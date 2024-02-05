@@ -7,10 +7,6 @@ from datetime import timedelta
 from typing import Any
 from uuid import UUID
 
-from aionotion import (
-    async_get_client_with_credentials,
-    async_get_client_with_refresh_token,
-)
 from aionotion.bridge.models import Bridge
 from aionotion.errors import InvalidCredentialsError, NotionError
 from aionotion.listener.models import Listener, ListenerKind
@@ -22,7 +18,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
-    aiohttp_client,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
@@ -51,6 +46,7 @@ from .const import (
     SENSOR_TEMPERATURE,
     SENSOR_WINDOW_HINGED,
 )
+from .util import async_get_client_with_credentials, async_get_client_with_refresh_token
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -144,9 +140,6 @@ class NotionData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Notion as a config entry."""
-    session = aiohttp_client.async_get_clientsession(hass)
-    password = None
-
     entry_updates: dict[str, Any] = {"data": {**entry.data}}
 
     if not entry.unique_id:
@@ -157,17 +150,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # If a password exists in the config entry data, use it to get a new client
             # (and pop it from the new entry data):
             client = await async_get_client_with_credentials(
-                entry.data[CONF_USERNAME],
-                password,
-                session=session,
+                hass, entry.data[CONF_USERNAME], password
             )
         else:
             # If a password doesn't exist in the config entry data, we can safely assume
             # that a refresh token and user UUID do, so we use them to get the client:
             client = await async_get_client_with_refresh_token(
+                hass,
                 entry.data[CONF_USER_UUID],
                 entry.data[CONF_REFRESH_TOKEN],
-                session=session,
             )
     except InvalidCredentialsError as err:
         raise ConfigEntryAuthFailed("Invalid credentials") from err

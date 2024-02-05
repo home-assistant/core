@@ -5,7 +5,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from aionotion import async_get_client_with_credentials
 from aionotion.errors import InvalidCredentialsError, NotionError
 import voluptuous as vol
 
@@ -14,9 +13,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client
 
 from .const import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN, LOGGER
+from .util import async_get_client_with_credentials
 
 AUTH_SCHEMA = vol.Schema(
     {
@@ -44,13 +43,10 @@ async def async_validate_credentials(
     hass: HomeAssistant, username: str, password: str
 ) -> CredentialsValidationResult:
     """Validate a Notion username and password."""
-    session = aiohttp_client.async_get_clientsession(hass)
     errors = {}
 
     try:
-        client = await async_get_client_with_credentials(
-            username, password, session=session
-        )
+        client = await async_get_client_with_credentials(hass, username, password)
     except InvalidCredentialsError:
         errors["base"] = "invalid_auth"
     except NotionError as err:
