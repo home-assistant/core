@@ -2144,3 +2144,65 @@ async def test_flow_with_multiple_schema_errors_base(
                 "latitude": "required key not provided",
             }
         }
+
+
+async def test_supports_reconfigure(
+    hass: HomeAssistant, client, enable_custom_integrations: None
+) -> None:
+    """Test a flow that creates an account."""
+    mock_platform(hass, "test.config_flow", None)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            return self.async_create_entry(
+                title="Test Entry", data={"secret": "account_token"}
+            )
+
+        async def async_step_reconfigure(self, user_input=None):
+            return self.async_create_entry(
+                title="Test Entry", data={"secret": "account_token"}
+            )
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow", json={"handler": "test"}
+        )
+
+    assert resp.status == HTTPStatus.OK
+
+    entries = hass.config_entries.async_entries("test")
+    assert len(entries) == 1
+
+    data = await resp.json()
+    data.pop("flow_id")
+    assert data == {
+        "handler": "test",
+        "title": "Test Entry",
+        "type": "create_entry",
+        "version": 1,
+        "result": {
+            "disabled_by": None,
+            "domain": "test",
+            "entry_id": entries[0].entry_id,
+            "source": core_ce.SOURCE_USER,
+            "state": core_ce.ConfigEntryState.LOADED.value,
+            "supports_reconfigure": True,
+            "supports_options": False,
+            "supports_remove_device": False,
+            "supports_unload": False,
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "title": "Test Entry",
+            "reason": None,
+        },
+        "description": None,
+        "description_placeholders": None,
+        "options": {},
+        "minor_version": 1,
+    }
