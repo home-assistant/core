@@ -154,12 +154,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         if password := entry_updates["data"].pop(CONF_PASSWORD, None):
+            # If a password exists in the config entry data, use it to get a new client
+            # (and pop it from the new entry data):
             client = await async_get_client_with_credentials(
                 entry.data[CONF_USERNAME],
                 password,
                 session=session,
             )
         else:
+            # If a password doesn't exist in the config entry data, we can safely assume
+            # that a refresh token and user UUID do, so we use them to get the client:
             client = await async_get_client_with_refresh_token(
                 entry.data[CONF_USER_UUID],
                 entry.data[CONF_REFRESH_TOKEN],
@@ -176,7 +180,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     @callback
     def async_save_refresh_token(refresh_token: str) -> None:
-        """Save a refresh token to the config entry."""
+        """Save a refresh token to the config entry data."""
         LOGGER.info("Saving new refresh token to HASS storage")
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_REFRESH_TOKEN: refresh_token}
