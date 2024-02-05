@@ -642,6 +642,7 @@ DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
     },
     SensorDeviceClass.WEIGHT: {
         SensorStateClass.MEASUREMENT,
+        SensorStateClass.TOTAL,
         SensorStateClass.TOTAL_INCREASING,
     },
     SensorDeviceClass.WIND_SPEED: {SensorStateClass.MEASUREMENT},
