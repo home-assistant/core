@@ -150,10 +150,6 @@ async def test_discovered_by_homekit_and_dhcp(
     dhcp_api_version: str,
 ) -> None:
     """Test we get the form with homekit and abort for dhcp source when we get both."""
-
-    if api_version != dhcp_api_version:
-        return
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
