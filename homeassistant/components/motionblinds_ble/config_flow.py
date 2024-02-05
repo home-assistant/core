@@ -40,8 +40,8 @@ CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_MAC_CODE): str})
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for MotionBlinds BLE."""
 
-
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize a ConfigFlow."""
         self._discovery_info: BluetoothServiceInfoBleak | BLEDevice | None = None
         self._mac_code: str | None = None
         self._display_name: str | None = None
