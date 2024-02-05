@@ -1,5 +1,4 @@
 """Tests for the system health component init."""
-import asyncio
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientError
@@ -92,7 +91,7 @@ async def test_info_endpoint_register_callback_timeout(
     """Test that the info endpoint timing out."""
 
     async def mock_info(hass):
-        raise asyncio.TimeoutError
+        raise TimeoutError
 
     hass.components.system_health.async_register_info("lovelace", mock_info)
     assert await async_setup_component(hass, "system_health", {})
@@ -128,7 +127,7 @@ async def test_platform_loading(
     """Test registering via platform."""
     aioclient_mock.get("http://example.com/status", text="")
     aioclient_mock.get("http://example.com/status_fail", exc=ClientError)
-    aioclient_mock.get("http://example.com/timeout", exc=asyncio.TimeoutError)
+    aioclient_mock.get("http://example.com/timeout", exc=TimeoutError)
     hass.config.components.add("fake_integration")
     mock_platform(
         hass,

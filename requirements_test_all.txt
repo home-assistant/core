@@ -827,7 +827,7 @@ habitipy==0.2.0
 habluetooth==2.4.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.76.0
+hass-nabucasa==0.77.0
 
 # homeassistant.components.conversation
 hassil==1.6.1
@@ -855,7 +855,7 @@ hole==0.8.0
 holidays==0.41
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240202.0
+home-assistant-frontend==20240205.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.2.2
@@ -1714,7 +1714,7 @@ python-juicenet==1.1.0
 python-kasa[speedups]==0.6.2.1
 
 # homeassistant.components.matter
-python-matter-server==5.4.0
+python-matter-server==5.4.1
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
