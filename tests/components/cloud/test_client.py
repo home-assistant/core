@@ -468,10 +468,11 @@ async def test_logged_out(
     await cloud.logout()
     await hass.async_block_till_done()
 
-    # Alexa is not cleaned up, Google is
-    assert cloud.client._alexa_config is alexa_config_mock
+    # Check we clean up Alexa and Google
+    assert cloud.client._alexa_config is None
     assert cloud.client._google_config is None
     google_config_mock.async_deinitialize.assert_called_once_with()
+    alexa_config_mock.async_deinitialize.assert_called_once_with()
 
 
 async def test_remote_enable(hass: HomeAssistant) -> None:
