@@ -143,6 +143,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not config:
         config = DeviceConfig(host)
+    else:
+        config.host = host
 
     config.timeout = CONNECT_TIMEOUT
     if config.uses_http is True:

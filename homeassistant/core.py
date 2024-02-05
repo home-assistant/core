@@ -875,7 +875,7 @@ class HomeAssistant:
                     tasks.append(task_or_none)
                 if tasks:
                     await asyncio.gather(*tasks, return_exceptions=True)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for shutdown jobs to complete, the shutdown will"
                 " continue"
@@ -906,7 +906,7 @@ class HomeAssistant:
         try:
             async with self.timeout.async_timeout(STOP_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for integrations to stop, the shutdown will"
                 " continue"
@@ -919,7 +919,7 @@ class HomeAssistant:
         try:
             async with self.timeout.async_timeout(FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for final writes to complete, the shutdown will"
                 " continue"
@@ -951,7 +951,7 @@ class HomeAssistant:
                     await task
             except asyncio.CancelledError:
                 pass
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Task may be shielded from cancellation.
                 _LOGGER.exception(
                     "Task %s could not be canceled during final shutdown stage", task
@@ -971,7 +971,7 @@ class HomeAssistant:
         try:
             async with self.timeout.async_timeout(CLOSE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for close event to be processed, the shutdown will"
                 " continue"
@@ -1757,7 +1757,9 @@ class StateMachine:
 
         Async friendly.
         """
-        return self._states_data.get(entity_id.lower())
+        return self._states_data.get(entity_id) or self._states_data.get(
+            entity_id.lower()
+        )
 
     def is_state(self, entity_id: str, state: str) -> bool:
         """Test if entity exists and is in specified state.
@@ -1795,7 +1797,6 @@ class StateMachine:
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": None},
-            EventOrigin.local,
             context=context,
         )
         return True
@@ -1870,10 +1871,16 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
-        entity_id = entity_id.lower()
         new_state = str(new_state)
         attributes = attributes or {}
-        if (old_state := self._states_data.get(entity_id)) is None:
+        old_state = self._states_data.get(entity_id)
+        if old_state is None:
+            # If the state is missing, try to convert the entity_id to lowercase
+            # and try again.
+            entity_id = entity_id.lower()
+            old_state = self._states_data.get(entity_id)
+
+        if old_state is None:
             same_state = False
             same_attr = False
             last_changed = None
@@ -1924,8 +1931,7 @@ class StateMachine:
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
-            EventOrigin.local,
-            context,
+            context=context,
             time_fired=now,
         )
 
@@ -2019,9 +2025,35 @@ class ServiceRegistry:
     def async_services(self) -> dict[str, dict[str, Service]]:
         """Return dictionary with per domain a list of available services.
 
+        This method makes a copy of the registry. This function is expensive,
+        and should only be used if has_service is not sufficient.
+
         This method must be run in the event loop.
         """
         return {domain: service.copy() for domain, service in self._services.items()}
+
+    @callback
+    def async_services_for_domain(self, domain: str) -> dict[str, Service]:
+        """Return dictionary with per domain a list of available services.
+
+        This method makes a copy of the registry for the domain.
+
+        This method must be run in the event loop.
+        """
+        return self._services.get(domain, {}).copy()
+
+    @callback
+    def async_services_internal(self) -> dict[str, dict[str, Service]]:
+        """Return dictionary with per domain a list of available services.
+
+        This method DOES NOT make a copy of the services like async_services does.
+        It is only expected to be called from the Home Assistant internals
+        as a performance optimization when the caller is not going to modify the
+        returned data.
+
+        This method must be run in the event loop.
+        """
+        return self._services
 
     def has_service(self, domain: str, service: str) -> bool:
         """Test if specified service exists.

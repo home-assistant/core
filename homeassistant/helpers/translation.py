@@ -218,8 +218,14 @@ class _TranslationCache:
                 if components_to_load := components - loaded:
                     await self._async_load(language, components_to_load)
 
-        result: dict[str, str] = {}
         category_cache = self.cache.get(language, {}).get(category, {})
+        # If only one component was requested, return it directly
+        # to avoid merging the dictionaries and keeping additional
+        # copies of the same data in memory.
+        if len(components) == 1 and (component := next(iter(components))):
+            return category_cache.get(component, {})
+
+        result: dict[str, str] = {}
         for component in components.intersection(category_cache):
             result.update(category_cache[component])
         return result
@@ -298,7 +304,6 @@ class _TranslationCache:
         """Extract resources into the cache."""
         resource: dict[str, Any] | str
         cached = self.cache.setdefault(language, {})
-
         categories: set[str] = set()
         for resource in translation_strings.values():
             categories.update(resource)
