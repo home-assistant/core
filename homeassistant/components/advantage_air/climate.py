@@ -224,7 +224,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         if ATTR_TEMPERATURE in kwargs:
             await self.async_update_ac({"setTemp": kwargs[ATTR_TEMPERATURE]})
         if ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs:
-            await self.async_update_ac(F
+            await self.async_update_ac(
                 {
                     ADVANTAGE_AIR_COOL_TARGET: kwargs[ATTR_TARGET_TEMP_HIGH],
                     ADVANTAGE_AIR_HEAT_TARGET: kwargs[ATTR_TARGET_TEMP_LOW],
