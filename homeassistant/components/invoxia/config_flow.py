@@ -9,7 +9,7 @@ import gps_tracker
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -20,7 +20,9 @@ from .helpers import get_invoxia_client
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_EMAIL): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.EMAIL)
+        ),
         vol.Required(CONF_PASSWORD): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
@@ -35,7 +37,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """
     cfg = gps_tracker.Config(
         password=data[CONF_PASSWORD],
-        username=data[CONF_USERNAME],
+        username=data[CONF_EMAIL],
     )
 
     async with get_invoxia_client(hass, cfg) as client:
@@ -78,10 +80,10 @@ class InvoxiaFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(user_input[CONF_USERNAME].lower())
+            await self.async_set_unique_id(user_input[CONF_EMAIL])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=user_input[CONF_USERNAME], data=user_input
+                title=user_input[CONF_EMAIL], data=user_input
             )
 
         return self.async_show_form(
