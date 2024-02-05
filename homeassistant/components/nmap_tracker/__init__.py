@@ -228,7 +228,7 @@ class NmapDeviceScanner:
             )
         )
         self._mac_vendor_lookup = AsyncMacLookup()
-        with contextlib.suppress((asyncio.TimeoutError, aiohttp.ClientError)):
+        with contextlib.suppress((TimeoutError, aiohttp.ClientError)):
             # We don't care if this fails since it only
             # improves the data when we don't have it from nmap
             await self._mac_vendor_lookup.load_vendors()
