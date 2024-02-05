@@ -1,7 +1,7 @@
 """Tests for the Blue Current integration."""
 from __future__ import annotations
 
-from asyncio import Event, sleep
+from asyncio import Event
 from functools import partial
 from unittest.mock import MagicMock, patch
 
@@ -19,35 +19,21 @@ DEFAULT_CHARGE_POINT = {
 }
 
 
-async def connect(client, token: str):
-    """Set the connected event."""
-    if client.connect_exception:
-        # Raise exception once.
-        temp = client.connect_exception
-        client.connect_exception = None
-        raise temp
-
-    client.connected.set()
-    client.connected.clear()
-
-
-async def start_loop(client, receiver):
+async def start_loop(hass: HomeAssistant, client, receiver):
     """Set the receiver."""
     client.receiver = receiver
-    client.loop_start_task.set()
 
-    while True:
-        if client.loop_exception:
-            # Raise exception once.
-            temp = client.loop_exception
-            client.loop_exception = None
-            raise temp
-        await sleep(0)
+    client.started_loop.set()
+    client.started_loop.clear()
+
+    client.loop_future = hass.loop.create_future()
+
+    await client.loop_future
 
 
 async def get_charge_points(client, charge_point: dict) -> None:
     """Send a list of charge points to the callback."""
-    await client.loop_start_task.wait()
+    await client.started_loop.wait()
     await client.receiver(
         {
             "object": "CHARGE_POINTS",
@@ -72,6 +58,7 @@ async def get_grid_status(client, grid: dict, evse_id: str) -> None:
 
 
 def create_client_mock(
+    hass: HomeAssistant,
     charge_point: dict,
     status: dict | None = None,
     grid: dict | None = None,
@@ -81,14 +68,9 @@ def create_client_mock(
 
     client_mock.receiver = None
 
-    client_mock.loop_exception = None
-    client_mock.connect_exception = None
+    client_mock.started_loop = Event()
 
-    client_mock.connected = Event()
-    client_mock.loop_start_task = Event()
-
-    client_mock.connect.side_effect = partial(connect, client_mock)
-    client_mock.start_loop.side_effect = partial(start_loop, client_mock)
+    client_mock.start_loop.side_effect = partial(start_loop, hass, client_mock)
     client_mock.get_charge_points.side_effect = partial(
         get_charge_points, client_mock, charge_point
     )
@@ -112,7 +94,7 @@ async def init_integration(
     if charge_point is None:
         charge_point = DEFAULT_CHARGE_POINT
 
-    client_mock = create_client_mock(charge_point, status, grid)
+    client_mock = create_client_mock(hass, charge_point, status, grid)
 
     with patch("homeassistant.components.blue_current.PLATFORMS", [platform]), patch(
         "homeassistant.components.blue_current.Client", return_value=client_mock
