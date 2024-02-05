@@ -30,9 +30,12 @@ from .const import (
     CONF_DEVICE,
     CONF_EUROPE,
     DOMAIN,
-    FAN_MODE_MAP,
-    HVAC_MODE_MAP,
-    SWING_MODE_MAP,
+    FUJI_TO_HA_FAN,
+    FUJI_TO_HA_HVAC,
+    FUJI_TO_HA_SWING,
+    HA_TO_FUJI_FAN,
+    HA_TO_FUJI_HVAC,
+    HA_TO_FUJI_SWING,
 )
 
 
@@ -104,7 +107,7 @@ class FujitsuHVACDevice(ClimateEntity):
         Requires ClimateEntityFeature.FAN_MODE.
         """
         with suppress(KeyError):
-            return FAN_MODE_MAP.inverse[self._dev.fan_speed]
+            return FUJI_TO_HA_FAN[self._dev.fan_speed]
 
         return None
 
@@ -115,9 +118,9 @@ class FujitsuHVACDevice(ClimateEntity):
         Requires ClimateEntityFeature.FAN_MODE.
         """
         ret = [
-            FAN_MODE_MAP.inverse[mode]
+            FUJI_TO_HA_FAN[mode]
             for mode in self._dev.supported_fan_speeds
-            if mode in FAN_MODE_MAP.inverse
+            if mode in FUJI_TO_HA_FAN
         ]
 
         if len(ret) > 0:
@@ -125,11 +128,15 @@ class FujitsuHVACDevice(ClimateEntity):
 
         return None
 
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set Fan mode."""
+        await self._dev.async_set_fan_speed(HA_TO_FUJI_FAN[fan_mode])
+
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         with suppress(KeyError):
-            return HVAC_MODE_MAP.inverse[self._dev.op_mode]
+            return FUJI_TO_HA_HVAC[self._dev.op_mode]
 
         return None
 
@@ -137,12 +144,16 @@ class FujitsuHVACDevice(ClimateEntity):
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         ret = [
-            HVAC_MODE_MAP.inverse[mode]
+            FUJI_TO_HA_HVAC[mode]
             for mode in self._dev.supported_op_modes
-            if mode in HVAC_MODE_MAP.inverse
+            if mode in FUJI_TO_HA_HVAC
         ]
 
         return ret
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set HVAC mode."""
+        await self._dev.async_set_op_mode(HA_TO_FUJI_HVAC[hvac_mode])
 
     @property
     def swing_mode(self) -> str | None:
@@ -151,7 +162,7 @@ class FujitsuHVACDevice(ClimateEntity):
         Requires ClimateEntityFeature.SWING_MODE.
         """
         with suppress(KeyError):
-            return SWING_MODE_MAP.inverse[self._dev.swing_mode]
+            return FUJI_TO_HA_SWING[self._dev.swing_mode]
 
         return None
 
@@ -162,15 +173,19 @@ class FujitsuHVACDevice(ClimateEntity):
         Requires ClimateEntityFeature.SWING_MODE.
         """
         ret = [
-            SWING_MODE_MAP.inverse[mode]
+            FUJI_TO_HA_SWING[mode]
             for mode in self._dev.supported_swing_modes
-            if mode in SWING_MODE_MAP.inverse
+            if mode in FUJI_TO_HA_SWING
         ]
 
         if len(ret) > 0:
             return ret
 
         return None
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set swing mode."""
+        await self._dev.async_set_swing_mode(HA_TO_FUJI_SWING[swing_mode])
 
     @property
     def min_temp(self) -> float:
@@ -192,6 +207,12 @@ class FujitsuHVACDevice(ClimateEntity):
         """Return the target temperature."""
         return float(self._dev.set_temp)
 
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set target temperature."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
+        await self._dev.async_set_set_temp(temperature)
+
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
@@ -205,21 +226,3 @@ class FujitsuHVACDevice(ClimateEntity):
             ret |= ClimateEntityFeature.SWING_MODE
 
         return ret
-
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set HVAC mode."""
-        await self._dev.async_set_op_mode(HVAC_MODE_MAP[hvac_mode])
-
-    async def async_set_fan_mode(self, fan_mode: str) -> None:
-        """Set Fan mode."""
-        await self._dev.async_set_fan_speed(FAN_MODE_MAP[fan_mode])
-
-    async def async_set_swing_mode(self, swing_mode: str) -> None:
-        """Set swing mode."""
-        await self._dev.async_set_swing_mode(SWING_MODE_MAP[swing_mode])
-
-    async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set target temperature."""
-        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            return
-        await self._dev.async_set_set_temp(temperature)
