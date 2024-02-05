@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from asyncio import timeout
+from contextlib import suppress
 
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
 
@@ -42,4 +43,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    with suppress(TimeoutError):
+        async with timeout(API_TIMEOUT):
+            await hass.data[DOMAIN][API].async_sign_out()
+
+    hass.data[DOMAIN].pop(API)
+
+    return unload_ok
