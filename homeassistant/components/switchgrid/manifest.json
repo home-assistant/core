@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/switchgrid",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "requirements": [],
+  "requirements": ["switchgrid_python_client==0.1.1"],
   "ssdp": [],
   "zeroconf": []
 }

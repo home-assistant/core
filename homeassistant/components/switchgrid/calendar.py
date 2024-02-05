@@ -52,12 +52,12 @@ class SwitchgridCalendarEntity(
         self._events = list(
             map(
                 lambda event: CalendarEvent(
-                    start=event["startUtc"],
-                    end=event["endUtc"],
-                    summary=event["summary"],
-                    description=event["description"],
+                    start=event.startUtc,
+                    end=event.endUtc,
+                    summary=event.summary,
+                    description=event.description,
                 ),
-                self.coordinator.data["events"],
+                self.coordinator.data.events,
             )
         )
         self.async_write_ha_state()

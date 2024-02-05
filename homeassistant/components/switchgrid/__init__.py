@@ -3,9 +3,12 @@ from __future__ import annotations
 
 import logging
 
+from switchgrid_python_client import SwitchgridData
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import SwitchgridCoordinator
@@ -20,7 +23,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
-    coordinator = SwitchgridCoordinator(hass, entry)
+    session = async_get_clientsession(hass)
+
+    data = SwitchgridData(session)
+
+    coordinator = SwitchgridCoordinator(hass, data)
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator
 

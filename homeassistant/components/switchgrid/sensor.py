@@ -42,7 +42,7 @@ class SwitchgridNextEventSensor(CoordinatorEntity[SwitchgridCoordinator], Sensor
     @property
     def native_value(self) -> str | None:
         """Return the value of the sensor."""
-        new_var = self.coordinator.next_event()
-        if new_var is None:
+        next_event = self.coordinator.next_event()
+        if next_event is None:
             return None
-        return new_var["startUtc"]
+        return next_event.startUtc

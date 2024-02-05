@@ -1907,6 +1907,9 @@ surepy==0.8.0
 # homeassistant.components.switchbot_cloud
 switchbot-api==1.2.1
 
+# homeassistant.components.switchgrid
+switchgrid_python_client==0.1.1
+
 # homeassistant.components.system_bridge
 systembridgeconnector==3.10.0
 

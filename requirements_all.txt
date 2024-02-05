@@ -2552,6 +2552,9 @@ swisshydrodata==0.1.0
 # homeassistant.components.switchbot_cloud
 switchbot-api==1.2.1
 
+# homeassistant.components.switchgrid
+switchgrid_python_client==0.1.1
+
 # homeassistant.components.synology_srm
 synology-srm==0.2.0
 
