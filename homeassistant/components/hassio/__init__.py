@@ -630,7 +630,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     dev_reg = dr.async_get(hass)
-    coordinator = HassioDataUpdateCoordinator(hass, entry, dev_reg)
+    coordinator = HassioDataUpdateCoordinator(hass, dev_reg)
     await coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = coordinator
 
@@ -749,9 +749,9 @@ def async_remove_addons_from_dev_reg(
 class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Class to retrieve Hass.io status."""
 
-    def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, dev_reg: dr.DeviceRegistry
-    ) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, dev_reg: dr.DeviceRegistry) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
@@ -767,7 +767,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
         )
         self.hassio: HassIO = hass.data[DOMAIN]
         self.data = {}
-        self.entry_id = config_entry.entry_id
+        self.entry_id = self.config_entry.entry_id
         self.dev_reg = dev_reg
         self.is_hass_os = (get_info(self.hass) or {}).get("hassos") is not None
         self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
