@@ -221,7 +221,7 @@ disable = [
     "duplicate-key", # F601
     "duplicate-string-formatting-argument", # F
     "duplicate-value", # F
-    "eval-used", # PGH001
+    "eval-used", # S307
     "exec-used", # S102
     # "expression-not-assigned", # B018, ruff catches new occurrences, needs more work
     "f-string-without-interpolation", # F541
@@ -241,7 +241,7 @@ disable = [
     "named-expr-without-context", # PLW0131
     "nested-min-max", # PLW3301
     # "pointless-statement", # B018, ruff catches new occurrences, needs more work
-    "raise-missing-from", # TRY200
+    "raise-missing-from", # B904
     # "redefined-builtin", # A001, ruff is way more stricter, needs work
     "try-except-raise", # TRY302
     "unused-argument", # ARG001, we don't use it
@@ -569,13 +569,14 @@ filterwarnings = [
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:webrtcvad",
 ]
 
-[tool.ruff]
+[tool.ruff.lint]
 select = [
     "B002", # Python does not support the unary prefix increment
     "B007", # Loop control variable {name} not used within loop body
     "B014", # Exception handler with duplicate exception
     "B023", # Function definition does not bind loop variable {name}
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
+    "B904", # Use raise from to specify exception cause
     "C",  # complexity
     "COM818", # Trailing comma on bare tuple prohibited
     "D",  # docstrings
@@ -589,7 +590,6 @@ select = [
     "N804", # First argument of a class method should be named cls
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase
-    "PGH001", # No builtin eval() allowed
     "PGH004",  # Use specific rule codes when using noqa
     "PLC0414", # Useless import alias. Import alias does not rename original package.
     "PLC", # pylint
@@ -628,7 +628,6 @@ select = [
     "T20",  # flake8-print
     "TID251", # Banned imports
     "TRY004", # Prefer TypeError exception for invalid type
-    "TRY200", # Use raise from to specify exception cause
     "TRY302", # Remove exception handler; error is immediately re-raised
     "UP",  # pyupgrade
     "W",  # pycodestyle
@@ -681,7 +680,7 @@ ignore = [
     "PLE0605",
 ]
 
-[tool.ruff.flake8-import-conventions.extend-aliases]
+[tool.ruff.lint.flake8-import-conventions.extend-aliases]
 voluptuous = "vol"
 "homeassistant.helpers.area_registry" = "ar"
 "homeassistant.helpers.config_validation" = "cv"
@@ -690,14 +689,14 @@ voluptuous = "vol"
 "homeassistant.helpers.issue_registry" = "ir"
 "homeassistant.util.dt" = "dt_util"
 
-[tool.ruff.flake8-pytest-style]
+[tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
 
-[tool.ruff.flake8-tidy-imports.banned-api]
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 force-sort-within-sections = true
 known-first-party = [
     "homeassistant",
@@ -705,12 +704,12 @@ known-first-party = [
 combine-as-imports = true
 split-on-trailing-comma = false
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 
 # Allow for main entry & scripts to write to stdout
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 25
