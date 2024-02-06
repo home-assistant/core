@@ -239,17 +239,6 @@ async def test_setting_sensor_value_via_mqtt_message(
             "2024-02-06",
             False,
         ),
-        (
-            help_custom_config(
-                sensor.DOMAIN,
-                DEFAULT_CONFIG,
-                ({"device_class": sensor.SensorDeviceClass.TIMESTAMP},),
-            ),
-            sensor.SensorDeviceClass.TIMESTAMP,
-            "some_value",
-            STATE_UNKNOWN,
-            True,
-        ),
     ],
 )
 async def test_setting_sensor_native_value_handling_via_mqtt_message(

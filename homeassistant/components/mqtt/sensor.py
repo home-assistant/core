@@ -239,7 +239,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 self._attr_native_value = new_value
                 return
             try:
-                if (payload_datetime := dt_util.parse_datetime(new_value)) is None and (
+                if (dt_util.parse_datetime(new_value)) is None and (
                     string_datetime := datetime.fromtimestamp(
                         float(payload), tz=UTC
                     ).isoformat()
