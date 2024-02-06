@@ -376,13 +376,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not self._device:
             return  # Can't get all the required information without a connection
 
-        if not self.registry_entry or not self.registry_entry.config_entry_id:
-            return  # No config registry entry to link to
-
-        if self.registry_entry.device_id and not set_mac and self._updated_registry:
+        if not set_mac and self._updated_registry:
             return  # No new information
 
-        self._updated_registry = True
         # Connections based on the root device's UDN, and the DMR embedded
         # device's UDN. They may be the same, if the DMR is the root device.
         connections = {
@@ -404,6 +400,18 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 (dr.CONNECTION_NETWORK_MAC, self.mac_address)
             )
 
+        self._attr_device_info = dr.DeviceInfo(
+            connections=connections,
+            default_manufacturer=self._device.manufacturer,
+            default_model=self._device.model_name,
+            default_name=self._device.name,
+        )
+
+        if not self.registry_entry or not self.registry_entry.config_entry_id:
+            # No config registry entry to update
+            return
+
+        self._updated_registry = True
         # Create linked HA DeviceEntry now the information is known.
         dev_reg = dr.async_get(self.hass)
         device_entry = dev_reg.async_get_or_create(
@@ -421,13 +429,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
             self.registry_entry.platform,
             self.unique_id,
             device_id=device_entry.id,
-        )
-
-        self._attr_device_info = dr.DeviceInfo(
-            connections=connections,
-            default_manufacturer=self._device.manufacturer,
-            default_model=self._device.model_name,
-            default_name=self._device.name,
         )
 
     async def _device_disconnect(self) -> None:
