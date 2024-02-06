@@ -6,13 +6,13 @@ from aioautomower.model import MowerAttributes
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 import pytest
 
-from homeassistant.components.husqvarna_automower.const import (
-    DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
 )
+from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.setup import async_setup_component
 
 from .const import TEST_CLIENT_ID, TEST_CLIENT_SECRET
 
@@ -67,6 +67,21 @@ def mower_data() -> dict[str, MowerAttributes]:
     )
 
 
+@pytest.fixture(autouse=True)
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(
+            TEST_CLIENT_ID,
+            TEST_CLIENT_SECRET,
+        ),
+        DOMAIN,
+    )
+
+
 @pytest.fixture(name="activity")
 def activity() -> str:
     """Defaults value for activity."""
@@ -92,19 +107,6 @@ async def setup_entity(
     test_mower: MowerAttributes = mower_data[TEST_MOWER_ID]
     test_mower.mower.activity = activity
     test_mower.mower.state = state
-
-    config_entry_oauth2_flow.async_register_implementation(
-        hass,
-        DOMAIN,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
-            hass,
-            DOMAIN,
-            TEST_CLIENT_ID,
-            TEST_CLIENT_SECRET,
-            OAUTH2_AUTHORIZE,
-            OAUTH2_TOKEN,
-        ),
-    )
 
     mock_config_entry.add_to_hass(hass)
     with patch(

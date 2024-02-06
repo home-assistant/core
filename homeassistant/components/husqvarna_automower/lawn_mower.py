@@ -82,7 +82,7 @@ class AutomowerLawnMowerEntity(LawnMowerEntity, AutomowerBaseEntity):
     @property
     def available(self) -> bool:
         """Return True if the device is available."""
-        return self.mower_attributes.metadata.connected
+        return super().available and self.mower_attributes.metadata.connected
 
     @property
     def activity(self) -> LawnMowerActivity:
@@ -106,7 +106,6 @@ class AutomowerLawnMowerEntity(LawnMowerEntity, AutomowerBaseEntity):
             raise HomeAssistantError(
                 f"Command couldn't be sent to the command que: {exception}"
             ) from exception
-        # await self.coordinator._async_update_data()
 
     async def async_pause(self) -> None:
         """Pauses the mower."""

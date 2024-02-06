@@ -20,6 +20,7 @@ class HusqvarnaConfigFlowHandler(
     """Handle a config flow."""
 
     VERSION = 1
+    DOMAIN = DOMAIN
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow."""

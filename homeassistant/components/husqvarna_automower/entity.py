@@ -8,7 +8,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AutomowerDataUpdateCoordinator
-from .const import DOMAIN, HUSQVARNA_URL
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,15 +27,11 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
         """Initialize AutomowerEntity."""
         super().__init__(coordinator)
         self.mower_id = mower_id
-        mower_name = self.mower_attributes.system.name
-        mower_model = self.mower_attributes.system.model
-
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, mower_id)},
-            name=mower_name,
+            identifiers={(DOMAIN, self.mower_id)},
+            name=self.mower_attributes.system.name,
             manufacturer="Husqvarna",
-            model=mower_model,
-            configuration_url=HUSQVARNA_URL,
+            model=self.mower_attributes.system.model,
             suggested_area="Garden",
         )
 

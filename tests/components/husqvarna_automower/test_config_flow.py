@@ -2,13 +2,7 @@
 
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant import config_entries
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.components.husqvarna_automower.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -16,20 +10,8 @@ from homeassistant.components.husqvarna_automower.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.setup import async_setup_component
 
-from .const import TEST_CLIENT_ID, TEST_CLIENT_SECRET
-
-
-@pytest.fixture
-async def setup_credentials(hass: HomeAssistant) -> None:
-    """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(TEST_CLIENT_ID, TEST_CLIENT_SECRET),
-    )
+from .const import TEST_CLIENT_ID
 
 
 async def test_full_flow(
