@@ -213,6 +213,10 @@ class CloudClient(Interface):
         """Cleanup some stuff after logout."""
         await self.prefs.async_set_username(None)
 
+        if self._alexa_config:
+            self._alexa_config.async_deinitialize()
+        self._alexa_config = None
+
         if self._google_config:
             self._google_config.async_deinitialize()
         self._google_config = None

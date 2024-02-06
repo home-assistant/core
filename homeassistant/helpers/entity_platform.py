@@ -370,7 +370,7 @@ class EntityPlatform:
                         EVENT_HOMEASSISTANT_STARTED, setup_again
                     )
                 return False
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.error(
                     (
                         "Setup of platform %s is taking longer than %s seconds."
@@ -513,7 +513,7 @@ class EntityPlatform:
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 await asyncio.gather(*tasks)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self.logger.warning(
                 "Timed out adding entities for domain %s with platform %s after %ds",
                 self.domain,

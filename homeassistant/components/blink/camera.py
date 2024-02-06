@@ -1,7 +1,6 @@
 """Support for Blink system camera."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import contextlib
 import logging
@@ -96,7 +95,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         try:
             await self._camera.async_arm(True)
 
-        except asyncio.TimeoutError as er:
+        except TimeoutError as er:
             raise HomeAssistantError("Blink failed to arm camera") from er
 
         self._camera.motion_enabled = True
@@ -106,7 +105,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         """Disable motion detection for the camera."""
         try:
             await self._camera.async_arm(False)
-        except asyncio.TimeoutError as er:
+        except TimeoutError as er:
             raise HomeAssistantError("Blink failed to disarm camera") from er
 
         self._camera.motion_enabled = False
@@ -124,7 +123,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
 
     async def trigger_camera(self) -> None:
         """Trigger camera to take a snapshot."""
-        with contextlib.suppress(asyncio.TimeoutError):
+        with contextlib.suppress(TimeoutError):
             await self._camera.snap_picture()
         self.async_write_ha_state()
 
