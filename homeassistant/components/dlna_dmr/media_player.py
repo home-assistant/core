@@ -28,7 +28,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.const import CONF_DEVICE_ID, CONF_MAC, CONF_TYPE, CONF_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -192,7 +192,12 @@ class DlnaDmrEntity(MediaPlayerEntity):
             )
         )
 
-        if not self._device:
+        if self._device:
+            return
+
+        if self.hass.state is CoreState.running:
+            await self._async_setup()
+        else:
             self._background_setup_task = self.hass.async_create_background_task(
                 self._async_setup(), f"dlna_dmr {self.name} setup"
             )
