@@ -28,15 +28,6 @@ from .const import (
     DOMAIN,
 )
 
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.COVER,
-    Platform.FAN,
-    Platform.LIGHT,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]
-
 
 def GetDeviceIdFromDiscoveryTopic(topic: str) -> str | None:
     """From the discovery topic get the PG LAB Electronics device id."""
@@ -203,30 +194,11 @@ class Discovery:
             discovery_info = DiscoverDeviceInfo(pglab_device)
             hass.data[DEVICE_ALREADY_DISCOVERED][pglab_device.id] = discovery_info
 
-            # create all new cover entities
-            for s in pglab_device.shutters:
-                # the HA entity is not yet created, send a message to create it
-                async_dispatcher_send(
-                    hass, CREATE_NEW_ENTITY[Platform.COVER], pglab_device, s
-                )
-
             # create all new relay entities
             for r in pglab_device.relays:
                 # the HA entity is not yet created, send a message to create it
                 async_dispatcher_send(
                     hass, CREATE_NEW_ENTITY[Platform.SWITCH], pglab_device, r
-                )
-
-            # create all new sensor entities
-            pglab_sensor = pglab_device.sensors
-            for sensor_type in pglab_sensor.state:
-                # the HA entity is not yet created, send a message to create it
-                async_dispatcher_send(
-                    hass,
-                    CREATE_NEW_ENTITY[Platform.SENSOR],
-                    sensor_type,
-                    pglab_device,
-                    pglab_sensor,
                 )
 
         topics = {
