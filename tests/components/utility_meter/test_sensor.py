@@ -1564,7 +1564,6 @@ def test_calculate_adjustment_invalid_new_state(
         periodically_resetting=True,
         sensor_always_available=False,
         unique_id="test_utility_meter",
-        device_class=None,
         source_entity="sensor.test",
         tariff=None,
         tariff_entity=None,
