@@ -129,19 +129,19 @@ class AbstractConfig(ABC):
             self._on_deinitialize.pop()()
 
     @property
+    @abstractmethod
     def enabled(self):
         """Return if Google is enabled."""
-        return False
 
     @property
+    @abstractmethod
     def entity_config(self):
         """Return entity config."""
-        return {}
 
     @property
+    @abstractmethod
     def secure_devices_pin(self):
         """Return entity config."""
-        return None
 
     @property
     def is_reporting_state(self):
@@ -154,9 +154,9 @@ class AbstractConfig(ABC):
         return self._local_sdk_active
 
     @property
+    @abstractmethod
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        return False
 
     @property
     def is_local_connected(self) -> bool:
@@ -167,6 +167,7 @@ class AbstractConfig(ABC):
             and self._local_last_active > utcnow() - timedelta(seconds=70)
         )
 
+    @abstractmethod
     def get_local_user_id(self, webhook_id):
         """Map webhook ID to a Home Assistant user ID.
 
@@ -175,21 +176,10 @@ class AbstractConfig(ABC):
 
         Return None if no user id is found for the webhook_id.
         """
-        # Note: The manually setup Google Assistant currently returns the Google agent
-        # user ID instead of a valid Home Assistant user ID
-        found_agent_user_id = None
-        for agent_user_id, agent_user_data in self._store.agent_user_ids.items():
-            if agent_user_data[STORE_GOOGLE_LOCAL_WEBHOOK_ID] == webhook_id:
-                found_agent_user_id = agent_user_id
-                break
 
-        return found_agent_user_id
-
+    @abstractmethod
     def get_local_webhook_id(self, agent_user_id):
         """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
-        if data := self._store.agent_user_ids.get(agent_user_id):
-            return data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
-        return None
 
     @abstractmethod
     def get_agent_user_id(self, context):
@@ -199,15 +189,15 @@ class AbstractConfig(ABC):
     def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
 
+    @abstractmethod
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
-        return True
 
+    @abstractmethod
     async def async_report_state(
         self, message: dict[str, Any], agent_user_id: str, event_id: str | None = None
     ) -> HTTPStatus | None:
         """Send a state report to Google."""
-        raise NotImplementedError
 
     async def async_report_state_all(self, message):
         """Send a state report to Google for all previously synced users."""
