@@ -699,7 +699,7 @@ class UtilityMeterSensor(RestoreSensor):
         try:
             device_class_source = get_device_class(self.hass, self._sensor_source_id)
         except HomeAssistantError:
-            # The entity no longer exists]
+            # The entity no longer exists
             device_class_source = None
 
         if device_class_source is None:
