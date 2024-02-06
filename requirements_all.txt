@@ -2757,7 +2757,7 @@ unifi_ap==0.0.1
 unifiled==0.11
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.15
+universal-silabs-flasher==0.0.18
 
 # homeassistant.components.upb
 upb-lib==0.5.4
