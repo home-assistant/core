@@ -26,7 +26,6 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
     ) -> None:
         """Initialize AutomowerEntity."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
         self.mower_id = mower_id
         mower_name = self.mower_attributes.system.name
         mower_model = self.mower_attributes.system.model
