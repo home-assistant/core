@@ -702,12 +702,12 @@ async def test_service_calls_core(
     await hass.services.async_call("homeassistant", "stop")
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 6
+    assert aioclient_mock.call_count == 5
 
     await hass.services.async_call("homeassistant", "check_config")
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == 6
+    assert aioclient_mock.call_count == 5
 
     with patch(
         "homeassistant.config.async_check_ha_config_file", return_value=None
@@ -716,7 +716,7 @@ async def test_service_calls_core(
         await hass.async_block_till_done()
         assert mock_check_config.called
 
-    assert aioclient_mock.call_count == 7
+    assert aioclient_mock.call_count == 6
 
 
 async def test_entry_load_and_unload(hass: HomeAssistant) -> None:

@@ -749,6 +749,8 @@ def async_remove_addons_from_dev_reg(
 class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Class to retrieve Hass.io status."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, dev_reg: dr.DeviceRegistry
     ) -> None:
@@ -1003,10 +1005,23 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
         """Refresh data."""
         if not scheduled:
             # Force refreshing updates for non-scheduled updates
-            try:
-                await self.hassio.refresh_updates()
-            except HassioAPIError as err:
-                _LOGGER.warning("Error on Supervisor API: %s", err)
+            # It `raise_on_auth_failed` is set, it means this is
+            # the first refresh. We background the update task in
+            # that case.
+            if raise_on_auth_failed:
+                self.config_entry.async_create_background_task(
+                    self.hass, self._async_refresh_updates(), "hassio_refresh_updates"
+                )
+            else:
+                await self._async_refresh_updates()
+
         await super()._async_refresh(
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
+
+    async def _async_refresh_updates(self) -> None:
+        """Refresh updates."""
+        try:
+            await self.hassio.refresh_updates()
+        except HassioAPIError as err:
+            _LOGGER.warning("Error on Supervisor API: %s", err)
