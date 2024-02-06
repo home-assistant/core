@@ -535,7 +535,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.37.6
+bellows==0.38.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
@@ -2913,7 +2913,7 @@ zeroconf==0.131.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.110
+zha-quirks==0.0.111
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.9
@@ -2922,7 +2922,7 @@ zhong-hong-hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.22.4
+zigpy-deconz==0.23.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.20.1
@@ -2934,7 +2934,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.61.0
+zigpy==0.62.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
