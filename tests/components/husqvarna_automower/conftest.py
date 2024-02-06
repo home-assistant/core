@@ -75,7 +75,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 @pytest.fixture
 def mock_automower_client() -> Generator[AsyncMock, None, None]:
-    """Mock a Homeassistant Analytics client."""
+    """Mock a Husqvarna Automower client."""
     with patch(
         "homeassistant.components.husqvarna_automower.AutomowerSession",
         autospec=True,
