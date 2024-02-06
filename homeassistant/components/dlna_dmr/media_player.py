@@ -383,16 +383,19 @@ class DlnaDmrEntity(MediaPlayerEntity):
             return  # No new information
 
         self._updated_registry = True
-        connections = set()
         # Connections based on the root device's UDN, and the DMR embedded
         # device's UDN. They may be the same, if the DMR is the root device.
-        connections.add(
+        connections = {
             (
                 dr.CONNECTION_UPNP,
                 self._device.profile_device.root_device.udn,
-            )
-        )
-        connections.add((dr.CONNECTION_UPNP, self._device.udn))
+            ),
+            (dr.CONNECTION_UPNP, self._device.udn),
+            (
+                dr.CONNECTION_UPNP,
+                self.udn,
+            ),
+        }
 
         if self.mac_address:
             # Connection based on MAC address, if known
