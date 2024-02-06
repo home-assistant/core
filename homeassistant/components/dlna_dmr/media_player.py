@@ -155,6 +155,11 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self.browse_unfiltered = browse_unfiltered
         self._device_lock = asyncio.Lock()
         self._background_setup_task: asyncio.Task[None] | None = None
+        # Device info will be updated when the device is connected
+        self._attr_device_info = dr.DeviceInfo(
+            connections={(dr.CONNECTION_UPNP, self.udn)},
+            default_name=name,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Handle addition."""
