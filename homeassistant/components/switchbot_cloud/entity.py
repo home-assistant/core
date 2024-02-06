@@ -1,8 +1,9 @@
 """Base class for SwitchBot via API entities."""
 from typing import Any
 
-from switchbot_api import Commands, Device, Remote, SwitchBotAPI
+from switchbot_api import Commands, Device, DeviceOffline, Remote, SwitchBotAPI
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -41,9 +42,18 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
         parameters: dict | str = "default",
     ) -> None:
         """Send command to device."""
-        await self._api.send_command(
-            self._attr_unique_id,
-            command,
-            command_type,
-            parameters,
-        )
+        try:
+            await self._api.send_command(
+                self._attr_unique_id,
+                command,
+                command_type,
+                parameters,
+            )
+        except DeviceOffline as e:
+            name = (
+                self._attr_unique_id
+                if self._attr_device_info is None
+                else self._attr_device_info.get("name")
+            )
+            err = f'SwitchBot Cloud Device "{name}" is offline.'
+            raise HomeAssistantError(err) from e
