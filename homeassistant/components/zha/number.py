@@ -970,6 +970,20 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
     _attr_icon: str = ICONS[0]
 
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> None:
+        """Init this ZHA local temperature calibration entity."""
+        self._cluster_handler: ClusterHandler = cluster_handlers[0]
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+        if zha_device.model == "TRVZB":
+            self._attr_native_max_value: float = 7
+            self._attr_native_min_value: float = -7
+
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY, models={"SNZB-06P"}
