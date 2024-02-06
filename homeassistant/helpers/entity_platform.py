@@ -148,8 +148,8 @@ class EntityPlatform:
         # which powers entity_component.add_entities
         self.parallel_updates_created = platform is None
 
-        # Storage for entities indexed by domain,
-        # and the child dict indexed by entity_id
+        # Storage for entities indexed by domain
+        # with the child dict indexed by entity_id
         #
         # This is usually media_player, light, switch, etc.
         domain_entities: dict[str, dict[str, Entity]] = hass.data.setdefault(
@@ -157,8 +157,8 @@ class EntityPlatform:
         )
         self.domain_entities = domain_entities.setdefault(domain, {})
 
-        # Storage for entities indexed by domain and platform,
-        # and the child dict indexed by entity_id
+        # Storage for entities indexed by domain and platform
+        # with the child dict indexed by entity_id
         #
         # This is usually media_player.yamaha, light.hue, switch.tplink, etc.
         domain_platform_entities: dict[
