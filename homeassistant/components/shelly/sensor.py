@@ -965,7 +965,6 @@ RPC_SENSORS: Final = {
         key="input",
         sub_key="xpercent",
         name="Analog value",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
