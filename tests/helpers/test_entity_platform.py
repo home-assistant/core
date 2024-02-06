@@ -1664,15 +1664,23 @@ async def test_register_entity_service_limited_to_matching_platforms(
     entity_platform = MockEntityPlatform(
         hass, domain="base_platform", platform_name="mock_platform", platform=None
     )
-    entity1 = MockEntity(entity_id=entity1_entry.entity_id)
-    entity2 = MockEntity(entity_id=entity2_entry.entity_id)
+    entity1 = MockEntity(
+        entity_id=entity1_entry.entity_id, unique_id=entity1_entry.unique_id
+    )
+    entity2 = MockEntity(
+        entity_id=entity2_entry.entity_id, unique_id=entity2_entry.unique_id
+    )
     await entity_platform.async_add_entities([entity1, entity2])
 
     other_entity_platform = MockEntityPlatform(
         hass, domain="base_platform", platform_name="other_mock_platform", platform=None
     )
-    entity3 = MockEntity(entity_id=entity3_entry.entity_id)
-    entity4 = MockEntity(entity_id=entity4_entry.entity_id)
+    entity3 = MockEntity(
+        entity_id=entity3_entry.entity_id, unique_id=entity3_entry.unique_id
+    )
+    entity4 = MockEntity(
+        entity_id=entity4_entry.entity_id, unique_id=entity4_entry.unique_id
+    )
     await other_entity_platform.async_add_entities([entity3, entity4])
 
     entity_platform.async_register_entity_service(
@@ -1693,11 +1701,11 @@ async def test_register_entity_service_limited_to_matching_platforms(
     # We should not target entity3 and entity4 even though they are in the area
     # because they are only part of the domain and not the platform
     assert response_data == {
-        "mock_integration.entity1": {
-            "response-key": "response-value-mock_integration.entity1"
+        "base_platform.entity1": {
+            "response-key": "response-value-base_platform.entity1"
         },
-        "mock_integration.entity2": {
-            "response-key": "response-value-mock_integration.entity2"
+        "base_platform.entity2": {
+            "response-key": "response-value-base_platform.entity2"
         },
     }
 
