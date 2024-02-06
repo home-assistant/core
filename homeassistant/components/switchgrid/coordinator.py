@@ -1,4 +1,5 @@
 """Coordinator for collecting Switchgrid data."""
+
 from asyncio import timeout
 import logging
 
@@ -42,6 +43,8 @@ class SwitchgridCoordinator(DataUpdateCoordinator[SwitchgridData]):
     def next_event(self) -> Event | None:
         """Return the next (first) upcoming event."""
         now = dt_util.now()
+        if self._data.data is None:
+            return None
         return next(
             (event for event in self._data.data.events if event.startUtc > now), None
         )

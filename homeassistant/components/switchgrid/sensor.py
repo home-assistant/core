@@ -1,4 +1,5 @@
 """Sensor platform for Switchgrid integration."""
+
 from datetime import datetime
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
