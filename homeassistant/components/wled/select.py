@@ -49,7 +49,6 @@ class WLEDLiveOverrideSelect(WLEDEntity, SelectEntity):
     """Defined a WLED Live Override select."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:theater"
     _attr_translation_key = "live_override"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
@@ -73,7 +72,6 @@ class WLEDLiveOverrideSelect(WLEDEntity, SelectEntity):
 class WLEDPresetSelect(WLEDEntity, SelectEntity):
     """Defined a WLED Preset select."""
 
-    _attr_icon = "mdi:playlist-play"
     _attr_translation_key = "preset"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
@@ -104,7 +102,6 @@ class WLEDPresetSelect(WLEDEntity, SelectEntity):
 class WLEDPlaylistSelect(WLEDEntity, SelectEntity):
     """Define a WLED Playlist select."""
 
-    _attr_icon = "mdi:play-speed"
     _attr_translation_key = "playlist"
 
     def __init__(self, coordinator: WLEDDataUpdateCoordinator) -> None:
@@ -138,7 +135,6 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
     """Defines a WLED Palette select."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:palette-outline"
     _attr_translation_key = "color_palette"
     _segment: int
 

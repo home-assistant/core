@@ -87,7 +87,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light Segment 1 speed',
-      'icon': 'mdi:speedometer',
       'max': 255,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -126,7 +125,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:speedometer',
+    'original_icon': None,
     'original_name': 'Segment 1 speed',
     'platform': 'wled',
     'previous_unique_id': None,

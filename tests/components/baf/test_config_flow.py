@@ -1,5 +1,4 @@
 """Test the baf config flow."""
-import asyncio
 from ipaddress import ip_address
 from unittest.mock import patch
 
@@ -55,7 +54,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with _patch_device_config_flow(asyncio.TimeoutError):
+    with _patch_device_config_flow(TimeoutError):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_IP_ADDRESS: "127.0.0.1"},

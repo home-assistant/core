@@ -41,6 +41,7 @@ from homeassistant.config_entries import current_entry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1263,14 +1264,8 @@ async def test_passive_bluetooth_entity_with_entity_platform(
     await hass.async_block_till_done()
     inject_bluetooth_service_info(hass, NO_DEVICES_BLUETOOTH_SERVICE_INFO_2)
     await hass.async_block_till_done()
-    assert (
-        hass.states.get("test_domain.test_platform_aa_bb_cc_dd_ee_ff_temperature")
-        is not None
-    )
-    assert (
-        hass.states.get("test_domain.test_platform_aa_bb_cc_dd_ee_ff_pressure")
-        is not None
-    )
+    assert hass.states.get("test_domain.temperature") is not None
+    assert hass.states.get("test_domain.pressure") is not None
     cancel_coordinator()
 
 
@@ -1765,3 +1760,82 @@ async def test_integration_multiple_entity_platforms_with_reload_and_restart(
     unregister_binary_sensor_processor()
     unregister_sensor_processor()
     await hass.async_stop()
+
+
+NAMING_PASSIVE_BLUETOOTH_DATA_UPDATE = PassiveBluetoothDataUpdate(
+    devices={
+        None: DeviceInfo(
+            name="Test Device", model="Test Model", manufacturer="Test Manufacturer"
+        ),
+    },
+    entity_data={
+        PassiveBluetoothEntityKey("temperature", None): 14.5,
+    },
+    entity_names={
+        PassiveBluetoothEntityKey("temperature", None): None,
+    },
+    entity_descriptions={
+        PassiveBluetoothEntityKey("temperature", None): SensorEntityDescription(
+            key="temperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+        ),
+    },
+)
+
+
+async def test_naming(
+    hass: HomeAssistant,
+    mock_bleak_scanner_start: MagicMock,
+    mock_bluetooth_adapters: None,
+) -> None:
+    """Test basic usage of the PassiveBluetoothProcessorCoordinator."""
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    @callback
+    def _mock_update_method(
+        service_info: BluetoothServiceInfo,
+    ) -> dict[str, str]:
+        return {"test": "data"}
+
+    coordinator = PassiveBluetoothProcessorCoordinator(
+        hass,
+        _LOGGER,
+        "aa:bb:cc:dd:ee:ff",
+        BluetoothScanningMode.ACTIVE,
+        _mock_update_method,
+    )
+    assert coordinator.available is False  # no data yet
+
+    sensor_processor = PassiveBluetoothDataProcessor(
+        lambda service_info: NAMING_PASSIVE_BLUETOOTH_DATA_UPDATE
+    )
+
+    coordinator.async_register_processor(sensor_processor)
+    cancel_coordinator = coordinator.async_start()
+
+    sensor_processor.async_add_listener(MagicMock())
+
+    mock_add_sensor_entities = MagicMock()
+
+    sensor_processor.async_add_entities_listener(
+        PassiveBluetoothProcessorEntity,
+        mock_add_sensor_entities,
+    )
+
+    inject_bluetooth_service_info(hass, GENERIC_BLUETOOTH_SERVICE_INFO)
+    # First call with just the remote sensor entities results in them being added
+    assert len(mock_add_sensor_entities.mock_calls) == 1
+
+    sensor_entities = [
+        *mock_add_sensor_entities.mock_calls[0][1][0],
+    ]
+
+    sensor_entity: PassiveBluetoothProcessorEntity = sensor_entities[0]
+    sensor_entity.hass = hass
+    assert sensor_entity.available is True
+    assert sensor_entity.name is UNDEFINED
+    assert sensor_entity.device_class is SensorDeviceClass.TEMPERATURE
+    assert sensor_entity.translation_key is None
+
+    cancel_coordinator()
