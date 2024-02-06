@@ -83,5 +83,5 @@ async def test_lawn_mower_commands(
             blocking=True,
         )
     assert (
-        str(exc_info.value) == "Command couldn't be sent to the command que: Test error"
+        str(exc_info.value) == "Command couldn't be sent to the command queue: Test error"
     )
