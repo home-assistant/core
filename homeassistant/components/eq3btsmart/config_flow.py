@@ -7,6 +7,7 @@ from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.const import CONF_MAC
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .schemas import SCHEMA_MAC
@@ -48,7 +49,7 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # We can not validate if this mac actually is an eQ-3 thermostat,
         # since the thermostat probably is not advertising right now.
-        return self.async_create_entry(title=mac_address, data=user_input)
+        return self.async_create_entry(title=slugify(mac_address), data=user_input)
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -81,7 +82,7 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=self.mac_address,
+            title=slugify(self.mac_address),
             data={
                 CONF_MAC: self.mac_address,
             },
