@@ -39,6 +39,7 @@ from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_ENTITIES,
     CONF_INCLUDE_DOMAINS,
     CONF_INCLUDE_ENTITIES,
+    EntityFilterDict,
 )
 from homeassistant.loader import async_get_integrations
 
@@ -124,7 +125,7 @@ DEFAULT_DOMAINS = [
     "water_heater",
 ]
 
-_EMPTY_ENTITY_FILTER: dict[str, list[str]] = {
+_EMPTY_ENTITY_FILTER: EntityFilterDict = {
     CONF_INCLUDE_DOMAINS: [],
     CONF_EXCLUDE_DOMAINS: [],
     CONF_INCLUDE_ENTITIES: [],
@@ -141,9 +142,9 @@ async def _async_domain_names(hass: HomeAssistant, domains: list[str]) -> str:
 
 
 @callback
-def _async_build_entites_filter(
+def _async_build_entities_filter(
     domains: list[str], entities: list[str]
-) -> dict[str, Any]:
+) -> EntityFilterDict:
     """Build an entities filter from domains and entities."""
     entity_filter = deepcopy(_EMPTY_ENTITY_FILTER)
     entity_filter[CONF_INCLUDE_ENTITIES] = entities
@@ -457,7 +458,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
-            entity_filter = _async_build_entites_filter(domains, entities)
+            entity_filter = _async_build_entities_filter(domains, entities)
             self.included_cameras = _async_cameras_from_entities(entities)
             self.hk_options[CONF_FILTER] = entity_filter
             if self.included_cameras:
@@ -497,7 +498,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         domains = self.hk_options[CONF_DOMAINS]
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
-            entity_filter = _async_build_entites_filter(domains, entities)
+            entity_filter = _async_build_entities_filter(domains, entities)
             self.included_cameras = _async_cameras_from_entities(entities)
             self.hk_options[CONF_FILTER] = entity_filter
             if self.included_cameras:
@@ -600,7 +601,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         self.hk_options = deepcopy(dict(self.config_entry.options))
         homekit_mode = self.hk_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
-        entity_filter = self.hk_options.get(CONF_FILTER, {})
+        entity_filter: EntityFilterDict = self.hk_options.get(CONF_FILTER, {})
         include_exclude_mode = MODE_INCLUDE
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
         if homekit_mode != HOMEKIT_MODE_ACCESSORY:
