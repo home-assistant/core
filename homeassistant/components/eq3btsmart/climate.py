@@ -1,13 +1,11 @@
 """Platform for eQ-3 climate entities."""
 
-from collections.abc import Callable
 import logging
 from typing import Any
 
 from eq3btsmart import Thermostat
 from eq3btsmart.const import EQ3BT_MAX_TEMP, EQ3BT_OFF_TEMP, Eq3Preset, OperationMode
 from eq3btsmart.exceptions import Eq3Exception
-from voluptuous import FalseInvalid
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -18,7 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import (
@@ -66,6 +64,22 @@ async def async_setup_entry(
 class Eq3Climate(Eq3Entity, ClimateEntity):
     """Climate entity to represent a eQ-3 thermostat."""
 
+    _attr_has_entity_name: bool = True
+    _attr_name: str | None = None
+    _attr_supported_features: ClimateEntityFeature = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _attr_temperature_unit: UnitOfTemperature = UnitOfTemperature.CELSIUS
+    _attr_min_temp: float = EQ3BT_OFF_TEMP
+    _attr_max_temp: float = EQ3BT_MAX_TEMP
+    _attr_precision: float = PRECISION_HALVES
+    _attr_hvac_modes: list[HVACMode] = list(HA_TO_EQ_HVAC.keys())
+    _attr_preset_modes: list[str] = list(Preset)
+    _attr_should_poll: bool = False
+
     def __init__(self, eq3_config: Eq3Config, thermostat: Thermostat) -> None:
         """Initialize the climate entity."""
 
@@ -74,26 +88,10 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         self._thermostat.register_update_callback(self._async_on_updated)
         self._target_temperature: float | None = None
         self._attr_available = False
-        self._cancel_timer: Callable[[], None] | None = None
-        self._attr_has_entity_name = True
-        self._attr_name = None
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.PRESET_MODE
-            | ClimateEntityFeature.TURN_OFF
-            | ClimateEntityFeature.TURN_ON
-        )
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-        self._attr_precision = PRECISION_TENTHS
         self._attr_hvac_mode: HVACMode | None = None
         self._attr_hvac_action: HVACAction | None = None
         self._attr_preset_mode: str | None = None
-        self._attr_hvac_modes = list(HA_TO_EQ_HVAC.keys())
-        self._attr_min_temp = EQ3BT_OFF_TEMP
-        self._attr_max_temp = EQ3BT_MAX_TEMP
-        self._attr_preset_modes = list(Preset)
         self._attr_unique_id = format_mac(self._eq3_config.mac_address)
-        self._attr_should_poll = FalseInvalid
         self._attr_device_info: DeviceInfo = DeviceInfo(
             name=self._eq3_config.name,
             manufacturer=MANUFACTURER,
