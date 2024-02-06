@@ -64,6 +64,7 @@ if TYPE_CHECKING:
     from .components.zeroconf import ZeroconfServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
 
+
 _LOGGER = logging.getLogger(__name__)
 
 SOURCE_BLUETOOTH = "bluetooth"
