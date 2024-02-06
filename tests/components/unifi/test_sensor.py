@@ -416,8 +416,8 @@ async def test_bandwidth_sensors(
         async_fire_time_changed(hass, new_time)
         await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.wireless_client_rx").state == "0"
-    assert hass.states.get("sensor.wireless_client_tx").state == "0"
+    assert hass.states.get("sensor.wireless_client_rx").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.wireless_client_tx").state == STATE_UNAVAILABLE
 
     # Disable option
 
