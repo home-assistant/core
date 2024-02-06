@@ -84,7 +84,10 @@ def async_setup_block_attribute_entities(
                 coordinator.device.settings, block
             ):
                 domain = sensor_class.__module__.split(".")[-1]
-                unique_id = f"{coordinator.mac}-{block.description}-{sensor_id}"
+                unique_id = f"{coordinator.mac}-{block.description}"
+                # Needed by entities created before moving to EntityDescription
+                if description.unique_appends_id:
+                    unique_id += f"-{sensor_id}"
                 async_remove_shelly_entity(hass, domain, unique_id)
             else:
                 entities.append(
@@ -191,11 +194,10 @@ def async_setup_rpc_attribute_entities(
                 coordinator.device.config, coordinator.device.status, key
             ):
                 domain = sensor_class.__module__.split(".")[-1]
-                unique_id = (
-                    f"{coordinator.mac}-{key}-{sensor_id}"
-                    if description.unique_appends_id
-                    else f"{coordinator.mac}-{key}"
-                )
+                unique_id = f"{coordinator.mac}-{key}"
+                # Needed by entities created before moving to EntityDescription
+                if description.unique_appends_id:
+                    unique_id += f"-{sensor_id}"
                 async_remove_shelly_entity(hass, domain, unique_id)
             elif description.use_polling_coordinator:
                 if not sleep_period:
@@ -285,6 +287,7 @@ class BlockEntityDescription(EntityDescription):
     # Callable (settings, block), return true if entity should be removed
     removal_condition: Callable[[dict, Block], bool] | None = None
     extra_state_attributes: Callable[[Block], dict | None] | None = None
+    unique_appends_id: bool = True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -439,7 +442,10 @@ class ShellyBlockAttributeEntity(ShellyBlockEntity, Entity):
         self.attribute = attribute
         self.entity_description = description
 
-        self._attr_unique_id: str = f"{super().unique_id}-{self.attribute}"
+        # Needed by entities created before moving to EntityDescription
+        if description.unique_appends_id:
+            self._attr_unique_id: str = f"{super().unique_id}-{self.attribute}"
+
         self._attr_name = get_block_entity_name(
             coordinator.device, block, description.name
         )
@@ -528,11 +534,10 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         self.attribute = attribute
         self.entity_description = description
 
-        self._attr_unique_id = (
-            f"{super().unique_id}-{attribute}"
-            if description.unique_appends_id
-            else f"{super().unique_id}"
-        )
+        # Needed by entities created before moving to EntityDescription
+        if description.unique_appends_id:
+            self._attr_unique_id = f"{super().unique_id}-{attribute}"
+
         self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
         self._last_value = None
         id_key = key.split(":")[-1]
