@@ -172,7 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @callback
     def async_save_refresh_token(refresh_token: str) -> None:
         """Save a refresh token to the config entry data."""
-        LOGGER.info("Saving new refresh token to HASS storage")
+        LOGGER.debug("Saving new refresh token to HASS storage")
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_REFRESH_TOKEN: refresh_token}
         )
