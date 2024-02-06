@@ -329,7 +329,7 @@ class Analytics:
                         response.status,
                         self.endpoint,
                     )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             LOGGER.error("Timeout sending analytics to %s", ANALYTICS_ENDPOINT_URL)
         except aiohttp.ClientError as err:
             LOGGER.error(

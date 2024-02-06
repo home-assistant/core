@@ -526,6 +526,9 @@ async def test_alexa_handle_logout(
         return_value=Mock(),
     ) as mock_enable:
         await aconf.async_enable_proactive_mode()
+        await hass.async_block_till_done()
+
+    assert len(aconf._on_deinitialize) == 5
 
     # This will trigger a prefs update when we logout.
     await cloud_prefs.get_cloud_user()
@@ -536,8 +539,13 @@ async def test_alexa_handle_logout(
         "async_check_token",
         side_effect=AssertionError("Should not be called"),
     ):
+        # Fake logging out; CloudClient.logout_cleanups sets username to None
+        # and deinitializes the Google config.
         await cloud_prefs.async_set_username(None)
+        aconf.async_deinitialize()
         await hass.async_block_till_done()
+        # Check listeners are removed:
+        assert not aconf._on_deinitialize
 
     assert len(mock_enable.return_value.mock_calls) == 1
 
@@ -551,7 +559,7 @@ async def test_alexa_config_migrate_expose_entity_prefs(
     alexa_settings_version: int,
 ) -> None:
     """Test migrating Alexa entity config."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set("light.state_only", "on")
@@ -649,7 +657,7 @@ async def test_alexa_config_migrate_expose_entity_prefs_v2_no_exposed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Alexa entity config from v2 to v3 when no entity is exposed."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set("light.state_only", "on")
@@ -696,7 +704,7 @@ async def test_alexa_config_migrate_expose_entity_prefs_v2_exposed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Alexa entity config from v2 to v3 when an entity is exposed."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set("light.state_only", "on")
@@ -744,7 +752,7 @@ async def test_alexa_config_migrate_expose_entity_prefs_default_none(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Alexa entity config."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     entity_default = entity_registry.async_get_or_create(
@@ -782,7 +790,7 @@ async def test_alexa_config_migrate_expose_entity_prefs_default(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Alexa entity config."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
 

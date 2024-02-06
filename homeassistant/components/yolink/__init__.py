@@ -130,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
     except YoLinkAuthFailError as yl_auth_err:
         raise ConfigEntryAuthFailed from yl_auth_err
-    except (YoLinkClientError, asyncio.TimeoutError) as err:
+    except (YoLinkClientError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
     device_coordinators = {}
