@@ -18,8 +18,6 @@ from .const import CLIENT_ID, CLIENT_SECRET, USER_ID
 
 from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
-TEST_MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
-
 
 @pytest.fixture(name="jwt")
 def load_jwt_fixture():

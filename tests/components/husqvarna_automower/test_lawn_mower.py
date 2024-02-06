@@ -1,6 +1,5 @@
 """Tests for lawn_mower module."""
 from datetime import timedelta
-import logging
 from unittest.mock import AsyncMock
 
 from aioautomower.exceptions import ApiException
@@ -21,8 +20,6 @@ from tests.common import (
     load_json_value_fixture,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 TEST_MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
@@ -41,32 +38,19 @@ async def test_lawn_mower_states(
     assert state is not None
     assert state.state == LawnMowerActivity.DOCKED
 
-    values[TEST_MOWER_ID].mower.activity = "UNKNOWN"
-    values[TEST_MOWER_ID].mower.state = "PAUSED"
-    mock_automower_client.get_status.return_value = values = values
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = hass.states.get("lawn_mower.test_mower_1")
-    assert state.state == LawnMowerActivity.PAUSED
-
-    values[TEST_MOWER_ID].mower.activity = "MOWING"
-    values[TEST_MOWER_ID].mower.state = "NOT_APPLICABLE"
-    mock_automower_client.get_status.return_value = values = values
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = hass.states.get("lawn_mower.test_mower_1")
-    assert state.state == LawnMowerActivity.MOWING
-
-    values[TEST_MOWER_ID].mower.activity = "NOT_APPLICABLE"
-    values[TEST_MOWER_ID].mower.state = "ERROR"
-    mock_automower_client.get_status.return_value = values = values
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = hass.states.get("lawn_mower.test_mower_1")
-    assert state.state == LawnMowerActivity.ERROR
+    for activity, state, expected_state in [
+        ("UNKNOWN", "PAUSED", LawnMowerActivity.PAUSED),
+        ("MOWING", "NOT_APPLICABLE", LawnMowerActivity.MOWING),
+        ("NOT_APPLICABLE", "ERROR", LawnMowerActivity.ERROR),
+    ]:
+        values[TEST_MOWER_ID].mower.activity = activity
+        values[TEST_MOWER_ID].mower.state = state
+        mock_automower_client.get_status.return_value = values
+        freezer.tick(timedelta(minutes=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        state = hass.states.get("lawn_mower.test_mower_1")
+        assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
