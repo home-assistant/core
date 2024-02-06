@@ -155,10 +155,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self.browse_unfiltered = browse_unfiltered
         self._device_lock = asyncio.Lock()
         self._background_setup_task: asyncio.Task[None] | None = None
+        self._updated_registry: bool = False
         # Device info will be updated when the device is connected
         self._attr_device_info = dr.DeviceInfo(
             connections={(dr.CONNECTION_UPNP, self.udn)},
-            default_name=name,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -374,9 +374,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not self.registry_entry or not self.registry_entry.config_entry_id:
             return  # No config registry entry to link to
 
-        if self.registry_entry.device_id and not set_mac:
+        if self.registry_entry.device_id and not set_mac and self._updated_registry:
             return  # No new information
 
+        self._updated_registry = True
         connections = set()
         # Connections based on the root device's UDN, and the DMR embedded
         # device's UDN. They may be the same, if the DMR is the root device.

@@ -1349,7 +1349,9 @@ async def test_unavailable_device(
         connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
-    assert device is None
+    assert device is not None
+    assert device.name is None
+    assert device.manufacturer is None
 
     # Unload config entry to clean up
     assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
@@ -1379,7 +1381,6 @@ async def test_become_available(
     # Cause connection attempts to fail before adding entity
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
     mock_entity_id = await setup_mock_component(hass, config_entry_mock)
-    await async_update_entity(hass, mock_entity_id)
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
@@ -1390,7 +1391,7 @@ async def test_become_available(
         connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
-    assert device is None
+    assert device is not None
 
     # Mock device is now available.
     domain_data_mock.upnp_factory.async_create_device.side_effect = None
