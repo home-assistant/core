@@ -4,13 +4,14 @@ from typing import Any
 
 from aioautomower.utils import async_structure_token
 
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, NAME
 
 _LOGGER = logging.getLogger(__name__)
+CONF_USER_ID = "user_id"
 
 
 class HusqvarnaConfigFlowHandler(

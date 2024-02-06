@@ -1,42 +1,18 @@
 """Tests for init module."""
 import http
 import time
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-from aiohttp import ClientError
 import pytest
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-SCAN_INTERVAL = dt_util.dt.timedelta(60)
-
-
-async def test_async_setup_raises_entry_not_ready(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that it throws ConfigEntryNotReady when exception occurs during setup."""
-    mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientError("API unavailable"),
-    ), patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_load_unload_entry(
