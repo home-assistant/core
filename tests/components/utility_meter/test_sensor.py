@@ -37,7 +37,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfElectricCurrent,
     UnitOfEnergy,
+    UnitOfVolume,
 )
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -551,7 +553,7 @@ async def test_entity_name(hass: HomeAssistant, yaml_config, entity_id, name) ->
         ),
     ),
 )
-async def test_device_class(
+async def test_device_class_by_unit(
     hass: HomeAssistant, yaml_config, config_entry_configs
 ) -> None:
     """Test utility device_class."""
@@ -1562,6 +1564,7 @@ def test_calculate_adjustment_invalid_new_state(
         periodically_resetting=True,
         sensor_always_available=False,
         unique_id="test_utility_meter",
+        device_class=None,
         source_entity="sensor.test",
         tariff=None,
         tariff_entity=None,
@@ -1682,3 +1685,194 @@ async def test_device_id(hass: HomeAssistant) -> None:
     utility_meter_no_tariffs_entity = entity_registry.async_get("sensor.energy")
     assert utility_meter_no_tariffs_entity is not None
     assert utility_meter_no_tariffs_entity.device_id == source_entity.device_id
+
+
+@pytest.mark.parametrize(
+    ("yaml_config", "config_entry_configs"),
+    (
+        (
+            {
+                "utility_meter": {
+                    "test_invalid_meter": {
+                        "source": "sensor.test_invalid_source",
+                    },
+                    "test_no_device_class_meter": {
+                        "source": "sensor.test_no_device_class_source",
+                    },
+                    "test_device_class_invalid_meter": {
+                        "source": "sensor.test_device_class_invalid_source",
+                    },
+                    "gas_meter": {
+                        "source": "sensor.gas_source",
+                        "net_consumption": True,
+                    },
+                    "water_meter": {
+                        "source": "sensor.water_source",
+                        "net_consumption": True,
+                    },
+                    "current_meter": {
+                        "source": "sensor.current_source",
+                        "net_consumption": True,
+                    },
+                }
+            },
+            None,
+        ),
+        (
+            None,
+            [
+                {
+                    "cycle": "none",
+                    "delta_values": False,
+                    "name": "Test invalid meter",
+                    "net_consumption": True,
+                    "offset": 0,
+                    "periodically_resetting": True,
+                    "source": "sensor.test_source",
+                    "tariffs": [],
+                },
+                {
+                    "cycle": "none",
+                    "delta_values": False,
+                    "name": "Test no device class meter",
+                    "net_consumption": True,
+                    "offset": 0,
+                    "periodically_resetting": True,
+                    "source": "sensor.test_no_device_class_source",
+                    "tariffs": [],
+                },
+                {
+                    "cycle": "none",
+                    "delta_values": False,
+                    "name": "Test device class invalid meter",
+                    "net_consumption": True,
+                    "offset": 0,
+                    "periodically_resetting": True,
+                    "source": "sensor.test_device_class_invalid_source",
+                    "tariffs": [],
+                },
+                {
+                    "cycle": "none",
+                    "delta_values": False,
+                    "name": "Gas meter",
+                    "net_consumption": True,
+                    "offset": 0,
+                    "periodically_resetting": True,
+                    "source": "sensor.gas_source",
+                    "tariffs": [],
+                },
+                {
+                    "cycle": "none",
+                    "delta_values": False,
+                    "name": "Water meter",
+                    "net_consumption": True,
+                    "offset": 0,
+                    "periodically_resetting": True,
+                    "source": "sensor.water_source",
+                    "tariffs": [],
+                },
+                {
+                    "cycle": "none",
+                    "delta_values": False,
+                    "name": "Current meter",
+                    "net_consumption": True,
+                    "offset": 0,
+                    "periodically_resetting": True,
+                    "source": "sensor.current_source",
+                    "tariffs": [],
+                },
+            ],
+        ),
+    ),
+)
+async def test_device_class_inherited(
+    hass: HomeAssistant, yaml_config, config_entry_configs
+) -> None:
+    """Test utility device_class inherited."""
+
+    hass.states.async_set(
+        "sensor.test_device_class_invalid_source",
+        2,
+        {
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.CUBIC_METERS,
+            ATTR_DEVICE_CLASS: "device_class_invalid",
+        },
+    )
+
+    hass.states.async_set(
+        "sensor.test_no_device_class_source",
+        2,
+        {
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.CUBIC_METERS,
+        },
+    )
+
+    hass.states.async_set(
+        "sensor.gas_source",
+        2,
+        {
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.CUBIC_METERS,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.GAS,
+        },
+    )
+
+    hass.states.async_set(
+        "sensor.water_source",
+        2,
+        {
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfVolume.CUBIC_METERS,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.WATER,
+        },
+    )
+
+    hass.states.async_set(
+        "sensor.current_source",
+        2,
+        {
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfElectricCurrent.AMPERE,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
+        },
+    )
+
+    if yaml_config:
+        assert await async_setup_component(hass, DOMAIN, yaml_config)
+        await hass.async_block_till_done()
+    else:
+        for config_entry_config in config_entry_configs:
+            config_entry = MockConfigEntry(
+                data={},
+                domain=DOMAIN,
+                options=config_entry_config,
+                title=config_entry_config["name"],
+            )
+            config_entry.add_to_hass(hass)
+            assert await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_invalid_meter")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+
+    state = hass.states.get("sensor.test_device_class_invalid_meter")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+
+    state = hass.states.get("sensor.test_no_device_class_meter")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+
+    state = hass.states.get("sensor.gas_meter")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.GAS
+
+    state = hass.states.get("sensor.water_meter")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.WATER
+
+    state = hass.states.get("sensor.current_meter")
+    assert state is not None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
