@@ -77,7 +77,7 @@ class RingDataCoordinator(DataUpdateCoordinator[dict[int, RingDeviceData]]):
                     try:
                         history_task = None
                         async with TaskGroup() as tg:
-                            if device.has_capability("history"):
+                            if hasattr(device, "history"):
                                 history_task = tg.create_task(
                                     _call_api(
                                         self.hass,
