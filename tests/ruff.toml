@@ -18,6 +18,7 @@ extend-ignore = [
     "PLE", # pylint
     "PLR", # pylint
     "PLW", # pylint
+    "B904", # Use raise from to specify exception cause
     "N815", # Variable {name} in class scope should not be mixedCase
 ]
 
