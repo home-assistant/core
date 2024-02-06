@@ -83,10 +83,10 @@ async def _run_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Run the thermostat."""
 
     eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][entry.entry_id]
-    thermostat: Thermostat = eq3_config_entry.thermostat
-    name: str = eq3_config_entry.eq3_config.name
-    mac_address: str = eq3_config_entry.eq3_config.mac_address
-    scan_interval: int = eq3_config_entry.eq3_config.scan_interval
+    thermostat = eq3_config_entry.thermostat
+    name = eq3_config_entry.eq3_config.name
+    mac_address = eq3_config_entry.eq3_config.mac_address
+    scan_interval = eq3_config_entry.eq3_config.scan_interval
 
     await _reconnect_thermostat(hass, entry)
 
@@ -120,10 +120,10 @@ async def _reconnect_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None
     """Reconnect the thermostat."""
 
     eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][entry.entry_id]
-    thermostat: Thermostat = eq3_config_entry.thermostat
-    mac_address: str = eq3_config_entry.eq3_config.mac_address
-    scan_interval: int = eq3_config_entry.eq3_config.scan_interval
-    name: str = eq3_config_entry.eq3_config.name
+    thermostat = eq3_config_entry.thermostat
+    mac_address = eq3_config_entry.eq3_config.mac_address
+    scan_interval = eq3_config_entry.eq3_config.scan_interval
+    name = eq3_config_entry.eq3_config.name
 
     while True:
         try:
