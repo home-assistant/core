@@ -233,7 +233,7 @@ aioeagle==1.1.0
 aioecowitt==2023.5.0
 
 # homeassistant.components.co2signal
-aioelectricitymaps==0.3.0
+aioelectricitymaps==0.3.1
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
@@ -535,7 +535,7 @@ beautifulsoup4==4.12.2
 # beewi-smartclim==0.0.10
 
 # homeassistant.components.zha
-bellows==0.37.6
+bellows==0.38.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
@@ -2429,7 +2429,7 @@ rfk101py==0.0.1
 rflink==0.0.65
 
 # homeassistant.components.ring
-ring-doorbell[listen]==0.8.6
+ring-doorbell[listen]==0.8.7
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
@@ -2757,7 +2757,7 @@ unifi_ap==0.0.1
 unifiled==0.11
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.15
+universal-silabs-flasher==0.0.18
 
 # homeassistant.components.upb
 upb-lib==0.5.4
@@ -2856,10 +2856,10 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.25.2
 
 # homeassistant.components.knx
-xknx==2.11.2
+xknx==2.12.0
 
 # homeassistant.components.knx
-xknxproject==3.4.0
+xknxproject==3.5.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -2889,7 +2889,7 @@ yeelight==0.7.14
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.3.6
+yolink-api==0.3.7
 
 # homeassistant.components.youless
 youless-api==1.0.1
@@ -2913,7 +2913,7 @@ zeroconf==0.131.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.110
+zha-quirks==0.0.111
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.9
@@ -2922,7 +2922,7 @@ zhong-hong-hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
-zigpy-deconz==0.22.4
+zigpy-deconz==0.23.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.20.1
@@ -2934,7 +2934,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.61.0
+zigpy==0.62.2
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
