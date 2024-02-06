@@ -569,7 +569,7 @@ filterwarnings = [
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:webrtcvad",
 ]
 
-[tool.ruff]
+[tool.ruff.lint]
 select = [
     "B002", # Python does not support the unary prefix increment
     "B007", # Loop control variable {name} not used within loop body
@@ -681,7 +681,7 @@ ignore = [
     "PLE0605",
 ]
 
-[tool.ruff.flake8-import-conventions.extend-aliases]
+[tool.ruff.lint.flake8-import-conventions.extend-aliases]
 voluptuous = "vol"
 "homeassistant.helpers.area_registry" = "ar"
 "homeassistant.helpers.config_validation" = "cv"
@@ -690,14 +690,14 @@ voluptuous = "vol"
 "homeassistant.helpers.issue_registry" = "ir"
 "homeassistant.util.dt" = "dt_util"
 
-[tool.ruff.flake8-pytest-style]
+[tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
 
-[tool.ruff.flake8-tidy-imports.banned-api]
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 force-sort-within-sections = true
 known-first-party = [
     "homeassistant",
@@ -705,12 +705,12 @@ known-first-party = [
 combine-as-imports = true
 split-on-trailing-comma = false
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 
 # Allow for main entry & scripts to write to stdout
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 25

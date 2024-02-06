@@ -1,6 +1,7 @@
 # This extend our general Ruff rules specifically for tests
 extend = "../pyproject.toml"
 
+[lint]
 extend-select = [
     "PT001", # Use @pytest.fixture without parentheses
     "PT002", # Configuration for fixture specified via positional args, use kwargs
@@ -20,7 +21,7 @@ extend-ignore = [
     "N815", # Variable {name} in class scope should not be mixedCase
 ]
 
-[isort]
+[lint.isort]
 known-first-party = [
     "homeassistant",
     "tests",
