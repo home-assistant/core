@@ -183,7 +183,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     RingSensorEntityDescription(
         key="last_activity",
         translation_key="last_activity",
-        category=["doorbots", "authorized_doorbots", "stickup_cams"],
+        category=["doorbots", "authorized_doorbots", "stickup_cams", "other"],
         icon="mdi:history",
         device_class=SensorDeviceClass.TIMESTAMP,
         cls=HistoryRingSensor,
@@ -191,7 +191,7 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription, ...] = (
     RingSensorEntityDescription(
         key="last_ding",
         translation_key="last_ding",
-        category=["doorbots", "authorized_doorbots"],
+        category=["doorbots", "authorized_doorbots", "other"],
         icon="mdi:history",
         kind="ding",
         device_class=SensorDeviceClass.TIMESTAMP,
