@@ -153,12 +153,6 @@ async def async_setup_entry(
     else:
         device_info = None
 
-    try:
-        device_class = get_device_class(hass, source_entity_id)
-    except HomeAssistantError:
-        # The entity no longer exists]
-        device_class = None
-
     cron_pattern = None
     delta_values = config_entry.options[CONF_METER_DELTA_VALUES]
     meter_offset = timedelta(days=config_entry.options[CONF_METER_OFFSET])
@@ -191,7 +185,6 @@ async def async_setup_entry(
             tariff_entity=tariff_entity,
             tariff=None,
             unique_id=entry_id,
-            device_class=device_class,
             device_info=device_info,
             sensor_always_available=sensor_always_available,
         )
@@ -213,7 +206,6 @@ async def async_setup_entry(
                 tariff_entity=tariff_entity,
                 tariff=tariff,
                 unique_id=f"{entry_id}_{tariff}",
-                device_class=device_class,
                 device_info=device_info,
                 sensor_always_available=sensor_always_available,
             )
@@ -259,12 +251,6 @@ async def async_setup_platform(
         conf_meter_name = hass.data[DATA_UTILITY][meter].get(CONF_NAME, meter)
         conf_sensor_tariff = conf.get(CONF_TARIFF)
 
-        try:
-            device_class = get_device_class(hass, conf_meter_source)
-        except HomeAssistantError:
-            # The entity no longer exists
-            device_class = None
-
         suggested_entity_id = None
         if conf_sensor_tariff:
             conf_sensor_name = f"{conf_meter_name} {conf_sensor_tariff}"
@@ -304,7 +290,6 @@ async def async_setup_platform(
             tariff_entity=conf_meter_tariff_entity,
             tariff=conf_sensor_tariff,
             unique_id=conf_sensor_unique_id,
-            device_class=device_class,
             suggested_entity_id=suggested_entity_id,
             sensor_always_available=conf_sensor_always_available,
         )
@@ -399,7 +384,6 @@ class UtilityMeterSensor(RestoreSensor):
         tariff_entity,
         tariff,
         unique_id,
-        device_class,
         sensor_always_available,
         suggested_entity_id=None,
         device_info=None,
@@ -417,7 +401,6 @@ class UtilityMeterSensor(RestoreSensor):
         self._collecting = None
         self._name = name
         self._unit_of_measurement = None
-        self._device_class = device_class
         self._period = meter_type
         if meter_type is not None:
             # For backwards compatibility reasons we convert the period and offset into a cron pattern
@@ -713,18 +696,24 @@ class UtilityMeterSensor(RestoreSensor):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        if self._device_class is None:
+        try:
+            device_class_source = get_device_class(self.hass, self._sensor_source_id)
+        except HomeAssistantError:
+            # The entity no longer exists]
+            device_class_source = None
+
+        if device_class_source is None:
             return DEVICE_CLASS_MAP.get(self._unit_of_measurement)
 
         # Inherits the source entity's class if it is compatible with the utility
         # meter entity's state class
-        device_class = try_parse_enum(SensorDeviceClass, self._device_class)
+        device_class = try_parse_enum(SensorDeviceClass, device_class_source)
         if (
             device_class is not None
             and (classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
             and self.state_class in classes
         ):
-            return self._device_class
+            return device_class_source
         return None
 
     @property
