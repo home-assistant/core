@@ -156,7 +156,7 @@ WALL_CONNECTOR_SENSORS = [
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda data: data[WALLCONNECTOR_DATA_VITALS].session_energy_wh,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     WallConnectorSensorDescription(
         key="energy_kWh",
