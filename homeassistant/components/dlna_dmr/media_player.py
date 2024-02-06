@@ -154,9 +154,15 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self.mac_address = mac_address
         self.browse_unfiltered = browse_unfiltered
         self._device_lock = asyncio.Lock()
+        self._background_setup_task: asyncio.Task[None] | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle addition."""
+        self._background_setup_task = self.hass.async_create_background_task(
+            self._async_setup(), f"dlna_dmr {self.name} setup"
+        )
+
+    async def _async_setup(self) -> None:
         # Update this entity when the associated config entry is modified
         if self.registry_entry and self.registry_entry.config_entry_id:
             config_entry = self.hass.config_entries.async_get_entry(
@@ -195,6 +201,12 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal."""
+        if self._background_setup_task:
+            self._background_setup_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._background_setup_task
+            self._background_setup_task = None
+
         await self._device_disconnect()
 
     async def async_ssdp_callback(
@@ -419,6 +431,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Retrieve the latest data."""
+        if self._background_setup_task:
+            await self._background_setup_task
+            self._background_setup_task = None
+
         if not self._device:
             if not self.poll_availability:
                 return
