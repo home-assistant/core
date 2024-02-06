@@ -983,6 +983,7 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
         if zha_device.model == "TRVZB":
             self._attr_native_max_value: float = 7
             self._attr_native_min_value: float = -7
+            self._attr_native_step: float = 0.2
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
