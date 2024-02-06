@@ -3,4 +3,4 @@
 from datetime import timedelta
 
 DOMAIN = "switchgrid"
-UPDATE_INTERVAL = timedelta(seconds=1)
+UPDATE_INTERVAL = timedelta(minutes=30)
