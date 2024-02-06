@@ -53,7 +53,10 @@ class MyUplinkDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 devices[device_id] = api_device_info
 
                 # Get device points (data)
-                api_device_points = await self.api.async_get_device_points(device_id)
+                api_device_points = await self.api.async_get_device_points(
+                    device_id,
+                    language=self.hass.config.language,
+                )
                 point_info: dict[str, DevicePoint] = {}
                 for point in api_device_points:
                     point_info[point.parameter_id] = point
