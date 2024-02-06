@@ -137,9 +137,29 @@
       "title": "Configured named holiday {remove_holidays} for {title} does not exist",
       "fix_flow": {
         "step": {
-          "named_holiday": {
+          "fix_remove_holiday": {
             "title": "[%key:component::workday::issues::bad_named_holiday::title%]",
             "description": "Remove named holiday `{remove_holidays}` as it can't be found in country {country}.",
+            "data": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]"
+            },
+            "data_description": {
+              "remove_holidays": "[%key:component::workday::config::step::options::data_description::remove_holidays%]"
+            }
+          }
+        },
+        "error": {
+          "remove_holiday_error": "[%key:component::workday::config::error::remove_holiday_error%]"
+        }
+      }
+    },
+    "bad_date_holiday": {
+      "title": "Configured holiday date {remove_holidays} for {title} does not exist",
+      "fix_flow": {
+        "step": {
+          "fix_remove_holiday": {
+            "title": "[%key:component::workday::issues::bad_date_holiday::title%]",
+            "description": "Remove holiday date `{remove_holidays}` as it can't be found in country {country}.",
             "data": {
               "remove_holidays": "[%key:component::workday::config::step::options::data::remove_holidays%]"
             },

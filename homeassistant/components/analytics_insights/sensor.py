@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -42,6 +43,20 @@ def get_core_integration_entity_description(
     )
 
 
+def get_custom_integration_entity_description(
+    domain: str,
+) -> AnalyticsSensorEntityDescription:
+    """Get custom integration entity description."""
+    return AnalyticsSensorEntityDescription(
+        key=f"custom_{domain}_active_installations",
+        translation_key="custom_integrations",
+        translation_placeholders={"custom_integration_domain": domain},
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement="active installations",
+        value_fn=lambda data: data.custom_integrations.get(domain),
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -50,15 +65,27 @@ async def async_setup_entry(
     """Initialize the entries."""
 
     analytics_data: AnalyticsInsightsData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
+    coordinator: HomeassistantAnalyticsDataUpdateCoordinator = (
+        analytics_data.coordinator
+    )
+    entities: list[HomeassistantAnalyticsSensor] = []
+    entities.extend(
         HomeassistantAnalyticsSensor(
-            analytics_data.coordinator,
+            coordinator,
             get_core_integration_entity_description(
                 integration_domain, analytics_data.names[integration_domain]
             ),
         )
-        for integration_domain in analytics_data.coordinator.data.core_integrations
+        for integration_domain in coordinator.data.core_integrations
     )
+    entities.extend(
+        HomeassistantAnalyticsSensor(
+            coordinator,
+            get_custom_integration_entity_description(integration_domain),
+        )
+        for integration_domain in coordinator.data.custom_integrations
+    )
+    async_add_entities(entities)
 
 
 class HomeassistantAnalyticsSensor(
@@ -67,6 +94,7 @@ class HomeassistantAnalyticsSensor(
     """Home Assistant Analytics Sensor."""
 
     _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     entity_description: AnalyticsSensorEntityDescription
 

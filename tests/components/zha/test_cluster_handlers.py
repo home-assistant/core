@@ -1,5 +1,4 @@
 """Test ZHA Core cluster handlers."""
-import asyncio
 from collections.abc import Callable
 import logging
 import math
@@ -564,12 +563,12 @@ async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
     ch_1 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
     ch_2 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
     ch_3 = cluster_handler(zha_const.CLUSTER_HANDLER_COLOR, 768)
-    ch_3.async_configure = AsyncMock(side_effect=asyncio.TimeoutError)
-    ch_3.async_initialize = AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_3.async_configure = AsyncMock(side_effect=TimeoutError)
+    ch_3.async_initialize = AsyncMock(side_effect=TimeoutError)
     ch_4 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
     ch_5 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
-    ch_5.async_configure = AsyncMock(side_effect=asyncio.TimeoutError)
-    ch_5.async_initialize = AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_5.async_configure = AsyncMock(side_effect=TimeoutError)
+    ch_5.async_initialize = AsyncMock(side_effect=TimeoutError)
 
     endpoint_mock = mock.MagicMock(spec_set=ZigpyEndpoint)
     type(endpoint_mock).in_clusters = mock.PropertyMock(return_value={})
@@ -959,7 +958,7 @@ async def test_quirk_id_cluster_handler(hass: HomeAssistant, caplog) -> None:
             zigpy.exceptions.ZigbeeException("Zigbee exception"),
             "Failed to send request: Zigbee exception",
         ),
-        (asyncio.TimeoutError(), "Failed to send request: device did not respond"),
+        (TimeoutError(), "Failed to send request: device did not respond"),
     ],
 )
 async def test_retry_request(
@@ -990,15 +989,9 @@ async def test_cluster_handler_naming() -> None:
         assert issubclass(client_cluster_handler, cluster_handlers.ClientClusterHandler)
         assert client_cluster_handler.__name__.endswith("ClientClusterHandler")
 
-    server_cluster_handlers = []
     for cluster_handler_dict in registries.ZIGBEE_CLUSTER_HANDLER_REGISTRY.values():
-        # remove this filter in the update platform PR
-        server_cluster_handlers += [
-            cluster_handler
-            for cluster_handler in cluster_handler_dict.values()
-            if cluster_handler.__name__ != "OtaClientClusterHandler"
-        ]
-
-    for cluster_handler in server_cluster_handlers:
-        assert not issubclass(cluster_handler, cluster_handlers.ClientClusterHandler)
-        assert cluster_handler.__name__.endswith("ClusterHandler")
+        for cluster_handler in cluster_handler_dict.values():
+            assert not issubclass(
+                cluster_handler, cluster_handlers.ClientClusterHandler
+            )
+            assert cluster_handler.__name__.endswith("ClusterHandler")
