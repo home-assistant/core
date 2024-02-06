@@ -146,8 +146,10 @@ def async_setup_rpc_entry(
             unique_id = f"{coordinator.mac}-switch:{id_}"
             async_remove_shelly_entity(hass, "switch", unique_id)
 
-    if climate_ids:
-        async_add_entities(RpcClimate(coordinator, id_) for id_ in climate_ids)
+    if not climate_ids:
+        return
+
+    async_add_entities(RpcClimate(coordinator, id_) for id_ in climate_key_ids)
 
     if blutrv_key_ids:
         async_add_entities(RpcBluTrvClimate(coordinator, id_) for id_ in blutrv_key_ids)
