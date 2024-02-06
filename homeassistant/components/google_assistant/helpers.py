@@ -105,6 +105,7 @@ class AbstractConfig(ABC):
         self._local_last_active: datetime | None = None
         self._local_sdk_version_warn = False
         self.is_supported_cache: dict[str, tuple[int | None, bool]] = {}
+        self._on_deinitialize: list[CALLBACK_TYPE] = []
 
     async def async_initialize(self) -> None:
         """Perform async initialization of config."""
@@ -118,7 +119,14 @@ class AbstractConfig(ABC):
             """Sync entities to Google."""
             await self.async_sync_entities_all()
 
-        start.async_at_start(self.hass, sync_google)
+        self._on_deinitialize.append(start.async_at_start(self.hass, sync_google))
+
+    @callback
+    def async_deinitialize(self) -> None:
+        """Remove listeners."""
+        _LOGGER.debug("async_deinitialize")
+        while self._on_deinitialize:
+            self._on_deinitialize.pop()()
 
     @property
     def enabled(self):
@@ -159,11 +167,16 @@ class AbstractConfig(ABC):
             and self._local_last_active > utcnow() - timedelta(seconds=70)
         )
 
-    def get_local_agent_user_id(self, webhook_id):
-        """Return the user ID to be used for actions received via the local SDK.
+    def get_local_user_id(self, webhook_id):
+        """Map webhook ID to a Home Assistant user ID.
 
-        Return None is no agent user id is found.
+        Any action inititated by Google Assistant via the local SDK will be attributed
+        to the returned user ID.
+
+        Return None if no user id is found for the webhook_id.
         """
+        # Note: The manually setup Google Assistant currently returns the Google agent
+        # user ID instead of a valid Home Assistant user ID
         found_agent_user_id = None
         for agent_user_id, agent_user_data in self._store.agent_user_ids.items():
             if agent_user_data[STORE_GOOGLE_LOCAL_WEBHOOK_ID] == webhook_id:
@@ -415,7 +428,7 @@ class AbstractConfig(ABC):
                 pprint.pformat(async_redact_request_msg(payload)),
             )
 
-        if (agent_user_id := self.get_local_agent_user_id(webhook_id)) is None:
+        if (agent_user_id := self.get_local_user_id(webhook_id)) is None:
             # No agent user linked to this webhook, means that the user has somehow unregistered
             # removing webhook and stopping processing of this request.
             _LOGGER.error(
