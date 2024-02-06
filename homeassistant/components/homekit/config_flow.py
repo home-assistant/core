@@ -76,7 +76,7 @@ DOMAINS_NEED_ACCESSORY_MODE = [
     MEDIA_PLAYER_DOMAIN,
     REMOTE_DOMAIN,
 ]
-NEVER_BRIDGED_DOMAINS = [CAMERA_DOMAIN]
+NEVER_BRIDGED_DOMAINS = {CAMERA_DOMAIN}
 
 CAMERA_ENTITY_PREFIX = f"{CAMERA_DOMAIN}."
 
@@ -197,7 +197,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_pairing()
 
         self.hk_data[CONF_HOMEKIT_MODE] = HOMEKIT_MODE_BRIDGE
-        default_domains = [] if self._async_current_names() else DEFAULT_DOMAINS
+        default_domains = (
+            [] if self._async_current_entries(include_ignore=False) else DEFAULT_DOMAINS
+        )
         name_to_type_map = await _async_name_to_type_map(self.hass)
         return self.async_show_form(
             step_id="user",
@@ -214,24 +216,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Pairing instructions."""
+        hk_data = self.hk_data
+
         if user_input is not None:
             port = async_find_next_available_port(self.hass, DEFAULT_CONFIG_FLOW_PORT)
             await self._async_add_entries_for_accessory_mode_entities(port)
-            self.hk_data[CONF_PORT] = port
-            include_domains_filter = self.hk_data[CONF_FILTER][CONF_INCLUDE_DOMAINS]
-            for domain in NEVER_BRIDGED_DOMAINS:
-                if domain in include_domains_filter:
-                    include_domains_filter.remove(domain)
+            hk_data[CONF_PORT] = port
+            conf_filter: EntityFilterDict = hk_data[CONF_FILTER]
+            conf_filter[CONF_INCLUDE_DOMAINS] = [
+                domain
+                for domain in conf_filter[CONF_INCLUDE_DOMAINS]
+                if domain not in NEVER_BRIDGED_DOMAINS
+            ]
             return self.async_create_entry(
-                title=f"{self.hk_data[CONF_NAME]}:{self.hk_data[CONF_PORT]}",
-                data=self.hk_data,
+                title=f"{hk_data[CONF_NAME]}:{hk_data[CONF_PORT]}",
+                data=hk_data,
             )
 
-        self.hk_data[CONF_NAME] = self._async_available_name(SHORT_BRIDGE_NAME)
-        self.hk_data[CONF_EXCLUDE_ACCESSORY_MODE] = True
+        hk_data[CONF_NAME] = self._async_available_name(SHORT_BRIDGE_NAME)
+        hk_data[CONF_EXCLUDE_ACCESSORY_MODE] = True
         return self.async_show_form(
             step_id="pairing",
-            description_placeholders={CONF_NAME: self.hk_data[CONF_NAME]},
+            description_placeholders={CONF_NAME: hk_data[CONF_NAME]},
         )
 
     async def _async_add_entries_for_accessory_mode_entities(
@@ -266,7 +272,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         state = self.hass.states.get(entity_id)
         assert state is not None
         name = state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id
-        entity_filter = _EMPTY_ENTITY_FILTER.copy()
+        entity_filter = deepcopy(_EMPTY_ENTITY_FILTER)
         entity_filter[CONF_INCLUDE_ENTITIES] = [entity_id]
 
         entry_data = {
@@ -361,26 +367,19 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Choose advanced options."""
-        if (
-            not self.show_advanced_options
-            or user_input is not None
-            or self.hk_options[CONF_HOMEKIT_MODE] != HOMEKIT_MODE_BRIDGE
-        ):
+        hk_options = self.hk_options
+        show_advanced_options = self.show_advanced_options
+        bridge_mode = hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE
+
+        if not show_advanced_options or user_input is not None or not bridge_mode:
             if user_input:
-                self.hk_options.update(user_input)
-                if (
-                    self.show_advanced_options
-                    and self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE
-                ):
-                    self.hk_options[CONF_DEVICES] = user_input[CONF_DEVICES]
+                hk_options.update(user_input)
+                if show_advanced_options and bridge_mode:
+                    hk_options[CONF_DEVICES] = user_input[CONF_DEVICES]
 
-            for key in (CONF_DOMAINS, CONF_ENTITIES):
-                if key in self.hk_options:
-                    del self.hk_options[key]
-
-            if CONF_INCLUDE_EXCLUDE_MODE in self.hk_options:
-                del self.hk_options[CONF_INCLUDE_EXCLUDE_MODE]
-
+            hk_options.pop(CONF_DOMAINS, None)
+            hk_options.pop(CONF_ENTITIES, None)
+            hk_options.pop(CONF_INCLUDE_EXCLUDE_MODE, None)
             return self.async_create_entry(title="", data=self.hk_options)
 
         all_supported_devices = await _async_get_supported_devices(self.hass)
@@ -405,8 +404,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Choose camera config."""
+        hk_options = self.hk_options
+        entity_config: dict[str, dict[str, Any]]
+
         if user_input is not None:
-            entity_config = self.hk_options[CONF_ENTITY_CONFIG]
+            entity_config = hk_options[CONF_ENTITY_CONFIG]
             for entity_id in self.included_cameras:
                 if entity_id in user_input[CONF_CAMERA_COPY]:
                     entity_config.setdefault(entity_id, {})[
@@ -428,7 +430,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         cameras_with_audio = []
         cameras_with_copy = []
-        entity_config = self.hk_options.setdefault(CONF_ENTITY_CONFIG, {})
+        entity_config = hk_options.setdefault(CONF_ENTITY_CONFIG, {})
         for entity in self.included_cameras:
             hk_entity_config = entity_config.get(entity, {})
             if hk_entity_config.get(CONF_VIDEO_CODEC) == VIDEO_CODEC_COPY:
@@ -454,18 +456,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Choose entity for the accessory."""
-        domains = self.hk_options[CONF_DOMAINS]
+        hk_options = self.hk_options
+        domains = hk_options[CONF_DOMAINS]
+        entity_filter: EntityFilterDict
 
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
             entity_filter = _async_build_entities_filter(domains, entities)
             self.included_cameras = _async_cameras_from_entities(entities)
-            self.hk_options[CONF_FILTER] = entity_filter
+            hk_options[CONF_FILTER] = entity_filter
             if self.included_cameras:
                 return await self.async_step_cameras()
             return await self.async_step_advanced()
 
-        entity_filter = self.hk_options.get(CONF_FILTER, {})
+        entity_filter = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
         all_supported_entities = _async_get_matching_entities(
             self.hass, domains, include_entity_category=True, include_hidden=True
@@ -495,17 +499,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Choose entities to include from the domain on the bridge."""
-        domains = self.hk_options[CONF_DOMAINS]
+        hk_options = self.hk_options
+        domains = hk_options[CONF_DOMAINS]
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
             entity_filter = _async_build_entities_filter(domains, entities)
             self.included_cameras = _async_cameras_from_entities(entities)
-            self.hk_options[CONF_FILTER] = entity_filter
+            hk_options[CONF_FILTER] = entity_filter
             if self.included_cameras:
                 return await self.async_step_cameras()
             return await self.async_step_advanced()
 
-        entity_filter = self.hk_options.get(CONF_FILTER, {})
+        entity_filter = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
 
         all_supported_entities = _async_get_matching_entities(
@@ -536,7 +541,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Choose entities to exclude from the domain on the bridge."""
-        domains = self.hk_options[CONF_DOMAINS]
+        hk_options = self.hk_options
+        domains = hk_options[CONF_DOMAINS]
 
         if user_input is not None:
             entity_filter = deepcopy(_EMPTY_ENTITY_FILTER)
@@ -553,7 +559,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     for entity_id in camera_entities
                     if entity_id not in entities
                 }
-            self.hk_options[CONF_FILTER] = entity_filter
+            hk_options[CONF_FILTER] = entity_filter
             if self.included_cameras:
                 return await self.async_step_cameras()
             return await self.async_step_advanced()
@@ -607,8 +613,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if homekit_mode != HOMEKIT_MODE_ACCESSORY:
             include_exclude_mode = MODE_INCLUDE if entities else MODE_EXCLUDE
         domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
-        include_entities = entity_filter.get(CONF_INCLUDE_ENTITIES)
-        if include_entities:
+        if include_entities := entity_filter.get(CONF_INCLUDE_ENTITIES):
             domains.extend(_domains_set_from_entities(include_entities))
         name_to_type_map = await _async_name_to_type_map(self.hass)
         return self.async_show_form(
@@ -709,7 +714,7 @@ def _async_get_entity_ids_for_accessory_mode(
 def _async_entity_ids_with_accessory_mode(hass: HomeAssistant) -> set[str]:
     """Return a set of entity ids that have config entries in accessory mode."""
 
-    entity_ids = set()
+    entity_ids: set[str] = set()
 
     current_entries = hass.config_entries.async_entries(DOMAIN)
     for entry in current_entries:
