@@ -25,7 +25,7 @@ class HusqvarnaConfigFlowHandler(
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow."""
         token = data[CONF_TOKEN]
-        user_id = token["user_id"]
+        user_id = token[CONF_USER_ID]
         structured_token = await async_structure_token(token["access_token"])
         first_name = structured_token.user.first_name
         last_name = structured_token.user.last_name
