@@ -69,6 +69,7 @@ class TrackedEntityDescriptor(NamedTuple):
 
     entity_id: str
     identifier: str
+    name: str
 
 
 def _device_info(coordinator: ProximityDataUpdateCoordinator) -> DeviceInfo:
@@ -95,13 +96,24 @@ async def async_setup_entry(
 
     entity_reg = er.async_get(hass)
     for tracked_entity_id in coordinator.tracked_entities:
+        tracked_entity_object_id = tracked_entity_id.split(".")[-1]
         if (entity_entry := entity_reg.async_get(tracked_entity_id)) is not None:
             tracked_entity_descriptors.append(
-                TrackedEntityDescriptor(tracked_entity_id, entity_entry.id)
+                TrackedEntityDescriptor(
+                    tracked_entity_id,
+                    entity_entry.id,
+                    entity_entry.name
+                    or entity_entry.original_name
+                    or tracked_entity_object_id,
+                )
             )
         else:
             tracked_entity_descriptors.append(
-                TrackedEntityDescriptor(tracked_entity_id, tracked_entity_id)
+                TrackedEntityDescriptor(
+                    tracked_entity_id,
+                    tracked_entity_id,
+                    tracked_entity_object_id,
+                )
             )
 
     entities += [
@@ -165,7 +177,7 @@ class ProximityTrackedEntitySensor(
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{tracked_entity_descriptor.identifier}_{description.key}"
         self._attr_device_info = _device_info(coordinator)
         self._attr_translation_placeholders = {
-            "tracked_entity": self.tracked_entity_id.split(".")[-1]
+            "tracked_entity": tracked_entity_descriptor.name
         }
 
     async def async_added_to_hass(self) -> None:
@@ -176,18 +188,19 @@ class ProximityTrackedEntitySensor(
         )
 
     @property
-    def data(self) -> dict[str, str | int | None] | None:
+    def data(self) -> dict[str, str | int | None]:
         """Get data from coordinator."""
-        return self.coordinator.data.entities.get(self.tracked_entity_id)
+        return self.coordinator.data.entities[self.tracked_entity_id]
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.data is not None
+        return (
+            super().available
+            and self.tracked_entity_id in self.coordinator.data.entities
+        )
 
     @property
     def native_value(self) -> str | float | None:
         """Return native sensor value."""
-        if self.data is None:
-            return None
         return self.data.get(self.entity_description.key)
