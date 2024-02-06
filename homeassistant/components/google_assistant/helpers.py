@@ -420,7 +420,7 @@ class AbstractConfig(ABC):
                 pprint.pformat(async_redact_request_msg(payload)),
             )
 
-        if (agent_user_id := self.get_local_agent_user_id(webhook_id)) is None:
+        if (agent_user_id := self.get_local_user_id(webhook_id)) is None:
             # No agent user linked to this webhook, means that the user has somehow unregistered
             # removing webhook and stopping processing of this request.
             _LOGGER.error(
