@@ -235,7 +235,7 @@ class CloudLogoutView(HomeAssistantView):
     async def post(self, request: web.Request) -> web.Response:
         """Handle logout request."""
         hass = request.app["hass"]
-        cloud = hass.data[DOMAIN]
+        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.logout()
@@ -262,7 +262,7 @@ class CloudRegisterView(HomeAssistantView):
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle registration request."""
         hass = request.app["hass"]
-        cloud = hass.data[DOMAIN]
+        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
         client_metadata = None
 
@@ -299,7 +299,7 @@ class CloudResendConfirmView(HomeAssistantView):
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle resending confirm email code request."""
         hass = request.app["hass"]
-        cloud = hass.data[DOMAIN]
+        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_resend_email_confirm(data["email"])
@@ -319,7 +319,7 @@ class CloudForgotPasswordView(HomeAssistantView):
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle forgot password request."""
         hass = request.app["hass"]
-        cloud = hass.data[DOMAIN]
+        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_forgot_password(data["email"])
@@ -338,7 +338,7 @@ async def websocket_cloud_status(
 
     Async friendly.
     """
-    cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     connection.send_message(
         websocket_api.result_message(msg["id"], await _account_data(hass, cloud))
     )
@@ -362,7 +362,7 @@ def _require_cloud_login(
         msg: dict[str, Any],
     ) -> None:
         """Require to be logged into the cloud."""
-        cloud = hass.data[DOMAIN]
+        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
         if not cloud.is_logged_in:
             connection.send_message(
                 websocket_api.error_message(
@@ -385,7 +385,7 @@ async def websocket_subscription(
     msg: dict[str, Any],
 ) -> None:
     """Handle request for account info."""
-    cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     if (data := await async_subscription_info(cloud)) is None:
         connection.send_error(
             msg["id"], "request_failed", "Failed to request subscription"
@@ -417,7 +417,7 @@ async def websocket_update_prefs(
     msg: dict[str, Any],
 ) -> None:
     """Handle request for account info."""
-    cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
     changes = dict(msg)
     changes.pop("id")
@@ -468,7 +468,7 @@ async def websocket_hook_create(
     msg: dict[str, Any],
 ) -> None:
     """Handle request for account info."""
-    cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     hook = await cloud.cloudhooks.async_create(msg["webhook_id"], False)
     connection.send_message(websocket_api.result_message(msg["id"], hook))
 
@@ -488,7 +488,7 @@ async def websocket_hook_delete(
     msg: dict[str, Any],
 ) -> None:
     """Handle request for account info."""
-    cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     await cloud.cloudhooks.async_delete(msg["webhook_id"])
     connection.send_message(websocket_api.result_message(msg["id"]))
 
@@ -557,7 +557,7 @@ async def websocket_remote_connect(
     msg: dict[str, Any],
 ) -> None:
     """Handle request for connect remote."""
-    cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     await cloud.client.prefs.async_update(remote_enabled=True)
     connection.send_result(msg["id"], await _account_data(hass, cloud))
 
@@ -573,7 +573,7 @@ async def websocket_remote_disconnect(
     msg: dict[str, Any],
 ) -> None:
     """Handle request for disconnect remote."""
-    cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     await cloud.client.prefs.async_update(remote_enabled=False)
     connection.send_result(msg["id"], await _account_data(hass, cloud))
 
@@ -594,7 +594,7 @@ async def google_assistant_get(
     msg: dict[str, Any],
 ) -> None:
     """Get data for a single google assistant entity."""
-    cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     gconf = await cloud.client.get_google_config()
     entity_id: str = msg["entity_id"]
     state = hass.states.get(entity_id)
@@ -642,7 +642,7 @@ async def google_assistant_list(
     msg: dict[str, Any],
 ) -> None:
     """List all google assistant entities."""
-    cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     gconf = await cloud.client.get_google_config()
     entities = google_helpers.async_get_entities(hass, gconf)
 
@@ -736,7 +736,7 @@ async def alexa_list(
     msg: dict[str, Any],
 ) -> None:
     """List all alexa entities."""
-    cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     alexa_config = await cloud.client.get_alexa_config()
     entities = alexa_entities.async_get_entities(hass, alexa_config)
 
@@ -764,7 +764,7 @@ async def alexa_sync(
     msg: dict[str, Any],
 ) -> None:
     """Sync with Alexa."""
-    cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     alexa_config = await cloud.client.get_alexa_config()
 
     async with asyncio.timeout(10):
@@ -794,7 +794,7 @@ async def thingtalk_convert(
     msg: dict[str, Any],
 ) -> None:
     """Convert a query."""
-    cloud = hass.data[DOMAIN]
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
 
     async with asyncio.timeout(10):
         try:
