@@ -5,7 +5,6 @@ from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
-    UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -31,11 +30,11 @@ async def async_setup_entry(
     coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Setup update entities
-    for device in coordinator.data.devices:
+    for device_id in coordinator.data.devices:
         entities.append(
             MyUplinkDeviceUpdate(
                 coordinator=coordinator,
-                device_id=device,
+                device_id=device_id,
                 entity_description=UPDATE_DESCRIPTION,
                 unique_id_suffix="upd",
             )
@@ -46,9 +45,6 @@ async def async_setup_entry(
 
 class MyUplinkDeviceUpdate(MyUplinkEntity, UpdateEntity):
     """Representation of a myUplink device update entity."""
-
-    _attr_supported_features = UpdateEntityFeature(0)
-    entity_description: UpdateEntityDescription
 
     def __init__(
         self,
@@ -65,7 +61,6 @@ class MyUplinkDeviceUpdate(MyUplinkEntity, UpdateEntity):
         )
 
         self.entity_description = entity_description
-        self._attr_name = "Update"
 
     @property
     def installed_version(self) -> str | None:
