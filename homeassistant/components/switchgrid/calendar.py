@@ -42,14 +42,18 @@ class SwitchgridCalendarEntity(
 
     @property
     def event(self) -> CalendarEvent | None:
-        """Return the next (first) upcoming event."""
+        """Return an eventual ongoing event."""
         now = dt_util.now()
-        ongoing_events = list(filter(lambda event: now <= event.start, self._events))
+        ongoing_events = list(
+            filter(lambda event: now >= event.start and now < event.end, self._events)
+        )
         return ongoing_events[0] if len(ongoing_events) > 0 else None
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        if self.coordinator.data is None:
+            return
         self._events = [
             CalendarEvent(
                 start=event.startUtc,
