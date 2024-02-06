@@ -100,8 +100,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from error
 
     # When the pet defined in Tractive has no tracker linked we get None as `trackable`.
-    # So we have to remove None values from trackables list.
-    trackables = [item for item in trackables if item]
+    # So we have to remove None values from trackables list. Additionally, we must omit
+    # trackables that do not have `details`, pets shared from another account do not
+    # contain details.
+    trackables = [item for item in trackables if item and "details" in item.trackable]
 
     hass.data[DOMAIN][entry.entry_id][CLIENT] = tractive
     hass.data[DOMAIN][entry.entry_id][TRACKABLES] = trackables
