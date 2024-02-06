@@ -77,7 +77,7 @@ class AutomowerLawnMowerEntity(LawnMowerEntity, AutomowerBaseEntity):
     ) -> None:
         """Set up HusqvarnaAutomowerEntity."""
         super().__init__(mower_id, coordinator)
-        self._attr_unique_id = f"{self.mower_id}_lawn_mower"
+        self._attr_unique_id = mower_id
 
     @property
     def available(self) -> bool:
