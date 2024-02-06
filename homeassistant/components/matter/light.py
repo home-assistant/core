@@ -333,7 +333,7 @@ class MatterLight(MatterEntity, LightEntity):
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
             # flag support for transition as soon as we support setting brightness and/or color
-            if len(supported_color_modes) > 1:
+            if supported_color_modes != {ColorMode.ONOFF}:
                 self._attr_supported_features |= LightEntityFeature.TRANSITION
 
             LOGGER.debug(
