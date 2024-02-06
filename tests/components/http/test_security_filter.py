@@ -1,4 +1,5 @@
 """Test security filter middleware."""
+import asyncio
 from http import HTTPStatus
 
 from aiohttp import web
@@ -75,7 +76,6 @@ async def test_bad_requests(
     fail_on_query_string,
     aiohttp_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    event_loop,
 ) -> None:
     """Test request paths that should be filtered."""
     app = web.Application()
@@ -93,7 +93,7 @@ async def test_bad_requests(
         man_params = ""
 
     http = urllib3.PoolManager()
-    resp = await event_loop.run_in_executor(
+    resp = await asyncio.get_running_loop().run_in_executor(
         None,
         http.request,
         "GET",
@@ -126,7 +126,6 @@ async def test_bad_requests_with_unsafe_bytes(
     fail_on_query_string,
     aiohttp_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    event_loop,
 ) -> None:
     """Test request with unsafe bytes in their URLs."""
     app = web.Application()
@@ -144,7 +143,7 @@ async def test_bad_requests_with_unsafe_bytes(
         man_params = ""
 
     http = urllib3.PoolManager()
-    resp = await event_loop.run_in_executor(
+    resp = await asyncio.get_running_loop().run_in_executor(
         None,
         http.request,
         "GET",

@@ -1,8 +1,6 @@
 """The Yale Access Bluetooth integration."""
 from __future__ import annotations
 
-import asyncio
-
 from yalexs_ble import (
     AuthError,
     ConnectionInfo,
@@ -10,6 +8,7 @@ from yalexs_ble import (
     LockState,
     PushLock,
     YaleXSBLEError,
+    close_stale_connections_by_address,
     local_name_is_unique,
 )
 
@@ -47,6 +46,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     id_ = local_name if has_unique_local_name else address
     push_lock.set_name(f"{entry.title} ({id_})")
 
+    # Ensure any lingering connections are closed since the device may not be
+    # advertising when its connected to another client which will prevent us
+    # from setting the device and setup will fail.
+    await close_stale_connections_by_address(address)
+
     @callback
     def _async_update_ble(
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -83,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await push_lock.wait_for_first_update(DEVICE_TIMEOUT)
     except AuthError as ex:
         raise ConfigEntryAuthFailed(str(ex)) from ex
-    except (YaleXSBLEError, asyncio.TimeoutError) as ex:
+    except (YaleXSBLEError, TimeoutError) as ex:
         raise ConfigEntryNotReady(
             f"{ex}; Try moving the Bluetooth adapter closer to {local_name}"
         ) from ex

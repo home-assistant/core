@@ -89,12 +89,13 @@ async def test_if_fires_on_entity_change(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
-async def test_if_fires_on_entity_change_uuid(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_on_entity_change_uuid(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, calls
+) -> None:
     """Test for firing on entity change."""
     context = Context()
 
-    registry = er.async_get(hass)
-    entry = registry.async_get_or_create(
+    entry = entity_registry.async_get_or_create(
         "test", "hue", "1234", suggested_object_id="beer"
     )
 

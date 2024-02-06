@@ -6,7 +6,7 @@ from py_nextbus import NextBusClient
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_STOP
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -15,7 +15,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .const import CONF_AGENCY, CONF_ROUTE, CONF_STOP, DOMAIN
+from .const import CONF_AGENCY, CONF_ROUTE, DOMAIN
+from .util import listify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +52,7 @@ def _get_stop_tags(
     title_counts = Counter(tags.values())
 
     stop_directions: dict[str, str] = {}
-    for direction in route_config["route"]["direction"]:
+    for direction in listify(route_config["route"]["direction"]):
         for stop in direction["stop"]:
             stop_directions[stop["tag"]] = direction["name"]
 

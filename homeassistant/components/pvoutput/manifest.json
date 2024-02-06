@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": ["pvo==2.0.0"]
+  "requirements": ["pvo==2.1.1"]
 }

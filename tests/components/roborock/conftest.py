@@ -12,7 +12,16 @@ from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .mock_data import BASE_URL, HOME_DATA, NETWORK_INFO, PROP, USER_DATA, USER_EMAIL
+from .mock_data import (
+    BASE_URL,
+    HOME_DATA,
+    MAP_DATA,
+    MULTI_MAP_LIST,
+    NETWORK_INFO,
+    PROP,
+    USER_DATA,
+    USER_EMAIL,
+)
 
 from tests.common import MockConfigEntry
 
@@ -34,15 +43,24 @@ def bypass_api_fixture() -> None:
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_prop",
         return_value=PROP,
     ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_multi_maps_list",
+        return_value=MULTI_MAP_LIST,
+    ), patch(
+        "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
+        return_value=MAP_DATA,
+    ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_message"
     ), patch(
         "homeassistant.components.roborock.RoborockMqttClient._wait_response"
     ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient._wait_response"
     ), patch(
-        "roborock.api.AttributeCache.async_value"
+        "roborock.api.AttributeCache.async_value",
     ), patch(
-        "roborock.api.AttributeCache.value"
+        "roborock.api.AttributeCache.value",
+    ), patch(
+        "homeassistant.components.roborock.image.MAP_SLEEP",
+        0,
     ):
         yield
 

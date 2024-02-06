@@ -55,7 +55,7 @@ async def test_devices_with_mocks(
 @pytest.mark.parametrize(
     ("exception", "error_msg"),
     [
-        (asyncio.TimeoutError, ERROR_MSG_NO_DEVICE_FOUND),
+        (TimeoutError, ERROR_MSG_NO_DEVICE_FOUND),
         (asyncio.exceptions.CancelledError, ERROR_MSG_CANNOT_CONNECT),
         (AddressInUseError, ERROR_MSG_ADDRESS_IN_USE),
     ],

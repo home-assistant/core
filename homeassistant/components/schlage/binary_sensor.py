@@ -20,7 +20,7 @@ from .coordinator import LockData, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class SchlageBinarySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -32,7 +32,7 @@ class SchlageBinarySensorEntityDescriptionMixin:
     value_fn: Callable[[LockData], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SchlageBinarySensorEntityDescription(
     BinarySensorEntityDescription, SchlageBinarySensorEntityDescriptionMixin
 ):

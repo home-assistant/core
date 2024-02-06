@@ -5,10 +5,12 @@ import asyncio
 from collections.abc import Callable, Hashable
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import TypeVarTuple
 
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.util.dt as dt_util
+
+_Ts = TypeVarTuple("_Ts")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,8 +61,8 @@ class KeyedRateLimit:
         key: Hashable,
         rate_limit: timedelta | None,
         now: datetime,
-        action: Callable,
-        *args: Any,
+        action: Callable[[*_Ts], None],
+        *args: *_Ts,
     ) -> datetime | None:
         """Check rate limits and schedule an action if we hit the limit.
 

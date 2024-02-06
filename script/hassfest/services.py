@@ -13,7 +13,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant.const import CONF_SELECTOR
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, selector, service
-from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml import load_yaml_dict
 
 from .model import Config, Integration
 
@@ -107,7 +107,7 @@ def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> bool
 def validate_services(config: Config, integration: Integration) -> None:
     """Validate services."""
     try:
-        data = load_yaml(str(integration.path / "services.yaml"))
+        data = load_yaml_dict(str(integration.path / "services.yaml"))
     except FileNotFoundError:
         # Find if integration uses services
         has_services = grep_dir(
@@ -122,7 +122,7 @@ def validate_services(config: Config, integration: Integration) -> None:
             )
         return
     except HomeAssistantError:
-        integration.add_error("services", "Unable to load services.yaml")
+        integration.add_error("services", "Invalid services.yaml")
         return
 
     try:

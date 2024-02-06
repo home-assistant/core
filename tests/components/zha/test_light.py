@@ -40,7 +40,10 @@ from .common import (
 )
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
-from tests.common import async_fire_time_changed
+from tests.common import (
+    async_fire_time_changed,
+    async_mock_load_restore_state_from_storage,
+)
 
 IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e9"
@@ -1921,3 +1924,76 @@ async def test_group_member_assume_state(
         await zha_gateway.async_remove_zigpy_group(zha_group.group_id)
         assert hass.states.get(group_entity_id) is None
         assert entity_registry.async_get(group_entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("restored_state", "expected_state"),
+    [
+        (
+            STATE_ON,
+            {
+                "brightness": None,
+                "off_with_transition": None,
+                "off_brightness": None,
+                "color_mode": ColorMode.XY,  # color_mode defaults to what the light supports when restored with ON state
+                "color_temp": None,
+                "xy_color": None,
+                "hs_color": None,
+                "effect": None,
+            },
+        ),
+        (
+            STATE_OFF,
+            {
+                "brightness": None,
+                "off_with_transition": None,
+                "off_brightness": None,
+                "color_mode": None,
+                "color_temp": None,
+                "xy_color": None,
+                "hs_color": None,
+                "effect": None,
+            },
+        ),
+    ],
+)
+async def test_restore_light_state(
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    core_rs,
+    zha_device_restored,
+    restored_state,
+    expected_state,
+) -> None:
+    """Test ZHA light restores without throwing an error when attributes are None."""
+
+    # restore state with None values
+    attributes = {
+        "brightness": None,
+        "off_with_transition": None,
+        "off_brightness": None,
+        "color_mode": None,
+        "color_temp": None,
+        "xy_color": None,
+        "hs_color": None,
+        "effect": None,
+    }
+
+    entity_id = "light.fakemanufacturer_fakemodel_light"
+    core_rs(
+        entity_id,
+        state=restored_state,
+        attributes=attributes,
+    )
+    await async_mock_load_restore_state_from_storage(hass)
+
+    zigpy_device = zigpy_device_mock(LIGHT_COLOR)
+    zha_device = await zha_device_restored(zigpy_device)
+    entity_id = find_entity_id(Platform.LIGHT, zha_device, hass)
+
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == restored_state
+
+    # compare actual restored state to expected state
+    for attribute, expected_value in expected_state.items():
+        assert hass.states.get(entity_id).attributes.get(attribute) == expected_value

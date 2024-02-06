@@ -13,9 +13,10 @@ from ..common import (
 )
 
 
-async def test_fan_add_feature_at_runtime(hass: HomeAssistant) -> None:
+async def test_fan_add_feature_at_runtime(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that new features can be added at runtime."""
-    entity_registry = er.async_get(hass)
 
     # Set up a basic fan that does not support oscillation
     accessories = await setup_accessories_from_file(
@@ -55,9 +56,10 @@ async def test_fan_add_feature_at_runtime(hass: HomeAssistant) -> None:
     assert fan_state.attributes[ATTR_SUPPORTED_FEATURES] is FanEntityFeature.SET_SPEED
 
 
-async def test_fan_remove_feature_at_runtime(hass: HomeAssistant) -> None:
+async def test_fan_remove_feature_at_runtime(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test that features can be removed at runtime."""
-    entity_registry = er.async_get(hass)
 
     # Set up a basic fan that does not support oscillation
     accessories = await setup_accessories_from_file(
@@ -97,9 +99,11 @@ async def test_fan_remove_feature_at_runtime(hass: HomeAssistant) -> None:
     assert fan_state.attributes[ATTR_SUPPORTED_FEATURES] is FanEntityFeature.SET_SPEED
 
 
-async def test_bridge_with_two_fans_one_removed(hass: HomeAssistant) -> None:
+async def test_bridge_with_two_fans_one_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test a bridge with two fans and one gets removed."""
-    entity_registry = er.async_get(hass)
 
     # Set up a basic fan that does not support oscillation
     accessories = await setup_accessories_from_file(

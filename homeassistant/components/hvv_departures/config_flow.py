@@ -150,7 +150,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             try:
                 departure_list = await hub.gti.departureList(
                     {
-                        "station": self.config_entry.data[CONF_STATION],
+                        "station": {
+                            "type": "STATION",
+                            "id": self.config_entry.data[CONF_STATION].get("id"),
+                        },
                         "time": {"date": "heute", "time": "jetzt"},
                         "maxList": 5,
                         "maxTimeOffset": 200,

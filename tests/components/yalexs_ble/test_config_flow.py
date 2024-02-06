@@ -958,7 +958,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             result2["flow_id"],
             {
                 CONF_KEY: "2fd51b8621c6a139eaffbedcb846b60f",
-                CONF_SLOT: 66,
+                CONF_SLOT: 67,
             },
         )
         await hass.async_block_till_done()

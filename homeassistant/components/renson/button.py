@@ -21,14 +21,14 @@ from .const import DOMAIN
 from .entity import RensonEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RensonButtonEntityDescriptionMixin:
     """Action function called on press."""
 
     action_fn: Callable[[RensonVentilation], None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RensonButtonEntityDescription(
     ButtonEntityDescription, RensonButtonEntityDescriptionMixin
 ):
@@ -47,6 +47,12 @@ ENTITY_DESCRIPTIONS: tuple[RensonButtonEntityDescription, ...] = (
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         action_fn=lambda api: api.restart_device(),
+    ),
+    RensonButtonEntityDescription(
+        key="reset_filter",
+        translation_key="reset_filter",
+        entity_category=EntityCategory.CONFIG,
+        action_fn=lambda api: api.reset_filter(),
     ),
 )
 
