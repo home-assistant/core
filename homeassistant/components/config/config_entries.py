@@ -49,7 +49,6 @@ async def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, config_entries_subscribe)
     websocket_api.async_register_command(hass, config_entries_progress)
     websocket_api.async_register_command(hass, ignore_config_flow)
-    websocket_api.async_register_command(hass, supports_multiple_entries)
 
     return True
 
@@ -270,24 +269,6 @@ def config_entries_progress(
             for flw in hass.config_entries.flow.async_progress()
             if flw["context"]["source"] != config_entries.SOURCE_USER
         ],
-    )
-
-
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "config_entries/supports_multiple",
-        vol.Required("integration"): str,
-    }
-)
-@websocket_api.async_response
-async def supports_multiple_entries(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Check if an integration supports multiple entries."""
-    connection.send_result(
-        msg["id"],
-        await config_entries.async_support_multiple_entries(hass, msg["integration"]),
     )
 
 

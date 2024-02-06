@@ -178,6 +178,7 @@ class Manifest(TypedDict, total=False):
     version: str
     codeowners: list[str]
     loggers: list[str]
+    single_instance_only: bool
 
 
 def async_setup(hass: HomeAssistant) -> None:
@@ -366,6 +367,9 @@ async def async_get_integration_descriptions(
             "integration_type": integration.integration_type,
             "iot_class": integration.iot_class,
             "name": integration.name,
+            "single_instance_only": integration.manifest.get(
+                "single_instance_only", False
+            ),
         }
         custom_flows[integration_key][integration.domain] = metadata
 

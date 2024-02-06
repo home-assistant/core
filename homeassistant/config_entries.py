@@ -1755,9 +1755,6 @@ def _async_abort_entries_match(
 class ConfigFlow(data_entry_flow.FlowHandler):
     """Base class for config flows with some helpers."""
 
-    # Indicates whether we support multiple config entries or not
-    supports_multiple_entries: bool = True
-
     def __init_subclass__(cls, *, domain: str | None = None, **kwargs: Any) -> None:
         """Initialize a subclass, register if possible."""
         super().__init_subclass__(**kwargs)
@@ -2375,9 +2372,3 @@ async def _async_get_flow_handler(
         return handler
 
     raise data_entry_flow.UnknownHandler
-
-
-async def async_support_multiple_entries(hass: HomeAssistant, domain: str) -> bool:
-    """Test if a domain supports multiple entries."""
-    handler = await _async_get_flow_handler(hass, domain, {})
-    return handler.supports_multiple_entries
