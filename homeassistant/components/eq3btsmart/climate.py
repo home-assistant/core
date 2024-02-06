@@ -40,7 +40,7 @@ from .const import (
     Preset,
     TargetTemperatureSelector,
 )
-from .entity import Entity
+from .entity import Eq3Entity
 from .models import Eq3Config, Eq3ConfigEntryData
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,24 +60,24 @@ async def async_setup_entry(
     )
 
 
-class Eq3Climate(Entity, ClimateEntity):
+class Eq3Climate(Eq3Entity, ClimateEntity):
     """Climate entity to represent a eQ-3 thermostat."""
 
-    _attr_has_entity_name: bool = True
-    _attr_name: str | None = None
-    _attr_supported_features: ClimateEntityFeature = (
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit: UnitOfTemperature = UnitOfTemperature.CELSIUS
-    _attr_min_temp: float = EQ3BT_OFF_TEMP
-    _attr_max_temp: float = EQ3BT_MAX_TEMP
-    _attr_precision: float = PRECISION_HALVES
-    _attr_hvac_modes: list[HVACMode] = list(HA_TO_EQ_HVAC.keys())
-    _attr_preset_modes: list[str] = list(Preset)
-    _attr_should_poll: bool = False
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_min_temp = EQ3BT_OFF_TEMP
+    _attr_max_temp = EQ3BT_MAX_TEMP
+    _attr_precision = PRECISION_HALVES
+    _attr_hvac_modes = list(HA_TO_EQ_HVAC.keys())
+    _attr_preset_modes = list(Preset)
+    _attr_should_poll = False
 
     def __init__(self, eq3_config: Eq3Config, thermostat: Thermostat) -> None:
         """Initialize the climate entity."""
@@ -86,11 +86,11 @@ class Eq3Climate(Entity, ClimateEntity):
 
         self._target_temperature: float | None = None
         self._attr_available = False
-        self._attr_hvac_mode: HVACMode | None = None
-        self._attr_hvac_action: HVACAction | None = None
-        self._attr_preset_mode: str | None = None
+        self._attr_hvac_mode = None
+        self._attr_hvac_action = None
+        self._attr_preset_mode = None
         self._attr_unique_id = format_mac(self._eq3_config.mac_address)
-        self._attr_device_info: DeviceInfo = DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             name=self._eq3_config.name,
             manufacturer=MANUFACTURER,
             model=DEVICE_MODEL,
@@ -114,6 +114,11 @@ class Eq3Climate(Entity, ClimateEntity):
                 self.hass, SIGNAL_THERMOSTAT_CONNECTED, self._async_on_connected
             )
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+
+        self._thermostat.unregister_update_callback(self._async_on_updated)
 
     @callback
     def _async_on_disconnected(self, mac_address: str) -> None:
@@ -285,21 +290,12 @@ class Eq3Climate(Entity, ClimateEntity):
         """Set new target hvac mode."""
 
         if hvac_mode == HVACMode.OFF:
-            self._target_temperature = EQ3BT_OFF_TEMP
             await self.async_set_temperature(temperature=EQ3BT_OFF_TEMP)
-
-        previous_mode = self.hvac_mode
-        self._attr_hvac_mode = hvac_mode
-
-        self.async_schedule_update_ha_state()
 
         try:
             await self._thermostat.async_set_mode(HA_TO_EQ_HVAC[hvac_mode])
         except Eq3Exception:
             _LOGGER.error("[%s] Failed setting HVAC mode", self._eq3_config.name)
-            self._attr_hvac_mode = previous_mode
-
-        self.async_schedule_update_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -315,6 +311,3 @@ class Eq3Climate(Entity, ClimateEntity):
                 await self._thermostat.async_set_preset(Eq3Preset.COMFORT)
             case Preset.OPEN:
                 await self._thermostat.async_set_mode(OperationMode.ON)
-
-        if self._thermostat.status is not None:
-            self._target_temperature = self._thermostat.status.target_temperature.value

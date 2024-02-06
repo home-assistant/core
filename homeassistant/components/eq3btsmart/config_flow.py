@@ -9,7 +9,7 @@ from homeassistant.const import CONF_MAC, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_RSSI, DOMAIN
+from .const import DOMAIN
 from .schemas import SCHEMA_NAME, SCHEMA_NAME_MAC
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +23,6 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.name = ""
         self.mac = ""
-        self.rssi = 0
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -71,14 +70,12 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.name = discovery_info.device.name or discovery_info.name
         self.mac = discovery_info.address
-        self.rssi = discovery_info.rssi
 
         self.context.update(
             {
                 "title_placeholders": {
                     CONF_NAME: self.name,
                     CONF_MAC: self.mac,
-                    CONF_RSSI: self.rssi,
                 }
             }
         )
@@ -98,7 +95,6 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 description_placeholders={
                     CONF_NAME: self.name,
                     CONF_MAC: self.mac,
-                    CONF_RSSI: str(self.rssi),
                 },
             )
 

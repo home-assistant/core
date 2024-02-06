@@ -132,7 +132,7 @@ async def _reconnect_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None
             await asyncio.sleep(scan_interval)
             continue
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "[%s] eQ-3 device connected",
             name,
         )

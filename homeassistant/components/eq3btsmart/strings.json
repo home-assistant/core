@@ -6,7 +6,7 @@
     "error": {
       "cannot_connect": "Failed to connect"
     },
-    "flow_title": "{name} [{mac}] {rssi}dB",
+    "flow_title": "{name} [{mac}]",
     "step": {
       "user": {
         "title": "Fill in your EQ3 information",
@@ -17,7 +17,7 @@
       },
       "init": {
         "title": "Fill in your EQ3 information",
-        "description": "{name} [{mac}] {rssi}dB",
+        "description": "{name} [{mac}]",
         "data": {
           "name": "Name given to the thermostat"
         }
