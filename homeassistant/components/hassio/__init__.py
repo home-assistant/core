@@ -749,8 +749,6 @@ def async_remove_addons_from_dev_reg(
 class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Class to retrieve Hass.io status."""
 
-    config_entry: ConfigEntry
-
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, dev_reg: dr.DeviceRegistry
     ) -> None:
