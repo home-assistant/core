@@ -23,5 +23,5 @@
   "iot_class": "local_polling",
   "loggers": ["eq3btsmart"],
   "quality_scale": "silver",
-  "requirements": ["eq3btsmart==1.1.5", "bleak-esphome==0.4.1"]
+  "requirements": ["eq3btsmart==1.1.6", "bleak-esphome==0.4.1"]
 }

@@ -47,12 +47,6 @@ class Preset(str, Enum):
     WINDOW_OPEN = "Window"
 
 
-CONF_ADAPTER = "conf_adapter"
-CONF_CURRENT_TEMP_SELECTOR = "conf_current_temp_selector"
-CONF_TARGET_TEMP_SELECTOR = "conf_target_temp_selector"
-CONF_EXTERNAL_TEMP_SENSOR = "conf_external_temp_sensor"
-
-
 class CurrentTemperatureSelector(str, Enum):
     """Selector for current temperature."""
 

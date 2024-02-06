@@ -27,6 +27,7 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import slugify
 
 from .const import (
     DEVICE_MODEL,
@@ -91,7 +92,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         self._attr_preset_mode = None
         self._attr_unique_id = format_mac(self._eq3_config.mac_address)
         self._attr_device_info = DeviceInfo(
-            name=self._eq3_config.name,
+            name=slugify(self._eq3_config.mac_address),
             manufacturer=MANUFACTURER,
             model=DEVICE_MODEL,
             sw_version=None,
@@ -106,12 +107,16 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_THERMOSTAT_DISCONNECTED, self._async_on_disconnected
+                self.hass,
+                f"{SIGNAL_THERMOSTAT_DISCONNECTED}_{self._eq3_config.mac_address}",
+                self._async_on_disconnected,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass, SIGNAL_THERMOSTAT_CONNECTED, self._async_on_connected
+                self.hass,
+                f"{SIGNAL_THERMOSTAT_CONNECTED}_{self._eq3_config.mac_address}",
+                self._async_on_connected,
             )
         )
 
@@ -121,16 +126,14 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         self._thermostat.unregister_update_callback(self._async_on_updated)
 
     @callback
-    def _async_on_disconnected(self, mac_address: str) -> None:
-        if mac_address == self._eq3_config.mac_address:
-            self._attr_available = False
-            self.async_write_ha_state()
+    def _async_on_disconnected(self) -> None:
+        self._attr_available = False
+        self.async_write_ha_state()
 
     @callback
-    def _async_on_connected(self, mac_address: str) -> None:
-        if mac_address == self._eq3_config.mac_address:
-            self._attr_available = True
-            self.async_write_ha_state()
+    def _async_on_connected(self) -> None:
+        self._attr_available = True
+        self.async_write_ha_state()
 
     @callback
     def _async_on_updated(self) -> None:
@@ -255,47 +258,47 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         """Set new target temperature."""
 
         if ATTR_HVAC_MODE in kwargs:
-            mode = kwargs.get(ATTR_HVAC_MODE)
-
-            if mode is None:
+            mode: HVACMode | None
+            if (mode := kwargs.get(ATTR_HVAC_MODE)) is None:
                 return
 
-            if mode == HVACMode.OFF:
+            if mode is not HVACMode.OFF:
+                await self.async_set_hvac_mode(mode)
+            else:
                 raise ServiceValidationError(
-                    f"[{self._eq3_config.name}] Can't change HVAC mode to off while changing temperature",
+                    f"[{self._eq3_config.mac_address}] Can't change HVAC mode to off while changing temperature",
                 )
 
-            await self.async_set_hvac_mode(mode)
-
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-
-        if temperature is None:
+        temperature: float | None
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         previous_temperature = self._target_temperature
         self._target_temperature = temperature
 
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
 
         try:
             await self._thermostat.async_set_temperature(self._target_temperature)
         except Eq3Exception:
-            _LOGGER.error("[%s] Failed setting temperature", self._eq3_config.name)
+            _LOGGER.error(
+                "[%s] Failed setting temperature", self._eq3_config.mac_address
+            )
             self._target_temperature = previous_temperature
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
         except ValueError as ex:
             raise ServiceValidationError("Invalid temperature") from ex
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
-        if hvac_mode == HVACMode.OFF:
+        if hvac_mode is HVACMode.OFF:
             await self.async_set_temperature(temperature=EQ3BT_OFF_TEMP)
 
         try:
             await self._thermostat.async_set_mode(HA_TO_EQ_HVAC[hvac_mode])
         except Eq3Exception:
-            _LOGGER.error("[%s] Failed setting HVAC mode", self._eq3_config.name)
+            _LOGGER.error("[%s] Failed setting HVAC mode", self._eq3_config.mac_address)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

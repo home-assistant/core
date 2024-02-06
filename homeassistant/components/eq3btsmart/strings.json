@@ -3,24 +3,16 @@
     "abort": {
       "already_configured": "Device is already configured"
     },
-    "error": {
-      "cannot_connect": "Failed to connect"
-    },
-    "flow_title": "{name} [{mac}]",
+    "flow_title": "eQ-3 Device [{mac}]",
     "step": {
       "user": {
-        "title": "Fill in your EQ3 information",
+        "title": "Configure new eQ-3 device",
         "data": {
-          "name": "Name given to the thermostat",
           "mac": "MAC address"
         }
       },
       "init": {
-        "title": "Fill in your EQ3 information",
-        "description": "{name} [{mac}]",
-        "data": {
-          "name": "Name given to the thermostat"
-        }
+        "title": "Configure new eQ-3 device"
       }
     }
   }

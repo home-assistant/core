@@ -19,7 +19,6 @@ class Eq3Config:
     """Config for a single eQ-3 device."""
 
     mac_address: str
-    name: str
     current_temp_selector: CurrentTemperatureSelector = DEFAULT_CURRENT_TEMP_SELECTOR
     target_temp_selector: TargetTemperatureSelector = DEFAULT_TARGET_TEMP_SELECTOR
     external_temp_sensor: str = ""

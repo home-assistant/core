@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 
-from .const import MAC, NAME, RSSI
+from .const import MAC
 
 from tests.components.bluetooth import generate_ble_device
 
@@ -20,22 +20,22 @@ def mock_bluetooth(enable_bluetooth):
 def fake_service_info():
     """Return a BluetoothServiceInfoBleak for use in testing."""
     return BluetoothServiceInfoBleak(
-        name=NAME,
+        name="CC-RT-BLE",
         address=MAC,
-        rssi=RSSI,
+        rssi=0,
         manufacturer_data={},
         service_data={},
         service_uuids=[],
         source="local",
         connectable=False,
         time=0,
-        device=generate_ble_device(address=MAC, name=NAME, rssi=RSSI),
+        device=generate_ble_device(address=MAC, name="CC-RT-BLE", rssi=0),
         advertisement=AdvertisementData(
-            local_name=NAME,
+            local_name="CC-RT-BLE",
             manufacturer_data={},
             service_data={},
             service_uuids=[],
-            rssi=RSSI,
+            rssi=0,
             tx_power=-127,
             platform_data=(),
         ),

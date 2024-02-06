@@ -9,7 +9,7 @@ from eq3btsmart.thermostat_config import ThermostatConfig
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_NAME, Platform
+from homeassistant.const import CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -28,24 +28,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle config entry setup."""
 
     mac_address: str = entry.data[CONF_MAC]
-    name: str = entry.data[CONF_NAME]
 
     eq3_config = Eq3Config(
         mac_address=mac_address,
-        name=name,
     )
 
     device = bluetooth.async_ble_device_from_address(
-        hass, mac_address, connectable=True
+        hass, mac_address.upper(), connectable=True
     )
 
     if device is None:
-        raise ConfigEntryNotReady(f"[{eq3_config.name}] Device could not be found")
+        raise ConfigEntryNotReady(
+            f"[{eq3_config.mac_address}] Device could not be found"
+        )
 
     thermostat = Thermostat(
         thermostat_config=ThermostatConfig(
             mac_address=mac_address,
-            name=name,
         ),
         ble_device=device,
     )
@@ -57,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_create_background_task(
-        hass, _run_thermostat(hass, entry), entry.entry_id
+        hass, _async_run_thermostat(hass, entry), entry.entry_id
     )
 
     return True
@@ -79,16 +78,15 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def _run_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_run_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Run the thermostat."""
 
     eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][entry.entry_id]
     thermostat = eq3_config_entry.thermostat
-    name = eq3_config_entry.eq3_config.name
     mac_address = eq3_config_entry.eq3_config.mac_address
     scan_interval = eq3_config_entry.eq3_config.scan_interval
 
-    await _reconnect_thermostat(hass, entry)
+    await _async_reconnect_thermostat(hass, entry)
 
     while True:
         try:
@@ -97,33 +95,31 @@ async def _run_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None:
             if not thermostat.is_connected:
                 _LOGGER.error(
                     "[%s] eQ-3 device disconnected",
-                    name,
+                    mac_address,
                 )
                 async_dispatcher_send(
                     hass,
-                    SIGNAL_THERMOSTAT_DISCONNECTED,
-                    mac_address,
+                    f"{SIGNAL_THERMOSTAT_DISCONNECTED}_{mac_address}",
                 )
-                await _reconnect_thermostat(hass, entry)
+                await _async_reconnect_thermostat(hass, entry)
                 continue
 
             _LOGGER.error(
                 "[%s] Error updating eQ-3 device: %s",
-                name,
+                mac_address,
                 e,
             )
 
         await asyncio.sleep(scan_interval)
 
 
-async def _reconnect_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_reconnect_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reconnect the thermostat."""
 
     eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][entry.entry_id]
     thermostat = eq3_config_entry.thermostat
     mac_address = eq3_config_entry.eq3_config.mac_address
     scan_interval = eq3_config_entry.eq3_config.scan_interval
-    name = eq3_config_entry.eq3_config.name
 
     while True:
         try:
@@ -134,13 +130,12 @@ async def _reconnect_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None
 
         _LOGGER.debug(
             "[%s] eQ-3 device connected",
-            name,
+            mac_address,
         )
 
         async_dispatcher_send(
             hass,
-            SIGNAL_THERMOSTAT_CONNECTED,
-            mac_address,
+            f"{SIGNAL_THERMOSTAT_CONNECTED}_{mac_address}",
         )
 
         return

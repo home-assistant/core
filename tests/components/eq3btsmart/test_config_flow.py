@@ -5,12 +5,12 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.eq3btsmart.const import DOMAIN
-from homeassistant.const import CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import MAC, NAME
+from .const import MAC
 
 from tests.common import MockConfigEntry
 
@@ -28,15 +28,14 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_MAC: MAC, CONF_NAME: NAME},
+            {CONF_MAC: MAC},
         )
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == NAME
+    assert result["title"] == MAC
     assert result["data"] == {
         CONF_MAC: MAC,
-        CONF_NAME: NAME,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -54,7 +53,7 @@ async def test_user_flow_invalid_mac(hass: HomeAssistant) -> None:
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_MAC: "invalid", CONF_NAME: NAME},
+            {CONF_MAC: "invalid"},
         )
         await hass.async_block_till_done()
 
@@ -64,51 +63,14 @@ async def test_user_flow_invalid_mac(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_MAC: MAC, CONF_NAME: NAME},
+            {CONF_MAC: MAC},
         )
         await hass.async_block_till_done()
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == NAME
+        assert result["title"] == MAC
         assert result["data"] == {
             CONF_MAC: MAC,
-            CONF_NAME: NAME,
-        }
-        assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_user_flow_invalid_name(hass: HomeAssistant) -> None:
-    """Test we handle invalid name."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.eq3btsmart.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_MAC: MAC, CONF_NAME: ""},
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {CONF_NAME: "invalid_name"}
-        assert len(mock_setup_entry.mock_calls) == 0
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_MAC: MAC, CONF_NAME: NAME},
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == NAME
-        assert result["data"] == {
-            CONF_MAC: MAC,
-            CONF_NAME: NAME,
         }
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -135,10 +97,9 @@ async def test_bluetooth_flow(
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == NAME
+    assert result["title"] == MAC
     assert result["data"] == {
         CONF_MAC: MAC,
-        CONF_NAME: NAME,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -149,7 +110,6 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_NAME: NAME,
             CONF_MAC: MAC,
         },
         unique_id=format_mac(MAC),
@@ -167,7 +127,6 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NAME: NAME,
                 CONF_MAC: MAC,
             },
         )
