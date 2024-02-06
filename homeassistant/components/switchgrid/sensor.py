@@ -1,6 +1,7 @@
 """Sensor platform for Switchgrid integration."""
 
 from datetime import datetime
+from typing import cast
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -49,4 +50,4 @@ class SwitchgridNextEventSensor(CoordinatorEntity[SwitchgridCoordinator], Sensor
         next_event = self.coordinator.next_event()
         if next_event is None:
             return None
-        return next_event.startUtc
+        return cast(datetime, (next_event.startUtc))
