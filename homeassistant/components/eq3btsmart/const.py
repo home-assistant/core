@@ -71,14 +71,6 @@ class TargetTemperatureSelector(str, Enum):
     LAST_REPORTED = "LAST_REPORTED"
 
 
-class Adapter(str, Enum):
-    """Adapter type to use for communication with the device."""
-
-    AUTO = "AUTO"
-    LOCAL = "LOCAL"
-
-
-DEFAULT_ADAPTER = Adapter.AUTO
 DEFAULT_CURRENT_TEMP_SELECTOR = CurrentTemperatureSelector.DEVICE
 DEFAULT_TARGET_TEMP_SELECTOR = TargetTemperatureSelector.TARGET
 DEFAULT_SCAN_INTERVAL = 10  # seconds

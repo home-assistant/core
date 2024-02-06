@@ -6,11 +6,9 @@ from eq3btsmart.const import DEFAULT_AWAY_HOURS, DEFAULT_AWAY_TEMP
 from eq3btsmart.thermostat import Thermostat
 
 from .const import (
-    DEFAULT_ADAPTER,
     DEFAULT_CURRENT_TEMP_SELECTOR,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TARGET_TEMP_SELECTOR,
-    Adapter,
     CurrentTemperatureSelector,
     TargetTemperatureSelector,
 )
@@ -22,7 +20,6 @@ class Eq3Config:
 
     mac_address: str
     name: str
-    adapter: Adapter | None = DEFAULT_ADAPTER
     current_temp_selector: CurrentTemperatureSelector = DEFAULT_CURRENT_TEMP_SELECTOR
     target_temp_selector: TargetTemperatureSelector = DEFAULT_TARGET_TEMP_SELECTOR
     external_temp_sensor: str = ""
