@@ -14,12 +14,11 @@ from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import TEST_CLIENT_ID, TEST_CLIENT_SECRET
+from .const import TEST_CLIENT_ID, TEST_CLIENT_SECRET, USER_ID
 
 from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
 TEST_MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
-USER_ID = "123"
 
 
 @pytest.fixture(name="jwt")
