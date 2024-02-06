@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from asyncio import Event, Future
-from functools import partial
 from unittest.mock import MagicMock, patch
 
 from bluecurrent_api import Client
@@ -18,43 +17,6 @@ DEFAULT_CHARGE_POINT = {
 }
 
 
-async def start_loop(client, future: Future | None, receiver):
-    """Set the receiver."""
-    client.receiver = receiver
-
-    client.started_loop.set()
-    client.started_loop.clear()
-
-    if future and not future.done():
-        await future
-
-
-async def get_charge_points(client, charge_point: dict) -> None:
-    """Send a list of charge points to the callback."""
-    await client.started_loop.wait()
-    await client.receiver(
-        {
-            "object": "CHARGE_POINTS",
-            "data": [charge_point],
-        }
-    )
-
-
-async def get_status(client, status: dict, evse_id: str) -> None:
-    """Send the status of a charge point to the callback."""
-    await client.receiver(
-        {
-            "object": "CH_STATUS",
-            "data": {"evse_id": evse_id} | status,
-        }
-    )
-
-
-async def get_grid_status(client, grid: dict, evse_id: str) -> None:
-    """Send the grid status to the callback."""
-    await client.receiver({"object": "GRID_STATUS", "data": grid})
-
-
 def create_client_mock(
     loop_future: Future | None,
     charge_point: dict,
@@ -63,17 +25,45 @@ def create_client_mock(
 ) -> MagicMock:
     """Create a mock of the bluecurrent-api Client."""
     client_mock = MagicMock(spec=Client)
-
     client_mock.started_loop = Event()
 
-    client_mock.start_loop.side_effect = partial(start_loop, client_mock, loop_future)
-    client_mock.get_charge_points.side_effect = partial(
-        get_charge_points, client_mock, charge_point
-    )
-    client_mock.get_status.side_effect = partial(get_status, client_mock, status)
-    client_mock.get_grid_status.side_effect = partial(
-        get_grid_status, client_mock, grid
-    )
+    async def start_loop(receiver):
+        """Set the receiver and await future."""
+        client_mock.receiver = receiver
+
+        client_mock.started_loop.set()
+        client_mock.started_loop.clear()
+
+        if loop_future and not loop_future.done():
+            await loop_future
+
+    async def get_charge_points() -> None:
+        """Send a list of charge points to the callback."""
+        await client_mock.started_loop.wait()
+        await client_mock.receiver(
+            {
+                "object": "CHARGE_POINTS",
+                "data": [charge_point],
+            }
+        )
+
+    async def get_status(evse_id: str) -> None:
+        """Send the status of a charge point to the callback."""
+        await client_mock.receiver(
+            {
+                "object": "CH_STATUS",
+                "data": {"evse_id": evse_id} | status,
+            }
+        )
+
+    async def get_grid_status(evse_id: str) -> None:
+        """Send the grid status to the callback."""
+        await client_mock.receiver({"object": "GRID_STATUS", "data": grid})
+
+    client_mock.start_loop.side_effect = start_loop
+    client_mock.get_charge_points.side_effect = get_charge_points
+    client_mock.get_status.side_effect = get_status
+    client_mock.get_grid_status.side_effect = get_grid_status
 
     return client_mock
 
