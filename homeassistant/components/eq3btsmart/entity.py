@@ -2,12 +2,12 @@
 
 from eq3btsmart.thermostat import Thermostat
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity as HassEntity
 
 from .models import Eq3Config
 
 
-class Eq3Entity(Entity):
+class Entity(HassEntity):
     """Base class for all eQ-3 entities."""
 
     def __init__(self, eq3_config: Eq3Config, thermostat: Thermostat) -> None:

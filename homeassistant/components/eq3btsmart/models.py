@@ -29,7 +29,7 @@ class Eq3Config:
 
 
 @dataclass(slots=True)
-class Eq3ConfigEntry:
+class Eq3ConfigEntryData:
     """Config entry for a single eQ-3 device."""
 
     eq3_config: Eq3Config

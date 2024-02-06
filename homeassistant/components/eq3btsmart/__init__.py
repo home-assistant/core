@@ -15,7 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, SIGNAL_THERMOSTAT_CONNECTED, SIGNAL_THERMOSTAT_DISCONNECTED
-from .models import Eq3Config, Eq3ConfigEntry
+from .models import Eq3Config, Eq3ConfigEntryData
 
 PLATFORMS = [
     Platform.CLIMATE,
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ble_device=device,
     )
 
-    eq3_config_entry = Eq3ConfigEntry(eq3_config=eq3_config, thermostat=thermostat)
+    eq3_config_entry = Eq3ConfigEntryData(eq3_config=eq3_config, thermostat=thermostat)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = eq3_config_entry
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -67,7 +67,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle config entry unload."""
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        eq3_config_entry: Eq3ConfigEntry = hass.data[DOMAIN].pop(entry.entry_id)
+        eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN].pop(entry.entry_id)
         await eq3_config_entry.thermostat.async_disconnect()
 
     return unload_ok
@@ -82,57 +82,65 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
 async def _run_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Run the thermostat."""
 
-    eq3_config_entry: Eq3ConfigEntry = hass.data[DOMAIN][entry.entry_id]
+    eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][entry.entry_id]
+    thermostat: Thermostat = eq3_config_entry.thermostat
+    name: str = eq3_config_entry.eq3_config.name
+    mac_address: str = eq3_config_entry.eq3_config.mac_address
+    scan_interval: int = eq3_config_entry.eq3_config.scan_interval
 
     await _reconnect_thermostat(hass, entry)
 
     while True:
         try:
-            await eq3_config_entry.thermostat.async_get_status()
+            await thermostat.async_get_status()
         except Eq3Exception as e:
-            if not eq3_config_entry.thermostat.is_connected:
+            if not thermostat.is_connected:
                 _LOGGER.error(
                     "[%s] eQ-3 device disconnected",
-                    eq3_config_entry.eq3_config.name,
+                    name,
                 )
                 async_dispatcher_send(
                     hass,
                     SIGNAL_THERMOSTAT_DISCONNECTED,
-                    eq3_config_entry.eq3_config.mac_address,
+                    mac_address,
                 )
                 await _reconnect_thermostat(hass, entry)
                 continue
 
             _LOGGER.error(
                 "[%s] Error updating eQ-3 device: %s",
-                eq3_config_entry.eq3_config.name,
+                name,
                 e,
             )
 
-        await asyncio.sleep(eq3_config_entry.eq3_config.scan_interval)
+        await asyncio.sleep(scan_interval)
 
 
 async def _reconnect_thermostat(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reconnect the thermostat."""
 
-    eq3_config_entry: Eq3ConfigEntry = hass.data[DOMAIN][entry.entry_id]
+    eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][entry.entry_id]
+    thermostat: Thermostat = eq3_config_entry.thermostat
+    mac_address: str = eq3_config_entry.eq3_config.mac_address
+    scan_interval: int = eq3_config_entry.eq3_config.scan_interval
+    name: str = eq3_config_entry.eq3_config.name
 
     while True:
         try:
-            await eq3_config_entry.thermostat.async_connect()
+            await thermostat.async_connect()
         except Eq3Exception:
-            await asyncio.sleep(eq3_config_entry.eq3_config.scan_interval)
+            await asyncio.sleep(scan_interval)
             continue
 
         _LOGGER.info(
             "[%s] eQ-3 device connected",
-            eq3_config_entry.eq3_config.name,
+            name,
         )
 
         async_dispatcher_send(
             hass,
             SIGNAL_THERMOSTAT_CONNECTED,
-            eq3_config_entry.eq3_config.mac_address,
+            mac_address,
         )
 
         return
