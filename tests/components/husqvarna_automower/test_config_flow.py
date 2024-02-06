@@ -1,6 +1,6 @@
 """Test the Husqvarna Automower config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.husqvarna_automower.const import (
@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .common import setup_platform
+from . import setup_integration
 from .const import TEST_CLIENT_ID, USER_ID
 
 from tests.common import MockConfigEntry
@@ -82,10 +82,11 @@ async def test_config_non_unique_profile(
     current_request_with_host: None,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    mock_automower_client: AsyncMock,
     jwt,
 ) -> None:
     """Test setup a non-unique profile."""
-    await setup_platform(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )

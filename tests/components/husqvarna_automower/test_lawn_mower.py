@@ -1,9 +1,11 @@
 """Tests for lawn_mower module."""
+from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
 from aioautomower.utils import mower_list_to_dictionary_dataclass
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
@@ -13,29 +15,58 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_json_value_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_value_fixture,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 TEST_MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
-@pytest.mark.parametrize(
-    ("activity", "state", "target_state"),
-    [
-        ("PARKED_IN_CS", "RESTRICTED", LawnMowerActivity.DOCKED),
-        ("UNKNOWN", "PAUSED", LawnMowerActivity.PAUSED),
-        ("MOWING", "NOT_APPLICABLE", LawnMowerActivity.MOWING),
-        ("NOT_APPLICABLE", "ERROR", LawnMowerActivity.ERROR),
-    ],
-)
-async def test_lawn_mower_states(
-    hass: HomeAssistant, setup_entity, target_state
+async def test_lawn_mower_states2(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test lawn_mower state."""
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+    await setup_integration(hass, mock_config_entry)
     state = hass.states.get("lawn_mower.test_mower_1")
     assert state is not None
-    assert state.state == target_state
+    assert state.state == LawnMowerActivity.DOCKED
+
+    values[TEST_MOWER_ID].mower.activity = "UNKNOWN"
+    values[TEST_MOWER_ID].mower.state = "PAUSED"
+    mock_automower_client.get_status.return_value = values = values
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("lawn_mower.test_mower_1")
+    assert state.state == LawnMowerActivity.PAUSED
+
+    values[TEST_MOWER_ID].mower.activity = "MOWING"
+    values[TEST_MOWER_ID].mower.state = "NOT_APPLICABLE"
+    mock_automower_client.get_status.return_value = values = values
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("lawn_mower.test_mower_1")
+    assert state.state == LawnMowerActivity.MOWING
+
+    values[TEST_MOWER_ID].mower.activity = "NOT_APPLICABLE"
+    values[TEST_MOWER_ID].mower.state = "ERROR"
+    mock_automower_client.get_status.return_value = values = values
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get("lawn_mower.test_mower_1")
+    assert state.state == LawnMowerActivity.ERROR
 
 
 @pytest.mark.parametrize(
@@ -64,21 +95,3 @@ async def test_lawn_mower_commands(
     assert (
         str(exc_info.value) == "Command couldn't be sent to the command que: Test error"
     )
-
-
-async def test_lawn_mower_states2(
-    hass: HomeAssistant,
-    mock_automower_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test lawn_mower state."""
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
-    values[TEST_MOWER_ID].mower.activity = "UNKNOWN"
-    values[TEST_MOWER_ID].mower.state = "PAUSED"
-    mock_automower_client.get_status = values
-    await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("lawn_mower.test_mower_1")
-    assert state is not None
-    assert state.state == LawnMowerActivity.PAUSED
