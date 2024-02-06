@@ -29,7 +29,7 @@ from .sia_entity_base import SIABaseEntity, SIAEntityDescription
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class SIAAlarmControlPanelEntityDescription(
     AlarmControlPanelEntityDescription,
     SIAEntityDescription,
@@ -52,6 +52,8 @@ ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
         "CQ": STATE_ALARM_ARMED_AWAY,
         "CS": STATE_ALARM_ARMED_AWAY,
         "CF": STATE_ALARM_ARMED_CUSTOM_BYPASS,
+        "NP": STATE_ALARM_DISARMED,
+        "NO": STATE_ALARM_DISARMED,
         "OA": STATE_ALARM_DISARMED,
         "OB": STATE_ALARM_DISARMED,
         "OG": STATE_ALARM_DISARMED,
@@ -64,8 +66,6 @@ ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
         "NE": STATE_ALARM_ARMED_CUSTOM_BYPASS,
         "NF": STATE_ALARM_ARMED_CUSTOM_BYPASS,
         "BR": PREVIOUS_STATE,
-        "NP": PREVIOUS_STATE,
-        "NO": PREVIOUS_STATE,
     },
 )
 

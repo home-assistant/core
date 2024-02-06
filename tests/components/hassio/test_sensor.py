@@ -10,6 +10,7 @@ from homeassistant.components.hassio import (
     HASSIO_UPDATE_INTERVAL,
     HassioAPIError,
 )
+from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -245,6 +246,12 @@ async def test_sensor(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
+    # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
+    async_fire_time_changed(
+        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+    )
+    await hass.async_block_till_done()
+
     # Verify that the entity have the expected state.
     state = hass.states.get(entity_id)
     assert state.state == expected
@@ -304,6 +311,12 @@ async def test_stats_addon_sensor(
     # Enable the entity.
     entity_registry.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # There is a REQUEST_REFRESH_DELAYs cooldown on the debouncer
+    async_fire_time_changed(
+        hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
+    )
     await hass.async_block_till_done()
 
     # Verify that the entity have the expected state.

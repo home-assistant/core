@@ -211,7 +211,9 @@ async def _async_create_bridge_with_updated_data(
                 partial(getmac.get_mac_address, ip=host)
             )
 
-        if mac:
+        if mac and mac != "none":
+            # Samsung sometimes returns a value of "none" for the mac address
+            # this should be ignored
             LOGGER.info("Updated mac to %s for %s", mac, host)
             updated_data[CONF_MAC] = mac
         else:

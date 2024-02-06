@@ -41,7 +41,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from . import FritzDeviceClimateMock, setup_config_entry
+from . import FritzDeviceClimateMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
@@ -402,3 +402,26 @@ async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock) -> None:
     assert fritz().update_devices.call_count == 3
     assert state
     assert state.attributes[ATTR_PRESET_MODE] == PRESET_ECO
+
+
+async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test adding new discovered devices during runtime."""
+    device = FritzDeviceClimateMock()
+    assert await setup_config_entry(
+        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+    )
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+
+    new_device = FritzDeviceClimateMock()
+    new_device.ain = "7890 1234"
+    new_device.name = "new_climate"
+    set_devices(fritz, devices=[device, new_device])
+
+    next_update = dt_util.utcnow() + timedelta(seconds=200)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{DOMAIN}.new_climate")
+    assert state

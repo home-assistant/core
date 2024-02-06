@@ -9,9 +9,9 @@ from typing import Any
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
 from ical.event import Event
+from ical.exceptions import CalendarParseError
 from ical.store import EventStore, EventStoreError
 from ical.types import Range, Recur
-from pydantic import ValidationError
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -178,8 +178,8 @@ def _parse_event(event: dict[str, Any]) -> Event:
             event[key] = dt_util.as_local(value).replace(tzinfo=None)
 
     try:
-        return Event.parse_obj(event)
-    except ValidationError as err:
+        return Event(**event)
+    except CalendarParseError as err:
         _LOGGER.debug("Error parsing event input fields: %s (%s)", event, str(err))
         raise vol.Invalid("Error parsing event input fields") from err
 

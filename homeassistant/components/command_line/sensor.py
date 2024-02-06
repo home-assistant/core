@@ -3,20 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import datetime, timedelta
 import json
 from typing import Any, cast
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import (
-    CONF_STATE_CLASS,
-    DEVICE_CLASSES_SCHEMA,
-    DOMAIN as SENSOR_DOMAIN,
-    PLATFORM_SCHEMA,
-    STATE_CLASSES_SCHEMA,
-    SensorDeviceClass,
-)
+from homeassistant.components.sensor import CONF_STATE_CLASS, SensorDeviceClass
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     CONF_COMMAND,
@@ -30,10 +21,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
@@ -43,7 +32,7 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN, LOGGER
+from .const import CONF_COMMAND_TIMEOUT, LOGGER
 from .utils import check_output_or_log
 
 CONF_JSON_ATTRIBUTES = "json_attributes"
@@ -62,20 +51,6 @@ TRIGGER_ENTITY_OPTIONS = (
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COMMAND): cv.string,
-        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
-    }
-)
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -84,19 +59,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command Sensor."""
-    if sensor_config := config:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_sensor",
-            breaks_in_ha_version="2023.12.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_platform_yaml",
-            translation_placeholders={"platform": SENSOR_DOMAIN},
-        )
-    if discovery_info:
-        sensor_config = discovery_info
+
+    discovery_info = cast(DiscoveryInfoType, discovery_info)
+    sensor_config = discovery_info
 
     name: str = sensor_config[CONF_NAME]
     command: str = sensor_config[CONF_COMMAND]
@@ -143,7 +108,7 @@ class CommandSensor(ManualTriggerSensorEntity):
         """Initialize the sensor."""
         super().__init__(self.hass, config)
         self.data = data
-        self._attr_extra_state_attributes = {}
+        self._attr_extra_state_attributes: dict[str, Any] = {}
         self._json_attributes = json_attributes
         self._attr_native_value = None
         self._value_template = value_template
@@ -153,12 +118,12 @@ class CommandSensor(ManualTriggerSensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
-        return cast(dict, self._attr_extra_state_attributes)
+        return self._attr_extra_state_attributes
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
-        await self._update_entity_state(None)
+        await self._update_entity_state()
         self.async_on_remove(
             async_track_time_interval(
                 self.hass,
@@ -169,7 +134,7 @@ class CommandSensor(ManualTriggerSensorEntity):
             ),
         )
 
-    async def _update_entity_state(self, now) -> None:
+    async def _update_entity_state(self, now: datetime | None = None) -> None:
         """Update the state of the entity."""
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()

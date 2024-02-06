@@ -274,10 +274,10 @@ async def ws_get_fossil_energy_consumption(
         statistic_ids,
         "hour",
         {"energy": UnitOfEnergy.KILO_WATT_HOUR},
-        {"mean", "sum"},
+        {"mean", "change"},
     )
 
-    def _combine_sum_statistics(
+    def _combine_change_statistics(
         stats: dict[str, list[StatisticsRow]], statistic_ids: list[str]
     ) -> dict[float, float]:
         """Combine multiple statistics, returns a dict indexed by start time."""
@@ -287,20 +287,11 @@ async def ws_get_fossil_energy_consumption(
             if statistics_id not in statistic_ids:
                 continue
             for period in stat:
-                if period["sum"] is None:
+                if period["change"] is None:
                     continue
-                result[period["start"]] += period["sum"]
+                result[period["start"]] += period["change"]
 
         return {key: result[key] for key in sorted(result)}
-
-    def _calculate_deltas(sums: dict[float, float]) -> dict[float, float]:
-        prev: float | None = None
-        result: dict[float, float] = {}
-        for period, sum_ in sums.items():
-            if prev is not None:
-                result[period] = sum_ - prev
-            prev = sum_
-        return result
 
     def _reduce_deltas(
         stat_list: list[dict[str, Any]],
@@ -334,10 +325,9 @@ async def ws_get_fossil_energy_consumption(
 
         return result
 
-    merged_energy_statistics = _combine_sum_statistics(
+    merged_energy_statistics = _combine_change_statistics(
         statistics, msg["energy_statistic_ids"]
     )
-    energy_deltas = _calculate_deltas(merged_energy_statistics)
     indexed_co2_statistics = cast(
         dict[float, float],
         {
@@ -349,7 +339,7 @@ async def ws_get_fossil_energy_consumption(
     # Calculate amount of fossil based energy, assume 100% fossil if missing
     fossil_energy = [
         {"start": start, "delta": delta * indexed_co2_statistics.get(start, 100) / 100}
-        for start, delta in energy_deltas.items()
+        for start, delta in merged_energy_statistics.items()
     ]
 
     if msg["period"] == "hour":

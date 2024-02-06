@@ -129,9 +129,8 @@ class DeconzDevice(DeconzBase[_DeviceT], Entity):
         if self.gateway.ignore_state_updates:
             return
 
-        if (
-            self._update_keys is not None
-            and not self._device.changed_keys.intersection(self._update_keys)
+        if self._update_keys is not None and not self._device.changed_keys.intersection(
+            self._update_keys
         ):
             return
 

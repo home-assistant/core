@@ -7,7 +7,11 @@
     },
     "abort": {
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]"
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -22,22 +26,13 @@
           "name": "Device ID",
           "description": "Id of the device."
         },
-        "program": {
-          "name": "Program",
-          "description": "Program to select."
-        },
-        "key": {
-          "name": "Option key",
-          "description": "Key of the option."
-        },
+        "program": { "name": "Program", "description": "Program to select." },
+        "key": { "name": "Option key", "description": "Key of the option." },
         "value": {
           "name": "Option value",
           "description": "Value of the option."
         },
-        "unit": {
-          "name": "Option unit",
-          "description": "Unit for the option."
-        }
+        "unit": { "name": "Option unit", "description": "Unit for the option." }
       }
     },
     "select_program": {
@@ -130,14 +125,8 @@
           "name": "Device ID",
           "description": "[%key:component::home_connect::services::start_program::fields::device_id::description%]"
         },
-        "key": {
-          "name": "Key",
-          "description": "Key of the setting."
-        },
-        "value": {
-          "name": "Value",
-          "description": "Value of the setting."
-        }
+        "key": { "name": "Key", "description": "Key of the setting." },
+        "value": { "name": "Value", "description": "Value of the setting." }
       }
     }
   }

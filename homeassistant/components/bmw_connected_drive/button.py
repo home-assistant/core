@@ -25,14 +25,14 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWRequiredKeysMixin:
     """Mixin for required keys."""
 
     remote_function: Callable[[MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWButtonEntityDescription(ButtonEntityDescription, BMWRequiredKeysMixin):
     """Class describing BMW button entities."""
 

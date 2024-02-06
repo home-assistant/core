@@ -49,13 +49,13 @@ async def test_camera_active_job(
 
     client = await hass_client()
 
-    with patch("pyprusalink.PrusaLink.get_large_thumbnail", return_value=b"hello"):
+    with patch("pyprusalink.PrusaLink.get_file", return_value=b"hello"):
         resp = await client.get("/api/camera_proxy/camera.mock_title_preview")
         assert resp.status == 200
         assert await resp.read() == b"hello"
 
     # Make sure we hit cached value.
-    with patch("pyprusalink.PrusaLink.get_large_thumbnail", side_effect=ValueError):
+    with patch("pyprusalink.PrusaLink.get_file", side_effect=ValueError):
         resp = await client.get("/api/camera_proxy/camera.mock_title_preview")
         assert resp.status == 200
         assert await resp.read() == b"hello"

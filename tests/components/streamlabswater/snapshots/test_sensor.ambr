@@ -1,0 +1,145 @@
+# serializer version: 1
+# name: test_all_entities[sensor.water_monitor_daily_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.water_monitor_daily_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Daily usage',
+    'platform': 'streamlabswater',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'daily_usage',
+    'unique_id': '945e7c52-854a-41e1-8524-50c6993277e1-daily_usage',
+    'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+  })
+# ---
+# name: test_all_entities[sensor.water_monitor_daily_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Water Monitor Daily usage',
+      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_monitor_daily_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '200.44691536',
+  })
+# ---
+# name: test_all_entities[sensor.water_monitor_monthly_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.water_monitor_monthly_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Monthly usage',
+    'platform': 'streamlabswater',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'monthly_usage',
+    'unique_id': '945e7c52-854a-41e1-8524-50c6993277e1-monthly_usage',
+    'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+  })
+# ---
+# name: test_all_entities[sensor.water_monitor_monthly_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Water Monitor Monthly usage',
+      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_monitor_monthly_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '420.514099294',
+  })
+# ---
+# name: test_all_entities[sensor.water_monitor_yearly_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.water_monitor_yearly_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Yearly usage',
+    'platform': 'streamlabswater',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'yearly_usage',
+    'unique_id': '945e7c52-854a-41e1-8524-50c6993277e1-yearly_usage',
+    'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+  })
+# ---
+# name: test_all_entities[sensor.water_monitor_yearly_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Water Monitor Yearly usage',
+      'unit_of_measurement': <UnitOfVolume.GALLONS: 'gal'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.water_monitor_yearly_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '65432.389256934',
+  })
+# ---

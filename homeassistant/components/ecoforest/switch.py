@@ -17,7 +17,7 @@ from .coordinator import EcoforestCoordinator
 from .entity import EcoforestEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class EcoforestSwitchRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -25,7 +25,7 @@ class EcoforestSwitchRequiredKeysMixin:
     switch_fn: Callable[[EcoforestApi, bool], Awaitable[Device]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EcoforestSwitchEntityDescription(
     SwitchEntityDescription, EcoforestSwitchRequiredKeysMixin
 ):

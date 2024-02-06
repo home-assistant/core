@@ -134,7 +134,9 @@ async def test_sensor(
 
 
 async def test_sensors_available_after_restart(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that all sensors are added again after a restart."""
     with patch(
@@ -153,7 +155,6 @@ async def test_sensors_available_after_restart(
         )
         entry.add_to_hass(hass)
 
-        device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, "XBT_USD")},
@@ -161,7 +162,6 @@ async def test_sensors_available_after_restart(
             manufacturer="Kraken.com",
             entry_type=dr.DeviceEntryType.SERVICE,
         )
-        entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(entry.entry_id)
 

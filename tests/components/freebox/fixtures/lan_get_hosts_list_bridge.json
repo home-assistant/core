@@ -1,0 +1,5 @@
+{
+  "msg": "Erreur lors de la récupération de la liste des hôtes : Interface invalide",
+  "success": false,
+  "error_code": "nodev"
+}

@@ -141,8 +141,6 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
 class AirzoneAidooSensor(AirzoneAidooEntity, AirzoneSensor):
     """Define an Airzone Cloud Aidoo sensor."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -162,8 +160,6 @@ class AirzoneAidooSensor(AirzoneAidooEntity, AirzoneSensor):
 class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
     """Define an Airzone Cloud WebServer sensor."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -182,8 +178,6 @@ class AirzoneWebServerSensor(AirzoneWebServerEntity, AirzoneSensor):
 
 class AirzoneZoneSensor(AirzoneZoneEntity, AirzoneSensor):
     """Define an Airzone Cloud Zone sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

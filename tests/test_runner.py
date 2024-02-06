@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util import executor, thread
 
 # https://github.com/home-assistant/supervisor/blob/main/supervisor/docker/homeassistant.py
-SUPERVISOR_HARD_TIMEOUT = 220
+SUPERVISOR_HARD_TIMEOUT = 240
 
 TIMEOUT_SAFETY_MARGIN = 10
 
@@ -21,9 +21,10 @@ TIMEOUT_SAFETY_MARGIN = 10
 async def test_cumulative_shutdown_timeout_less_than_supervisor() -> None:
     """Verify the cumulative shutdown timeout is at least 10s less than the supervisor."""
     assert (
-        core.STAGE_1_SHUTDOWN_TIMEOUT
-        + core.STAGE_2_SHUTDOWN_TIMEOUT
-        + core.STAGE_3_SHUTDOWN_TIMEOUT
+        core.STOPPING_STAGE_SHUTDOWN_TIMEOUT
+        + core.STOP_STAGE_SHUTDOWN_TIMEOUT
+        + core.FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT
+        + core.CLOSE_STAGE_SHUTDOWN_TIMEOUT
         + executor.EXECUTOR_SHUTDOWN_TIMEOUT
         + thread.THREADING_SHUTDOWN_TIMEOUT
         + TIMEOUT_SAFETY_MARGIN
@@ -75,7 +76,7 @@ def test_run_executor_shutdown_throws(
         "homeassistant.runner.InterruptibleThreadPoolExecutor.shutdown",
         side_effect=RuntimeError,
     ) as mock_shutdown, patch(
-        "homeassistant.core.HomeAssistant.async_run"
+        "homeassistant.core.HomeAssistant.async_run",
     ) as mock_run:
         runner.run(default_config)
 

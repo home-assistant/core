@@ -25,6 +25,9 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
         return_value=None,
     ), patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.logout",
+        return_value=None,
+    ), patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.list_installations",
         return_value=[],
     ), patch(
