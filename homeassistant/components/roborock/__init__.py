@@ -124,7 +124,7 @@ async def setup_device(
     coordinator.api.is_available = True
     try:
         await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
+    except ConfigEntryNotReady as ex:
         if isinstance(coordinator.api, RoborockMqttClient):
             _LOGGER.warning(
                 "Not setting up %s because the we failed to get data for the first time using the online client. "
@@ -136,7 +136,7 @@ async def setup_device(
             # but in case if it isn't, the error can be included in debug logs for the user to grab.
             if coordinator.last_exception:
                 _LOGGER.debug(coordinator.last_exception)
-                raise coordinator.last_exception
+                raise coordinator.last_exception from ex
         elif coordinator.last_exception:
             # If this is reached, we have verified that we can communicate with the Vacuum locally,
             # so if there is an error here - it is not a communication issue but some other problem
@@ -147,7 +147,7 @@ async def setup_device(
                 device.name,
                 extra_error,
             )
-            raise coordinator.last_exception
+            raise coordinator.last_exception from ex
     return coordinator
 
 

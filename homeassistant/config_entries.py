@@ -2249,7 +2249,7 @@ async def _load_integration(
             domain,
             err,
         )
-        raise data_entry_flow.UnknownHandler
+        raise data_entry_flow.UnknownHandler from err
 
 
 async def _async_get_flow_handler(
