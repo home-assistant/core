@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import logging
 from typing import Any
 
@@ -239,6 +239,12 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 self._attr_native_value = new_value
                 return
             try:
+                if (payload_datetime := dt_util.parse_datetime(new_value)) is None and (
+                    string_datetime := datetime.fromtimestamp(
+                        float(payload), tz=UTC
+                    ).isoformat()
+                ) is not None:
+                    new_value = string_datetime
                 if (payload_datetime := dt_util.parse_datetime(new_value)) is None:
                     raise ValueError
             except ValueError:
