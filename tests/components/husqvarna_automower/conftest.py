@@ -1,6 +1,7 @@
 """Test helpers for Husqvarna Automower."""
+from collections.abc import Generator
 import time
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from aioautomower.model import MowerAttributes
 from aioautomower.utils import mower_list_to_dictionary_dataclass
@@ -116,3 +117,17 @@ async def setup_entity(
         await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_automower_client() -> Generator[AsyncMock, None, None]:
+    """Mock a Homeassistant Analytics client."""
+    with patch(
+        "homeassistant.components.husqvarna_automower.AutomowerSession",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+        client.get_status.return_value = mower_list_to_dictionary_dataclass(
+            load_json_value_fixture("mower.json", DOMAIN)
+        )
+        yield client
