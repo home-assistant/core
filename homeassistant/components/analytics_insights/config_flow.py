@@ -63,7 +63,14 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title="Home Assistant Analytics Insights",
                     data={},
-                    options=user_input,
+                    options={
+                        CONF_TRACKED_INTEGRATIONS: user_input.get(
+                            CONF_TRACKED_INTEGRATIONS, []
+                        ),
+                        CONF_TRACKED_CUSTOM_INTEGRATIONS: user_input.get(
+                            CONF_TRACKED_CUSTOM_INTEGRATIONS, []
+                        ),
+                    },
                 )
 
         client = HomeassistantAnalyticsClient(
@@ -122,7 +129,17 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
             ):
                 errors["base"] = "no_integrations_selected"
             else:
-                return self.async_create_entry(title="", data=user_input)
+                return self.async_create_entry(
+                    title="",
+                    data={
+                        CONF_TRACKED_INTEGRATIONS: user_input.get(
+                            CONF_TRACKED_INTEGRATIONS, []
+                        ),
+                        CONF_TRACKED_CUSTOM_INTEGRATIONS: user_input.get(
+                            CONF_TRACKED_CUSTOM_INTEGRATIONS, []
+                        ),
+                    },
+                )
 
         client = HomeassistantAnalyticsClient(
             session=async_get_clientsession(self.hass)

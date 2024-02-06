@@ -19,18 +19,36 @@ from tests.components.analytics_insights import setup_integration
 
 
 @pytest.mark.parametrize(
-    "user_input",
+    ("user_input", "expected_options"),
     [
-        {
-            CONF_TRACKED_INTEGRATIONS: ["youtube"],
-            CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
-        },
-        {
-            CONF_TRACKED_INTEGRATIONS: ["youtube"],
-        },
-        {
-            CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
-        },
+        (
+            {
+                CONF_TRACKED_INTEGRATIONS: ["youtube"],
+                CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+            },
+            {
+                CONF_TRACKED_INTEGRATIONS: ["youtube"],
+                CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+            },
+        ),
+        (
+            {
+                CONF_TRACKED_INTEGRATIONS: ["youtube"],
+            },
+            {
+                CONF_TRACKED_INTEGRATIONS: ["youtube"],
+                CONF_TRACKED_CUSTOM_INTEGRATIONS: [],
+            },
+        ),
+        (
+            {
+                CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+            },
+            {
+                CONF_TRACKED_INTEGRATIONS: [],
+                CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+            },
+        ),
     ],
 )
 async def test_form(
@@ -38,6 +56,7 @@ async def test_form(
     mock_setup_entry: AsyncMock,
     mock_analytics_client: AsyncMock,
     user_input: dict[str, Any],
+    expected_options: dict[str, Any],
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -54,7 +73,7 @@ async def test_form(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Home Assistant Analytics Insights"
     assert result["data"] == {}
-    assert result["options"] == user_input
+    assert result["options"] == expected_options
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -146,18 +165,36 @@ async def test_form_already_configured(
 
 
 @pytest.mark.parametrize(
-    "user_input",
+    ("user_input", "expected_options"),
     [
-        {
-            CONF_TRACKED_INTEGRATIONS: ["youtube"],
-            CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
-        },
-        {
-            CONF_TRACKED_INTEGRATIONS: ["youtube"],
-        },
-        {
-            CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
-        },
+        (
+            {
+                CONF_TRACKED_INTEGRATIONS: ["youtube"],
+                CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+            },
+            {
+                CONF_TRACKED_INTEGRATIONS: ["youtube"],
+                CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+            },
+        ),
+        (
+            {
+                CONF_TRACKED_INTEGRATIONS: ["youtube"],
+            },
+            {
+                CONF_TRACKED_INTEGRATIONS: ["youtube"],
+                CONF_TRACKED_CUSTOM_INTEGRATIONS: [],
+            },
+        ),
+        (
+            {
+                CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+            },
+            {
+                CONF_TRACKED_INTEGRATIONS: [],
+                CONF_TRACKED_CUSTOM_INTEGRATIONS: ["hacs"],
+            },
+        ),
     ],
 )
 async def test_options_flow(
@@ -165,6 +202,7 @@ async def test_options_flow(
     mock_analytics_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     user_input: dict[str, Any],
+    expected_options: dict[str, Any],
 ) -> None:
     """Test options flow."""
     await setup_integration(hass, mock_config_entry)
@@ -180,7 +218,7 @@ async def test_options_flow(
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == user_input
+    assert result["data"] == expected_options
     await hass.async_block_till_done()
     mock_analytics_client.get_integrations.assert_called_once()
 
