@@ -14,7 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_integration
-from .const import TEST_CLIENT_ID, USER_ID
+from .const import CLIENT_ID, USER_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -41,7 +41,7 @@ async def test_full_flow(
     )
 
     assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={TEST_CLIENT_ID}"
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
     )
@@ -100,7 +100,7 @@ async def test_config_non_unique_profile(
 
     assert result["type"] == FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={TEST_CLIENT_ID}"
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
     )

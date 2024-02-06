@@ -1,7 +1,7 @@
 """Tests for lawn_mower module."""
 from datetime import timedelta
 import logging
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aioautomower.exceptions import ApiException
 from aioautomower.utils import mower_list_to_dictionary_dataclass
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 TEST_MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
-async def test_lawn_mower_states2(
+async def test_lawn_mower_states(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -78,14 +78,20 @@ async def test_lawn_mower_states2(
     ],
 )
 async def test_lawn_mower_commands(
-    hass: HomeAssistant, setup_entity, aioautomower_command, service
+    hass: HomeAssistant,
+    aioautomower_command: str,
+    service: str,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test lawn_mower commands."""
+    await setup_integration(hass, mock_config_entry)
 
-    with pytest.raises(HomeAssistantError) as exc_info, patch(
-        f"aioautomower.session.AutomowerSession.{aioautomower_command}",
-        side_effect=ApiException("Test error"),
-    ):
+    getattr(mock_automower_client, aioautomower_command).side_effect = ApiException(
+        "Test error"
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             domain="lawn_mower",
             service=service,
