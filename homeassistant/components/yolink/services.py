@@ -3,6 +3,7 @@
 import voluptuous as vol
 from yolink.client_request import ClientRequest
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -33,8 +34,8 @@ def async_register_services(hass: HomeAssistant) -> None:
                     continue
                 if entry.domain == DOMAIN:
                     break
-            if entry is None:
-                raise ServiceValidationError("Config entry not found!")
+            if entry is None or entry.state == ConfigEntryState.NOT_LOADED:
+                raise ServiceValidationError("Config entry not found or not loaded!")
             home_store = hass.data[DOMAIN][entry.entry_id]
             for identifier in device_entry.identifiers:
                 if (
