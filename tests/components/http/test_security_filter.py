@@ -123,7 +123,7 @@ async def test_ok_requests_with_encoded_unsafe_bytes(
     request_params,
     aiohttp_client: ClientSessionGenerator,
 ) -> None:
-    """Test request with unsafe bytes in their URLs."""
+    """Test request with unsafe bytes in their URLs, sent with urllib3 so they are safely encoded."""
     app = web.Application()
     app.router.add_get("/{all:.*}", mock_handler)
 
