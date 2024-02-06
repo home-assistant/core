@@ -420,6 +420,13 @@ class DlnaDmrEntity(MediaPlayerEntity):
             device_id=device_entry.id,
         )
 
+        self._attr_device_info = dr.DeviceInfo(
+            connections=connections,
+            default_manufacturer=self._device.manufacturer,
+            default_model=self._device.model_name,
+            default_name=self._device.name,
+        )
+
     async def _device_disconnect(self) -> None:
         """Destroy connections to the device now that it's not available.
 
