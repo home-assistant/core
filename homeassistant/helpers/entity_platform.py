@@ -125,7 +125,8 @@ class EntityPlatform:
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
         self.config_entry: config_entries.ConfigEntry | None = None
-        # Store the entities for this specific platform only
+        # Storage for entities for this specific platform only
+        # which are indexed by entity_id
         self.entities: dict[str, Entity] = {}
         self.component_translations: dict[str, Any] = {}
         self.platform_translations: dict[str, Any] = {}
@@ -147,14 +148,18 @@ class EntityPlatform:
         # which powers entity_component.add_entities
         self.parallel_updates_created = platform is None
 
-        # Store the entities in the data for the domain.
+        # Storage for entities indexed by domain,
+        # and the child dict indexed by entity_id
+        #
         # This is usually media_player, light, switch, etc.
         domain_entities: dict[str, dict[str, Entity]] = hass.data.setdefault(
             DATA_DOMAIN_ENTITIES, {}
         )
         self.domain_entities = domain_entities.setdefault(domain, {})
 
-        # Store the entities in the data for the domain and platform
+        # Storage for entities indexed by domain and platform,
+        # and the child dict indexed by entity_id
+        #
         # This is usually media_player.yamaha, light.hue, switch.tplink, etc.
         domain_platform_entities: dict[
             tuple[str, str], dict[str, Entity]
