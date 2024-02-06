@@ -3,6 +3,7 @@ import asyncio
 from collections.abc import Iterable
 import dataclasses
 from datetime import timedelta
+from enum import IntFlag
 import logging
 import threading
 from typing import Any
@@ -654,9 +655,7 @@ async def test_set_context_expired(hass: HomeAssistant) -> None:
     """Test setting context."""
     context = Context()
 
-    with patch(
-        "homeassistant.helpers.entity.CONTEXT_RECENT_TIME", timedelta(seconds=-5)
-    ):
+    with patch("homeassistant.helpers.entity.CONTEXT_RECENT_TIME_SECONDS", -5):
         ent = entity.Entity()
         ent.hass = hass
         ent.entity_id = "hello.world"
@@ -1137,6 +1136,203 @@ async def test_friendly_name_description_device_class_name(
 
 
 @pytest.mark.parametrize(
+    (
+        "has_entity_name",
+        "translation_key",
+        "translations",
+        "placeholders",
+        "expected_friendly_name",
+    ),
+    (
+        (False, None, None, None, "Entity Blu"),
+        (True, None, None, None, "Device Bla Entity Blu"),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "English ent"
+                },
+            },
+            None,
+            "Device Bla English ent",
+        ),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                },
+            },
+            {"placeholder": "special"},
+            "Device Bla special English ent",
+        ),
+        (
+            True,
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "English ent {placeholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "Device Bla English ent special",
+        ),
+    ),
+)
+async def test_entity_name_translation_placeholders(
+    hass: HomeAssistant,
+    has_entity_name: bool,
+    translation_key: str | None,
+    translations: dict[str, str] | None,
+    placeholders: dict[str, str] | None,
+    expected_friendly_name: str | None,
+) -> None:
+    """Test friendly name when the entity name translation has placeholders."""
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test",
+        has_entity_name=has_entity_name,
+        translation_key=translation_key,
+        name="Entity Blu",
+    )
+    if placeholders is not None:
+        ent._attr_translation_placeholders = placeholders
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await _test_friendly_name(hass, ent, expected_friendly_name)
+
+
+@pytest.mark.parametrize(
+    (
+        "translation_key",
+        "translations",
+        "placeholders",
+        "release_channel",
+        "expected_error",
+    ),
+    (
+        (
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "stable",
+            (
+                "has translation placeholders '{'placeholder': 'special'}' which do "
+                "not match the name '{placeholder} English ent {2ndplaceholder}'"
+            ),
+        ),
+        (
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                },
+            },
+            {"placeholder": "special"},
+            "beta",
+            "HomeAssistantError: Missing placeholder '2ndplaceholder'",
+        ),
+        (
+            "test_entity",
+            {
+                "en": {
+                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                },
+            },
+            None,
+            "stable",
+            (
+                "has translation placeholders '{}' which do "
+                "not match the name '{placeholder} English ent'"
+            ),
+        ),
+    ),
+)
+async def test_entity_name_translation_placeholder_errors(
+    hass: HomeAssistant,
+    translation_key: str | None,
+    translations: dict[str, str] | None,
+    placeholders: dict[str, str] | None,
+    release_channel: str,
+    expected_error: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test entity name translation has placeholder issues."""
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        return translations[language]
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities([ent])
+        return True
+
+    ent = MockEntity(
+        unique_id="qwer",
+    )
+    ent.entity_description = entity.EntityDescription(
+        "test",
+        has_entity_name=True,
+        translation_key=translation_key,
+        name="Entity Blu",
+    )
+    if placeholders is not None:
+        ent._attr_translation_placeholders = placeholders
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    caplog.clear()
+
+    with patch(
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ), patch(
+        "homeassistant.helpers.entity.get_release_channel", return_value=release_channel
+    ):
+        await entity_platform.async_setup_entry(config_entry)
+
+    assert expected_error in caplog.text
+
+
+@pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     (
         (False, "Entity Blu", "Entity Blu"),
@@ -1391,8 +1587,8 @@ async def test_translation_key(hass: HomeAssistant) -> None:
     assert mock_entity2.translation_key == "from_entity_description"
 
 
-async def test_repr_using_stringify_state() -> None:
-    """Test that repr uses stringify state."""
+async def test_repr(hass) -> None:
+    """Test Entity.__repr__."""
 
     class MyEntity(MockEntity):
         """Mock entity."""
@@ -1402,8 +1598,19 @@ async def test_repr_using_stringify_state() -> None:
             """Return the state."""
             raise ValueError("Boom")
 
+    platform = MockEntityPlatform(hass, domain="hello")
     my_entity = MyEntity(entity_id="test.test", available=False)
+
+    # Not yet added
+    assert str(my_entity) == "<entity unknown.unknown=unknown>"
+
+    # Added
+    await platform.async_add_entities([my_entity])
     assert str(my_entity) == "<entity test.test=unavailable>"
+
+    # Removed
+    await platform.async_remove_entity(my_entity.entity_id)
+    assert str(my_entity) == "<entity unknown.unknown=unknown>"
 
 
 async def test_warn_using_async_update_ha_state(
@@ -1715,30 +1922,200 @@ def test_extending_entity_description(snapshot: SnapshotAssertion):
 
     # Try multiple direct parents
     @dataclasses.dataclass(frozen=True)
-    class MyMixin:
+    class MyMixin1:
+        mixin: str
+
+    @dataclasses.dataclass
+    class MyMixin2:
+        mixin: str
+
+    @dataclasses.dataclass(frozen=True)
+    class MyMixin3:
+        mixin: str = None
+
+    @dataclasses.dataclass
+    class MyMixin4:
         mixin: str = None
 
     @dataclasses.dataclass(frozen=True, kw_only=True)
-    class ComplexEntityDescription1(MyMixin, entity.EntityDescription):
+    class ComplexEntityDescription1A(MyMixin1, entity.EntityDescription):
         extra: str = None
 
-    obj = ComplexEntityDescription1(key="blah", extra="foo", mixin="mixin", name="name")
+    obj = ComplexEntityDescription1A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
     assert obj == snapshot
-    assert obj == ComplexEntityDescription1(
+    assert obj == ComplexEntityDescription1A(
         key="blah", extra="foo", mixin="mixin", name="name"
     )
     assert repr(obj) == snapshot
 
     @dataclasses.dataclass(frozen=True, kw_only=True)
-    class ComplexEntityDescription2(entity.EntityDescription, MyMixin):
+    class ComplexEntityDescription1B(entity.EntityDescription, MyMixin1):
         extra: str = None
 
-    obj = ComplexEntityDescription2(key="blah", extra="foo", mixin="mixin", name="name")
+    obj = ComplexEntityDescription1B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
     assert obj == snapshot
-    assert obj == ComplexEntityDescription2(
+    assert obj == ComplexEntityDescription1B(
         key="blah", extra="foo", mixin="mixin", name="name"
     )
     assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True)
+    class ComplexEntityDescription1C(MyMixin1, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription1C(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription1C(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True)
+    class ComplexEntityDescription1D(entity.EntityDescription, MyMixin1):
+        extra: str = None
+
+    obj = ComplexEntityDescription1D(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription1D(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(kw_only=True)
+    class ComplexEntityDescription2A(MyMixin2, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription2A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(kw_only=True)
+    class ComplexEntityDescription2B(entity.EntityDescription, MyMixin2):
+        extra: str = None
+
+    obj = ComplexEntityDescription2B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass
+    class ComplexEntityDescription2C(MyMixin2, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription2C(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2C(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass
+    class ComplexEntityDescription2D(entity.EntityDescription, MyMixin2):
+        extra: str = None
+
+    obj = ComplexEntityDescription2D(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription2D(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class ComplexEntityDescription3A(MyMixin3, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription3A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription3A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(frozen=True, kw_only=True)
+    class ComplexEntityDescription3B(entity.EntityDescription, MyMixin3):
+        extra: str = None
+
+    obj = ComplexEntityDescription3B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription3B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    with pytest.raises(TypeError):
+
+        @dataclasses.dataclass(frozen=True)
+        class ComplexEntityDescription3C(MyMixin3, entity.EntityDescription):
+            extra: str = None
+
+    with pytest.raises(TypeError):
+
+        @dataclasses.dataclass(frozen=True)
+        class ComplexEntityDescription3D(entity.EntityDescription, MyMixin3):
+            extra: str = None
+
+    @dataclasses.dataclass(kw_only=True)
+    class ComplexEntityDescription4A(MyMixin4, entity.EntityDescription):
+        extra: str = None
+
+    obj = ComplexEntityDescription4A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription4A(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    @dataclasses.dataclass(kw_only=True)
+    class ComplexEntityDescription4B(entity.EntityDescription, MyMixin4):
+        extra: str = None
+
+    obj = ComplexEntityDescription4B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert obj == snapshot
+    assert obj == ComplexEntityDescription4B(
+        key="blah", extra="foo", mixin="mixin", name="name"
+    )
+    assert repr(obj) == snapshot
+
+    with pytest.raises(TypeError):
+
+        @dataclasses.dataclass
+        class ComplexEntityDescription4C(MyMixin4, entity.EntityDescription):
+            extra: str = None
+
+    with pytest.raises(TypeError):
+
+        @dataclasses.dataclass
+        class ComplexEntityDescription4D(entity.EntityDescription, MyMixin4):
+            extra: str = None
 
     # Try inheriting with custom init
     @dataclasses.dataclass
@@ -2025,3 +2402,69 @@ async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> No
     for ent in entities:
         assert getattr(ent[0], property) == values[1]
         assert getattr(ent[1], property) == values[0]
+
+
+async def test_cached_entity_property_override(hass: HomeAssistant) -> None:
+    """Test overriding cached _attr_ raises."""
+
+    class EntityWithClassAttribute1(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution: str
+
+    class EntityWithClassAttribute2(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution = "blabla"
+
+    class EntityWithClassAttribute3(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution: str = "blabla"
+
+    class EntityWithClassAttribute4(entity.Entity):
+        @property
+        def _attr_not_cached(self):
+            return "blabla"
+
+    class EntityWithClassAttribute5(entity.Entity):
+        def _attr_not_cached(self):
+            return "blabla"
+
+    with pytest.raises(TypeError):
+
+        class EntityWithClassAttribute6(entity.Entity):
+            @property
+            def _attr_attribution(self):
+                return "🤡"
+
+    with pytest.raises(TypeError):
+
+        class EntityWithClassAttribute7(entity.Entity):
+            def _attr_attribution(self):
+                return "🤡"
+
+
+async def test_entity_report_deprecated_supported_features_values(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test reporting deprecated supported feature values only happens once."""
+    ent = entity.Entity()
+
+    class MockEntityFeatures(IntFlag):
+        VALUE1 = 1
+        VALUE2 = 2
+
+    ent._report_deprecated_supported_features_values(MockEntityFeatures(2))
+    assert (
+        "is using deprecated supported features values which will be removed"
+        in caplog.text
+    )
+    assert "MockEntityFeatures.VALUE2" in caplog.text
+
+    caplog.clear()
+    ent._report_deprecated_supported_features_values(MockEntityFeatures(2))
+    assert (
+        "is using deprecated supported features values which will be removed"
+        not in caplog.text
+    )

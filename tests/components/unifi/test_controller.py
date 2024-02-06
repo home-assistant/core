@@ -1,5 +1,4 @@
 """Test UniFi Network."""
-import asyncio
 from copy import deepcopy
 from datetime import timedelta
 from http import HTTPStatus
@@ -421,7 +420,7 @@ async def test_reconnect_mechanism(
 @pytest.mark.parametrize(
     "exception",
     [
-        asyncio.TimeoutError,
+        TimeoutError,
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         aiounifi.AiounifiException,
@@ -459,13 +458,13 @@ async def test_get_unifi_controller_verify_ssl_false(hass: HomeAssistant) -> Non
 @pytest.mark.parametrize(
     ("side_effect", "raised_exception"),
     [
-        (asyncio.TimeoutError, CannotConnect),
+        (TimeoutError, CannotConnect),
         (aiounifi.BadGateway, CannotConnect),
+        (aiounifi.Forbidden, CannotConnect),
         (aiounifi.ServiceUnavailable, CannotConnect),
         (aiounifi.RequestError, CannotConnect),
         (aiounifi.ResponseError, CannotConnect),
         (aiounifi.Unauthorized, AuthenticationRequired),
-        (aiounifi.Forbidden, AuthenticationRequired),
         (aiounifi.LoginRequired, AuthenticationRequired),
         (aiounifi.AiounifiException, AuthenticationRequired),
     ],

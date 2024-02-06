@@ -17,7 +17,13 @@
           "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "location": "Equal or part of name, description or camera id"
+          "location": "Equal or part of name, description or camera id. Be as specific as possible to avoid getting multiple cameras as result"
+        }
+      },
+      "multiple_cameras": {
+        "description": "Result came back with multiple cameras",
+        "data": {
+          "id": "Choose camera"
         }
       }
     }

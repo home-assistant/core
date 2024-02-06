@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Lupus Electronics LUPUSEC connection",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The Lupus Electronics LUPUSEC YAML configuration import failed",
+      "description": "Configuring Lupus Electronics LUPUSEC using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure connection to Lupus Electronics LUPUSEC works and restart Home Assistant to try again or remove the Lupus Electronics LUPUSEC YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "The Lupus Electronics LUPUSEC YAML configuration import failed",
+      "description": "Configuring Lupus Electronics LUPUSEC using YAML is being removed but there was an unknown error when trying to import the YAML configuration.\n\nEnsure the imported configuration is correct and remove the Lupus Electronics LUPUSEC YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    }
+  }
+}

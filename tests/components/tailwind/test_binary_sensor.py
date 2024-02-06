@@ -12,8 +12,8 @@ pytestmark = pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     "entity_id",
     [
-        "binary_sensor.door_1_operational_status",
-        "binary_sensor.door_2_operational_status",
+        "binary_sensor.door_1_operational_problem",
+        "binary_sensor.door_2_operational_problem",
     ],
 )
 async def test_number_entities(

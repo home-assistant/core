@@ -2502,3 +2502,22 @@ async def test_pipeline_empty_tts_output(
     assert msg["event"]["type"] == "run-end"
     assert msg["event"]["data"] == snapshot
     events.append(msg["event"])
+
+
+async def test_pipeline_list_devices(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    assist_device,
+) -> None:
+    """Test list devices."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "assist_pipeline/device/list"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] == [
+        {
+            "device_id": assist_device.id,
+            "pipeline_entity": "select.test_assist_device_test_prefix_pipeline",
+        }
+    ]

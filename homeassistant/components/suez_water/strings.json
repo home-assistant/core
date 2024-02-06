@@ -18,6 +18,13 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "water_usage_yesterday": {
+        "name": "Water usage yesterday"
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_invalid_auth": {
       "title": "The Suez water YAML configuration import failed",

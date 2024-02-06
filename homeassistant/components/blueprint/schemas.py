@@ -25,7 +25,7 @@ from .const import (
 )
 
 
-def version_validator(value):
+def version_validator(value: Any) -> str:
     """Validate a Home Assistant version."""
     if not isinstance(value, str):
         raise vol.Invalid("Version needs to be a string")
@@ -36,7 +36,7 @@ def version_validator(value):
         raise vol.Invalid("Version needs to be formatted as {major}.{minor}.{patch}")
 
     try:
-        parts = [int(p) for p in parts]
+        [int(p) for p in parts]
     except ValueError:
         raise vol.Invalid(
             "Major, minor and patch version needs to be an integer"
