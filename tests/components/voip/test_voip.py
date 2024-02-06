@@ -319,7 +319,7 @@ async def test_tts_timeout(
 
         async def send_tts(*args, **kwargs):
             # Call original then end test successfully
-            with pytest.raises(asyncio.TimeoutError):
+            with pytest.raises(TimeoutError):
                 await original_send_tts(*args, **kwargs)
 
             done.set()

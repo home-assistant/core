@@ -303,7 +303,7 @@ class AdsEntity(Entity):
         try:
             async with timeout(10):
                 await self._event.wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.debug("Variable %s: Timeout during first update", ads_var)
 
     @property

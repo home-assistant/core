@@ -409,7 +409,7 @@ class UniFiController:
                 async_dispatcher_send(self.hass, self.signal_reachable)
 
         except (
-            asyncio.TimeoutError,
+            TimeoutError,
             aiounifi.BadGateway,
             aiounifi.ServiceUnavailable,
             aiounifi.AiounifiException,
@@ -516,7 +516,7 @@ async def get_unifi_controller(
         raise AuthenticationRequired from err
 
     except (
-        asyncio.TimeoutError,
+        TimeoutError,
         aiounifi.BadGateway,
         aiounifi.Forbidden,
         aiounifi.ServiceUnavailable,
