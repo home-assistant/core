@@ -32,14 +32,14 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class KrakenRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[DataUpdateCoordinator[KrakenResponse], str], float | int]
 
 
-@dataclass
+@dataclass(frozen=True)
 class KrakenSensorEntityDescription(SensorEntityDescription, KrakenRequiredKeysMixin):
     """Describes Kraken sensor entity."""
 
@@ -259,7 +259,8 @@ class KrakenSensor(
             return
         try:
             self._attr_native_value = self.entity_description.value_fn(
-                self.coordinator, self.tracked_asset_pair_wsname  # type: ignore[arg-type]
+                self.coordinator,  # type: ignore[arg-type]
+                self.tracked_asset_pair_wsname,
             )
             self._received_data_at_least_once = True
         except KeyError:

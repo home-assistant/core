@@ -165,8 +165,6 @@ class AuthProvidersView(HomeAssistantView):
 
         providers = []
         for provider in hass.auth.auth_providers:
-            additional_data = {}
-
             if provider.type == "trusted_networks":
                 if cloud_connection:
                     # Skip quickly as trusted networks are not available on cloud
@@ -179,34 +177,23 @@ class AuthProvidersView(HomeAssistantView):
                 except InvalidAuthError:
                     # Not a trusted network, so we don't expose that trusted_network authenticator is setup
                     continue
-            elif (
-                provider.type == "homeassistant"
-                and not cloud_connection
-                and is_local(remote_address)
-                and "person" in hass.config.components
-            ):
-                # We are local, return user id and username
-                users = await provider.store.async_get_users()
-                additional_data["users"] = {
-                    user.id: credentials.data["username"]
-                    for user in users
-                    for credentials in user.credentials
-                    if (
-                        credentials.auth_provider_type == provider.type
-                        and credentials.auth_provider_id == provider.id
-                    )
-                }
 
             providers.append(
                 {
                     "name": provider.name,
                     "id": provider.id,
                     "type": provider.type,
-                    **additional_data,
                 }
             )
 
-        return self.json(providers)
+        preselect_remember_me = not cloud_connection and is_local(remote_address)
+
+        return self.json(
+            {
+                "providers": providers,
+                "preselect_remember_me": preselect_remember_me,
+            }
+        )
 
 
 def _prepare_result_json(

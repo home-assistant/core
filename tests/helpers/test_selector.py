@@ -396,6 +396,7 @@ def test_assist_pipeline_selector_schema(
         ({"min": 10, "max": 1000, "mode": "slider", "step": 0.5}, (), ()),
         ({"mode": "box"}, (10,), ()),
         ({"mode": "box", "step": "any"}, (), ()),
+        ({"mode": "slider", "min": 0, "max": 1, "step": "any"}, (), ()),
     ),
 )
 def test_number_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -408,12 +409,6 @@ def test_number_selector_schema(schema, valid_selections, invalid_selections) ->
     (
         {},  # Must have mandatory fields
         {"mode": "slider"},  # Must have min+max in slider mode
-        {
-            "mode": "slider",
-            "min": 0,
-            "max": 1,
-            "step": "any",  # Can't combine slider with step any
-        },
     ),
 )
 def test_number_selector_schema_error(schema) -> None:
@@ -602,6 +597,11 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
         ({"multiline": True}, (), ()),
         ({"multiline": False, "type": "email"}, (), ()),
         ({"prefix": "before", "suffix": "after"}, (), ()),
+        (
+            {"multiple": True},
+            (["abc123", "def456"],),
+            ("abc123", None, ["abc123", None]),
+        ),
     ),
 )
 def test_text_selector_schema(schema, valid_selections, invalid_selections) -> None:
@@ -858,6 +858,11 @@ def test_language_selector_schema(schema, valid_selections, invalid_selections) 
                     "longitude": 2.0,
                     "radius": 3.0,
                 },
+                {
+                    "latitude": 1,
+                    "longitude": 2,
+                    "radius": 3,
+                },
             ),
             (
                 None,
@@ -865,7 +870,6 @@ def test_language_selector_schema(schema, valid_selections, invalid_selections) 
                 {},
                 {"latitude": 1.0},
                 {"longitude": 1.0},
-                {"latitude": 1.0, "longitude": "1.0"},
             ),
         ),
     ),
@@ -906,6 +910,16 @@ def test_rgb_color_selector_schema(
             {"min_mireds": 100, "max_mireds": 200},
             (100, 200),
             (99, 201),
+        ),
+        (
+            {"unit": "mired", "min": 100, "max": 200},
+            (100, 200),
+            (99, 201),
+        ),
+        (
+            {"unit": "kelvin", "min": 1000, "max": 2000},
+            (1000, 2000),
+            (999, 2001),
         ),
     ),
 )
@@ -1098,3 +1112,32 @@ def test_condition_selector_schema(
 def test_trigger_selector_schema(schema, valid_selections, invalid_selections) -> None:
     """Test trigger sequence selector."""
     _test_selector("trigger", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    (
+        (
+            {"data": "test", "scale": 5},
+            ("test",),
+            (False, 0, []),
+        ),
+        (
+            {"data": "test"},
+            ("test",),
+            (True, 1, []),
+        ),
+        (
+            {
+                "data": "test",
+                "scale": 5,
+                "error_correction_level": selector.QrErrorCorrectionLevel.HIGH,
+            },
+            ("test",),
+            (True, 1, []),
+        ),
+    ),
+)
+def test_qr_code_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test QR code selector."""
+    _test_selector("qr_code", schema, valid_selections, invalid_selections)

@@ -1,4 +1,5 @@
 """The tests for the webdav todo component."""
+from datetime import UTC, date, datetime
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
@@ -12,11 +13,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"
 TEST_ENTITY = "todo.my_tasks"
-SUPPORTED_FEATURES = 7
+SUPPORTED_FEATURES = 119
 
 TODO_NO_STATUS = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -38,6 +40,12 @@ SUMMARY:Cheese
 STATUS:NEEDS-ACTION
 END:VTODO
 END:VCALENDAR"""
+
+RESULT_ITEM = {
+    "uid": "2",
+    "summary": "Cheese",
+    "status": "needs_action",
+}
 
 TODO_COMPLETED = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -61,11 +69,30 @@ STATUS:NEEDS-ACTION
 END:VTODO
 END:VCALENDAR"""
 
+TODO_ALL_FIELDS = """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VTODO
+UID:2
+DTSTAMP:20171125T000000Z
+SUMMARY:Cheese
+DESCRIPTION:Any kind will do
+STATUS:NEEDS-ACTION
+DUE:20171126
+END:VTODO
+END:VCALENDAR"""
+
 
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Fixture to set up config entry platforms."""
     return [Platform.TODO]
+
+
+@pytest.fixture(autouse=True)
+def set_tz(hass: HomeAssistant) -> None:
+    """Fixture to set timezone with fixed offset year round."""
+    hass.config.set_time_zone("America/Regina")
 
 
 @pytest.fixture(name="todos")
@@ -116,6 +143,18 @@ async def mock_add_to_hass(
 ) -> None:
     """Fixture to add the ConfigEntry."""
     config_entry.add_to_hass(hass)
+
+
+IGNORE_COMPONENTS = ["BEGIN", "END", "DTSTAMP", "PRODID", "UID", "VERSION"]
+
+
+def compact_ics(ics: str) -> list[str]:
+    """Pull out parts of the rfc5545 content useful for assertions in tests."""
+    return [
+        line
+        for line in ics.split("\n")
+        if line and not any(filter(line.startswith, IGNORE_COMPONENTS))
+    ]
 
 
 @pytest.mark.parametrize(
@@ -177,10 +216,53 @@ async def test_supported_components(
     assert (state is not None) == has_entity
 
 
+@pytest.mark.parametrize(
+    ("item_data", "expcted_save_args", "expected_item"),
+    [
+        (
+            {},
+            {"status": "NEEDS-ACTION", "summary": "Cheese"},
+            RESULT_ITEM,
+        ),
+        (
+            {"due_date": "2023-11-18"},
+            {"status": "NEEDS-ACTION", "summary": "Cheese", "due": date(2023, 11, 18)},
+            {**RESULT_ITEM, "due": "2023-11-18"},
+        ),
+        (
+            {"due_datetime": "2023-11-18T08:30:00-06:00"},
+            {
+                "status": "NEEDS-ACTION",
+                "summary": "Cheese",
+                "due": datetime(2023, 11, 18, 14, 30, 00, tzinfo=UTC),
+            },
+            {**RESULT_ITEM, "due": "2023-11-18T08:30:00-06:00"},
+        ),
+        (
+            {"description": "Make sure to get Swiss"},
+            {
+                "status": "NEEDS-ACTION",
+                "summary": "Cheese",
+                "description": "Make sure to get Swiss",
+            },
+            {**RESULT_ITEM, "description": "Make sure to get Swiss"},
+        ),
+    ],
+    ids=[
+        "summary",
+        "due_date",
+        "due_datetime",
+        "description",
+    ],
+)
 async def test_add_item(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    dav_client: Mock,
     calendar: Mock,
+    item_data: dict[str, Any],
+    expcted_save_args: dict[str, Any],
+    expected_item: dict[str, Any],
 ) -> None:
     """Test adding an item to the list."""
     calendar.search.return_value = []
@@ -190,22 +272,19 @@ async def test_add_item(
     assert state
     assert state.state == "0"
 
-    # Simulat return value for the state update after the service call
+    # Simulate return value for the state update after the service call
     calendar.search.return_value = [create_todo(calendar, "2", TODO_NEEDS_ACTION)]
 
     await hass.services.async_call(
         TODO_DOMAIN,
         "add_item",
-        {"item": "Cheese"},
+        {"item": "Cheese", **item_data},
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
 
     assert calendar.save_todo.call_args
-    assert calendar.save_todo.call_args.kwargs == {
-        "status": "NEEDS-ACTION",
-        "summary": "Cheese",
-    }
+    assert calendar.save_todo.call_args.kwargs == expcted_save_args
 
     # Verify state was updated
     state = hass.states.get(TEST_ENTITY)
@@ -234,20 +313,164 @@ async def test_add_item_failure(
 
 
 @pytest.mark.parametrize(
-    ("update_data", "expected_ics", "expected_state"),
+    ("update_data", "expected_ics", "expected_state", "expected_item"),
     [
         (
             {"rename": "Swiss Cheese"},
-            ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"],
+            [
+                "DESCRIPTION:Any kind will do",
+                "DUE;VALUE=DATE:20171126",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Swiss Cheese",
+            ],
             "1",
+            {
+                "uid": "2",
+                "summary": "Swiss Cheese",
+                "status": "needs_action",
+                "description": "Any kind will do",
+                "due": "2017-11-26",
+            },
         ),
-        ({"status": "needs_action"}, ["SUMMARY:Cheese", "STATUS:NEEDS-ACTION"], "1"),
-        ({"status": "completed"}, ["SUMMARY:Cheese", "STATUS:COMPLETED"], "0"),
+        (
+            {"status": "needs_action"},
+            [
+                "DESCRIPTION:Any kind will do",
+                "DUE;VALUE=DATE:20171126",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Cheese",
+            ],
+            "1",
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "needs_action",
+                "description": "Any kind will do",
+                "due": "2017-11-26",
+            },
+        ),
+        (
+            {"status": "completed"},
+            [
+                "DESCRIPTION:Any kind will do",
+                "DUE;VALUE=DATE:20171126",
+                "STATUS:COMPLETED",
+                "SUMMARY:Cheese",
+            ],
+            "0",
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "completed",
+                "description": "Any kind will do",
+                "due": "2017-11-26",
+            },
+        ),
         (
             {"rename": "Swiss Cheese", "status": "needs_action"},
-            ["SUMMARY:Swiss Cheese", "STATUS:NEEDS-ACTION"],
+            [
+                "DESCRIPTION:Any kind will do",
+                "DUE;VALUE=DATE:20171126",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Swiss Cheese",
+            ],
             "1",
+            {
+                "uid": "2",
+                "summary": "Swiss Cheese",
+                "status": "needs_action",
+                "description": "Any kind will do",
+                "due": "2017-11-26",
+            },
         ),
+        (
+            {"due_date": "2023-11-18"},
+            [
+                "DESCRIPTION:Any kind will do",
+                "DUE;VALUE=DATE:20231118",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Cheese",
+            ],
+            "1",
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "needs_action",
+                "description": "Any kind will do",
+                "due": "2023-11-18",
+            },
+        ),
+        (
+            {"due_datetime": "2023-11-18T08:30:00-06:00"},
+            [
+                "DESCRIPTION:Any kind will do",
+                "DUE;TZID=America/Regina:20231118T083000",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Cheese",
+            ],
+            "1",
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "needs_action",
+                "description": "Any kind will do",
+                "due": "2023-11-18T08:30:00-06:00",
+            },
+        ),
+        (
+            {"due_datetime": None},
+            [
+                "DESCRIPTION:Any kind will do",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Cheese",
+            ],
+            "1",
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "needs_action",
+                "description": "Any kind will do",
+            },
+        ),
+        (
+            {"description": "Make sure to get Swiss"},
+            [
+                "DESCRIPTION:Make sure to get Swiss",
+                "DUE;VALUE=DATE:20171126",
+                "STATUS:NEEDS-ACTION",
+                "SUMMARY:Cheese",
+            ],
+            "1",
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "needs_action",
+                "due": "2017-11-26",
+                "description": "Make sure to get Swiss",
+            },
+        ),
+        (
+            {"description": None},
+            ["DUE;VALUE=DATE:20171126", "STATUS:NEEDS-ACTION", "SUMMARY:Cheese"],
+            "1",
+            {
+                "uid": "2",
+                "summary": "Cheese",
+                "status": "needs_action",
+                "due": "2017-11-26",
+            },
+        ),
+    ],
+    ids=[
+        "rename",
+        "status_needs_action",
+        "status_completed",
+        "rename_status",
+        "due_date",
+        "due_datetime",
+        "clear_due_date",
+        "description",
+        "clear_description",
     ],
 )
 async def test_update_item(
@@ -258,10 +481,11 @@ async def test_update_item(
     update_data: dict[str, Any],
     expected_ics: list[str],
     expected_state: str,
+    expected_item: dict[str, Any],
 ) -> None:
-    """Test creating a an item on the list."""
+    """Test updating an item on the list."""
 
-    item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
+    item = Todo(dav_client, None, TODO_ALL_FIELDS, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
     await config_entry.async_setup(hass)
@@ -287,12 +511,21 @@ async def test_update_item(
 
     assert dav_client.put.call_args
     ics = dav_client.put.call_args.args[1]
-    for expected in expected_ics:
-        assert expected in ics
+    assert compact_ics(ics) == expected_ics
 
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == expected_state
+
+    result = await hass.services.async_call(
+        TODO_DOMAIN,
+        "get_items",
+        {},
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+        return_response=True,
+    )
+    assert result == {TEST_ENTITY: {"items": [expected_item]}}
 
 
 async def test_update_item_failure(
@@ -496,3 +729,71 @@ async def test_remove_item_not_found(
             target={"entity_id": TEST_ENTITY},
             blocking=True,
         )
+
+
+async def test_subscribe(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    dav_client: Mock,
+    calendar: Mock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test subscription to item updates."""
+
+    item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
+    calendar.search = MagicMock(return_value=[item])
+
+    await config_entry.async_setup(hass)
+
+    # Subscribe and get the initial list
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "todo/item/subscribe",
+            "entity_id": TEST_ENTITY,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+    subscription_id = msg["id"]
+
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    items = msg["event"].get("items")
+    assert items
+    assert len(items) == 1
+    assert items[0]["summary"] == "Cheese"
+    assert items[0]["status"] == "needs_action"
+    assert items[0]["uid"]
+
+    calendar.todo_by_uid = MagicMock(return_value=item)
+    dav_client.put.return_value.status = 204
+    # Reflect update for state refresh after update
+    calendar.search.return_value = [
+        Todo(
+            dav_client, None, TODO_NEEDS_ACTION.replace("Cheese", "Milk"), calendar, "2"
+        )
+    ]
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        "update_item",
+        {
+            "item": "Cheese",
+            "rename": "Milk",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Verify update is published
+    msg = await client.receive_json()
+    assert msg["id"] == subscription_id
+    assert msg["type"] == "event"
+    items = msg["event"].get("items")
+    assert items
+    assert len(items) == 1
+    assert items[0]["summary"] == "Milk"
+    assert items[0]["status"] == "needs_action"
+    assert items[0]["uid"]

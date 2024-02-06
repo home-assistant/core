@@ -53,7 +53,7 @@ async def test_reload_platform(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{DOMAIN}.{PLATFORM}" in hass.config.components
+    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
     platform = async_get_platform_without_config_entry(hass, PLATFORM, DOMAIN)
@@ -93,7 +93,7 @@ async def test_setup_reload_service(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{DOMAIN}.{PLATFORM}" in hass.config.components
+    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
     await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
@@ -134,7 +134,7 @@ async def test_setup_reload_service_when_async_process_component_config_fails(
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{DOMAIN}.{PLATFORM}" in hass.config.components
+    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
     await async_setup_reload_service(hass, PLATFORM, [DOMAIN])
@@ -186,7 +186,7 @@ async def test_setup_reload_service_with_platform_that_provides_async_reset_plat
     await hass.async_block_till_done()
     assert component_setup.called
 
-    assert f"{DOMAIN}.{PLATFORM}" in hass.config.components
+    assert f"{PLATFORM}.{DOMAIN}" in hass.config.components
     assert len(setup_called) == 1
 
     await async_setup_reload_service(hass, PLATFORM, [DOMAIN])

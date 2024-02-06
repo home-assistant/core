@@ -7,8 +7,9 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-from apcaccess import status
+import aioapcaccess
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -31,6 +32,8 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
     For each entity to use, acts as the single point responsible for fetching
     updates from the server.
     """
+
+    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
         """Initialize the data object."""
@@ -70,13 +73,10 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
         return self.data.get("SERIALNO")
 
     @property
-    def device_info(self) -> DeviceInfo | None:
+    def device_info(self) -> DeviceInfo:
         """Return the DeviceInfo of this APC UPS, if serial number is available."""
-        if not self.ups_serial_no:
-            return None
-
         return DeviceInfo(
-            identifiers={(DOMAIN, self.ups_serial_no)},
+            identifiers={(DOMAIN, self.ups_serial_no or self.config_entry.entry_id)},
             model=self.ups_model,
             manufacturer="APC",
             name=self.ups_name if self.ups_name else "APC UPS",
@@ -90,13 +90,8 @@ class APCUPSdCoordinator(DataUpdateCoordinator[OrderedDict[str, str]]):
         Note that the result dict uses upper case for each resource, where our
         integration uses lower cases as keys internally.
         """
-
         async with asyncio.timeout(10):
             try:
-                raw = await self.hass.async_add_executor_job(
-                    status.get, self._host, self._port
-                )
-                result: OrderedDict[str, str] = status.parse(raw)
-                return result
-            except OSError as error:
+                return await aioapcaccess.request_status(self._host, self._port)
+            except (OSError, asyncio.IncompleteReadError) as error:
                 raise UpdateFailed(error) from error

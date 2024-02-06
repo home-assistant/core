@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_climate_myauto_main[climate.myauto-fanmode]
+  dict({
+    'ac3': dict({
+      'info': dict({
+        'fan': 'autoAA',
+      }),
+    }),
+  })
+# ---
+# name: test_climate_myauto_main[climate.myauto-settemp]
+  dict({
+    'ac3': dict({
+      'info': dict({
+        'myAutoCoolTargetTemp': 23.0,
+        'myAutoHeatTargetTemp': 21.0,
+      }),
+    }),
+  })
+# ---
+# name: test_climate_myauto_main[climate.myauto]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'fan_mode': 'auto',
+      'fan_modes': list([
+        'low',
+        'medium',
+        'high',
+        'auto',
+      ]),
+      'friendly_name': 'myauto',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 32,
+      'min_temp': 16,
+      'supported_features': <ClimateEntityFeature: 395>,
+      'target_temp_high': 24,
+      'target_temp_low': 20,
+      'target_temp_step': 1,
+      'temperature': 24,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.myauto',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---

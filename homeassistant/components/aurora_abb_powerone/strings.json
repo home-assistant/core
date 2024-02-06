@@ -21,11 +21,14 @@
   },
   "entity": {
     "sensor": {
+      "alarm": {
+        "name": "Alarm status"
+      },
       "power_output": {
-        "name": "Power Output"
+        "name": "Power output"
       },
       "total_energy": {
-        "name": "Total Energy"
+        "name": "Total energy"
       }
     }
   }

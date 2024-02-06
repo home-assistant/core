@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.zodiac.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -36,7 +36,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("source", [SOURCE_USER, SOURCE_IMPORT])
+@pytest.mark.parametrize("source", [SOURCE_USER])
 async def test_single_instance_allowed(
     hass: HomeAssistant,
     source: str,
@@ -52,19 +52,3 @@ async def test_single_instance_allowed(
 
     assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
-
-
-async def test_import_flow(
-    hass: HomeAssistant,
-) -> None:
-    """Test the import configuration flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={},
-    )
-
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Zodiac"
-    assert result.get("data") == {}
-    assert result.get("options") == {}

@@ -67,6 +67,7 @@ from homeassistant.const import (
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
+    CONF_SET_CONVERSATION_RESPONSE,
     CONF_STATE,
     CONF_STOP,
     CONF_TARGET,
@@ -99,6 +100,7 @@ from homeassistant.generated.countries import COUNTRIES
 from homeassistant.generated.languages import LANGUAGES
 from homeassistant.util import raise_if_invalid_path, slugify as util_slugify
 import homeassistant.util.dt as dt_util
+from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
 
@@ -350,6 +352,31 @@ comp_entity_ids_or_uuids = vol.Any(
 )
 
 
+def domain_key(config_key: Any) -> str:
+    """Validate a top level config key with an optional label and return the domain.
+
+    A domain is separated from a label by one or more spaces, empty labels are not
+    allowed.
+
+    Examples:
+    'hue' returns 'hue'
+    'hue 1' returns 'hue'
+    'hue  1' returns 'hue'
+    'hue ' raises
+    'hue  ' raises
+
+    """
+    if not isinstance(config_key, str):
+        raise vol.Invalid("invalid domain", path=[config_key])
+
+    parts = config_key.partition(" ")
+    _domain = parts[0] if parts[2].strip(" ") else config_key
+    if not _domain or _domain.strip(" ") != _domain:
+        raise vol.Invalid("invalid domain", path=[config_key])
+
+    return _domain
+
+
 def entity_domain(domain: str | list[str]) -> Callable[[Any], str]:
     """Validate that entity belong to domain."""
     ent_domain = entities_domain(domain)
@@ -581,7 +608,11 @@ def string(value: Any) -> str:
         raise vol.Invalid("string value is None")
 
     # This is expected to be the most common case, so check it first.
-    if type(value) is str:  # noqa: E721
+    if (
+        type(value) is str  # noqa: E721
+        or type(value) is NodeStrClass  # noqa: E721
+        or isinstance(value, str)
+    ):
         return value
 
     if isinstance(value, template_helper.ResultWrapper):
@@ -1238,6 +1269,9 @@ def make_entity_service_schema(
     )
 
 
+SCRIPT_CONVERSATION_RESPONSE_SCHEMA = vol.Any(template, None)
+
+
 SCRIPT_VARIABLES_SCHEMA = vol.All(
     vol.Schema({str: template_complex}),
     # pylint: disable-next=unnecessary-lambda
@@ -1713,6 +1747,15 @@ _SCRIPT_SET_SCHEMA = vol.Schema(
     }
 )
 
+_SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA = vol.Schema(
+    {
+        **SCRIPT_ACTION_BASE_SCHEMA,
+        vol.Required(
+            CONF_SET_CONVERSATION_RESPONSE
+        ): SCRIPT_CONVERSATION_RESPONSE_SCHEMA,
+    }
+)
+
 _SCRIPT_STOP_SCHEMA = vol.Schema(
     {
         **SCRIPT_ACTION_BASE_SCHEMA,
@@ -1751,20 +1794,21 @@ _SCRIPT_PARALLEL_SCHEMA = vol.Schema(
 )
 
 
-SCRIPT_ACTION_DELAY = "delay"
-SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
-SCRIPT_ACTION_CHECK_CONDITION = "condition"
-SCRIPT_ACTION_FIRE_EVENT = "event"
-SCRIPT_ACTION_CALL_SERVICE = "call_service"
-SCRIPT_ACTION_DEVICE_AUTOMATION = "device"
 SCRIPT_ACTION_ACTIVATE_SCENE = "scene"
-SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_CALL_SERVICE = "call_service"
+SCRIPT_ACTION_CHECK_CONDITION = "condition"
 SCRIPT_ACTION_CHOOSE = "choose"
-SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
-SCRIPT_ACTION_VARIABLES = "variables"
-SCRIPT_ACTION_STOP = "stop"
+SCRIPT_ACTION_DELAY = "delay"
+SCRIPT_ACTION_DEVICE_AUTOMATION = "device"
+SCRIPT_ACTION_FIRE_EVENT = "event"
 SCRIPT_ACTION_IF = "if"
 SCRIPT_ACTION_PARALLEL = "parallel"
+SCRIPT_ACTION_REPEAT = "repeat"
+SCRIPT_ACTION_SET_CONVERSATION_RESPONSE = "set_conversation_response"
+SCRIPT_ACTION_STOP = "stop"
+SCRIPT_ACTION_VARIABLES = "variables"
+SCRIPT_ACTION_WAIT_FOR_TRIGGER = "wait_for_trigger"
+SCRIPT_ACTION_WAIT_TEMPLATE = "wait_template"
 
 
 def determine_script_action(action: dict[str, Any]) -> str:
@@ -1811,24 +1855,28 @@ def determine_script_action(action: dict[str, Any]) -> str:
     if CONF_PARALLEL in action:
         return SCRIPT_ACTION_PARALLEL
 
+    if CONF_SET_CONVERSATION_RESPONSE in action:
+        return SCRIPT_ACTION_SET_CONVERSATION_RESPONSE
+
     raise ValueError("Unable to determine action")
 
 
 ACTION_TYPE_SCHEMAS: dict[str, Callable[[Any], dict]] = {
-    SCRIPT_ACTION_CALL_SERVICE: SERVICE_SCHEMA,
-    SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
-    SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
-    SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
-    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_ACTION_SCHEMA,
-    SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
     SCRIPT_ACTION_ACTIVATE_SCENE: _SCRIPT_SCENE_SCHEMA,
-    SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_CALL_SERVICE: SERVICE_SCHEMA,
+    SCRIPT_ACTION_CHECK_CONDITION: CONDITION_ACTION_SCHEMA,
     SCRIPT_ACTION_CHOOSE: _SCRIPT_CHOOSE_SCHEMA,
-    SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
-    SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
-    SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
+    SCRIPT_ACTION_DELAY: _SCRIPT_DELAY_SCHEMA,
+    SCRIPT_ACTION_DEVICE_AUTOMATION: DEVICE_ACTION_SCHEMA,
+    SCRIPT_ACTION_FIRE_EVENT: EVENT_SCHEMA,
     SCRIPT_ACTION_IF: _SCRIPT_IF_SCHEMA,
     SCRIPT_ACTION_PARALLEL: _SCRIPT_PARALLEL_SCHEMA,
+    SCRIPT_ACTION_REPEAT: _SCRIPT_REPEAT_SCHEMA,
+    SCRIPT_ACTION_SET_CONVERSATION_RESPONSE: _SCRIPT_SET_CONVERSATION_RESPONSE_SCHEMA,
+    SCRIPT_ACTION_STOP: _SCRIPT_STOP_SCHEMA,
+    SCRIPT_ACTION_VARIABLES: _SCRIPT_SET_SCHEMA,
+    SCRIPT_ACTION_WAIT_FOR_TRIGGER: _SCRIPT_WAIT_FOR_TRIGGER_SCHEMA,
+    SCRIPT_ACTION_WAIT_TEMPLATE: _SCRIPT_WAIT_TEMPLATE_SCHEMA,
 }
 
 

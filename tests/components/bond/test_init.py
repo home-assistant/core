@@ -1,5 +1,4 @@
 """Tests for the Bond module."""
-import asyncio
 from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -45,7 +44,7 @@ async def test_async_setup_no_domain_config(hass: HomeAssistant) -> None:
     [
         ClientConnectionError,
         ClientResponseError(MagicMock(), MagicMock(), status=404),
-        asyncio.TimeoutError,
+        TimeoutError,
         OSError,
     ],
 )
@@ -184,9 +183,7 @@ async def test_old_identifiers_are_removed(
             "name": "test1",
             "type": DeviceType.GENERIC_DEVICE,
         }
-    ), patch_bond_device_properties(
-        return_value={}
-    ), patch_bond_device_state(
+    ), patch_bond_device_properties(return_value={}), patch_bond_device_state(
         return_value={}
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
@@ -228,9 +225,7 @@ async def test_smart_by_bond_device_suggested_area(
             "type": DeviceType.GENERIC_DEVICE,
             "location": "Den",
         }
-    ), patch_bond_device_properties(
-        return_value={}
-    ), patch_bond_device_state(
+    ), patch_bond_device_properties(return_value={}), patch_bond_device_state(
         return_value={}
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True
@@ -275,9 +270,7 @@ async def test_bridge_device_suggested_area(
             "type": DeviceType.GENERIC_DEVICE,
             "location": "Bathroom",
         }
-    ), patch_bond_device_properties(
-        return_value={}
-    ), patch_bond_device_state(
+    ), patch_bond_device_properties(return_value={}), patch_bond_device_state(
         return_value={}
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is True

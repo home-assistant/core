@@ -1,5 +1,7 @@
 """Test the Advantage Air Select Platform."""
-from json import loads
+
+
+from unittest.mock import AsyncMock
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -10,36 +12,18 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import (
-    TEST_SET_RESPONSE,
-    TEST_SET_URL,
-    TEST_SYSTEM_DATA,
-    TEST_SYSTEM_URL,
-    add_mock_config,
-)
-
-from tests.test_util.aiohttp import AiohttpClientMocker
+from . import add_mock_config
 
 
 async def test_select_async_setup_entry(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
+    mock_get: AsyncMock,
+    mock_update: AsyncMock,
 ) -> None:
     """Test select platform."""
 
-    aioclient_mock.get(
-        TEST_SYSTEM_URL,
-        text=TEST_SYSTEM_DATA,
-    )
-    aioclient_mock.get(
-        TEST_SET_URL,
-        text=TEST_SET_RESPONSE,
-    )
-
     await add_mock_config(hass)
-
-    assert len(aioclient_mock.mock_calls) == 1
 
     # Test MyZone Select Entity
     entity_id = "select.myzone_myzone"
@@ -57,10 +41,4 @@ async def test_select_async_setup_entry(
         {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Zone 3"},
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 3
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"]["myZone"] == 3
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+    mock_update.assert_called_once()

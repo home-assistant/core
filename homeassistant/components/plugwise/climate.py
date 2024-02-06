@@ -45,6 +45,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     _previous_mode: str = "heating"
 
@@ -68,6 +69,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         ):
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
+        if HVACMode.OFF in self.hvac_modes:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
         if presets := self.device.get("preset_modes"):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
@@ -159,6 +164,16 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         """Return the current running hvac operation if supported."""
         # Keep track of the previous action-mode
         self._previous_action_mode(self.coordinator)
+
+        # Adam provides the hvac_action for each thermostat
+        if (control_state := self.device.get("control_state")) == "cooling":
+            return HVACAction.COOLING
+        if control_state == "heating":
+            return HVACAction.HEATING
+        if control_state == "preheating":
+            return HVACAction.PREHEATING
+        if control_state == "off":
+            return HVACAction.IDLE
 
         heater: str = self.coordinator.data.gateway["heater_id"]
         heater_data = self.coordinator.data.devices[heater]

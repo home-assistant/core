@@ -42,6 +42,7 @@ async def test_form(hass: HomeAssistant, host, expected_title) -> None:
     assert result["options"] == {
         "count": 5,
         "host": host,
+        "consider_home": 180,
     }
 
 
@@ -58,7 +59,7 @@ async def test_options(hass: HomeAssistant, host, count, expected_title) -> None
         source=config_entries.SOURCE_USER,
         data={},
         domain=DOMAIN,
-        options={"count": count, "host": host},
+        options={"count": count, "host": host, "consider_home": 180},
         title=expected_title,
     )
     config_entry.add_to_hass(hass)
@@ -83,6 +84,7 @@ async def test_options(hass: HomeAssistant, host, count, expected_title) -> None
     assert result["data"] == {
         "count": count,
         "host": "10.10.10.1",
+        "consider_home": 180,
     }
 
 
@@ -103,6 +105,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
     assert result["options"] == {
         "host": "127.0.0.1",
         "count": 1,
+        "consider_home": 240,
     }
 
     # test import without name
@@ -119,4 +122,5 @@ async def test_step_import(hass: HomeAssistant) -> None:
     assert result["options"] == {
         "host": "10.10.10.10",
         "count": 5,
+        "consider_home": 180,
     }
