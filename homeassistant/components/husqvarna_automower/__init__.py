@@ -25,7 +25,6 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
-    hass.data.setdefault(DOMAIN, {})
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
