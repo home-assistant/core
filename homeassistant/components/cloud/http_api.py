@@ -69,6 +69,7 @@ _CLOUD_ERRORS: dict[type[Exception], tuple[HTTPStatus, str]] = {
 @callback
 def async_setup(hass: HomeAssistant) -> None:
     """Initialize the HTTP API."""
+    websocket_api.async_register_command(hass, websocket_cloud_remove_data)
     websocket_api.async_register_command(hass, websocket_cloud_status)
     websocket_api.async_register_command(hass, websocket_subscription)
     websocket_api.async_register_command(hass, websocket_update_prefs)
@@ -325,6 +326,32 @@ class CloudForgotPasswordView(HomeAssistantView):
             await cloud.auth.async_forgot_password(data["email"])
 
         return self.json_message("ok")
+
+
+@websocket_api.websocket_command({vol.Required("type"): "cloud/remove_data"})
+@websocket_api.async_response
+async def websocket_cloud_remove_data(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle request for account info.
+
+    Async friendly.
+    """
+    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    if cloud.is_logged_in:
+        connection.send_message(
+            websocket_api.error_message(
+                msg["id"], "logged_in", "Can't remove data when logged in."
+            )
+        )
+        return
+
+    await cloud.remove_data()
+    await cloud.client.prefs.async_erase_config()
+
+    connection.send_message(websocket_api.result_message(msg["id"]))
 
 
 @websocket_api.websocket_command({vol.Required("type"): "cloud/status"})

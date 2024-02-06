@@ -177,6 +177,10 @@ class CloudPreferences:
 
         return True
 
+    async def async_erase_config(self) -> None:
+        """Erase the configuration."""
+        await self._save_prefs(self._empty_config(""))
+
     def as_dict(self) -> dict[str, Any]:
         """Return dictionary version."""
         return {
