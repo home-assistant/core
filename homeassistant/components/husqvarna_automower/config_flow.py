@@ -26,7 +26,7 @@ class HusqvarnaConfigFlowHandler(
         """Create an entry for the flow."""
         token = data[CONF_TOKEN]
         user_id = token[CONF_USER_ID]
-        structured_token = await async_structure_token(token["access_token"])
+        structured_token = await async_structure_token(token[CONF_ACCESS_TOKEN])
         first_name = structured_token.user.first_name
         last_name = structured_token.user.last_name
         await self.async_set_unique_id(user_id)
