@@ -788,8 +788,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/media_source/ @hunterjm
 /tests/components/media_source/ @hunterjm
 /homeassistant/components/mediaroom/ @dgomes
-/homeassistant/components/melcloud/ @vilppuvuorinen
-/tests/components/melcloud/ @vilppuvuorinen
 /homeassistant/components/melissa/ @kennedyshead
 /tests/components/melissa/ @kennedyshead
 /homeassistant/components/melnor/ @vanstinator

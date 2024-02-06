@@ -1,5 +1,4 @@
 """Philips Hue lights platform tests."""
-import asyncio
 from unittest.mock import Mock
 
 import aiohue
@@ -558,8 +557,8 @@ async def test_other_light_update(hass: HomeAssistant, mock_bridge_v1) -> None:
 
 async def test_update_timeout(hass: HomeAssistant, mock_bridge_v1) -> None:
     """Test bridge marked as not available if timeout error during update."""
-    mock_bridge_v1.api.lights.update = Mock(side_effect=asyncio.TimeoutError)
-    mock_bridge_v1.api.groups.update = Mock(side_effect=asyncio.TimeoutError)
+    mock_bridge_v1.api.lights.update = Mock(side_effect=TimeoutError)
+    mock_bridge_v1.api.groups.update = Mock(side_effect=TimeoutError)
     await setup_bridge(hass, mock_bridge_v1)
     assert len(mock_bridge_v1.mock_requests) == 0
     assert len(hass.states.async_all()) == 0

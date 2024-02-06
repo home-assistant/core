@@ -101,6 +101,23 @@ class ImapMessage:
         """Initialize IMAP message."""
         self.email_message = email.message_from_bytes(raw_message)
 
+    @staticmethod
+    def _decode_payload(part: Message) -> str:
+        """Try to decode text payloads.
+
+        Common text encodings are quoted-printable or base64.
+        Falls back to the raw content part if decoding fails.
+        """
+        try:
+            decoded_payload: Any = part.get_payload(decode=True)
+            if TYPE_CHECKING:
+                assert isinstance(decoded_payload, bytes)
+            content_charset = part.get_content_charset() or "utf-8"
+            return decoded_payload.decode(content_charset)
+        except ValueError:
+            # return undecoded payload
+            return str(part.get_payload())
+
     @property
     def headers(self) -> dict[str, tuple[str,]]:
         """Get the email headers."""
@@ -158,30 +175,14 @@ class ImapMessage:
         message_html: str | None = None
         message_untyped_text: str | None = None
 
-        def _decode_payload(part: Message) -> str:
-            """Try to decode text payloads.
-
-            Common text encodings are quoted-printable or base64.
-            Falls back to the raw content part if decoding fails.
-            """
-            try:
-                decoded_payload: Any = part.get_payload(decode=True)
-                if TYPE_CHECKING:
-                    assert isinstance(decoded_payload, bytes)
-                content_charset = part.get_content_charset() or "utf-8"
-                return decoded_payload.decode(content_charset)
-            except ValueError:
-                # return undecoded payload
-                return str(part.get_payload())
-
         part: Message
         for part in self.email_message.walk():
             if part.get_content_type() == CONTENT_TYPE_TEXT_PLAIN:
                 if message_text is None:
-                    message_text = _decode_payload(part)
+                    message_text = self._decode_payload(part)
             elif part.get_content_type() == "text/html":
                 if message_html is None:
-                    message_html = _decode_payload(part)
+                    message_html = self._decode_payload(part)
             elif (
                 part.get_content_type().startswith("text")
                 and message_untyped_text is None
@@ -346,7 +347,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                 await self.imap_client.stop_wait_server_push()
                 await self.imap_client.close()
                 await self.imap_client.logout()
-            except (AioImapException, asyncio.TimeoutError):
+            except (AioImapException, TimeoutError):
                 if log_error:
                     _LOGGER.debug("Error while cleaning up imap connection")
             finally:
@@ -378,7 +379,7 @@ class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):
         except (
             AioImapException,
             UpdateFailed,
-            asyncio.TimeoutError,
+            TimeoutError,
         ) as ex:
             await self._cleanup()
             self.async_set_update_error(ex)
@@ -450,7 +451,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
             except (
                 UpdateFailed,
                 AioImapException,
-                asyncio.TimeoutError,
+                TimeoutError,
             ) as ex:
                 await self._cleanup()
                 self.async_set_update_error(ex)
@@ -466,8 +467,7 @@ class ImapPushDataUpdateCoordinator(ImapDataUpdateCoordinator):
                 async with asyncio.timeout(10):
                     await idle
 
-            # From python 3.11 asyncio.TimeoutError is an alias of TimeoutError
-            except (AioImapException, asyncio.TimeoutError):
+            except (AioImapException, TimeoutError):
                 _LOGGER.debug(
                     "Lost %s (will attempt to reconnect after %s s)",
                     self.config_entry.data[CONF_SERVER],

@@ -82,7 +82,7 @@ async def async_setup_entry(
         # so we force a refresh when we add it if possible
         shade: BaseShade = PvShade(raw_shade, pv_entry.api)
         name_before_refresh = shade.name
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with asyncio.timeout(1):
                 await shade.refresh()
 

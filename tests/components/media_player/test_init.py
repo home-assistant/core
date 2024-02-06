@@ -1,5 +1,4 @@
 """Test the base functions of the media player."""
-import asyncio
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -103,7 +102,7 @@ async def test_get_image_http_log_credentials_redacted(
         state = hass.states.get("media_player.bedroom")
         assert "entity_picture_local" not in state.attributes
 
-        aioclient_mock.get(url, exc=asyncio.TimeoutError())
+        aioclient_mock.get(url, exc=TimeoutError())
 
         client = await hass_client_no_auth()
 

@@ -1,6 +1,5 @@
 """Axis network device abstraction."""
 
-import asyncio
 from asyncio import timeout
 from types import MappingProxyType
 from typing import Any
@@ -270,7 +269,7 @@ async def get_axis_device(
         )
         raise AuthenticationRequired from err
 
-    except (asyncio.TimeoutError, axis.RequestError) as err:
+    except (TimeoutError, axis.RequestError) as err:
         LOGGER.error("Error connecting to the Axis device at %s", config[CONF_HOST])
         raise CannotConnect from err
 
