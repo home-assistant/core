@@ -104,8 +104,6 @@ async def test_bad_requests(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
     message = "Filtered a potential harmful request to:"
-    if fail_on_query_string:
-        message = "Filtered a request with a potential harmful query string:"
     assert message in caplog.text
 
 
