@@ -1,13 +1,12 @@
 """Tests for the Blue Current integration."""
 from __future__ import annotations
 
-from asyncio import Event
+from asyncio import Event, Future
 from functools import partial
 from unittest.mock import MagicMock, patch
 
 from bluecurrent_api import Client
 
-from homeassistant.components.blue_current import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -19,16 +18,15 @@ DEFAULT_CHARGE_POINT = {
 }
 
 
-async def start_loop(hass: HomeAssistant, client, receiver):
+async def start_loop(client, future: Future | None, receiver):
     """Set the receiver."""
     client.receiver = receiver
 
     client.started_loop.set()
     client.started_loop.clear()
 
-    client.loop_future = hass.loop.create_future()
-
-    await client.loop_future
+    if future and not future.done():
+        await future
 
 
 async def get_charge_points(client, charge_point: dict) -> None:
@@ -58,19 +56,17 @@ async def get_grid_status(client, grid: dict, evse_id: str) -> None:
 
 
 def create_client_mock(
-    hass: HomeAssistant,
+    loop_future: Future | None,
     charge_point: dict,
-    status: dict | None = None,
-    grid: dict | None = None,
+    status: dict | None,
+    grid: dict | None,
 ) -> MagicMock:
     """Create a mock of the bluecurrent-api Client."""
     client_mock = MagicMock(spec=Client)
 
-    client_mock.receiver = None
-
     client_mock.started_loop = Event()
 
-    client_mock.start_loop.side_effect = partial(start_loop, hass, client_mock)
+    client_mock.start_loop.side_effect = partial(start_loop, client_mock, loop_future)
     client_mock.get_charge_points.side_effect = partial(
         get_charge_points, client_mock, charge_point
     )
@@ -84,27 +80,23 @@ def create_client_mock(
 
 async def init_integration(
     hass: HomeAssistant,
+    config_entry: MockConfigEntry,
     platform="",
     charge_point: dict | None = None,
     status: dict | None = None,
     grid: dict | None = None,
+    loop_future: Future | None = None,
 ) -> MagicMock:
     """Set up the Blue Current integration in Home Assistant."""
 
     if charge_point is None:
         charge_point = DEFAULT_CHARGE_POINT
 
-    client_mock = create_client_mock(hass, charge_point, status, grid)
+    client_mock = create_client_mock(loop_future, charge_point, status, grid)
 
     with patch("homeassistant.components.blue_current.PLATFORMS", [platform]), patch(
         "homeassistant.components.blue_current.Client", return_value=client_mock
     ):
-        config_entry = MockConfigEntry(
-            domain=DOMAIN,
-            entry_id="uuid",
-            unique_id="uuid",
-            data={"api_token": "123", "card": {"123"}},
-        )
         config_entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(config_entry.entry_id)
