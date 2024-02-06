@@ -362,7 +362,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
 class UtilityMeterSensor(RestoreSensor):
     """Representation of an utility meter sensor."""
 
-    _attr_icon = "mdi:counter"
+    _attr_translation_key = "utility_meter"
     _attr_should_poll = False
 
     def __init__(

@@ -1,6 +1,8 @@
-"""Support for GPSD."""
+"""Sensor platform for GPSD integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -11,7 +13,12 @@ from gps3.agps3threaded import (
 )
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -20,6 +27,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    EntityCategory,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -38,6 +46,28 @@ ATTR_GPS_TIME = "gps_time"
 ATTR_SPEED = "speed"
 
 DEFAULT_NAME = "GPS"
+
+_MODE_VALUES = {2: "2d_fix", 3: "3d_fix"}
+
+
+@dataclass(frozen=True, kw_only=True)
+class GpsdSensorDescription(SensorEntityDescription):
+    """Class describing GPSD sensor entities."""
+
+    value_fn: Callable[[AGPS3mechanism], str | None]
+
+
+SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
+    GpsdSensorDescription(
+        key="mode",
+        translation_key="mode",
+        name=None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=list(_MODE_VALUES.values()),
+        value_fn=lambda agps_thread: _MODE_VALUES.get(agps_thread.data_stream.mode),
+    ),
+)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -60,7 +90,9 @@ async def async_setup_entry(
                 config_entry.data[CONF_HOST],
                 config_entry.data[CONF_PORT],
                 config_entry.entry_id,
+                description,
             )
+            for description in SENSOR_TYPES
         ]
     )
 
@@ -97,20 +129,23 @@ class GpsdSensor(SensorEntity):
     """Representation of a GPS receiver available via GPSD."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+
+    entity_description: GpsdSensorDescription
 
     def __init__(
         self,
         host: str,
         port: int,
         unique_id: str,
+        description: GpsdSensorDescription,
     ) -> None:
         """Initialize the GPSD sensor."""
+        self.entity_description = description
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._attr_unique_id = unique_id
+        self._attr_unique_id = f"{unique_id}-{self.entity_description.key}"
 
         self.agps_thread = AGPS3mechanism()
         self.agps_thread.stream_data(host=host, port=port)
@@ -119,11 +154,7 @@ class GpsdSensor(SensorEntity):
     @property
     def native_value(self) -> str | None:
         """Return the state of GPSD."""
-        if self.agps_thread.data_stream.mode == 3:
-            return "3D Fix"
-        if self.agps_thread.data_stream.mode == 2:
-            return "2D Fix"
-        return None
+        return self.entity_description.value_fn(self.agps_thread)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -137,12 +168,3 @@ class GpsdSensor(SensorEntity):
             ATTR_CLIMB: self.agps_thread.data_stream.climb,
             ATTR_MODE: self.agps_thread.data_stream.mode,
         }
-
-    @property
-    def icon(self) -> str:
-        """Return the icon of the sensor."""
-        mode = self.agps_thread.data_stream.mode
-
-        if isinstance(mode, int) and mode >= 2:
-            return "mdi:crosshairs-gps"
-        return "mdi:crosshairs"

@@ -4,6 +4,7 @@ from unittest.mock import patch
 from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 
 async def test_import(hass: HomeAssistant) -> None:
@@ -46,3 +47,20 @@ async def test_import_once(hass: HomeAssistant) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
     mock_setup_entry.assert_not_called()
+
+
+async def test_reauth(hass: HomeAssistant) -> None:
+    """Test reauth works."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["handler"] == DOMAIN
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
