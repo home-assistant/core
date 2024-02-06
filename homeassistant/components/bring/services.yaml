@@ -1,6 +1,6 @@
 push_notification:
   fields:
-    bring_list:
+    entity_id:
       required: true
       example: todo.bring_shoppinglist
       selector:

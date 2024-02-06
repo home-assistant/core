@@ -22,7 +22,7 @@
       "name": "Notifications",
       "description": "Send a mobile push notification to members of a shared Bring! list.",
       "fields": {
-        "bring_list": {
+        "entity_id": {
           "name": "List",
           "description": "Bring! list whose members (except sender) will be notified."
         },

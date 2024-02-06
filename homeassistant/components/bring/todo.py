@@ -17,6 +17,7 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -25,7 +26,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_ITEM_NAME,
-    ATTR_LIST,
     ATTR_NOTIFICATION_TYPE,
     DOMAIN,
     SERVICE_PUSH_NOTIFICATION,
@@ -61,7 +61,7 @@ async def async_setup_entry(
         SERVICE_PUSH_NOTIFICATION,
         vol.Schema(
             {
-                vol.Required(ATTR_LIST): cv.entities_domain(DOMAIN_TODO),
+                vol.Required(ATTR_ENTITY_ID): cv.entities_domain(DOMAIN_TODO),
                 vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
                     vol.Upper, cv.enum(BringNotificationType)
                 ),
@@ -248,13 +248,12 @@ class BringTodoListEntity(
     ) -> None:
         """Send a push notification to members of the To-Do list."""
         try:
-            await self.hass.async_add_executor_job(
-                self.coordinator.bring.notify,
-                self.bring_list["listUuid"],
-                notification_type,
-                item_name or "",
+            await self.coordinator.bring.notifyAsync(
+                self.bring_list["listUuid"], notification_type, item_name or None
             )
         except BringRequestException as e:
             raise HomeAssistantError(
                 "Unable to send push notification for bring"
             ) from e
+        except ValueError as e:
+            raise HomeAssistantError("Item name required") from e
