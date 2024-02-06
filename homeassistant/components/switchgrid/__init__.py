@@ -1,4 +1,5 @@
 """The Switchgrid integration."""
+
 from __future__ import annotations
 
 from switchgrid_python_client import SwitchgridData
@@ -11,7 +12,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 from .coordinator import SwitchgridCoordinator
 
-PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.CALENDAR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

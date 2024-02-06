@@ -26,7 +26,6 @@ class Platform(StrEnum):
     ALARM_CONTROL_PANEL = "alarm_control_panel"
     BINARY_SENSOR = "binary_sensor"
     BUTTON = "button"
-
     CALENDAR = "calendar"
     CAMERA = "camera"
     CLIMATE = "climate"
