@@ -1,6 +1,5 @@
 """Constants for monitoring a Sense energy sensor."""
 
-import asyncio
 import socket
 
 from sense_energy import (
@@ -39,11 +38,11 @@ FROM_GRID_ID = "from_grid"
 SOLAR_POWERED_NAME = "Solar Powered Percentage"
 SOLAR_POWERED_ID = "solar_powered"
 
-SENSE_TIMEOUT_EXCEPTIONS = (asyncio.TimeoutError, SenseAPITimeoutException)
+SENSE_TIMEOUT_EXCEPTIONS = (TimeoutError, SenseAPITimeoutException)
 SENSE_WEBSOCKET_EXCEPTIONS = (socket.gaierror, SenseWebsocketException)
 SENSE_CONNECT_EXCEPTIONS = (
     socket.gaierror,
-    asyncio.TimeoutError,
+    TimeoutError,
     SenseAPITimeoutException,
     SenseAPIException,
 )

@@ -364,6 +364,7 @@ def domain_key(config_key: Any) -> str:
     'hue  1' returns 'hue'
     'hue ' raises
     'hue  ' raises
+
     """
     if not isinstance(config_key, str):
         raise vol.Invalid("invalid domain", path=[config_key])

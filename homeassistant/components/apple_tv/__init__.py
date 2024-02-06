@@ -40,7 +40,8 @@ from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Apple TV"
+DEFAULT_NAME_TV = "Apple TV"
+DEFAULT_NAME_HP = "HomePod"
 
 BACKOFF_TIME_LOWER_LIMIT = 15  # seconds
 BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
@@ -358,7 +359,11 @@ class AppleTVManager(DeviceListener):
             ATTR_MANUFACTURER: "Apple",
             ATTR_NAME: self.config_entry.data[CONF_NAME],
         }
-        attrs[ATTR_SUGGESTED_AREA] = attrs[ATTR_NAME].removesuffix(f" {DEFAULT_NAME}")
+        attrs[ATTR_SUGGESTED_AREA] = (
+            attrs[ATTR_NAME]
+            .removesuffix(f" {DEFAULT_NAME_TV}")
+            .removesuffix(f" {DEFAULT_NAME_HP}")
+        )
 
         if self.atv:
             dev_info = self.atv.device_info

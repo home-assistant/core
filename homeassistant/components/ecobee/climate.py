@@ -323,6 +323,7 @@ class Thermostat(ClimateEntity):
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
     _attr_name = None
     _attr_has_entity_name = True
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, data: EcobeeData, thermostat_index: int, thermostat: dict
@@ -375,6 +376,10 @@ class Thermostat(ClimateEntity):
             supported = supported | ClimateEntityFeature.TARGET_HUMIDITY
         if self.has_aux_heat:
             supported = supported | ClimateEntityFeature.AUX_HEAT
+        if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
+            supported = (
+                supported | ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
         return supported
 
     @property
