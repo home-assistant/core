@@ -42,6 +42,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         await self.api.close()
 
     @callback
-    def callback(self, ws_data: MowerList):
+    def callback(self, ws_data: MowerList) -> None:
         """Process websocket callbacks and write them to the DataUpdateCoordinator."""
         self.async_set_updated_data(ws_data)
