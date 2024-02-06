@@ -849,9 +849,10 @@ class SmartEnergySummationReceived(PolledSmartEnergySummation):
         """Entity Factory.
 
         This attribute only started to be initialized in HA 2024.2.0,
-        so the entity would still be created on the first HA start after the upgrade for existing devices,
-        as the initialization to see if an attribute is unsupported happens later in the background.
-        To avoid creating a lot of unnecessary entities for existing devices,
+        so the entity would be created on the first HA start after the
+        upgrade for existing devices, as the initialization to see if
+        an attribute is unsupported happens later in the background.
+        To avoid creating unnecessary entities for existing devices,
         wait until the attribute was properly initialized once for now.
         """
         if cluster_handlers[0].cluster.get(cls._attribute_name) is None:
