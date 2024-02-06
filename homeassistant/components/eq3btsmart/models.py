@@ -16,7 +16,7 @@ from .const import (
 )
 
 
-@dataclass
+@dataclass(slots=True)
 class Eq3Config:
     """Config for a single eQ-3 device."""
 
@@ -31,7 +31,7 @@ class Eq3Config:
     default_away_temperature: float = DEFAULT_AWAY_TEMP
 
 
-@dataclass
+@dataclass(slots=True)
 class Eq3ConfigEntry:
     """Config entry for a single eQ-3 device."""
 

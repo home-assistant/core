@@ -58,9 +58,23 @@ async def test_user_flow_invalid_mac(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {CONF_MAC: "invalid_mac_address"}
-    assert len(mock_setup_entry.mock_calls) == 0
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {CONF_MAC: "invalid_mac_address"}
+        assert len(mock_setup_entry.mock_calls) == 0
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_MAC: MAC, CONF_NAME: NAME},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == NAME
+        assert result["data"] == {
+            CONF_MAC: MAC,
+            CONF_NAME: NAME,
+        }
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_flow_invalid_name(hass: HomeAssistant) -> None:
@@ -80,9 +94,23 @@ async def test_user_flow_invalid_name(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {CONF_NAME: "invalid_name"}
-    assert len(mock_setup_entry.mock_calls) == 0
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {CONF_NAME: "invalid_name"}
+        assert len(mock_setup_entry.mock_calls) == 0
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_MAC: MAC, CONF_NAME: NAME},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == NAME
+        assert result["data"] == {
+            CONF_MAC: MAC,
+            CONF_NAME: NAME,
+        }
+        assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_bluetooth_flow(

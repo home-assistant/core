@@ -101,6 +101,9 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_RSSI: str(self.rssi),
                 },
             )
+
+        self.name = user_input[CONF_NAME]
+
         await self.async_set_unique_id(format_mac(self.mac))
         return self.async_create_entry(
             title=user_input[CONF_NAME],

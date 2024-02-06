@@ -1,14 +1,13 @@
 """Platform for eQ-3 climate entities."""
 
-import asyncio
 from collections.abc import Callable
-from datetime import datetime, timedelta
 import logging
 from typing import Any
 
 from eq3btsmart import Thermostat
 from eq3btsmart.const import EQ3BT_MAX_TEMP, EQ3BT_OFF_TEMP, Eq3Preset, OperationMode
 from eq3btsmart.exceptions import Eq3Exception
+from voluptuous import FalseInvalid
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -28,9 +27,8 @@ from homeassistant.helpers.device_registry import (
     async_get,
     format_mac,
 )
-from homeassistant.helpers.entity import EntityPlatformState
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 
 from .const import (
     DEVICE_MODEL,
@@ -38,6 +36,8 @@ from .const import (
     EQ_TO_HA_HVAC,
     HA_TO_EQ_HVAC,
     MANUFACTURER,
+    SIGNAL_THERMOSTAT_CONNECTED,
+    SIGNAL_THERMOSTAT_DISCONNECTED,
     CurrentTemperatureSelector,
     Preset,
     TargetTemperatureSelector,
@@ -71,14 +71,12 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         super().__init__(eq3_config, thermostat)
 
-        self._thermostat.register_update_callback(self._on_updated)
-        self._thermostat.register_connection_callback(self._on_connection_changed)
+        self._thermostat.register_update_callback(self._async_on_updated)
         self._target_temperature: float | None = None
-        self._is_available = False
+        self._attr_available = False
         self._cancel_timer: Callable[[], None] | None = None
         self._attr_has_entity_name = True
         self._attr_name = None
-        self._attr_hvac_mode = None
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.PRESET_MODE
@@ -87,132 +85,110 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         )
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_precision = PRECISION_TENTHS
+        self._attr_hvac_mode: HVACMode | None = None
+        self._attr_hvac_action: HVACAction | None = None
+        self._attr_preset_mode: str | None = None
         self._attr_hvac_modes = list(HA_TO_EQ_HVAC.keys())
         self._attr_min_temp = EQ3BT_OFF_TEMP
         self._attr_max_temp = EQ3BT_MAX_TEMP
         self._attr_preset_modes = list(Preset)
         self._attr_unique_id = format_mac(self._eq3_config.mac_address)
-        self._attr_should_poll = False
-        self._was_connected: bool = False
-        self._firmware_version: str | None = None
+        self._attr_should_poll = FalseInvalid
         self._attr_device_info: DeviceInfo = DeviceInfo(
             name=self._eq3_config.name,
             manufacturer=MANUFACTURER,
             model=DEVICE_MODEL,
-            identifiers={(DOMAIN, self._eq3_config.mac_address)},
-            sw_version=self._firmware_version,
+            sw_version=None,
+            serial_number=None,
             connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
         )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
 
-        asyncio.get_event_loop().create_task(self._async_scan_loop())
-        self._on_connection_changed(True)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-
-        if self._cancel_timer:
-            self._cancel_timer()
-
-    async def _async_scan_loop(self, now: datetime | None = None) -> None:
-        """Scan for data."""
-
-        await self.async_scan()
-
-        if self._platform_state != EntityPlatformState.REMOVED:
-            delay = timedelta(seconds=self._eq3_config.scan_interval)
-            self._cancel_timer = async_call_later(
-                self.hass, delay, self._async_scan_loop
-            )
+        async_dispatcher_connect(
+            self.hass, SIGNAL_THERMOSTAT_DISCONNECTED, self._async_on_disconnected
+        )
+        async_dispatcher_connect(
+            self.hass, SIGNAL_THERMOSTAT_CONNECTED, self._async_on_connected
+        )
 
     @callback
-    def _on_updated(self) -> None:
+    def _async_on_disconnected(self, mac_address: str) -> None:
+        if mac_address == self._eq3_config.mac_address:
+            self._attr_available = False
+            self.async_schedule_update_ha_state(force_refresh=True)
+
+    @callback
+    def _async_on_connected(self, mac_address: str) -> None:
+        if mac_address == self._eq3_config.mac_address:
+            self._attr_available = True
+            self.async_schedule_update_ha_state(force_refresh=True)
+
+    @callback
+    def _async_on_updated(self) -> None:
         """Handle updated data from the thermostat."""
 
-        self._is_available = True
-
         if self._thermostat.status is not None:
-            self._on_status_updated()
+            self._async_on_status_updated()
 
         if self._thermostat.device_data is not None:
-            self._on_device_updated()
+            self._async_on_device_updated()
 
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     @callback
-    def _on_status_updated(self) -> None:
+    def _async_on_status_updated(self) -> None:
         """Handle updated status from the thermostat."""
 
         self._target_temperature = self._thermostat.status.target_temperature.value
         self._attr_hvac_mode = EQ_TO_HA_HVAC[self._thermostat.status.operation_mode]
 
+        if self._thermostat.status.operation_mode is OperationMode.OFF:
+            self._attr_hvac_action = HVACAction.OFF
+        elif self._thermostat.status.valve == 0:
+            self._attr_hvac_action = HVACAction.IDLE
+        else:
+            self._attr_hvac_action = HVACAction.HEATING
+
+        if self._thermostat.status.is_window_open:
+            self._attr_preset_mode = Preset.WINDOW_OPEN
+        elif self._thermostat.status.is_boost:
+            self._attr_preset_mode = Preset.BOOST
+        elif self._thermostat.status.is_low_battery:
+            self._attr_preset_mode = Preset.LOW_BATTERY
+        elif self._thermostat.status.is_away:
+            self._attr_preset_mode = Preset.AWAY
+        elif self._thermostat.status.operation_mode is OperationMode.ON:
+            self._attr_preset_mode = Preset.OPEN
+        elif self._thermostat.status.presets is None:
+            self._attr_preset_mode = PRESET_NONE
+        elif (
+            self._thermostat.status.target_temperature
+            == self._thermostat.status.presets.eco_temperature
+        ):
+            self._attr_preset_mode = Preset.ECO
+        elif (
+            self._thermostat.status.target_temperature
+            == self._thermostat.status.presets.comfort_temperature
+        ):
+            self._attr_preset_mode = Preset.COMFORT
+        else:
+            self._attr_preset_mode = PRESET_NONE
+
     @callback
-    def _on_device_updated(self) -> None:
+    def _async_on_device_updated(self) -> None:
         """Handle updated device data from the thermostat."""
 
-        self._firmware_version = str(self._thermostat.device_data.firmware_version)
-        self._attr_device_info["sw_version"] = self._firmware_version
-
         device_registry = async_get(self.hass)
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, self._eq3_config.mac_address)},
-        )
-
-        if device:
+        if device := device_registry.async_get_device(
+            connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
+        ):
             device_registry.async_update_device(
                 device.id,
-                sw_version=self._firmware_version,
+                sw_version=self._thermostat.device_data.firmware_version,
+                serial_number=self._thermostat.device_data.device_serial.value,
             )
-
-    @callback
-    def _on_connection_changed(self, is_connected: bool = True) -> None:
-        """Handle connection changed."""
-
-        self._is_available = is_connected
-
-        if is_connected and not self._was_connected:
-            _LOGGER.info("[%s] Connected", self._eq3_config.name)
-            self._was_connected = True
-            self.hass.add_job(self._update_device())
-
-        if not is_connected and self._was_connected:
-            _LOGGER.warning("[%s] Disconnected", self._eq3_config.name)
-            self._was_connected = False
-
-        self.schedule_update_ha_state()
-
-    @callback
-    async def _update_device(self) -> None:
-        try:
-            await self._thermostat.async_get_id()
-        except Eq3Exception:
-            _LOGGER.error(
-                "[%s] Error fetching device information", self._eq3_config.name
-            )
-            return
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-
-        return self._is_available
-
-    @property
-    def hvac_action(self) -> HVACAction | None:
-        """Return the current running hvac operation."""
-
-        if self._thermostat.status is None:
-            return None
-
-        if self._thermostat.status.operation_mode is OperationMode.OFF:
-            return HVACAction.OFF
-
-        if self._thermostat.status.valve == 0:
-            return HVACAction.IDLE
-
-        return HVACAction.HEATING
 
     @property
     def current_temperature(self) -> float | None:
@@ -291,12 +267,6 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         except ValueError as ex:
             raise ServiceValidationError("Invalid temperature") from ex
 
-    @property
-    def hvac_mode(self) -> HVACMode | None:
-        """Return the current HVAC mode."""
-
-        return self._attr_hvac_mode
-
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
@@ -317,39 +287,6 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         self.async_schedule_update_ha_state()
 
-    @property
-    def preset_mode(self) -> str | None:
-        """Return the current preset mode."""
-
-        if self._thermostat.status is None:
-            return None
-
-        if self._thermostat.status.is_window_open:
-            return Preset.WINDOW_OPEN
-        if self._thermostat.status.is_boost:
-            return Preset.BOOST
-        if self._thermostat.status.is_low_battery:
-            return Preset.LOW_BATTERY
-        if self._thermostat.status.is_away:
-            return Preset.AWAY
-        if self._thermostat.status.operation_mode is OperationMode.ON:
-            return Preset.OPEN
-
-        if self._thermostat.status.presets is None:
-            return None
-
-        if (
-            self._thermostat.status.target_temperature
-            == self._thermostat.status.presets.eco_temperature
-        ):
-            return Preset.ECO
-        if (
-            self._thermostat.status.target_temperature
-            == self._thermostat.status.presets.comfort_temperature
-        ):
-            return Preset.COMFORT
-        return PRESET_NONE
-
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
 
@@ -367,25 +304,3 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         if self._thermostat.status is not None:
             self._target_temperature = self._thermostat.status.target_temperature.value
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information."""
-
-        return DeviceInfo(
-            name=self._eq3_config.name,
-            manufacturer=MANUFACTURER,
-            model=DEVICE_MODEL,
-            identifiers={(DOMAIN, self._eq3_config.mac_address)},
-            sw_version=self._firmware_version,
-            connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
-        )
-
-    async def async_scan(self) -> None:
-        """Update the data from the thermostat."""
-
-        try:
-            await self._thermostat.async_get_status()
-        except Eq3Exception:
-            self._is_available = False
-            self.schedule_update_ha_state()
