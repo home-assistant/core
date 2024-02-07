@@ -433,7 +433,7 @@ def temperature_to_states(temperature: float, unit: str) -> float:
 
 def density_to_air_quality(density: float) -> int:
     """Map PM2.5 µg/m3 density to HomeKit AirQuality level."""
-    if density <= 12:  # US AQI 0-50 (HomeKit: Excellent)
+    if density <= 9:  # US AQI 0-50 (HomeKit: Excellent)
         return 1
     if density <= 35.4:  # US AQI 51-100 (HomeKit: Good)
         return 2
