@@ -135,10 +135,22 @@ def async_setup_forwarded(
             )
             raise HTTPBadRequest
 
+        # Ignore "unknown" in the X-Forwarded-For list as it provides
+        # no value (and breaks the next process)
+        forwarded_for_split = [
+            forwarded_for.strip()
+            for forwarded_for in forwarded_for_headers[0].split(",")
+            if forwarded_for.strip() != "unknown"
+        ]
+
+        if not forwarded_for_split:
+            # No values left after filtering, continue as normal
+            return await handler(request)
+
         # Process X-Forwarded-For from the right side (by reversing the list)
-        forwarded_for_split = list(reversed(forwarded_for_headers[0].split(",")))
+        forwarded_for_split_reversed = list(reversed(forwarded_for_split))
         try:
-            forwarded_for = [ip_address(addr.strip()) for addr in forwarded_for_split]
+            forwarded_for = [ip_address(addr) for addr in forwarded_for_split_reversed]
         except ValueError as err:
             _LOGGER.error(
                 "Invalid IP address in X-Forwarded-For: %s", forwarded_for_headers[0]
