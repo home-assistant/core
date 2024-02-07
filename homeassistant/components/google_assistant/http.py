@@ -11,13 +11,13 @@ from aiohttp import ClientError, ClientResponseError
 from aiohttp.web import Request, Response
 import jwt
 
+from homeassistant.components import webhook
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-
-# Typing imports
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -30,12 +30,14 @@ from .const import (
     CONF_REPORT_STATE,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
+    DOMAIN,
     GOOGLE_ASSISTANT_API_ENDPOINT,
     HOMEGRAPH_SCOPE,
     HOMEGRAPH_TOKEN_URL,
     REPORT_STATE_BASE_URL,
     REQUEST_SYNC_BASE_URL,
     SOURCE_CLOUD,
+    STORE_AGENT_USER_IDS,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
 from .helpers import AbstractConfig
@@ -78,6 +80,8 @@ async def _get_homegraph_token(
 class GoogleConfig(AbstractConfig):
     """Config for manual setup of Google."""
 
+    _store: GoogleConfigStore
+
     def __init__(self, hass, config):
         """Initialize the config."""
         super().__init__(hass)
@@ -87,6 +91,10 @@ class GoogleConfig(AbstractConfig):
 
     async def async_initialize(self):
         """Perform async initialization of config."""
+        # We need to initialize the store before calling super
+        self._store = GoogleConfigStore(self.hass)
+        await self._store.async_initialize()
+
         await super().async_initialize()
 
         self.async_enable_local_sdk()
@@ -191,6 +199,28 @@ class GoogleConfig(AbstractConfig):
         _LOGGER.error("No configuration for request_sync available")
         return HTTPStatus.INTERNAL_SERVER_ERROR
 
+    async def async_connect_agent_user(self, agent_user_id: str):
+        """Add a synced and known agent_user_id.
+
+        Called before sending a sync response to Google.
+        """
+        self._store.add_agent_user_id(agent_user_id)
+
+    async def async_disconnect_agent_user(self, agent_user_id: str):
+        """Turn off report state and disable further state reporting.
+
+        Called when:
+         - The user disconnects their account from Google.
+         - When the cloud configuration is initialized
+         - When sync entities fails with 404
+        """
+        self._store.pop_agent_user_id(agent_user_id)
+
+    @callback
+    def async_get_agent_users(self):
+        """Return known agent users."""
+        return self._store.agent_user_ids
+
     async def _async_update_token(self, force=False):
         if CONF_SERVICE_ACCOUNT not in self._config:
             _LOGGER.error("Trying to get homegraph api token without service account")
@@ -256,6 +286,67 @@ class GoogleConfig(AbstractConfig):
         if event_id is not None:
             data["eventId"] = event_id
         return await self.async_call_homegraph_api(REPORT_STATE_BASE_URL, data)
+
+
+class GoogleConfigStore:
+    """A configuration store for google assistant."""
+
+    _STORAGE_VERSION = 1
+    _STORAGE_KEY = DOMAIN
+    _data: dict[str, Any]
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize a configuration store."""
+        self._hass = hass
+        self._store: Store[dict[str, Any]] = Store(
+            hass, self._STORAGE_VERSION, self._STORAGE_KEY
+        )
+
+    async def async_initialize(self) -> None:
+        """Finish initializing the ConfigStore."""
+        should_save_data = False
+        if (data := await self._store.async_load()) is None:
+            # if the store is not found create an empty one
+            # Note that the first request is always a cloud request,
+            # and that will store the correct agent user id to be used for local requests
+            data = {
+                STORE_AGENT_USER_IDS: {},
+            }
+            should_save_data = True
+
+        for agent_user_id, agent_user_data in data[STORE_AGENT_USER_IDS].items():
+            if STORE_GOOGLE_LOCAL_WEBHOOK_ID not in agent_user_data:
+                data[STORE_AGENT_USER_IDS][agent_user_id] = {
+                    **agent_user_data,
+                    STORE_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
+                }
+                should_save_data = True
+
+        if should_save_data:
+            await self._store.async_save(data)
+
+        self._data = data
+
+    @property
+    def agent_user_ids(self) -> dict[str, Any]:
+        """Return a list of connected agent user_ids."""
+        return self._data[STORE_AGENT_USER_IDS]
+
+    @callback
+    def add_agent_user_id(self, agent_user_id: str) -> None:
+        """Add an agent user id to store."""
+        if agent_user_id not in self._data[STORE_AGENT_USER_IDS]:
+            self._data[STORE_AGENT_USER_IDS][agent_user_id] = {
+                STORE_GOOGLE_LOCAL_WEBHOOK_ID: webhook.async_generate_id(),
+            }
+            self._store.async_delay_save(lambda: self._data, 1.0)
+
+    @callback
+    def pop_agent_user_id(self, agent_user_id: str) -> None:
+        """Remove agent user id from store."""
+        if agent_user_id in self._data[STORE_AGENT_USER_IDS]:
+            self._data[STORE_AGENT_USER_IDS].pop(agent_user_id, None)
+            self._store.async_delay_save(lambda: self._data, 1.0)
 
 
 class GoogleAssistantView(HomeAssistantView):

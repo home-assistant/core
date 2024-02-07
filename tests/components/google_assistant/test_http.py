@@ -18,14 +18,20 @@ from homeassistant.components.google_assistant.const import (
 )
 from homeassistant.components.google_assistant.http import (
     GoogleConfig,
+    GoogleConfigStore,
     _get_homegraph_jwt,
     _get_homegraph_token,
 )
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
-from tests.common import async_capture_events, async_mock_service
+from tests.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -468,4 +474,70 @@ async def test_async_enable_local_sdk(
     assert (
         "Cannot process request for webhook **REDACTED** as no linked agent user is found:"
         in caplog.text
+    )
+
+
+async def test_agent_user_id_storage(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test a disconnect message."""
+
+    hass_storage["google_assistant"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "google_assistant",
+        "data": {
+            "agent_user_ids": {
+                "agent_1": {
+                    "local_webhook_id": "test_webhook",
+                }
+            },
+        },
+    }
+
+    store = GoogleConfigStore(hass)
+    await store.async_initialize()
+
+    assert hass_storage["google_assistant"] == {
+        "version": 1,
+        "minor_version": 1,
+        "key": "google_assistant",
+        "data": {
+            "agent_user_ids": {
+                "agent_1": {
+                    "local_webhook_id": "test_webhook",
+                }
+            },
+        },
+    }
+
+    async def _check_after_delay(data):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done()
+
+        assert (
+            list(hass_storage["google_assistant"]["data"]["agent_user_ids"].keys())
+            == data
+        )
+
+    store.add_agent_user_id("agent_2")
+    await _check_after_delay(["agent_1", "agent_2"])
+
+    store.pop_agent_user_id("agent_1")
+    await _check_after_delay(["agent_2"])
+
+    hass_storage["google_assistant"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "google_assistant",
+        "data": {
+            "agent_user_ids": {"agent_1": {}},
+        },
+    }
+    store = GoogleConfigStore(hass)
+    await store.async_initialize()
+
+    assert (
+        STORE_GOOGLE_LOCAL_WEBHOOK_ID
+        in hass_storage["google_assistant"]["data"]["agent_user_ids"]["agent_1"]
     )
