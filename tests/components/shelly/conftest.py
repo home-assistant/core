@@ -119,6 +119,7 @@ MOCK_BLOCKS = [
         colorTemp=mock_light_set_state()["temp"],
         **mock_light_set_state(),
         type="light",
+        description="light_0",
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
