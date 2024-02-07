@@ -32,7 +32,7 @@ from .parsers import PARSERS
 # entities for them.
 UNHANDLED_TOPICS: set[str] = {"tns1:MediaControl/VideoEncoderConfiguration"}
 
-SUBSCRIPTION_ERRORS = (Fault, asyncio.TimeoutError, TransportError)
+SUBSCRIPTION_ERRORS = (Fault, TimeoutError, TransportError)
 CREATE_ERRORS = (ONVIFError, Fault, RequestError, XMLParseError, ValidationError)
 SET_SYNCHRONIZATION_POINT_ERRORS = (*SUBSCRIPTION_ERRORS, TypeError)
 UNSUBSCRIBE_ERRORS = (XMLParseError, *SUBSCRIPTION_ERRORS)

@@ -9,7 +9,7 @@ astral==2.2
 async-upnp-client==0.38.1
 atomicwrites-homeassistant==1.4.1
 attrs==23.2.0
-awesomeversion==23.11.0
+awesomeversion==24.2.0
 bcrypt==4.0.1
 bleak-retry-connector==3.4.0
 bleak==0.21.1
@@ -19,24 +19,24 @@ bluetooth-data-tools==1.19.0
 cached_ipaddress==0.3.0
 certifi>=2021.5.30
 ciso8601==2.3.0
-cryptography==42.0.1
+cryptography==42.0.2
 dbus-fast==2.21.1
 fnv-hash-fast==0.5.0
 ha-av==10.1.1
 ha-ffmpeg==3.1.0
 habluetooth==2.4.0
-hass-nabucasa==0.75.1
-hassil==1.6.0
+hass-nabucasa==0.78.0
+hassil==1.6.1
 home-assistant-bluetooth==1.12.0
-home-assistant-frontend==20240112.0
-home-assistant-intents==2024.1.29
+home-assistant-frontend==20240207.0
+home-assistant-intents==2024.2.2
 httpx==0.26.0
 ifaddr==0.2.0
 janus==1.0.0
 Jinja2==3.1.3
 lru-dict==1.3.0
 mutagen==1.47.0
-orjson==3.9.12
+orjson==3.9.13
 packaging>=23.1
 paho-mqtt==1.6.1
 Pillow==10.2.0
@@ -188,3 +188,6 @@ dacite>=1.7.0
 
 # Musle wheels for pandas 2.2.0 cannot be build for any architecture.
 pandas==2.1.4
+
+# chacha20poly1305-reuseable==0.12.0 is incompatible with cryptography==42.0.x
+chacha20poly1305-reuseable>=0.12.1
