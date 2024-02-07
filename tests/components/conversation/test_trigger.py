@@ -1,4 +1,7 @@
 """Test conversation triggers."""
+
+import logging
+
 import pytest
 import voluptuous as vol
 
@@ -70,7 +73,7 @@ async def test_if_fires_on_event(hass: HomeAssistant, calls, setup_comp) -> None
 
 
 async def test_response(hass: HomeAssistant, setup_comp) -> None:
-    """Test the firing of events."""
+    """Test the conversation response action."""
     response = "I'm sorry, Dave. I'm afraid I can't do that"
     assert await async_setup_component(
         hass,
@@ -98,6 +101,116 @@ async def test_response(hass: HomeAssistant, setup_comp) -> None:
         return_response=True,
     )
     assert service_response["response"]["speech"]["plain"]["speech"] == response
+
+
+async def test_response_same_sentence(hass: HomeAssistant, calls, setup_comp) -> None:
+    """Test the conversation response action with multiple triggers using the same sentence."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                {
+                    "trigger": {
+                        "id": "trigger1",
+                        "platform": "conversation",
+                        "command": ["test sentence"],
+                    },
+                    "action": [
+                        # Add delay so this response will not be the first
+                        {"delay": "0:0:0.100"},
+                        {
+                            "service": "test.automation",
+                            "data_template": {"data": "{{ trigger }}"},
+                        },
+                        {"set_conversation_response": "response 2"},
+                    ],
+                },
+                {
+                    "trigger": {
+                        "id": "trigger2",
+                        "platform": "conversation",
+                        "command": ["test sentence"],
+                    },
+                    "action": {"set_conversation_response": "response 1"},
+                },
+            ]
+        },
+    )
+
+    service_response = await hass.services.async_call(
+        "conversation",
+        "process",
+        {"text": "test sentence"},
+        blocking=True,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
+
+    # Should only get first response
+    assert service_response["response"]["speech"]["plain"]["speech"] == "response 1"
+
+    # Service should still have been called
+    assert len(calls) == 1
+    assert calls[0].data["data"] == {
+        "alias": None,
+        "id": "trigger1",
+        "idx": "0",
+        "platform": "conversation",
+        "sentence": "test sentence",
+        "slots": {},
+        "details": {},
+    }
+
+
+async def test_response_same_sentence_with_error(
+    hass: HomeAssistant, calls, setup_comp, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the conversation response action with multiple triggers using the same sentence and an error."""
+    caplog.set_level(logging.ERROR)
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                {
+                    "trigger": {
+                        "id": "trigger1",
+                        "platform": "conversation",
+                        "command": ["test sentence"],
+                    },
+                    "action": [
+                        # Add delay so this will not finish first
+                        {"delay": "0:0:0.100"},
+                        {"service": "fake_domain.fake_service"},
+                    ],
+                },
+                {
+                    "trigger": {
+                        "id": "trigger2",
+                        "platform": "conversation",
+                        "command": ["test sentence"],
+                    },
+                    "action": {"set_conversation_response": "response 1"},
+                },
+            ]
+        },
+    )
+
+    service_response = await hass.services.async_call(
+        "conversation",
+        "process",
+        {"text": "test sentence"},
+        blocking=True,
+        return_response=True,
+    )
+    await hass.async_block_till_done()
+
+    # Should still get first response
+    assert service_response["response"]["speech"]["plain"]["speech"] == "response 1"
+
+    # Error should have been logged
+    assert "Error executing script" in caplog.text
 
 
 async def test_subscribe_trigger_does_not_interfere_with_responses(
