@@ -96,15 +96,15 @@ async def async_setup_entry(
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
             description = get_description(device_point)
-            EntityClassToCreate = MyUplinkDevicePointSensor
+            entity_class = MyUplinkDevicePointSensor
             if (
                 description is not None
                 and description.device_class == SensorDeviceClass.ENUM
             ):
-                EntityClassToCreate = MyUplinkEnumSensor
+                entity_class = MyUplinkEnumSensor
 
             entities.append(
-                EntityClassToCreate(
+                entity_class(
                     coordinator=coordinator,
                     device_id=device_id,
                     device_point=device_point,
