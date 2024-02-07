@@ -7,7 +7,7 @@ from operator import itemgetter
 import random
 import re
 import string
-from typing import Any
+from typing import Any, TypedDict
 
 import voluptuous as vol
 
@@ -39,7 +39,6 @@ from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_ENTITIES,
     CONF_INCLUDE_DOMAINS,
     CONF_INCLUDE_ENTITIES,
-    EntityFilterDict,
 )
 from homeassistant.loader import async_get_integrations
 
@@ -124,6 +123,16 @@ DEFAULT_DOMAINS = [
     "vacuum",
     "water_heater",
 ]
+
+
+class EntityFilterDict(TypedDict, total=False):
+    """Entity filter dict."""
+
+    include_domains: list[str]
+    include_entities: list[str]
+    exclude_domains: list[str]
+    exclude_entities: list[str]
+
 
 _EMPTY_ENTITY_FILTER: EntityFilterDict = {
     CONF_INCLUDE_DOMAINS: [],
@@ -503,9 +512,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         domains = hk_options[CONF_DOMAINS]
         if user_input is not None:
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
-            entity_filter = _async_build_entities_filter(domains, entities)
             self.included_cameras = _async_cameras_from_entities(entities)
-            hk_options[CONF_FILTER] = entity_filter
+            hk_options[CONF_FILTER] = _async_build_entities_filter(domains, entities)
             if self.included_cameras:
                 return await self.async_step_cameras()
             return await self.async_step_advanced()

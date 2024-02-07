@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import fnmatch
 import re
-from typing import Final, TypedDict
+from typing import Final
 
 import voluptuous as vol
 
@@ -19,17 +19,6 @@ CONF_INCLUDE_ENTITIES: Final = "include_entities"
 CONF_EXCLUDE_DOMAINS: Final = "exclude_domains"
 CONF_EXCLUDE_ENTITY_GLOBS: Final = "exclude_entity_globs"
 CONF_EXCLUDE_ENTITIES: Final = "exclude_entities"
-
-
-class EntityFilterDict(TypedDict, total=False):
-    """Entity filter dict."""
-
-    include_domains: list[str]
-    include_entity_globs: list[str]
-    include_entities: list[str]
-    exclude_domains: list[str]
-    exclude_entity_globs: list[str]
-    exclude_entities: list[str]
 
 
 CONF_ENTITY_GLOBS = "entity_globs"
