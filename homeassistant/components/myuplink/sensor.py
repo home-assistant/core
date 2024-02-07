@@ -96,29 +96,22 @@ async def async_setup_entry(
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
             description = get_description(device_point)
+            EntityClassToCreate = MyUplinkDevicePointSensor
             if (
                 description is not None
                 and description.device_class == SensorDeviceClass.ENUM
             ):
-                entities.append(
-                    MyUplinkEnumSensor(
-                        coordinator=coordinator,
-                        device_id=device_id,
-                        device_point=device_point,
-                        entity_description=description,
-                        unique_id_suffix=point_id,
-                    )
+                EntityClassToCreate = MyUplinkEnumSensor
+
+            entities.append(
+                EntityClassToCreate(
+                    coordinator=coordinator,
+                    device_id=device_id,
+                    device_point=device_point,
+                    entity_description=description,
+                    unique_id_suffix=point_id,
                 )
-            else:
-                entities.append(
-                    MyUplinkDevicePointSensor(
-                        coordinator=coordinator,
-                        device_id=device_id,
-                        device_point=device_point,
-                        entity_description=description,
-                        unique_id_suffix=point_id,
-                    )
-                )
+            )
 
     async_add_entities(entities)
 
@@ -178,11 +171,10 @@ class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
         )
 
         self._attr_options = [x["text"].capitalize() for x in device_point.enum_values]
+        self.options_map = {x["value"]: x["text"] for x in device_point.enum_values}
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> str:
         """Sensor state value for enum sensor."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
-        return {x["value"]: x["text"] for x in device_point.enum_values}[  # type: ignore[no-any-return]
-            str(int(device_point.value))
-        ].capitalize()
+        return self.options_map[str(int(device_point.value))].capitalize()  # type: ignore[no-any-return]
