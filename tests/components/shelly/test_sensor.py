@@ -597,10 +597,14 @@ async def test_block_sleeping_update_entity_service(
 
 
 async def test_rpc_analog_input_xpercent_sensor(
-    hass: HomeAssistant, mock_rpc_device
+    hass: HomeAssistant, mock_rpc_device, entity_registry
 ) -> None:
     """Test RPC analog input xpercent sensor."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_input_0_analog_value"
     await init_integration(hass, 2)
 
     assert hass.states.get(entity_id).state == "8.9"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-input:0-analoginput_xpercent"
