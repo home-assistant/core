@@ -148,13 +148,13 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
             self._attr_is_on = False
             return
 
-        response = self.rest.data
+        response = self.rest.data_without_xml()
 
         raw_value = response
 
         if self._value_template is not None:
             response = self._value_template.async_render_with_possible_json_value(
-                self.rest.data, False
+                response, False
             )
 
         try:
