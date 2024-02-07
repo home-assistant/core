@@ -209,7 +209,10 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             error_code = error_response.get("error", "unknown")
             error_description = error_response.get("error_description", "unknown error")
             _LOGGER.error(
-                "Token request failed (%s): %s", error_code, error_description
+                "Token request for %s failed (%s): %s",
+                self.domain,
+                error_code,
+                error_description,
             )
         resp.raise_for_status()
         return cast(dict, await resp.json())

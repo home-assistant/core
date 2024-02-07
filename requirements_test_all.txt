@@ -161,7 +161,7 @@ aio-geojson-nsw-rfs-incidents==0.7
 aio-geojson-usgs-earthquakes==0.2
 
 # homeassistant.components.gdacs
-aio-georss-gdacs==0.8
+aio-georss-gdacs==0.9
 
 # homeassistant.components.airq
 aioairq==0.3.2
@@ -183,6 +183,9 @@ aioaseko==0.0.2
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
+
+# homeassistant.components.husqvarna_automower
+aioautomower==2024.1.5
 
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
@@ -209,16 +212,16 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2023.5.0
+aioecowitt==2024.2.0
 
 # homeassistant.components.co2signal
-aioelectricitymaps==0.3.0
+aioelectricitymaps==0.3.1
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==21.0.1
+aioesphomeapi==21.0.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -457,7 +460,7 @@ base36==0.1.1
 beautifulsoup4==4.12.2
 
 # homeassistant.components.zha
-bellows==0.37.6
+bellows==0.38.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer-connected[china]==0.14.6
@@ -827,7 +830,7 @@ habitipy==0.2.0
 habluetooth==2.4.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.77.0
+hass-nabucasa==0.78.0
 
 # homeassistant.components.conversation
 hassil==1.6.1
@@ -1046,7 +1049,7 @@ moehlenhoff-alpha2==1.3.0
 mopeka-iot-ble==0.7.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.19
+motionblinds==0.6.20
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -1094,7 +1097,7 @@ nextcord==2.0.0a8
 nextdns==2.1.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.7.0
+nibe==2.8.0
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1494,7 +1497,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.8
+pymelcloud==2.5.9
 
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
@@ -1730,7 +1733,7 @@ python-opensky==1.0.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.5.0
+python-otbr-api==2.6.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2101,7 +2104,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.1.7
 
 # homeassistant.components.zha
-universal-silabs-flasher==0.0.15
+universal-silabs-flasher==0.0.18
 
 # homeassistant.components.upb
 upb-lib==0.5.4
@@ -2188,10 +2191,10 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.25.2
 
 # homeassistant.components.knx
-xknx==2.11.2
+xknx==2.12.0
 
 # homeassistant.components.knx
-xknxproject==3.4.0
+xknxproject==3.5.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -2236,10 +2239,10 @@ zeroconf==0.131.0
 zeversolar==0.3.1
 
 # homeassistant.components.zha
-zha-quirks==0.0.110
+zha-quirks==0.0.111
 
 # homeassistant.components.zha
-zigpy-deconz==0.22.4
+zigpy-deconz==0.23.0
 
 # homeassistant.components.zha
 zigpy-xbee==0.20.1
@@ -2251,7 +2254,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.61.0
+zigpy==0.62.3
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.55.3
