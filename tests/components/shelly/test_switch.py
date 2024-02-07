@@ -317,6 +317,10 @@ async def test_rpc_device_unique_ids(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     entity_registry: EntityRegistry,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch,: EntityRegistry
 ) -> None:
     """Test RPC device unique_ids."""
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
