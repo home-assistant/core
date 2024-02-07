@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from enum import IntEnum
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
-from aiohomekit.model.characteristics.const import TemperatureDisplayUnits, TargetAirPurifierStateValues
+from aiohomekit.model.characteristics.const import (
+    TargetAirPurifierStateValues,
+    TemperatureDisplayUnits,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
-from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus, CurrentAirPurifierStateValues
+from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.bluetooth import (
@@ -139,6 +139,7 @@ def thread_status_to_str(char: Characteristic) -> str:
 
 
 def air_purifier_state_to_str(char: Characteristic) -> str:
+    """Return the air purifier status as a translatable string."""
     if char.value == 0:
         return "purifying"
     return "idle"
