@@ -402,21 +402,18 @@ class DlnaDmrEntity(MediaPlayerEntity):
                 (dr.CONNECTION_NETWORK_MAC, self.mac_address)
             )
 
-        self._attr_device_info = dr.DeviceInfo(
+        device_info = dr.DeviceInfo(
             connections=connections,
             default_manufacturer=self._device.manufacturer,
             default_model=self._device.model_name,
             default_name=self._device.name,
         )
+        self._attr_device_info = device_info
 
         self._updated_registry = True
         # Create linked HA DeviceEntry now the information is known.
         device_entry = dr.async_get(self.hass).async_get_or_create(
-            config_entry_id=self._config_entry_id,
-            connections=connections,
-            default_manufacturer=self._device.manufacturer,
-            default_model=self._device.model_name,
-            default_name=self._device.name,
+            config_entry_id=self._config_entry_id, **device_info
         )
 
         # Update entity registry to link to the device
