@@ -110,24 +110,22 @@ async def test_bad_requests(
 
 
 @pytest.mark.parametrize(
-    ("request_path", "request_params", "fail_on_query_string"),
+    ("request_path", "request_params"),
     [
-        ("/some\thing", {}, False),
-        ("/new\nline/cinema", {}, False),
-        ("/return\r/to/sender", {}, False),
-        ("/", {"some": "\thing"}, True),
-        ("/", {"\newline": "cinema"}, True),
-        ("/", {"return": "t\rue"}, True),
+        ("/some\thing", {}),
+        ("/new\nline/cinema", {}),
+        ("/return\r/to/sender", {}),
+        ("/", {"some": "\thing"}),
+        ("/", {"\newline": "cinema"}),
+        ("/", {"return": "t\rue"}),
     ],
 )
-async def test_bad_requests_with_unsafe_bytes(
+async def test_ok_requests_with_encoded_unsafe_bytes(
     request_path,
     request_params,
-    fail_on_query_string,
     aiohttp_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test request with unsafe bytes in their URLs."""
+    """Test request with unsafe bytes in their URLs, sent with urllib3 so they are safely encoded."""
     app = web.Application()
     app.router.add_get("/{all:.*}", mock_handler)
 
@@ -151,9 +149,4 @@ async def test_bad_requests_with_unsafe_bytes(
         request_params,
     )
 
-    assert resp.status == HTTPStatus.BAD_REQUEST
-
-    message = "Filtered a request with an unsafe byte in path:"
-    if fail_on_query_string:
-        message = "Filtered a request with unsafe byte query string:"
-    assert message in caplog.text
+    assert resp.status == HTTPStatus.OK
