@@ -521,12 +521,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         entity_filter: EntityFilterDict = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-
         all_supported_entities = _async_get_matching_entities(
             self.hass, domains, include_entity_category=True, include_hidden=True
         )
-        if not entities:
-            entities = entity_filter.get(CONF_EXCLUDE_ENTITIES, [])
         # Strip out entities that no longer exist to prevent error in the UI
         default_value = [
             entity_id for entity_id in entities if entity_id in all_supported_entities
