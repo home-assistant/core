@@ -29,10 +29,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_registry import async_get
 
 from . import (
-    MOCK_MAC,
     init_integration,
     inject_rpc_device_event,
     mock_rest_update,
@@ -49,18 +47,13 @@ async def test_block_update(
     mock_block_device,
     entity_registry,
     monkeypatch,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test block device update entity."""
-    entity_registry.async_get_or_create(
-        UPDATE_DOMAIN,
-        DOMAIN,
-        f"{MOCK_MAC}-fwupdate",
-        suggested_object_id="test_name_firmware_update",
-        disabled_by=None,
-    )
     entity_id = "update.test_name_firmware_update"
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1")
     monkeypatch.setitem(mock_block_device.status["update"], "new_version", "2")
+    monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
     await init_integration(hass, 1)
 
     state = hass.states.get(entity_id)
@@ -106,19 +99,14 @@ async def test_block_beta_update(
     mock_block_device,
     entity_registry,
     monkeypatch,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test block device beta update entity."""
-    entity_registry.async_get_or_create(
-        UPDATE_DOMAIN,
-        DOMAIN,
-        f"{MOCK_MAC}-fwupdate_beta",
-        suggested_object_id="test_name_beta_firmware_update",
-        disabled_by=None,
-    )
     entity_id = "update.test_name_beta_firmware_update"
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1")
     monkeypatch.setitem(mock_block_device.status["update"], "new_version", "2")
     monkeypatch.setitem(mock_block_device.status["update"], "beta_version", "")
+    monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
     await init_integration(hass, 1)
 
     state = hass.states.get(entity_id)
@@ -170,16 +158,9 @@ async def test_block_update_connection_error(
     mock_block_device,
     monkeypatch,
     caplog: pytest.LogCaptureFixture,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test block device update connection error."""
-    entity_registry = async_get(hass)
-    entity_registry.async_get_or_create(
-        UPDATE_DOMAIN,
-        DOMAIN,
-        f"{MOCK_MAC}-fwupdate",
-        suggested_object_id="test_name_firmware_update",
-        disabled_by=None,
-    )
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1")
     monkeypatch.setitem(mock_block_device.status["update"], "new_version", "2")
     monkeypatch.setattr(
@@ -200,17 +181,12 @@ async def test_block_update_connection_error(
 
 
 async def test_block_update_auth_error(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant,
+    mock_block_device,
+    monkeypatch,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test block device update authentication error."""
-    entity_registry = async_get(hass)
-    entity_registry.async_get_or_create(
-        UPDATE_DOMAIN,
-        DOMAIN,
-        f"{MOCK_MAC}-fwupdate",
-        suggested_object_id="test_name_firmware_update",
-        disabled_by=None,
-    )
     monkeypatch.setitem(mock_block_device.status["update"], "old_version", "1")
     monkeypatch.setitem(mock_block_device.status["update"], "new_version", "2")
     monkeypatch.setattr(
@@ -479,15 +455,9 @@ async def test_rpc_beta_update(
     mock_rpc_device,
     entity_registry,
     monkeypatch,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test RPC device beta update entity."""
-    entity_registry.async_get_or_create(
-        UPDATE_DOMAIN,
-        DOMAIN,
-        f"{MOCK_MAC}-sys-fwupdate_beta",
-        suggested_object_id="test_name_beta_firmware_update",
-        disabled_by=None,
-    )
     entity_id = "update.test_name_beta_firmware_update"
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
@@ -605,23 +575,16 @@ async def test_rpc_beta_update(
         (RpcCallError(-1, "error"), "OTA update request error"),
     ],
 )
-async def test_rpc_update__errors(
+async def test_rpc_update_errors(
     hass: HomeAssistant,
     exc,
     error,
     mock_rpc_device,
     monkeypatch,
     caplog: pytest.LogCaptureFixture,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test RPC device update connection/call errors."""
-    entity_registry = async_get(hass)
-    entity_registry.async_get_or_create(
-        UPDATE_DOMAIN,
-        DOMAIN,
-        f"{MOCK_MAC}-sys-fwupdate",
-        suggested_object_id="test_name_firmware_update",
-        disabled_by=None,
-    )
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
         mock_rpc_device.status["sys"],
@@ -647,17 +610,13 @@ async def test_rpc_update__errors(
 
 
 async def test_rpc_update_auth_error(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_rpc_device,
+    entity_registry,
+    monkeypatch,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Test RPC device update authentication error."""
-    entity_registry = async_get(hass)
-    entity_registry.async_get_or_create(
-        UPDATE_DOMAIN,
-        DOMAIN,
-        f"{MOCK_MAC}-sys-fwupdate",
-        suggested_object_id="test_name_firmware_update",
-        disabled_by=None,
-    )
     monkeypatch.setitem(mock_rpc_device.shelly, "ver", "1")
     monkeypatch.setitem(
         mock_rpc_device.status["sys"],

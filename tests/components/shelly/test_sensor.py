@@ -237,10 +237,9 @@ async def test_block_sensor_error(
 
 
 async def test_block_sensor_removal(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device, entity_registry, monkeypatch
 ) -> None:
     """Test block sensor is removed due to removal_condition."""
-    entity_registry = async_get(hass)
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_battery", "device_0-battery"
     )
