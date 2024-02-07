@@ -36,7 +36,6 @@ def exception_wrap(
             self.hass.loop.call_soon_threadsafe(
                 self.coordinator.config_entry.async_start_reauth, self.hass
             )
-            # self.coordinator.config_entry.async_start_reauth(self.hass)
             raise HomeAssistantError(err) from err
         except ring_doorbell.RingTimeout as err:
             raise HomeAssistantError(
