@@ -256,7 +256,7 @@ async def test_turn_on_skips_domains_without_service(
         "turn_on",
         {"entity_id": ["light.test", "sensor.bla", "binary_sensor.blub", "light.bla"]},
     )
-    service = hass.services._services["homeassistant"]["turn_on"]
+    service = hass.services.async_services_for_domain("homeassistant")["turn_on"]
 
     with patch(
         "homeassistant.core.ServiceRegistry.async_call",

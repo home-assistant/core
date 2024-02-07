@@ -160,14 +160,14 @@ def brightness_supported(color_modes: Iterable[ColorMode | str] | None) -> bool:
     """Test if brightness is supported."""
     if not color_modes:
         return False
-    return any(mode in COLOR_MODES_BRIGHTNESS for mode in color_modes)
+    return not COLOR_MODES_BRIGHTNESS.isdisjoint(color_modes)
 
 
 def color_supported(color_modes: Iterable[ColorMode | str] | None) -> bool:
     """Test if color is supported."""
     if not color_modes:
         return False
-    return any(mode in COLOR_MODES_COLOR for mode in color_modes)
+    return not COLOR_MODES_COLOR.isdisjoint(color_modes)
 
 
 def color_temp_supported(color_modes: Iterable[ColorMode | str] | None) -> bool:
@@ -234,6 +234,7 @@ ATTR_EFFECT_LIST = "effect_list"
 # Apply an effect to the light, can be EFFECT_COLORLOOP.
 ATTR_EFFECT = "effect"
 EFFECT_COLORLOOP = "colorloop"
+EFFECT_OFF = "off"
 EFFECT_RANDOM = "random"
 EFFECT_WHITE = "white"
 
@@ -345,6 +346,9 @@ def filter_turn_off_params(
     light: LightEntity, params: dict[str, Any]
 ) -> dict[str, Any]:
     """Filter out params not used in turn off or not supported by the light."""
+    if not params:
+        return params
+
     supported_features = light.supported_features_compat
 
     if LightEntityFeature.FLASH not in supported_features:
@@ -604,7 +608,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 )
 
         # If white is set to True, set it to the light's brightness
-        # Add a warning in Home Assistant Core 2023.5 if the brightness is set to an
+        # Add a warning in Home Assistant Core 2024.3 if the brightness is set to an
         # integer.
         if params.get(ATTR_WHITE) is True:
             params[ATTR_WHITE] = light.brightness
@@ -893,7 +897,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the color mode of the light with backwards compatibility."""
         if (color_mode := self.color_mode) is None:
             # Backwards compatibility for color_mode added in 2021.4
-            # Add warning in 2021.6, remove in 2021.10
+            # Add warning in 2024.3, remove in 2025.3
             supported = self._light_internal_supported_color_modes
 
             if ColorMode.HS in supported and self.hs_color is not None:
@@ -947,8 +951,8 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value in Kelvin."""
-        if self._attr_color_temp_kelvin is None and self.color_temp:
-            return color_util.color_temperature_mired_to_kelvin(self.color_temp)
+        if self._attr_color_temp_kelvin is None and (color_temp := self.color_temp):
+            return color_util.color_temperature_mired_to_kelvin(color_temp)
         return self._attr_color_temp_kelvin
 
     @cached_property
@@ -993,19 +997,21 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         supported_color_modes = self._light_internal_supported_color_modes
 
         if ColorMode.COLOR_TEMP in supported_color_modes:
-            data[ATTR_MIN_COLOR_TEMP_KELVIN] = self.min_color_temp_kelvin
-            data[ATTR_MAX_COLOR_TEMP_KELVIN] = self.max_color_temp_kelvin
-            if not self.max_color_temp_kelvin:
+            min_color_temp_kelvin = self.min_color_temp_kelvin
+            max_color_temp_kelvin = self.max_color_temp_kelvin
+            data[ATTR_MIN_COLOR_TEMP_KELVIN] = min_color_temp_kelvin
+            data[ATTR_MAX_COLOR_TEMP_KELVIN] = max_color_temp_kelvin
+            if not max_color_temp_kelvin:
                 data[ATTR_MIN_MIREDS] = None
             else:
                 data[ATTR_MIN_MIREDS] = color_util.color_temperature_kelvin_to_mired(
-                    self.max_color_temp_kelvin
+                    max_color_temp_kelvin
                 )
-            if not self.min_color_temp_kelvin:
+            if not min_color_temp_kelvin:
                 data[ATTR_MAX_MIREDS] = None
             else:
                 data[ATTR_MAX_MIREDS] = color_util.color_temperature_kelvin_to_mired(
-                    self.min_color_temp_kelvin
+                    min_color_temp_kelvin
                 )
         if LightEntityFeature.EFFECT in supported_features:
             data[ATTR_EFFECT_LIST] = self.effect_list
@@ -1018,30 +1024,27 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         self, color_mode: ColorMode | str
     ) -> dict[str, tuple[float, ...]]:
         data: dict[str, tuple[float, ...]] = {}
-        if color_mode == ColorMode.HS and self.hs_color:
-            hs_color = self.hs_color
+        if color_mode == ColorMode.HS and (hs_color := self.hs_color):
             data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
             data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
             data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
-        elif color_mode == ColorMode.XY and self.xy_color:
-            xy_color = self.xy_color
+        elif color_mode == ColorMode.XY and (xy_color := self.xy_color):
             data[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
             data[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(*xy_color)
             data[ATTR_XY_COLOR] = (round(xy_color[0], 6), round(xy_color[1], 6))
-        elif color_mode == ColorMode.RGB and self.rgb_color:
-            rgb_color = self.rgb_color
+        elif color_mode == ColorMode.RGB and (rgb_color := self.rgb_color):
             data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
             data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
-        elif color_mode == ColorMode.RGBW and self._light_internal_rgbw_color:
-            rgbw_color = self._light_internal_rgbw_color
+        elif color_mode == ColorMode.RGBW and (
+            rgbw_color := self._light_internal_rgbw_color
+        ):
             rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
             data[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
             data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
             data[ATTR_RGBW_COLOR] = tuple(int(x) for x in rgbw_color[0:4])
             data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
-        elif color_mode == ColorMode.RGBWW and self.rgbww_color:
-            rgbww_color = self.rgbww_color
+        elif color_mode == ColorMode.RGBWW and (rgbww_color := self.rgbww_color):
             rgb_color = color_util.color_rgbww_to_rgb(
                 *rgbww_color, self.min_color_temp_kelvin, self.max_color_temp_kelvin
             )
@@ -1049,12 +1052,59 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_RGB_COLOR] = tuple(int(x) for x in rgb_color[0:3])
             data[ATTR_RGBWW_COLOR] = tuple(int(x) for x in rgbww_color[0:5])
             data[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
-        elif color_mode == ColorMode.COLOR_TEMP and self.color_temp_kelvin:
-            hs_color = color_util.color_temperature_to_hs(self.color_temp_kelvin)
+        elif color_mode == ColorMode.COLOR_TEMP and (
+            color_temp_kelvin := self.color_temp_kelvin
+        ):
+            hs_color = color_util.color_temperature_to_hs(color_temp_kelvin)
             data[ATTR_HS_COLOR] = (round(hs_color[0], 3), round(hs_color[1], 3))
             data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
             data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
         return data
+
+    def __validate_color_mode(
+        self,
+        color_mode: ColorMode | str | None,
+        supported_color_modes: set[ColorMode] | set[str],
+        effect: str | None,
+    ) -> None:
+        """Validate the color mode."""
+        if color_mode is None:
+            # The light is turned off
+            return
+
+        if not effect or effect == EFFECT_OFF:
+            # No effect is active, the light must set color mode to one of the supported
+            # color modes
+            if color_mode in supported_color_modes:
+                return
+            # Increase severity to warning in 2024.3, reject in 2025.3
+            _LOGGER.debug(
+                "%s: set to unsupported color_mode: %s, supported_color_modes: %s",
+                self.entity_id,
+                color_mode,
+                supported_color_modes,
+            )
+            return
+
+        # When an effect is active, the color mode should indicate what adjustments are
+        # supported by the effect. To make this possible, we allow the light to set its
+        # color mode to on_off, and to brightness if the light allows adjusting
+        # brightness, in addition to the otherwise supported color modes.
+        effect_color_modes = supported_color_modes | {ColorMode.ONOFF}
+        if brightness_supported(effect_color_modes):
+            effect_color_modes.add(ColorMode.BRIGHTNESS)
+
+        if color_mode in effect_color_modes:
+            return
+
+        # Increase severity to warning in 2024.3, reject in 2025.3
+        _LOGGER.debug(
+            "%s: set to unsupported color_mode: %s, supported for effect: %s",
+            self.entity_id,
+            color_mode,
+            effect_color_modes,
+        )
+        return
 
     @final
     @property
@@ -1062,43 +1112,45 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return state attributes."""
         data: dict[str, Any] = {}
         supported_features = self.supported_features_compat
-        supported_color_modes = self._light_internal_supported_color_modes
+        supported_color_modes = self.supported_color_modes
+        legacy_supported_color_modes = (
+            supported_color_modes or self._light_internal_supported_color_modes
+        )
         supported_features_value = supported_features.value
-        color_mode = self._light_internal_color_mode if self.is_on else None
+        _is_on = self.is_on
+        color_mode = self._light_internal_color_mode if _is_on else None
 
-        if color_mode and color_mode not in supported_color_modes:
-            # Increase severity to warning in 2021.6, reject in 2021.10
-            _LOGGER.debug(
-                "%s: set to unsupported color_mode: %s, supported_color_modes: %s",
-                self.entity_id,
-                color_mode,
-                supported_color_modes,
-            )
+        effect: str | None
+        if LightEntityFeature.EFFECT in supported_features:
+            data[ATTR_EFFECT] = effect = self.effect if _is_on else None
+        else:
+            effect = None
+
+        self.__validate_color_mode(color_mode, legacy_supported_color_modes, effect)
 
         data[ATTR_COLOR_MODE] = color_mode
 
-        if brightness_supported(self.supported_color_modes):
+        if brightness_supported(supported_color_modes):
             if color_mode in COLOR_MODES_BRIGHTNESS:
                 data[ATTR_BRIGHTNESS] = self.brightness
             else:
                 data[ATTR_BRIGHTNESS] = None
         elif supported_features_value & SUPPORT_BRIGHTNESS:
             # Backwards compatibility for ambiguous / incomplete states
-            # Add warning in 2021.6, remove in 2021.10
-            if self.is_on:
+            # Add warning in 2024.3, remove in 2025.3
+            if _is_on:
                 data[ATTR_BRIGHTNESS] = self.brightness
             else:
                 data[ATTR_BRIGHTNESS] = None
 
-        if color_temp_supported(self.supported_color_modes):
+        if color_temp_supported(supported_color_modes):
             if color_mode == ColorMode.COLOR_TEMP:
-                data[ATTR_COLOR_TEMP_KELVIN] = self.color_temp_kelvin
-                if self.color_temp_kelvin:
+                color_temp_kelvin = self.color_temp_kelvin
+                data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
+                if color_temp_kelvin:
                     data[
                         ATTR_COLOR_TEMP
-                    ] = color_util.color_temperature_kelvin_to_mired(
-                        self.color_temp_kelvin
-                    )
+                    ] = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
                 else:
                     data[ATTR_COLOR_TEMP] = None
             else:
@@ -1106,47 +1158,43 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data[ATTR_COLOR_TEMP] = None
         elif supported_features_value & SUPPORT_COLOR_TEMP:
             # Backwards compatibility
-            # Add warning in 2021.6, remove in 2021.10
-            if self.is_on:
-                data[ATTR_COLOR_TEMP_KELVIN] = self.color_temp_kelvin
-                if self.color_temp_kelvin:
+            # Add warning in 2024.3, remove in 2025.3
+            if _is_on:
+                color_temp_kelvin = self.color_temp_kelvin
+                data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
+                if color_temp_kelvin:
                     data[
                         ATTR_COLOR_TEMP
-                    ] = color_util.color_temperature_kelvin_to_mired(
-                        self.color_temp_kelvin
-                    )
+                    ] = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
                 else:
                     data[ATTR_COLOR_TEMP] = None
             else:
                 data[ATTR_COLOR_TEMP_KELVIN] = None
                 data[ATTR_COLOR_TEMP] = None
 
-        if color_supported(supported_color_modes) or color_temp_supported(
-            supported_color_modes
+        if color_supported(legacy_supported_color_modes) or color_temp_supported(
+            legacy_supported_color_modes
         ):
             data[ATTR_HS_COLOR] = None
             data[ATTR_RGB_COLOR] = None
             data[ATTR_XY_COLOR] = None
-            if ColorMode.RGBW in supported_color_modes:
+            if ColorMode.RGBW in legacy_supported_color_modes:
                 data[ATTR_RGBW_COLOR] = None
-            if ColorMode.RGBWW in supported_color_modes:
+            if ColorMode.RGBWW in legacy_supported_color_modes:
                 data[ATTR_RGBWW_COLOR] = None
             if color_mode:
                 data.update(self._light_internal_convert_color(color_mode))
-
-        if LightEntityFeature.EFFECT in supported_features:
-            data[ATTR_EFFECT] = self.effect if self.is_on else None
 
         return data
 
     @property
     def _light_internal_supported_color_modes(self) -> set[ColorMode] | set[str]:
         """Calculate supported color modes with backwards compatibility."""
-        if self.supported_color_modes is not None:
-            return self.supported_color_modes
+        if (_supported_color_modes := self.supported_color_modes) is not None:
+            return _supported_color_modes
 
         # Backwards compatibility for supported_color_modes added in 2021.4
-        # Add warning in 2021.6, remove in 2021.10
+        # Add warning in 2024.3, remove in 2025.3
         supported_features = self.supported_features_compat
         supported_features_value = supported_features.value
         supported_color_modes: set[ColorMode] = set()

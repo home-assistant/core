@@ -51,7 +51,6 @@ class WLEDMainLight(WLEDEntity, LightEntity):
     """Defines a WLED main light."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_icon = "mdi:led-strip-variant"
     _attr_translation_key = "main"
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -103,7 +102,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
     """Defines a WLED light based on a segment."""
 
     _attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.TRANSITION
-    _attr_icon = "mdi:led-strip-variant"
+    _attr_translation_key = "segment"
 
     def __init__(
         self,
@@ -121,7 +120,7 @@ class WLEDSegmentLight(WLEDEntity, LightEntity):
         if segment == 0:
             self._attr_name = None
         else:
-            self._attr_name = f"Segment {segment}"
+            self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = (
             f"{self.coordinator.data.info.mac_address}_{self._segment}"

@@ -672,7 +672,7 @@ async def test_keepalive_validation(
     assert result["step_id"] == "broker"
 
     if error:
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(vol.Invalid):
             result = await hass.config_entries.options.async_configure(
                 result["flow_id"],
                 user_input=test_input,

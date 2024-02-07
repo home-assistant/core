@@ -428,3 +428,47 @@ async def test_async_create_repair_issue_unknown(
         )
     issue = issue_registry.async_get_issue(domain=DOMAIN, issue_id=identifier)
     assert issue is None
+
+
+async def test_disconnected(hass: HomeAssistant) -> None:
+    """Test cleanup when disconnected from the cloud."""
+    prefs = MagicMock(
+        alexa_enabled=False,
+        google_enabled=True,
+        async_set_username=AsyncMock(return_value=None),
+    )
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = MagicMock(is_logged_in=True, username="mock-username")
+    client._google_config = Mock()
+    client._google_config.async_disable_local_sdk.assert_not_called()
+
+    await client.cloud_disconnected()
+    client._google_config.async_disable_local_sdk.assert_called_once_with()
+
+
+async def test_logged_out(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+) -> None:
+    """Test cleanup when logged out from the cloud."""
+
+    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+
+    alexa_config_mock = Mock(async_enable_proactive_mode=AsyncMock())
+    google_config_mock = Mock(async_sync_entities=AsyncMock())
+    cloud.client._alexa_config = alexa_config_mock
+    cloud.client._google_config = google_config_mock
+
+    await cloud.client.cloud_connected()
+    await hass.async_block_till_done()
+
+    # Simulate logged out
+    await cloud.logout()
+    await hass.async_block_till_done()
+
+    # Alexa is not cleaned up, Google is
+    assert cloud.client._alexa_config is alexa_config_mock
+    assert cloud.client._google_config is None
+    google_config_mock.async_deinitialize.assert_called_once_with()

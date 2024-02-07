@@ -15,7 +15,7 @@ import voluptuous as vol
 from homeassistant.components import conversation, stt, tts, websocket_api
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_SECONDS, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.util import language as language_util
 
 from .const import (
@@ -53,6 +53,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_run)
     websocket_api.async_register_command(hass, websocket_list_languages)
     websocket_api.async_register_command(hass, websocket_list_runs)
+    websocket_api.async_register_command(hass, websocket_list_devices)
     websocket_api.async_register_command(hass, websocket_get_run)
     websocket_api.async_register_command(hass, websocket_device_capture)
 
@@ -284,6 +285,35 @@ def websocket_list_runs(
                 for id, pipeline_run in pipeline_debug.items()
             ]
         },
+    )
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "assist_pipeline/device/list",
+    }
+)
+def websocket_list_devices(
+    hass: HomeAssistant,
+    connection: websocket_api.connection.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List assist devices."""
+    pipeline_data: PipelineData = hass.data[DOMAIN]
+    ent_reg = er.async_get(hass)
+    connection.send_result(
+        msg["id"],
+        [
+            {
+                "device_id": device_id,
+                "pipeline_entity": ent_reg.async_get_entity_id(
+                    "select", info.domain, f"{info.unique_id_prefix}-pipeline"
+                ),
+            }
+            for device_id, info in pipeline_data.pipeline_devices.items()
+        ],
     )
 
 

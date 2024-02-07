@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Awaitable
 import dataclasses
 import logging
 from typing import Any, Protocol
@@ -339,14 +338,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         """Return the correct flow manager."""
         return self.hass.config_entries.options
 
-    async def _resume_flow_when_done(self, awaitable: Awaitable) -> None:
-        try:
-            await awaitable
-        finally:
-            self.hass.async_create_task(
-                self.flow_manager.async_configure(flow_id=self.flow_id)
-            )
-
     async def _async_get_addon_info(self, addon_manager: AddonManager) -> AddonInfo:
         """Return and cache Silicon Labs Multiprotocol add-on info."""
         try:
@@ -411,18 +402,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Install Silicon Labs Multiprotocol add-on."""
+        multipan_manager = await get_multiprotocol_addon_manager(self.hass)
+
         if not self.install_task:
-            multipan_manager = await get_multiprotocol_addon_manager(self.hass)
             self.install_task = self.hass.async_create_task(
-                self._resume_flow_when_done(
-                    multipan_manager.async_install_addon_waiting()
-                ),
+                multipan_manager.async_install_addon_waiting(),
                 "SiLabs Multiprotocol addon install",
             )
+
+        if not self.install_task.done():
             return self.async_show_progress(
                 step_id="install_addon",
                 progress_action="install_addon",
                 description_placeholders={"addon_name": multipan_manager.addon_name},
+                progress_task=self.install_task,
             )
 
         try:
@@ -518,27 +511,29 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Start Silicon Labs Multiprotocol add-on."""
+        multipan_manager = await get_multiprotocol_addon_manager(self.hass)
+
         if not self.start_task:
-            multipan_manager = await get_multiprotocol_addon_manager(self.hass)
             self.start_task = self.hass.async_create_task(
-                self._resume_flow_when_done(
-                    multipan_manager.async_start_addon_waiting()
-                )
+                multipan_manager.async_start_addon_waiting()
             )
+
+        if not self.start_task.done():
             return self.async_show_progress(
                 step_id="start_addon",
                 progress_action="start_addon",
                 description_placeholders={"addon_name": multipan_manager.addon_name},
+                progress_task=self.start_task,
             )
 
         try:
             await self.start_task
         except (AddonError, AbortFlow) as err:
-            self.start_task = None
             _LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="start_failed")
+        finally:
+            self.start_task = None
 
-        self.start_task = None
         return self.async_show_progress_done(next_step_id="finish_addon_setup")
 
     async def async_step_start_failed(
@@ -715,15 +710,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
 
         if not self.install_task:
             self.install_task = self.hass.async_create_task(
-                self._resume_flow_when_done(
-                    flasher_manager.async_install_addon_waiting()
-                ),
+                flasher_manager.async_install_addon_waiting(),
                 "SiLabs Flasher addon install",
             )
+
+        if not self.install_task.done():
             return self.async_show_progress(
                 step_id="install_flasher_addon",
                 progress_action="install_addon",
                 description_placeholders={"addon_name": flasher_manager.addon_name},
+                progress_task=self.install_task,
             )
 
         try:
@@ -800,19 +796,20 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Uninstall Silicon Labs Multiprotocol add-on."""
+        multipan_manager = await get_multiprotocol_addon_manager(self.hass)
 
         if not self.stop_task:
-            multipan_manager = await get_multiprotocol_addon_manager(self.hass)
             self.stop_task = self.hass.async_create_task(
-                self._resume_flow_when_done(
-                    multipan_manager.async_uninstall_addon_waiting()
-                ),
+                multipan_manager.async_uninstall_addon_waiting(),
                 "SiLabs Multiprotocol addon uninstall",
             )
+
+        if not self.stop_task.done():
             return self.async_show_progress(
                 step_id="uninstall_multiprotocol_addon",
                 progress_action="uninstall_multiprotocol_addon",
                 description_placeholders={"addon_name": multipan_manager.addon_name},
+                progress_task=self.stop_task,
             )
 
         try:
@@ -826,9 +823,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Start Silicon Labs Flasher add-on."""
+        flasher_manager = get_flasher_addon_manager(self.hass)
 
         if not self.start_task:
-            flasher_manager = get_flasher_addon_manager(self.hass)
 
             async def start_and_wait_until_done() -> None:
                 await flasher_manager.async_start_addon_waiting()
@@ -837,13 +834,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow, ABC):
                     AddonState.NOT_RUNNING
                 )
 
-            self.start_task = self.hass.async_create_task(
-                self._resume_flow_when_done(start_and_wait_until_done())
-            )
+            self.start_task = self.hass.async_create_task(start_and_wait_until_done())
+
+        if not self.start_task.done():
             return self.async_show_progress(
                 step_id="start_flasher_addon",
                 progress_action="start_flasher_addon",
                 description_placeholders={"addon_name": flasher_manager.addon_name},
+                progress_task=self.start_task,
             )
 
         try:

@@ -252,7 +252,6 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
     Otherwise raise AttributeError.
     """
     module_name = module_globals.get("__name__")
-    logger = logging.getLogger(module_name)
     value = replacement = None
     if (deprecated_const := module_globals.get(_PREFIX_DEPRECATED + name)) is None:
         raise AttributeError(f"Module {module_name!r} has no attribute {name!r}")
@@ -273,7 +272,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
             "but an instance of DeprecatedConstant or DeprecatedConstantEnum is required"
         )
 
-        logger.debug(msg)
+        logging.getLogger(module_name).debug(msg)
         # PEP 562 -- Module __getattr__ and __dir__
         # specifies that __getattr__ should raise AttributeError if the attribute is not
         # found.

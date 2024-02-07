@@ -36,7 +36,13 @@ from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 
-from .const import ATTR_LAST_RESET, ATTR_STATE_CLASS, DOMAIN, SensorStateClass
+from .const import (
+    ATTR_LAST_RESET,
+    ATTR_STATE_CLASS,
+    DOMAIN,
+    SensorStateClass,
+    UnitOfVolumeFlowRate,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +58,7 @@ EQUIVALENT_UNITS = {
     "RPM": REVOLUTIONS_PER_MINUTE,
     "ft3": UnitOfVolume.CUBIC_FEET,
     "m3": UnitOfVolume.CUBIC_METERS,
+    "ft³/m": UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
 }
 
 # Keep track of entities for which a warning about decreasing value has been logged
@@ -68,13 +75,19 @@ LINK_DEV_STATISTICS = "https://my.home-assistant.io/redirect/developer_statistic
 
 def _get_sensor_states(hass: HomeAssistant) -> list[State]:
     """Get the current state of all sensors for which to compile statistics."""
-    all_sensors = hass.states.all(DOMAIN)
     instance = get_instance(hass)
+    # We check for state class first before calling the filter
+    # function as the filter function is much more expensive
+    # than checking the state class
     return [
         state
-        for state in all_sensors
-        if instance.entity_filter(state.entity_id)
-        and try_parse_enum(SensorStateClass, state.attributes.get(ATTR_STATE_CLASS))
+        for state in hass.states.all(DOMAIN)
+        if (state_class := state.attributes.get(ATTR_STATE_CLASS))
+        and (
+            type(state_class) is SensorStateClass
+            or try_parse_enum(SensorStateClass, state_class)
+        )
+        and instance.entity_filter(state.entity_id)
     ]
 
 

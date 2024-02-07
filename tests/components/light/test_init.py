@@ -2610,3 +2610,51 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
     caplog.clear()
     assert entity.supported_features_compat is light.LightEntityFeature(1)
     assert "is using deprecated supported features values" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("color_mode", "supported_color_modes", "effect", "warning_expected"),
+    [
+        (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, None, False),
+        # A light which supports brightness should not set its color mode to on_off
+        (light.ColorMode.ONOFF, {light.ColorMode.BRIGHTNESS}, None, True),
+        (light.ColorMode.ONOFF, {light.ColorMode.BRIGHTNESS}, light.EFFECT_OFF, True),
+        # Unless it renders an effect
+        (light.ColorMode.ONOFF, {light.ColorMode.BRIGHTNESS}, "effect", False),
+        (light.ColorMode.BRIGHTNESS, {light.ColorMode.BRIGHTNESS}, "effect", False),
+        (light.ColorMode.BRIGHTNESS, {light.ColorMode.BRIGHTNESS}, None, False),
+        # A light which supports color should not set its color mode to brightnes
+        (light.ColorMode.BRIGHTNESS, {light.ColorMode.HS}, None, True),
+        (light.ColorMode.BRIGHTNESS, {light.ColorMode.HS}, light.EFFECT_OFF, True),
+        (light.ColorMode.ONOFF, {light.ColorMode.HS}, None, True),
+        (light.ColorMode.ONOFF, {light.ColorMode.HS}, light.EFFECT_OFF, True),
+        # Unless it renders an effect
+        (light.ColorMode.BRIGHTNESS, {light.ColorMode.HS}, "effect", False),
+        (light.ColorMode.ONOFF, {light.ColorMode.HS}, "effect", False),
+        (light.ColorMode.HS, {light.ColorMode.HS}, "effect", False),
+        # A light which supports brightness should not set its color mode to hs even
+        # if rendering an effect
+        (light.ColorMode.HS, {light.ColorMode.BRIGHTNESS}, "effect", True),
+    ],
+)
+def test_report_invalid_color_mode(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    color_mode: str,
+    supported_color_modes: set[str],
+    effect: str | None,
+    warning_expected: bool,
+) -> None:
+    """Test a light setting an invalid color mode."""
+
+    class MockLightEntityEntity(light.LightEntity):
+        _attr_color_mode = color_mode
+        _attr_effect = effect
+        _attr_is_on = True
+        _attr_supported_features = light.LightEntityFeature.EFFECT
+        _attr_supported_color_modes = supported_color_modes
+
+    entity = MockLightEntityEntity()
+    entity._async_calculate_state()
+    expected_warning = f"set to unsupported color_mode: {color_mode}"
+    assert (expected_warning in caplog.text) is warning_expected

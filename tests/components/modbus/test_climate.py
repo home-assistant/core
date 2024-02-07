@@ -30,6 +30,7 @@ from homeassistant.components.modbus.const import (
     CONF_FAN_MODE_OFF,
     CONF_FAN_MODE_ON,
     CONF_FAN_MODE_REGISTER,
+    CONF_FAN_MODE_TOP,
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
@@ -310,6 +311,36 @@ async def test_temperature_climate(
 
 
 @pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_SLAVE: 1,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_DATA_TYPE: DataType.INT32,
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    ("register_words", "expected"),
+    [
+        (
+            None,
+            "unavailable",
+        ),
+    ],
+)
+async def test_temperature_error(hass: HomeAssistant, expected, mock_do_cycle) -> None:
+    """Run test for given config."""
+    assert hass.states.get(ENTITY_ID).state == expected
+
+
+@pytest.mark.parametrize(
     ("do_config", "result", "register_words"),
     [
         (
@@ -461,7 +492,7 @@ async def test_service_climate_update(
                         CONF_SCAN_INTERVAL: 0,
                         CONF_DATA_TYPE: DataType.INT32,
                         CONF_FAN_MODE_REGISTER: {
-                            CONF_ADDRESS: 118,
+                            CONF_ADDRESS: [118],
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_LOW: 0,
                                 CONF_FAN_MODE_MEDIUM: 1,
@@ -474,6 +505,31 @@ async def test_service_climate_update(
             },
             FAN_HIGH,
             [0x02],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: [118],
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_LOW: 0,
+                                CONF_FAN_MODE_MEDIUM: 1,
+                                CONF_FAN_MODE_HIGH: 2,
+                                CONF_FAN_MODE_TOP: 3,
+                            },
+                        },
+                    },
+                ]
+            },
+            FAN_TOP,
+            [0x03],
         ),
     ],
 )
@@ -710,7 +766,7 @@ async def test_service_set_hvac_mode(
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_FAN_MODE_REGISTER: {
-                            CONF_ADDRESS: 118,
+                            CONF_ADDRESS: [118],
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_ON: 1,
                                 CONF_FAN_MODE_OFF: 2,
