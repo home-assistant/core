@@ -2459,6 +2459,8 @@ async def test_udn_upnp_connection_added_if_missing(
         identifiers=set(),
     )
 
+    ent_reg.async_update_entity(mock_entity_id, device_id=device.id)
+
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
     assert await hass.config_entries.async_setup(config_entry_mock.entry_id) is True
     await hass.async_block_till_done()
@@ -2469,8 +2471,6 @@ async def test_udn_upnp_connection_added_if_missing(
 
     # Check hass device information has not been filled in yet
     dev_reg = async_get_dr(hass)
-    device = dev_reg.async_get_device(
-        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
-        identifiers=set(),
-    )
+    device = dev_reg.async_get(device.id)
     assert device is not None
+    assert (CONNECTION_UPNP, MOCK_DEVICE_UDN) in device.connections
