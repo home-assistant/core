@@ -766,12 +766,13 @@ async def test_same_named_entities_in_different_areas(
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert (
-        result.response.intent.slots.get("name", {}).get("value")
-        == kitchen_light.entity_id
+        result.response.intent.slots.get("name", {}).get("value") == kitchen_light.name
     )
     assert (
         result.response.intent.slots.get("name", {}).get("text") == kitchen_light.name
     )
+    assert len(result.response.matched_states) == 1
+    assert result.response.matched_states[0].entity_id == kitchen_light.entity_id
     assert calls[0].data.get("entity_id") == [kitchen_light.entity_id]
 
     # Target bedroom light
@@ -785,10 +786,11 @@ async def test_same_named_entities_in_different_areas(
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert (
-        result.response.intent.slots.get("name", {}).get("value")
-        == bedroom_light.entity_id
+        result.response.intent.slots.get("name", {}).get("value") == bedroom_light.name
     )
     assert (
         result.response.intent.slots.get("name", {}).get("text") == bedroom_light.name
     )
+    assert len(result.response.matched_states) == 1
+    assert result.response.matched_states[0].entity_id == bedroom_light.entity_id
     assert calls[0].data.get("entity_id") == [bedroom_light.entity_id]

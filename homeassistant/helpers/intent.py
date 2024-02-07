@@ -453,14 +453,10 @@ class ServiceIntentHandler(IntentHandler):
                 device_classes=device_classes,
             )
 
-        # Patch the "name" slot value with the first matched entity id.
-        #
-        # We want to use the entity id downstream in a response or automation,
-        # but we can't know it until this point.
-        if entity_name and (intent_name_slot := intent_obj.slots.get("name")):
-            intent_name_slot["value"] = states[0].entity_id
-
         response = await self.async_handle_states(intent_obj, states, area)
+
+        # Make the matched states available in the response
+        response.async_set_states(matched_states=states, unmatched_states=[])
 
         return response
 

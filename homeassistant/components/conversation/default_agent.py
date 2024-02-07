@@ -223,22 +223,22 @@ class DefaultAgent(AbstractConversationAgent):
         # Check if a trigger matched
         if isinstance(result, SentenceTriggerResult):
             # Gather callback responses in parallel
-            trigger_responses = await asyncio.gather(
-                *(
-                    self._trigger_sentences[trigger_id].callback(
-                        result.sentence, trigger_result
-                    )
-                    for trigger_id, trigger_result in result.matched_triggers.items()
+            trigger_callbacks = [
+                self._trigger_sentences[trigger_id].callback(
+                    result.sentence, trigger_result
                 )
-            )
+                for trigger_id, trigger_result in result.matched_triggers.items()
+            ]
 
             # Use last non-empty result as response.
             #
             # There may be multiple copies of a trigger running when editing in
             # the UI, so it's critical that we filter out empty responses here.
             response_text: str | None = None
-            for trigger_response in trigger_responses:
-                response_text = response_text or trigger_response
+            for trigger_future in asyncio.as_completed(trigger_callbacks):
+                if trigger_response := await trigger_future:
+                    response_text = trigger_response
+                    break
 
             # Convert to conversation result
             response = intent.IntentResponse(language=language)
