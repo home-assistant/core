@@ -51,6 +51,7 @@ POSITION_DEVICE_MAP = {
     BlindType.CurtainLeft: CoverDeviceClass.CURTAIN,
     BlindType.CurtainRight: CoverDeviceClass.CURTAIN,
     BlindType.SkylightBlind: CoverDeviceClass.SHADE,
+    BlindType.InsectScreen: CoverDeviceClass.SHADE,
 }
 
 TILT_DEVICE_MAP = {
@@ -69,6 +70,7 @@ TILT_ONLY_DEVICE_MAP = {
 
 TDBU_DEVICE_MAP = {
     BlindType.TopDownBottomUp: CoverDeviceClass.SHADE,
+    BlindType.TriangleBlind: CoverDeviceClass.BLIND,
 }
 
 
