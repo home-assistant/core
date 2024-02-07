@@ -26,6 +26,7 @@ from homeassistant.components.dlna_dmr.const import (
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
+    DOMAIN,
 )
 from homeassistant.components.dlna_dmr.data import EventListenAddr
 from homeassistant.components.dlna_dmr.media_player import DlnaDmrEntity
@@ -2424,3 +2425,52 @@ async def test_connections_restored(
 
     # Unload config entry to clean up
     assert await hass.config_entries.async_unload(config_entry_mock.entry_id)
+
+
+async def test_udn_upnp_connection_added_if_missing(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    ssdp_scanner_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    dmr_device_mock: Mock,
+) -> None:
+    """Test missing upnp connection added.
+
+    We did not always add the upnp connection to the device registry, so we need to
+    check that it is added if missing as otherwise we might end up creating a new
+    device entry.
+    """
+    config_entry_mock.add_to_hass(hass)
+
+    # Cause connection attempts to fail before adding entity
+    ent_reg = async_get_er(hass)
+    entry = ent_reg.async_get_or_create(
+        MP_DOMAIN,
+        DOMAIN,
+        MOCK_DEVICE_UDN,
+        config_entry=config_entry_mock,
+    )
+    mock_entity_id = entry.entity_id
+
+    dev_reg = async_get_dr(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=config_entry_mock.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS)},
+        identifiers=set(),
+    )
+
+    domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
+    assert await hass.config_entries.async_setup(config_entry_mock.entry_id) is True
+    await hass.async_block_till_done()
+
+    mock_state = hass.states.get(mock_entity_id)
+    assert mock_state is not None
+    assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+    # Check hass device information has not been filled in yet
+    dev_reg = async_get_dr(hass)
+    device = dev_reg.async_get_device(
+        connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
+        identifiers=set(),
+    )
+    assert device is not None
