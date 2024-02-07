@@ -414,37 +414,33 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     ) -> FlowResult:
         """Choose camera config."""
         hk_options = self.hk_options
-        entity_config: dict[str, dict[str, Any]]
+        all_entity_config: dict[str, dict[str, Any]]
 
         if user_input is not None:
-            entity_config = hk_options[CONF_ENTITY_CONFIG]
+            all_entity_config = hk_options[CONF_ENTITY_CONFIG]
             for entity_id in self.included_cameras:
+                entity_config = all_entity_config.setdefault(entity_id, {})
+
                 if entity_id in user_input[CONF_CAMERA_COPY]:
-                    entity_config.setdefault(entity_id, {})[
-                        CONF_VIDEO_CODEC
-                    ] = VIDEO_CODEC_COPY
-                elif (
-                    entity_id in entity_config
-                    and CONF_VIDEO_CODEC in entity_config[entity_id]
-                ):
-                    del entity_config[entity_id][CONF_VIDEO_CODEC]
+                    entity_config[CONF_VIDEO_CODEC] = VIDEO_CODEC_COPY
+                elif CONF_VIDEO_CODEC in entity_config:
+                    del entity_config[CONF_VIDEO_CODEC]
+
                 if entity_id in user_input[CONF_CAMERA_AUDIO]:
-                    entity_config.setdefault(entity_id, {})[CONF_SUPPORT_AUDIO] = True
-                elif (
-                    entity_id in entity_config
-                    and CONF_SUPPORT_AUDIO in entity_config[entity_id]
-                ):
-                    del entity_config[entity_id][CONF_SUPPORT_AUDIO]
+                    entity_config[CONF_SUPPORT_AUDIO] = True
+                elif CONF_SUPPORT_AUDIO in entity_config:
+                    del entity_config[CONF_SUPPORT_AUDIO]
+
             return await self.async_step_advanced()
 
         cameras_with_audio = []
         cameras_with_copy = []
-        entity_config = hk_options.setdefault(CONF_ENTITY_CONFIG, {})
+        all_entity_config = hk_options.setdefault(CONF_ENTITY_CONFIG, {})
         for entity in self.included_cameras:
-            hk_entity_config = entity_config.get(entity, {})
-            if hk_entity_config.get(CONF_VIDEO_CODEC) == VIDEO_CODEC_COPY:
+            entity_config = all_entity_config.get(entity, {})
+            if entity_config.get(CONF_VIDEO_CODEC) == VIDEO_CODEC_COPY:
                 cameras_with_copy.append(entity)
-            if hk_entity_config.get(CONF_SUPPORT_AUDIO):
+            if entity_config.get(CONF_SUPPORT_AUDIO):
                 cameras_with_audio.append(entity)
 
         data_schema = vol.Schema(
