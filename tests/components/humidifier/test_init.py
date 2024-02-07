@@ -13,7 +13,7 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import import_and_test_deprecated_constant_enum
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 
 
 class MockHumidifierEntity(HumidifierEntity):
@@ -52,6 +52,15 @@ def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
     for enum in enum:
         result.append((enum, constant_prefix))
     return result
+
+
+@pytest.mark.parametrize(
+    "module",
+    [humidifier, humidifier.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
 
 
 @pytest.mark.parametrize(

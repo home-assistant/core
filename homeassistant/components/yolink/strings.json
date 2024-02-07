@@ -69,6 +69,49 @@
           "disabled": "[%key:common::state::disabled%]"
         }
       }
+    },
+    "number": {
+      "config_volume": {
+        "name": "Volume"
+      }
+    }
+  },
+  "services": {
+    "play_on_speaker_hub": {
+      "name": "Play on SpeakerHub",
+      "description": "Convert text to audio play on YoLink SpeakerHub",
+      "fields": {
+        "target_device": {
+          "name": "SpeakerHub Device",
+          "description": "SpeakerHub Device"
+        },
+        "message": {
+          "name": "Text message",
+          "description": "Text message to be played."
+        },
+        "tone": {
+          "name": "Tone",
+          "description": "Tone before playing audio."
+        },
+        "volume": {
+          "name": "Volume",
+          "description": "Speaker volume during playback."
+        },
+        "repeat": {
+          "name": "Repeat",
+          "description": "The amount of times the text will be repeated."
+        }
+      }
+    }
+  },
+  "selector": {
+    "speaker_tone": {
+      "options": {
+        "emergency": "Emergency",
+        "alert": "Alert",
+        "warn": "Warn",
+        "tip": "Tip"
+      }
     }
   }
 }

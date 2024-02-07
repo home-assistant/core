@@ -160,10 +160,14 @@ class BlockSleepingClimate(
     _attr_max_temp = SHTRV_01_TEMPERATURE_SETTINGS["max"]
     _attr_min_temp = SHTRV_01_TEMPERATURE_SETTINGS["min"]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -316,6 +320,21 @@ class BlockSleepingClimate(
         """Set new target temperature."""
         if (current_temp := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
+
+        # Shelly TRV accepts target_t in Fahrenheit or Celsius, but you must
+        # send the units that the device expects
+        if self.block is not None and self.block.channel is not None:
+            therm = self.coordinator.device.settings["thermostats"][
+                int(self.block.channel)
+            ]
+            LOGGER.debug("Themostat settings: %s", therm)
+            if therm.get("target_t", {}).get("units", "C") == "F":
+                current_temp = TemperatureConverter.convert(
+                    cast(float, current_temp),
+                    UnitOfTemperature.CELSIUS,
+                    UnitOfTemperature.FAHRENHEIT,
+                )
+
         await self.set_state_full_path(target_t_enabled=1, target_t=f"{current_temp}")
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -423,9 +442,14 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     _attr_icon = "mdi:thermostat"
     _attr_max_temp = RPC_THERMOSTAT_SETTINGS["max"]
     _attr_min_temp = RPC_THERMOSTAT_SETTINGS["min"]
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""

@@ -6,7 +6,16 @@ import pytest
 
 from homeassistant.components import alarm_control_panel
 
-from tests.common import import_and_test_deprecated_constant_enum
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
+
+
+@pytest.mark.parametrize(
+    "module",
+    [alarm_control_panel, alarm_control_panel.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
 
 
 @pytest.mark.parametrize(

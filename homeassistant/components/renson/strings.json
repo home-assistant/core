@@ -24,6 +24,14 @@
         "name": "Reset filter counter"
       }
     },
+    "time": {
+      "day_time": {
+        "name": "Start time of the day"
+      },
+      "night_time": {
+        "name": "Start time of the night"
+      }
+    },
     "number": {
       "filter_change": {
         "name": "Filter clean/replacement"
@@ -124,12 +132,6 @@
           "level4": "[%key:component::renson::entity::sensor::ventilation_level::state::level4%]",
           "breeze": "[%key:component::renson::entity::sensor::ventilation_level::state::breeze%]"
         }
-      },
-      "start_day_time": {
-        "name": "Start day time"
-      },
-      "start_night_time": {
-        "name": "Start night time"
       },
       "day_pollution_level": {
         "name": "Day pollution level",

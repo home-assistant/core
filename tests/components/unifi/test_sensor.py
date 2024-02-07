@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from aiounifi.models.device import DeviceState
 from aiounifi.models.message import MessageKey
-from freezegun.api import FrozenDateTimeFactory
+from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -22,6 +22,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     DEVICE_STATES,
+    DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCategory
@@ -392,6 +393,31 @@ async def test_bandwidth_sensors(
 
     assert hass.states.get("sensor.wireless_client_rx").state == "3456.0"
     assert hass.states.get("sensor.wireless_client_tx").state == "7891.0"
+
+    # Verify reset sensor after heartbeat expires
+
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    new_time = dt_util.utcnow()
+    wireless_client["last_seen"] = dt_util.as_timestamp(new_time)
+
+    mock_unifi_websocket(message=MessageKey.CLIENT, data=wireless_client)
+    await hass.async_block_till_done()
+
+    with freeze_time(new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wireless_client_rx").state == "3456.0"
+    assert hass.states.get("sensor.wireless_client_tx").state == "7891.0"
+
+    new_time = new_time + controller.option_detection_time + timedelta(seconds=1)
+
+    with freeze_time(new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wireless_client_rx").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.wireless_client_tx").state == STATE_UNAVAILABLE
 
     # Disable option
 
