@@ -131,6 +131,7 @@ async def setup_device(
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as ex:
+        await coordinator.release()
         if isinstance(coordinator.api, RoborockMqttClient):
             _LOGGER.warning(
                 "Not setting up %s because the we failed to get data for the first time using the online client. "
@@ -154,7 +155,6 @@ async def setup_device(
                 extra_error,
             )
             raise coordinator.last_exception from ex
-        await coordinator.release()
     return coordinator
 
 
