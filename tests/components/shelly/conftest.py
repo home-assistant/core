@@ -65,6 +65,24 @@ def mock_light_set_state(
     }
 
 
+def mock_white_light_set_state(
+    turn="on",
+    temp=4050,
+    gain=19,
+    brightness=128,
+    transition=0,
+):
+    """Mock white light block set_state."""
+    return {
+        "ison": turn == "on",
+        "mode": "white",
+        "gain": gain,
+        "temp": temp,
+        "brightness": brightness,
+        "transition": transition,
+    }
+
+
 MOCK_BLOCKS = [
     Mock(
         sensor_ids={
