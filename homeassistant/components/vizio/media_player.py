@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from pyvizio import VizioAsync
+from pyvizio import AppConfig, VizioAsync
 from pyvizio.api.apps import find_app_name
 from pyvizio.const import APP_HOME, INPUT_APPS, NO_APP_RUNNING, UNKNOWN_APP
 
@@ -144,9 +144,8 @@ class VizioDevice(MediaPlayerEntity):
         self._apps_coordinator = apps_coordinator
 
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
-        self._current_input = None
-        self._current_app_config = None
-        self._attr_app_name = None
+        self._current_input: str | None = None
+        self._current_app_config: AppConfig | None = None
         self._available_inputs: list[str] = []
         self._available_apps: list[str] = []
         self._all_apps = apps_coordinator.data if apps_coordinator else None
@@ -377,7 +376,7 @@ class VizioDevice(MediaPlayerEntity):
         return self._available_inputs
 
     @property
-    def app_id(self) -> str | None:
+    def app_id(self):
         """Return the ID of the current app if it is unknown by pyvizio."""
         if self._current_app_config and self.source == UNKNOWN_APP:
             return {
@@ -388,9 +387,9 @@ class VizioDevice(MediaPlayerEntity):
 
         return None
 
-    async def async_select_sound_mode(self, sound_mode):
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
-        if sound_mode in self._attr_sound_mode_list:
+        if sound_mode in (self._attr_sound_mode_list or ()):
             await self._device.set_setting(
                 VIZIO_AUDIO_SETTINGS,
                 VIZIO_SOUND_MODE,

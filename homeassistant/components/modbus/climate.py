@@ -97,7 +97,12 @@ async def async_setup_platform(
 class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -125,7 +130,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         )
         self._attr_min_temp = config[CONF_MIN_TEMP]
         self._attr_max_temp = config[CONF_MAX_TEMP]
-        self._attr_target_temperature_step = config[CONF_TARGET_TEMP]
         self._attr_target_temperature_step = config[CONF_STEP]
 
         if CONF_HVAC_MODE_REGISTER in config:
@@ -171,7 +175,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._fan_mode_mapping_to_modbus: dict[str, int] = {}
             self._fan_mode_mapping_from_modbus: dict[int, str] = {}
             mode_value_config = mode_config[CONF_FAN_MODE_VALUES]
-
             for fan_mode_kw, fan_mode in (
                 (CONF_FAN_MODE_ON, FAN_ON),
                 (CONF_FAN_MODE_OFF, FAN_OFF),
@@ -254,16 +257,23 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-
         if self._fan_mode_register is not None:
             # Write a value to the mode register for the desired mode.
             value = self._fan_mode_mapping_to_modbus[fan_mode]
-            await self._hub.async_pb_call(
-                self._slave,
-                self._fan_mode_register,
-                value,
-                CALL_TYPE_WRITE_REGISTER,
-            )
+            if isinstance(self._fan_mode_register, list):
+                await self._hub.async_pb_call(
+                    self._slave,
+                    self._fan_mode_register[0],
+                    [value],
+                    CALL_TYPE_WRITE_REGISTERS,
+                )
+            else:
+                await self._hub.async_pb_call(
+                    self._slave,
+                    self._fan_mode_register,
+                    value,
+                    CALL_TYPE_WRITE_REGISTER,
+                )
 
         await self.async_update()
 
@@ -345,7 +355,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # Read the Fan mode register if defined
         if self._fan_mode_register is not None:
             fan_mode = await self._async_read_register(
-                CALL_TYPE_REGISTER_HOLDING, self._fan_mode_register, raw=True
+                CALL_TYPE_REGISTER_HOLDING,
+                self._fan_mode_register
+                if isinstance(self._fan_mode_register, int)
+                else self._fan_mode_register[0],
+                raw=True,
             )
 
             # Translate the value received

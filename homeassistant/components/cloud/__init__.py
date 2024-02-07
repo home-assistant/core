@@ -26,6 +26,7 @@ from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
+    SignalType,
     async_dispatcher_connect,
     async_dispatcher_send,
 )
@@ -64,12 +65,14 @@ from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.STT]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.STT, Platform.TTS]
 
 SERVICE_REMOTE_CONNECT = "remote_connect"
 SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
-SIGNAL_CLOUD_CONNECTION_STATE = "CLOUD_CONNECTION_STATE"
+SIGNAL_CLOUD_CONNECTION_STATE: SignalType[CloudConnectionState] = SignalType(
+    "CLOUD_CONNECTION_STATE"
+)
 
 STARTUP_REPAIR_DELAY = 1  # 1 hour
 
@@ -285,9 +288,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     loaded = False
     stt_platform_loaded = asyncio.Event()
     tts_platform_loaded = asyncio.Event()
+    stt_tts_entities_added = asyncio.Event()
     hass.data[DATA_PLATFORMS_SETUP] = {
         Platform.STT: stt_platform_loaded,
         Platform.TTS: tts_platform_loaded,
+        "stt_tts_entities_added": stt_tts_entities_added,
     }
 
     async def _on_start() -> None:
@@ -327,6 +332,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     account_link.async_setup(hass)
 
+    # Load legacy tts platform for backwards compatibility.
     hass.async_create_task(
         async_load_platform(
             hass,
@@ -374,8 +380,10 @@ def _remote_handle_prefs_updated(cloud: Cloud[CloudClient]) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    stt_platform_loaded: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][Platform.STT]
-    stt_platform_loaded.set()
+    stt_tts_entities_added: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][
+        "stt_tts_entities_added"
+    ]
+    stt_tts_entities_added.set()
 
     return True
 

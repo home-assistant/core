@@ -86,7 +86,7 @@ DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]
 
 
 @bind_hass
-def is_on(hass, entity_id):
+def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the humidifier is on based on the statemachine.
 
     Async friendly.

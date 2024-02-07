@@ -1,8 +1,9 @@
 """Module to coordinate user intentions."""
+
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Collection, Iterable
+from collections.abc import Collection, Coroutine, Iterable
 import dataclasses
 from dataclasses import dataclass
 from enum import Enum
@@ -109,8 +110,8 @@ async def async_handle(
     except vol.Invalid as err:
         _LOGGER.warning("Received invalid slot info for %s: %s", intent_type, err)
         raise InvalidSlotInfo(f"Received invalid slot info for {intent_type}") from err
-    except IntentHandleError:
-        raise
+    except IntentError:
+        raise  # bubble up intent related errors
     except Exception as err:
         raise IntentUnexpectedError(f"Error handling {intent_type}") from err
 
@@ -133,6 +134,25 @@ class IntentHandleError(IntentError):
 
 class IntentUnexpectedError(IntentError):
     """Unexpected error while handling intent."""
+
+
+class NoStatesMatchedError(IntentError):
+    """Error when no states match the intent's constraints."""
+
+    def __init__(
+        self,
+        name: str | None,
+        area: str | None,
+        domains: set[str] | None,
+        device_classes: set[str] | None,
+    ) -> None:
+        """Initialize error."""
+        super().__init__()
+
+        self.name = name
+        self.area = area
+        self.domains = domains
+        self.device_classes = device_classes
 
 
 def _is_device_class(
@@ -382,17 +402,21 @@ class ServiceIntentHandler(IntentHandler):
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
 
-        name: str | None = slots.get("name", {}).get("value")
-        if name == "all":
+        name_slot = slots.get("name", {})
+        entity_id: str | None = name_slot.get("value")
+        entity_name: str | None = name_slot.get("text")
+        if entity_id == "all":
             # Don't match on name if targeting all entities
-            name = None
+            entity_id = None
 
         # Look up area first to fail early
-        area_name = slots.get("area", {}).get("value")
+        area_slot = slots.get("area", {})
+        area_id = area_slot.get("value")
+        area_name = area_slot.get("text")
         area: area_registry.AreaEntry | None = None
-        if area_name is not None:
+        if area_id is not None:
             areas = area_registry.async_get(hass)
-            area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
+            area = areas.async_get_area(area_id) or areas.async_get_area_by_name(
                 area_name
             )
             if area is None:
@@ -412,7 +436,7 @@ class ServiceIntentHandler(IntentHandler):
         states = list(
             async_match_states(
                 hass,
-                name=name,
+                name=entity_id,
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
@@ -421,8 +445,12 @@ class ServiceIntentHandler(IntentHandler):
         )
 
         if not states:
-            raise IntentHandleError(
-                f"No entities matched for: name={name}, area={area}, domains={domains}, device_classes={device_classes}",
+            # No states matched constraints
+            raise NoStatesMatchedError(
+                name=entity_name or entity_id,
+                area=area_name or area_id,
+                domains=domains,
+                device_classes=device_classes,
             )
 
         response = await self.async_handle_states(intent_obj, states, area)
@@ -451,7 +479,7 @@ class ServiceIntentHandler(IntentHandler):
         else:
             speech_name = states[0].name
 
-        service_coros = []
+        service_coros: list[Coroutine[Any, Any, None]] = []
         for state in states:
             service_coros.append(self.async_call_service(intent_obj, state))
 
@@ -507,7 +535,7 @@ class ServiceIntentHandler(IntentHandler):
             )
         )
 
-    async def _run_then_background(self, task: asyncio.Task) -> None:
+    async def _run_then_background(self, task: asyncio.Task[Any]) -> None:
         """Run task with timeout to (hopefully) catch validation errors.
 
         After the timeout the task will continue to run in the background.

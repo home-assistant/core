@@ -51,14 +51,12 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_CONNECTED_DEVICE[0],
         translation_key="devices_connected",
-        icon="mdi:router-network",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UNIT_DEVICES,
     ),
     AsusWrtSensorEntityDescription(
         key=SENSORS_RATES[0],
         translation_key="download_speed",
-        icon="mdi:download-network",
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
@@ -69,7 +67,6 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_RATES[1],
         translation_key="upload_speed",
-        icon="mdi:upload-network",
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
@@ -80,7 +77,6 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_BYTES[0],
         translation_key="download",
-        icon="mdi:download",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -91,7 +87,6 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_BYTES[1],
         translation_key="upload",
-        icon="mdi:upload",
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.GIGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -102,7 +97,6 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[0],
         translation_key="load_avg_1m",
-        icon="mdi:cpu-32-bit",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -111,7 +105,6 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[1],
         translation_key="load_avg_5m",
-        icon="mdi:cpu-32-bit",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -120,7 +113,6 @@ CONNECTION_SENSORS: tuple[AsusWrtSensorEntityDescription, ...] = (
     AsusWrtSensorEntityDescription(
         key=SENSORS_LOAD_AVG[2],
         translation_key="load_avg_15m",
-        icon="mdi:cpu-32-bit",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

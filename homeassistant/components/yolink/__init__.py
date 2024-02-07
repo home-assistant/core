@@ -19,15 +19,20 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
+    config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import DOMAIN, YOLINK_EVENT
 from .coordinator import YoLinkCoordinator
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
+from .services import async_register_services
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 PLATFORMS = [
@@ -36,6 +41,7 @@ PLATFORMS = [
     Platform.COVER,
     Platform.LIGHT,
     Platform.LOCK,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
@@ -92,6 +98,14 @@ class YoLinkHomeStore:
 
     home_instance: YoLinkHome
     device_coordinators: dict[str, YoLinkCoordinator]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up YoLink."""
+
+    async_register_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

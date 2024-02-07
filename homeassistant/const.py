@@ -15,14 +15,14 @@ from .helpers.deprecation import (
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 1
-PATCH_VERSION: Final = "6"
+MINOR_VERSION: Final = 2
+PATCH_VERSION: Final = "0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
+REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2024.4"
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -251,6 +251,7 @@ CONF_SERVICE: Final = "service"
 CONF_SERVICE_DATA: Final = "data"
 CONF_SERVICE_DATA_TEMPLATE: Final = "data_template"
 CONF_SERVICE_TEMPLATE: Final = "service_template"
+CONF_SET_CONVERSATION_RESPONSE: Final = "set_conversation_response"
 CONF_SHOW_ON_MAP: Final = "show_on_map"
 CONF_SLAVE: Final = "slave"
 CONF_SOURCE: Final = "source"
@@ -540,6 +541,7 @@ ATTR_CONNECTIONS: Final = "connections"
 ATTR_DEFAULT_NAME: Final = "default_name"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
+ATTR_SERIAL_NUMBER: Final = "serial_number"
 ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
 ATTR_HW_VERSION: Final = "hw_version"
@@ -1040,7 +1042,9 @@ class UnitOfVolumeFlowRate(StrEnum):
     """Volume flow rate units."""
 
     CUBIC_METERS_PER_HOUR = "m³/h"
-    CUBIC_FEET_PER_MINUTE = "ft³/m"
+    CUBIC_FEET_PER_MINUTE = "ft³/min"
+    LITERS_PER_MINUTE = "L/min"
+    GALLONS_PER_MINUTE = "gal/min"
 
 
 _DEPRECATED_VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = DeprecatedConstantEnum(

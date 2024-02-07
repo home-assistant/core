@@ -1,6 +1,7 @@
 """Sensors on Zigbee Home Automation networks."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import enum
 import functools
@@ -9,11 +10,14 @@ import random
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
+from zigpy.zcl.clusters.closures import WindowCovering
+from zigpy.zcl.clusters.general import Basic
 
 from homeassistant.components.climate import HVACAction
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -49,6 +53,7 @@ from .core import discovery
 from .core.const import (
     CLUSTER_HANDLER_ANALOG_INPUT,
     CLUSTER_HANDLER_BASIC,
+    CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_DEVICE_TEMPERATURE,
     CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
     CLUSTER_HANDLER_HUMIDITY,
@@ -93,6 +98,9 @@ CLUSTER_HANDLER_ST_HUMIDITY_CLUSTER = (
 )
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SENSOR)
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SENSOR)
+CONFIG_DIAGNOSTIC_MATCH = functools.partial(
+    ZHA_ENTITIES.config_diagnostic_match, Platform.SENSOR
+)
 
 
 async def async_setup_entry(
@@ -236,6 +244,19 @@ class PollableSensor(Sensor):
             )
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class EnumSensor(Sensor):
+    """Sensor with value from enum."""
+
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
+    _enum: type[enum.Enum]
+
+    def formatter(self, value: int) -> str | None:
+        """Use name of enum."""
+        assert self._enum is not None
+        return self._enum(value).name
+
+
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_ANALOG_INPUT,
     manufacturers="Digi",
@@ -317,7 +338,7 @@ class ElectricalMeasurement(PollableSensor):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement: str = UnitOfPower.WATT
-    _div_mul_prefix = "ac_power"
+    _div_mul_prefix: str | None = "ac_power"
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -340,10 +361,14 @@ class ElectricalMeasurement(PollableSensor):
 
     def formatter(self, value: int) -> int | float:
         """Return 'normalized' value."""
-        multiplier = getattr(
-            self._cluster_handler, f"{self._div_mul_prefix}_multiplier"
-        )
-        divisor = getattr(self._cluster_handler, f"{self._div_mul_prefix}_divisor")
+        if self._div_mul_prefix:
+            multiplier = getattr(
+                self._cluster_handler, f"{self._div_mul_prefix}_multiplier"
+            )
+            divisor = getattr(self._cluster_handler, f"{self._div_mul_prefix}_divisor")
+        else:
+            multiplier = self._multiplier
+            divisor = self._divisor
         value = float(value * multiplier) / divisor
         if value < 100 and divisor > 1:
             return round(value, self._decimals)
@@ -417,13 +442,14 @@ class ElectricalMeasurementFrequency(PolledElectricalMeasurement):
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ElectricalMeasurementPowerFactor(PolledElectricalMeasurement):
-    """Frequency measurement."""
+    """Power Factor measurement."""
 
     _attribute_name = "power_factor"
     _unique_id_suffix = "power_factor"
     _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
     _attr_native_unit_of_measurement = PERCENTAGE
+    _div_mul_prefix = None
 
 
 @MULTI_MATCH(
@@ -490,6 +516,15 @@ class Illuminance(Sensor):
         return round(pow(10, ((value - 1) / 10000)))
 
 
+@dataclass(frozen=True, kw_only=True)
+class SmartEnergyMeteringEntityDescription(SensorEntityDescription):
+    """Dataclass that describes a Zigbee smart energy metering entity."""
+
+    key: str = "instantaneous_demand"
+    state_class: SensorStateClass | None = SensorStateClass.MEASUREMENT
+    scale: int = 1
+
+
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
     stop_on_match_group=CLUSTER_HANDLER_SMARTENERGY_METERING,
@@ -498,36 +533,87 @@ class Illuminance(Sensor):
 class SmartEnergyMetering(PollableSensor):
     """Metering sensor."""
 
+    entity_description: SmartEnergyMeteringEntityDescription
     _use_custom_polling: bool = False
     _attribute_name = "instantaneous_demand"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
-    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_translation_key: str = "instantaneous_demand"
 
-    unit_of_measure_map = {
-        0x00: UnitOfPower.WATT,
-        0x01: UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        0x02: UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
-        0x03: f"100 {UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR}",
-        0x04: f"US {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
-        0x05: f"IMP {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
-        0x06: UnitOfPower.BTU_PER_HOUR,
-        0x07: f"l/{UnitOfTime.HOURS}",
-        0x08: UnitOfPressure.KPA,  # gauge
-        0x09: UnitOfPressure.KPA,  # absolute
-        0x0A: f"1000 {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",
-        0x0B: "unitless",
-        0x0C: f"MJ/{UnitOfTime.SECONDS}",
+    _ENTITY_DESCRIPTION_MAP = {
+        0x00: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfPower.WATT,
+            device_class=SensorDeviceClass.POWER,
+        ),
+        0x01: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            device_class=None,  # volume flow rate is not supported yet
+        ),
+        0x02: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            device_class=None,  # volume flow rate is not supported yet
+        ),
+        0x03: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            device_class=None,  # volume flow rate is not supported yet
+            scale=100,
+        ),
+        0x04: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"{UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",  # US gallons per hour
+            device_class=None,  # volume flow rate is not supported yet
+        ),
+        0x05: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"IMP {UnitOfVolume.GALLONS}/{UnitOfTime.HOURS}",  # IMP gallons per hour
+            device_class=None,  # needs to be None as imperial gallons are not supported
+        ),
+        0x06: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfPower.BTU_PER_HOUR,
+            device_class=None,
+            state_class=None,
+        ),
+        0x07: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"l/{UnitOfTime.HOURS}",
+            device_class=None,  # volume flow rate is not supported yet
+        ),
+        0x08: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            device_class=SensorDeviceClass.PRESSURE,
+        ),  # gauge
+        0x09: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            device_class=SensorDeviceClass.PRESSURE,
+        ),  # absolute
+        0x0A: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"{UnitOfVolume.CUBIC_FEET}/{UnitOfTime.HOURS}",  # cubic feet per hour
+            device_class=None,  # volume flow rate is not supported yet
+            scale=1000,
+        ),
+        0x0B: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement="unitless", device_class=None, state_class=None
+        ),
+        0x0C: SmartEnergyMeteringEntityDescription(
+            native_unit_of_measurement=f"{UnitOfEnergy.MEGA_JOULE}/{UnitOfTime.SECONDS}",
+            device_class=None,  # needs to be None as MJ/s is not supported
+        ),
     }
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> None:
+        """Init."""
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+        entity_description = self._ENTITY_DESCRIPTION_MAP.get(
+            self._cluster_handler.unit_of_measurement
+        )
+        if entity_description is not None:
+            self.entity_description = entity_description
 
     def formatter(self, value: int) -> int | float:
         """Pass through cluster handler formatter."""
         return self._cluster_handler.demand_formatter(value)
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return Unit of measurement."""
-        return self.unit_of_measure_map.get(self._cluster_handler.unit_of_measurement)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -544,6 +630,23 @@ class SmartEnergyMetering(PollableSensor):
                 attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
         return attrs
 
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        state = super().native_value
+        if hasattr(self, "entity_description") and state is not None:
+            return float(state) * self.entity_description.scale
+
+        return state
+
+
+@dataclass(frozen=True, kw_only=True)
+class SmartEnergySummationEntityDescription(SmartEnergyMeteringEntityDescription):
+    """Dataclass that describes a Zigbee smart energy summation entity."""
+
+    key: str = "summation_delivered"
+    state_class: SensorStateClass | None = SensorStateClass.TOTAL_INCREASING
+
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
@@ -553,26 +656,66 @@ class SmartEnergyMetering(PollableSensor):
 class SmartEnergySummation(SmartEnergyMetering):
     """Smart Energy Metering summation sensor."""
 
+    entity_description: SmartEnergySummationEntityDescription
     _attribute_name = "current_summ_delivered"
     _unique_id_suffix = "summation_delivered"
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENERGY
-    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_translation_key: str = "summation_delivered"
 
-    unit_of_measure_map = {
-        0x00: UnitOfEnergy.KILO_WATT_HOUR,
-        0x01: UnitOfVolume.CUBIC_METERS,
-        0x02: UnitOfVolume.CUBIC_FEET,
-        0x03: f"100 {UnitOfVolume.CUBIC_FEET}",
-        0x04: f"US {UnitOfVolume.GALLONS}",
-        0x05: f"IMP {UnitOfVolume.GALLONS}",
-        0x06: "BTU",
-        0x07: UnitOfVolume.LITERS,
-        0x08: UnitOfPressure.KPA,  # gauge
-        0x09: UnitOfPressure.KPA,  # absolute
-        0x0A: f"1000 {UnitOfVolume.CUBIC_FEET}",
-        0x0B: "unitless",
-        0x0C: "MJ",
+    _ENTITY_DESCRIPTION_MAP = {
+        0x00: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+        ),
+        0x01: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+            device_class=SensorDeviceClass.VOLUME,
+        ),
+        0x02: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.CUBIC_FEET,
+            device_class=SensorDeviceClass.VOLUME,
+        ),
+        0x03: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.CUBIC_FEET,
+            device_class=SensorDeviceClass.VOLUME,
+            scale=100,
+        ),
+        0x04: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.GALLONS,  # US gallons
+            device_class=SensorDeviceClass.VOLUME,
+        ),
+        0x05: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=f"IMP {UnitOfVolume.GALLONS}",
+            device_class=None,  # needs to be None as imperial gallons are not supported
+        ),
+        0x06: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement="BTU", device_class=None, state_class=None
+        ),
+        0x07: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.LITERS,
+            device_class=SensorDeviceClass.VOLUME,
+        ),
+        0x08: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            device_class=SensorDeviceClass.PRESSURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),  # gauge
+        0x09: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfPressure.KPA,
+            device_class=SensorDeviceClass.PRESSURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),  # absolute
+        0x0A: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfVolume.CUBIC_FEET,
+            device_class=SensorDeviceClass.VOLUME,
+            scale=1000,
+        ),
+        0x0B: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement="unitless", device_class=None, state_class=None
+        ),
+        0x0C: SmartEnergySummationEntityDescription(
+            native_unit_of_measurement=UnitOfEnergy.MEGA_JOULE,
+            device_class=SensorDeviceClass.ENERGY,
+        ),
     }
 
     def formatter(self, value: int) -> int | float:
@@ -589,7 +732,7 @@ class SmartEnergySummation(SmartEnergyMetering):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"TS011F", "ZLinky_TIC"},
+    models={"TS011F", "ZLinky_TIC", "TICMeter"},
     stop_on_match_group=CLUSTER_HANDLER_SMARTENERGY_METERING,
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -601,7 +744,7 @@ class PolledSmartEnergySummation(SmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier1SmartEnergySummation(PolledSmartEnergySummation):
@@ -615,7 +758,7 @@ class Tier1SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier2SmartEnergySummation(PolledSmartEnergySummation):
@@ -629,7 +772,7 @@ class Tier2SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier3SmartEnergySummation(PolledSmartEnergySummation):
@@ -643,7 +786,7 @@ class Tier3SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier4SmartEnergySummation(PolledSmartEnergySummation):
@@ -657,7 +800,7 @@ class Tier4SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier5SmartEnergySummation(PolledSmartEnergySummation):
@@ -671,7 +814,7 @@ class Tier5SmartEnergySummation(PolledSmartEnergySummation):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
-    models={"ZLinky_TIC"},
+    models={"ZLinky_TIC", "TICMeter"},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Tier6SmartEnergySummation(PolledSmartEnergySummation):
@@ -681,6 +824,39 @@ class Tier6SmartEnergySummation(PolledSmartEnergySummation):
     _attribute_name = "current_tier6_summ_delivered"
     _unique_id_suffix = "tier6_summation_delivered"
     _attr_translation_key: str = "tier6_summation_delivered"
+
+
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_SMARTENERGY_METERING,
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SmartEnergySummationReceived(PolledSmartEnergySummation):
+    """Smart Energy Metering summation received sensor."""
+
+    _use_custom_polling = False  # Poll indirectly by PolledSmartEnergySummation
+    _attribute_name = "current_summ_received"
+    _unique_id_suffix = "summation_received"
+    _attr_translation_key: str = "summation_received"
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> Self | None:
+        """Entity Factory.
+
+        This attribute only started to be initialized in HA 2024.2.0,
+        so the entity would still be created on the first HA start after the upgrade for existing devices,
+        as the initialization to see if an attribute is unsupported happens later in the background.
+        To avoid creating a lot of unnecessary entities for existing devices,
+        wait until the attribute was properly initialized once for now.
+        """
+        if cluster_handlers[0].cluster.get(cls._attribute_name) is None:
+            return None
+        return super().create_entity(unique_id, zha_device, cluster_handlers, **kwargs)
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_PRESSURE)
@@ -1034,17 +1210,14 @@ class AqaraFeedingSource(types.enum8):
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class AqaraPetFeederLastFeedingSource(Sensor):
+class AqaraPetFeederLastFeedingSource(EnumSensor):
     """Sensor that displays the last feeding source of pet feeder."""
 
     _attribute_name = "last_feeding_source"
     _unique_id_suffix = "last_feeding_source"
     _attr_translation_key: str = "last_feeding_source"
     _attr_icon = "mdi:devices"
-
-    def formatter(self, value: int) -> int | float | None:
-        """Numeric pass-through formatter."""
-        return AqaraFeedingSource(value).name
+    _enum = AqaraFeedingSource
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -1095,3 +1268,116 @@ class AqaraSmokeDensityDbm(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_icon: str = "mdi:google-circles-communities"
     _attr_suggested_display_precision: int = 3
+
+
+class SonoffIlluminationStates(types.enum8):
+    """Enum for displaying last Illumination state."""
+
+    Dark = 0x00
+    Light = 0x01
+
+
+@MULTI_MATCH(cluster_handler_names="sonoff_manufacturer", models={"SNZB-06P"})
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SonoffPresenceSenorIlluminationStatus(EnumSensor):
+    """Sensor that displays the illumination status the last time peresence was detected."""
+
+    _attribute_name = "last_illumination_state"
+    _unique_id_suffix = "last_illumination"
+    _attr_translation_key: str = "last_illumination_state"
+    _attr_icon: str = "mdi:theme-light-dark"
+    _enum = SonoffIlluminationStates
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class PiHeatingDemand(Sensor):
+    """Sensor that displays the percentage of heating power demanded.
+
+    Optional thermostat attribute.
+    """
+
+    _unique_id_suffix = "pi_heating_demand"
+    _attribute_name = "pi_heating_demand"
+    _attr_translation_key: str = "pi_heating_demand"
+    _attr_icon: str = "mdi:radiator"
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _decimals = 0
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+
+class SetpointChangeSourceEnum(types.enum8):
+    """The source of the setpoint change."""
+
+    Manual = 0x00
+    Schedule = 0x01
+    External = 0x02
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SetpointChangeSource(EnumSensor):
+    """Sensor that displays the source of the setpoint change.
+
+    Optional thermostat attribute.
+    """
+
+    _unique_id_suffix = "setpoint_change_source"
+    _attribute_name = "setpoint_change_source"
+    _attr_translation_key: str = "setpoint_change_source"
+    _attr_icon: str = "mdi:thermostat"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _enum = SetpointChangeSourceEnum
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_COVER)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class WindowCoveringTypeSensor(EnumSensor):
+    """Sensor that displays the type of a cover device."""
+
+    _attribute_name: str = WindowCovering.AttributeDefs.window_covering_type.name
+    _enum = WindowCovering.WindowCoveringType
+    _unique_id_suffix: str = WindowCovering.AttributeDefs.window_covering_type.name
+    _attr_translation_key: str = WindowCovering.AttributeDefs.window_covering_type.name
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:curtains"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_BASIC, models={"lumi.curtain.agl001"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class AqaraCurtainMotorPowerSourceSensor(EnumSensor):
+    """Sensor that displays the power source of the Aqara E1 curtain motor device."""
+
+    _attribute_name: str = Basic.AttributeDefs.power_source.name
+    _enum = Basic.PowerSource
+    _unique_id_suffix: str = Basic.AttributeDefs.power_source.name
+    _attr_translation_key: str = Basic.AttributeDefs.power_source.name
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:battery-positive"
+
+
+class AqaraE1HookState(types.enum8):
+    """Aqara hook state."""
+
+    Unlocked = 0x00
+    Locked = 0x01
+    Locking = 0x02
+    Unlocking = 0x03
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.curtain.agl001"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class AqaraCurtainHookStateSensor(EnumSensor):
+    """Representation of a ZHA curtain mode configuration entity."""
+
+    _attribute_name = "hooks_state"
+    _enum = AqaraE1HookState
+    _unique_id_suffix = "hooks_state"
+    _attr_translation_key: str = "hooks_state"
+    _attr_icon: str = "mdi:hook"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC

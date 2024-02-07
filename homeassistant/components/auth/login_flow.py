@@ -91,6 +91,7 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.network import is_cloud_connection
+from homeassistant.util.network import is_local
 
 from . import indieauth
 
@@ -185,7 +186,14 @@ class AuthProvidersView(HomeAssistantView):
                 }
             )
 
-        return self.json(providers)
+        preselect_remember_me = not cloud_connection and is_local(remote_address)
+
+        return self.json(
+            {
+                "providers": providers,
+                "preselect_remember_me": preselect_remember_me,
+            }
+        )
 
 
 def _prepare_result_json(

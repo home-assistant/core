@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import json
 from typing import Any, cast
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -116,6 +116,18 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             key=DPCode.SWITCH_1,
             translation_key="light",
             brightness=DPCode.BRIGHT_VALUE_1,
+        ),
+    ),
+    # Filament Light
+    # Based on data from https://github.com/home-assistant/core/issues/106703
+    # Product category mentioned in https://developer.tuya.com/en/docs/iot/oemapp-light?id=Kb77kja5woao6
+    # As at 30/12/23 not documented in https://developer.tuya.com/en/docs/iot/lighting?id=Kaiuyzxq30wmc
+    "dsd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name=None,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
         ),
     ),
     # Ceiling Fan Light
@@ -401,19 +413,17 @@ async def async_setup_entry(
         """Discover and add a discovered tuya light."""
         entities: list[TuyaLightEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if descriptions := LIGHTS.get(device.category):
                 for description in descriptions:
                     if description.key in device.status:
                         entities.append(
-                            TuyaLightEntity(
-                                device, hass_data.device_manager, description
-                            )
+                            TuyaLightEntity(device, hass_data.manager, description)
                         )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -435,8 +445,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
         description: TuyaLightEntityDescription,
     ) -> None:
         """Init TuyaHaLight."""

@@ -79,6 +79,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, camera.serial)},
             serial_number=camera.serial,
+            sw_version=camera.version,
             name=name,
             manufacturer=DEFAULT_BRAND,
             model=camera.camera_type,
@@ -125,7 +126,6 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         """Trigger camera to take a snapshot."""
         with contextlib.suppress(asyncio.TimeoutError):
             await self._camera.snap_picture()
-            await self.coordinator.api.refresh()
         self.async_write_ha_state()
 
     def camera_image(

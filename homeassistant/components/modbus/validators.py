@@ -172,23 +172,6 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def number_validator(value: Any) -> int | float:
-    """Coerce a value to number without losing precision."""
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return value
-
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        pass
-    try:
-        return float(value)
-    except (TypeError, ValueError) as err:
-        raise vol.Invalid(f"invalid number {value}") from err
-
-
 def nan_validator(value: Any) -> int:
     """Convert nan string to number (can be hex string or int)."""
     if isinstance(value, int):
@@ -201,6 +184,23 @@ def nan_validator(value: Any) -> int:
         return int(value, 16)
     except (TypeError, ValueError) as err:
         raise vol.Invalid(f"invalid number {value}") from err
+
+
+def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
+    """Control modbus climate fan mode values for duplicates."""
+    fan_modes: set[int] = set()
+    errors = []
+    for key, value in config[CONF_FAN_MODE_VALUES].items():
+        if value in fan_modes:
+            warn = f"Modbus fan mode {key} has a duplicate value {value}, not loaded, values must be unique!"
+            _LOGGER.warning(warn)
+            errors.append(key)
+        else:
+            fan_modes.add(value)
+
+    for key in reversed(errors):
+        del config[CONF_FAN_MODE_VALUES][key]
+    return config
 
 
 def scan_interval_validator(config: dict) -> dict:
@@ -276,7 +276,11 @@ def duplicate_entity_validator(config: dict) -> dict:
                     a += "_" + str(inx)
                     entry_addrs.add(a)
                 if CONF_FAN_MODE_REGISTER in entry:
-                    a = str(entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS])
+                    a = str(
+                        entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]
+                        if isinstance(entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS], int)
+                        else entry[CONF_FAN_MODE_REGISTER][CONF_ADDRESS][0]
+                    )
                     a += "_" + str(inx)
                     entry_addrs.add(a)
 
@@ -306,7 +310,7 @@ def duplicate_entity_validator(config: dict) -> dict:
     return config
 
 
-def duplicate_modbus_validator(config: list) -> list:
+def duplicate_modbus_validator(config: dict) -> dict:
     """Control modbus connection for duplicates."""
     hosts: set[str] = set()
     names: set[str] = set()
@@ -334,18 +338,23 @@ def duplicate_modbus_validator(config: list) -> list:
     return config
 
 
-def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
-    """Control modbus climate fan mode values for duplicates."""
-    fan_modes: set[int] = set()
-    errors = []
-    for key, value in config[CONF_FAN_MODE_VALUES].items():
-        if value in fan_modes:
-            wrn = f"Modbus fan mode {key} has a duplicate value {value}, not loaded, values must be unique!"
-            _LOGGER.warning(wrn)
-            errors.append(key)
-        else:
-            fan_modes.add(value)
+def register_int_list_validator(value: Any) -> Any:
+    """Check if a register (CONF_ADRESS) is an int or a list having only 1 register."""
+    if isinstance(value, int) and value >= 0:
+        return value
 
-    for key in reversed(errors):
-        del config[CONF_FAN_MODE_VALUES][key]
-    return config
+    if isinstance(value, list):
+        if (len(value) == 1) and isinstance(value[0], int) and value[0] >= 0:
+            return value
+
+    raise vol.Invalid(
+        f"Invalid {CONF_ADDRESS} register for fan mode. Required type: positive integer, allowed 1 or list of 1 register."
+    )
+
+
+def check_config(config: dict) -> dict:
+    """Do final config check."""
+    config2 = duplicate_modbus_validator(config)
+    config3 = scan_interval_validator(config2)
+    config4 = duplicate_entity_validator(config3)
+    return config4

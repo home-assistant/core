@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Iterable
 import dataclasses
 from enum import Enum
-from functools import cache, partial, wraps
+from functools import cache, partial
 import logging
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, TypedDict, TypeGuard, TypeVar, cast
@@ -29,6 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     Context,
     EntityServiceResponse,
+    HassJob,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -53,12 +54,12 @@ from . import (
     template,
     translation,
 )
+from .group import expand_entity_ids
 from .selector import TargetSelector
 from .typing import ConfigType, TemplateVarsType
 
 if TYPE_CHECKING:
     from .entity import Entity
-    from .entity_platform import EntityPlatform
 
     _EntityT = TypeVar("_EntityT", bound=Entity)
 
@@ -191,11 +192,14 @@ class ServiceParams(TypedDict):
 class ServiceTargetSelector:
     """Class to hold a target selector for a service."""
 
+    __slots__ = ("entity_ids", "device_ids", "area_ids")
+
     def __init__(self, service_call: ServiceCall) -> None:
         """Extract ids from service call data."""
-        entity_ids: str | list | None = service_call.data.get(ATTR_ENTITY_ID)
-        device_ids: str | list | None = service_call.data.get(ATTR_DEVICE_ID)
-        area_ids: str | list | None = service_call.data.get(ATTR_AREA_ID)
+        service_call_data = service_call.data
+        entity_ids: str | list | None = service_call_data.get(ATTR_ENTITY_ID)
+        device_ids: str | list | None = service_call_data.get(ATTR_DEVICE_ID)
+        area_ids: str | list | None = service_call_data.get(ATTR_AREA_ID)
 
         self.entity_ids = (
             set(cv.ensure_list(entity_ids)) if _has_match(entity_ids) else set()
@@ -460,9 +464,9 @@ def async_extract_referenced_entity_ids(
     if not selector.has_any_selector:
         return selected
 
-    entity_ids = selector.entity_ids
+    entity_ids: set[str] | list[str] = selector.entity_ids
     if expand_group:
-        entity_ids = hass.components.group.expand_entity_ids(entity_ids)
+        entity_ids = expand_entity_ids(hass, entity_ids)
 
     selected.referenced.update(entity_ids)
 
@@ -516,7 +520,7 @@ def async_extract_referenced_entity_ids(
 @bind_hass
 async def async_extract_config_entry_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
-) -> set:
+) -> set[str]:
     """Extract referenced config entry ids from a service call."""
     referenced = async_extract_referenced_entity_ids(hass, service_call, expand_group)
     ent_reg = entity_registry.async_get(hass)
@@ -577,31 +581,41 @@ async def async_get_all_descriptions(
     descriptions_cache: dict[
         tuple[str, str], dict[str, Any] | None
     ] = hass.data.setdefault(SERVICE_DESCRIPTION_CACHE, {})
-    services = hass.services.async_services()
+
+    # We don't mutate services here so we avoid calling
+    # async_services which makes a copy of every services
+    # dict.
+    services = hass.services.async_services_internal()
 
     # See if there are new services not seen before.
     # Any service that we saw before already has an entry in description_cache.
-    missing = set()
-    all_services = []
-    for domain in services:
-        for service_name in services[domain]:
+    domains_with_missing_services: set[str] = set()
+    all_services: set[tuple[str, str]] = set()
+    for domain, services_by_domain in services.items():
+        for service_name in services_by_domain:
             cache_key = (domain, service_name)
-            all_services.append(cache_key)
+            all_services.add(cache_key)
             if cache_key not in descriptions_cache:
-                missing.add(domain)
+                domains_with_missing_services.add(domain)
 
     # If we have a complete cache, check if it is still valid
+    all_cache: tuple[set[tuple[str, str]], dict[str, dict[str, Any]]] | None
     if all_cache := hass.data.get(ALL_SERVICE_DESCRIPTIONS_CACHE):
         previous_all_services, previous_descriptions_cache = all_cache
         # If the services are the same, we can return the cache
         if previous_all_services == all_services:
-            return cast(dict[str, dict[str, Any]], previous_descriptions_cache)
+            return previous_descriptions_cache  # type: ignore[no-any-return]
 
     # Files we loaded for missing descriptions
     loaded: dict[str, JSON_TYPE] = {}
+    # We try to avoid making a copy in the event the cache is good,
+    # but now we must make a copy in case new services get added
+    # while we are loading the missing ones so we do not
+    # add the new ones to the cache without their descriptions
+    services = {domain: service.copy() for domain, service in services.items()}
 
-    if missing:
-        ints_or_excs = await async_get_integrations(hass, missing)
+    if domains_with_missing_services:
+        ints_or_excs = await async_get_integrations(hass, domains_with_missing_services)
         integrations: list[Integration] = []
         for domain, int_or_exc in ints_or_excs.items():
             if type(int_or_exc) is Integration:  # noqa: E721
@@ -613,11 +627,11 @@ async def async_get_all_descriptions(
         contents = await hass.async_add_executor_job(
             _load_services_files, hass, integrations
         )
-        loaded = dict(zip(missing, contents))
+        loaded = dict(zip(domains_with_missing_services, contents))
 
     # Load translations for all service domains
     translations = await translation.async_get_translations(
-        hass, "en", "services", list(services)
+        hass, "en", "services", services
     )
 
     # Build response
@@ -741,7 +755,7 @@ def async_set_service_schema(
 
 def _get_permissible_entity_candidates(
     call: ServiceCall,
-    platforms: Iterable[EntityPlatform],
+    entities: dict[str, Entity],
     entity_perms: None | (Callable[[str, str], bool]),
     target_all_entities: bool,
     all_referenced: set[str] | None,
@@ -754,9 +768,8 @@ def _get_permissible_entity_candidates(
             # is allowed to control.
             return [
                 entity
-                for platform in platforms
-                for entity in platform.entities.values()
-                if entity_perms(entity.entity_id, POLICY_CONTROL)
+                for entity_id, entity in entities.items()
+                if entity_perms(entity_id, POLICY_CONTROL)
             ]
 
         assert all_referenced is not None
@@ -771,30 +784,27 @@ def _get_permissible_entity_candidates(
                 )
 
     elif target_all_entities:
-        return [
-            entity for platform in platforms for entity in platform.entities.values()
-        ]
+        return list(entities.values())
 
     # We have already validated they have permissions to control all_referenced
     # entities so we do not need to check again.
-    assert all_referenced is not None
-    if single_entity := len(all_referenced) == 1 and list(all_referenced)[0]:
-        for platform in platforms:
-            if (entity := platform.entities.get(single_entity)) is not None:
-                return [entity]
+    if TYPE_CHECKING:
+        assert all_referenced is not None
+    if (
+        len(all_referenced) == 1
+        and (single_entity := list(all_referenced)[0])
+        and (entity := entities.get(single_entity)) is not None
+    ):
+        return [entity]
 
-    return [
-        platform.entities[entity_id]
-        for platform in platforms
-        for entity_id in all_referenced.intersection(platform.entities)
-    ]
+    return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
 
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistant,
-    platforms: Iterable[EntityPlatform],
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
+    registered_entities: dict[str, Entity],
+    func: str | HassJob,
     call: ServiceCall,
     required_features: Iterable[int] | None = None,
 ) -> EntityServiceResponse | None:
@@ -832,7 +842,7 @@ async def entity_service_call(
     # A list with entities to call the service on.
     entity_candidates = _get_permissible_entity_candidates(
         call,
-        platforms,
+        registered_entities,
         entity_perms,
         target_all_entities,
         all_referenced,
@@ -930,7 +940,7 @@ async def entity_service_call(
 async def _handle_entity_call(
     hass: HomeAssistant,
     entity: Entity,
-    func: str | Callable[..., Coroutine[Any, Any, ServiceResponse]],
+    func: str | HassJob,
     data: dict | ServiceCall,
     context: Context,
 ) -> ServiceResponse:
@@ -939,11 +949,11 @@ async def _handle_entity_call(
 
     task: asyncio.Future[ServiceResponse] | None
     if isinstance(func, str):
-        task = hass.async_run_job(
-            partial(getattr(entity, func), **data)  # type: ignore[arg-type]
+        task = hass.async_run_hass_job(
+            HassJob(partial(getattr(entity, func), **data))  # type: ignore[arg-type]
         )
     else:
-        task = hass.async_run_job(func, entity, data)
+        task = hass.async_run_hass_job(func, entity, data)
 
     # Guard because callback functions do not return a task when passed to
     # async_run_job.
@@ -965,6 +975,24 @@ async def _handle_entity_call(
     return result
 
 
+async def _async_admin_handler(
+    hass: HomeAssistant,
+    service_job: HassJob[[None], Callable[[ServiceCall], Awaitable[None] | None]],
+    call: ServiceCall,
+) -> None:
+    """Run an admin service."""
+    if call.context.user_id:
+        user = await hass.auth.async_get_user(call.context.user_id)
+        if user is None:
+            raise UnknownUser(context=call.context)
+        if not user.is_admin:
+            raise Unauthorized(context=call.context)
+
+    result = hass.async_run_hass_job(service_job, call)
+    if result is not None:
+        await result
+
+
 @bind_hass
 @callback
 def async_register_admin_service(
@@ -975,21 +1003,16 @@ def async_register_admin_service(
     schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""
-
-    @wraps(service_func)
-    async def admin_handler(call: ServiceCall) -> None:
-        if call.context.user_id:
-            user = await hass.auth.async_get_user(call.context.user_id)
-            if user is None:
-                raise UnknownUser(context=call.context)
-            if not user.is_admin:
-                raise Unauthorized(context=call.context)
-
-        result = hass.async_run_job(service_func, call)
-        if result is not None:
-            await result
-
-    hass.services.async_register(domain, service, admin_handler, schema)
+    hass.services.async_register(
+        domain,
+        service,
+        partial(
+            _async_admin_handler,
+            hass,
+            HassJob(service_func, f"admin service {domain}.{service}"),
+        ),
+        schema,
+    )
 
 
 @bind_hass

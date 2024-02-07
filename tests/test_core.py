@@ -54,6 +54,7 @@ from homeassistant.exceptions import (
     MaxLengthExceeded,
     ServiceNotFound,
 )
+from homeassistant.helpers.json import json_dumps
 import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -412,7 +413,7 @@ async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     with patch.object(hass.timeout, "async_timeout", side_effect=asyncio.TimeoutError):
         await hass.async_stop()
 
-    assert hass.state == CoreState.stopped
+    assert hass.state is CoreState.stopped
 
 
 async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:
@@ -624,6 +625,46 @@ def test_event_eq() -> None:
     assert event1.as_dict() == event2.as_dict()
 
 
+def test_event_time_fired_timestamp() -> None:
+    """Test time_fired_timestamp."""
+    now = dt_util.utcnow()
+    event = ha.Event("some_type", {"some": "attr"}, time_fired=now)
+    assert event.time_fired_timestamp == now.timestamp()
+    assert event.time_fired_timestamp == now.timestamp()
+
+
+def test_event_json_fragment() -> None:
+    """Test event JSON fragments."""
+    now = dt_util.utcnow()
+    data = {"some": "attr"}
+    context = ha.Context()
+    event1, event2 = (
+        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+    )
+
+    # We are testing that the JSON fragments are the same when as_dict is called
+    # after json_fragment or before.
+    json_fragment_1 = event1.json_fragment
+    as_dict_1 = event1.as_dict()
+    as_dict_2 = event2.as_dict()
+    json_fragment_2 = event2.json_fragment
+
+    assert json_dumps(json_fragment_1) == json_dumps(json_fragment_2)
+    # We also test that the as_dict is the same
+    assert as_dict_1 == as_dict_2
+
+    # Finally we verify that the as_dict is a ReadOnlyDict
+    # as is the data and context inside regardless of
+    # if the json fragment was called first or not
+    assert isinstance(as_dict_1, ReadOnlyDict)
+    assert isinstance(as_dict_1["data"], ReadOnlyDict)
+    assert isinstance(as_dict_1["context"], ReadOnlyDict)
+
+    assert isinstance(as_dict_2, ReadOnlyDict)
+    assert isinstance(as_dict_2["data"], ReadOnlyDict)
+    assert isinstance(as_dict_2["context"], ReadOnlyDict)
+
+
 def test_event_repr() -> None:
     """Test that Event repr method works."""
     assert str(ha.Event("TestEvent")) == "<Event TestEvent[L]>"
@@ -701,15 +742,53 @@ def test_state_as_dict_json() -> None:
         context=ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW"),
     )
     expected = (
-        '{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
-        '"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
-        '"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
+        b'{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
+        b'"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
+        b'"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
     )
     as_dict_json_1 = state.as_dict_json
     assert as_dict_json_1 == expected
     # 2nd time to verify cache
     assert state.as_dict_json == expected
     assert state.as_dict_json is as_dict_json_1
+
+
+def test_state_json_fragment() -> None:
+    """Test state JSON fragments."""
+    last_time = datetime(1984, 12, 8, 12, 0, 0)
+    state1, state2 = (
+        ha.State(
+            "happy.happy",
+            "on",
+            {"pig": "dog"},
+            last_updated=last_time,
+            last_changed=last_time,
+            context=ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW"),
+        )
+        for _ in range(2)
+    )
+
+    # We are testing that the JSON fragments are the same when as_dict is called
+    # after json_fragment or before.
+    json_fragment_1 = state1.json_fragment
+    as_dict_1 = state1.as_dict()
+    as_dict_2 = state2.as_dict()
+    json_fragment_2 = state2.json_fragment
+
+    assert json_dumps(json_fragment_1) == json_dumps(json_fragment_2)
+    # We also test that the as_dict is the same
+    assert as_dict_1 == as_dict_2
+
+    # Finally we verify that the as_dict is a ReadOnlyDict
+    # as is the attributes and context inside regardless of
+    # if the json fragment was called first or not
+    assert isinstance(as_dict_1, ReadOnlyDict)
+    assert isinstance(as_dict_1["attributes"], ReadOnlyDict)
+    assert isinstance(as_dict_1["context"], ReadOnlyDict)
+
+    assert isinstance(as_dict_2, ReadOnlyDict)
+    assert isinstance(as_dict_2["attributes"], ReadOnlyDict)
+    assert isinstance(as_dict_2["context"], ReadOnlyDict)
 
 
 def test_state_as_compressed_state() -> None:
@@ -773,7 +852,7 @@ def test_state_as_compressed_state_json() -> None:
         last_changed=last_time,
         context=ha.Context(id="01H0D6H5K3SZJ3XGDHED1TJ79N"),
     )
-    expected = '"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
+    expected = b'"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
     as_compressed_state = state.as_compressed_state_json
     # We are not too concerned about these being ReadOnlyDict
     # since we don't expect them to be called by external callers
@@ -1158,6 +1237,26 @@ async def test_statemachine_force_update(hass: HomeAssistant) -> None:
     assert len(events) == 1
 
 
+async def test_statemachine_avoids_updating_attributes(hass: HomeAssistant) -> None:
+    """Test async_set avoids recreating ReadOnly dicts when possible."""
+    attrs = {"some_attr": "attr_value"}
+
+    hass.states.async_set("light.bowl", "off", attrs)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.bowl")
+    assert state.attributes == attrs
+
+    hass.states.async_set("light.bowl", "on", attrs)
+    await hass.async_block_till_done()
+
+    new_state = hass.states.get("light.bowl")
+    assert new_state.attributes == attrs
+
+    assert new_state.attributes is state.attributes
+    assert isinstance(new_state.attributes, ReadOnlyDict)
+
+
 def test_service_call_repr() -> None:
     """Test ServiceCall repr."""
     call = ha.ServiceCall("homeassistant", "start")
@@ -1170,13 +1269,37 @@ def test_service_call_repr() -> None:
     )
 
 
-async def test_serviceregistry_has_service(hass: HomeAssistant) -> None:
+async def test_service_registry_has_service(hass: HomeAssistant) -> None:
     """Test has_service method."""
     hass.services.async_register("test_domain", "test_service", lambda call: None)
     assert len(hass.services.async_services()) == 1
     assert hass.services.has_service("tesT_domaiN", "tesT_servicE")
     assert not hass.services.has_service("test_domain", "non_existing")
     assert not hass.services.has_service("non_existing", "test_service")
+
+
+async def test_service_registry_service_enumeration(hass: HomeAssistant) -> None:
+    """Test enumerating services methods."""
+    hass.services.async_register("test_domain", "test_service", lambda call: None)
+    services1 = hass.services.async_services()
+    services2 = hass.services.async_services()
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is not services2  # should be a copy
+
+    services1 = hass.services.async_services_internal()
+    services2 = hass.services.async_services_internal()
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is services2  # should be the same object
+
+    assert hass.services.async_services_for_domain("unknown") == {}
+
+    services1 = hass.services.async_services_for_domain("test_domain")
+    services2 = hass.services.async_services_for_domain("test_domain")
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is not services2  # should be a copy
 
 
 async def test_serviceregistry_call_with_blocking_done_in_time(
@@ -1523,11 +1646,11 @@ async def test_config_as_dict() -> None:
         CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
         "location_name": "Home",
         "time_zone": "UTC",
-        "components": set(),
+        "components": [],
         "config_dir": "/test/ha-config",
-        "whitelist_external_dirs": set(),
-        "allowlist_external_dirs": set(),
-        "allowlist_external_urls": set(),
+        "whitelist_external_dirs": [],
+        "allowlist_external_dirs": [],
+        "allowlist_external_urls": [],
         "version": __version__,
         "config_source": ha.ConfigSource.DEFAULT,
         "recovery_mode": False,
@@ -1624,9 +1747,7 @@ async def test_bad_timezone_raises_value_error(hass: HomeAssistant) -> None:
         await hass.config.async_update(time_zone="not_a_timezone")
 
 
-async def test_start_taking_too_long(
-    event_loop, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_start_taking_too_long(caplog: pytest.LogCaptureFixture) -> None:
     """Test when async_start takes too long."""
     hass = ha.HomeAssistant("/test/ha-config")
     caplog.set_level(logging.WARNING)
@@ -1707,6 +1828,27 @@ def test_context() -> None:
     assert c.user_id == 23
     assert c.parent_id == 100
     assert c.id is not None
+
+
+def test_context_json_fragment() -> None:
+    """Test context JSON fragments."""
+    context1, context2 = (ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW") for _ in range(2))
+
+    # We are testing that the JSON fragments are the same when as_dict is called
+    # after json_fragment or before.
+    json_fragment_1 = context1.json_fragment
+    as_dict_1 = context1.as_dict()
+    as_dict_2 = context2.as_dict()
+    json_fragment_2 = context2.json_fragment
+
+    assert json_dumps(json_fragment_1) == json_dumps(json_fragment_2)
+    # We also test that the as_dict is the same
+    assert as_dict_1 == as_dict_2
+
+    # Finally we verify that the as_dict is a ReadOnlyDict
+    # regardless of if the json fragment was called first or not
+    assert isinstance(as_dict_1, ReadOnlyDict)
+    assert isinstance(as_dict_2, ReadOnlyDict)
 
 
 async def test_async_functions_with_callback(hass: HomeAssistant) -> None:
@@ -2339,6 +2481,23 @@ async def test_state_change_events_context_id_match_state_time(
     assert _ulid_timestamp(state.context.id) == int(
         state.last_updated.timestamp() * 1000
     )
+
+
+def test_state_timestamps() -> None:
+    """Test timestamp functions for State."""
+    now = dt_util.utcnow()
+    state = ha.State(
+        "light.bedroom",
+        "on",
+        {"brightness": 100},
+        last_changed=now,
+        last_updated=now,
+        context=ha.Context(id="1234"),
+    )
+    assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_updated_timestamp == now.timestamp()
+    assert state.last_updated_timestamp == now.timestamp()
 
 
 async def test_state_firing_event_matches_context_id_ulid_time(

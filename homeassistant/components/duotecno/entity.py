@@ -17,10 +17,9 @@ from .const import DOMAIN
 class DuotecnoEntity(Entity):
     """Representation of a Duotecno entity."""
 
-    _attr_should_poll: bool = False
-    _unit: BaseUnit
+    _attr_should_poll = False
 
-    def __init__(self, unit) -> None:
+    def __init__(self, unit: BaseUnit) -> None:
         """Initialize a Duotecno entity."""
         self._unit = unit
         self._attr_name = unit.get_name()

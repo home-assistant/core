@@ -192,7 +192,7 @@ class ProtectData:
     ) -> None:
         self._async_signal_device_update(device)
         if (
-            device.model == ModelType.CAMERA
+            device.model is ModelType.CAMERA
             and device.id in self._pending_camera_ids
             and "channels" in changed_data
         ):
@@ -249,7 +249,7 @@ class ProtectData:
                             obj.id,
                         )
 
-            if obj.type == EventType.DEVICE_ADOPTED:
+            if obj.type is EventType.DEVICE_ADOPTED:
                 if obj.metadata is not None and obj.metadata.device_id is not None:
                     device = self.api.bootstrap.get_device_from_id(
                         obj.metadata.device_id

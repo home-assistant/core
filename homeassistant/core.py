@@ -46,7 +46,6 @@ import voluptuous as vol
 import yarl
 
 from . import block_async_io, util
-from .backports.functools import cached_property
 from .const import (
     ATTR_DOMAIN,
     ATTR_FRIENDLY_NAME,
@@ -87,7 +86,7 @@ from .helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
-from .helpers.json import json_dumps
+from .helpers.json import json_bytes, json_fragment
 from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
@@ -108,11 +107,14 @@ from .util.unit_system import (
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
+    from functools import cached_property
+
     from .auth import AuthManager
     from .components.http import ApiConfig, HomeAssistantHTTP
     from .config_entries import ConfigEntries
     from .helpers.entity import StateInfo
-
+else:
+    from .backports.functools import cached_property
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 100
@@ -391,15 +393,22 @@ class HomeAssistant:
         self._stop_future: concurrent.futures.Future[None] | None = None
         self._shutdown_jobs: list[HassJobWithArgs] = []
 
-    @property
+    @cached_property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
 
-    @property
+    @cached_property
     def is_stopping(self) -> bool:
         """Return if Home Assistant is stopping."""
         return self.state in (CoreState.stopping, CoreState.final_write)
+
+    def set_state(self, state: CoreState) -> None:
+        """Set the current state."""
+        self.state = state
+        for prop in ("is_running", "is_stopping"):
+            with suppress(AttributeError):
+                delattr(self, prop)
 
     def start(self) -> int:
         """Start Home Assistant.
@@ -425,7 +434,7 @@ class HomeAssistant:
 
         This method is a coroutine.
         """
-        if self.state != CoreState.not_running:
+        if self.state is not CoreState.not_running:
             raise RuntimeError("Home Assistant is already running")
 
         # _async_stop will set this instead of stopping the loop
@@ -449,7 +458,7 @@ class HomeAssistant:
         _LOGGER.info("Starting Home Assistant")
         setattr(self.loop, "_thread_ident", threading.get_ident())
 
-        self.state = CoreState.starting
+        self.set_state(CoreState.starting)
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
@@ -474,14 +483,14 @@ class HomeAssistant:
         # Allow automations to set up the start triggers before changing state
         await asyncio.sleep(0)
 
-        if self.state != CoreState.starting:
+        if self.state is not CoreState.starting:
             _LOGGER.warning(
                 "Home Assistant startup has been interrupted. "
                 "Its state may be inconsistent"
             )
             return
 
-        self.state = CoreState.running
+        self.set_state(CoreState.running)
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
@@ -580,13 +589,13 @@ class HomeAssistant:
         # if TYPE_CHECKING to avoid the overhead of constructing
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
-        if hassjob.job_type == HassJobType.Coroutinefunction:
+        if hassjob.job_type is HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
             task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
-        elif hassjob.job_type == HassJobType.Callback:
+        elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             self.loop.call_soon(hassjob.target, *args)
@@ -685,7 +694,7 @@ class HomeAssistant:
         # if TYPE_CHECKING to avoid the overhead of constructing
         # the type used for the cast. For history see:
         # https://github.com/home-assistant/core/pull/71960
-        if hassjob.job_type == HassJobType.Callback:
+        if hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
             hassjob.target(*args)
@@ -824,7 +833,7 @@ class HomeAssistant:
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
-        if self.state == CoreState.not_running:  # just ignore
+        if self.state is CoreState.not_running:  # just ignore
             return
         # The future is never retrieved, and we only hold a reference
         # to it to prevent it from being garbage collected.
@@ -844,12 +853,12 @@ class HomeAssistant:
         if not force:
             # Some tests require async_stop to run,
             # regardless of the state of the loop.
-            if self.state == CoreState.not_running:  # just ignore
+            if self.state is CoreState.not_running:  # just ignore
                 return
             if self.state in [CoreState.stopping, CoreState.final_write]:
                 _LOGGER.info("Additional call to async_stop was ignored")
                 return
-            if self.state == CoreState.starting:
+            if self.state is CoreState.starting:
                 # This may not work
                 _LOGGER.warning(
                     "Stopping Home Assistant before startup has completed may fail"
@@ -892,7 +901,7 @@ class HomeAssistant:
 
         self.exit_code = exit_code
 
-        self.state = CoreState.stopping
+        self.set_state(CoreState.stopping)
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STOP_STAGE_SHUTDOWN_TIMEOUT):
@@ -905,7 +914,7 @@ class HomeAssistant:
             self._async_log_running_tasks("stop integrations")
 
         # Stage 3 - Final write
-        self.state = CoreState.final_write
+        self.set_state(CoreState.final_write)
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
             async with self.timeout.async_timeout(FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT):
@@ -918,7 +927,7 @@ class HomeAssistant:
             self._async_log_running_tasks("final write")
 
         # Stage 4 - Close
-        self.state = CoreState.not_running
+        self.set_state(CoreState.not_running)
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
 
         # Make a copy of running_tasks since a task can finish
@@ -969,7 +978,7 @@ class HomeAssistant:
             )
             self._async_log_running_tasks("close")
 
-        self.state = CoreState.stopped
+        self.set_state(CoreState.stopped)
 
         if self._stopped is not None:
             self._stopped.set()
@@ -996,8 +1005,6 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    __slots__ = ("user_id", "parent_id", "id", "origin_event", "_as_dict")
-
     def __init__(
         self,
         user_id: str | None = None,
@@ -1009,23 +1016,37 @@ class Context:
         self.user_id = user_id
         self.parent_id = parent_id
         self.origin_event: Event | None = None
-        self._as_dict: ReadOnlyDict[str, str | None] | None = None
 
     def __eq__(self, other: Any) -> bool:
         """Compare contexts."""
         return bool(self.__class__ == other.__class__ and self.id == other.id)
 
+    @cached_property
+    def _as_dict(self) -> dict[str, str | None]:
+        """Return a dictionary representation of the context.
+
+        Callers should be careful to not mutate the returned dictionary
+        as it will mutate the cached version.
+        """
+        return {
+            "id": self.id,
+            "parent_id": self.parent_id,
+            "user_id": self.user_id,
+        }
+
     def as_dict(self) -> ReadOnlyDict[str, str | None]:
-        """Return a dictionary representation of the context."""
-        if not self._as_dict:
-            self._as_dict = ReadOnlyDict(
-                {
-                    "id": self.id,
-                    "parent_id": self.parent_id,
-                    "user_id": self.user_id,
-                }
-            )
-        return self._as_dict
+        """Return a ReadOnlyDict representation of the context."""
+        return self._as_read_only_dict
+
+    @cached_property
+    def _as_read_only_dict(self) -> ReadOnlyDict[str, str | None]:
+        """Return a ReadOnlyDict representation of the context."""
+        return ReadOnlyDict(self._as_dict)
+
+    @cached_property
+    def json_fragment(self) -> json_fragment:
+        """Return a JSON fragment of the context."""
+        return json_fragment(json_bytes(self._as_dict))
 
 
 class EventOrigin(enum.Enum):
@@ -1041,8 +1062,6 @@ class EventOrigin(enum.Enum):
 
 class Event:
     """Representation of an event within the bus."""
-
-    __slots__ = ("event_type", "data", "origin", "time_fired", "context", "_as_dict")
 
     def __init__(
         self,
@@ -1062,26 +1081,59 @@ class Event:
                 id=ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
             )
         self.context = context
-        self._as_dict: ReadOnlyDict[str, Any] | None = None
         if not context.origin_event:
             context.origin_event = self
 
-    def as_dict(self) -> ReadOnlyDict[str, Any]:
+    @cached_property
+    def time_fired_timestamp(self) -> float:
+        """Return time fired as a timestamp."""
+        return self.time_fired.timestamp()
+
+    @cached_property
+    def _as_dict(self) -> dict[str, Any]:
         """Create a dict representation of this Event.
+
+        Callers should be careful to not mutate the returned dictionary
+        as it will mutate the cached version.
+        """
+        return {
+            "event_type": self.event_type,
+            "data": self.data,
+            "origin": self.origin.value,
+            "time_fired": self.time_fired.isoformat(),
+            # _as_dict is marked as protected
+            # to avoid callers outside of this module
+            # from misusing it by mistake.
+            "context": self.context._as_dict,  # pylint: disable=protected-access
+        }
+
+    def as_dict(self) -> ReadOnlyDict[str, Any]:
+        """Create a ReadOnlyDict representation of this Event.
 
         Async friendly.
         """
-        if not self._as_dict:
-            self._as_dict = ReadOnlyDict(
-                {
-                    "event_type": self.event_type,
-                    "data": ReadOnlyDict(self.data),
-                    "origin": self.origin.value,
-                    "time_fired": self.time_fired.isoformat(),
-                    "context": self.context.as_dict(),
-                }
-            )
-        return self._as_dict
+        return self._as_read_only_dict
+
+    @cached_property
+    def _as_read_only_dict(self) -> ReadOnlyDict[str, Any]:
+        """Create a ReadOnlyDict representation of this Event."""
+        as_dict = self._as_dict
+        data = as_dict["data"]
+        context = as_dict["context"]
+        # json_fragment will serialize data from a ReadOnlyDict
+        # or a normal dict so its ok to have either. We only
+        # mutate the cache if someone asks for the as_dict version
+        # to avoid storing multiple copies of the data in memory.
+        if type(data) is not ReadOnlyDict:
+            as_dict["data"] = ReadOnlyDict(data)
+        if type(context) is not ReadOnlyDict:
+            as_dict["context"] = ReadOnlyDict(context)
+        return ReadOnlyDict(as_dict)
+
+    @cached_property
+    def json_fragment(self) -> json_fragment:
+        """Return an event as a JSON fragment."""
+        return json_fragment(json_bytes(self._as_dict))
 
     def __repr__(self) -> str:
         """Return the representation."""
@@ -1099,6 +1151,23 @@ _FilterableJobType = tuple[
     Callable[[Event], bool] | None,  # event_filter
     bool,  # run_immediately
 ]
+
+
+@dataclass(slots=True)
+class _OneTimeListener:
+    hass: HomeAssistant
+    listener: Callable[[Event], Coroutine[Any, Any, None] | None]
+    remove: CALLBACK_TYPE | None = None
+
+    @callback
+    def async_call(self, event: Event) -> None:
+        """Remove listener from event bus and then fire listener."""
+        if not self.remove:
+            # If the listener was already removed, we don't need to do anything
+            return
+        self.remove()
+        self.remove = None
+        self.hass.async_run_job(self.listener, event)
 
 
 class EventBus:
@@ -1292,39 +1361,21 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        filterable_job: _FilterableJobType | None = None
-
-        @callback
-        def _onetime_listener(event: Event) -> None:
-            """Remove listener from event bus and then fire listener."""
-            nonlocal filterable_job
-            if hasattr(_onetime_listener, "run"):
-                return
-            # Set variable so that we will never run twice.
-            # Because the event bus loop might have async_fire queued multiple
-            # times, its possible this listener may already be lined up
-            # multiple times as well.
-            # This will make sure the second time it does nothing.
-            setattr(_onetime_listener, "run", True)
-            assert filterable_job is not None
-            self._async_remove_listener(event_type, filterable_job)
-            self._hass.async_run_job(listener, event)
-
-        functools.update_wrapper(
-            _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
-        )
-
-        filterable_job = (
-            HassJob(
-                _onetime_listener,
-                f"onetime listen {event_type} {listener}",
-                job_type=HassJobType.Callback,
+        one_time_listener = _OneTimeListener(self._hass, listener)
+        remove = self._async_listen_filterable_job(
+            event_type,
+            (
+                HassJob(
+                    one_time_listener.async_call,
+                    f"onetime listen {event_type} {listener}",
+                    job_type=HassJobType.Callback,
+                ),
+                None,
+                False,
             ),
-            None,
-            False,
         )
-
-        return self._async_listen_filterable_job(event_type, filterable_job)
+        one_time_listener.remove = remove
+        return remove
 
     @callback
     def _async_remove_listener(
@@ -1385,51 +1436,96 @@ class State:
 
         self.entity_id = entity_id
         self.state = state
-        self.attributes = ReadOnlyDict(attributes or {})
+        # State only creates and expects a ReadOnlyDict so
+        # there is no need to check for subclassing with
+        # isinstance here so we can use the faster type check.
+        if type(attributes) is not ReadOnlyDict:  # noqa: E721
+            self.attributes = ReadOnlyDict(attributes or {})
+        else:
+            self.attributes = attributes
         self.last_updated = last_updated or dt_util.utcnow()
         self.last_changed = last_changed or self.last_updated
         self.context = context or Context()
         self.state_info = state_info
         self.domain, self.object_id = split_entity_id(self.entity_id)
-        self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
-    @property
+    @cached_property
     def name(self) -> str:
         """Name of this state."""
         return self.attributes.get(ATTR_FRIENDLY_NAME) or self.object_id.replace(
             "_", " "
         )
 
-    def as_dict(self) -> ReadOnlyDict[str, Collection[Any]]:
+    @cached_property
+    def last_updated_timestamp(self) -> float:
+        """Timestamp of last update."""
+        return self.last_updated.timestamp()
+
+    @cached_property
+    def last_changed_timestamp(self) -> float:
+        """Timestamp of last change."""
+        return self.last_changed.timestamp()
+
+    @cached_property
+    def _as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the State.
+
+        Callers should be careful to not mutate the returned dictionary
+        as it will mutate the cached version.
+        """
+        last_changed_isoformat = self.last_changed.isoformat()
+        if self.last_changed == self.last_updated:
+            last_updated_isoformat = last_changed_isoformat
+        else:
+            last_updated_isoformat = self.last_updated.isoformat()
+        return {
+            "entity_id": self.entity_id,
+            "state": self.state,
+            "attributes": self.attributes,
+            "last_changed": last_changed_isoformat,
+            "last_updated": last_updated_isoformat,
+            # _as_dict is marked as protected
+            # to avoid callers outside of this module
+            # from misusing it by mistake.
+            "context": self.context._as_dict,  # pylint: disable=protected-access
+        }
+
+    def as_dict(
+        self,
+    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
+        """Return a ReadOnlyDict representation of the State.
 
         Async friendly.
 
-        To be used for JSON serialization.
+        Can be used for JSON serialization.
         Ensures: state == State.from_dict(state.as_dict())
         """
-        if not self._as_dict:
-            last_changed_isoformat = self.last_changed.isoformat()
-            if self.last_changed == self.last_updated:
-                last_updated_isoformat = last_changed_isoformat
-            else:
-                last_updated_isoformat = self.last_updated.isoformat()
-            self._as_dict = ReadOnlyDict(
-                {
-                    "entity_id": self.entity_id,
-                    "state": self.state,
-                    "attributes": self.attributes,
-                    "last_changed": last_changed_isoformat,
-                    "last_updated": last_updated_isoformat,
-                    "context": self.context.as_dict(),
-                }
-            )
-        return self._as_dict
+        return self._as_read_only_dict
 
     @cached_property
-    def as_dict_json(self) -> str:
+    def _as_read_only_dict(
+        self,
+    ) -> ReadOnlyDict[str, datetime.datetime | Collection[Any]]:
+        """Return a ReadOnlyDict representation of the State."""
+        as_dict = self._as_dict
+        context = as_dict["context"]
+        # json_fragment will serialize data from a ReadOnlyDict
+        # or a normal dict so its ok to have either. We only
+        # mutate the cache if someone asks for the as_dict version
+        # to avoid storing multiple copies of the data in memory.
+        if type(context) is not ReadOnlyDict:
+            as_dict["context"] = ReadOnlyDict(context)
+        return ReadOnlyDict(as_dict)
+
+    @cached_property
+    def as_dict_json(self) -> bytes:
         """Return a JSON string of the State."""
-        return json_dumps(self.as_dict())
+        return json_bytes(self._as_dict)
+
+    @cached_property
+    def json_fragment(self) -> json_fragment:
+        """Return a JSON fragment of the State."""
+        return json_fragment(self.as_dict_json)
 
     @cached_property
     def as_compressed_state(self) -> dict[str, Any]:
@@ -1443,28 +1539,31 @@ class State:
         if state_context.parent_id is None and state_context.user_id is None:
             context: dict[str, Any] | str = state_context.id
         else:
-            context = state_context.as_dict()
+            # _as_dict is marked as protected
+            # to avoid callers outside of this module
+            # from misusing it by mistake.
+            context = state_context._as_dict  # pylint: disable=protected-access
         compressed_state = {
             COMPRESSED_STATE_STATE: self.state,
             COMPRESSED_STATE_ATTRIBUTES: self.attributes,
             COMPRESSED_STATE_CONTEXT: context,
-            COMPRESSED_STATE_LAST_CHANGED: dt_util.utc_to_timestamp(self.last_changed),
+            COMPRESSED_STATE_LAST_CHANGED: self.last_changed_timestamp,
         }
         if self.last_changed != self.last_updated:
-            compressed_state[COMPRESSED_STATE_LAST_UPDATED] = dt_util.utc_to_timestamp(
-                self.last_updated
-            )
+            compressed_state[
+                COMPRESSED_STATE_LAST_UPDATED
+            ] = self.last_updated_timestamp
         return compressed_state
 
     @cached_property
-    def as_compressed_state_json(self) -> str:
+    def as_compressed_state_json(self) -> bytes:
         """Build a compressed JSON key value pair of a state for adds.
 
         The JSON string is a key value pair of the entity_id and the compressed state.
 
         It is used for sending multiple states in a single message.
         """
-        return json_dumps({self.entity_id: self.as_compressed_state})[1:-1]
+        return json_bytes({self.entity_id: self.as_compressed_state})[1:-1]
 
     @classmethod
     def from_dict(cls, json_dict: dict[str, Any]) -> Self | None:
@@ -1804,6 +1903,11 @@ class StateMachine:
         else:
             now = dt_util.utcnow()
 
+        if same_attr:
+            if TYPE_CHECKING:
+                assert old_state is not None
+            attributes = old_state.attributes
+
         state = State(
             entity_id,
             new_state,
@@ -1915,9 +2019,35 @@ class ServiceRegistry:
     def async_services(self) -> dict[str, dict[str, Service]]:
         """Return dictionary with per domain a list of available services.
 
+        This method makes a copy of the registry. This function is expensive,
+        and should only be used if has_service is not sufficient.
+
         This method must be run in the event loop.
         """
         return {domain: service.copy() for domain, service in self._services.items()}
+
+    @callback
+    def async_services_for_domain(self, domain: str) -> dict[str, Service]:
+        """Return dictionary with per domain a list of available services.
+
+        This method makes a copy of the registry for the domain.
+
+        This method must be run in the event loop.
+        """
+        return self._services.get(domain, {}).copy()
+
+    @callback
+    def async_services_internal(self) -> dict[str, dict[str, Service]]:
+        """Return dictionary with per domain a list of available services.
+
+        This method DOES NOT make a copy of the services like async_services does.
+        It is only expected to be called from the Home Assistant internals
+        as a performance optimization when the caller is not going to modify the
+        returned data.
+
+        This method must be run in the event loop.
+        """
+        return self._services
 
     def has_service(self, domain: str, service: str) -> bool:
         """Test if specified service exists.
@@ -2098,11 +2228,11 @@ class ServiceRegistry:
                 raise ValueError(
                     "Invalid argument return_response=True when blocking=False"
                 )
-            if handler.supports_response == SupportsResponse.NONE:
+            if handler.supports_response is SupportsResponse.NONE:
                 raise ValueError(
                     "Invalid argument return_response=True when handler does not support responses"
                 )
-        elif handler.supports_response == SupportsResponse.ONLY:
+        elif handler.supports_response is SupportsResponse.ONLY:
             raise ValueError(
                 "Service call requires responses but caller did not ask for responses"
             )
@@ -2180,11 +2310,11 @@ class ServiceRegistry:
         """Execute a service."""
         job = handler.job
         target = job.target
-        if job.job_type == HassJobType.Coroutinefunction:
+        if job.job_type is HassJobType.Coroutinefunction:
             if TYPE_CHECKING:
                 target = cast(Callable[..., Coroutine[Any, Any, _R]], target)
             return await target(service_call)
-        if job.job_type == HassJobType.Callback:
+        if job.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 target = cast(Callable[..., _R], target)
             return target(service_call)
@@ -2311,6 +2441,7 @@ class Config:
 
         Async friendly.
         """
+        allowlist_external_dirs = list(self.allowlist_external_dirs)
         return {
             "latitude": self.latitude,
             "longitude": self.longitude,
@@ -2318,12 +2449,12 @@ class Config:
             "unit_system": self.units.as_dict(),
             "location_name": self.location_name,
             "time_zone": self.time_zone,
-            "components": self.components,
+            "components": list(self.components),
             "config_dir": self.config_dir,
             # legacy, backwards compat
-            "whitelist_external_dirs": self.allowlist_external_dirs,
-            "allowlist_external_dirs": self.allowlist_external_dirs,
-            "allowlist_external_urls": self.allowlist_external_urls,
+            "whitelist_external_dirs": allowlist_external_dirs,
+            "allowlist_external_dirs": allowlist_external_dirs,
+            "allowlist_external_urls": list(self.allowlist_external_urls),
             "version": __version__,
             "config_source": self.config_source,
             "recovery_mode": self.recovery_mode,
