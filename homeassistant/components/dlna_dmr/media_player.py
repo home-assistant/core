@@ -97,7 +97,9 @@ async def async_setup_entry(
     has_linked_device_id = bool(
         existing_entity_id
         and (existing_entry := ent_reg.async_get(existing_entity_id))
-        and existing_entry.device_id
+        and (device_id := existing_entry.device_id)
+        and (device_entry := dr.async_get(hass).async_get(device_id))
+        and (dr.CONNECTION_UPNP, udn) in device_entry.connections
     )
 
     # Create our own device-wrapping entity
