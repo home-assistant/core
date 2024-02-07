@@ -70,8 +70,6 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle flow start."""
 
-        self._async_abort_entries_match({CONF_MAC: self.mac_address})
-
         if user_input is None:
             return self.async_show_form(
                 step_id="init",
