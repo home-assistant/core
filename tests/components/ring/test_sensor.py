@@ -31,9 +31,6 @@ async def test_sensor(hass: HomeAssistant, requests_mock: requests_mock.Mocker) 
     assert downstairs_volume_state is not None
     assert downstairs_volume_state.state == "2"
 
-    front_door_last_activity_state = hass.states.get("sensor.front_door_last_activity")
-    assert front_door_last_activity_state is not None
-
     downstairs_wifi_signal_strength_state = hass.states.get(
         "sensor.downstairs_wifi_signal_strength"
     )
@@ -64,6 +61,24 @@ async def test_sensor(hass: HomeAssistant, requests_mock: requests_mock.Mocker) 
     )
     assert front_door_wifi_signal_strength_state is not None
     assert front_door_wifi_signal_strength_state.state == "-58"
+
+
+async def test_history(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    requests_mock: requests_mock.Mocker,
+) -> None:
+    """Test history derived sensors."""
+    await setup_platform(hass, Platform.SENSOR)
+    freezer.tick(120)
+    await setup_platform(hass, Platform.SENSOR)
+    await hass.async_block_till_done()
+
+    front_door_last_activity_state = hass.states.get("sensor.front_door_last_activity")
+    assert front_door_last_activity_state.state == "2017-03-05T15:03:40+00:00"
+
+    ingress_last_activity_state = hass.states.get("sensor.ingress_last_activity")
+    assert ingress_last_activity_state.state == "unknown"
 
 
 async def test_only_chime_devices(
