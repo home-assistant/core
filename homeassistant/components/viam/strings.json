@@ -32,9 +32,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "selector": {
@@ -51,6 +48,12 @@
     },
     "entry_not_loaded": {
       "message": "{config_entry_title} is not loaded"
+    },
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry}"
+    },
+    "unloaded_config_entry": {
+      "message": "Invalid config entry provided. {config_entry} is not loaded."
     },
     "robot_credentials_required": {
       "message": "The robot location and secret are required for this connection type."
