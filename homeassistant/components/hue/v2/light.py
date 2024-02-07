@@ -94,6 +94,9 @@ class HueLight(HueBaseEntity, LightEntity):
                 self._supported_color_modes.add(ColorMode.BRIGHTNESS)
             # support transition if brightness control
             self._attr_supported_features |= LightEntityFeature.TRANSITION
+        if len(self._supported_color_modes) == 0:
+            # only add onoff colormode as fallback
+            self._supported_color_modes.add(ColorMode.ONOFF)
         self._last_brightness: float | None = None
         self._color_temp_active: bool = False
         # get list of supported effects (combine effects and timed_effects)
