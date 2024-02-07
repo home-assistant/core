@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity
+from .entity import RingEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +48,7 @@ class RingChimeSiren(RingEntity, SirenEntity):
         # Entity class attributes
         self._attr_unique_id = f"{self._device.id}-siren"
 
+    @exception_wrap
     def turn_on(self, **kwargs: Any) -> None:
         """Play the test sound on a Ring Chime device."""
         tone = kwargs.get(ATTR_TONE) or KIND_DING

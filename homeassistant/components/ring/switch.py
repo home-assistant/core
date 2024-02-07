@@ -15,7 +15,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity
+from .entity import RingEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,6 +85,7 @@ class SirenSwitch(BaseRingSwitch):
             self._attr_is_on = device.siren > 0
         super()._handle_coordinator_update()
 
+    @exception_wrap
     def _set_switch(self, new_state):
         """Update switch state, and causes Home Assistant to correctly update."""
         try:

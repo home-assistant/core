@@ -15,7 +15,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, RING_DEVICES, RING_DEVICES_COORDINATOR
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity
+from .entity import RingEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +75,7 @@ class RingLight(RingEntity, LightEntity):
             self._attr_is_on = device.lights == ON_STATE
         super()._handle_coordinator_update()
 
+    @exception_wrap
     def _set_light(self, new_state):
         """Update light state, and causes Home Assistant to correctly update."""
         try:
