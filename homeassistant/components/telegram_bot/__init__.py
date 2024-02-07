@@ -420,7 +420,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if msgtype == SERVICE_SEND_MESSAGE:
             await hass.async_add_executor_job(
-                partial(notify_service.send_message, **kwargs)
+                partial(notify_service.send_message, context=service.context, **kwargs)
             )
         elif msgtype in [
             SERVICE_SEND_PHOTO,
@@ -430,31 +430,44 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SERVICE_SEND_DOCUMENT,
         ]:
             await hass.async_add_executor_job(
-                partial(notify_service.send_file, msgtype, **kwargs)
+                partial(
+                    notify_service.send_file, msgtype, context=service.context, **kwargs
+                )
             )
         elif msgtype == SERVICE_SEND_STICKER:
             await hass.async_add_executor_job(
-                partial(notify_service.send_sticker, **kwargs)
+                partial(notify_service.send_sticker, context=service.context, **kwargs)
             )
         elif msgtype == SERVICE_SEND_LOCATION:
             await hass.async_add_executor_job(
-                partial(notify_service.send_location, **kwargs)
+                partial(notify_service.send_location, context=service.context, **kwargs)
             )
         elif msgtype == SERVICE_SEND_POLL:
             await hass.async_add_executor_job(
-                partial(notify_service.send_poll, **kwargs)
+                partial(notify_service.send_poll, context=service.context, **kwargs)
             )
         elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
             await hass.async_add_executor_job(
-                partial(notify_service.answer_callback_query, **kwargs)
+                partial(
+                    notify_service.answer_callback_query,
+                    context=service.context,
+                    **kwargs,
+                )
             )
         elif msgtype == SERVICE_DELETE_MESSAGE:
             await hass.async_add_executor_job(
-                partial(notify_service.delete_message, **kwargs)
+                partial(
+                    notify_service.delete_message, context=service.context, **kwargs
+                )
             )
         else:
             await hass.async_add_executor_job(
-                partial(notify_service.edit_message, msgtype, **kwargs)
+                partial(
+                    notify_service.edit_message,
+                    msgtype,
+                    context=service.context,
+                    **kwargs,
+                )
             )
 
     # Register notification services
@@ -635,7 +648,9 @@ class TelegramNotificationService:
                 )
         return params
 
-    def _send_msg(self, func_send, msg_error, message_tag, *args_msg, **kwargs_msg):
+    def _send_msg(
+        self, func_send, msg_error, message_tag, *args_msg, context=None, **kwargs_msg
+    ):
         """Send one message."""
         try:
             out = func_send(*args_msg, **kwargs_msg)
@@ -655,7 +670,7 @@ class TelegramNotificationService:
                 }
                 if message_tag is not None:
                     event_data[ATTR_MESSAGE_TAG] = message_tag
-                self.hass.bus.fire(EVENT_TELEGRAM_SENT, event_data)
+                self.hass.bus.fire(EVENT_TELEGRAM_SENT, event_data, context=context)
             elif not isinstance(out, bool):
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out
@@ -666,7 +681,7 @@ class TelegramNotificationService:
                 "%s: %s. Args: %s, kwargs: %s", msg_error, exc, args_msg, kwargs_msg
             )
 
-    def send_message(self, message="", target=None, **kwargs):
+    def send_message(self, message="", target=None, context=None, **kwargs):
         """Send a message to one or multiple pre-allowed chat IDs."""
         title = kwargs.get(ATTR_TITLE)
         text = f"{title}\n{message}" if title else message
@@ -685,15 +700,21 @@ class TelegramNotificationService:
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
                 timeout=params[ATTR_TIMEOUT],
+                context=context,
             )
 
-    def delete_message(self, chat_id=None, **kwargs):
+    def delete_message(self, chat_id=None, context=None, **kwargs):
         """Delete a previously sent message."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
         message_id, _ = self._get_msg_ids(kwargs, chat_id)
         _LOGGER.debug("Delete message %s in chat ID %s", message_id, chat_id)
         deleted = self._send_msg(
-            self.bot.delete_message, "Error deleting message", None, chat_id, message_id
+            self.bot.delete_message,
+            "Error deleting message",
+            None,
+            chat_id,
+            message_id,
+            context=context,
         )
         # reduce message_id anyway:
         if self._last_message_id[chat_id] is not None:
@@ -701,7 +722,7 @@ class TelegramNotificationService:
             self._last_message_id[chat_id] -= 1
         return deleted
 
-    def edit_message(self, type_edit, chat_id=None, **kwargs):
+    def edit_message(self, type_edit, chat_id=None, context=None, **kwargs):
         """Edit a previously sent message."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
         message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
@@ -729,6 +750,7 @@ class TelegramNotificationService:
                 disable_web_page_preview=params[ATTR_DISABLE_WEB_PREV],
                 reply_markup=params[ATTR_REPLYMARKUP],
                 timeout=params[ATTR_TIMEOUT],
+                context=context,
             )
         if type_edit == SERVICE_EDIT_CAPTION:
             return self._send_msg(
@@ -742,6 +764,7 @@ class TelegramNotificationService:
                 reply_markup=params[ATTR_REPLYMARKUP],
                 timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
+                context=context,
             )
 
         return self._send_msg(
@@ -753,10 +776,11 @@ class TelegramNotificationService:
             inline_message_id=inline_message_id,
             reply_markup=params[ATTR_REPLYMARKUP],
             timeout=params[ATTR_TIMEOUT],
+            context=context,
         )
 
     def answer_callback_query(
-        self, message, callback_query_id, show_alert=False, **kwargs
+        self, message, callback_query_id, show_alert=False, context=None, **kwargs
     ):
         """Answer a callback originated with a press in an inline keyboard."""
         params = self._get_msg_kwargs(kwargs)
@@ -774,9 +798,12 @@ class TelegramNotificationService:
             text=message,
             show_alert=show_alert,
             timeout=params[ATTR_TIMEOUT],
+            context=context,
         )
 
-    def send_file(self, file_type=SERVICE_SEND_PHOTO, target=None, **kwargs):
+    def send_file(
+        self, file_type=SERVICE_SEND_PHOTO, target=None, context=None, **kwargs
+    ):
         """Send a photo, sticker, video, or document."""
         params = self._get_msg_kwargs(kwargs)
         file_content = load_data(
@@ -806,6 +833,7 @@ class TelegramNotificationService:
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
+                        context=context,
                     )
 
                 elif file_type == SERVICE_SEND_STICKER:
@@ -819,6 +847,7 @@ class TelegramNotificationService:
                         reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
+                        context=context,
                     )
 
                 elif file_type == SERVICE_SEND_VIDEO:
@@ -834,6 +863,7 @@ class TelegramNotificationService:
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
+                        context=context,
                     )
                 elif file_type == SERVICE_SEND_DOCUMENT:
                     self._send_msg(
@@ -848,6 +878,7 @@ class TelegramNotificationService:
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
+                        context=context,
                     )
                 elif file_type == SERVICE_SEND_VOICE:
                     self._send_msg(
@@ -861,6 +892,7 @@ class TelegramNotificationService:
                         reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
+                        context=context,
                     )
                 elif file_type == SERVICE_SEND_ANIMATION:
                     self._send_msg(
@@ -875,13 +907,14 @@ class TelegramNotificationService:
                         reply_markup=params[ATTR_REPLYMARKUP],
                         timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
+                        context=context,
                     )
 
                 file_content.seek(0)
         else:
             _LOGGER.error("Can't send file with kwargs: %s", kwargs)
 
-    def send_sticker(self, target=None, **kwargs):
+    def send_sticker(self, target=None, context=None, **kwargs):
         """Send a sticker from a telegram sticker pack."""
         params = self._get_msg_kwargs(kwargs)
         stickerid = kwargs.get(ATTR_STICKER_ID)
@@ -897,11 +930,12 @@ class TelegramNotificationService:
                     reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                     reply_markup=params[ATTR_REPLYMARKUP],
                     timeout=params[ATTR_TIMEOUT],
+                    context=context,
                 )
         else:
             self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
 
-    def send_location(self, latitude, longitude, target=None, **kwargs):
+    def send_location(self, latitude, longitude, target=None, context=None, **kwargs):
         """Send a location."""
         latitude = float(latitude)
         longitude = float(longitude)
@@ -920,6 +954,7 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 timeout=params[ATTR_TIMEOUT],
+                context=context,
             )
 
     def send_poll(
@@ -929,6 +964,7 @@ class TelegramNotificationService:
         is_anonymous,
         allows_multiple_answers,
         target=None,
+        context=None,
         **kwargs,
     ):
         """Send a poll."""
@@ -949,14 +985,15 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 timeout=params[ATTR_TIMEOUT],
+                context=context,
             )
 
-    def leave_chat(self, chat_id=None):
+    def leave_chat(self, chat_id=None, context=None):
         """Remove bot from chat."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
         _LOGGER.debug("Leave from chat ID %s", chat_id)
         leaved = self._send_msg(
-            self.bot.leave_chat, "Error leaving chat", None, chat_id
+            self.bot.leave_chat, "Error leaving chat", None, chat_id, context=context
         )
         return leaved
 
