@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
-from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
+from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus, CurrentAirPurifierStateValues
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.bluetooth import (
@@ -136,6 +136,12 @@ def thread_status_to_str(char: Characteristic) -> str:
     # Must be ThreadStatus.DISABLED
     # Device is not currently connected to Thread and will not try to.
     return "disabled"
+
+
+def air_purifier_state_to_str(char: Characteristic) -> str:
+    if char.value == 0:
+        return "purifying"
+    return "idle"
 
 
 SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
@@ -323,6 +329,18 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
             "router",
         ],
         translation_key="thread_status",
+    ),
+    CharacteristicsTypes.AIR_PURIFIER_STATE_CURRENT: HomeKitSensorEntityDescription(
+        key=CharacteristicsTypes.AIR_PURIFIER_STATE_CURRENT,
+        name="Air Purifier Status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        format=air_purifier_state_to_str,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "idle",
+            "purifying",
+        ],
+        translation_key="air_purifier_state_current",
     ),
     CharacteristicsTypes.VENDOR_NETATMO_NOISE: HomeKitSensorEntityDescription(
         key=CharacteristicsTypes.VENDOR_NETATMO_NOISE,
@@ -551,10 +569,9 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | float:
         """Return the current sensor value."""
-        val = self._char.value
         if self.entity_description.format:
-            return self.entity_description.format(val)
-        return val
+            return self.entity_description.format(self._char)
+        return self._char.value
 
 
 ENTITY_TYPES = {
