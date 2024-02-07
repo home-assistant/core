@@ -44,11 +44,13 @@ NumberType = Literal[
 
 SelectType = Literal[
     "select_dhw_mode",
+    "select_gateway_mode",
     "select_regulation_mode",
     "select_schedule",
 ]
 SelectOptionsType = Literal[
     "dhw_modes",
+    "gateway_modes",
     "regulation_modes",
     "available_schedules",
 ]
