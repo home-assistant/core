@@ -140,6 +140,7 @@
       },
       "air_purifier_state_current": {
         "state": {
+          "inactive": "Inactive",
           "idle": "Idle",
           "purifying": "Purifying"
         }

@@ -3,10 +3,15 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import IntEnum
 
 from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
-from aiohomekit.model.characteristics.const import ThreadNodeCapabilities, ThreadStatus
+from aiohomekit.model.characteristics.const import (
+    CurrentAirPurifierStateValues,
+    ThreadNodeCapabilities,
+    ThreadStatus,
+)
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.bluetooth import (
@@ -52,6 +57,7 @@ class HomeKitSensorEntityDescription(SensorEntityDescription):
 
     probe: Callable[[Characteristic], bool] | None = None
     format: Callable[[Characteristic], str] | None = None
+    enum: dict[IntEnum, str] | None = None
 
 
 def thread_node_capability_to_str(char: Characteristic) -> str:
@@ -136,13 +142,6 @@ def thread_status_to_str(char: Characteristic) -> str:
     # Must be ThreadStatus.DISABLED
     # Device is not currently connected to Thread and will not try to.
     return "disabled"
-
-
-def air_purifier_state_to_str(char: Characteristic) -> str:
-    """Return the air purifier status as a translatable string."""
-    if char.value == 0:
-        return "purifying"
-    return "idle"
 
 
 SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
@@ -335,12 +334,12 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
         key=CharacteristicsTypes.AIR_PURIFIER_STATE_CURRENT,
         name="Air Purifier Status",
         entity_category=EntityCategory.DIAGNOSTIC,
-        format=air_purifier_state_to_str,
         device_class=SensorDeviceClass.ENUM,
-        options=[
-            "idle",
-            "purifying",
-        ],
+        enum={
+            CurrentAirPurifierStateValues.INACTIVE: "inactive",
+            CurrentAirPurifierStateValues.IDLE: "idle",
+            CurrentAirPurifierStateValues.ACTIVE: "purifying",
+        },
         translation_key="air_purifier_state_current",
     ),
     CharacteristicsTypes.VENDOR_NETATMO_NOISE: HomeKitSensorEntityDescription(
@@ -554,6 +553,8 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
     ) -> None:
         """Initialise a secondary HomeKit characteristic sensor."""
         self.entity_description = description
+        if self.entity_description.enum:
+            self._attr_options = list(self.entity_description.enum.values())
         super().__init__(conn, info, char)
 
     def get_characteristic_types(self) -> list[str]:
@@ -570,6 +571,8 @@ class SimpleSensor(CharacteristicEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | float:
         """Return the current sensor value."""
+        if self.entity_description.enum:
+            return self.entity_description.enum[self._char.value]
         if self.entity_description.format:
             return self.entity_description.format(self._char)
         return self._char.value

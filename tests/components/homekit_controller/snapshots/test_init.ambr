@@ -196,6 +196,7 @@
             'area_id': None,
             'capabilities': dict({
               'options': list([
+                'inactive',
                 'idle',
                 'purifying',
               ]),
@@ -227,12 +228,13 @@
               'device_class': 'enum',
               'friendly_name': 'Airversa AP2 1808 Air Purifier Status',
               'options': list([
+                'inactive',
                 'idle',
                 'purifying',
               ]),
             }),
             'entity_id': 'sensor.airversa_ap2_1808_air_purifier_status',
-            'state': 'purifying',
+            'state': 'inactive',
           }),
         }),
         dict({
