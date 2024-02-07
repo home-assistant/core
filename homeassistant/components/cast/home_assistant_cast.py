@@ -70,7 +70,7 @@ async def async_setup_ha_cast(
             SIGNAL_HASS_CAST_SHOW_VIEW,
             controller,
             call.data[ATTR_ENTITY_ID],
-            call.data[ATTR_VIEW_PATH],
+            call.data.get(ATTR_VIEW_PATH),
             call.data.get(ATTR_URL_PATH),
         )
 

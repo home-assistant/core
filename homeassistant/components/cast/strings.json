@@ -51,12 +51,12 @@
           "description": "Media player entity to show the dashboard view on."
         },
         "dashboard_path": {
-          "name": "Dashboard path",
-          "description": "The URL path of the dashboard to show."
+          "name": "Dashboard",
+          "description": "The dashboard to show, for example 'energy' or 'lovelace'. If not specified, the default dashboard will be shown."
         },
         "view_path": {
-          "name": "View path",
-          "description": "The path of the dashboard view to show."
+          "name": "View",
+          "description": "The view to show. If not specified, the dashboard's default view will be shown."
         }
       }
     }
