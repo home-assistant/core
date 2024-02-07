@@ -4,7 +4,6 @@ from __future__ import annotations
 from collections.abc import Callable
 import fnmatch
 import re
-from typing import Final
 
 import voluptuous as vol
 
@@ -13,13 +12,12 @@ from homeassistant.core import split_entity_id
 
 from . import config_validation as cv
 
-CONF_INCLUDE_DOMAINS: Final = "include_domains"
-CONF_INCLUDE_ENTITY_GLOBS: Final = "include_entity_globs"
-CONF_INCLUDE_ENTITIES: Final = "include_entities"
-CONF_EXCLUDE_DOMAINS: Final = "exclude_domains"
-CONF_EXCLUDE_ENTITY_GLOBS: Final = "exclude_entity_globs"
-CONF_EXCLUDE_ENTITIES: Final = "exclude_entities"
-
+CONF_INCLUDE_DOMAINS = "include_domains"
+CONF_INCLUDE_ENTITY_GLOBS = "include_entity_globs"
+CONF_INCLUDE_ENTITIES = "include_entities"
+CONF_EXCLUDE_DOMAINS = "exclude_domains"
+CONF_EXCLUDE_ENTITY_GLOBS = "exclude_entity_globs"
+CONF_EXCLUDE_ENTITIES = "exclude_entities"
 
 CONF_ENTITY_GLOBS = "entity_globs"
 

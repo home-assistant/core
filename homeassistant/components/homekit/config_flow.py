@@ -7,7 +7,7 @@ from operator import itemgetter
 import random
 import re
 import string
-from typing import Any, TypedDict
+from typing import Any, Final, TypedDict
 
 import voluptuous as vol
 
@@ -33,12 +33,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
-)
-from homeassistant.helpers.entityfilter import (
-    CONF_EXCLUDE_DOMAINS,
-    CONF_EXCLUDE_ENTITIES,
-    CONF_INCLUDE_DOMAINS,
-    CONF_INCLUDE_ENTITIES,
 )
 from homeassistant.loader import async_get_integrations
 
@@ -124,6 +118,11 @@ DEFAULT_DOMAINS = [
     "water_heater",
 ]
 
+CONF_INCLUDE_DOMAINS: Final = "include_domains"
+CONF_INCLUDE_ENTITIES: Final = "include_entities"
+CONF_EXCLUDE_DOMAINS: Final = "exclude_domains"
+CONF_EXCLUDE_ENTITIES: Final = "exclude_entities"
+
 
 class EntityFilterDict(TypedDict, total=False):
     """Entity filter dict."""
@@ -134,12 +133,19 @@ class EntityFilterDict(TypedDict, total=False):
     exclude_entities: list[str]
 
 
-_EMPTY_ENTITY_FILTER: EntityFilterDict = {
-    CONF_INCLUDE_DOMAINS: [],
-    CONF_EXCLUDE_DOMAINS: [],
-    CONF_INCLUDE_ENTITIES: [],
-    CONF_EXCLUDE_ENTITIES: [],
-}
+def _make_entity_filter(
+    include_domains: list[str] | None = None,
+    include_entities: list[str] | None = None,
+    exclude_domains: list[str] | None = None,
+    exclude_entities: list[str] | None = None,
+) -> EntityFilterDict:
+    """Create a filter dict."""
+    return EntityFilterDict(
+        include_domains=include_domains or [],
+        include_entities=include_entities or [],
+        exclude_domains=exclude_domains or [],
+        exclude_entities=exclude_entities or [],
+    )
 
 
 async def _async_domain_names(hass: HomeAssistant, domains: list[str]) -> str:
@@ -155,15 +161,13 @@ def _async_build_entities_filter(
     domains: list[str], entities: list[str]
 ) -> EntityFilterDict:
     """Build an entities filter from domains and entities."""
-    entity_filter = deepcopy(_EMPTY_ENTITY_FILTER)
-    entity_filter[CONF_INCLUDE_ENTITIES] = entities
     # Include all of the domain if there are no entities
     # explicitly included as the user selected the domain
     domains_with_entities_selected = _domains_set_from_entities(entities)
-    entity_filter[CONF_INCLUDE_DOMAINS] = [
-        domain for domain in domains if domain not in domains_with_entities_selected
-    ]
-    return entity_filter
+    return _make_entity_filter(
+        include_domains=sorted(set(domains).difference(domains_with_entities_selected)),
+        include_entities=entities,
+    )
 
 
 def _async_cameras_from_entities(entities: list[str]) -> dict[str, str]:
@@ -200,9 +204,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Choose specific domains in bridge mode."""
         if user_input is not None:
-            entity_filter = deepcopy(_EMPTY_ENTITY_FILTER)
-            entity_filter[CONF_INCLUDE_DOMAINS] = user_input[CONF_INCLUDE_DOMAINS]
-            self.hk_data[CONF_FILTER] = entity_filter
+            self.hk_data[CONF_FILTER] = _make_entity_filter(
+                include_domains=user_input[CONF_INCLUDE_DOMAINS]
+            )
             return await self.async_step_pairing()
 
         self.hk_data[CONF_HOMEKIT_MODE] = HOMEKIT_MODE_BRIDGE
@@ -281,14 +285,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         state = self.hass.states.get(entity_id)
         assert state is not None
         name = state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id
-        entity_filter = deepcopy(_EMPTY_ENTITY_FILTER)
-        entity_filter[CONF_INCLUDE_ENTITIES] = [entity_id]
 
         entry_data = {
             CONF_PORT: port,
             CONF_NAME: self._async_available_name(name),
             CONF_HOMEKIT_MODE: HOMEKIT_MODE_ACCESSORY,
-            CONF_FILTER: entity_filter,
+            CONF_FILTER: _make_entity_filter(include_entities=[entity_id]),
         }
         if entity_id.startswith(CAMERA_ENTITY_PREFIX):
             entry_data[CONF_ENTITY_CONFIG] = {
@@ -431,6 +433,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 elif CONF_SUPPORT_AUDIO in entity_config:
                     del entity_config[CONF_SUPPORT_AUDIO]
 
+                if not entity_config:
+                    all_entity_config.pop(entity_id)
+
             return await self.async_step_advanced()
 
         cameras_with_audio = []
@@ -549,12 +554,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         domains = hk_options[CONF_DOMAINS]
 
         if user_input is not None:
-            entity_filter = deepcopy(_EMPTY_ENTITY_FILTER)
-            entities = cv.ensure_list(user_input[CONF_ENTITIES])
-            entity_filter[CONF_INCLUDE_DOMAINS] = domains
-            entity_filter[CONF_EXCLUDE_ENTITIES] = entities
             self.included_cameras = {}
-            if CAMERA_DOMAIN in entity_filter[CONF_INCLUDE_DOMAINS]:
+            entities = cv.ensure_list(user_input[CONF_ENTITIES])
+            if CAMERA_DOMAIN in domains:
                 camera_entities = _async_get_matching_entities(
                     self.hass, [CAMERA_DOMAIN]
                 )
@@ -563,7 +565,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     for entity_id in camera_entities
                     if entity_id not in entities
                 }
-            hk_options[CONF_FILTER] = entity_filter
+            hk_options[CONF_FILTER] = _make_entity_filter(
+                include_domains=domains, exclude_entities=entities
+            )
             if self.included_cameras:
                 return await self.async_step_cameras()
             return await self.async_step_advanced()
