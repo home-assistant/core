@@ -1,5 +1,4 @@
 """Sensor for myUplink."""
-import dataclasses
 
 from myuplink.models import DevicePoint
 
@@ -51,12 +50,37 @@ DEVICE_POINT_DESCRIPTIONS = {
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:heat-pump-outline",
     ),
+    "49993": SensorEntityDescription(
+        key="elect_add",
+        device_class=SensorDeviceClass.ENUM,
+        icon="mdi:heat-wave",
+    ),
     "49994": SensorEntityDescription(
         key="priority",
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:priority-high",
     ),
 }
+
+
+def get_description(device_point: DevicePoint) -> SensorEntityDescription | None:
+    """Get description for a device point.
+
+    Priorities:
+    1. Category specific parameter_id e.g "NIBEF F730 CU 3x400V-49994"
+    2. Global parameter_id e.g. "49994"
+    3. Global parameter_unit e.g. "°C"
+    4. Default to None
+    """
+    description = DEVICE_POINT_DESCRIPTIONS.get(
+        f"{device_point.category}-{device_point.parameter_id}"
+    )
+    if description is None:
+        description = DEVICE_POINT_DESCRIPTIONS.get(device_point.parameter_id)
+    if description is None:
+        description = DEVICE_POINT_DESCRIPTIONS.get(device_point.parameter_unit)
+
+    return description
 
 
 async def async_setup_entry(
@@ -68,45 +92,33 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
     coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    def get_description(device_point: DevicePoint) -> SensorEntityDescription | None:
-        """Get description for a device point.
-
-        Priorities:
-        1. Category specific parameter_id e.g "NIBEF F730 CU 3x400V-49994"
-        2. Global parameter_id e.g. "49994"
-        3. Global parameter_unit e.g. "°C"
-        4. Default to None
-        """
-        description = DEVICE_POINT_DESCRIPTIONS.get(
-            f"{device_point.category}-{device_point.parameter_id}"
-        )
-        if description is None:
-            description = DEVICE_POINT_DESCRIPTIONS.get(device_point.parameter_id)
-        if description is None:
-            description = DEVICE_POINT_DESCRIPTIONS.get(device_point.parameter_unit)
-
-        if (
-            description is not None
-            and description.device_class == SensorDeviceClass.ENUM
-        ):
-            description = dataclasses.replace(
-                description,
-                options=[x["text"].capitalize() for x in device_point.enum_values],
-            )
-        return description
-
     # Setup device point sensors
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
-            entities.append(
-                MyUplinkDevicePointSensor(
-                    coordinator=coordinator,
-                    device_id=device_id,
-                    device_point=device_point,
-                    entity_description=get_description(device_point),
-                    unique_id_suffix=point_id,
+            description = get_description(device_point)
+            if (
+                description is not None
+                and description.device_class == SensorDeviceClass.ENUM
+            ):
+                entities.append(
+                    MyUplinkEnumSensor(
+                        coordinator=coordinator,
+                        device_id=device_id,
+                        device_point=device_point,
+                        entity_description=description,
+                        unique_id_suffix=point_id,
+                    )
                 )
-            )
+            else:
+                entities.append(
+                    MyUplinkDevicePointSensor(
+                        coordinator=coordinator,
+                        device_id=device_id,
+                        device_point=device_point,
+                        entity_description=description,
+                        unique_id_suffix=point_id,
+                    )
+                )
 
     async_add_entities(entities)
 
@@ -142,8 +154,35 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Sensor state value."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
-        if self.device_class == SensorDeviceClass.ENUM:
-            return {x["value"]: x["text"] for x in device_point.enum_values}[  # type: ignore[no-any-return]
-                str(int(device_point.value))
-            ].capitalize()
         return device_point.value  # type: ignore[no-any-return]
+
+
+class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
+    """Representation of a myUplink device point sensor for ENUM device_class."""
+
+    def __init__(
+        self,
+        coordinator: MyUplinkDataCoordinator,
+        device_id: str,
+        device_point: DevicePoint,
+        entity_description: SensorEntityDescription | None,
+        unique_id_suffix: str,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            device_id=device_id,
+            device_point=device_point,
+            entity_description=entity_description,
+            unique_id_suffix=unique_id_suffix,
+        )
+
+        self._attr_options = [x["text"].capitalize() for x in device_point.enum_values]
+
+    @property
+    def native_value(self) -> StateType:
+        """Sensor state value for enum sensor."""
+        device_point = self.coordinator.data.points[self.device_id][self.point_id]
+        return {x["value"]: x["text"] for x in device_point.enum_values}[  # type: ignore[no-any-return]
+            str(int(device_point.value))
+        ].capitalize()
