@@ -1,4 +1,5 @@
 """Test for the default agent."""
+
 from collections import defaultdict
 from unittest.mock import AsyncMock, patch
 
@@ -85,8 +86,10 @@ async def test_exposed_areas(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that all areas are exposed."""
-    area_kitchen = area_registry.async_get_or_create("kitchen")
-    area_bedroom = area_registry.async_get_or_create("bedroom")
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
+    area_bedroom = area_registry.async_get_or_create("bedroom_id")
+    area_bedroom = area_registry.async_update(area_bedroom.id, name="bedroom")
 
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
@@ -122,6 +125,9 @@ async def test_exposed_areas(
 
     # All is well for the exposed kitchen light
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert result.response.intent.slots["area"]["value"] == area_kitchen.id
+    assert result.response.intent.slots["area"]["text"] == area_kitchen.normalized_name
 
     # Bedroom has no exposed entities
     result = await conversation.async_converse(
@@ -195,7 +201,8 @@ async def test_unexposed_entities_skipped(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that unexposed entities are skipped in exposed areas."""
-    area_kitchen = area_registry.async_get_or_create("kitchen")
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
     # Both lights are in the kitchen
     exposed_light = entity_registry.async_get_or_create("light", "demo", "1234")
@@ -224,6 +231,9 @@ async def test_unexposed_entities_skipped(
 
     assert len(calls) == 1
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert result.response.intent.slots["area"]["value"] == area_kitchen.id
+    assert result.response.intent.slots["area"]["text"] == area_kitchen.normalized_name
 
     # Only one light should be returned
     hass.states.async_set(exposed_light.entity_id, "on")
@@ -314,8 +324,10 @@ async def test_device_area_context(
     turn_on_calls = async_mock_service(hass, "light", "turn_on")
     turn_off_calls = async_mock_service(hass, "light", "turn_off")
 
-    area_kitchen = area_registry.async_get_or_create("Kitchen")
-    area_bedroom = area_registry.async_get_or_create("Bedroom")
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
+    area_bedroom = area_registry.async_get_or_create("bedroom_id")
+    area_bedroom = area_registry.async_update(area_bedroom.id, name="bedroom")
 
     # Create 2 lights in each area
     area_lights = defaultdict(list)
@@ -363,13 +375,14 @@ async def test_device_area_context(
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert result.response.intent.slots["area"]["value"] == area_kitchen.id
+    assert result.response.intent.slots["area"]["text"] == area_kitchen.normalized_name
 
     # Verify only kitchen lights were targeted
     assert {s.entity_id for s in result.response.matched_states} == {
-        e.entity_id for e in area_lights["kitchen"]
+        e.entity_id for e in area_lights[area_kitchen.id]
     }
     assert {c.data["entity_id"][0] for c in turn_on_calls} == {
-        e.entity_id for e in area_lights["kitchen"]
+        e.entity_id for e in area_lights[area_kitchen.id]
     }
     turn_on_calls.clear()
 
@@ -386,13 +399,14 @@ async def test_device_area_context(
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert result.response.intent.slots["area"]["value"] == area_bedroom.id
+    assert result.response.intent.slots["area"]["text"] == area_bedroom.normalized_name
 
     # Verify only bedroom lights were targeted
     assert {s.entity_id for s in result.response.matched_states} == {
-        e.entity_id for e in area_lights["bedroom"]
+        e.entity_id for e in area_lights[area_bedroom.id]
     }
     assert {c.data["entity_id"][0] for c in turn_on_calls} == {
-        e.entity_id for e in area_lights["bedroom"]
+        e.entity_id for e in area_lights[area_bedroom.id]
     }
     turn_on_calls.clear()
 
@@ -409,13 +423,14 @@ async def test_device_area_context(
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.intent is not None
     assert result.response.intent.slots["area"]["value"] == area_bedroom.id
+    assert result.response.intent.slots["area"]["text"] == area_bedroom.normalized_name
 
     # Verify only bedroom lights were targeted
     assert {s.entity_id for s in result.response.matched_states} == {
-        e.entity_id for e in area_lights["bedroom"]
+        e.entity_id for e in area_lights[area_bedroom.id]
     }
     assert {c.data["entity_id"][0] for c in turn_off_calls} == {
-        e.entity_id for e in area_lights["bedroom"]
+        e.entity_id for e in area_lights[area_bedroom.id]
     }
     turn_off_calls.clear()
 
@@ -463,7 +478,8 @@ async def test_error_no_device_in_area(
     hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
 ) -> None:
     """Test error message when area is missing a device/entity."""
-    area_registry.async_get_or_create("kitchen")
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
     result = await conversation.async_converse(
         hass, "turn on missing entity in the kitchen", None, Context(), None
     )
@@ -482,7 +498,7 @@ async def test_error_no_domain(
     """Test error message when no devices/entities exist for a domain."""
 
     # We don't have a sentence for turning on all fans
-    fan_domain = MatchEntity(name="domain", value="fan", text="")
+    fan_domain = MatchEntity(name="domain", value="fan", text="fans")
     recognize_result = RecognizeResult(
         intent=Intent("HassTurnOn"),
         intent_data=IntentData([]),
@@ -513,7 +529,8 @@ async def test_error_no_domain_in_area(
     hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
 ) -> None:
     """Test error message when no devices/entities for a domain exist in an area."""
-    area_registry.async_get_or_create("kitchen")
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
     result = await conversation.async_converse(
         hass, "turn on the lights in the kitchen", None, Context(), None
     )
@@ -526,13 +543,11 @@ async def test_error_no_domain_in_area(
     )
 
 
-async def test_error_no_device_class(
-    hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
-) -> None:
+async def test_error_no_device_class(hass: HomeAssistant, init_components) -> None:
     """Test error message when no entities of a device class exist."""
 
     # We don't have a sentence for opening all windows
-    window_class = MatchEntity(name="device_class", value="window", text="")
+    window_class = MatchEntity(name="device_class", value="window", text="windows")
     recognize_result = RecognizeResult(
         intent=Intent("HassTurnOn"),
         intent_data=IntentData([]),
@@ -563,7 +578,8 @@ async def test_error_no_device_class_in_area(
     hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
 ) -> None:
     """Test error message when no entities of a device class exist in an area."""
-    area_registry.async_get_or_create("bedroom")
+    area_bedroom = area_registry.async_get_or_create("bedroom_id")
+    area_bedroom = area_registry.async_update(area_bedroom.id, name="bedroom")
     result = await conversation.async_converse(
         hass, "open bedroom windows", None, Context(), None
     )
@@ -600,7 +616,8 @@ async def test_no_states_matched_default_error(
     hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
 ) -> None:
     """Test default response when no states match and slots are missing."""
-    area_registry.async_get_or_create("kitchen")
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
 
     with patch(
         "homeassistant.components.conversation.default_agent.intent.async_handle",
@@ -629,9 +646,9 @@ async def test_empty_aliases(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that empty aliases are not added to slot lists."""
-    area_kitchen = area_registry.async_get_or_create("kitchen")
-    assert area_kitchen.id is not None
-    area_registry.async_update(area_kitchen.id, aliases={" "})
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
+    area_kitchen = area_registry.async_update(area_kitchen.id, aliases={" "})
 
     entry = MockConfigEntry()
     entry.add_to_hass(hass)
@@ -643,11 +660,16 @@ async def test_empty_aliases(
     device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
     kitchen_light = entity_registry.async_get_or_create("light", "demo", "1234")
-    entity_registry.async_update_entity(
-        kitchen_light.entity_id, device_id=kitchen_device.id, aliases={" "}
+    kitchen_light = entity_registry.async_update_entity(
+        kitchen_light.entity_id,
+        device_id=kitchen_device.id,
+        name="kitchen light",
+        aliases={" "},
     )
     hass.states.async_set(
-        kitchen_light.entity_id, "on", attributes={ATTR_FRIENDLY_NAME: "kitchen light"}
+        kitchen_light.entity_id,
+        "on",
+        attributes={ATTR_FRIENDLY_NAME: kitchen_light.name},
     )
 
     with patch(
@@ -665,16 +687,16 @@ async def test_empty_aliases(
         assert slot_lists.keys() == {"area", "name"}
         areas = slot_lists["area"]
         assert len(areas.values) == 1
-        assert areas.values[0].value_out == "kitchen"
+        assert areas.values[0].value_out == area_kitchen.id
+        assert areas.values[0].text_in.text == area_kitchen.normalized_name
 
         names = slot_lists["name"]
         assert len(names.values) == 1
-        assert names.values[0].value_out == "kitchen light"
+        assert names.values[0].value_out == kitchen_light.entity_id
+        assert names.values[0].text_in.text == kitchen_light.name
 
 
-async def test_all_domains_loaded(
-    hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
-) -> None:
+async def test_all_domains_loaded(hass: HomeAssistant, init_components) -> None:
     """Test that sentences for all domains are always loaded."""
 
     # light domain is not loaded

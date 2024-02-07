@@ -244,7 +244,7 @@ async def test_import_insecure_dataset(hass: HomeAssistant, dataset: bytes) -> N
 @pytest.mark.parametrize(
     "error",
     [
-        asyncio.TimeoutError,
+        TimeoutError,
         python_otbr_api.OTBRError,
         aiohttp.ClientError,
     ],

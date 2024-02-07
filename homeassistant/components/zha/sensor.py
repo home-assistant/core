@@ -838,6 +838,27 @@ class SmartEnergySummationReceived(PolledSmartEnergySummation):
     _unique_id_suffix = "summation_received"
     _attr_translation_key: str = "summation_received"
 
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> Self | None:
+        """Entity Factory.
+
+        This attribute only started to be initialized in HA 2024.2.0,
+        so the entity would be created on the first HA start after the
+        upgrade for existing devices, as the initialization to see if
+        an attribute is unsupported happens later in the background.
+        To avoid creating unnecessary entities for existing devices,
+        wait until the attribute was properly initialized once for now.
+        """
+        if cluster_handlers[0].cluster.get(cls._attribute_name) is None:
+            return None
+        return super().create_entity(unique_id, zha_device, cluster_handlers, **kwargs)
+
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_PRESSURE)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
