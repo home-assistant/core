@@ -46,7 +46,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_URL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
@@ -1235,14 +1235,20 @@ async def test_playback_update_state(
     dmr_device_mock.async_update.assert_not_awaited()
 
 
+@pytest.mark.parametrize(
+    "core_state",
+    (CoreState.not_running, CoreState.running),
+)
 async def test_unavailable_device(
     hass: HomeAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     config_entry_mock: MockConfigEntry,
+    core_state: CoreState,
 ) -> None:
     """Test a DlnaDmrEntity with out a connected DmrDevice."""
     # Cause connection attempts to fail
+    hass.set_state(core_state)
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
 
     with patch(
@@ -1355,15 +1361,21 @@ async def test_unavailable_device(
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    "core_state",
+    (CoreState.not_running, CoreState.running),
+)
 async def test_become_available(
     hass: HomeAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,
+    core_state: CoreState,
 ) -> None:
     """Test a device becoming available after the entity is constructed."""
     # Cause connection attempts to fail before adding entity
+    hass.set_state(core_state)
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
     mock_entity_id = await setup_mock_component(hass, config_entry_mock)
     mock_state = hass.states.get(mock_entity_id)
@@ -1440,13 +1452,19 @@ async def test_become_available(
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    "core_state",
+    (CoreState.not_running, CoreState.running),
+)
 async def test_alive_but_gone(
     hass: HomeAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     mock_disconnected_entity_id: str,
+    core_state: CoreState,
 ) -> None:
     """Test a device sending an SSDP alive announcement, but not being connectable."""
+    hass.set_state(core_state)
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpError
 
     # Send an SSDP notification from the still missing device

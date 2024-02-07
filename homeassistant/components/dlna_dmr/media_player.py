@@ -188,15 +188,13 @@ class DlnaDmrEntity(MediaPlayerEntity):
             )
         )
 
-        if self._device:
-            return
-
-        if self.hass.state is CoreState.running:
-            await self._async_setup()
-        else:
-            self._background_setup_task = self.hass.async_create_background_task(
-                self._async_setup(), f"dlna_dmr {self.name} setup"
-            )
+        if not self._device:
+            if self.hass.state is CoreState.running:
+                await self._async_setup()
+            else:
+                self._background_setup_task = self.hass.async_create_background_task(
+                    self._async_setup(), f"dlna_dmr {self.name} setup"
+                )
 
     async def _async_setup(self) -> None:
         # Try to connect to the last known location, but don't worry if not available
