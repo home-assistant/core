@@ -724,7 +724,12 @@ class DefaultAgent(AbstractConversationAgent):
             if async_should_expose(self.hass, DOMAIN, state.entity_id)
         ]
 
-        # Gather exposed entity names
+        # Gather exposed entity names.
+        #
+        # NOTE: We do not pass entity ids in here because multiple entities may
+        # have the same name. The intent matcher doesn't gather all matching
+        # values for a list, just the first. So we will need to match by name no
+        # matter what.
         entity_names = []
         for state in states:
             # Checked against "requires_context" and "excludes_context" in hassil
@@ -740,7 +745,7 @@ class DefaultAgent(AbstractConversationAgent):
 
             if not entity:
                 # Default name
-                entity_names.append((state.name, state.entity_id, context))
+                entity_names.append((state.name, state.name, context))
                 continue
 
             if entity.aliases:
@@ -748,12 +753,15 @@ class DefaultAgent(AbstractConversationAgent):
                     if not alias.strip():
                         continue
 
-                    entity_names.append((alias, state.entity_id, context))
+                    entity_names.append((alias, state.name, context))
 
             # Default name
-            entity_names.append((state.name, state.entity_id, context))
+            entity_names.append((state.name, state.name, context))
 
-        # Expose all areas
+        # Expose all areas.
+        #
+        # We pass in area id here with the expectation that no two areas will
+        # share the same name or alias.
         areas = ar.async_get(self.hass)
         area_names = []
         for area in areas.async_list_areas():
