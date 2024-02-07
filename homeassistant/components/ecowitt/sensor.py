@@ -238,7 +238,7 @@ async def async_setup_entry(
             "hrain_piezomm",
             "hrain_piezo",
             "hourlyrainmm",
-            "hourlyrainin"
+            "hourlyrainin",
         ):
             description = dataclasses.replace(
                 description,
