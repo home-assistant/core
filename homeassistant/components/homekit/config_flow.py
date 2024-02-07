@@ -163,9 +163,10 @@ def _async_build_entities_filter(
     """Build an entities filter from domains and entities."""
     # Include all of the domain if there are no entities
     # explicitly included as the user selected the domain
-    domains_with_entities_selected = _domains_set_from_entities(entities)
     return _make_entity_filter(
-        include_domains=sorted(set(domains).difference(domains_with_entities_selected)),
+        include_domains=sorted(
+            set(domains).difference(_domains_set_from_entities(entities))
+        ),
         include_entities=entities,
     )
 
