@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from roborock import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.vacuum import (
@@ -15,12 +16,12 @@ from homeassistant.components.vacuum import (
     SERVICE_SEND_COMMAND,
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
-    SERVICE_START_PAUSE,
     SERVICE_STOP,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -46,7 +47,6 @@ async def test_registry_entries(
         (SERVICE_RETURN_TO_BASE, RoborockCommand.APP_CHARGE, None, None),
         (SERVICE_CLEAN_SPOT, RoborockCommand.APP_SPOT, None, None),
         (SERVICE_LOCATE, RoborockCommand.FIND_ME, None, None),
-        (SERVICE_START_PAUSE, RoborockCommand.APP_START, None, None),
         (
             SERVICE_SET_FAN_SPEED,
             RoborockCommand.SET_CUSTOM_MODE,
@@ -90,35 +90,20 @@ async def test_commands(
         assert mock_send_command.call_args[0][1] == called_params
 
 
-@pytest.mark.parametrize(
-    ("service", "issue_id"),
-    [
-        (SERVICE_START_PAUSE, "service_deprecation_start_pause"),
-    ],
-)
-async def test_issues(
+async def test_failed_user_command(
     hass: HomeAssistant,
     bypass_api_fixture,
     setup_entry: MockConfigEntry,
-    service: str,
-    issue_id: str,
 ) -> None:
-    """Test issues raised by calling deprecated services."""
-    vacuum = hass.states.get(ENTITY_ID)
-    assert vacuum
-
-    data = {ATTR_ENTITY_ID: ENTITY_ID}
+    """Test that when a user sends an invalid command, we raise HomeAssistantError."""
+    data = {ATTR_ENTITY_ID: ENTITY_ID, **{"command": "fake_command"}}
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command"
-    ):
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.send_command",
+        side_effect=RoborockException(),
+    ), pytest.raises(HomeAssistantError, match="Error while calling fake_command"):
         await hass.services.async_call(
             Platform.VACUUM,
-            service,
+            SERVICE_SEND_COMMAND,
             data,
             blocking=True,
         )
-
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue("roborock", issue_id)
-    assert issue.is_fixable is True
-    assert issue.is_persistent is True

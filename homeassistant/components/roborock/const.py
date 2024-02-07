@@ -48,8 +48,8 @@ DEFAULT_SIZES = {
     Size.MOP_PATH_WIDTH: 1,
 }
 PLATFORMS = [
-    Platform.BUTTON,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.IMAGE,
     Platform.NUMBER,
     Platform.SELECT,

@@ -1,0 +1,130 @@
+# serializer version: 1
+# name: test_switch_entities[yna5x1][switch.ozmo_950_advanced_mode:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.ozmo_950_advanced_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Advanced mode',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'advanced_mode',
+    'unique_id': 'E1234567890000000001_advanced_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[yna5x1][switch.ozmo_950_advanced_mode:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ozmo 950 Advanced mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.ozmo_950_advanced_mode',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[yna5x1][switch.ozmo_950_carpet_auto_boost_suction:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.ozmo_950_carpet_auto_boost_suction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Carpet auto-boost suction',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'carpet_auto_fan_boost',
+    'unique_id': 'E1234567890000000001_carpet_auto_fan_boost',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[yna5x1][switch.ozmo_950_carpet_auto_boost_suction:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ozmo 950 Carpet auto-boost suction',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.ozmo_950_carpet_auto_boost_suction',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[yna5x1][switch.ozmo_950_continuous_cleaning:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.ozmo_950_continuous_cleaning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Continuous cleaning',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'continuous_cleaning',
+    'unique_id': 'E1234567890000000001_continuous_cleaning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[yna5x1][switch.ozmo_950_continuous_cleaning:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ozmo 950 Continuous cleaning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.ozmo_950_continuous_cleaning',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

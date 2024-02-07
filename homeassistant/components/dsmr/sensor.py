@@ -614,7 +614,7 @@ async def async_setup_entry(
         transport = None
         protocol = None
 
-        while hass.state == CoreState.not_running or hass.is_running:
+        while hass.state is CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
 
             # Reflect connected state in devices state by setting an
@@ -641,7 +641,7 @@ async def async_setup_entry(
                     await protocol.wait_closed()
 
                     # Unexpected disconnect
-                    if hass.state == CoreState.not_running or hass.is_running:
+                    if hass.state is CoreState.not_running or hass.is_running:
                         stop_listener()
 
                 transport = None
@@ -673,7 +673,7 @@ async def async_setup_entry(
                 update_entities_telegram(None)
 
                 if stop_listener and (
-                    hass.state == CoreState.not_running or hass.is_running
+                    hass.state is CoreState.not_running or hass.is_running
                 ):
                     stop_listener()
 

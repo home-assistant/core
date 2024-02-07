@@ -1,22 +1,48 @@
 """The tests for Netatmo light."""
 from unittest.mock import AsyncMock, patch
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
 from homeassistant.components.netatmo import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.entity_registry as er
 
-from .common import FAKE_WEBHOOK_ACTIVATION, selected_platforms, simulate_webhook
+from .common import (
+    FAKE_WEBHOOK_ACTIVATION,
+    selected_platforms,
+    simulate_webhook,
+    snapshot_platform_entities,
+)
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 
+async def test_entity(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test entities."""
+    await snapshot_platform_entities(
+        hass,
+        config_entry,
+        Platform.LIGHT,
+        entity_registry,
+        snapshot,
+    )
+
+
 async def test_camera_light_setup_and_services(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test camera ligiht setup and services."""
     with selected_platforms(["light"]):
@@ -127,7 +153,7 @@ async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> 
 
 
 async def test_light_setup_and_services(
-    hass: HomeAssistant, config_entry, netatmo_auth
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
 ) -> None:
     """Test setup and services."""
     with selected_platforms(["light"]):

@@ -27,7 +27,7 @@
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'container_active',
     'unique_id': 'test--docker_active',
     'unit_of_measurement': None,
   })
@@ -46,7 +46,7 @@
     'state': '2',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_containers_cpu_used-entry]
+# name: test_sensor_states[sensor.0_0_0_0_containers_cpu_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,7 +60,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_containers_cpu_used',
+    'entity_id': 'sensor.0_0_0_0_containers_cpu_usage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -70,31 +70,31 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:docker',
-    'original_name': 'Containers CPU used',
+    'original_name': 'Containers CPU usage',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'container_cpu_usage',
     'unique_id': 'test--docker_cpu_use',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_containers_cpu_used-state]
+# name: test_sensor_states[sensor.0_0_0_0_containers_cpu_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '0.0.0.0 Containers CPU used',
+      'friendly_name': '0.0.0.0 Containers CPU usage',
       'icon': 'mdi:docker',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_containers_cpu_used',
+    'entity_id': 'sensor.0_0_0_0_containers_cpu_usage',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '77.2',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_containers_ram_used-entry]
+# name: test_sensor_states[sensor.0_0_0_0_containers_memory_used-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -108,7 +108,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_containers_ram_used',
+    'entity_id': 'sensor.0_0_0_0_containers_memory_used',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -118,26 +118,26 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': 'mdi:docker',
-    'original_name': 'Containers RAM used',
+    'original_name': 'Containers memory used',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'container_memory_used',
     'unique_id': 'test--docker_memory_use',
     'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_containers_ram_used-state]
+# name: test_sensor_states[sensor.0_0_0_0_containers_memory_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': '0.0.0.0 Containers RAM used',
+      'friendly_name': '0.0.0.0 Containers memory used',
       'icon': 'mdi:docker',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_containers_ram_used',
+    'entity_id': 'sensor.0_0_0_0_containers_memory_used',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '1149.6',
@@ -167,11 +167,11 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'cpu_thermal 1 Temperature',
+    'original_name': 'cpu_thermal 1 temperature',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'temperature',
     'unique_id': 'test-cpu_thermal 1-temperature_core',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -180,7 +180,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': '0.0.0.0 cpu_thermal 1 Temperature',
+      'friendly_name': '0.0.0.0 cpu_thermal 1 temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -189,6 +189,55 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '59',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_data_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_data_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': 'mdi:memory',
+    'original_name': 'Data size',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'memory_used',
+    'unique_id': 'test--memory_use',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_data_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': '0.0.0.0 Data size',
+      'icon': 'mdi:memory',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_data_size',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1047.1',
   })
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_err_temp_temperature-entry]
@@ -215,11 +264,11 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'err_temp Temperature',
+    'original_name': 'err_temp temperature',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'temperature',
     'unique_id': 'test-err_temp-temperature_hdd',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -228,7 +277,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': '0.0.0.0 err_temp Temperature',
+      'friendly_name': '0.0.0.0 err_temp temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -239,7 +288,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_md1_raid_available-entry]
+# name: test_sensor_states[sensor.0_0_0_0_md1_available-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -253,7 +302,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_md1_raid_available',
+    'entity_id': 'sensor.0_0_0_0_md1_available',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -263,30 +312,30 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:harddisk',
-    'original_name': 'md1 Raid available',
+    'original_name': 'md1 available',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'raid_available',
     'unique_id': 'test-md1-available',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_md1_raid_available-state]
+# name: test_sensor_states[sensor.0_0_0_0_md1_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '0.0.0.0 md1 Raid available',
+      'friendly_name': '0.0.0.0 md1 available',
       'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_md1_raid_available',
+    'entity_id': 'sensor.0_0_0_0_md1_available',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_md1_raid_used-entry]
+# name: test_sensor_states[sensor.0_0_0_0_md1_used-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -300,7 +349,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_md1_raid_used',
+    'entity_id': 'sensor.0_0_0_0_md1_used',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -310,30 +359,30 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:harddisk',
-    'original_name': 'md1 Raid used',
+    'original_name': 'md1 used',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'raid_used',
     'unique_id': 'test-md1-used',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_md1_raid_used-state]
+# name: test_sensor_states[sensor.0_0_0_0_md1_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '0.0.0.0 md1 Raid used',
+      'friendly_name': '0.0.0.0 md1 used',
       'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_md1_raid_used',
+    'entity_id': 'sensor.0_0_0_0_md1_used',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_md3_raid_available-entry]
+# name: test_sensor_states[sensor.0_0_0_0_md3_available-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -347,7 +396,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_md3_raid_available',
+    'entity_id': 'sensor.0_0_0_0_md3_available',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -357,30 +406,30 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:harddisk',
-    'original_name': 'md3 Raid available',
+    'original_name': 'md3 available',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'raid_available',
     'unique_id': 'test-md3-available',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_md3_raid_available-state]
+# name: test_sensor_states[sensor.0_0_0_0_md3_available-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '0.0.0.0 md3 Raid available',
+      'friendly_name': '0.0.0.0 md3 available',
       'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_md3_raid_available',
+    'entity_id': 'sensor.0_0_0_0_md3_available',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_md3_raid_used-entry]
+# name: test_sensor_states[sensor.0_0_0_0_md3_used-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -394,7 +443,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_md3_raid_used',
+    'entity_id': 'sensor.0_0_0_0_md3_used',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -404,30 +453,30 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:harddisk',
-    'original_name': 'md3 Raid used',
+    'original_name': 'md3 used',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'raid_used',
     'unique_id': 'test-md3-used',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_md3_raid_used-state]
+# name: test_sensor_states[sensor.0_0_0_0_md3_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '0.0.0.0 md3 Raid used',
+      'friendly_name': '0.0.0.0 md3 used',
       'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_md3_raid_used',
+    'entity_id': 'sensor.0_0_0_0_md3_used',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '2',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_media_free-entry]
+# name: test_sensor_states[sensor.0_0_0_0_media_disk_free-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -441,7 +490,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_media_free',
+    'entity_id': 'sensor.0_0_0_0_media_disk_free',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -451,32 +500,32 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': 'mdi:harddisk',
-    'original_name': '/media free',
+    'original_name': '/media disk free',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'disk_free',
     'unique_id': 'test-/media-disk_free',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_media_free-state]
+# name: test_sensor_states[sensor.0_0_0_0_media_disk_free-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': '0.0.0.0 /media free',
+      'friendly_name': '0.0.0.0 /media disk free',
       'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_media_free',
+    'entity_id': 'sensor.0_0_0_0_media_disk_free',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '426.5',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_media_used-entry]
+# name: test_sensor_states[sensor.0_0_0_0_media_disk_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -490,56 +539,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_media_used',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': 'mdi:harddisk',
-    'original_name': '/media used',
-    'platform': 'glances',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'test-/media-disk_use',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor_states[sensor.0_0_0_0_media_used-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '0.0.0.0 /media used',
-      'icon': 'mdi:harddisk',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_media_used',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '30.7',
-  })
-# ---
-# name: test_sensor_states[sensor.0_0_0_0_media_used_percent-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_media_used_percent',
+    'entity_id': 'sensor.0_0_0_0_media_disk_usage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -549,28 +549,174 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:harddisk',
-    'original_name': '/media used percent',
+    'original_name': '/media disk usage',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'disk_usage',
     'unique_id': 'test-/media-disk_use_percent',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_media_used_percent-state]
+# name: test_sensor_states[sensor.0_0_0_0_media_disk_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '0.0.0.0 /media used percent',
+      'friendly_name': '0.0.0.0 /media disk usage',
       'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_media_used_percent',
+    'entity_id': 'sensor.0_0_0_0_media_disk_usage',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '6.7',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_media_disk_used-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_media_disk_used',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': 'mdi:harddisk',
+    'original_name': '/media disk used',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'disk_used',
+    'unique_id': 'test-/media-disk_use',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_media_disk_used-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': '0.0.0.0 /media disk used',
+      'icon': 'mdi:harddisk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_media_disk_used',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30.7',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_memory_free-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_memory_free',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': 'mdi:memory',
+    'original_name': 'Memory free',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'memory_free',
+    'unique_id': 'test--memory_free',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_memory_free-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': '0.0.0.0 Memory free',
+      'icon': 'mdi:memory',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_memory_free',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2745.0',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_memory_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_memory_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:memory',
+    'original_name': 'Memory usage',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'memory_usage',
+    'unique_id': 'test--memory_use_percent',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_memory_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '0.0.0.0 Memory usage',
+      'icon': 'mdi:memory',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_memory_usage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '27.6',
   })
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_na_temp_temperature-entry]
@@ -597,11 +743,11 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'na_temp Temperature',
+    'original_name': 'na_temp temperature',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'temperature',
     'unique_id': 'test-na_temp-temperature_hdd',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -610,7 +756,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': '0.0.0.0 na_temp Temperature',
+      'friendly_name': '0.0.0.0 na_temp temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -621,7 +767,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_ram_free-entry]
+# name: test_sensor_states[sensor.0_0_0_0_ssl_disk_free-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -635,153 +781,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_ram_free',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': 'mdi:memory',
-    'original_name': 'RAM free',
-    'platform': 'glances',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'test--memory_free',
-    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
-  })
-# ---
-# name: test_sensor_states[sensor.0_0_0_0_ram_free-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '0.0.0.0 RAM free',
-      'icon': 'mdi:memory',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_ram_free',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2745.0',
-  })
-# ---
-# name: test_sensor_states[sensor.0_0_0_0_ram_used-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_ram_used',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': 'mdi:memory',
-    'original_name': 'RAM used',
-    'platform': 'glances',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'test--memory_use',
-    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
-  })
-# ---
-# name: test_sensor_states[sensor.0_0_0_0_ram_used-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '0.0.0.0 RAM used',
-      'icon': 'mdi:memory',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_ram_used',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1047.1',
-  })
-# ---
-# name: test_sensor_states[sensor.0_0_0_0_ram_used_percent-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_ram_used_percent',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:memory',
-    'original_name': 'RAM used percent',
-    'platform': 'glances',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'test--memory_use_percent',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensor_states[sensor.0_0_0_0_ram_used_percent-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': '0.0.0.0 RAM used percent',
-      'icon': 'mdi:memory',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_ram_used_percent',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '27.6',
-  })
-# ---
-# name: test_sensor_states[sensor.0_0_0_0_ssl_free-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_ssl_free',
+    'entity_id': 'sensor.0_0_0_0_ssl_disk_free',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -791,32 +791,32 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': 'mdi:harddisk',
-    'original_name': '/ssl free',
+    'original_name': '/ssl disk free',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'disk_free',
     'unique_id': 'test-/ssl-disk_free',
     'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_ssl_free-state]
+# name: test_sensor_states[sensor.0_0_0_0_ssl_disk_free-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': '0.0.0.0 /ssl free',
+      'friendly_name': '0.0.0.0 /ssl disk free',
       'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_ssl_free',
+    'entity_id': 'sensor.0_0_0_0_ssl_disk_free',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '426.5',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_ssl_used-entry]
+# name: test_sensor_states[sensor.0_0_0_0_ssl_disk_usage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -830,56 +830,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_ssl_used',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': 'mdi:harddisk',
-    'original_name': '/ssl used',
-    'platform': 'glances',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'test-/ssl-disk_use',
-    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-  })
-# ---
-# name: test_sensor_states[sensor.0_0_0_0_ssl_used-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '0.0.0.0 /ssl used',
-      'icon': 'mdi:harddisk',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_ssl_used',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '30.7',
-  })
-# ---
-# name: test_sensor_states[sensor.0_0_0_0_ssl_used_percent-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_ssl_used_percent',
+    'entity_id': 'sensor.0_0_0_0_ssl_disk_usage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -889,27 +840,76 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:harddisk',
-    'original_name': '/ssl used percent',
+    'original_name': '/ssl disk usage',
     'platform': 'glances',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'disk_usage',
     'unique_id': 'test-/ssl-disk_use_percent',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_ssl_used_percent-state]
+# name: test_sensor_states[sensor.0_0_0_0_ssl_disk_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '0.0.0.0 /ssl used percent',
+      'friendly_name': '0.0.0.0 /ssl disk usage',
       'icon': 'mdi:harddisk',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_ssl_used_percent',
+    'entity_id': 'sensor.0_0_0_0_ssl_disk_usage',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '6.7',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_ssl_disk_used-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_ssl_disk_used',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': 'mdi:harddisk',
+    'original_name': '/ssl disk used',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'disk_used',
+    'unique_id': 'test-/ssl-disk_use',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_ssl_disk_used-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': '0.0.0.0 /ssl disk used',
+      'icon': 'mdi:harddisk',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_ssl_disk_used',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30.7',
   })
 # ---

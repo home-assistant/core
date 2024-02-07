@@ -1,9 +1,9 @@
 """Test the Powerwall config flow."""
 
-import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+import pytest
 from tesla_powerwall import (
     AccessDeniedError,
     MissingAttributeError,
@@ -60,15 +60,14 @@ async def test_form_source_user(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("exc", (PowerwallUnreachableError, TimeoutError))
+async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_powerwall = await _mock_powerwall_side_effect(
-        site_info=PowerwallUnreachableError
-    )
+    mock_powerwall = await _mock_powerwall_side_effect(site_info=exc)
 
     with patch(
         "homeassistant.components.powerwall.config_flow.Powerwall",
@@ -586,7 +585,7 @@ async def test_discovered_wifi_does_not_update_ip_online_but_access_denied(
         # the discovery flow to probe to see if its online
         # which will result in an access denied error, which
         # means its still online and we should not update the ip
-        mock_powerwall.get_meters.side_effect = asyncio.TimeoutError
+        mock_powerwall.get_meters.side_effect = TimeoutError
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=60))
         await hass.async_block_till_done()
 
