@@ -35,7 +35,11 @@ def async_register_services(hass: HomeAssistant) -> None:
                 if entry.domain == DOMAIN:
                     break
             if entry is None or entry.state == ConfigEntryState.NOT_LOADED:
-                raise ServiceValidationError("Config entry not found or not loaded!")
+                raise ServiceValidationError(
+                    "Config entry not found or not loaded!",
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_config_entry",
+                )
             home_store = hass.data[DOMAIN][entry.entry_id]
             for identifier in device_entry.identifiers:
                 if (
