@@ -1525,6 +1525,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/wilight/ @leofig-rj
 /tests/components/wilight/ @leofig-rj
 /homeassistant/components/wireguard/ @niro1987
+/tests/components/wireguard/ @niro1987
 /homeassistant/components/wirelesstag/ @sergeymaysak
 /homeassistant/components/withings/ @joostlek
 /tests/components/withings/ @joostlek

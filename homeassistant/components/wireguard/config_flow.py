@@ -1,13 +1,18 @@
 """Config flow for WireGuard integration."""
 from __future__ import annotations
 
+from ha_wireguard_api import WireguardApiClient
+from ha_wireguard_api.exceptions import (
+    WireGuardInvalidJson,
+    WireGuardResponseError,
+    WireGuardTimeoutError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 
-from .api import WireGuardAPI, WireGuardError
 from .const import DEFAULT_HOST, DEFAULT_NAME, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -23,7 +28,7 @@ class WireGuardConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     host: str
-    wireguard: WireGuardAPI
+    wireguard: WireguardApiClient
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -33,12 +38,17 @@ class WireGuardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.host = user_input[CONF_HOST]
-            self.wireguard = WireGuardAPI(self.host)
+            self.wireguard = WireguardApiClient(self.host)
 
             try:
-                await self.hass.async_add_executor_job(self.wireguard.get_status)
-            except WireGuardError:
+                await self.wireguard.get_peers()
+                await self.wireguard.close()
+            except WireGuardTimeoutError:
+                errors["base"] = "timeout_connect"
+            except WireGuardResponseError:
                 errors["base"] = "cannot_connect"
+            except WireGuardInvalidJson:
+                errors["base"] = "invalid_response"
             else:
                 return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 

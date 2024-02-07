@@ -1015,6 +1015,9 @@ ha-iotawattpy==0.1.1
 # homeassistant.components.philips_js
 ha-philipsjs==3.1.1
 
+# homeassistant.components.wireguard
+ha_wireguard_api==0.2.4
+
 # homeassistant.components.habitica
 habitipy==0.2.0
 

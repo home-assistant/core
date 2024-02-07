@@ -1,16 +1,16 @@
 """Support for WireGuard binary sensors."""
 from datetime import datetime
 
+from ha_wireguard_api.model import WireGuardPeer
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api import WireGuardPeer
 from .const import DOMAIN
 from .coordinator import WireGuardUpdateCoordinator
 
@@ -22,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the WireGuard binary sensors based on a config entry."""
     coordinator: WireGuardUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    sensors: list[Entity] = []
+    sensors: list[SensorEntity] = []
     sensors.extend(
         WireGuardPeerHandshakeSensor(coordinator, peer) for peer in coordinator.data
     )
@@ -43,24 +43,32 @@ class WireGuardPeerHandshakeSensor(
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_has_entity_name = True
 
-    def __init__(
-        self, coordinator: WireGuardUpdateCoordinator, peer: WireGuardPeer
-    ) -> None:
+    def __init__(self, coordinator: WireGuardUpdateCoordinator, peer_id: str) -> None:
         """Initialize the WireGuard latest_handshake Sensor."""
         super().__init__(coordinator)
-        self.peer: WireGuardPeer = peer
+        self._peer_id: str = peer_id
         self._attr_name = "Latest Handshake"
-        self._attr_unique_id = f"{self.peer.name}_latest_handshake"
+        self._attr_unique_id = f"{self._peer_id}_latest_handshake"
         self._latest_handshake: datetime | None = None
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return DeviceInfo(
-            name=self.peer.name,
-            identifiers={(DOMAIN, self.peer.name)},
+            name=self._peer_id,
+            identifiers={(DOMAIN, self._peer_id)},
             configuration_url=self.coordinator.wireguard.host,
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._peer_id in self.coordinator.data
+
+    @property
+    def peer(self) -> WireGuardPeer:
+        """Return peer from coordinator data."""
+        return self.coordinator.data[self._peer_id]
 
     @callback
     def _handle_coordinator_update(self):
@@ -83,14 +91,12 @@ class WireGuardPeerBytesReceivedSensor(
     _attr_device_class = SensorDeviceClass.DATA_SIZE
     _attr_has_entity_name = True
 
-    def __init__(
-        self, coordinator: WireGuardUpdateCoordinator, peer: WireGuardPeer
-    ) -> None:
+    def __init__(self, coordinator: WireGuardUpdateCoordinator, peer_id: str) -> None:
         """Initialize the WireGuard Bytes Received Sensor."""
         super().__init__(coordinator)
-        self.peer: WireGuardPeer = peer
+        self._peer_id: str = peer_id
         self._attr_name = "Received"
-        self._attr_unique_id = f"{self.peer.name}_transfer_rx"
+        self._attr_unique_id = f"{self._peer_id}_transfer_rx"
         self._attr_native_unit_of_measurement = UnitOfInformation.BYTES
         self._attr_suggested_unit_of_measurement = UnitOfInformation.MEGABYTES
         self._attr_suggested_display_precision = 2
@@ -99,10 +105,20 @@ class WireGuardPeerBytesReceivedSensor(
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return DeviceInfo(
-            name=self.peer.name,
-            identifiers={(DOMAIN, self.peer.name)},
+            name=self._peer_id,
+            identifiers={(DOMAIN, self._peer_id)},
             configuration_url=self.coordinator.wireguard.host,
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._peer_id in self.coordinator.data
+
+    @property
+    def peer(self) -> WireGuardPeer:
+        """Return peer from coordinator data."""
+        return self.coordinator.data[self._peer_id]
 
     @property
     def native_value(self) -> int:
@@ -118,14 +134,12 @@ class WireGuardPeerBytesSentSensor(
     _attr_device_class = SensorDeviceClass.DATA_SIZE
     _attr_has_entity_name = True
 
-    def __init__(
-        self, coordinator: WireGuardUpdateCoordinator, peer: WireGuardPeer
-    ) -> None:
+    def __init__(self, coordinator: WireGuardUpdateCoordinator, peer_id: str) -> None:
         """Initialize the WireGuard Bytes Received Sensor."""
         super().__init__(coordinator)
-        self.peer: WireGuardPeer = peer
+        self._peer_id: str = peer_id
         self._attr_name = "Sent"
-        self._attr_unique_id = f"{self.peer.name}_transfer_tx"
+        self._attr_unique_id = f"{self._peer_id}_transfer_tx"
         self._attr_native_unit_of_measurement = UnitOfInformation.BYTES
         self._attr_suggested_unit_of_measurement = UnitOfInformation.MEGABYTES
         self._attr_suggested_display_precision = 2
@@ -134,10 +148,20 @@ class WireGuardPeerBytesSentSensor(
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return DeviceInfo(
-            name=self.peer.name,
-            identifiers={(DOMAIN, self.peer.name)},
+            name=self._peer_id,
+            identifiers={(DOMAIN, self._peer_id)},
             configuration_url=self.coordinator.wireguard.host,
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self._peer_id in self.coordinator.data
+
+    @property
+    def peer(self) -> WireGuardPeer:
+        """Return peer from coordinator data."""
+        return self.coordinator.data[self._peer_id]
 
     @property
     def native_value(self) -> int:

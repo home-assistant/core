@@ -8,7 +8,9 @@
       }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_response": "Invalid response from host"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
