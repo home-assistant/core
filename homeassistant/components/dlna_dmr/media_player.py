@@ -91,12 +91,11 @@ async def async_setup_entry(
 
     udn = entry.data[CONF_DEVICE_ID]
     ent_reg = er.async_get(hass)
+    existing_entity_id = ent_reg.async_get_entity_id(
+        domain=MEDIA_PLAYER_DOMAIN, platform=DOMAIN, unique_id=udn
+    )
     has_linked_device_id = bool(
-        (
-            existing_entity_id := ent_reg.async_get_entity_id(
-                domain=MEDIA_PLAYER_DOMAIN, platform=DOMAIN, unique_id=udn
-            )
-        )
+        existing_entity_id
         and (existing_entry := ent_reg.async_get(existing_entity_id))
         and existing_entry.device_id
     )
