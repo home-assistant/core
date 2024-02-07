@@ -89,9 +89,24 @@ async def async_setup_entry(
     """Set up the DlnaDmrEntity from a config entry."""
     _LOGGER.debug("media_player.async_setup_entry %s (%s)", entry.entry_id, entry.title)
 
+    udn = entry.data[CONF_DEVICE_ID]
+    ent_reg = er.async_get(hass)
+    previous_connections: set[tuple[str, str]] = set()
+    if (
+        (
+            existing_entity_id := ent_reg.async_get_entity_id(
+                MEDIA_PLAYER_DOMAIN, DOMAIN, udn
+            )
+        )
+        and (existing_entry := ent_reg.async_get(existing_entity_id))
+        and (device_id := existing_entry.device_id)
+        and (device_entry := dr.async_get(hass).async_get(device_id))
+    ):
+        previous_connections = device_entry.connections
+
     # Create our own device-wrapping entity
     entity = DlnaDmrEntity(
-        udn=entry.data[CONF_DEVICE_ID],
+        udn=udn,
         device_type=entry.data[CONF_TYPE],
         name=entry.title,
         event_port=entry.options.get(CONF_LISTEN_PORT) or 0,
@@ -101,6 +116,7 @@ async def async_setup_entry(
         mac_address=entry.data.get(CONF_MAC),
         browse_unfiltered=entry.options.get(CONF_BROWSE_UNFILTERED, False),
         config_entry=entry,
+        previous_connections=previous_connections,
     )
 
     async_add_entities([entity])
@@ -147,6 +163,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         mac_address: str | None,
         browse_unfiltered: bool,
         config_entry: config_entries.ConfigEntry,
+        previous_connections: set[tuple[str, str]],
     ) -> None:
         """Initialize DLNA DMR entity."""
         self.udn = udn
@@ -161,18 +178,15 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self._background_setup_task: asyncio.Task[None] | None = None
         self._updated_registry: bool = False
         self._config_entry = config_entry
+        if previous_connections:
+            self._attr_device_info = dr.DeviceInfo(connections=previous_connections)
 
     async def async_added_to_hass(self) -> None:
         """Handle addition."""
         # Update this entity when the associated config entry is modified
-        if self.registry_entry and self.registry_entry.config_entry_id:
-            config_entry = self.hass.config_entries.async_get_entry(
-                self.registry_entry.config_entry_id
-            )
-            assert config_entry is not None
-            self.async_on_remove(
-                config_entry.add_update_listener(self.async_config_update_listener)
-            )
+        self.async_on_remove(
+            self._config_entry.add_update_listener(self.async_config_update_listener)
+        )
 
         # Get SSDP notifications for only this device
         self.async_on_remove(
