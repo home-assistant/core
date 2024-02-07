@@ -216,6 +216,9 @@ async def test_setup_entry_no_options(
     """
     config_entry_mock.options = MappingProxyType({})
     mock_entity_id = await setup_mock_component(hass, config_entry_mock)
+    await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
+
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
 
@@ -291,6 +294,8 @@ async def test_setup_entry_with_options(
         }
     )
     mock_entity_id = await setup_mock_component(hass, config_entry_mock)
+    await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
 
@@ -349,8 +354,9 @@ async def test_setup_entry_mac_address(
     dmr_device_mock: Mock,
 ) -> None:
     """Entry with a MAC address will set up and set the device registry connection."""
-    await setup_mock_component(hass, config_entry_mock)
-
+    mock_entity_id = await setup_mock_component(hass, config_entry_mock)
+    await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
     # Check the device registry connections for MAC address
     dev_reg = async_get_dr(hass)
     device = dev_reg.async_get_device(
@@ -369,8 +375,9 @@ async def test_setup_entry_no_mac_address(
     dmr_device_mock: Mock,
 ) -> None:
     """Test setting up an entry without a MAC address will succeed."""
-    await setup_mock_component(hass, config_entry_mock_no_mac)
-
+    mock_entity_id = await setup_mock_component(hass, config_entry_mock_no_mac)
+    await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
     # Check the device registry connections does not include the MAC address
     dev_reg = async_get_dr(hass)
     device = dev_reg.async_get_device(
@@ -388,6 +395,8 @@ async def test_event_subscribe_failure(
     dmr_device_mock.async_subscribe_services.side_effect = UpnpError
 
     mock_entity_id = await setup_mock_component(hass, config_entry_mock)
+    await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
 
@@ -418,6 +427,8 @@ async def test_event_subscribe_rejected(
     dmr_device_mock.async_subscribe_services.side_effect = UpnpResponseError(status=501)
 
     mock_entity_id = await setup_mock_component(hass, config_entry_mock)
+    await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
 
@@ -438,6 +449,8 @@ async def test_available_device(
 ) -> None:
     """Test a DlnaDmrEntity with a connected DmrDevice."""
     # Check hass device information is filled in
+    await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
     dev_reg = async_get_dr(hass)
     device = dev_reg.async_get_device(
         connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
@@ -1348,7 +1361,9 @@ async def test_unavailable_device(
         connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
-    assert device is None
+    assert device is not None
+    assert device.name is None
+    assert device.manufacturer is None
 
     # Unload config entry to clean up
     assert await hass.config_entries.async_remove(config_entry_mock.entry_id) == {
@@ -1394,7 +1409,7 @@ async def test_become_available(
         connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
-    assert device is None
+    assert device is not None
 
     # Mock device is now available.
     domain_data_mock.upnp_factory.async_create_device.side_effect = None
@@ -2313,7 +2328,7 @@ async def test_connections_restored(
     dmr_device_mock: Mock,
     core_state: CoreState,
 ) -> None:
-    """Test previous connections re restored."""
+    """Test previous connections restored."""
     # Cause connection attempts to fail before adding entity
     hass.set_state(core_state)
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
@@ -2328,7 +2343,7 @@ async def test_connections_restored(
         connections={(CONNECTION_UPNP, MOCK_DEVICE_UDN)},
         identifiers=set(),
     )
-    assert device is None
+    assert device is not None
 
     # Mock device is now available.
     domain_data_mock.upnp_factory.async_create_device.side_effect = None
@@ -2371,6 +2386,7 @@ async def test_connections_restored(
         identifiers=set(),
     )
     assert device is not None
+    previous_connections = device.connections
     assert device.manufacturer == "device_manufacturer"
     assert device.model == "device_model_name"
     assert device.name == "device_name"
@@ -2393,6 +2409,7 @@ async def test_connections_restored(
         identifiers=set(),
     )
     assert device is not None
+    assert device.connections == previous_connections
 
     # Verify the entity remains linked to the device
     ent_reg = async_get_er(hass)
