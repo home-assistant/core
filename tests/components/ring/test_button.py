@@ -22,7 +22,7 @@ async def test_entity_registry(
 async def test_button_opens_door(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
-    """Tests the siren turns on correctly."""
+    """Tests the door open button works correctly."""
     await setup_platform(hass, Platform.BUTTON)
 
     # Mocks the response for opening door
