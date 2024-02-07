@@ -1,10 +1,8 @@
 """Define test fixtures for Blue Current."""
-from asyncio import Future
 
 import pytest
 
 from homeassistant.components.blue_current.const import DOMAIN
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -18,9 +16,3 @@ def config_entry_fixture() -> MockConfigEntry:
         unique_id="1234",
         data={"api_token": "123"},
     )
-
-
-@pytest.fixture(name="future")
-def future_fixture(hass: HomeAssistant) -> Future:
-    """Create a future."""
-    return hass.loop.create_future()

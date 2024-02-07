@@ -18,28 +18,27 @@ DEFAULT_CHARGE_POINT = {
 
 
 def create_client_mock(
-    loop_future: Future | None,
+    loop_future: Future,
+    started_loop: Event,
     charge_point: dict,
     status: dict | None,
     grid: dict | None,
 ) -> MagicMock:
     """Create a mock of the bluecurrent-api Client."""
     client_mock = MagicMock(spec=Client)
-    client_mock.started_loop = Event()
 
     async def start_loop(receiver):
         """Set the receiver and await future."""
         client_mock.receiver = receiver
 
-        client_mock.started_loop.set()
-        client_mock.started_loop.clear()
+        started_loop.set()
+        started_loop.clear()
 
-        if loop_future and not loop_future.done():
-            await loop_future
+        await loop_future
 
     async def get_charge_points() -> None:
         """Send a list of charge points to the callback."""
-        await client_mock.started_loop.wait()
+        await started_loop.wait()
         await client_mock.receiver(
             {
                 "object": "CHARGE_POINTS",
@@ -75,14 +74,18 @@ async def init_integration(
     charge_point: dict | None = None,
     status: dict | None = None,
     grid: dict | None = None,
-    loop_future: Future | None = None,
 ) -> MagicMock:
     """Set up the Blue Current integration in Home Assistant."""
 
     if charge_point is None:
         charge_point = DEFAULT_CHARGE_POINT
 
-    client_mock = create_client_mock(loop_future, charge_point, status, grid)
+    loop_future = hass.loop.create_future()
+    started_loop = Event()
+
+    client_mock = create_client_mock(
+        loop_future, started_loop, charge_point, status, grid
+    )
 
     with patch("homeassistant.components.blue_current.PLATFORMS", [platform]), patch(
         "homeassistant.components.blue_current.Client", return_value=client_mock
@@ -91,4 +94,4 @@ async def init_integration(
 
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-    return client_mock
+    return client_mock, started_loop, loop_future

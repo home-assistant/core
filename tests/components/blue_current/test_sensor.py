@@ -161,7 +161,7 @@ async def test_sensor_update(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test if the sensors get updated when there is new data."""
-    client = await init_integration(
+    client, _, _ = await init_integration(
         hass,
         config_entry,
         "sensor",
