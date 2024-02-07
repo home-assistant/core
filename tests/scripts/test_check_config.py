@@ -1,4 +1,5 @@
 """Test check_config script."""
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -20,6 +21,15 @@ BASE_CONFIG = (
 )
 
 BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
+
+
+@pytest.fixture(autouse=True)
+def reset_log_level():
+    """Reset log level after each test case."""
+    logger = logging.getLogger("homeassistant.loader")
+    orig_level = logger.level
+    yield
+    logger.setLevel(orig_level)
 
 
 @pytest.fixture(autouse=True)
