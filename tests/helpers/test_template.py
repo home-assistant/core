@@ -716,6 +716,27 @@ def test_multiply(hass: HomeAssistant) -> None:
     assert render(hass, "{{ 'no_number' | multiply(10, default=1) }}") == 1
 
 
+def test_add(hass: HomeAssistant) -> None:
+    """Test add."""
+    tests = {10: 42}
+
+    for inp, out in tests.items():
+        assert (
+            template.Template(
+                "{{ %s | add(32) | round }}" % inp, hass
+            ).async_render()
+            == out
+        )
+
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        template.Template("{{ abcd | add(10) }}", hass).async_render()
+
+    # Test handling of default return value
+    assert render(hass, "{{ 'no_number' | add(10, 1) }}") == 1
+    assert render(hass, "{{ 'no_number' | add(10, default=1) }}") == 1
+
+
 def test_logarithm(hass: HomeAssistant) -> None:
     """Test logarithm."""
     tests = [
