@@ -6166,6 +6166,12 @@
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "TP-Link LTE"
+        },
+        "tplink_tapo": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "tplink",
+          "name": "Tapo"
         }
       },
       "iot_standards": [
