@@ -182,7 +182,7 @@ aio-geojson-nsw-rfs-incidents==0.7
 aio-geojson-usgs-earthquakes==0.2
 
 # homeassistant.components.gdacs
-aio-georss-gdacs==0.8
+aio-georss-gdacs==0.9
 
 # homeassistant.components.airq
 aioairq==0.3.2
@@ -1062,7 +1062,7 @@ hole==0.8.0
 holidays==0.42
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240205.0
+home-assistant-frontend==20240207.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.2.2
