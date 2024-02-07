@@ -266,17 +266,23 @@ async def test_setup_entry_no_options(
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    "core_state",
+    (CoreState.not_running, CoreState.running),
+)
 async def test_setup_entry_with_options(
     hass: HomeAssistant,
     domain_data_mock: Mock,
     ssdp_scanner_mock: Mock,
     config_entry_mock: MockConfigEntry,
     dmr_device_mock: Mock,
+    core_state: CoreState,
 ) -> None:
     """Test setting options leads to a DlnaDmrEntity with custom event_handler.
 
     Check that the device is constructed properly as part of the test.
     """
+    hass.set_state(core_state)
     config_entry_mock.options = MappingProxyType(
         {
             CONF_LISTEN_PORT: 2222,
