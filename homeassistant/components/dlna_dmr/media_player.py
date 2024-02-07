@@ -19,6 +19,7 @@ from homeassistant import config_entries
 from homeassistant.components import media_source, ssdp
 from homeassistant.components.media_player import (
     ATTR_MEDIA_EXTRA,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -37,6 +38,7 @@ from .const import (
     CONF_CALLBACK_URL_OVERRIDE,
     CONF_LISTEN_PORT,
     CONF_POLL_AVAILABILITY,
+    DOMAIN,
     LOGGER as _LOGGER,
     MEDIA_METADATA_DIDL,
     MEDIA_TYPE_MAP,
@@ -98,6 +100,7 @@ async def async_setup_entry(
         location=entry.data[CONF_URL],
         mac_address=entry.data.get(CONF_MAC),
         browse_unfiltered=entry.options.get(CONF_BROWSE_UNFILTERED, False),
+        config_entry_id=entry.entry_id,
     )
 
     async_add_entities([entity])
@@ -143,6 +146,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         location: str,
         mac_address: str | None,
         browse_unfiltered: bool,
+        config_entry_id: str,
     ) -> None:
         """Initialize DLNA DMR entity."""
         self.udn = udn
@@ -156,6 +160,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self._device_lock = asyncio.Lock()
         self._background_setup_task: asyncio.Task[None] | None = None
         self._updated_registry: bool = False
+        self._config_entry_id = config_entry_id
 
     async def async_added_to_hass(self) -> None:
         """Handle addition."""
@@ -404,15 +409,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
             default_name=self._device.name,
         )
 
-        if not self.registry_entry or not self.registry_entry.config_entry_id:
-            # No config registry entry to update
-            return
-
         self._updated_registry = True
         # Create linked HA DeviceEntry now the information is known.
-        dev_reg = dr.async_get(self.hass)
-        device_entry = dev_reg.async_get_or_create(
-            config_entry_id=self.registry_entry.config_entry_id,
+        device_entry = dr.async_get(self.hass).async_get_or_create(
+            config_entry_id=self._config_entry_id,
             connections=connections,
             default_manufacturer=self._device.manufacturer,
             default_model=self._device.model_name,
@@ -420,10 +420,9 @@ class DlnaDmrEntity(MediaPlayerEntity):
         )
 
         # Update entity registry to link to the device
-        ent_reg = er.async_get(self.hass)
-        ent_reg.async_get_or_create(
-            self.registry_entry.domain,
-            self.registry_entry.platform,
+        er.async_get(self.hass).async_get_or_create(
+            MEDIA_PLAYER_DOMAIN,
+            DOMAIN,
             self.unique_id,
             device_id=device_entry.id,
         )
