@@ -91,11 +91,14 @@ async def async_setup_entry(
 
     udn = entry.data[CONF_DEVICE_ID]
     ent_reg = er.async_get(hass)
+    # If the device is offline, we need to make sure we still
+    # have the previous connections so that the entity does not
+    # get unlinked from the device when it gets added to hass.
     previous_connections: set[tuple[str, str]] = set()
     if (
         (
             existing_entity_id := ent_reg.async_get_entity_id(
-                MEDIA_PLAYER_DOMAIN, DOMAIN, udn
+                domain=MEDIA_PLAYER_DOMAIN, platform=DOMAIN, unique_id=udn
             )
         )
         and (existing_entry := ent_reg.async_get(existing_entity_id))
