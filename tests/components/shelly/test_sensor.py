@@ -594,3 +594,13 @@ async def test_block_sleeping_update_entity_service(
         "Entity sensor.test_name_temperature comes from a sleeping device"
         in caplog.text
     )
+
+
+async def test_rpc_analog_input_xpercent_sensor(
+    hass: HomeAssistant, mock_rpc_device
+) -> None:
+    """Test RPC analog input xpercent sensor."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_input_0_analog_value"
+    await init_integration(hass, 2)
+
+    assert hass.states.get(entity_id).state == "8.9"
