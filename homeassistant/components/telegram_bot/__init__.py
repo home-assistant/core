@@ -1004,9 +1004,7 @@ class BaseTelegramBotEntity:
     def __init__(self, hass, config):
         """Initialize the bot base class."""
         self.allowed_chat_ids = {
-            x
-            if isinstance(x, int)
-            else x[CONF_CHAT_ID]: None
+            x if isinstance(x, int) else x[CONF_CHAT_ID]: None
             if isinstance(x, int)
             else x.get(CONF_USER_ID)
             for x in config[CONF_ALLOWED_CHAT_IDS]
