@@ -403,11 +403,11 @@ class ServiceIntentHandler(IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
 
         name_slot = slots.get("name", {})
-        entity_id: str | None = name_slot.get("value")
-        entity_name: str | None = name_slot.get("text")
-        if entity_id == "all":
+        entity_name: str | None = name_slot.get("value")
+        entity_text: str | None = name_slot.get("text")
+        if entity_name == "all":
             # Don't match on name if targeting all entities
-            entity_id = None
+            entity_name = None
 
         # Look up area first to fail early
         area_slot = slots.get("area", {})
@@ -436,7 +436,7 @@ class ServiceIntentHandler(IntentHandler):
         states = list(
             async_match_states(
                 hass,
-                name=entity_id,
+                name=entity_name,
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
@@ -447,13 +447,16 @@ class ServiceIntentHandler(IntentHandler):
         if not states:
             # No states matched constraints
             raise NoStatesMatchedError(
-                name=entity_name or entity_id,
+                name=entity_text or entity_name,
                 area=area_name or area_id,
                 domains=domains,
                 device_classes=device_classes,
             )
 
         response = await self.async_handle_states(intent_obj, states, area)
+
+        # Make the matched states available in the response
+        response.async_set_states(matched_states=states, unmatched_states=[])
 
         return response
 
