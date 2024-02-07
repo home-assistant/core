@@ -209,7 +209,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2023.5.0
+aioecowitt==2024.2.0
 
 # homeassistant.components.co2signal
 aioelectricitymaps==0.3.1
@@ -218,7 +218,7 @@ aioelectricitymaps==0.3.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==21.0.1
+aioesphomeapi==21.0.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1094,7 +1094,7 @@ nextcord==2.0.0a8
 nextdns==2.1.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.7.0
+nibe==2.8.0
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1727,7 +1727,7 @@ python-opensky==1.0.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.5.0
+python-otbr-api==2.6.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
