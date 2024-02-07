@@ -36,9 +36,6 @@ async def async_setup_entry(
         RING_DEVICES_COORDINATOR
     ]
 
-    # Some accounts returned data without intercom devices
-    devices.setdefault("other", [])
-
     entities = [
         description.cls(device, devices_coordinator, description)
         for device_type in (

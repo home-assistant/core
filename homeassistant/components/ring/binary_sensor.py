@@ -60,9 +60,6 @@ async def async_setup_entry(
         config_entry.entry_id
     ][RING_NOTIFICATIONS_COORDINATOR]
 
-    # Some accounts returned data without intercom devices
-    devices.setdefault("other", [])
-
     entities = [
         RingBinarySensor(ring, device, notifications_coordinator, description)
         for device_type in ("doorbots", "authorized_doorbots", "stickup_cams", "other")

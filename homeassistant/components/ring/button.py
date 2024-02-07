@@ -28,8 +28,6 @@ async def async_setup_entry(
     ]
     buttons = []
 
-    # Some accounts returned data without intercom devices
-    devices.setdefault("other", [])
     for device in devices["other"]:
         if device.has_capability("open"):
             buttons.append(
