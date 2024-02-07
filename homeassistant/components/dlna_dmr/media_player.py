@@ -367,11 +367,14 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
     def _update_device_registry(self, set_mac: bool = False) -> None:
         """Update the device registry with new information about the DMR."""
-        if not self._device:
-            return  # Can't get all the required information without a connection
-
-        if not set_mac and self._updated_registry:
-            return  # No new information
+        if (
+            # Can't get all the required information without a connection
+            not self._device
+            or
+            # No new information
+            (not set_mac and self._updated_registry)
+        ):
+            return
 
         # Connections based on the root device's UDN, and the DMR embedded
         # device's UDN. They may be the same, if the DMR is the root device.
