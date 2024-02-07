@@ -115,6 +115,7 @@ async def setup_device(
             device.name,
         )
         _LOGGER.debug(err)
+        await mqtt_client.async_release()
         raise err
     coordinator = RoborockDataUpdateCoordinator(
         hass, device, networking, product_info, mqtt_client
@@ -153,6 +154,7 @@ async def setup_device(
                 extra_error,
             )
             raise coordinator.last_exception from ex
+        await coordinator.release()
     return coordinator
 
 
