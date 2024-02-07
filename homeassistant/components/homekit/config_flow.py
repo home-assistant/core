@@ -519,7 +519,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 return await self.async_step_cameras()
             return await self.async_step_advanced()
 
-        entity_filter = hk_options.get(CONF_FILTER, {})
+        entity_filter: EntityFilterDict = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
 
         all_supported_entities = _async_get_matching_entities(
