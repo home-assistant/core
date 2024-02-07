@@ -37,7 +37,7 @@ from homeassistant.const import (
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -92,9 +92,11 @@ ATTR_IS_ANONYMOUS = "is_anonymous"
 ATTR_ALLOWS_MULTIPLE_ANSWERS = "allows_multiple_answers"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
+CONF_CHAT_ID = "chat_id"
 CONF_PROXY_URL = "proxy_url"
 CONF_PROXY_PARAMS = "proxy_params"
 CONF_TRUSTED_NETWORKS = "trusted_networks"
+CONF_USER_ID = "user_id"
 
 DOMAIN = "telegram_bot"
 
@@ -137,7 +139,18 @@ CONFIG_SCHEMA = vol.Schema(
                         ),
                         vol.Required(CONF_API_KEY): cv.string,
                         vol.Required(CONF_ALLOWED_CHAT_IDS): vol.All(
-                            cv.ensure_list, [vol.Coerce(int)]
+                            cv.ensure_list,
+                            [
+                                vol.Any(
+                                    vol.Coerce(int),
+                                    vol.Schema(
+                                        {
+                                            vol.Required(CONF_CHAT_ID): vol.Coerce(int),
+                                            vol.Optional(CONF_USER_ID): cv.string,
+                                        }
+                                    ),
+                                )
+                            ],
                         ),
                         vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
                         vol.Optional(CONF_PROXY_URL): cv.string,
@@ -473,7 +486,9 @@ class TelegramNotificationService:
 
     def __init__(self, hass, bot, allowed_chat_ids, parser):
         """Initialize the service."""
-        self.allowed_chat_ids = allowed_chat_ids
+        self.allowed_chat_ids = [
+            x if isinstance(x, int) else x[CONF_CHAT_ID] for x in allowed_chat_ids
+        ]
         self._default_user = self.allowed_chat_ids[0]
         self._last_message_id = {user: None for user in self.allowed_chat_ids}
         self._parsers = {
@@ -951,7 +966,14 @@ class BaseTelegramBotEntity:
 
     def __init__(self, hass, config):
         """Initialize the bot base class."""
-        self.allowed_chat_ids = config[CONF_ALLOWED_CHAT_IDS]
+        self.allowed_chat_ids = {
+            x
+            if isinstance(x, int)
+            else x[CONF_CHAT_ID]: None
+            if isinstance(x, int)
+            else x.get(CONF_USER_ID)
+            for x in config[CONF_ALLOWED_CHAT_IDS]
+        }
         self.hass = hass
 
     def handle_update(self, update: Update, context: CallbackContext) -> bool:
@@ -975,8 +997,10 @@ class BaseTelegramBotEntity:
             _LOGGER.warning("Unhandled update: %s", update)
             return True
 
+        event_context = self._get_event_context(update)
+
         _LOGGER.debug("Firing event %s: %s", event_type, event_data)
-        self.hass.bus.fire(event_type, event_data)
+        self.hass.bus.fire(event_type, event_data, context=event_context)
         return True
 
     @staticmethod
@@ -1036,6 +1060,14 @@ class BaseTelegramBotEntity:
         event_data.update(self._get_command_event_data(callback_query.data))
 
         return event_type, event_data
+
+    def _get_event_context(self, update: Update) -> Context:
+        from_user = update.effective_user.id if update.effective_user else None
+        from_chat = update.effective_chat.id if update.effective_chat else None
+        user_id = self.allowed_chat_ids.get(from_chat)
+        user_id = self.allowed_chat_ids.get(from_user, user_id)
+
+        return Context(user_id=user_id)
 
     def authorize_update(self, update: Update) -> bool:
         """Make sure either user or chat is in allowed_chat_ids."""
