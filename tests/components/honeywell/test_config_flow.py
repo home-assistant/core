@@ -1,5 +1,4 @@
 """Tests for honeywell config flow."""
-import asyncio
 from unittest.mock import MagicMock, patch
 
 import aiosomecomfort
@@ -213,7 +212,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
     [
         aiosomecomfort.device.ConnectionError,
         aiosomecomfort.device.ConnectionTimeout,
-        asyncio.TimeoutError,
+        TimeoutError,
     ],
 )
 async def test_reauth_flow_connnection_error(

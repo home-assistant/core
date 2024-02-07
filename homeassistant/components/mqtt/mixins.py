@@ -17,6 +17,7 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
+    ATTR_SERIAL_NUMBER,
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
     ATTR_VIA_DEVICE,
@@ -82,6 +83,7 @@ from .const import (
     CONF_ORIGIN,
     CONF_QOS,
     CONF_SCHEMA,
+    CONF_SERIAL_NUMBER,
     CONF_SUGGESTED_AREA,
     CONF_SW_VERSION,
     CONF_TOPIC,
@@ -220,6 +222,7 @@ MQTT_ENTITY_DEVICE_INFO_SCHEMA = vol.All(
             vol.Optional(CONF_MODEL): cv.string,
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_HW_VERSION): cv.string,
+            vol.Optional(CONF_SERIAL_NUMBER): cv.string,
             vol.Optional(CONF_SW_VERSION): cv.string,
             vol.Optional(CONF_VIA_DEVICE): cv.string,
             vol.Optional(CONF_SUGGESTED_AREA): cv.string,
@@ -643,8 +646,7 @@ class MqttAvailability(Entity):
                 self._available_latest = False
 
         self._available = {
-            topic: (self._available[topic] if topic in self._available else False)
-            for topic in self._avail_topics
+            topic: (self._available.get(topic, False)) for topic in self._avail_topics
         }
         topics: dict[str, dict[str, Any]] = {
             f"availability_{topic}": {
@@ -1102,6 +1104,9 @@ def device_info_from_specifications(
 
     if CONF_HW_VERSION in specifications:
         info[ATTR_HW_VERSION] = specifications[CONF_HW_VERSION]
+
+    if CONF_SERIAL_NUMBER in specifications:
+        info[ATTR_SERIAL_NUMBER] = specifications[CONF_SERIAL_NUMBER]
 
     if CONF_SW_VERSION in specifications:
         info[ATTR_SW_VERSION] = specifications[CONF_SW_VERSION]

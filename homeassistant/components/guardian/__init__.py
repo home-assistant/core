@@ -40,7 +40,7 @@ from .const import (
     LOGGER,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
-from .util import GuardianDataUpdateCoordinator
+from .coordinator import GuardianDataUpdateCoordinator
 
 DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
 

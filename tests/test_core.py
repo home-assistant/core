@@ -410,10 +410,10 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
 async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test timeouts at each step."""
 
-    with patch.object(hass.timeout, "async_timeout", side_effect=asyncio.TimeoutError):
+    with patch.object(hass.timeout, "async_timeout", side_effect=TimeoutError):
         await hass.async_stop()
 
-    assert hass.state == CoreState.stopped
+    assert hass.state is CoreState.stopped
 
 
 async def test_stage_shutdown_generic_error(hass: HomeAssistant, caplog) -> None:
@@ -625,6 +625,14 @@ def test_event_eq() -> None:
     assert event1.as_dict() == event2.as_dict()
 
 
+def test_event_time_fired_timestamp() -> None:
+    """Test time_fired_timestamp."""
+    now = dt_util.utcnow()
+    event = ha.Event("some_type", {"some": "attr"}, time_fired=now)
+    assert event.time_fired_timestamp == now.timestamp()
+    assert event.time_fired_timestamp == now.timestamp()
+
+
 def test_event_json_fragment() -> None:
     """Test event JSON fragments."""
     now = dt_util.utcnow()
@@ -734,9 +742,9 @@ def test_state_as_dict_json() -> None:
         context=ha.Context(id="01H0D6K3RFJAYAV2093ZW30PCW"),
     )
     expected = (
-        '{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
-        '"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
-        '"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
+        b'{"entity_id":"happy.happy","state":"on","attributes":{"pig":"dog"},'
+        b'"last_changed":"1984-12-08T12:00:00","last_updated":"1984-12-08T12:00:00",'
+        b'"context":{"id":"01H0D6K3RFJAYAV2093ZW30PCW","parent_id":null,"user_id":null}}'
     )
     as_dict_json_1 = state.as_dict_json
     assert as_dict_json_1 == expected
@@ -844,7 +852,7 @@ def test_state_as_compressed_state_json() -> None:
         last_changed=last_time,
         context=ha.Context(id="01H0D6H5K3SZJ3XGDHED1TJ79N"),
     )
-    expected = '"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
+    expected = b'"happy.happy":{"s":"on","a":{"pig":"dog"},"c":"01H0D6H5K3SZJ3XGDHED1TJ79N","lc":471355200.0}'
     as_compressed_state = state.as_compressed_state_json
     # We are not too concerned about these being ReadOnlyDict
     # since we don't expect them to be called by external callers
@@ -1186,8 +1194,8 @@ async def test_statemachine_remove(hass: HomeAssistant) -> None:
     assert len(events) == 1
 
 
-async def test_statemachine_case_insensitivty(hass: HomeAssistant) -> None:
-    """Test insensitivty."""
+async def test_state_machine_case_insensitivity(hass: HomeAssistant) -> None:
+    """Test setting and getting states entity_id insensitivity."""
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
     hass.states.async_set("light.BOWL", "off")
@@ -1195,6 +1203,15 @@ async def test_statemachine_case_insensitivty(hass: HomeAssistant) -> None:
 
     assert hass.states.is_state("light.bowl", "off")
     assert len(events) == 1
+
+    hass.states.async_set("ligHT.Bowl", "on")
+    assert hass.states.get("light.bowl").state == "on"
+
+    hass.states.async_set("light.BOWL", "off")
+    assert hass.states.get("light.BoWL").state == "off"
+
+    hass.states.async_set("light.bowl", "on")
+    assert hass.states.get("light.bowl").state == "on"
 
 
 async def test_statemachine_last_changed_not_updated_on_same_state(
@@ -1261,13 +1278,37 @@ def test_service_call_repr() -> None:
     )
 
 
-async def test_serviceregistry_has_service(hass: HomeAssistant) -> None:
+async def test_service_registry_has_service(hass: HomeAssistant) -> None:
     """Test has_service method."""
     hass.services.async_register("test_domain", "test_service", lambda call: None)
     assert len(hass.services.async_services()) == 1
     assert hass.services.has_service("tesT_domaiN", "tesT_servicE")
     assert not hass.services.has_service("test_domain", "non_existing")
     assert not hass.services.has_service("non_existing", "test_service")
+
+
+async def test_service_registry_service_enumeration(hass: HomeAssistant) -> None:
+    """Test enumerating services methods."""
+    hass.services.async_register("test_domain", "test_service", lambda call: None)
+    services1 = hass.services.async_services()
+    services2 = hass.services.async_services()
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is not services2  # should be a copy
+
+    services1 = hass.services.async_services_internal()
+    services2 = hass.services.async_services_internal()
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is services2  # should be the same object
+
+    assert hass.services.async_services_for_domain("unknown") == {}
+
+    services1 = hass.services.async_services_for_domain("test_domain")
+    services2 = hass.services.async_services_for_domain("test_domain")
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is not services2  # should be a copy
 
 
 async def test_serviceregistry_call_with_blocking_done_in_time(
@@ -1614,11 +1655,11 @@ async def test_config_as_dict() -> None:
         CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
         "location_name": "Home",
         "time_zone": "UTC",
-        "components": set(),
+        "components": [],
         "config_dir": "/test/ha-config",
-        "whitelist_external_dirs": set(),
-        "allowlist_external_dirs": set(),
-        "allowlist_external_urls": set(),
+        "whitelist_external_dirs": [],
+        "allowlist_external_dirs": [],
+        "allowlist_external_urls": [],
         "version": __version__,
         "config_source": ha.ConfigSource.DEFAULT,
         "recovery_mode": False,
@@ -1715,9 +1756,7 @@ async def test_bad_timezone_raises_value_error(hass: HomeAssistant) -> None:
         await hass.config.async_update(time_zone="not_a_timezone")
 
 
-async def test_start_taking_too_long(
-    event_loop, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_start_taking_too_long(caplog: pytest.LogCaptureFixture) -> None:
     """Test when async_start takes too long."""
     hass = ha.HomeAssistant("/test/ha-config")
     caplog.set_level(logging.WARNING)
@@ -2451,6 +2490,23 @@ async def test_state_change_events_context_id_match_state_time(
     assert _ulid_timestamp(state.context.id) == int(
         state.last_updated.timestamp() * 1000
     )
+
+
+def test_state_timestamps() -> None:
+    """Test timestamp functions for State."""
+    now = dt_util.utcnow()
+    state = ha.State(
+        "light.bedroom",
+        "on",
+        {"brightness": 100},
+        last_changed=now,
+        last_updated=now,
+        context=ha.Context(id="1234"),
+    )
+    assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_changed_timestamp == now.timestamp()
+    assert state.last_updated_timestamp == now.timestamp()
+    assert state.last_updated_timestamp == now.timestamp()
 
 
 async def test_state_firing_event_matches_context_id_ulid_time(
