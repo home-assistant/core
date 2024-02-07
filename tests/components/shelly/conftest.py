@@ -104,6 +104,7 @@ MOCK_BLOCKS = [
         sensor_ids={"roller": "stop", "rollerPos": 0},
         channel="1",
         type="roller",
+        description="roller_0",
         set_state=AsyncMock(
             side_effect=lambda go, roller_pos=0: {
                 "current_pos": roller_pos,
@@ -118,6 +119,7 @@ MOCK_BLOCKS = [
         colorTemp=mock_light_set_state()["temp"],
         **mock_light_set_state(),
         type="light",
+        description="light_0",
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
