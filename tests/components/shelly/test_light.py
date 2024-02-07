@@ -248,9 +248,7 @@ async def test_block_device_white_bulb(
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "colorTemp")
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "effect")
     monkeypatch.setattr(
-        mock_block_device.blocks[LIGHT_BLOCK_ID],
-        "description",
-        "light_1"
+        mock_block_device.blocks[LIGHT_BLOCK_ID], "description", "light_1"
     )
     monkeypatch.setattr(
         mock_block_device.blocks[LIGHT_BLOCK_ID],
