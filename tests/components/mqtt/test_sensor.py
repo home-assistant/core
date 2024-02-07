@@ -243,12 +243,23 @@ async def test_setting_sensor_value_via_mqtt_message(
             help_custom_config(
                 sensor.DOMAIN,
                 DEFAULT_CONFIG,
+                ({"device_class": sensor.SensorDeviceClass.TIMESTAMP},),
+            ),
+            sensor.SensorDeviceClass.TIMESTAMP,
+            "1707265443.323565",
+            "2024-02-07T00:24:03+00:00",
+            False,
+        ),
+        (
+            help_custom_config(
+                sensor.DOMAIN,
+                DEFAULT_CONFIG,
                 ({"device_class": sensor.SensorDeviceClass.DATE},),
             ),
             sensor.SensorDeviceClass.DATE,
-            "invalid",
-            STATE_UNKNOWN,
-            True,
+            "1707265443.323565",
+            "2024-02-07",
+            False,
         ),
     ],
 )
