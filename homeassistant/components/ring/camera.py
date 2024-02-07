@@ -140,7 +140,7 @@ class RingCam(RingEntity, Camera):
             and self._attr_motion_detection_enabled != self._device.motion_detection
         ):
             self._attr_motion_detection_enabled = self._device.motion_detection
-            self.async_schedule_update_ha_state()
+            self.async_write_ha_state()
 
         if self._last_event is None:
             return
