@@ -64,7 +64,6 @@ async def async_setup_entry(
 class Eq3Climate(Eq3Entity, ClimateEntity):
     """Climate entity to represent a eQ-3 thermostat."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -79,24 +78,21 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     _attr_hvac_modes = list(HA_TO_EQ_HVAC.keys())
     _attr_preset_modes = list(Preset)
     _attr_should_poll = False
+    _attr_available = False
+    _attr_hvac_mode: HVACMode | None = None
+    _attr_hvac_action: HVACAction | None = None
+    _attr_preset_mode: str | None = None
+    _target_temperature: float | None = None
 
     def __init__(self, eq3_config: Eq3Config, thermostat: Thermostat) -> None:
         """Initialize the climate entity."""
 
         super().__init__(eq3_config, thermostat)
-
-        self._target_temperature: float | None = None
-        self._attr_available = False
-        self._attr_hvac_mode = None
-        self._attr_hvac_action = None
-        self._attr_preset_mode = None
-        self._attr_unique_id = format_mac(self._eq3_config.mac_address)
+        self._attr_unique_id = format_mac(eq3_config.mac_address)
         self._attr_device_info = DeviceInfo(
             name=slugify(self._eq3_config.mac_address),
             manufacturer=MANUFACTURER,
             model=DEVICE_MODEL,
-            sw_version=None,
-            serial_number=None,
             connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
         )
 
