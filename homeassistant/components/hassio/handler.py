@@ -459,7 +459,7 @@ class HassIO:
 
         This method returns a coroutine.
         """
-        return self.send_command("/refresh_updates", timeout=None)
+        return self.send_command("/refresh_updates", timeout=300)
 
     @api_data
     def retrieve_discovery_messages(self) -> Coroutine:
