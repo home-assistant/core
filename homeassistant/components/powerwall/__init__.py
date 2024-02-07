@@ -89,7 +89,7 @@ class PowerwallDataManager:
                 if attempt == 1:
                     await self._recreate_powerwall_login()
                 data = await _fetch_powerwall_data(self.power_wall)
-            except (asyncio.TimeoutError, PowerwallUnreachableError) as err:
+            except (TimeoutError, PowerwallUnreachableError) as err:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
             except MissingAttributeError as err:
                 _LOGGER.error("The powerwall api has changed: %s", str(err))
@@ -136,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             # Cancel closing power_wall on success
             stack.pop_all()
-        except (asyncio.TimeoutError, PowerwallUnreachableError) as err:
+        except (TimeoutError, PowerwallUnreachableError) as err:
             raise ConfigEntryNotReady from err
         except MissingAttributeError as err:
             # The error might include some important information about what exactly changed.

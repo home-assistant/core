@@ -77,9 +77,13 @@ def icon_schema(integration_type: str) -> vol.Schema:
     )
 
     if integration_type in ("entity", "helper", "system"):
+        if integration_type != "entity":
+            field = vol.Optional("entity_component")
+        else:
+            field = vol.Required("entity_component")
         schema = schema.extend(
             {
-                vol.Required("entity_component"): vol.All(
+                field: vol.All(
                     cv.schema_with_slug_keys(
                         icon_schema_slug(vol.Required),
                         slug_validator=vol.Any("_", cv.slug),

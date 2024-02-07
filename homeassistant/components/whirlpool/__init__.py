@@ -1,5 +1,4 @@
 """The Whirlpool Appliances integration."""
-import asyncio
 from dataclasses import dataclass
 import logging
 
@@ -35,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         await auth.do_auth(store=False)
-    except (ClientError, asyncio.TimeoutError) as ex:
+    except (ClientError, TimeoutError) as ex:
         raise ConfigEntryNotReady("Cannot connect") from ex
 
     if not auth.is_access_token_valid():
