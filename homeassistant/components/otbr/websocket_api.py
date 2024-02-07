@@ -90,7 +90,7 @@ def async_get_otbr_data(
     """Decorate function to get OTBR data."""
 
     @wraps(orig_func)
-    async def async_check_border_agent_id_func(
+    async def async_check_extended_address_func(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
         """Fetch OTBR data and pass to orig_func."""
@@ -101,27 +101,27 @@ def async_get_otbr_data(
         data: OTBRData = hass.data[DOMAIN]
 
         try:
-            border_agent_id = await data.get_border_agent_id()
+            extended_address = await data.get_extended_address()
         except HomeAssistantError as exc:
-            connection.send_error(msg["id"], "get_border_agent_id_failed", str(exc))
+            connection.send_error(msg["id"], "get_extended_address_failed", str(exc))
             return
 
         # The border agent ID is checked when the OTBR config entry is setup,
         # we can assert it's not None
-        assert border_agent_id is not None
-        if border_agent_id.hex() != msg["border_agent_id"]:
+        assert extended_address is not None
+        if extended_address.hex() != msg["extended_address"]:
             connection.send_error(msg["id"], "unknown_router", "")
             return
 
         await orig_func(hass, connection, msg, data)
 
-    return async_check_border_agent_id_func
+    return async_check_extended_address_func
 
 
 @websocket_api.websocket_command(
     {
         "type": "otbr/create_network",
-        vol.Required("border_agent_id"): str,
+        vol.Required("extended_address"): str,
     }
 )
 @websocket_api.require_admin
@@ -187,7 +187,7 @@ async def websocket_create_network(
 @websocket_api.websocket_command(
     {
         "type": "otbr/set_network",
-        vol.Required("border_agent_id"): str,
+        vol.Required("extended_address"): str,
         vol.Required("dataset_id"): str,
     }
 )
@@ -248,7 +248,7 @@ async def websocket_set_network(
 @websocket_api.websocket_command(
     {
         "type": "otbr/set_channel",
-        vol.Required("border_agent_id"): str,
+        vol.Required("extended_address"): str,
         vol.Required("channel"): int,
     }
 )
