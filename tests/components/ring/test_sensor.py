@@ -70,8 +70,8 @@ async def test_history(
 ) -> None:
     """Test history derived sensors."""
     await setup_platform(hass, Platform.SENSOR)
-    freezer.tick(120)
-    await setup_platform(hass, Platform.SENSOR)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     front_door_last_activity_state = hass.states.get("sensor.front_door_last_activity")
