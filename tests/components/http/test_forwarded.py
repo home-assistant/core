@@ -501,3 +501,67 @@ async def test_x_forwarded_cloud(
 
     # This request would normally fail because it's invalid, now it works.
     assert resp.status == HTTPStatus.OK
+
+
+@pytest.mark.parametrize(
+    ("x_forwarded_for"),
+    [
+        ("255.255.255.255, unknown"),
+        ("unknown"),
+        ("unknown, 255.255.255.255"),
+        ("127.0.0.2, 255.255.255.255, unknown, 192.168.0.1"),
+    ],
+)
+async def test_x_forwarded_for_trusted_with_unknown(
+    aiohttp_client: ClientSessionGenerator, x_forwarded_for: str
+) -> None:
+    """Test that an unknown value in X-Forwarded-For is filtered out before processing."""
+    app = web.Application()
+    app.router.add_get("/", mock_handler)
+    async_setup_forwarded(app, True, [ip_network("127.0.0.0/24")])
+
+    mock_api_client = await aiohttp_client(app)
+    resp = await mock_api_client.get(
+        "/",
+        headers={
+            X_FORWARDED_FOR: x_forwarded_for,
+            X_FORWARDED_PROTO: "https",
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+
+@pytest.mark.parametrize(
+    ("x_forwarded_for"),
+    [
+        ("255.255.255.255, unknown, 192.168.0.1"),
+        ("unknown, 255.255.255.255, 192.168.0.1"),
+        ("255.255.255.255, 192.168.0.1, unknown"),
+        ("unknown"),
+    ],
+)
+async def test_x_forwarded_untrusted_with_unknown(
+    aiohttp_client: ClientSessionGenerator,
+    x_forwarded_for: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that an unknown value in X-Forwarded-For does not affect untrusted proxy failure."""
+    app = web.Application()
+    app.router.add_get("/", mock_handler)
+    async_setup_forwarded(app, True, [])
+
+    mock_api_client = await aiohttp_client(app)
+    resp = await mock_api_client.get(
+        "/",
+        headers={
+            X_FORWARDED_FOR: x_forwarded_for,
+            X_FORWARDED_PROTO: "https",
+        },
+    )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert (
+        "Received X-Forwarded-For header from an untrusted proxy 127.0.0.1"
+        in caplog.text
+    )
