@@ -161,7 +161,7 @@ aio-geojson-nsw-rfs-incidents==0.7
 aio-geojson-usgs-earthquakes==0.2
 
 # homeassistant.components.gdacs
-aio-georss-gdacs==0.8
+aio-georss-gdacs==0.9
 
 # homeassistant.components.airq
 aioairq==0.3.2
