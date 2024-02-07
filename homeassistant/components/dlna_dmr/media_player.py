@@ -91,16 +91,26 @@ async def async_setup_entry(
 
     udn = entry.data[CONF_DEVICE_ID]
     ent_reg = er.async_get(hass)
-    existing_entity_id = ent_reg.async_get_entity_id(
-        domain=MEDIA_PLAYER_DOMAIN, platform=DOMAIN, unique_id=udn
-    )
-    has_linked_device_id = bool(
-        existing_entity_id
+    dev_reg = dr.async_get(hass)
+
+    if (
+        (
+            existing_entity_id := ent_reg.async_get_entity_id(
+                domain=MEDIA_PLAYER_DOMAIN, platform=DOMAIN, unique_id=udn
+            )
+        )
         and (existing_entry := ent_reg.async_get(existing_entity_id))
         and (device_id := existing_entry.device_id)
-        and (device_entry := dr.async_get(hass).async_get(device_id))
-        and (dr.CONNECTION_UPNP, udn) in device_entry.connections
-    )
+        and (device_entry := dev_reg.async_get(device_id))
+        and (dr.CONNECTION_UPNP, udn) not in device_entry.connections
+    ):
+        # If the existing device is missing the udn connection, add it
+        # now to ensure that when the entity gets added it is linked to
+        # the correct device.
+        dev_reg.async_update_device(
+            device_id,
+            merge_connections={(dr.CONNECTION_UPNP, udn)},
+        )
 
     # Create our own device-wrapping entity
     entity = DlnaDmrEntity(
@@ -114,7 +124,6 @@ async def async_setup_entry(
         mac_address=entry.data.get(CONF_MAC),
         browse_unfiltered=entry.options.get(CONF_BROWSE_UNFILTERED, False),
         config_entry=entry,
-        has_linked_device_id=has_linked_device_id,
     )
 
     async_add_entities([entity])
@@ -161,7 +170,6 @@ class DlnaDmrEntity(MediaPlayerEntity):
         mac_address: str | None,
         browse_unfiltered: bool,
         config_entry: config_entries.ConfigEntry,
-        has_linked_device_id: bool,
     ) -> None:
         """Initialize DLNA DMR entity."""
         self.udn = udn
@@ -176,15 +184,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         self._background_setup_task: asyncio.Task[None] | None = None
         self._updated_registry: bool = False
         self._config_entry = config_entry
-        if has_linked_device_id:
-            # If the entity registry already has a device_id we want
-            # to link to in case the device is not available, we can
-            # set the device_info now. If we do not set device info
-            # the linkage to the device will be removed by the entity
-            # platform.
-            self._attr_device_info = dr.DeviceInfo(
-                connections={(dr.CONNECTION_UPNP, udn)}
-            )
+        self._attr_device_info = dr.DeviceInfo(connections={(dr.CONNECTION_UPNP, udn)})
 
     async def async_added_to_hass(self) -> None:
         """Handle addition."""
