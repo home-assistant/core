@@ -505,8 +505,8 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self._device.refresh()
 
             except (
+                TimeoutError,
                 AscConnectionError,
-                asyncio.TimeoutError,
                 APIRateLimited,
                 AuthError,
                 ClientConnectionError,
@@ -525,8 +525,8 @@ class HoneywellUSThermostat(ClimateEntity):
             await _login()
             return
         except (
+            TimeoutError,
             AscConnectionError,
-            asyncio.TimeoutError,
             APIRateLimited,
             ClientConnectionError,
         ):
