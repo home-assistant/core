@@ -1,4 +1,6 @@
 """Tests for Shelly light platform."""
+from unittest.mock import AsyncMock
+
 from aioshelly.const import (
     MODEL_BULB,
     MODEL_BULB_RGBW,
@@ -35,6 +37,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from . import init_integration, mutate_rpc_device_status
+from .conftest import mock_white_light_set_state
 
 RELAY_BLOCK_ID = 0
 LIGHT_BLOCK_ID = 2
@@ -227,6 +230,11 @@ async def test_block_device_white_bulb(
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "mode")
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "colorTemp")
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "effect")
+    monkeypatch.setattr(
+        mock_block_device.blocks[LIGHT_BLOCK_ID],
+        "set_state",
+        AsyncMock(side_effect=mock_white_light_set_state),
+    )
     await init_integration(hass, 1, model=MODEL_VINTAGE_V2)
 
     # Test initial
