@@ -9,6 +9,7 @@ from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.util import slugify
 
 from .const import MAC
 
@@ -33,7 +34,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == MAC
+    assert result["title"] == slugify(MAC)
     assert result["data"] == {
         CONF_MAC: MAC,
     }
@@ -68,7 +69,7 @@ async def test_user_flow_invalid_mac(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == MAC
+        assert result["title"] == slugify(MAC)
         assert result["data"] == {
             CONF_MAC: MAC,
         }
@@ -97,7 +98,7 @@ async def test_bluetooth_flow(
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == MAC
+    assert result["title"] == slugify(MAC)
     assert result["data"] == {
         CONF_MAC: MAC,
     }
