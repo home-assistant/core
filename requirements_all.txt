@@ -170,7 +170,7 @@ agent-py==0.0.23
 aio-geojson-generic-client==0.4
 
 # homeassistant.components.geonetnz_quakes
-aio-geojson-geonetnz-quakes==0.15
+aio-geojson-geonetnz-quakes==0.16
 
 # homeassistant.components.geonetnz_volcano
 aio-geojson-geonetnz-volcano==0.8
@@ -1337,7 +1337,7 @@ mutesync==0.0.1
 mypermobil==0.1.8
 
 # homeassistant.components.myuplink
-myuplink==0.0.9
+myuplink==0.1.1
 
 # homeassistant.components.nad
 nad-receiver==0.3.0
