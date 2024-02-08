@@ -1179,8 +1179,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         if not self._domain_index[domain]:
             del self._domain_index[domain]
         if (unique_id := entry.unique_id) is not None:
-            unique_id_hash = str(unique_id)
-            del self._domain_unique_id_index[domain][unique_id_hash]
+            # Check type first to avoid expensive isinstance call
+            if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
+                unique_id = str(entry.unique_id)  # type: ignore[unreachable]
+            del self._domain_unique_id_index[domain][unique_id]
             if not self._domain_unique_id_index[domain]:
                 del self._domain_unique_id_index[domain]
 
@@ -1197,8 +1199,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self, domain: str, unique_id: str
     ) -> ConfigEntry | None:
         """Get entry by domain and unique id."""
-        unique_id_hash = str(unique_id)
-        return self._domain_unique_id_index.get(domain, {}).get(unique_id_hash)
+        # Check type first to avoid expensive isinstance call
+        if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
+            unique_id = str(unique_id)  # type: ignore[unreachable]
+        return self._domain_unique_id_index.get(domain, {}).get(unique_id)
 
 
 class ConfigEntries:
