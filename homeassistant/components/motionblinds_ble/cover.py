@@ -122,6 +122,11 @@ async def async_setup_entry(
 class GenericBlind(CoverEntity):
     """Representation of a blind."""
 
+    _attr_is_closed: bool | None = None
+    _attr_is_opening: bool | None = None
+    _attr_is_closing: bool | None = None
+    _attr_should_poll: bool = False
+
     device_address: str
     device_rssi: int | None = None
     _device: MotionDevice
@@ -154,10 +159,6 @@ class GenericBlind(CoverEntity):
             manufacturer=MANUFACTURER,
             name=self._attr_name,
         )
-        self._attr_is_closed: bool | None = None
-        self._attr_is_opening: bool | None = None
-        self._attr_is_closing: bool | None = None
-        self._attr_should_poll: bool = False
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
