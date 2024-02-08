@@ -418,7 +418,6 @@ CONFIG_SCHEMA = vol.Schema(
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
-            check_config,
         ),
     },
     extra=vol.ALLOW_EXTRA,
