@@ -312,7 +312,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         try:
             self.data = await self._async_update_data()
 
-        except (asyncio.TimeoutError, requests.exceptions.Timeout) as err:
+        except (TimeoutError, requests.exceptions.Timeout) as err:
             self.last_exception = err
             if self.last_update_success:
                 if log_failures:

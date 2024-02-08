@@ -665,7 +665,7 @@ class Template:
                 await finish_event.wait()
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
-        except asyncio.TimeoutError:
+        except TimeoutError:
             template_render_thread.raise_exc(TimeoutError)
             return True
         finally:

@@ -4257,3 +4257,64 @@ async def test_update_entry_and_reload(
         assert entry.state == config_entries.ConfigEntryState.LOADED
         assert task["type"] == FlowResultType.ABORT
         assert task["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
+async def test_unhashable_unique_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
+) -> None:
+    """Test the ConfigEntryItems user dict handles unhashable unique_id."""
+    entries = config_entries.ConfigEntryItems(hass)
+    entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=1,
+        domain="test",
+        entry_id="mock_id",
+        title="title",
+        data={},
+        source="test",
+        unique_id=unique_id,
+    )
+
+    entries[entry.entry_id] = entry
+    assert (
+        "Config entry 'title' from integration test has an invalid unique_id "
+        f"'{str(unique_id)}'"
+    ) in caplog.text
+
+    assert entry.entry_id in entries
+    assert entries[entry.entry_id] is entry
+    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) == entry
+    del entries[entry.entry_id]
+    assert not entries
+    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
+
+
+@pytest.mark.parametrize("unique_id", [123])
+async def test_hashable_non_string_unique_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
+) -> None:
+    """Test the ConfigEntryItems user dict handles hashable non string unique_id."""
+    entries = config_entries.ConfigEntryItems(hass)
+    entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=1,
+        domain="test",
+        entry_id="mock_id",
+        title="title",
+        data={},
+        source="test",
+        unique_id=unique_id,
+    )
+
+    entries[entry.entry_id] = entry
+    assert (
+        "Config entry 'title' from integration test has an invalid unique_id"
+    ) not in caplog.text
+
+    assert entry.entry_id in entries
+    assert entries[entry.entry_id] is entry
+    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) == entry
+    del entries[entry.entry_id]
+    assert not entries
+    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None

@@ -875,7 +875,7 @@ class HomeAssistant:
                     tasks.append(task_or_none)
                 if tasks:
                     await asyncio.gather(*tasks, return_exceptions=True)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for shutdown jobs to complete, the shutdown will"
                 " continue"
@@ -906,7 +906,7 @@ class HomeAssistant:
         try:
             async with self.timeout.async_timeout(STOP_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for integrations to stop, the shutdown will"
                 " continue"
@@ -919,7 +919,7 @@ class HomeAssistant:
         try:
             async with self.timeout.async_timeout(FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for final writes to complete, the shutdown will"
                 " continue"
@@ -951,7 +951,7 @@ class HomeAssistant:
                     await task
             except asyncio.CancelledError:
                 pass
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Task may be shielded from cancellation.
                 _LOGGER.exception(
                     "Task %s could not be canceled during final shutdown stage", task
@@ -971,7 +971,7 @@ class HomeAssistant:
         try:
             async with self.timeout.async_timeout(CLOSE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for close event to be processed, the shutdown will"
                 " continue"
@@ -1077,9 +1077,7 @@ class Event:
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         if not context:
-            context = Context(
-                id=ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
-            )
+            context = Context(id=ulid_at_time(self.time_fired.timestamp()))
         self.context = context
         if not context.origin_event:
             context.origin_event = self
