@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-TO_REDACT = {"access_token", "refresh_token"}
+TO_REDACT = {"access_token", "refresh_token", "serialNumber"}
 
 
 async def async_get_config_entry_diagnostics(
