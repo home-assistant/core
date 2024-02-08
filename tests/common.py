@@ -69,6 +69,7 @@ from homeassistant.helpers import (
     restore_state,
     restore_state as rs,
     storage,
+    translation,
 )
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -267,6 +268,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     # Load the registries
     entity.async_setup(hass)
     loader.async_setup(hass)
+    translation.async_setup(hass)
     if load_registries:
         with patch(
             "homeassistant.helpers.storage.Store.async_load", return_value=None

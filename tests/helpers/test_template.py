@@ -1960,8 +1960,6 @@ async def test_state_translated(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ):
     """Test state_translated method."""
-    translation.async_setup(hass)
-
     assert await async_setup_component(
         hass,
         "binary_sensor",
