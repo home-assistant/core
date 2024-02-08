@@ -3,7 +3,7 @@
 from datetime import datetime
 from http import HTTPStatus
 import ssl
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 from aiohttp import hdrs
 from freezegun.api import FrozenDateTimeFactory
@@ -13,7 +13,9 @@ import respx
 
 from homeassistant.components import image
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -331,6 +333,7 @@ async def test_image_stream(
             assert not resp.closed
             assert resp.status == HTTPStatus.OK
 
+
             mock_image.image_last_updated = datetime.now()
             mock_image.async_write_ha_state()
             # Two blocks to ensure the frame is written
@@ -354,3 +357,44 @@ async def test_image_stream(
             await hass.async_block_till_done()
 
     await close_future
+
+
+async def test_snapshot_service(hass: HomeAssistant) -> None:
+    """Test snapshot service."""
+    mopen = mock_open()
+
+    with patch("homeassistant.components.image.open", mopen, create=True), patch(
+        "homeassistant.components.image.os.makedirs",
+    ), patch.object(hass.config, "is_allowed_path", return_value=True):
+        await hass.services.async_call(
+            image.DOMAIN,
+            image.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "image.demo_image",
+                image.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
+
+        mock_write = mopen().write
+
+        assert len(mock_write.mock_calls) == 1
+        assert mock_write.mock_calls[0][1][0] == b"Test"
+
+
+async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
+    """Test snapshot service with a not allowed path."""
+    mopen = mock_open()
+
+    with patch("homeassistant.components.image.open", mopen, create=True), patch(
+        "homeassistant.components.image.os.makedirs",
+    ), pytest.raises(HomeAssistantError, match="/test/snapshot.jpg"):
+        await hass.services.async_call(
+            image.DOMAIN,
+            image.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "image.demo_image",
+                image.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )

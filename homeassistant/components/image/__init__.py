@@ -428,9 +428,9 @@ async def async_handle_snapshot_service(
         )
 
     async with asyncio.timeout(IMAGE_TIMEOUT):
-        image = await image.async_image()
+        image_data = await image.async_image()
 
-    if image is None:
+    if image_data is None:
         return
 
     def _write_image(to_file: str, image_data: bytes) -> None:
@@ -440,6 +440,6 @@ async def async_handle_snapshot_service(
             img_file.write(image_data)
 
     try:
-        await hass.async_add_executor_job(_write_image, snapshot_file, image)
+        await hass.async_add_executor_job(_write_image, snapshot_file, image_data)
     except OSError as err:
         _LOGGER.error("Can't write image to file: %s", err)
