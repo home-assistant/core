@@ -35,9 +35,9 @@ from .helpers import (
     recorder,
     restore_state,
     template,
+    translation,
 )
 from .helpers.dispatcher import async_dispatcher_send
-from .helpers.translation import async_setup as async_setup_translations
 from .helpers.typing import ConfigType
 from .setup import (
     DATA_SETUP_STARTED,
@@ -292,6 +292,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         platform.uname().processor  # pylint: disable=expression-not-assigned
 
     # Load the registries and cache the result of platform.uname().processor
+    translation.async_setup(hass)
     entity.async_setup(hass)
     template.async_setup(hass)
     await asyncio.gather(
@@ -315,8 +316,6 @@ async def async_from_config_dict(
     This method is a coroutine.
     """
     start = monotonic()
-
-    async_setup_translations(hass)
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     await async_load_base_functionality(hass)

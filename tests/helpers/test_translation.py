@@ -154,6 +154,8 @@ async def test_load_translations_files_invalid_localized_placeholders(
     expected_errors: bool,
 ) -> None:
     """Test the load translation files with invalid localized placeholders."""
+    translation.async_setup(hass)
+
     caplog.clear()
     translations = await translation.async_get_translations(
         hass, language, "entity", ["test"]
@@ -174,6 +176,8 @@ async def test_get_translations(
     hass: HomeAssistant, mock_config_flows, enable_custom_integrations: None
 ) -> None:
     """Test the get translations helper."""
+    translation.async_setup(hass)
+
     translations = await translation.async_get_translations(hass, "en", "state")
     assert translations == {}
 
@@ -207,6 +211,8 @@ async def test_get_translations_loads_config_flows(
     hass: HomeAssistant, mock_config_flows
 ) -> None:
     """Test the get translations helper loads config flow translations."""
+    translation.async_setup(hass)
+
     mock_config_flows["integration"].append("component1")
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 1"
@@ -275,6 +281,8 @@ async def test_get_translations_loads_config_flows(
 
 async def test_get_translations_while_loading_components(hass: HomeAssistant) -> None:
     """Test the get translations helper loads config flow translations."""
+    translation.async_setup(hass)
+
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 1"
     hass.config.components.add("component1")
@@ -311,6 +319,8 @@ async def test_get_translations_while_loading_components(hass: HomeAssistant) ->
 
 async def test_get_translation_categories(hass: HomeAssistant) -> None:
     """Test the get translations helper loads config flow translations."""
+    translation.async_setup(hass)
+
     with patch.object(translation, "async_get_config_flows", return_value={"light"}):
         translations = await translation.async_get_translations(
             hass, "en", "title", None, True
@@ -327,6 +337,8 @@ async def test_translation_merging(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we merge translations of two integrations."""
+    translation.async_setup(hass)
+
     hass.config.components.add("moon.sensor")
     hass.config.components.add("sensor")
 
@@ -375,6 +387,8 @@ async def test_translation_merging_loaded_apart(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we merge translations of two integrations when they are not loaded at the same time."""
+    translation.async_setup(hass)
+
     orig_load_translations = translation.load_translations_files
 
     def mock_load_translations_files(files):
@@ -420,6 +434,8 @@ async def test_translation_merging_loaded_together(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we merge translations of two integrations when they are loaded at the same time."""
+    translation.async_setup(hass)
+
     hass.config.components.add("hue")
     hass.config.components.add("homekit")
     hue_translations = await translation.async_get_translations(
@@ -437,6 +453,8 @@ async def test_translation_merging_loaded_together(
 
 async def test_caching(hass: HomeAssistant) -> None:
     """Test we cache data."""
+    translation.async_setup(hass)
+
     hass.config.components.add("sensor")
     hass.config.components.add("light")
 
@@ -508,6 +526,8 @@ async def test_custom_component_translations(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
     """Test getting translation from custom components."""
+    translation.async_setup(hass)
+
     hass.config.components.add("test_embedded")
     hass.config.components.add("test_package")
     assert await translation.async_get_translations(hass, "en", "state") == {}
@@ -549,6 +569,8 @@ async def test_get_cached_translations(
     hass: HomeAssistant, mock_config_flows, enable_custom_integrations: None
 ):
     """Test the get cached translations helper."""
+    translation.async_setup(hass)
+
     translations = translation.async_get_cached_translations(hass, "en", "state")
     assert translations == {}
 
@@ -618,6 +640,18 @@ async def test_setup(hass: HomeAssistant):
 
 async def test_translate_state(hass: HomeAssistant):
     """Test the state translation helper."""
+    translation.async_setup(hass)
+
+    result = translation.async_translate_state(
+        hass, "unavailable", "binary_sensor", "platform", "translation_key", None
+    )
+    assert result == "unavailable"
+
+    result = translation.async_translate_state(
+        hass, "unknown", "binary_sensor", "platform", "translation_key", None
+    )
+    assert result == "unknown"
+
     with patch(
         "homeassistant.helpers.translation.async_get_cached_translations",
         return_value={

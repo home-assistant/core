@@ -1960,6 +1960,8 @@ async def test_state_translated(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ):
     """Test state_translated method."""
+    translation.async_setup(hass)
+
     assert await async_setup_component(
         hass,
         "binary_sensor",
@@ -1994,6 +1996,8 @@ async def test_state_translated(
         "foo",
         attributes={"device_class": "some_device_class"},
     )
+    hass.states.async_set("domain.is_unavailable", "unavailable", attributes={})
+    hass.states.async_set("domain.is_unknown", "unknown", attributes={})
 
     config_entry = MockConfigEntry(domain="light")
     entity_registry.async_get_or_create(
@@ -2069,6 +2073,12 @@ async def test_state_translated(
             '{{ state_translated("some_domain.with_device_class_2") }}', hass
         )
         assert tpl10.async_render() == "state_is_foo"
+
+    tpl11 = template.Template('{{ state_translated("domain.is_unavailable") }}', hass)
+    assert tpl11.async_render() == "unavailable"
+
+    tpl12 = template.Template('{{ state_translated("domain.is_unknown") }}', hass)
+    assert tpl12.async_render() == "unknown"
 
 
 def test_has_value(hass: HomeAssistant) -> None:
