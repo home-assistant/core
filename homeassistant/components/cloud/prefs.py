@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-import os
 from typing import Any
 import uuid
 
@@ -51,6 +50,29 @@ ALEXA_SETTINGS_VERSION = 3
 GOOGLE_SETTINGS_VERSION = 3
 
 
+class ReadOnlyStore(Store):
+    """A store which will never write."""
+
+    async def _async_handle_write_data(self, *_args: Any) -> None:
+        """Handle writing the config."""
+        # Do not write anything
+
+
+class ImportGoogleConfigStore(GoogleConfigStore):
+    """A read only configuration store for google assistant."""
+
+    # pylint: disable-next=super-init-not-called
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize a configuration store."""
+        self._hass = hass
+        self._store: Store[dict[str, Any]] = ReadOnlyStore(
+            hass,
+            self._STORAGE_VERSION,
+            self._STORAGE_KEY,
+            minor_version=self._STORAGE_VERSION_MINOR,
+        )
+
+
 class CloudPreferencesStore(Store):
     """Store cloud preferences."""
 
@@ -65,16 +87,9 @@ class CloudPreferencesStore(Store):
             if not (cur_username := old_data.get(PREF_USERNAME)):
                 return False
 
-            google_store = GoogleConfigStore(self.hass)
-            # If the Google store does not exist, we can't be connected to Google
-            if not await self.hass.async_add_executor_job(
-                os.path.exists,
-                # pylint: disable-next=protected-access
-                google_store._store.path,
-            ):
-                return False
-
+            google_store = ImportGoogleConfigStore(self.hass)
             await google_store.async_initialize()
+
             # If our user is in the Google store, we're connected
             return cur_username in google_store.agent_user_ids
 
@@ -83,7 +98,9 @@ class CloudPreferencesStore(Store):
                 old_data.setdefault(PREF_ALEXA_SETTINGS_VERSION, 1)
                 old_data.setdefault(PREF_GOOGLE_SETTINGS_VERSION, 1)
             if old_minor_version < 3:
-                # Import settings from the google_assistant store
+                # Import settings from the google_assistant store.
+                # In HA Core 2024.9, remove the import and also remove the Google
+                # assistant store if it's not been migrated by manual Google assistant
                 old_data.setdefault(PREF_GOOGLE_CONNECTED, await google_connected())
 
         return old_data

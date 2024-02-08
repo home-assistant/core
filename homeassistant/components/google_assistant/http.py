@@ -292,6 +292,7 @@ class GoogleConfigStore:
     """A configuration store for google assistant."""
 
     _STORAGE_VERSION = 1
+    _STORAGE_VERSION_MINOR = 2
     _STORAGE_KEY = DOMAIN
     _data: dict[str, Any]
 
@@ -299,7 +300,10 @@ class GoogleConfigStore:
         """Initialize a configuration store."""
         self._hass = hass
         self._store: Store[dict[str, Any]] = Store(
-            hass, self._STORAGE_VERSION, self._STORAGE_KEY
+            hass,
+            self._STORAGE_VERSION,
+            self._STORAGE_KEY,
+            minor_version=self._STORAGE_VERSION_MINOR,
         )
 
     async def async_initialize(self) -> None:
