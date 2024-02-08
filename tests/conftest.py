@@ -545,23 +545,22 @@ async def hass(
         orig_exception_handler(loop, context)
 
     exceptions: list[Exception] = []
-    hass = await async_test_home_assistant(loop, load_registries)
+    async with async_test_home_assistant(loop, load_registries) as hass:
+        orig_exception_handler = loop.get_exception_handler()
+        loop.set_exception_handler(exc_handle)
 
-    orig_exception_handler = loop.get_exception_handler()
-    loop.set_exception_handler(exc_handle)
+        yield hass
 
-    yield hass
-
-    # Config entries are not normally unloaded on HA shutdown. They are unloaded here
-    # to ensure that they could, and to help track lingering tasks and timers.
-    await asyncio.gather(
-        *(
-            config_entry.async_unload(hass)
-            for config_entry in hass.config_entries.async_entries()
+        # Config entries are not normally unloaded on HA shutdown. They are unloaded here
+        # to ensure that they could, and to help track lingering tasks and timers.
+        await asyncio.gather(
+            *(
+                config_entry.async_unload(hass)
+                for config_entry in hass.config_entries.async_entries()
+            )
         )
-    )
 
-    await hass.async_stop(force=True)
+        await hass.async_stop(force=True)
 
     # Restore timezone, it is set when creating the hass object
     dt_util.DEFAULT_TIME_ZONE = orig_tz

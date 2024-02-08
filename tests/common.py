@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Generator, Mapping, Sequence
-from contextlib import contextmanager
+from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
+from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 import functools as ft
@@ -157,7 +157,8 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     """Return a Home Assistant object pointing at test config directory."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    hass = loop.run_until_complete(async_test_home_assistant(loop))
+    context_manager = async_test_home_assistant(loop)
+    hass = loop.run_until_complete(context_manager.__aenter__())
 
     loop_stop_event = threading.Event()
 
@@ -179,7 +180,6 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
         """Stop hass."""
         orig_stop()
         loop_stop_event.wait()
-        loop.close()
 
     hass.start = start_hass
     hass.stop = stop_hass
@@ -187,9 +187,15 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
 
     yield hass
+    loop.run_until_complete(context_manager.__aexit__(None, None, None))
+    loop.close()
 
 
-async def async_test_home_assistant(event_loop, load_registries=True):
+@asynccontextmanager
+async def async_test_home_assistant(
+    event_loop: asyncio.AbstractEventLoop | None = None,
+    load_registries: bool = True,
+) -> AsyncGenerator[HomeAssistant, None]:
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(get_test_config_dir())
     store = auth_store.AuthStore(hass)
@@ -295,7 +301,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
-    return hass
+    yield hass
 
 
 def async_mock_service(
