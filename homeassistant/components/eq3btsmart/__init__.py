@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import TYPE_CHECKING
 
 from eq3btsmart import Thermostat
 from eq3btsmart.exceptions import Eq3Exception
@@ -29,10 +30,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     mac_address: str | None = entry.unique_id
 
-    if mac_address is None:
-        raise ConfigEntryNotReady(
-            "Unique ID not found in config entry. Please reconfigure the integration"
-        )
+    if TYPE_CHECKING:
+        assert mac_address is not None
 
     eq3_config = Eq3Config(
         mac_address=mac_address,
