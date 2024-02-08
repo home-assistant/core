@@ -1077,9 +1077,7 @@ class Event:
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         if not context:
-            context = Context(
-                id=ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
-            )
+            context = Context(id=ulid_at_time(self.time_fired.timestamp()))
         self.context = context
         if not context.origin_event:
             context.origin_event = self

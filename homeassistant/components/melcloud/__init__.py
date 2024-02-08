@@ -22,7 +22,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
 
@@ -123,11 +123,6 @@ class MelCloudDevice:
             via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
         )
 
-    @property
-    def daily_energy_consumed(self) -> float | None:
-        """Return energy consumed during the current day in kWh."""
-        return self.device.daily_energy_consumed
-
 
 async def mel_devices_setup(
     hass: HomeAssistant, token: str
@@ -138,8 +133,7 @@ async def mel_devices_setup(
         all_devices = await get_devices(
             token,
             session,
-            user_update_interval=timedelta(minutes=30),
-            conf_update_interval=timedelta(minutes=15),
+            conf_update_interval=timedelta(minutes=30),
             device_set_debounce=timedelta(seconds=2),
         )
     wrapped_devices: dict[str, list[MelCloudDevice]] = {}
