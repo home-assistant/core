@@ -35,9 +35,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == slugify(MAC)
-    assert result["data"] == {
-        CONF_MAC: MAC,
-    }
+    assert result["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -70,9 +68,7 @@ async def test_user_flow_invalid_mac(hass: HomeAssistant) -> None:
 
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == slugify(MAC)
-        assert result["data"] == {
-            CONF_MAC: MAC,
-        }
+        assert result["data"] == {}
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -99,9 +95,7 @@ async def test_bluetooth_flow(
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == slugify(MAC)
-    assert result["data"] == {
-        CONF_MAC: MAC,
-    }
+    assert result["data"] == {}
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -9,7 +9,7 @@ from eq3btsmart.thermostat_config import ThermostatConfig
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -27,7 +27,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle config entry setup."""
 
-    mac_address: str = entry.data[CONF_MAC]
+    mac_address: str | None = entry.unique_id
+
+    if mac_address is None:
+        raise ConfigEntryNotReady(
+            "Unique ID not found in config entry. Please reconfigure the integration"
+        )
 
     eq3_config = Eq3Config(
         mac_address=mac_address,

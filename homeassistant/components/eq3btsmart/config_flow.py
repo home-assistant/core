@@ -49,7 +49,7 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # We can not validate if this mac actually is an eQ-3 thermostat,
         # since the thermostat probably is not advertising right now.
-        return self.async_create_entry(title=slugify(mac_address), data=user_input)
+        return self.async_create_entry(title=slugify(mac_address), data={})
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -81,9 +81,7 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=slugify(self.mac_address),
-            data={
-                CONF_MAC: self.mac_address,
-            },
+            data={},
         )
 
 
