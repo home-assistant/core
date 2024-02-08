@@ -76,7 +76,7 @@ PyMetEireann==2021.8.0
 PyMetno==0.11.0
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.10
+PyMicroBot==0.0.11
 
 # homeassistant.components.nina
 PyNINA==0.3.3
