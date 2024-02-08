@@ -529,11 +529,11 @@ class HKDevice:
         # For services, (unique_id, aid, sid, None)
         # For accessories, (unique_id, aid, None, None)
         entries = er.async_entries_for_config_entry(reg, self.config_entry.entry_id)
-        exisiting_entities = {}
-        for entry in entries:
-            if iids := unique_id_to_iids(entry.unique_id):
-                exisiting_entities[iids] = entry.entity_id
-        existing_unique_id = set(exisiting_entities.keys())
+        existing_entities = {
+            iids: entry.entity_id
+            for entry in entries
+            if (iids := unique_id_to_iids(entry.unique_id))
+        }
 
         # Process current entity map and produce a similar set
         current_unique_id: set[IidTuple] = set()
