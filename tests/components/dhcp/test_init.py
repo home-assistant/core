@@ -589,7 +589,9 @@ async def test_setup_fails_non_root(
     )
     await hass.async_block_till_done()
 
-    with patch("os.geteuid", return_value=10), patch.object(
+    with patch("os.geteuid", return_value=10), patch(
+        "scapy.arch.common.compile_filter"
+    ), patch.object(
         interfaces,
         "resolve_iface",
         side_effect=Scapy_Exception,
