@@ -5,6 +5,7 @@ import threading
 from typing import Any, cast
 from unittest.mock import patch
 
+import aiodhcpwatcher
 import pytest
 from scapy import (
     arch,  # noqa: F401
@@ -143,16 +144,16 @@ async def _async_get_handle_dhcp_packet(
         {},
         integration_matchers,
     )
-    with patch(
-        "scapy.arch.common.compile_filter",
-    ), patch.object(
-        interfaces,
-        "resolve_iface",
-    ):
+    with patch("aiodhcpwatcher.start"):
         await dhcp_watcher.async_start()
 
+    def _async_handle_dhcp_request(request: aiodhcpwatcher.DHCPRequest) -> None:
+        dhcp_watcher._async_process_dhcp_request(request)
+
+    handler = aiodhcpwatcher.make_packet_handler(_async_handle_dhcp_request)
+
     async def _async_handle_dhcp_packet(packet):
-        dhcp_watcher._async_handle_dhcp_packet(packet)
+        handler(packet)
 
     return cast("Callable[[Any], Awaitable[None]]", _async_handle_dhcp_packet)
 

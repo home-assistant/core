@@ -9,7 +9,7 @@
   "quality_scale": "internal",
   "requirements": [
     "scapy==2.5.0",
-    "aiodhcpwatcher==0.2.0",
+    "aiodhcpwatcher==0.3.0",
     "aiodiscover==1.6.0",
     "cached_ipaddress==0.3.0"
   ]
