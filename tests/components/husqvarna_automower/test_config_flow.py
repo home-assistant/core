@@ -1,6 +1,6 @@
 """Test the Husqvarna Automower config flow."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.husqvarna_automower.const import (
@@ -168,11 +168,6 @@ async def test_reauth(
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
-
-    # Config flow will lookup existing key to make sure it still exists
-    mock_open = Mock()
-    mock_open.return_value.id = USER_ID
-    mock_automower_client.return_value.open_by_key = mock_open
 
     aioclient_mock.post(
         OAUTH2_TOKEN,
