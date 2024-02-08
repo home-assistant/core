@@ -339,4 +339,7 @@ async def test_ecobee3_services_and_chars_removed(
 
     # Make sure the current mode select and clear hold button are gone
     assert hass.states.get("select.homew_current_mode") is None
+    assert entity_registry.async_get("select.homew_current_mode") is None
+
     assert hass.states.get("button.homew_clear_hold") is None
+    assert entity_registry.async_get("button.homew_clear_hold") is None

@@ -144,3 +144,4 @@ async def test_bridge_with_two_fans_one_removed(
     )
     # The second fan should have been removed
     assert not hass.states.get("fan.ceiling_fan")
+    assert not entity_registry.async_get("fan.ceiling_fan")
