@@ -1,8 +1,6 @@
 """Support for Fast.com internet speed testing sensor."""
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -10,12 +8,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_UPDATED, DOMAIN
+from .const import DOMAIN
+from .coordinator import FastdotcomDataUpdateCoordindator
 
 
 async def async_setup_entry(
@@ -24,45 +23,38 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fast.com sensor."""
-    async_add_entities([SpeedtestSensor(entry.entry_id, hass.data[DOMAIN])])
+    coordinator: FastdotcomDataUpdateCoordindator = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([SpeedtestSensor(entry.entry_id, coordinator)])
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SpeedtestSensor(RestoreEntity, SensorEntity):
+class SpeedtestSensor(
+    CoordinatorEntity[FastdotcomDataUpdateCoordindator], SensorEntity
+):
     """Implementation of a Fast.com sensor."""
 
-    _attr_name = "Fast.com Download"
+    _attr_translation_key = "download"
     _attr_device_class = SensorDeviceClass.DATA_RATE
     _attr_native_unit_of_measurement = UnitOfDataRate.MEGABITS_PER_SECOND
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:speedometer"
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
-    def __init__(self, entry_id: str, speedtest_data: dict[str, Any]) -> None:
+    def __init__(
+        self, entry_id: str, coordinator: FastdotcomDataUpdateCoordindator
+    ) -> None:
         """Initialize the sensor."""
-        self._speedtest_data = speedtest_data
+        super().__init__(coordinator)
         self._attr_unique_id = entry_id
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        await super().async_added_to_hass()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, DATA_UPDATED, self._schedule_immediate_update
-            )
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry_id)},
+            entry_type=DeviceEntryType.SERVICE,
+            configuration_url="https://www.fast.com",
         )
 
-        if not (state := await self.async_get_last_state()):
-            return
-        self._attr_native_value = state.state
-
-    def update(self) -> None:
-        """Get the latest data and update the states."""
-        if (data := self._speedtest_data.data) is None:  # type: ignore[attr-defined]
-            return
-        self._attr_native_value = data["download"]
-
-    @callback
-    def _schedule_immediate_update(self) -> None:
-        self.async_schedule_update_ha_state(True)
+    @property
+    def native_value(
+        self,
+    ) -> float:
+        """Return the state of the sensor."""
+        return self.coordinator.data

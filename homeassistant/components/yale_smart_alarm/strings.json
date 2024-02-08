@@ -56,5 +56,19 @@
         "name": "Panic button"
       }
     }
+  },
+  "exceptions": {
+    "set_alarm": {
+      "message": "Could not set alarm for {name}: {error}"
+    },
+    "could_not_change_alarm": {
+      "message": "Could not change alarm, check system ready for arming"
+    },
+    "set_lock": {
+      "message": "Could not set lock for {name}: {error}"
+    },
+    "could_not_change_lock": {
+      "message": "Could not set lock, check system ready for lock"
+    }
   }
 }

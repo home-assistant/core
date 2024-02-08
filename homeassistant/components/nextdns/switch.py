@@ -1,7 +1,6 @@
 """Support for the NextDNS service."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic
@@ -24,14 +23,14 @@ from .const import ATTR_SETTINGS, DOMAIN
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class NextDnsSwitchRequiredKeysMixin(Generic[CoordinatorDataT]):
     """Class for NextDNS entity required keys."""
 
     state: Callable[[CoordinatorDataT], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class NextDnsSwitchEntityDescription(
     SwitchEntityDescription, NextDnsSwitchRequiredKeysMixin[CoordinatorDataT]
 ):
@@ -647,7 +646,7 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
         except (
             ApiError,
             ClientConnectorError,
-            asyncio.TimeoutError,
+            TimeoutError,
             ClientError,
         ) as err:
             raise HomeAssistantError(

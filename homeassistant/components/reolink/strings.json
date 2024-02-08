@@ -12,7 +12,11 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'."
+          "host": "The hostname or IP address of your Reolink device. For example: '192.168.1.25'.",
+          "port": "The port to connect to the Reolink device. For HTTP normally: '80', for HTTPS normally '443'.",
+          "use_https": "Use a HTTPS (SSL) connection to the Reolink device.",
+          "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
+          "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
         }
       },
       "reauth_confirm": {
@@ -38,6 +42,9 @@
       "init": {
         "data": {
           "protocol": "Protocol"
+        },
+        "data_description": {
+          "protocol": "Streaming protocol to use for the camera entities. RTSP supports 4K streams (h265 encoding) while RTMP and FLV do not. FLV is the least demanding on the camera."
         }
       }
     }
@@ -231,9 +238,6 @@
       "floodlight": {
         "name": "Floodlight"
       },
-      "ir_lights": {
-        "name": "Infra red lights in night mode"
-      },
       "status_led": {
         "name": "Status LED"
       }
@@ -304,6 +308,21 @@
       },
       "day_night_switch_threshold": {
         "name": "Day night switch threshold"
+      },
+      "image_brightness": {
+        "name": "Image brightness"
+      },
+      "image_contrast": {
+        "name": "Image contrast"
+      },
+      "image_saturation": {
+        "name": "Image saturation"
+      },
+      "image_sharpness": {
+        "name": "Image sharpness"
+      },
+      "image_hue": {
+        "name": "Image hue"
       }
     },
     "select": {
@@ -366,6 +385,9 @@
       }
     },
     "switch": {
+      "ir_lights": {
+        "name": "Infra red lights in night mode"
+      },
       "record_audio": {
         "name": "Record audio"
       },

@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -51,25 +51,6 @@ class AfterShipConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import configuration from yaml."""
-        try:
-            self._async_abort_entries_match({CONF_API_KEY: config[CONF_API_KEY]})
-        except AbortFlow as err:
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                "deprecated_yaml_import_issue_already_configured",
-                breaks_in_ha_version="2024.4.0",
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_yaml_import_issue_already_configured",
-                translation_placeholders={
-                    "domain": DOMAIN,
-                    "integration_title": "AfterShip",
-                },
-            )
-            raise err
-
         async_create_issue(
             self.hass,
             HOMEASSISTANT_DOMAIN,
@@ -84,6 +65,8 @@ class AfterShipConfigFlow(ConfigFlow, domain=DOMAIN):
                 "integration_title": "AfterShip",
             },
         )
+
+        self._async_abort_entries_match({CONF_API_KEY: config[CONF_API_KEY]})
         return self.async_create_entry(
             title=config.get(CONF_NAME, "AfterShip"),
             data={CONF_API_KEY: config[CONF_API_KEY]},

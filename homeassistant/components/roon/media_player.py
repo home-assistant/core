@@ -207,13 +207,14 @@ class RoonDevice(MediaPlayerEntity):
         try:
             volume_max = volume_data["max"]
             volume_min = volume_data["min"]
+
             raw_level = convert(volume_data["value"], float, 0)
 
             volume_range = volume_max - volume_min
             volume_percentage_factor = volume_range / 100
 
             level = (raw_level - volume_min) / volume_percentage_factor
-            volume["level"] = convert(level, int, 0) / 100
+            volume["level"] = round(level) / 100
         except KeyError:
             pass
 

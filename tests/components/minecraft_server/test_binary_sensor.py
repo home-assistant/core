@@ -22,16 +22,27 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.parametrize(
-    ("mock_config_entry", "server", "status_response"),
+    ("mock_config_entry", "server", "lookup_function_name", "status_response"),
     [
-        ("java_mock_config_entry", JavaServer, TEST_JAVA_STATUS_RESPONSE),
-        ("bedrock_mock_config_entry", BedrockServer, TEST_BEDROCK_STATUS_RESPONSE),
+        (
+            "java_mock_config_entry",
+            JavaServer,
+            "async_lookup",
+            TEST_JAVA_STATUS_RESPONSE,
+        ),
+        (
+            "bedrock_mock_config_entry",
+            BedrockServer,
+            "lookup",
+            TEST_BEDROCK_STATUS_RESPONSE,
+        ),
     ],
 )
 async def test_binary_sensor(
     hass: HomeAssistant,
     mock_config_entry: str,
     server: JavaServer | BedrockServer,
+    lookup_function_name: str,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     request: pytest.FixtureRequest,
     snapshot: SnapshotAssertion,
@@ -41,7 +52,7 @@ async def test_binary_sensor(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.lookup",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
@@ -53,16 +64,27 @@ async def test_binary_sensor(
 
 
 @pytest.mark.parametrize(
-    ("mock_config_entry", "server", "status_response"),
+    ("mock_config_entry", "server", "lookup_function_name", "status_response"),
     [
-        ("java_mock_config_entry", JavaServer, TEST_JAVA_STATUS_RESPONSE),
-        ("bedrock_mock_config_entry", BedrockServer, TEST_BEDROCK_STATUS_RESPONSE),
+        (
+            "java_mock_config_entry",
+            JavaServer,
+            "async_lookup",
+            TEST_JAVA_STATUS_RESPONSE,
+        ),
+        (
+            "bedrock_mock_config_entry",
+            BedrockServer,
+            "lookup",
+            TEST_BEDROCK_STATUS_RESPONSE,
+        ),
     ],
 )
 async def test_binary_sensor_update(
     hass: HomeAssistant,
     mock_config_entry: str,
     server: JavaServer | BedrockServer,
+    lookup_function_name: str,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     request: pytest.FixtureRequest,
     snapshot: SnapshotAssertion,
@@ -73,7 +95,7 @@ async def test_binary_sensor_update(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.lookup",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
@@ -88,16 +110,27 @@ async def test_binary_sensor_update(
 
 
 @pytest.mark.parametrize(
-    ("mock_config_entry", "server", "status_response"),
+    ("mock_config_entry", "server", "lookup_function_name", "status_response"),
     [
-        ("java_mock_config_entry", JavaServer, TEST_JAVA_STATUS_RESPONSE),
-        ("bedrock_mock_config_entry", BedrockServer, TEST_BEDROCK_STATUS_RESPONSE),
+        (
+            "java_mock_config_entry",
+            JavaServer,
+            "async_lookup",
+            TEST_JAVA_STATUS_RESPONSE,
+        ),
+        (
+            "bedrock_mock_config_entry",
+            BedrockServer,
+            "lookup",
+            TEST_BEDROCK_STATUS_RESPONSE,
+        ),
     ],
 )
 async def test_binary_sensor_update_failure(
     hass: HomeAssistant,
     mock_config_entry: str,
     server: JavaServer | BedrockServer,
+    lookup_function_name: str,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     request: pytest.FixtureRequest,
     freezer: FrozenDateTimeFactory,
@@ -107,7 +140,7 @@ async def test_binary_sensor_update_failure(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.lookup",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",

@@ -129,6 +129,7 @@ async def test_entry_diagnostics(
             "disabled_by": None,
             "domain": "unifi",
             "entry_id": "1",
+            "minor_version": 1,
             "options": {
                 "allow_bandwidth_sensors": True,
                 "allow_uptime_sensors": True,

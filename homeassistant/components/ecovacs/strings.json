@@ -1,0 +1,212 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url": "Invalid URL",
+      "invalid_url_schema_override_rest_url": "Invalid REST URL scheme.\nThe URL should start with `http://` or `https://`.",
+      "invalid_url_schema_override_mqtt_url": "Invalid MQTT URL scheme.\nThe URL should start with `mqtt://` or `mqtts://`.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "auth": {
+        "data": {
+          "country": "Country",
+          "override_rest_url": "REST URL",
+          "override_mqtt_url": "MQTT URL",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_mqtt_certificate": "Verify MQTT SSL certificate"
+        },
+        "data_description": {
+          "override_rest_url": "Enter the REST URL of your self-hosted instance including the scheme (http/https).",
+          "override_mqtt_url": "Enter the MQTT URL of your self-hosted instance including the scheme (mqtt/mqtts)."
+        }
+      },
+      "user": {
+        "data": {
+          "mode": "[%key:common::config_flow::data::mode%]"
+        },
+        "data_description": {
+          "mode": "Select the mode you want to use to connect to Ecovacs. If you are unsure, select 'Cloud'.\n\nSelect 'Self-hosted' only if you have a working self-hosted instance."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "water_mop_attached": {
+        "name": "Mop attached"
+      }
+    },
+    "button": {
+      "relocate": {
+        "name": "Relocate"
+      },
+      "reset_lifespan_brush": {
+        "name": "Reset main brush lifespan"
+      },
+      "reset_lifespan_filter": {
+        "name": "Reset filter lifespan"
+      },
+      "reset_lifespan_side_brush": {
+        "name": "Reset side brushes lifespan"
+      }
+    },
+    "image": {
+      "map": {
+        "name": "Map"
+      }
+    },
+    "number": {
+      "clean_count": {
+        "name": "Clean count"
+      },
+      "volume": {
+        "name": "Volume"
+      }
+    },
+    "sensor": {
+      "error": {
+        "name": "Error",
+        "state_attributes": {
+          "description": {
+            "name": "Description"
+          }
+        }
+      },
+      "lifespan_brush": {
+        "name": "Main brush lifespan"
+      },
+      "lifespan_filter": {
+        "name": "Filter lifespan"
+      },
+      "lifespan_side_brush": {
+        "name": "Side brushes lifespan"
+      },
+      "network_ip": {
+        "name": "IP address"
+      },
+      "network_rssi": {
+        "name": "Wi-Fi RSSI"
+      },
+      "network_ssid": {
+        "name": "Wi-Fi SSID"
+      },
+      "stats_area": {
+        "name": "Area cleaned"
+      },
+      "stats_time": {
+        "name": "Cleaning duration"
+      },
+      "total_stats_area": {
+        "name": "Total area cleaned"
+      },
+      "total_stats_cleanings": {
+        "name": "Total cleanings"
+      },
+      "total_stats_time": {
+        "name": "Total cleaning duration"
+      }
+    },
+    "select": {
+      "water_amount": {
+        "name": "Water flow level",
+        "state": {
+          "high": "High",
+          "low": "Low",
+          "medium": "Medium",
+          "ultrahigh": "Ultrahigh"
+        }
+      },
+      "work_mode": {
+        "name": "Work mode",
+        "state": {
+          "mop": "Mop",
+          "mop_after_vacuum": "Mop after vacuum",
+          "vacuum": "Vacuum",
+          "vacuum_and_mop": "Vacuum & mop"
+        }
+      }
+    },
+    "switch": {
+      "advanced_mode": {
+        "name": "Advanced mode"
+      },
+      "carpet_auto_fan_boost": {
+        "name": "Carpet auto-boost suction"
+      },
+      "clean_preference": {
+        "name": "Clean preference"
+      },
+      "continuous_cleaning": {
+        "name": "Continuous cleaning"
+      },
+      "true_detect": {
+        "name": "True detect"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "max": "Max",
+              "max_plus": "Max+",
+              "normal": "Normal",
+              "quiet": "Quiet"
+            }
+          },
+          "rooms": {
+            "name": "Rooms"
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "vacuum_send_command_params_dict": {
+      "message": "Params must be a dictionary and not a list"
+    },
+    "vacuum_send_command_params_required": {
+      "message": "Params are required for the command: {command}"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The Ecovacs YAML configuration import failed",
+      "description": "Configuring Ecovacs using YAML is being removed but there was a connection error when trying to import the YAML configuration.\n\nPlease verify that you have a stable internet connection and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "title": "The Ecovacs YAML configuration import failed",
+      "description": "Configuring Ecovacs using YAML is being removed but there was an authentication error when trying to import the YAML configuration.\n\nCorrect the YAML configuration and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "The Ecovacs YAML configuration import failed",
+      "description": "Configuring Ecovacs using YAML is being removed but there was an unknown error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_invalid_country_length": {
+      "title": "The Ecovacs YAML configuration import failed",
+      "description": "Configuring Ecovacs using YAML is being removed but there is an invalid country specified in the YAML configuration.\n\nPlease change the country to the [Alpha-2 code of your country]({countries_url}) and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_invalid_continent_length": {
+      "title": "The Ecovacs YAML configuration import failed",
+      "description": "Configuring Ecovacs using YAML is being removed but there is an invalid continent specified in the YAML configuration.\n\nPlease correct the continent to be one of {continent_list} and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_continent_not_match": {
+      "title": "The Ecovacs YAML configuration import failed",
+      "description": "Configuring Ecovacs using YAML is being removed but there is an unexpected continent specified in the YAML configuration.\n\nFrom the given country, the continent '{continent}' is expected. Change the continent and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.\n\nIf the contintent '{continent}' is not applicable, please open an issue on [GitHub]({github_issue_url})."
+    }
+  },
+  "selector": {
+    "installation_mode": {
+      "options": {
+        "cloud": "Cloud",
+        "self_hosted": "Self-hosted"
+      }
+    }
+  }
+}
