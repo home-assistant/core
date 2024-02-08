@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         retries = hass.data.setdefault(DOMAIN, {}).get(retry_key, 0)
         if retries < AUTH_RETRIES:
             retries += 1
-            hass.data[retry_key] = retries
+            hass.data[DOMAIN][retry_key] = retries
             raise ConfigEntryNotReady from err
         raise ConfigEntryAuthFailed(err) from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
