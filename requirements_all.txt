@@ -170,7 +170,7 @@ agent-py==0.0.23
 aio-geojson-generic-client==0.4
 
 # homeassistant.components.geonetnz_quakes
-aio-geojson-geonetnz-quakes==0.15
+aio-geojson-geonetnz-quakes==0.16
 
 # homeassistant.components.geonetnz_volcano
 aio-geojson-geonetnz-volcano==0.8
@@ -182,7 +182,7 @@ aio-geojson-nsw-rfs-incidents==0.7
 aio-geojson-usgs-earthquakes==0.2
 
 # homeassistant.components.gdacs
-aio-georss-gdacs==0.8
+aio-georss-gdacs==0.9
 
 # homeassistant.components.airq
 aioairq==0.3.2
@@ -204,6 +204,9 @@ aioaseko==0.0.2
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
+
+# homeassistant.components.husqvarna_automower
+aioautomower==2024.1.5
 
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
@@ -233,7 +236,7 @@ aioeagle==1.1.0
 aioecowitt==2024.2.0
 
 # homeassistant.components.co2signal
-aioelectricitymaps==0.3.1
+aioelectricitymaps==0.4.0
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
@@ -1059,7 +1062,7 @@ hole==0.8.0
 holidays==0.42
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240205.0
+home-assistant-frontend==20240207.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.2.2
@@ -1331,7 +1334,7 @@ mutesync==0.0.1
 mypermobil==0.1.8
 
 # homeassistant.components.myuplink
-myuplink==0.0.9
+myuplink==0.1.1
 
 # homeassistant.components.nad
 nad-receiver==0.3.0
@@ -1940,7 +1943,7 @@ pymata-express==1.19
 pymediaroom==0.6.5.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.8
+pymelcloud==2.5.9
 
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
@@ -2238,7 +2241,7 @@ python-kasa[speedups]==0.6.2.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==5.4.1
+python-matter-server==5.5.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
