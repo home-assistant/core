@@ -35,7 +35,7 @@ import voluptuous as vol
 import yarl
 
 if TYPE_CHECKING:
-    from .components.rasc import RASC
+    from .components.rasc import RASCAbstraction
 
 from . import block_async_io, util
 from .backports.functools import cached_property
@@ -2000,10 +2000,10 @@ class ServiceRegistry:
             context=context,
         )
 
-        rasc: RASC = self._hass.data[DOMAIN_RASC]
+        rasc: RASCAbstraction = self._hass.data[DOMAIN_RASC]
         coro, s_coro, c_coro = rasc.execute_service(handler, service_call)
-        # s_coro.add_done_callback(lambda res: print(res.result(), "start!!!"))
-        # c_coro.add_done_callback(lambda res: print(res.result(), "complete!!!"))
+        s_coro.add_done_callback(lambda _: None)
+        c_coro.add_done_callback(lambda _: None)
         # coro = self._execute_service(handler, service_call)
         if not blocking:
             self._hass.async_create_task(

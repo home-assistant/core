@@ -7,12 +7,13 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
 
 from homeassistant.helpers.entity import Entity
 
-from . import RASC
 from .const import DOMAIN
 
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_platform import EntityPlatform
     from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+    from .abstraction import RASCAbstraction
 
 RT = TypeVar("RT")
 
@@ -37,7 +38,7 @@ def rasc_push_event(
             rt = await cast(Awaitable[RT], func(self, *args, **kwargs))
         else:
             rt = cast(RT, func(self, *args, **kwargs))
-        rasc: RASC = self.hass.data[DOMAIN]
+        rasc: RASCAbstraction = self.hass.data[DOMAIN]
         await rasc.async_on_push_event(self)
         return rt
 
@@ -69,7 +70,7 @@ def rasc_track_service(
             rt = await cast(Awaitable[RT], func(self, entity, *args, **kwargs))
         else:
             rt = cast(RT, func(self, entity, *args, **kwargs))
-        rasc: RASC = self.hass.data[DOMAIN]
+        rasc: RASCAbstraction = self.hass.data[DOMAIN]
         await rasc.update(entity, self)
         return rt
 

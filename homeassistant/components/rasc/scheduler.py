@@ -239,9 +239,10 @@ def get_target_entities(hass: HomeAssistant, script: dict[str, Any]) -> list[str
                     )
                 ]
             else:
-                target_entities += async_get_entity_id_from_number(
-                    hass, script[CONF_TARGET][CONF_ENTITY_ID]
-                )
+                target_entities += [
+                    async_get_entity_id_from_number(hass, entity)
+                    for entity in script[CONF_TARGET][CONF_ENTITY_ID]
+                ]
     else:
         target_entities = [
             async_get_entity_id_from_number(hass, script[CONF_ENTITY_ID])

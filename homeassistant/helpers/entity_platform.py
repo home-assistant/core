@@ -44,7 +44,6 @@ from . import (
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
 from .issue_registry import IssueSeverity, async_create_issue
-from .rasc import RASCState, rasc_on_command, rasc_on_update
 from .rascalscheduler import add_entity_in_lineage, delete_entity_in_lineage
 from .typing import UNDEFINED, ConfigType, DiscoveryInfoType
 

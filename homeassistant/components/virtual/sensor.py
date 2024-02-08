@@ -118,7 +118,7 @@ async def async_setup_entry(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
         entity = SENSOR_SCHEMA(entity)
-        if CONF_COORDINATED in entity:
+        if entity[CONF_COORDINATED]:
             entities.append(CoordinatedVirtualSensor(entity, coordinator))
         else:
             entities.append(VirtualSensor(entity))

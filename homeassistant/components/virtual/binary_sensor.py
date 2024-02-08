@@ -75,7 +75,7 @@ async def async_setup_entry(
         hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN
     ):
         entity = BINARY_SENSOR_SCHEMA(entity)
-        if CONF_COORDINATED in entity:
+        if entity[CONF_COORDINATED]:
             entities.append(CoordinatedVirtualBinarySensor(entity, coordinator))
         else:
             entities.append(VirtualBinarySensor(entity))
