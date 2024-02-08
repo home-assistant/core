@@ -21,9 +21,9 @@ from telegram import (
     Update,
     User,
 )
+from telegram.constants import ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, Filters
-from telegram.parsemode import ParseMode
 from telegram.utils.request import Request
 import voluptuous as vol
 
