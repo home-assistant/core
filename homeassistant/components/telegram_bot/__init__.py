@@ -667,7 +667,7 @@ class TelegramNotificationService:
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                timeout=params[ATTR_TIMEOUT],
+                connect_timeout=params[ATTR_TIMEOUT],
             )
 
     def delete_message(self, chat_id=None, **kwargs):
@@ -711,7 +711,7 @@ class TelegramNotificationService:
                 parse_mode=params[ATTR_PARSER],
                 disable_web_page_preview=params[ATTR_DISABLE_WEB_PREV],
                 reply_markup=params[ATTR_REPLYMARKUP],
-                timeout=params[ATTR_TIMEOUT],
+                connect_timeout=params[ATTR_TIMEOUT],
             )
         if type_edit == SERVICE_EDIT_CAPTION:
             return self._send_msg(
@@ -723,7 +723,7 @@ class TelegramNotificationService:
                 inline_message_id=inline_message_id,
                 caption=kwargs.get(ATTR_CAPTION),
                 reply_markup=params[ATTR_REPLYMARKUP],
-                timeout=params[ATTR_TIMEOUT],
+                connect_timeout=params[ATTR_TIMEOUT],
                 parse_mode=params[ATTR_PARSER],
             )
 
@@ -735,7 +735,7 @@ class TelegramNotificationService:
             message_id=message_id,
             inline_message_id=inline_message_id,
             reply_markup=params[ATTR_REPLYMARKUP],
-            timeout=params[ATTR_TIMEOUT],
+            connect_timeout=params[ATTR_TIMEOUT],
         )
 
     def answer_callback_query(
@@ -756,7 +756,7 @@ class TelegramNotificationService:
             callback_query_id,
             text=message,
             show_alert=show_alert,
-            timeout=params[ATTR_TIMEOUT],
+            connect_timeout=params[ATTR_TIMEOUT],
         )
 
     def send_file(self, file_type=SERVICE_SEND_PHOTO, target=None, **kwargs):
@@ -787,7 +787,7 @@ class TelegramNotificationService:
                         disable_notification=params[ATTR_DISABLE_NOTIF],
                         reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
-                        timeout=params[ATTR_TIMEOUT],
+                        connect_timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
                     )
 
@@ -801,7 +801,7 @@ class TelegramNotificationService:
                         disable_notification=params[ATTR_DISABLE_NOTIF],
                         reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
-                        timeout=params[ATTR_TIMEOUT],
+                        connect_timeout=params[ATTR_TIMEOUT],
                     )
 
                 elif file_type == SERVICE_SEND_VIDEO:
@@ -815,7 +815,7 @@ class TelegramNotificationService:
                         disable_notification=params[ATTR_DISABLE_NOTIF],
                         reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
-                        timeout=params[ATTR_TIMEOUT],
+                        connect_timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
                     )
                 elif file_type == SERVICE_SEND_DOCUMENT:
@@ -829,7 +829,7 @@ class TelegramNotificationService:
                         disable_notification=params[ATTR_DISABLE_NOTIF],
                         reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
-                        timeout=params[ATTR_TIMEOUT],
+                        connect_timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
                     )
                 elif file_type == SERVICE_SEND_VOICE:
@@ -843,7 +843,7 @@ class TelegramNotificationService:
                         disable_notification=params[ATTR_DISABLE_NOTIF],
                         reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
-                        timeout=params[ATTR_TIMEOUT],
+                        connect_timeout=params[ATTR_TIMEOUT],
                     )
                 elif file_type == SERVICE_SEND_ANIMATION:
                     self._send_msg(
@@ -856,7 +856,7 @@ class TelegramNotificationService:
                         disable_notification=params[ATTR_DISABLE_NOTIF],
                         reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                         reply_markup=params[ATTR_REPLYMARKUP],
-                        timeout=params[ATTR_TIMEOUT],
+                        connect_timeout=params[ATTR_TIMEOUT],
                         parse_mode=params[ATTR_PARSER],
                     )
 
@@ -879,7 +879,7 @@ class TelegramNotificationService:
                     disable_notification=params[ATTR_DISABLE_NOTIF],
                     reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
                     reply_markup=params[ATTR_REPLYMARKUP],
-                    timeout=params[ATTR_TIMEOUT],
+                    connect_timeout=params[ATTR_TIMEOUT],
                 )
         else:
             self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
@@ -902,7 +902,7 @@ class TelegramNotificationService:
                 longitude=longitude,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-                timeout=params[ATTR_TIMEOUT],
+                connect_timeout=params[ATTR_TIMEOUT],
             )
 
     def send_poll(
@@ -931,7 +931,7 @@ class TelegramNotificationService:
                 open_period=openperiod,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-                timeout=params[ATTR_TIMEOUT],
+                connect_timeout=params[ATTR_TIMEOUT],
             )
 
     def leave_chat(self, chat_id=None):
