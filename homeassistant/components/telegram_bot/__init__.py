@@ -8,6 +8,7 @@ from ipaddress import ip_network
 import logging
 from typing import Any
 
+from httpx import Proxy
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from telegram import (
@@ -24,7 +25,7 @@ from telegram import (
 from telegram.constants import ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
-from telegram.utils.request import Request
+from telegram.request import HTTPXRequest
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -460,11 +461,12 @@ def initialize_bot(p_config):
     proxy_params = p_config.get(CONF_PROXY_PARAMS)
 
     if proxy_url is not None:
-        request = Request(
-            con_pool_size=8, proxy_url=proxy_url, urllib3_proxy_kwargs=proxy_params
-        )
+        # These have been kept for backwards compatability, they can actually be stuffed into the URL.
+        auth = proxy_params.pop("username"), proxy_params.pop("password")
+        proxy = Proxy(proxy_url, auth=auth, **proxy_params)
+        request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
-        request = Request(con_pool_size=8)
+        request = HTTPXRequest(connection_pool_size=8)
     return Bot(token=api_key, request=request)
 
 
