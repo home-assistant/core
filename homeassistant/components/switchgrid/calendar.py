@@ -28,8 +28,8 @@ class SwitchgridCalendarEntity(
 ):
     """A calendar entity holding Switchgrid Electric Loadshaving events."""
 
-    _attr_has_entity_name = True
     entity_id = "calendar.switchgrid_events"
+    _attr_has_entity_name = True
     _attr_unique_id = "switchgrid_events"
     _attr_translation_key = "switchgrid_events"
     _events: list[CalendarEvent] = []
