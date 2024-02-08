@@ -1,14 +1,11 @@
 """Base entity for microBees."""
 
+from microBeesPy.microbees import Actuator, Bee
+
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
 from .coordinator import MicroBeesUpdateCoordinator
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
-from microBeesPy.microbees import Actuator, Bee, MicroBees, MicroBeesException
+
 
 class MicroBeesEntity(CoordinatorEntity[MicroBeesUpdateCoordinator]):
     """Base class for microBees entities."""
@@ -25,11 +22,9 @@ class MicroBeesEntity(CoordinatorEntity[MicroBeesUpdateCoordinator]):
     @property
     def updated_bee(self) -> Bee:
         """Return the updated bee."""
-        return next(filter(lambda x: x.id == self.bee_id, self.coordinator.data))
+        return self.coordinator.data.get(f"bee_{self.bee_id}")
 
     @property
     def updated_act(self) -> Actuator:
         """Return the updated act."""
-        if self.act is None:
-            return None
-        return next(filter(lambda x: x.id == self.act_id, self.updated_bee.actuators))
+        return self.coordinator.data.get(f"act_{self.act_id}")

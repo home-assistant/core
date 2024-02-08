@@ -9,13 +9,14 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
-from .api import get_api_scopes
 from .const import DOMAIN, VERSION
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
+class OAuth2FlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
     """Handle a config flow for microBees."""
 
     VERSION = VERSION
@@ -26,10 +27,13 @@ class ConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMA
         """Return logger."""
         return logging.getLogger(__name__)
 
+    reauth_entry: config_entries.ConfigEntry | None = None
+    _title: str = ""
+
     @property
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
-        scopes = get_api_scopes(self.flow_impl.domain)
+        scopes = ["read", "write"]
         return {"scope": " ".join(scopes)}
 
     async def async_oauth_create_entry(self, data: dict) -> FlowResult:
@@ -41,28 +45,28 @@ class ConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMA
         )
 
         current_user = await microbees.getMyProfile()
-        existing_entry = await self.async_set_unique_id(current_user.id)
-        if existing_entry:
-            self.hass.config_entries.async_update_entry(existing_entry, data=data)
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
+        if not self.reauth_entry:
+            await self.async_set_unique_id(current_user.id)
+        elif self.reauth_entry.unique_id == current_user.id:
+            self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
+            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
+        self._title = current_user.firstName + " " + current_user.lastName
 
-        name = current_user.firstName + " " + current_user.lastName
-
-        return self.async_create_entry(title=name, data=data)
-
+        return self.async_create_entry(title=self._title, data=data)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Dialog that informs the user that reauth is required."""
+        """Confirm reauth dialog."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm", data_schema={}, errors={}
-            )
+            return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()

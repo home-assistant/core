@@ -9,7 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import BEES, CONNECTOR, COORDINATOR, DOMAIN
-from .coordinator import MicroBeesEntity
+from .entity import MicroBeesEntity
 
 _LOGGER = logging.getLogger(__name__)
 

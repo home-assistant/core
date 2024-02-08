@@ -1,6 +1,5 @@
 """API for microBees bound to Home Assistant OAuth."""
 
-from collections.abc import Iterable
 import logging
 
 from homeassistant.core import HomeAssistant
@@ -30,8 +29,3 @@ class ConfigEntryAuth(MicroBeesAuth):
         await self._oauth_session.async_ensure_token_valid()
 
         return self._oauth_session.token[ACCESS_TOKEN]
-
-
-def get_api_scopes(auth_implementation: str) -> Iterable[str]:
-    """Return the microBees API scopes based on the auth implementation."""
-    return ["read", "write"]
