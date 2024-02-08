@@ -19,7 +19,7 @@ from homeassistant.data_entry_flow import FlowResultType
 async def test_user_flow(
     hass: HomeAssistant,
     setup_entry: AsyncMock,
-    mock_config_flow: MagicMock,
+    config_flow: MagicMock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -37,7 +37,7 @@ async def test_user_flow(
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == DEFAULT_NAME
     assert result2.get("data") == {CONF_HOST: DEFAULT_HOST}
-    assert len(mock_config_flow.get_peers.mock_calls) == 1
+    assert len(config_flow.get_peers.mock_calls) == 1
     assert len(setup_entry.mock_calls) == 1
 
 
@@ -69,7 +69,7 @@ async def test_user_flow(
 async def test_user_flow_errors(
     hass: HomeAssistant,
     setup_entry: AsyncMock,
-    mock_config_flow: MagicMock,
+    config_flow: MagicMock,
     side_effect: WireGuardException,
     message: str,
     error: str,
@@ -82,7 +82,7 @@ async def test_user_flow_errors(
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_config_flow.get_peers.side_effect = side_effect(message)
+    config_flow.get_peers.side_effect = side_effect(message)
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: DEFAULT_HOST},
@@ -91,9 +91,9 @@ async def test_user_flow_errors(
     assert result2.get("step_id") == "user"
     assert result2.get("type") == FlowResultType.FORM
     assert result2["errors"] == {"base": error}
-    assert len(mock_config_flow.get_peers.mock_calls) == 1
+    assert len(config_flow.get_peers.mock_calls) == 1
 
-    mock_config_flow.get_peers.side_effect = None
+    config_flow.get_peers.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: DEFAULT_HOST},
@@ -102,5 +102,5 @@ async def test_user_flow_errors(
     assert result3.get("type") == FlowResultType.CREATE_ENTRY
     assert result3.get("title") == DEFAULT_NAME
     assert result3.get("data") == {CONF_HOST: DEFAULT_HOST}
-    assert len(mock_config_flow.get_peers.mock_calls) == 2
+    assert len(config_flow.get_peers.mock_calls) == 2
     assert len(setup_entry.mock_calls) == 1

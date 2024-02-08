@@ -12,8 +12,8 @@ from homeassistant.const import CONF_HOST
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+@pytest.fixture(name="config_entry")
+def fixture_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -24,7 +24,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture(name="setup_entry")
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def fixture_setup_entry() -> Generator[AsyncMock, None, None]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.wireguard.async_setup_entry", return_value=True
@@ -32,7 +32,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup
 
 
-@pytest.fixture(name="mock_config_flow")
+@pytest.fixture(name="config_flow")
 def fixture_config_flow() -> Generator[None, MagicMock, None]:
     """Return a mocked WireGuardApiClient."""
     with patch(
