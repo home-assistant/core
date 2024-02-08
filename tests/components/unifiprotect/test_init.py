@@ -210,7 +210,7 @@ async def test_setup_failed_auth_retry(
     ufp.api.get_nvr = AsyncMock(side_effect=NotAuthorized)
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
-    assert ufp.entry.state == ConfigEntryState.SETUP_RETRY
+    assert ufp.entry.state is ConfigEntryState.SETUP_RETRY
     assert hass.data[DOMAIN][reauth_key] == 1
     assert not ufp.api.update.called
 
