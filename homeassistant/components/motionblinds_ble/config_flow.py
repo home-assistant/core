@@ -7,6 +7,7 @@ import re
 from typing import Any
 
 from bleak.backends.device import BLEDevice
+from motionblindsble.const import MotionBlindType
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -30,7 +31,6 @@ from .const import (
     ERROR_INVALID_MAC_CODE,
     ERROR_NO_BLUETOOTH_ADAPTER,
     ERROR_NO_DEVICES_FOUND,
-    MotionBlindType,
 )
 
 _LOGGER = logging.getLogger(__name__)
