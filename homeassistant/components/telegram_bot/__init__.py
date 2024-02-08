@@ -23,7 +23,7 @@ from telegram import (
 )
 from telegram.constants import ParseMode
 from telegram.error import TelegramError
-from telegram.ext import CallbackContext, Filters
+from telegram.ext import CallbackContext, filters
 from telegram.utils.request import Request
 import voluptuous as vol
 
@@ -990,7 +990,7 @@ class BaseTelegramBotEntity:
             ATTR_CHAT_ID: message.chat.id,
             ATTR_DATE: message.date,
         }
-        if Filters.command.filter(message):
+        if filters.COMMAND.filter(message):
             # This is a command message - set event type to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
