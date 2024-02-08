@@ -56,7 +56,7 @@
         },
         "view_path": {
           "name": "View",
-          "description": "The view to show. If not specified, the dashboard's default view will be shown."
+          "description": "The view to show, for example 'home' for a view with a specified URL or '0' for view without a specified URL. If not specified, the dashboard's default view will be shown."
         }
       }
     }
