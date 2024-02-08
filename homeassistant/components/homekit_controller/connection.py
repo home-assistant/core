@@ -21,6 +21,10 @@ from aiohomekit.model import Accessories, Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic
 from aiohomekit.model.services import Service, ServicesTypes
 
+from homeassistant.components.homekit_controller.utils import (
+    IidTuple,
+    unique_id_to_iids,
+)
 from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
@@ -530,15 +534,14 @@ class HKDevice:
         entries = er.async_entries_for_config_entry(reg, self.config_entry.entry_id)
         exisiting_entities = {}
         for entry in entries:
-            parts = tuple(int(id) for id in entry.unique_id.split("_")[1:])
-            parts += (None,) * (3 - len(parts))
-            exisiting_entities[parts] = entry.entity_id
+            if iids := unique_id_to_iids(entry.unique_id):
+                exisiting_entities[iids] = entry.entity_id
         existing_unique_id = set(exisiting_entities.keys())
 
         # Process current entity map and produce a similar set
-        current_unique_id = set()
+        current_unique_id: set[IidTuple] = set()
         for accessory in self.entity_map.accessories:
-            current_unique_id.add((self.unique_id, accessory.aid, None, None))
+            current_unique_id.add((accessory.aid, None, None))
 
             for service in accessory.services:
                 current_unique_id.add((accessory.aid, service.iid, None))
