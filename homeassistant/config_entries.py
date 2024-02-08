@@ -1146,9 +1146,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             _LOGGER.error("An entry with the id %s already exists", entry_id)
             self._unindex_entry(entry_id)
         data[entry_id] = entry
-        self._index_entry(entry_id, entry)
+        self._index_entry(entry)
 
-    def _index_entry(self, entry_id: str, entry: ConfigEntry) -> None:
+    def _index_entry(self, entry: ConfigEntry) -> None:
         """Index an entry."""
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
@@ -1203,7 +1203,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         entry_id = entry.entry_id
         self._unindex_entry(entry_id)
         entry.unique_id = new_unique_id
-        self._index_entry(entry_id, entry)
+        self._index_entry(entry)
 
     def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
         """Get entries for a domain."""
