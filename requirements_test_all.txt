@@ -1767,7 +1767,7 @@ python-tado==0.17.4
 python-technove==1.2.2
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==20.8
+python-telegram-bot[socks]==20.8
 
 # homeassistant.components.tile
 pytile==2023.04.0
