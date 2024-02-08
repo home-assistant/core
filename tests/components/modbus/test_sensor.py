@@ -688,6 +688,16 @@ async def test_config_wrong_struct_sensor(
             False,
             "112594",
         ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT16,
+                CONF_SCALE: -1,
+                CONF_OFFSET: 0,
+            },
+            [0x000A],
+            False,
+            "-10",
+        ),
     ],
 )
 async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
