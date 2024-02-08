@@ -7,6 +7,7 @@ from collections.abc import (
     Callable,
     Coroutine,
     Generator,
+    Hashable,
     Iterable,
     Mapping,
     ValuesView,
@@ -211,6 +212,10 @@ class UnknownEntry(ConfigError):
 
 class OperationNotAllowed(ConfigError):
     """Raised when a config entry operation is not allowed."""
+
+
+class InvalidUniqueId(HomeAssistantError):
+    """Raised when config entries set an unhashable unique id."""
 
 
 UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Coroutine[Any, Any, None]]
@@ -1137,6 +1142,11 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
     def __setitem__(self, entry_id: str, entry: ConfigEntry) -> None:
         """Add an item."""
         data = self.data
+
+        # Guard against integrations using unhashable unique_id
+        if not isinstance(entry.unique_id, Hashable):
+            raise InvalidUniqueId
+
         if entry_id in data:
             # This is likely a bug in a test that is adding the same entry twice.
             # In the future, once we have fixed the tests, this will raise HomeAssistantError.
@@ -1351,7 +1361,18 @@ class ConfigEntries:
                 pref_disable_new_entities=pref_disable_new_entities,
                 pref_disable_polling=entry.get("pref_disable_polling"),
             )
-            entries[entry_id] = config_entry
+            try:
+                entries[entry_id] = config_entry
+            except InvalidUniqueId:
+                _LOGGER.error(
+                    (
+                        "Config entry %s from integration %s has an invalid unique_id "
+                        "'%s' and will not be loaded"
+                    ),
+                    entry["title"],
+                    domain,
+                    entry.get("unique_id"),
+                )
 
         self._entries = entries
 
