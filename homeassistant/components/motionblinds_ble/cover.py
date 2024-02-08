@@ -1,4 +1,5 @@
 """Cover entities for the MotionBlinds BLE integration."""
+
 from __future__ import annotations
 
 from asyncio import Event
@@ -33,6 +34,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,7 +42,6 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import (
     ATTR_CONNECTION_TYPE,
-    CONF_ADDRESS,
     CONF_BLIND_TYPE,
     CONF_MAC_CODE,
     DOMAIN,
@@ -480,11 +481,15 @@ class PositionBlind(GenericBlind):
         self.async_update_running(
             MotionRunningType.UNKNOWN
             if self._attr_current_cover_position is None or new_position is None
-            else MotionRunningType.STILL
-            if new_position == 100 - self._attr_current_cover_position
-            else MotionRunningType.OPENING
-            if new_position < 100 - self._attr_current_cover_position
-            else MotionRunningType.CLOSING
+            else (
+                MotionRunningType.STILL
+                if new_position == 100 - self._attr_current_cover_position
+                else (
+                    MotionRunningType.OPENING
+                    if new_position < 100 - self._attr_current_cover_position
+                    else MotionRunningType.CLOSING
+                )
+            )
         )
         if await self._device.percentage(
             new_position, ignore_end_positions_not_set=ignore_end_positions_not_set
@@ -558,9 +563,11 @@ class TiltBlind(GenericBlind):
             if self._attr_current_cover_tilt_position is None
             or new_tilt_position is None
             or new_tilt_position == 100 - self._attr_current_cover_tilt_position
-            else MotionRunningType.OPENING
-            if new_tilt_position < 100 - self._attr_current_cover_tilt_position
-            else MotionRunningType.CLOSING
+            else (
+                MotionRunningType.OPENING
+                if new_tilt_position < 100 - self._attr_current_cover_tilt_position
+                else MotionRunningType.CLOSING
+            )
         )
         if await self._device.percentage_tilt(
             new_tilt_position, ignore_end_positions_not_set=ignore_end_positions_not_set
@@ -621,11 +628,13 @@ class PositionCalibrationBlind(PositionBlind):
         new_calibration_type = (
             MotionCalibrationType.CALIBRATED  # Calibrated if end positions are set
             if end_position_info.up
-            else MotionCalibrationType.CALIBRATING  # Calibrating if no end positions, and motor is running
-            if self._running_type is not None
-            and self._running_type
-            in [MotionRunningType.OPENING, MotionRunningType.CLOSING]
-            else MotionCalibrationType.UNCALIBRATED
+            else (
+                MotionCalibrationType.CALIBRATING  # Calibrating if no end positions, and motor is running
+                if self._running_type is not None
+                and self._running_type
+                in [MotionRunningType.OPENING, MotionRunningType.CLOSING]
+                else MotionCalibrationType.UNCALIBRATED
+            )
         )
         if new_calibration_type != self._calibration_type:
             _LOGGER.debug(
