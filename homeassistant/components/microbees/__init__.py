@@ -1,21 +1,43 @@
 """The microBees integration."""
 
-from dataclasses import dataclass
 from http import HTTPStatus
 import logging
 
 import aiohttp
-from microBeesPy.microbees import MicroBees
+from microBeesPy.microbees import Bee, MicroBees
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import ACCESS_TOKEN, BEES, CONNECTOR, COORDINATOR, DOMAIN, PLATFORMS
+from .const import ACCESS_TOKEN, DOMAIN, PLATFORMS
 from .coordinator import MicroBeesUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class HomeAssistantMicroBeesData:
+    """Microbees data stored in the Home Assistant data object."""
+
+    connector: MicroBees
+    bees: list[Bee]
+    session: config_entry_oauth2_flow.OAuth2Session
+    coordinator: MicroBeesUpdateCoordinator
+
+    def __init__(
+        self,
+        connector: MicroBees,
+        bees: list[Bee],
+        session: config_entry_oauth2_flow.OAuth2Session,
+        coordinator: MicroBeesUpdateCoordinator,
+    ) -> None:
+        """Initialize the data."""
+        self.connector = connector
+        self.bees = bees
+        self.session = session
+        self.coordinator = coordinator
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up microBees from a config entry."""
@@ -43,11 +65,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except Exception as ex:
         raise ConfigEntryNotReady from ex
     hass.data[DOMAIN] = {
-        entry.entry_id: {
-            BEES: bees,
-            CONNECTOR: microbees,
-            COORDINATOR: coordinator,
-        }
+        entry.entry_id: HomeAssistantMicroBeesData(
+            connector=microbees,
+            bees=bees,
+            session=session,
+            coordinator=coordinator,
+        )
     }
 
     await coordinator.async_config_entry_first_refresh()
@@ -59,6 +82,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
-
 
     return unload_ok

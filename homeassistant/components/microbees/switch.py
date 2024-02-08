@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BEES, CONNECTOR, COORDINATOR, DOMAIN
+from .const import DOMAIN
 from .entity import MicroBeesEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,9 +18,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Config entry."""
-    microbees = hass.data[DOMAIN][entry.entry_id][CONNECTOR]
-    bees = hass.data[DOMAIN][entry.entry_id][BEES]
-    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
+    microbees_data = hass.data[DOMAIN][entry.entry_id]
+    microbees = microbees_data.connector
+    bees = microbees_data.bees
+    coordinator = microbees_data.coordinator
     switches = []
     for bee in bees:
         match bee.productID:
