@@ -39,21 +39,29 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
         self.act = act
         self.bee = bee
         self.microbees = microbees
-        self._attr_unique_id = self.act.id
+        self._attr_unique_id = f"{self.bee.id}_{self.act.id}"
         self._attr_name = self.act.name + " (" + self.bee.name + ")"
-        self._attr_is_on = self.act.value
         if self.bee.productID == 46:
             self._attr_icon = "mdi:power-socket-it"
         if self.bee.productID == 38:
             self._attr_icon = "mdi:power-socket-eu"
-        self._attr_available = self.bee.active
         super().__init__(coordinator, act, bee)
+
+    @property
+    def is_on(self) -> bool:
+        """Status of the switch."""
+        return self.act.value
+
+    @property
+    def available(self) -> bool:
+        """Status of the bee."""
+        return self.bee.active
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         sendCommand = await self.microbees.sendCommand(self.act.id, 1)
         if sendCommand:
-            self._attr_is_on = True
+            self.act.value = True
             self.async_write_ha_state()
         else:
             raise HomeAssistantError(f"Failed to turn on {self.name}")
@@ -62,13 +70,13 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
         """Turn off the switch."""
         sendCommand = await self.microbees.sendCommand(self.act.id, 0)
         if sendCommand:
-            self._attr_is_on = False
+            self.act.value = False
             self.async_write_ha_state()
         else:
             raise HomeAssistantError(f"Failed to turn off {self.name}")
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._attr_is_on = self.updated_act.value
-        self._attr_available = self.updated_bee.active
+        self.act.value = self.updated_act.value
+        self.bee.active = self.updated_bee.active
         super()._handle_coordinator_update()

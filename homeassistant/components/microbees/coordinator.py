@@ -51,17 +51,17 @@ class MicroBeesEntity(CoordinatorEntity[MicroBeesUpdateCoordinator]):
         """Initialize the microBees entity."""
         super().__init__(coordinator)
         self._attr_available = False
-        self.bee = bee
-        self.act = act
+        self.bee_id = bee.id
+        self.act_id = act.id
 
     @property
     def updated_bee(self) -> Bee:
         """Return the updated bee."""
-        return next(filter(lambda x: x.id == self.bee.id, self.coordinator.data))
+        return next(filter(lambda x: x.id == self.bee_id, self.coordinator.data))
 
     @property
     def updated_act(self) -> Actuator:
         """Return the updated act."""
         if self.act is None:
             return None
-        return next(filter(lambda x: x.id == self.act.id, self.updated_bee.actuators))
+        return next(filter(lambda x: x.id == self.act_id, self.updated_bee.actuators))

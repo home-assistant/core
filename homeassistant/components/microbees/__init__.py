@@ -11,10 +11,9 @@ from microBeesPy.microbees import MicroBees
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow
 
-from . import api
-from .const import ACCESS_TOKEN, AUTH, BEES, CONNECTOR, COORDINATOR, DOMAIN, PLATFORMS
+from .const import ACCESS_TOKEN, BEES, CONNECTOR, COORDINATOR, DOMAIN, PLATFORMS
 from .coordinator import MicroBeesUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,27 +47,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ):
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
         raise ConfigEntryNotReady from ex
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        AUTH: api.ConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
-    }
     microbees = MicroBees(token=session.token[ACCESS_TOKEN])
-
-    hass.data[DOMAIN][CONNECTOR] = microbees
+    coordinator = MicroBeesUpdateCoordinator(hass, microbees)
     try:
         bees = await microbees.getBees()
-        hass.data[DOMAIN][BEES] = bees
-        hass.data[DOMAIN][entry.entry_id] = HomeAssistantMicroBeesData(
-            client=microbees,
-            bees=bees,
-            session=session,
-        )
+        hass.data[DOMAIN] = {
+            entry.entry_id: HomeAssistantMicroBeesData(
+                client=microbees,
+                bees=bees,
+                session=session,
+            ),
+            BEES: bees,
+            CONNECTOR: microbees,
+            COORDINATOR: coordinator,
+        }
 
-        coordinator = MicroBeesUpdateCoordinator(hass, microbees)
         await coordinator.async_config_entry_first_refresh()
-        hass.data[DOMAIN][COORDINATOR] = coordinator
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
         return True
     except Exception as ex:
         raise ConfigEntryNotReady from ex
