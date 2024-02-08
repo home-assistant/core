@@ -1,6 +1,5 @@
 """Tests for Shelly switch platform."""
 
-from copy import deepcopy
 from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import MODEL_GAS

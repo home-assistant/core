@@ -428,18 +428,9 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     return cast(str, con_types[channel]).lower().startswith("light")
 
 
-def is_rpc_thermostat_internal_actuator(settings: dict[str, Any], ch: int) -> bool:
+def is_rpc_thermostat_internal_actuator(status: dict[str, Any]) -> bool:
     """Return true if the thermostat uses an internal relay."""
-    if thermostat := settings.get(f"thermostat:{ch}"):
-        # Wall Display relay is used as the thermostat actuator,
-        # we need to remove the switch entity
-        mac: str = settings["sys"]["device"]["mac"]
-
-        if thermostat["actuator"].startswith(
-            f"shelly://shellywalldisplay-{mac.lower()}"
-        ):
-            return True
-    return False
+    return cast(bool, status.get("relay_in_thermostat", False))
 
 
 def is_rpc_exclude_from_relay(
@@ -447,7 +438,7 @@ def is_rpc_exclude_from_relay(
 ) -> bool:
     """Return true if rpc channel should be excludeed from switch platform."""
     ch = int(channel.split(":")[1])
-    if is_rpc_thermostat_internal_actuator(settings, ch):
+    if is_rpc_thermostat_internal_actuator(status):
         return True
 
     return is_rpc_channel_type_light(settings, ch)

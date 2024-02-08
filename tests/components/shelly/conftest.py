@@ -205,7 +205,6 @@ MOCK_CONFIG = {
         "id": 0,
         "enable": True,
         "type": "heating",
-        "actuator": f"shelly://shellywalldisplay-{MOCK_MAC.lower()}/c/switch:0",
     },
     "sys": {
         "ui_data": {},
@@ -346,7 +345,7 @@ MOCK_STATUS_RPC = {
     "em1:1": {"act_power": 123.3},
     "em1data:0": {"total_act_energy": 123456.4},
     "em1data:1": {"total_act_energy": 987654.3},
-    "flood:0": {"id": 0, "alarm": False, "mute": False},
+    "relay_in_thermostat": False,
     "thermostat:0": {
         "id": 0,
         "enable": True,
