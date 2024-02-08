@@ -1,9 +1,11 @@
 """Test the MotionBlinds BLE config flow."""
+
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.motionblinds_ble import const
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 
 from .conftest import TEST_ADDRESS, TEST_MAC, TEST_NAME
@@ -65,7 +67,7 @@ async def test_config_flow_manual_success(
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
     assert result["data"] == {
-        const.CONF_ADDRESS: TEST_ADDRESS,
+        CONF_ADDRESS: TEST_ADDRESS,
         const.CONF_LOCAL_NAME: TEST_NAME,
         const.CONF_MAC_CODE: TEST_MAC.upper(),
         const.CONF_BLIND_TYPE: TEST_BLIND_TYPE,
@@ -120,7 +122,7 @@ async def test_config_flow_manual_error_invalid_mac(
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
     assert result["data"] == {
-        const.CONF_ADDRESS: TEST_ADDRESS,
+        CONF_ADDRESS: TEST_ADDRESS,
         const.CONF_LOCAL_NAME: TEST_NAME,
         const.CONF_MAC_CODE: TEST_MAC.upper(),
         const.CONF_BLIND_TYPE: TEST_BLIND_TYPE,
@@ -194,7 +196,7 @@ async def test_config_flow_manual_error_could_not_find_motor(
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
     assert result["data"] == {
-        const.CONF_ADDRESS: TEST_ADDRESS,
+        CONF_ADDRESS: TEST_ADDRESS,
         const.CONF_LOCAL_NAME: TEST_NAME,
         const.CONF_MAC_CODE: TEST_MAC.upper(),
         const.CONF_BLIND_TYPE: TEST_BLIND_TYPE,
@@ -246,7 +248,7 @@ async def test_config_flow_bluetooth_success(
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
     assert result["data"] == {
-        const.CONF_ADDRESS: TEST_ADDRESS,
+        CONF_ADDRESS: TEST_ADDRESS,
         const.CONF_LOCAL_NAME: TEST_NAME,
         const.CONF_MAC_CODE: TEST_MAC.upper(),
         const.CONF_BLIND_TYPE: TEST_BLIND_TYPE,
