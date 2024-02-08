@@ -1200,9 +1200,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
 
         This method mutates the entry with the new unique id and updates the indexes.
         """
-        self._unindex_entry(entry.entry_id)
+        entry_id = entry.entry_id
+        self._unindex_entry(entry_id)
         entry.unique_id = new_unique_id
-        self._index_entry(entry.entry_id, entry)
+        self._index_entry(entry_id, entry)
 
     def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
         """Get entries for a domain."""
