@@ -1931,7 +1931,7 @@ pylitterbot==2023.4.9
 pylutron-caseta==0.19.0
 
 # homeassistant.components.lutron
-pylutron==0.2.8
+pylutron==0.2.11
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1955,7 +1955,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.3
+pymodbus==3.6.4
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
