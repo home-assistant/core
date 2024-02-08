@@ -133,22 +133,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # everything else starts up or we will miss events
     for passive_cls in (DeviceTrackerRegisteredWatcher, DeviceTrackerWatcher):
         passive_watcher = passive_cls(hass, address_data, integration_matchers)
-        await passive_watcher.async_start()
+        passive_watcher.async_start()
         watchers.append(passive_watcher)
 
-    async def _initialize(event: Event) -> None:
+    @callback
+    def _async_initialize(event: Event) -> None:
         for active_cls in (DHCPWatcher, NetworkWatcher):
             active_watcher = active_cls(hass, address_data, integration_matchers)
-            await active_watcher.async_start()
+            active_watcher.async_start()
             watchers.append(active_watcher)
 
-        async def _async_stop(event: Event) -> None:
+        @callback
+        def _async_stop(event: Event) -> None:
             for watcher in watchers:
-                await watcher.async_stop()
+                watcher.async_stop()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _initialize)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_initialize)
     return True
 
 
@@ -169,11 +171,13 @@ class WatcherBase(ABC):
         self._address_data = address_data
 
     @abstractmethod
-    async def async_stop(self) -> None:
+    @callback
+    def async_stop(self) -> None:
         """Stop the watcher."""
 
     @abstractmethod
-    async def async_start(self) -> None:
+    @callback
+    def async_start(self) -> None:
         """Start the watcher."""
 
     @callback
@@ -278,7 +282,8 @@ class NetworkWatcher(WatcherBase):
         self._discover_hosts: DiscoverHosts | None = None
         self._discover_task: asyncio.Task | None = None
 
-    async def async_stop(self) -> None:
+    @callback
+    def async_stop(self) -> None:
         """Stop scanning for new devices on the network."""
         if self._unsub:
             self._unsub()
@@ -287,7 +292,8 @@ class NetworkWatcher(WatcherBase):
             self._discover_task.cancel()
             self._discover_task = None
 
-    async def async_start(self) -> None:
+    @callback
+    def async_start(self) -> None:
         """Start scanning for new devices on the network."""
         self._discover_hosts = DiscoverHosts()
         self._unsub = async_track_time_interval(
@@ -329,13 +335,15 @@ class DeviceTrackerWatcher(WatcherBase):
         super().__init__(hass, address_data, integration_matchers)
         self._unsub: Callable[[], None] | None = None
 
-    async def async_stop(self) -> None:
+    @callback
+    def async_stop(self) -> None:
         """Stop watching for new device trackers."""
         if self._unsub:
             self._unsub()
             self._unsub = None
 
-    async def async_start(self) -> None:
+    @callback
+    def async_start(self) -> None:
         """Stop watching for new device trackers."""
         self._unsub = async_track_state_added_domain(
             self.hass, [DEVICE_TRACKER_DOMAIN], self._async_process_device_event
@@ -384,13 +392,15 @@ class DeviceTrackerRegisteredWatcher(WatcherBase):
         super().__init__(hass, address_data, integration_matchers)
         self._unsub: Callable[[], None] | None = None
 
-    async def async_stop(self) -> None:
+    @callback
+    def async_stop(self) -> None:
         """Stop watching for device tracker registrations."""
         if self._unsub:
             self._unsub()
             self._unsub = None
 
-    async def async_start(self) -> None:
+    @callback
+    def async_start(self) -> None:
         """Stop watching for device tracker registrations."""
         self._unsub = async_dispatcher_connect(
             self.hass, CONNECTED_DEVICE_REGISTERED, self._async_process_device_data
@@ -429,12 +439,14 @@ class DHCPWatcher(WatcherBase):
             response.ip_address, response.hostname, _format_mac(response.mac_address)
         )
 
-    async def async_stop(self) -> None:
+    @callback
+    def async_stop(self) -> None:
         """Stop watching for DHCP packets."""
         if self._cancel:
             self._cancel()
 
-    async def async_start(self) -> None:
+    @callback
+    def async_start(self) -> None:
         """Start watching for dhcp packets."""
         self._cancel = aiodhcpwatcher.start(self._async_process_dhcp_request)
 
