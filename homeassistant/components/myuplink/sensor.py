@@ -41,21 +41,21 @@ DEVICE_POINT_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
-    "NIBEF F730 CU 3x400V-43108": SensorEntityDescription(
+    "NIBEF-43108": SensorEntityDescription(
         key="fan_mode",
         icon="mdi:fan",
     ),
-    "NIBEF F730 CU 3x400V-43427": SensorEntityDescription(
+    "NIBEF-43427": SensorEntityDescription(
         key="status_compressor",
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:heat-pump-outline",
     ),
-    "NIBEF F730 CU 3x400V-49993": SensorEntityDescription(
+    "NIBEF-49993": SensorEntityDescription(
         key="elect_add",
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:heat-wave",
     ),
-    "NIBEF F730 CU 3x400V-49994": SensorEntityDescription(
+    "NIBEF-49994": SensorEntityDescription(
         key="priority",
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:priority-high",
@@ -67,14 +67,22 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
     """Get description for a device point.
 
     Priorities:
-    1. Category specific parameter_id e.g "NIBEF F730 CU 3x400V-49994"
+    1. Category specific prefix e.g "NIBEF-49994"
     2. Global parameter_id e.g. "49994"
     3. Global parameter_unit e.g. "°C"
     4. Default to None
     """
-    description = DEVICE_POINT_DESCRIPTIONS.get(
-        f"{device_point.category}-{device_point.parameter_id}"
-    )
+    model_prefix = ""
+    for prefix in ("NIBEF",):
+        if device_point.category.startswith(prefix):
+            model_prefix = prefix
+            break
+
+    description = None
+    if model_prefix != "":
+        description = DEVICE_POINT_DESCRIPTIONS.get(
+            f"{model_prefix}-{device_point.parameter_id}"
+        )
     if description is None:
         description = DEVICE_POINT_DESCRIPTIONS.get(device_point.parameter_id)
     if description is None:
@@ -147,6 +155,8 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Sensor state value."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
+        if device_point.value == -32768:
+            return None
         return device_point.value  # type: ignore[no-any-return]
 
 
