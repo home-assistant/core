@@ -36,7 +36,7 @@ ICON_FAVORITE = "mdi:star"
 ICON_CONNECTION_TYPE = "mdi:bluetooth-connect"
 ICON_VERTICAL_BLIND = "mdi:blinds-vertical-closed"
 
-MANUFACTURER = "MotionBlinds - Coulisse"
+MANUFACTURER = "MotionBlinds"
 
 SETTING_MAX_MOTOR_FEEDBACK_TIME = 2  # Seconds
 
@@ -52,11 +52,11 @@ class MotionCalibrationType(StrEnum):
 class MotionBlindType(StrEnum):
     """Enum for the blind type."""
 
-    ROLLER = "roller"
-    HONEYCOMB = "honeycomb"
-    ROMAN = "roman"
-    VENETIAN = "venetian"
-    VENETIAN_TILT_ONLY = "venetian_tilt_only"
-    DOUBLE_ROLLER = "double_roller"
-    CURTAIN = "curtain"
-    VERTICAL = "vertical"
+    ROLLER = "Roller blind"
+    HONEYCOMB = "Honeycomb blind"
+    ROMAN = "Roman blind"
+    VENETIAN = "Venetian blind"
+    VENETIAN_TILT_ONLY = "Venetian blind (tilt-only)"
+    DOUBLE_ROLLER = "Double Roller blind"
+    CURTAIN = "Curtain blind"
+    VERTICAL = "Vertical blind"
