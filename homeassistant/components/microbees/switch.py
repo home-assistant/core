@@ -39,7 +39,6 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
         self.act = act
         self.bee = bee
         self.microbees = microbees
-        self._coordinator = coordinator
         self._attr_unique_id = self.act.id
         self._attr_name = self.act.name + " (" + self.bee.name + ")"
         self._attr_is_on = self.act.value
@@ -52,9 +51,7 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        sendCommand = await self.microbees.sendCommand(
-            self.act.id, 1
-        )
+        sendCommand = await self.microbees.sendCommand(self.act.id, 1)
         if sendCommand:
             self._attr_is_on = True
             self.async_write_ha_state()
@@ -63,9 +60,7 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        sendCommand = await self.microbees.sendCommand(
-            self.act.id, 0
-        )
+        sendCommand = await self.microbees.sendCommand(self.act.id, 0)
         if sendCommand:
             self._attr_is_on = False
             self.async_write_ha_state()

@@ -29,12 +29,8 @@ class HomeAssistantMicroBeesData:
     session: config_entry_oauth2_flow.OAuth2Session
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, domain=DOMAIN
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up microBees from a config entry."""
-    hass.data[DOMAIN] = {}
-    hass.data.setdefault(DOMAIN, {})
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
