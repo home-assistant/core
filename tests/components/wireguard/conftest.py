@@ -40,7 +40,35 @@ def fixture_config_flow() -> Generator[None, MagicMock, None]:
         autospec=True,
     ) as wg_mock:
         wg = wg_mock.return_value
-        wg.host = "localhost"
+        wg.host = DEFAULT_HOST
+        wg.get_peers.return_value = [
+            WireGuardPeer(
+                name="EMPTY",
+                endpoint=None,
+                latest_handshake=None,
+                transfer_rx=0,
+                transfer_tx=0,
+            ),
+            WireGuardPeer(
+                name="CONNECTED",
+                endpoint="127.0.0.1:1234",
+                latest_handshake=datetime(2024, 1, 1, tzinfo=UTC),
+                transfer_rx=123,
+                transfer_tx=456,
+            ),
+        ]
+        yield wg
+
+
+@pytest.fixture(name="coordinator_client")
+def fixture_coordinator_client() -> Generator[None, MagicMock, None]:
+    """Return a mocked WireGuardApiClient."""
+    with patch(
+        "homeassistant.components.wireguard.coordinator.WireguardApiClient",
+        autospec=True,
+    ) as wg_mock:
+        wg = wg_mock.return_value
+        wg.host = DEFAULT_HOST
         wg.get_peers.return_value = [
             WireGuardPeer(
                 name="EMPTY",
