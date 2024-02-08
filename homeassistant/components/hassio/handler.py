@@ -506,7 +506,6 @@ class HassIO:
         options = {
             "ssl": CONF_SSL_CERTIFICATE in http_config,
             "port": port,
-            "watchdog": True,
             "refresh_token": refresh_token.token,
         }
 
