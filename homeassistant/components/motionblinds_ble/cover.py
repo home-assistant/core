@@ -36,7 +36,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
@@ -155,6 +155,7 @@ class GenericBlind(CoverEntity):
         self._attr_name: str = ENTITY_NAME.format(mac_code=entry.data[CONF_MAC_CODE])
         self._attr_unique_id: str = entry.data[CONF_ADDRESS]
         self._attr_device_info: DeviceInfo = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
             identifiers={(DOMAIN, entry.data[CONF_MAC_CODE])},
             manufacturer=MANUFACTURER,
             name=self._attr_name,
