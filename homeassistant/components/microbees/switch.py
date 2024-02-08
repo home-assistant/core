@@ -39,8 +39,6 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
         self.act = act
         self.bee = bee
         self.microbees = microbees
-        self._state = self.act.value
-        self._attr_available = self.bee.active
         self._coordinator = coordinator
         self._attr_unique_id = self.act.id
         self._attr_name = self.act.name + " (" + self.bee.name + ")"
@@ -55,18 +53,18 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         sendCommand = await self.microbees.sendCommand(
-            self.act.id, 1, color=self.rgbw_color
+            self.act.id, 1
         )
         if sendCommand:
-            self._attr_is_on = False
+            self._attr_is_on = True
             self.async_write_ha_state()
         else:
-            raise HomeAssistantError(f"Failed to turn off {self.name}")
+            raise HomeAssistantError(f"Failed to turn on {self.name}")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         sendCommand = await self.microbees.sendCommand(
-            self.act.id, 0, color=self.rgbw_color
+            self.act.id, 0
         )
         if sendCommand:
             self._attr_is_on = False
