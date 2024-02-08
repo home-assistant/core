@@ -6,6 +6,7 @@ from typing import Any
 
 from aiohttp import ClientConnectionError
 from aiosomecomfort import (
+    APIRateLimited,
     AuthError,
     ConnectionError as AscConnectionError,
     SomeComfortError,
@@ -504,10 +505,11 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self._device.refresh()
 
             except (
+                TimeoutError,
+                AscConnectionError,
+                APIRateLimited,
                 AuthError,
                 ClientConnectionError,
-                AscConnectionError,
-                TimeoutError,
             ):
                 self._retry += 1
                 self._attr_available = self._retry <= RETRY
@@ -522,8 +524,12 @@ class HoneywellUSThermostat(ClimateEntity):
         except UnauthorizedError:
             await _login()
             return
-
-        except (AscConnectionError, ClientConnectionError, TimeoutError):
+        except (
+            TimeoutError,
+            AscConnectionError,
+            APIRateLimited,
+            ClientConnectionError,
+        ):
             self._retry += 1
             self._attr_available = self._retry <= RETRY
             return

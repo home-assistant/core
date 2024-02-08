@@ -170,7 +170,7 @@ agent-py==0.0.23
 aio-geojson-generic-client==0.4
 
 # homeassistant.components.geonetnz_quakes
-aio-geojson-geonetnz-quakes==0.15
+aio-geojson-geonetnz-quakes==0.16
 
 # homeassistant.components.geonetnz_volcano
 aio-geojson-geonetnz-volcano==0.8
@@ -182,7 +182,7 @@ aio-geojson-nsw-rfs-incidents==0.7
 aio-geojson-usgs-earthquakes==0.2
 
 # homeassistant.components.gdacs
-aio-georss-gdacs==0.8
+aio-georss-gdacs==0.9
 
 # homeassistant.components.airq
 aioairq==0.3.2
@@ -204,6 +204,9 @@ aioaseko==0.0.2
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
+
+# homeassistant.components.husqvarna_automower
+aioautomower==2024.1.5
 
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
@@ -230,16 +233,16 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2023.5.0
+aioecowitt==2024.2.0
 
 # homeassistant.components.co2signal
-aioelectricitymaps==0.3.1
+aioelectricitymaps==0.4.0
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==21.0.1
+aioesphomeapi==21.0.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1019,7 +1022,7 @@ habitipy==0.2.0
 habluetooth==2.4.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.77.0
+hass-nabucasa==0.78.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1059,7 +1062,7 @@ hole==0.8.0
 holidays==0.42
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240205.0
+home-assistant-frontend==20240207.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.2.2
@@ -1310,7 +1313,7 @@ moehlenhoff-alpha2==1.3.0
 mopeka-iot-ble==0.7.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.19
+motionblinds==0.6.20
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -1331,7 +1334,7 @@ mutesync==0.0.1
 mypermobil==0.1.8
 
 # homeassistant.components.myuplink
-myuplink==0.0.9
+myuplink==0.1.1
 
 # homeassistant.components.nad
 nad-receiver==0.3.0
@@ -1367,7 +1370,7 @@ nextcord==2.0.0a8
 nextdns==2.1.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.7.0
+nibe==2.8.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1940,7 +1943,7 @@ pymata-express==1.19
 pymediaroom==0.6.5.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.8
+pymelcloud==2.5.9
 
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
@@ -2238,7 +2241,7 @@ python-kasa[speedups]==0.6.2.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==5.4.1
+python-matter-server==5.5.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2257,7 +2260,7 @@ python-opensky==1.0.0
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.5.0
+python-otbr-api==2.6.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2934,7 +2937,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.62.2
+zigpy==0.62.3
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
