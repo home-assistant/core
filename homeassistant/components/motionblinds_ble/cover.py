@@ -156,7 +156,6 @@ class GenericBlind(CoverEntity):
         self._attr_unique_id: str = entry.data[CONF_ADDRESS]
         self._attr_device_info: DeviceInfo = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, entry.data[CONF_ADDRESS])},
-            identifiers={(DOMAIN, entry.data[CONF_MAC_CODE])},
             manufacturer=MANUFACTURER,
             model=entry.data[CONF_BLIND_TYPE],
             name=self._attr_name,
