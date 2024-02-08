@@ -6,7 +6,7 @@
           "preset_mode": {
             "state": {
               "off": "mdi:power",
-              "keep": "mdi:fan"
+              "keep": "mdi:fan",
               "dog": "mdi:dog",
               "camp": "mdi:tent"
             }
