@@ -1139,12 +1139,13 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
 
     def __setitem__(self, entry_id: str, entry: ConfigEntry) -> None:
         """Add an item."""
-        if entry_id in self.data:
+        data = self.data
+        if entry_id in data:
             # This is likely a bug in a test that is adding the same entry twice.
             # In the future, once we have fixed the tests, this will raise HomeAssistantError.
             _LOGGER.error("An entry with the id %s already exists", entry_id)
             self._unindex_entry(entry_id)
-        self.data[entry_id] = entry
+        data[entry_id] = entry
         self._index_entry(entry_id, entry)
 
     def _index_entry(self, entry_id: str, entry: ConfigEntry) -> None:
