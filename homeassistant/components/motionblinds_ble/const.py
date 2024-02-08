@@ -12,7 +12,6 @@ ATTR_FAVORITE = "favorite"
 ATTR_SIGNAL_STRENGTH = "signal_strength"
 
 CONF_LOCAL_NAME = "local_name"
-CONF_ADDRESS = "address"
 CONF_MAC_CODE = "mac_code"
 CONF_BLIND_TYPE = "blind_type"
 

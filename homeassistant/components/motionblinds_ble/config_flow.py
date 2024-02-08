@@ -1,4 +1,5 @@
 """Config flow for MotionBlinds BLE integration."""
+
 from __future__ import annotations
 
 import logging
@@ -11,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigFlow
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
@@ -20,7 +22,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_ADDRESS,
     CONF_BLIND_TYPE,
     CONF_LOCAL_NAME,
     CONF_MAC_CODE,
@@ -81,9 +82,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason=EXCEPTION_MAP[NoDevicesFound])
             except tuple(EXCEPTION_MAP.keys()) as e:
                 errors = {
-                    "base": EXCEPTION_MAP[type(e)]
-                    if type(e) in EXCEPTION_MAP
-                    else str(type(e))
+                    "base": (
+                        EXCEPTION_MAP[type(e)]
+                        if type(e) in EXCEPTION_MAP
+                        else str(type(e))
+                    )
                 }
                 return self.async_show_form(
                     step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
