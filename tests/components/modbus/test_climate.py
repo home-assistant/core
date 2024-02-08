@@ -191,8 +191,8 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
-                    CONF_MIN_TEMP: -23,
-                    CONF_MAX_TEMP: -57,
+                    CONF_MIN_TEMP: -57,
+                    CONF_MAX_TEMP: -23,
                 }
             ],
         },
