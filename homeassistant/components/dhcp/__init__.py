@@ -11,7 +11,7 @@ from functools import lru_cache
 import itertools
 import logging
 import re
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
 import aiodhcpwatcher
 from aiodiscover import DiscoverHosts
@@ -57,19 +57,13 @@ from homeassistant.loader import DHCPMatcher, async_get_dhcp
 
 from .const import DOMAIN
 
-if TYPE_CHECKING:
-    pass
-
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 FILTER = "udp and (port 67 or 68)"
-REQUESTED_ADDR = "requested_addr"
-MESSAGE_TYPE = "message-type"
 HOSTNAME: Final = "hostname"
 MAC_ADDRESS: Final = "macaddress"
 IP_ADDRESS: Final = "ip"
 REGISTERED_DEVICES: Final = "registered_devices"
-DHCP_REQUEST = 3
 SCAN_INTERVAL = timedelta(minutes=60)
 
 
