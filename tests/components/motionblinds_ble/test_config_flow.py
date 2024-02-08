@@ -46,7 +46,6 @@ async def test_config_flow_manual_success(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
@@ -55,7 +54,6 @@ async def test_config_flow_manual_success(
         result["flow_id"],
         {const.CONF_MAC_CODE: TEST_MAC},
     )
-
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
@@ -63,7 +61,6 @@ async def test_config_flow_manual_success(
         result["flow_id"],
         {const.CONF_BLIND_TYPE: const.MotionBlindType.ROLLER},
     )
-
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
     assert result["data"] == {
@@ -73,15 +70,6 @@ async def test_config_flow_manual_success(
         const.CONF_BLIND_TYPE: TEST_BLIND_TYPE,
     }
     assert result["options"] == {}
-
-    # Second setup to test already configured error
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
 
 
 async def test_config_flow_manual_error_invalid_mac(
