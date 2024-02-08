@@ -1,7 +1,6 @@
 """Support to send and receive Telegram messages."""
 from __future__ import annotations
 
-from functools import partial
 import importlib
 import io
 from ipaddress import ip_network
@@ -407,9 +406,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
         if msgtype == SERVICE_SEND_MESSAGE:
-            await hass.async_add_executor_job(
-                partial(notify_service.send_message, **kwargs)
-            )
+            await notify_service.send_message(**kwargs)
         elif msgtype in [
             SERVICE_SEND_PHOTO,
             SERVICE_SEND_ANIMATION,
@@ -417,33 +414,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SERVICE_SEND_VOICE,
             SERVICE_SEND_DOCUMENT,
         ]:
-            await hass.async_add_executor_job(
-                partial(notify_service.send_file, msgtype, **kwargs)
-            )
+            await notify_service.send_file(msgtype, **kwargs)
         elif msgtype == SERVICE_SEND_STICKER:
-            await hass.async_add_executor_job(
-                partial(notify_service.send_sticker, **kwargs)
-            )
+            await notify_service.send_sticker(**kwargs)
         elif msgtype == SERVICE_SEND_LOCATION:
-            await hass.async_add_executor_job(
-                partial(notify_service.send_location, **kwargs)
-            )
+            await notify_service.send_location(**kwargs)
         elif msgtype == SERVICE_SEND_POLL:
-            await hass.async_add_executor_job(
-                partial(notify_service.send_poll, **kwargs)
-            )
+            await notify_service.send_poll(**kwargs)
         elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
-            await hass.async_add_executor_job(
-                partial(notify_service.answer_callback_query, **kwargs)
-            )
+            await notify_service.answer_callback_query(**kwargs)
         elif msgtype == SERVICE_DELETE_MESSAGE:
-            await hass.async_add_executor_job(
-                partial(notify_service.delete_message, **kwargs)
-            )
+            await notify_service.delete_message(**kwargs)
         else:
-            await hass.async_add_executor_job(
-                partial(notify_service.edit_message, msgtype, **kwargs)
-            )
+            await notify_service.edit_message(msgtype, **kwargs)
 
     # Register notification services
     for service_notif, schema in SERVICE_MAP.items():
@@ -618,10 +601,12 @@ class TelegramNotificationService:
                 )
         return params
 
-    def _send_msg(self, func_send, msg_error, message_tag, *args_msg, **kwargs_msg):
+    async def _send_msg(
+        self, func_send, msg_error, message_tag, *args_msg, **kwargs_msg
+    ):
         """Send one message."""
         try:
-            out = self.hass.create_task(func_send(*args_msg, **kwargs_msg))
+            out = await func_send(*args_msg, **kwargs_msg)
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
                 message_id = out[ATTR_MESSAGEID]
@@ -649,14 +634,14 @@ class TelegramNotificationService:
                 "%s: %s. Args: %s, kwargs: %s", msg_error, exc, args_msg, kwargs_msg
             )
 
-    def send_message(self, message="", target=None, **kwargs):
+    async def send_message(self, message="", target=None, **kwargs):
         """Send a message to one or multiple pre-allowed chat IDs."""
         title = kwargs.get(ATTR_TITLE)
         text = f"{title}\n{message}" if title else message
         params = self._get_msg_kwargs(kwargs)
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug("Send message in chat ID %s with params: %s", chat_id, params)
-            self._send_msg(
+            await self._send_msg(
                 self.bot.send_message,
                 "Error sending message",
                 params[ATTR_MESSAGE_TAG],
@@ -670,12 +655,12 @@ class TelegramNotificationService:
                 connect_timeout=params[ATTR_TIMEOUT],
             )
 
-    def delete_message(self, chat_id=None, **kwargs):
+    async def delete_message(self, chat_id=None, **kwargs):
         """Delete a previously sent message."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
         message_id, _ = self._get_msg_ids(kwargs, chat_id)
         _LOGGER.debug("Delete message %s in chat ID %s", message_id, chat_id)
-        deleted = self._send_msg(
+        deleted = await self._send_msg(
             self.bot.delete_message, "Error deleting message", None, chat_id, message_id
         )
         # reduce message_id anyway:
@@ -684,7 +669,7 @@ class TelegramNotificationService:
             self._last_message_id[chat_id] -= 1
         return deleted
 
-    def edit_message(self, type_edit, chat_id=None, **kwargs):
+    async def edit_message(self, type_edit, chat_id=None, **kwargs):
         """Edit a previously sent message."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
         message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
@@ -700,7 +685,7 @@ class TelegramNotificationService:
             title = kwargs.get(ATTR_TITLE)
             text = f"{title}\n{message}" if title else message
             _LOGGER.debug("Editing message with ID %s", message_id or inline_message_id)
-            return self._send_msg(
+            return await self._send_msg(
                 self.bot.edit_message_text,
                 "Error editing text message",
                 params[ATTR_MESSAGE_TAG],
@@ -714,7 +699,7 @@ class TelegramNotificationService:
                 connect_timeout=params[ATTR_TIMEOUT],
             )
         if type_edit == SERVICE_EDIT_CAPTION:
-            return self._send_msg(
+            return await self._send_msg(
                 self.bot.edit_message_caption,
                 "Error editing message attributes",
                 params[ATTR_MESSAGE_TAG],
@@ -727,7 +712,7 @@ class TelegramNotificationService:
                 parse_mode=params[ATTR_PARSER],
             )
 
-        return self._send_msg(
+        return await self._send_msg(
             self.bot.edit_message_reply_markup,
             "Error editing message attributes",
             params[ATTR_MESSAGE_TAG],
@@ -738,7 +723,7 @@ class TelegramNotificationService:
             connect_timeout=params[ATTR_TIMEOUT],
         )
 
-    def answer_callback_query(
+    async def answer_callback_query(
         self, message, callback_query_id, show_alert=False, **kwargs
     ):
         """Answer a callback originated with a press in an inline keyboard."""
@@ -749,7 +734,7 @@ class TelegramNotificationService:
             message,
             show_alert,
         )
-        self._send_msg(
+        await self._send_msg(
             self.bot.answer_callback_query,
             "Error sending answer callback query",
             params[ATTR_MESSAGE_TAG],
@@ -759,7 +744,7 @@ class TelegramNotificationService:
             connect_timeout=params[ATTR_TIMEOUT],
         )
 
-    def send_file(self, file_type=SERVICE_SEND_PHOTO, target=None, **kwargs):
+    async def send_file(self, file_type=SERVICE_SEND_PHOTO, target=None, **kwargs):
         """Send a photo, sticker, video, or document."""
         params = self._get_msg_kwargs(kwargs)
         file_content = load_data(
@@ -777,7 +762,7 @@ class TelegramNotificationService:
                 _LOGGER.debug("Sending file to chat ID %s", chat_id)
 
                 if file_type == SERVICE_SEND_PHOTO:
-                    self._send_msg(
+                    await self._send_msg(
                         self.bot.send_photo,
                         "Error sending photo",
                         params[ATTR_MESSAGE_TAG],
@@ -792,7 +777,7 @@ class TelegramNotificationService:
                     )
 
                 elif file_type == SERVICE_SEND_STICKER:
-                    self._send_msg(
+                    await self._send_msg(
                         self.bot.send_sticker,
                         "Error sending sticker",
                         params[ATTR_MESSAGE_TAG],
@@ -805,7 +790,7 @@ class TelegramNotificationService:
                     )
 
                 elif file_type == SERVICE_SEND_VIDEO:
-                    self._send_msg(
+                    await self._send_msg(
                         self.bot.send_video,
                         "Error sending video",
                         params[ATTR_MESSAGE_TAG],
@@ -819,7 +804,7 @@ class TelegramNotificationService:
                         parse_mode=params[ATTR_PARSER],
                     )
                 elif file_type == SERVICE_SEND_DOCUMENT:
-                    self._send_msg(
+                    await self._send_msg(
                         self.bot.send_document,
                         "Error sending document",
                         params[ATTR_MESSAGE_TAG],
@@ -833,7 +818,7 @@ class TelegramNotificationService:
                         parse_mode=params[ATTR_PARSER],
                     )
                 elif file_type == SERVICE_SEND_VOICE:
-                    self._send_msg(
+                    await self._send_msg(
                         self.bot.send_voice,
                         "Error sending voice",
                         params[ATTR_MESSAGE_TAG],
@@ -846,7 +831,7 @@ class TelegramNotificationService:
                         connect_timeout=params[ATTR_TIMEOUT],
                     )
                 elif file_type == SERVICE_SEND_ANIMATION:
-                    self._send_msg(
+                    await self._send_msg(
                         self.bot.send_animation,
                         "Error sending animation",
                         params[ATTR_MESSAGE_TAG],
@@ -864,13 +849,13 @@ class TelegramNotificationService:
         else:
             _LOGGER.error("Can't send file with kwargs: %s", kwargs)
 
-    def send_sticker(self, target=None, **kwargs):
+    async def send_sticker(self, target=None, **kwargs):
         """Send a sticker from a telegram sticker pack."""
         params = self._get_msg_kwargs(kwargs)
         stickerid = kwargs.get(ATTR_STICKER_ID)
         if stickerid:
             for chat_id in self._get_target_chat_ids(target):
-                self._send_msg(
+                await self._send_msg(
                     self.bot.send_sticker,
                     "Error sending sticker",
                     params[ATTR_MESSAGE_TAG],
@@ -882,9 +867,9 @@ class TelegramNotificationService:
                     connect_timeout=params[ATTR_TIMEOUT],
                 )
         else:
-            self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
+            await self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
 
-    def send_location(self, latitude, longitude, target=None, **kwargs):
+    async def send_location(self, latitude, longitude, target=None, **kwargs):
         """Send a location."""
         latitude = float(latitude)
         longitude = float(longitude)
@@ -893,7 +878,7 @@ class TelegramNotificationService:
             _LOGGER.debug(
                 "Send location %s/%s to chat ID %s", latitude, longitude, chat_id
             )
-            self._send_msg(
+            await self._send_msg(
                 self.bot.send_location,
                 "Error sending location",
                 params[ATTR_MESSAGE_TAG],
@@ -905,7 +890,7 @@ class TelegramNotificationService:
                 connect_timeout=params[ATTR_TIMEOUT],
             )
 
-    def send_poll(
+    async def send_poll(
         self,
         question,
         options,
@@ -919,7 +904,7 @@ class TelegramNotificationService:
         openperiod = kwargs.get(ATTR_OPEN_PERIOD)
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug("Send poll '%s' to chat ID %s", question, chat_id)
-            self._send_msg(
+            await self._send_msg(
                 self.bot.send_poll,
                 "Error sending poll",
                 params[ATTR_MESSAGE_TAG],
@@ -934,11 +919,11 @@ class TelegramNotificationService:
                 connect_timeout=params[ATTR_TIMEOUT],
             )
 
-    def leave_chat(self, chat_id=None):
+    async def leave_chat(self, chat_id=None):
         """Remove bot from chat."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
         _LOGGER.debug("Leave from chat ID %s", chat_id)
-        leaved = self._send_msg(
+        leaved = await self._send_msg(
             self.bot.leave_chat, "Error leaving chat", None, chat_id
         )
         return leaved
