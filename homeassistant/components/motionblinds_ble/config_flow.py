@@ -163,7 +163,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             None,
         )
 
-        if not motion_device:
+        if motion_device is None:
             _LOGGER.error("Could not find a motor with MAC code: %s", mac_code.upper())
             raise CouldNotFindMotor()
 
