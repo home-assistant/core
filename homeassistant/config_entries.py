@@ -1144,11 +1144,11 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             # In the future, once we have fixed the tests, this will raise HomeAssistantError.
             _LOGGER.error("An entry with the id %s already exists", entry_id)
             self._unindex_entry(entry_id)
+        self.data[entry_id] = entry
         self._index_entry(entry_id, entry)
 
     def _index_entry(self, entry_id: str, entry: ConfigEntry) -> None:
         """Index an entry."""
-        self.data[entry_id] = entry
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
             unique_id_hash = entry.unique_id
