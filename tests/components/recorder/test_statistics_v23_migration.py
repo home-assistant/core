@@ -169,8 +169,7 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> 
             create_engine_test_for_schema_version_postfix,
             schema_version_postfix=SCHEMA_VERSION_POSTFIX,
         ),
-    ):
-        hass = get_test_home_assistant()
+    ), get_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -198,13 +197,13 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> 
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
+    with get_test_home_assistant() as hass:
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     assert "Deleted 2 duplicated statistics rows" in caplog.text
@@ -349,8 +348,7 @@ def test_delete_duplicates_many(
             create_engine_test_for_schema_version_postfix,
             schema_version_postfix=SCHEMA_VERSION_POSTFIX,
         ),
-    ):
-        hass = get_test_home_assistant()
+    ), get_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -384,13 +382,13 @@ def test_delete_duplicates_many(
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
+    with get_test_home_assistant() as hass:
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     assert "Deleted 3002 duplicated statistics rows" in caplog.text
@@ -506,8 +504,7 @@ def test_delete_duplicates_non_identical(
             create_engine_test_for_schema_version_postfix,
             schema_version_postfix=SCHEMA_VERSION_POSTFIX,
         ),
-    ):
-        hass = get_test_home_assistant()
+    ), get_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -530,14 +527,14 @@ def test_delete_duplicates_non_identical(
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    hass.config.config_dir = tmp_path
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
+    with get_test_home_assistant() as hass:
+        hass.config.config_dir = tmp_path
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     assert "Deleted 2 duplicated statistics rows" in caplog.text
@@ -618,8 +615,7 @@ def test_delete_duplicates_short_term(
             create_engine_test_for_schema_version_postfix,
             schema_version_postfix=SCHEMA_VERSION_POSTFIX,
         ),
-    ):
-        hass = get_test_home_assistant()
+    ), get_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -641,14 +637,14 @@ def test_delete_duplicates_short_term(
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    hass.config.config_dir = tmp_path
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
+    with get_test_home_assistant() as hass:
+        hass.config.config_dir = tmp_path
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     assert "duplicated statistics rows" not in caplog.text

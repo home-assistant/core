@@ -152,7 +152,8 @@ def get_test_config_dir(*add_path):
     return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
 
 
-def get_test_home_assistant():
+@contextmanager
+def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     """Return a Home Assistant object pointing at test config directory."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -160,7 +161,7 @@ def get_test_home_assistant():
 
     loop_stop_event = threading.Event()
 
-    def run_loop():
+    def run_loop() -> None:
         """Run event loop."""
 
         loop._thread_ident = threading.get_ident()
@@ -170,11 +171,11 @@ def get_test_home_assistant():
     orig_stop = hass.stop
     hass._stopped = Mock(set=loop.stop)
 
-    def start_hass(*mocks):
+    def start_hass(*mocks: Any) -> None:
         """Start hass."""
         asyncio.run_coroutine_threadsafe(hass.async_start(), loop).result()
 
-    def stop_hass():
+    def stop_hass() -> None:
         """Stop hass."""
         orig_stop()
         loop_stop_event.wait()
@@ -185,7 +186,7 @@ def get_test_home_assistant():
 
     threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
 
-    return hass
+    yield hass
 
 
 async def async_test_home_assistant(event_loop, load_registries=True):

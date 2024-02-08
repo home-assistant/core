@@ -169,8 +169,7 @@ def test_delete_metadata_duplicates(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch(
         "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
-    ):
-        hass = get_test_home_assistant()
+    ), get_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -201,23 +200,23 @@ def test_delete_metadata_duplicates(
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 28
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
+    with get_test_home_assistant() as hass:
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
 
-    assert "Deleted 1 duplicated statistics_meta rows" in caplog.text
-    with session_scope(hass=hass) as session:
-        tmp = session.query(recorder.db_schema.StatisticsMeta).all()
-        assert len(tmp) == 2
-        assert tmp[0].id == 2
-        assert tmp[0].statistic_id == "test:total_energy_import_tariff_1"
-        assert tmp[1].id == 3
-        assert tmp[1].statistic_id == "test:fossil_percentage"
+        assert "Deleted 1 duplicated statistics_meta rows" in caplog.text
+        with session_scope(hass=hass) as session:
+            tmp = session.query(recorder.db_schema.StatisticsMeta).all()
+            assert len(tmp) == 2
+            assert tmp[0].id == 2
+            assert tmp[0].statistic_id == "test:total_energy_import_tariff_1"
+            assert tmp[1].id == 3
+            assert tmp[1].statistic_id == "test:fossil_percentage"
 
-    hass.stop()
+        hass.stop()
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
 
@@ -264,8 +263,7 @@ def test_delete_metadata_duplicates_many(
         recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
     ), patch(
         "homeassistant.components.recorder.core.create_engine", new=_create_engine_28
-    ):
-        hass = get_test_home_assistant()
+    ), get_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -298,25 +296,25 @@ def test_delete_metadata_duplicates_many(
         dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 28
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
+    with get_test_home_assistant() as hass:
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
 
-    assert "Deleted 1102 duplicated statistics_meta rows" in caplog.text
-    with session_scope(hass=hass) as session:
-        tmp = session.query(recorder.db_schema.StatisticsMeta).all()
-        assert len(tmp) == 3
-        assert tmp[0].id == 1101
-        assert tmp[0].statistic_id == "test:total_energy_import_tariff_1"
-        assert tmp[1].id == 1103
-        assert tmp[1].statistic_id == "test:total_energy_import_tariff_2"
-        assert tmp[2].id == 1105
-        assert tmp[2].statistic_id == "test:fossil_percentage"
+        assert "Deleted 1102 duplicated statistics_meta rows" in caplog.text
+        with session_scope(hass=hass) as session:
+            tmp = session.query(recorder.db_schema.StatisticsMeta).all()
+            assert len(tmp) == 3
+            assert tmp[0].id == 1101
+            assert tmp[0].statistic_id == "test:total_energy_import_tariff_1"
+            assert tmp[1].id == 1103
+            assert tmp[1].statistic_id == "test:total_energy_import_tariff_2"
+            assert tmp[2].id == 1105
+            assert tmp[2].statistic_id == "test:fossil_percentage"
 
-    hass.stop()
+        hass.stop()
     dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
 

@@ -1307,81 +1307,85 @@ def hass_recorder(
 
     original_tz = dt_util.DEFAULT_TIME_ZONE
 
-    hass = get_test_home_assistant()
-    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
-    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
-    compile_missing = (
-        recorder.Recorder._schedule_compile_missing_statistics
-        if enable_statistics
-        else None
-    )
-    schema_validate = (
-        migration._find_schema_errors
-        if enable_schema_validation
-        else itertools.repeat(set())
-    )
-    migrate_states_context_ids = (
-        recorder.Recorder._migrate_states_context_ids
-        if enable_migrate_context_ids
-        else None
-    )
-    migrate_events_context_ids = (
-        recorder.Recorder._migrate_events_context_ids
-        if enable_migrate_context_ids
-        else None
-    )
-    migrate_event_type_ids = (
-        recorder.Recorder._migrate_event_type_ids
-        if enable_migrate_event_type_ids
-        else None
-    )
-    migrate_entity_ids = (
-        recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
-    )
-    with patch(
-        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
-        side_effect=nightly,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
-        side_effect=stats,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.migration._find_schema_errors",
-        side_effect=schema_validate,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
-        side_effect=migrate_events_context_ids,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
-        side_effect=migrate_states_context_ids,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
-        side_effect=migrate_event_type_ids,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_entity_ids",
-        side_effect=migrate_entity_ids,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
-        side_effect=compile_missing,
-        autospec=True,
-    ):
+    with get_test_home_assistant() as hass:
+        nightly = (
+            recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
+        )
+        stats = (
+            recorder.Recorder.async_periodic_statistics if enable_statistics else None
+        )
+        compile_missing = (
+            recorder.Recorder._schedule_compile_missing_statistics
+            if enable_statistics
+            else None
+        )
+        schema_validate = (
+            migration._find_schema_errors
+            if enable_schema_validation
+            else itertools.repeat(set())
+        )
+        migrate_states_context_ids = (
+            recorder.Recorder._migrate_states_context_ids
+            if enable_migrate_context_ids
+            else None
+        )
+        migrate_events_context_ids = (
+            recorder.Recorder._migrate_events_context_ids
+            if enable_migrate_context_ids
+            else None
+        )
+        migrate_event_type_ids = (
+            recorder.Recorder._migrate_event_type_ids
+            if enable_migrate_event_type_ids
+            else None
+        )
+        migrate_entity_ids = (
+            recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
+        )
+        with patch(
+            "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+            side_effect=nightly,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder.async_periodic_statistics",
+            side_effect=stats,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.migration._find_schema_errors",
+            side_effect=schema_validate,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
+            side_effect=migrate_events_context_ids,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
+            side_effect=migrate_states_context_ids,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
+            side_effect=migrate_event_type_ids,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder._migrate_entity_ids",
+            side_effect=migrate_entity_ids,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
+            side_effect=compile_missing,
+            autospec=True,
+        ):
 
-        def setup_recorder(config: dict[str, Any] | None = None) -> HomeAssistant:
-            """Set up with params."""
-            init_recorder_component(hass, config, recorder_db_url)
-            hass.start()
-            hass.block_till_done()
-            hass.data[recorder.DATA_INSTANCE].block_till_done()
-            return hass
+            def setup_recorder(config: dict[str, Any] | None = None) -> HomeAssistant:
+                """Set up with params."""
+                init_recorder_component(hass, config, recorder_db_url)
+                hass.start()
+                hass.block_till_done()
+                hass.data[recorder.DATA_INSTANCE].block_till_done()
+                return hass
 
-        yield setup_recorder
-        hass.stop()
+            yield setup_recorder
+            hass.stop()
 
     # Restore timezone, it is set when creating the hass object
     dt_util.DEFAULT_TIME_ZONE = original_tz
