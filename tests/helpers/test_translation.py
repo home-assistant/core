@@ -585,10 +585,9 @@ async def test_get_cached_translations(
 
 
 async def test_setup(hass: HomeAssistant):
-    """Test the setup load listeners helper.
+    """Test the setup load listeners helper."""
+    translation.async_setup(hass)
 
-    translation.async_setup(hass) is called in common.py
-    """
     with patch(
         "homeassistant.helpers.translation._async_load_state_translations_to_cache",
     ) as mock:
