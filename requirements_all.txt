@@ -218,7 +218,7 @@ aiobotocore==2.9.1
 aiocomelit==0.8.3
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==0.3.0
+aiodhcpwatcher==0.3.2
 
 # homeassistant.components.dhcp
 aiodiscover==1.6.0
@@ -2484,9 +2484,6 @@ samsungtvws[async,encrypted]==2.6.0
 
 # homeassistant.components.satel_integra
 satel-integra==0.3.7
-
-# homeassistant.components.dhcp
-scapy==2.5.0
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.0
