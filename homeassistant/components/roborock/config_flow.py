@@ -222,11 +222,12 @@ class RoborockOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
                 title="", data={**self.config_entry.options, **new_sizes}
             )
         data_schema = {}
+        current_sizes = self.config_entry.options.get(SIZES, {})
         for size, default_value in DEFAULT_SIZES.items():
             data_schema[
                 vol.Required(
                     size.value,
-                    default=self.config_entry.options.get(SIZES, {}).get(
+                    default=current_sizes.get(
                         size, default_value
                     ),
                 )
@@ -241,14 +242,9 @@ class RoborockOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
     ) -> FlowResult:
         """Manage the map object drawable options."""
         if user_input is not None:
-            new_drawables = {
-                DRAWABLES: {
-                    **self.config_entry.options.get(DRAWABLES, {}),
-                    **user_input,
-                }
-            }
+            self.options.setdefault(DRAWABLES, {}).update(user_input)
             return self.async_create_entry(
-                title="", data={**self.config_entry.options, **new_drawables}
+                title="", data=self.options
             )
         data_schema = {}
         for drawable, default_value in DEFAULT_DRAWABLES.items():
