@@ -464,7 +464,9 @@ class DHCPWatcher(WatcherBase):
         # sockets
 
         from scapy import arch  # pylint: disable=import-outside-toplevel # noqa: F401
-
+        from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
         #
         # Importing scapy.sendrecv will cause a scapy resync which will
         # import scapy.arch.read_routes which will import scapy.sendrecv
@@ -472,9 +474,6 @@ class DHCPWatcher(WatcherBase):
         # We avoid this circular import by importing arch above to ensure
         # the module is loaded and avoid the problem
         #
-        from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
-        from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
-        from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
 
         @callback
         def _async_handle_dhcp_packet(packet: Packet) -> None:
