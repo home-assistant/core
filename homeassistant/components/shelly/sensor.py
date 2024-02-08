@@ -958,8 +958,12 @@ RPC_SENSORS: Final = {
         sub_key="percent",
         name="Analog input",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "analoginput_xpercent": RpcSensorDescription(
+        key="input",
+        sub_key="xpercent",
+        name="Analog value",
     ),
 }
 

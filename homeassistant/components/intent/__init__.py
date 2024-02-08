@@ -1,4 +1,5 @@
 """The Intent integration."""
+
 from __future__ import annotations
 
 import logging
@@ -155,7 +156,7 @@ class GetStateIntentHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
 
         # Entity name to match
-        name: str | None = slots.get("name", {}).get("value")
+        entity_name: str | None = slots.get("name", {}).get("value")
 
         # Look up area first to fail early
         area_name = slots.get("area", {}).get("value")
@@ -186,7 +187,7 @@ class GetStateIntentHandler(intent.IntentHandler):
         states = list(
             intent.async_match_states(
                 hass,
-                name=name,
+                name=entity_name,
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
@@ -197,7 +198,7 @@ class GetStateIntentHandler(intent.IntentHandler):
         _LOGGER.debug(
             "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s, assistant=%s",
             len(states),
-            name,
+            entity_name,
             area,
             domains,
             device_classes,

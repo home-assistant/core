@@ -185,6 +185,28 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                 }
             ]
         },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_MIN_VALUE: 1,
+                    CONF_MAX_VALUE: 3,
+                }
+            ]
+        },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_MIN_VALUE: -3,
+                    CONF_MAX_VALUE: -1,
+                }
+            ]
+        },
     ],
 )
 async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
@@ -357,7 +379,7 @@ async def test_config_wrong_struct_sensor(
             },
             [7],
             False,
-            "34",
+            "34.0000",
         ),
         (
             {
@@ -379,7 +401,7 @@ async def test_config_wrong_struct_sensor(
             },
             [9],
             False,
-            "18",
+            "18.5",
         ),
         (
             {
@@ -390,7 +412,7 @@ async def test_config_wrong_struct_sensor(
             },
             [1],
             False,
-            "2",
+            "2.40",
         ),
         (
             {
@@ -401,7 +423,7 @@ async def test_config_wrong_struct_sensor(
             },
             [2],
             False,
-            "-8",
+            "-8.3",
         ),
         (
             {
@@ -676,7 +698,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x00AB, 0xCDEF],
             False,
-            "112594",
+            "112593.75",
         ),
         (
             {
@@ -687,6 +709,16 @@ async def test_config_wrong_struct_sensor(
             [0x00AB, 0xCDEF],
             False,
             "112594",
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT16,
+                CONF_SCALE: -1,
+                CONF_OFFSET: 0,
+            },
+            [0x000A],
+            False,
+            "-10",
         ),
     ],
 )

@@ -595,7 +595,7 @@ class _ScriptRun:
         try:
             async with asyncio.timeout(delay):
                 await self._stop.wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             trace_set_result(delay=delay, done=True)
 
     async def _async_wait_template_step(self):
@@ -643,7 +643,7 @@ class _ScriptRun:
         try:
             async with asyncio.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             self._variables["wait"]["remaining"] = 0.0
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
@@ -1023,7 +1023,7 @@ class _ScriptRun:
         try:
             async with asyncio.timeout(timeout) as to_context:
                 await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             self._variables["wait"]["remaining"] = 0.0
             if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
                 self._log(_TIMEOUT_MSG)
