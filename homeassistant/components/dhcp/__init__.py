@@ -443,11 +443,6 @@ class DHCPWatcher(WatcherBase):
 
     async def async_stop(self) -> None:
         """Stop watching for DHCP packets."""
-        self._async_stop()
-
-    @callback
-    def _async_stop(self) -> None:
-        """Stop watching for DHCP packets."""
         if self._cancel:
             self._cancel()
 
