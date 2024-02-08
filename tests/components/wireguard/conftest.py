@@ -1,60 +1,60 @@
 """Common fixtures for the WireGuard tests."""
 from collections.abc import Generator
-from http import HTTPStatus
-import json
-from unittest.mock import AsyncMock, patch
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from ha_wireguard_api.model import WireGuardPeer
 import pytest
-import requests
 
 from homeassistant.components.wireguard.const import DEFAULT_HOST, DOMAIN
+from homeassistant.const import CONF_HOST
 
-from tests.common import load_fixture
-
-
-def mocked_requests(*args, **kwargs):
-    """Mock requests.get invocations."""
-
-    if args[0] == "single_peer" or args[0] == DEFAULT_HOST:
-        return MockResponse(
-            json.loads(load_fixture("single_peer.json", DOMAIN)),
-            200,
-        )
-
-    return MockResponse(None, 500)
-
-
-class MockResponse(requests.Response):
-    """Class to represent a mocked response."""
-
-    def __init__(self, json_data, status_code) -> None:
-        """Initialize the mock response class."""
-        super().__init__()
-        self.json_data = json_data
-        self.status_code = status_code
-
-    def json(self):
-        """Return the json of the response."""
-        return self.json_data
-
-    @property
-    def content(self):
-        """Return the content of the response."""
-        return self.json()
-
-    def raise_for_status(self):
-        """Raise an HTTPError if status is not OK."""
-        if self.status_code != HTTPStatus.OK:
-            raise requests.HTTPError(self.status_code)
-
-    def close(self):
-        """Close the response."""
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="12345",
+        data={CONF_HOST: DEFAULT_HOST},
+        version=1,
+    )
+
+
+@pytest.fixture(name="setup_entry")
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
-    """Override async_setup_entry."""
+    """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.wireguard.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture(name="mock_config_flow")
+def fixture_config_flow() -> Generator[None, MagicMock, None]:
+    """Return a mocked WireGuardApiClient."""
+    with patch(
+        "homeassistant.components.wireguard.config_flow.WireguardApiClient",
+        autospec=True,
+    ) as wg_mock:
+        wg = wg_mock.return_value
+        wg.host = "localhost"
+        wg.get_peers.return_value = [
+            WireGuardPeer(
+                name="EMPTY",
+                endpoint=None,
+                latest_handshake=None,
+                transfer_rx=0,
+                transfer_tx=0,
+            ),
+            WireGuardPeer(
+                name="CONNECTED",
+                endpoint="127.0.0.1:1234",
+                latest_handshake=datetime(2024, 1, 1, tzinfo=UTC),
+                transfer_rx=123,
+                transfer_tx=456,
+            ),
+        ]
+        yield wg
