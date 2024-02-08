@@ -101,7 +101,7 @@ async def test_exposed_areas(
     device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
     kitchen_light = entity_registry.async_get_or_create("light", "demo", "1234")
-    entity_registry.async_update_entity(
+    kitchen_light = entity_registry.async_update_entity(
         kitchen_light.entity_id, device_id=kitchen_device.id
     )
     hass.states.async_set(
@@ -109,7 +109,7 @@ async def test_exposed_areas(
     )
 
     bedroom_light = entity_registry.async_get_or_create("light", "demo", "5678")
-    entity_registry.async_update_entity(
+    bedroom_light = entity_registry.async_update_entity(
         bedroom_light.entity_id, area_id=area_bedroom.id
     )
     hass.states.async_set(
@@ -206,14 +206,14 @@ async def test_unexposed_entities_skipped(
 
     # Both lights are in the kitchen
     exposed_light = entity_registry.async_get_or_create("light", "demo", "1234")
-    entity_registry.async_update_entity(
+    exposed_light = entity_registry.async_update_entity(
         exposed_light.entity_id,
         area_id=area_kitchen.id,
     )
     hass.states.async_set(exposed_light.entity_id, "off")
 
     unexposed_light = entity_registry.async_get_or_create("light", "demo", "5678")
-    entity_registry.async_update_entity(
+    unexposed_light = entity_registry.async_update_entity(
         unexposed_light.entity_id,
         area_id=area_kitchen.id,
     )
@@ -336,7 +336,9 @@ async def test_device_area_context(
             light_entity = entity_registry.async_get_or_create(
                 "light", "demo", f"{area.name}-light-{i}"
             )
-            entity_registry.async_update_entity(light_entity.entity_id, area_id=area.id)
+            light_entity = entity_registry.async_update_entity(
+                light_entity.entity_id, area_id=area.id
+            )
             hass.states.async_set(
                 light_entity.entity_id,
                 "off",
@@ -692,7 +694,7 @@ async def test_empty_aliases(
 
         names = slot_lists["name"]
         assert len(names.values) == 1
-        assert names.values[0].value_out == kitchen_light.entity_id
+        assert names.values[0].value_out == kitchen_light.name
         assert names.values[0].text_in.text == kitchen_light.name
 
 
@@ -713,3 +715,82 @@ async def test_all_domains_loaded(hass: HomeAssistant, init_components) -> None:
         result.response.speech["plain"]["speech"]
         == "Sorry, I am not aware of any device called test light"
     )
+
+
+async def test_same_named_entities_in_different_areas(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that entities with the same name in different areas can be targeted."""
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
+
+    area_bedroom = area_registry.async_get_or_create("bedroom_id")
+    area_bedroom = area_registry.async_update(area_bedroom.id, name="bedroom")
+
+    # Both lights have the same name, but are in different areas
+    kitchen_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    kitchen_light = entity_registry.async_update_entity(
+        kitchen_light.entity_id,
+        area_id=area_kitchen.id,
+        name="overhead light",
+    )
+    hass.states.async_set(
+        kitchen_light.entity_id,
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: kitchen_light.name},
+    )
+
+    bedroom_light = entity_registry.async_get_or_create("light", "demo", "5678")
+    bedroom_light = entity_registry.async_update_entity(
+        bedroom_light.entity_id,
+        area_id=area_bedroom.id,
+        name="overhead light",
+    )
+    hass.states.async_set(
+        bedroom_light.entity_id,
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: bedroom_light.name},
+    )
+
+    # Target kitchen light
+    calls = async_mock_service(hass, "light", "turn_on")
+    result = await conversation.async_converse(
+        hass, "turn on overhead light in the kitchen", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert (
+        result.response.intent.slots.get("name", {}).get("value") == kitchen_light.name
+    )
+    assert (
+        result.response.intent.slots.get("name", {}).get("text") == kitchen_light.name
+    )
+    assert len(result.response.matched_states) == 1
+    assert result.response.matched_states[0].entity_id == kitchen_light.entity_id
+    assert calls[0].data.get("entity_id") == [kitchen_light.entity_id]
+
+    # Target bedroom light
+    calls.clear()
+    result = await conversation.async_converse(
+        hass, "turn on overhead light in the bedroom", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert (
+        result.response.intent.slots.get("name", {}).get("value") == bedroom_light.name
+    )
+    assert (
+        result.response.intent.slots.get("name", {}).get("text") == bedroom_light.name
+    )
+    assert len(result.response.matched_states) == 1
+    assert result.response.matched_states[0].entity_id == bedroom_light.entity_id
+    assert calls[0].data.get("entity_id") == [bedroom_light.entity_id]
