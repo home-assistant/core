@@ -500,7 +500,7 @@ async def test_agent_user_id_storage(
 
     assert hass_storage["google_assistant"] == {
         "version": 1,
-        "minor_version": 1,
+        "minor_version": 2,
         "key": "google_assistant",
         "data": {
             "agent_user_ids": {
@@ -528,7 +528,7 @@ async def test_agent_user_id_storage(
 
     hass_storage["google_assistant"] = {
         "version": 1,
-        "minor_version": 1,
+        "minor_version": 2,
         "key": "google_assistant",
         "data": {
             "agent_user_ids": {"agent_1": {}},
