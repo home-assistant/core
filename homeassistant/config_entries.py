@@ -252,6 +252,16 @@ class ConfigEntry:
         "_supports_options",
     )
 
+    entry_id: str
+    domain: str
+    title: str
+    data: MappingProxyType[str, Any]
+    options: MappingProxyType[str, Any]
+    unique_id: str | None
+    state: ConfigEntryState
+    pref_disable_new_entities: bool
+    pref_disable_polling: bool
+
     def __init__(
         self,
         *,
@@ -271,43 +281,44 @@ class ConfigEntry:
     ) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
-        self.entry_id = entry_id or uuid_util.random_uuid_hex()
+        entry_id = entry_id or uuid_util.random_uuid_hex()
+        object.__setattr__(self, "entry_id", entry_id)
 
         # Version of the configuration.
         self.version = version
         self.minor_version = minor_version
 
         # Domain the configuration belongs to
-        self.domain = domain
+        object.__setattr__(self, "domain", domain)
 
         # Title of the configuration
-        self.title = title
+        object.__setattr__(self, "title", title)
 
         # Config data
-        self.data = MappingProxyType(data)
+        object.__setattr__(self, "data", MappingProxyType(data))
 
         # Entry options
-        self.options = MappingProxyType(options or {})
+        object.__setattr__(self, "options", MappingProxyType(options or {}))
 
         # Entry system options
         if pref_disable_new_entities is None:
             pref_disable_new_entities = False
 
-        self.pref_disable_new_entities = pref_disable_new_entities
+        object.__setattr__(self, "pref_disable_new_entities", pref_disable_new_entities)
 
         if pref_disable_polling is None:
             pref_disable_polling = False
 
-        self.pref_disable_polling = pref_disable_polling
+        object.__setattr__(self, "pref_disable_polling", pref_disable_polling)
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
 
         # State of the entry (LOADED, NOT_LOADED)
-        self.state = state
+        object.__setattr__(self, "state", state)
 
         # Unique ID of this entry.
-        self.unique_id = unique_id
+        object.__setattr__(self, "unique_id", unique_id)
 
         # Config entry is disabled
         if isinstance(disabled_by, str) and not isinstance(
@@ -365,6 +376,22 @@ class ConfigEntry:
             f"<ConfigEntry entry_id={self.entry_id} version={self.version} domain={self.domain} "
             f"title={self.title} state={self.state} unique_id={self.unique_id}>"
         )
+
+    def __setattr__(self, key: str, value: Any) -> None:
+        """Set an attribute."""
+        if key in (
+            "unique_id",
+            "title",
+            "data",
+            "options",
+            "pref_disable_new_entities",
+            "pref_disable_polling",
+        ):
+            raise AttributeError(f"{key} must only be updated via async_update_entry")
+        if key in ("entry_id", "domain", "state"):
+            raise AttributeError(f"{key} cannot be changed")
+
+        super().__setattr__(key, value)
 
     @property
     def supports_options(self) -> bool:
@@ -657,7 +684,7 @@ class ConfigEntry:
         """Set the state of the config entry."""
         if state not in NO_RESET_TRIES_STATES:
             self._tries = 0
-        self.state = state
+        object.__setattr__(self, "state", state)
         self.reason = reason
         async_dispatcher_send(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
@@ -1202,7 +1229,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         """
         entry_id = entry.entry_id
         self._unindex_entry(entry_id)
-        entry.unique_id = new_unique_id
+        object.__setattr__(entry, "unique_id", new_unique_id)
         self._index_entry(entry)
 
     def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
@@ -1540,16 +1567,16 @@ class ConfigEntries:
             if value is UNDEFINED or getattr(entry, attr) == value:
                 continue
 
-            setattr(entry, attr, value)
+            object.__setattr__(entry, attr, value)
             changed = True
 
         if data is not UNDEFINED and entry.data != data:
             changed = True
-            entry.data = MappingProxyType(data)
+            object.__setattr__(entry, "data", MappingProxyType(data))
 
         if options is not UNDEFINED and entry.options != options:
             changed = True
-            entry.options = MappingProxyType(options)
+            object.__setattr__(entry, "options", MappingProxyType(options))
 
         if not changed:
             return False
