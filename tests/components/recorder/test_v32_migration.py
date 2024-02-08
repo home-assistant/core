@@ -22,8 +22,6 @@ from .common import async_wait_recording_done
 
 from tests.common import async_test_home_assistant
 
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
-
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE = "tests.components.recorder.db_schema_32"
 
@@ -141,8 +139,6 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
             await hass.async_stop()
             await hass.async_block_till_done()
 
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
-
     assert "ix_states_event_id" in states_index_names
 
     # Test that the duplicates are removed during migration from schema 23
@@ -215,7 +211,6 @@ async def test_migrate_times(caplog: pytest.LogCaptureFixture, tmp_path: Path) -
         assert recorder.get_instance(hass).use_legacy_events_index is False
 
         await hass.async_stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
 
 async def test_migrate_can_resume_entity_id_post_migration(
@@ -354,4 +349,3 @@ async def test_migrate_can_resume_entity_id_post_migration(
         assert "ix_states_entity_id_last_updated_ts" not in states_index_names
 
         await hass.async_stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ

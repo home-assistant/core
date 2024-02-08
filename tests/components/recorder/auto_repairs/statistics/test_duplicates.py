@@ -27,8 +27,6 @@ from ...common import wait_recording_done
 
 from tests.common import get_test_home_assistant
 
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
-
 
 def test_delete_duplicates_no_duplicates(
     hass_recorder: Callable[..., HomeAssistant], caplog: pytest.LogCaptureFixture
@@ -197,7 +195,6 @@ def test_delete_metadata_duplicates(
             assert tmp[2].statistic_id == "test:fossil_percentage"
 
         hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 28
     with get_test_home_assistant() as hass:
@@ -217,7 +214,6 @@ def test_delete_metadata_duplicates(
             assert tmp[1].statistic_id == "test:fossil_percentage"
 
         hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
 
 def test_delete_metadata_duplicates_many(
@@ -293,7 +289,6 @@ def test_delete_metadata_duplicates_many(
             )
 
         hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 28
     with get_test_home_assistant() as hass:
@@ -315,7 +310,6 @@ def test_delete_metadata_duplicates_many(
             assert tmp[2].statistic_id == "test:fossil_percentage"
 
         hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
 
 def test_delete_metadata_duplicates_no_duplicates(

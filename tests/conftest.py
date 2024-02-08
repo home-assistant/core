@@ -60,7 +60,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import BASE_PLATFORMS, async_setup_component
-from homeassistant.util import dt as dt_util, location
+from homeassistant.util import location
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
@@ -526,8 +526,6 @@ async def hass(
     loop = asyncio.get_running_loop()
     hass_fixture_setup.append(True)
 
-    orig_tz = dt_util.DEFAULT_TIME_ZONE
-
     def exc_handle(loop, context):
         """Handle exceptions by rethrowing them, which will fail the test."""
         # Most of these contexts will contain an exception, but not all.
@@ -561,9 +559,6 @@ async def hass(
         )
 
         await hass.async_stop(force=True)
-
-    # Restore timezone, it is set when creating the hass object
-    dt_util.DEFAULT_TIME_ZONE = orig_tz
 
     for ex in exceptions:
         if (
@@ -1304,8 +1299,6 @@ def hass_recorder(
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components.recorder import migration
 
-    original_tz = dt_util.DEFAULT_TIME_ZONE
-
     with get_test_home_assistant() as hass:
         nightly = (
             recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
@@ -1385,9 +1378,6 @@ def hass_recorder(
 
             yield setup_recorder
             hass.stop()
-
-    # Restore timezone, it is set when creating the hass object
-    dt_util.DEFAULT_TIME_ZONE = original_tz
 
 
 async def _async_init_recorder_component(
