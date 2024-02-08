@@ -9,10 +9,10 @@ from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
 from pyunifiprotect.data import NVR, Bootstrap, Light
 
 from homeassistant.components.unifiprotect.const import (
+    AUTH_RETRIES,
     CONF_DISABLE_RTSP,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    AUTH_RETRIES,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -200,7 +200,9 @@ async def test_setup_failed_auth(hass: HomeAssistant, ufp: MockUFPFixture) -> No
     assert not ufp.api.update.called
 
 
-async def test_setup_failed_auth_retry(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
+async def test_setup_failed_auth_retry(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
     """Test setup of unifiprotect entry with unauthorized error."""
 
     reauth_key = f"{ufp.entry.entry_id}_auth"
