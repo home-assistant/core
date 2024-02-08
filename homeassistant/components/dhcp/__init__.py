@@ -3,18 +3,17 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Callable, Iterable
-import contextlib
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from fnmatch import translate
 from functools import lru_cache
 import itertools
 import logging
-import os
 import re
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final
 
+import aiodhcpwatcher
 from aiodiscover import DiscoverHosts
 from aiodiscover.discovery import (
     HOSTNAME as DISCOVERY_HOSTNAME,
@@ -22,8 +21,6 @@ from aiodiscover.discovery import (
     MAC_ADDRESS as DISCOVERY_MAC_ADDRESS,
 )
 from cached_ipaddress import cached_ip_addresses
-from scapy.config import conf
-from scapy.error import Scapy_Exception
 
 from homeassistant import config_entries
 from homeassistant.components.device_tracker import (
@@ -61,7 +58,7 @@ from homeassistant.loader import DHCPMatcher, async_get_dhcp
 from .const import DOMAIN
 
 if TYPE_CHECKING:
-    from scapy.packet import Packet
+    pass
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -435,9 +432,14 @@ class DHCPWatcher(WatcherBase):
     ) -> None:
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
-        self._loop = asyncio.get_running_loop()
-        self._sock: Any | None = None
-        self._async_handle_dhcp_packet: Callable[[Packet], None] | None = None
+        self._cancel: Callable[[], None] | None = None
+
+    @callback
+    def _async_process_dhcp_request(self, response: aiodhcpwatcher.DHCPRequest) -> None:
+        """Process a dhcp request."""
+        self.async_process_client(
+            response.ip_address, response.hostname, _format_mac(response.mac_address)
+        )
 
     async def async_stop(self) -> None:
         """Stop watching for DHCP packets."""
@@ -446,151 +448,12 @@ class DHCPWatcher(WatcherBase):
     @callback
     def _async_stop(self) -> None:
         """Stop watching for DHCP packets."""
-        if self._sock:
-            self._loop.remove_reader(self._sock.fileno())
-            self._sock.close()
-            self._sock = None
+        if self._cancel:
+            self._cancel()
 
     async def async_start(self) -> None:
         """Start watching for dhcp packets."""
-        try:
-            await self._async_start()
-        except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.exception("Error setting up DHCP watcher: %s", ex)
-
-    async def _async_start(self) -> None:
-        """Start watching for dhcp packets."""
-        # Local import because importing from scapy has side effects such as opening
-        # sockets
-        from scapy import arch  # pylint: disable=import-outside-toplevel # noqa: F401
-        from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
-        from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
-        from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
-
-        #
-        # Importing scapy.sendrecv will cause a scapy resync which will
-        # import scapy.arch.read_routes which will import scapy.sendrecv
-        #
-        # We avoid this circular import by importing arch above to ensure
-        # the module is loaded and avoid the problem
-        #
-
-        @callback
-        def _async_handle_dhcp_packet(packet: Packet) -> None:
-            """Process a dhcp packet."""
-            if not (dhcp_packet := packet.getlayer(DHCP)):
-                return
-
-            if TYPE_CHECKING:
-                dhcp_packet = cast(DHCP, dhcp_packet)
-
-            options_dict = _dhcp_options_as_dict(dhcp_packet.options)
-            if options_dict.get(MESSAGE_TYPE) != DHCP_REQUEST:
-                # Not a DHCP request
-                return
-
-            ip_address = options_dict.get(REQUESTED_ADDR) or cast(str, packet[IP].src)
-            assert isinstance(ip_address, str)
-            hostname = ""
-            if (hostname_bytes := options_dict.get(HOSTNAME)) and isinstance(
-                hostname_bytes, bytes
-            ):
-                with contextlib.suppress(AttributeError, UnicodeDecodeError):
-                    hostname = hostname_bytes.decode()
-            mac_address = _format_mac(cast(str, packet[Ether].src))
-
-            if ip_address is not None and mac_address is not None:
-                self.async_process_client(ip_address, hostname, mac_address)
-
-        # disable scapy promiscuous mode as we do not need it
-        conf.sniff_promisc = 0
-
-        try:
-            self._verify_working_pcap(FILTER)
-        except (Scapy_Exception, ImportError) as ex:
-            _LOGGER.error(
-                "Cannot watch for dhcp packets without a functional packet filter: %s",
-                ex,
-            )
-            return
-
-        try:
-            sock = self._make_listen_socket(FILTER)
-            fileno = sock.fileno()
-        except (Scapy_Exception, OSError) as ex:
-            if os.geteuid() == 0:
-                _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
-            else:
-                _LOGGER.debug(
-                    "Cannot watch for dhcp packets without root or CAP_NET_RAW: %s", ex
-                )
-            return
-
-        self._sock = sock
-        self._async_handle_dhcp_packet = _async_handle_dhcp_packet
-        self._loop.add_reader(fileno, self._async_on_data)
-
-    def _async_on_data(self) -> None:
-        """Handle data from the socket."""
-        if not (sock := self._sock):
-            return
-
-        try:
-            data = sock.recv()
-        except (BlockingIOError, InterruptedError):
-            return
-        except BaseException as ex:  # pylint: disable=broad-except
-            _LOGGER.exception("Fatal error while processing dhcp packet: %s", ex)
-            self._async_stop()
-
-        if TYPE_CHECKING:
-            assert self._async_handle_dhcp_packet is not None
-
-        if data:
-            self._async_handle_dhcp_packet(data)
-
-    def _make_listen_socket(self, cap_filter: str) -> Any:
-        """Get a nonblocking listen socket."""
-        from scapy.data import ETH_P_ALL  # pylint: disable=import-outside-toplevel
-        from scapy.interfaces import (  # pylint: disable=import-outside-toplevel
-            resolve_iface,
-        )
-
-        iface = conf.iface
-        sock = resolve_iface(iface).l2listen()(
-            type=ETH_P_ALL, iface=iface, filter=cap_filter
-        )
-        if hasattr(sock, "set_nonblock"):
-            # Not all classes have set_nonblock so we have to call fcntl directly
-            # in the event its not implemented
-            sock.set_nonblock()
-        else:
-            import fcntl  # pylint: disable=import-outside-toplevel
-
-            fcntl.fcntl(sock.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
-
-        return sock
-
-    def _verify_working_pcap(self, cap_filter: str) -> None:
-        """Verify we can create a packet filter.
-
-        If we cannot create a filter we will be listening for
-        all traffic which is too intensive.
-        """
-        # Local import because importing from scapy has side effects such as opening
-        # sockets
-        from scapy.arch.common import (  # pylint: disable=import-outside-toplevel
-            compile_filter,
-        )
-
-        compile_filter(cap_filter)
-
-
-def _dhcp_options_as_dict(
-    dhcp_options: Iterable[tuple[str, int | bytes | None]],
-) -> dict[str, str | int | bytes | None]:
-    """Extract data from packet options as a dict."""
-    return {option[0]: option[1] for option in dhcp_options if len(option) >= 2}
+        self._cancel = aiodhcpwatcher.start(self._async_process_dhcp_request)
 
 
 def _format_mac(mac_address: str) -> str:
