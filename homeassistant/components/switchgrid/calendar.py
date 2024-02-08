@@ -29,6 +29,8 @@ class SwitchgridCalendarEntity(
     """A calendar entity holding Switchgrid Electric Loadshaving events."""
 
     _attr_has_entity_name = True
+    entity_id = "calendar.switchgrid_events"
+    _attr_unique_id = "switchgrid_events"
     _attr_translation_key = "switchgrid_events"
     _events: list[CalendarEvent] = []
 
@@ -37,7 +39,6 @@ class SwitchgridCalendarEntity(
     ) -> None:
         """Create the Calendar entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = "switchgrid_events"
         self._config_entry = config_entry
 
     @property
