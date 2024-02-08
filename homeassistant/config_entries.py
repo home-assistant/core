@@ -1126,9 +1126,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
     - domain -> unique_id -> ConfigEntry
     """
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the container."""
         super().__init__()
+        self._hass = hass
         self._domain_index: dict[str, list[ConfigEntry]] = {}
         self._domain_unique_id_index: dict[str, dict[str, ConfigEntry]] = {}
 
@@ -1152,12 +1153,12 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             if not isinstance(entry.unique_id, Hashable):
                 unique_id_hash = str(entry.unique_id)  # type: ignore[unreachable]
                 report_issue = async_suggest_report_issue(
-                    self.hass, integration_domain=entry.domain
+                    self._hass, integration_domain=entry.domain
                 )
                 _LOGGER.error(
                     (
-                        "Config entry %s from integration %s has an invalid unique_id "
-                        "'%s', please %s"
+                        "Config entry '%s' from integration %s has an invalid unique_id"
+                        " '%s', please %s"
                     ),
                     entry.title,
                     entry.domain,
@@ -1211,7 +1212,7 @@ class ConfigEntries:
         self.flow = ConfigEntriesFlowManager(hass, self, hass_config)
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
-        self._entries = ConfigEntryItems()
+        self._entries = ConfigEntryItems(hass)
         self._store = storage.Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
@@ -1336,10 +1337,10 @@ class ConfigEntries:
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
         if config is None:
-            self._entries = ConfigEntryItems()
+            self._entries = ConfigEntryItems(self.hass)
             return
 
-        entries: ConfigEntryItems = ConfigEntryItems()
+        entries: ConfigEntryItems = ConfigEntryItems(self.hass)
         for entry in config["entries"]:
             pref_disable_new_entities = entry.get("pref_disable_new_entities")
 
