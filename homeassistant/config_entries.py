@@ -281,8 +281,7 @@ class ConfigEntry:
     ) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
-        entry_id = entry_id or uuid_util.random_uuid_hex()
-        object.__setattr__(self, "entry_id", entry_id)
+        object.__setattr__(self, "entry_id", entry_id or uuid_util.random_uuid_hex())
 
         # Version of the configuration.
         self.version = version
