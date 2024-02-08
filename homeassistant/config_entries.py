@@ -1150,6 +1150,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         if entry.unique_id is not None:
             unique_id_hash = entry.unique_id
             # Guard against integrations using unhashable unique_id
+            # In HA Core 2024.9, we should remove the guard and instead fail
             if not isinstance(entry.unique_id, Hashable):
                 unique_id_hash = str(entry.unique_id)  # type: ignore[unreachable]
                 report_issue = async_suggest_report_issue(
