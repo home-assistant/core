@@ -6,6 +6,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -41,7 +42,15 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
         self.bee = bee
         self.microbees = microbees
         self._attr_unique_id = f"{self.bee.id}_{self.act.id}"
-        self._attr_name = self.act.name + " (" + self.bee.name + ")"
+        self._attr_name = self.act.name
+        self._attr_has_entity_name = True
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.bee.id)},
+            manufacturer="microBees",
+            name=self.bee.name,
+            model=self.bee.prototypeName,
+        )
+
         if self.bee.productID == 46:
             self._attr_icon = "mdi:power-socket-it"
         if self.bee.productID == 38:
