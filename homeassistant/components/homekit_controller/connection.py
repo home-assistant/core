@@ -557,10 +557,10 @@ class HKDevice:
             for parts in stale:
                 _LOGGER.debug(
                     "Removing stale entity registry entry %s for pairing %s",
-                    exisiting_entities[parts],
+                    existing_entities[parts],
                     self.unique_id,
                 )
-                reg.async_remove(exisiting_entities[parts])
+                reg.async_remove(existing_entities[parts])
 
     @callback
     def async_migrate_ble_unique_id(self) -> None:
