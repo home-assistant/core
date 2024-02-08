@@ -48,7 +48,7 @@ async def test_setup(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert ufp.entry.state == ConfigEntryState.LOADED
+    assert ufp.entry.state is ConfigEntryState.LOADED
     assert ufp.api.update.called
     assert ufp.entry.unique_id == ufp.api.bootstrap.nvr.mac
 
@@ -63,7 +63,7 @@ async def test_setup_multiple(
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert ufp.entry.state == ConfigEntryState.LOADED
+    assert ufp.entry.state is ConfigEntryState.LOADED
     assert ufp.api.update.called
     assert ufp.entry.unique_id == ufp.api.bootstrap.nvr.mac
 
@@ -105,14 +105,14 @@ async def test_reload(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
-    assert ufp.entry.state == ConfigEntryState.LOADED
+    assert ufp.entry.state is ConfigEntryState.LOADED
 
     options = dict(ufp.entry.options)
     options[CONF_DISABLE_RTSP] = True
     hass.config_entries.async_update_entry(ufp.entry, options=options)
     await hass.async_block_till_done()
 
-    assert ufp.entry.state == ConfigEntryState.LOADED
+    assert ufp.entry.state is ConfigEntryState.LOADED
     assert ufp.api.async_disconnect_ws.called
 
 
@@ -120,10 +120,10 @@ async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture, light: Light) ->
     """Test unloading of unifiprotect entry."""
 
     await init_entry(hass, ufp, [light])
-    assert ufp.entry.state == ConfigEntryState.LOADED
+    assert ufp.entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(ufp.entry.entry_id)
-    assert ufp.entry.state == ConfigEntryState.NOT_LOADED
+    assert ufp.entry.state is ConfigEntryState.NOT_LOADED
     assert ufp.api.async_disconnect_ws.called
 
 
@@ -136,7 +136,7 @@ async def test_setup_too_old(
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
-    assert ufp.entry.state == ConfigEntryState.SETUP_ERROR
+    assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
     assert not ufp.api.update.called
 
 
@@ -147,7 +147,7 @@ async def test_setup_failed_update(hass: HomeAssistant, ufp: MockUFPFixture) -> 
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
-    assert ufp.entry.state == ConfigEntryState.SETUP_RETRY
+    assert ufp.entry.state is ConfigEntryState.SETUP_RETRY
     assert ufp.api.update.called
 
 
@@ -156,11 +156,9 @@ async def test_setup_failed_update_reauth(
 ) -> None:
     """Test setup of unifiprotect entry with update that gives unauthroized error."""
 
-    reauth_key = f"{ufp.entry.entry_id}_auth"
-    hass.data.setdefault(DOMAIN, {})[reauth_key] = AUTH_RETRIES
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
-    assert ufp.entry.state == ConfigEntryState.LOADED
+    assert ufp.entry.state is ConfigEntryState.LOADED
 
     # reauth should not be triggered until there are 10 auth failures in a row
     # to verify it is not transient
@@ -170,7 +168,7 @@ async def test_setup_failed_update_reauth(
         assert len(hass.config_entries.flow._progress) == 0
 
     assert ufp.api.update.call_count == AUTH_RETRIES
-    assert ufp.entry.state == ConfigEntryState.LOADED
+    assert ufp.entry.state is ConfigEntryState.LOADED
 
     await time_changed(hass, DEFAULT_SCAN_INTERVAL)
     assert ufp.api.update.call_count == AUTH_RETRIES + 1
@@ -184,34 +182,24 @@ async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture) -> N
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
-    assert ufp.entry.state == ConfigEntryState.SETUP_RETRY
+    assert ufp.entry.state is ConfigEntryState.SETUP_RETRY
     assert not ufp.api.update.called
 
 
 async def test_setup_failed_auth(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     """Test setup of unifiprotect entry with unauthorized error after multiple retries."""
 
-    reauth_key = f"{ufp.entry.entry_id}_auth"
-    hass.data.setdefault(DOMAIN, {})[reauth_key] = AUTH_RETRIES
-    ufp.api.get_nvr = AsyncMock(side_effect=NotAuthorized)
-
-    await hass.config_entries.async_setup(ufp.entry.entry_id)
-    assert ufp.entry.state == ConfigEntryState.SETUP_ERROR
-    assert not ufp.api.update.called
-
-
-async def test_setup_failed_auth_retry(
-    hass: HomeAssistant, ufp: MockUFPFixture
-) -> None:
-    """Test setup of unifiprotect entry with unauthorized error."""
-
-    reauth_key = f"{ufp.entry.entry_id}_auth"
-    hass.data.setdefault(DOMAIN, {})[reauth_key] = 0
     ufp.api.get_nvr = AsyncMock(side_effect=NotAuthorized)
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     assert ufp.entry.state is ConfigEntryState.SETUP_RETRY
-    assert hass.data[DOMAIN][reauth_key] == 1
+
+    for _ in range(AUTH_RETRIES - 1):
+        await hass.config_entries.async_reload(ufp.entry.entry_id)
+        assert ufp.entry.state is ConfigEntryState.SETUP_RETRY
+
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
     assert not ufp.api.update.called
 
 
@@ -228,7 +216,7 @@ async def test_setup_starts_discovery(
 
         await hass.config_entries.async_setup(ufp.entry.entry_id)
         await hass.async_block_till_done()
-        assert ufp.entry.state == ConfigEntryState.LOADED
+        assert ufp.entry.state is ConfigEntryState.LOADED
         await hass.async_block_till_done()
         assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
 
