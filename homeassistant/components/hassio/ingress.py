@@ -9,7 +9,7 @@ import logging
 from urllib.parse import quote
 
 import aiohttp
-from aiohttp import ClientTimeout, hdrs, web
+from aiohttp import ClientTimeout, ClientWebSocketResponse, hdrs, web
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPBadRequest
 from multidict import CIMultiDict
 from yarl import URL
@@ -46,7 +46,7 @@ MAX_SIMPLE_RESPONSE_SIZE = 4194000
 
 
 @callback
-def async_setup_ingress_view(hass: HomeAssistant, host: str):
+def async_setup_ingress_view(hass: HomeAssistant, host: str) -> None:
     """Auth setup."""
     websession = async_get_clientsession(hass)
 
@@ -67,18 +67,20 @@ class HassIOIngress(HomeAssistantView):
         self._websession = websession
 
     @lru_cache
-    def _create_url(self, token: str, path: str) -> str:
+    def _create_url(self, token: str, path: str) -> URL:
         """Create URL to service."""
         base_path = f"/ingress/{token}/"
         url = f"http://{self._host}{base_path}{quote(path)}"
 
         try:
-            if not URL(url).path.startswith(base_path):
-                raise HTTPBadRequest()
+            target_url = URL(url)
         except ValueError as err:
             raise HTTPBadRequest() from err
 
-        return url
+        if not target_url.path.startswith(base_path):
+            raise HTTPBadRequest()
+
+        return target_url
 
     async def _handle(
         self, request: web.Request, token: str, path: str
@@ -128,7 +130,7 @@ class HassIOIngress(HomeAssistantView):
 
         # Support GET query
         if request.query_string:
-            url = f"{url}?{request.query_string}"
+            url = url.with_query(request.query_string)
 
         # Start proxy
         async with self._websession.ws_connect(
@@ -279,20 +281,23 @@ def _is_websocket(request: web.Request) -> bool:
     )
 
 
-async def _websocket_forward(ws_from, ws_to):
+async def _websocket_forward(
+    ws_from: web.WebSocketResponse | ClientWebSocketResponse,
+    ws_to: web.WebSocketResponse | ClientWebSocketResponse,
+) -> None:
     """Handle websocket message directly."""
     try:
         async for msg in ws_from:
-            if msg.type == aiohttp.WSMsgType.TEXT:
+            if msg.type is aiohttp.WSMsgType.TEXT:
                 await ws_to.send_str(msg.data)
-            elif msg.type == aiohttp.WSMsgType.BINARY:
+            elif msg.type is aiohttp.WSMsgType.BINARY:
                 await ws_to.send_bytes(msg.data)
-            elif msg.type == aiohttp.WSMsgType.PING:
+            elif msg.type is aiohttp.WSMsgType.PING:
                 await ws_to.ping()
-            elif msg.type == aiohttp.WSMsgType.PONG:
+            elif msg.type is aiohttp.WSMsgType.PONG:
                 await ws_to.pong()
             elif ws_to.closed:
-                await ws_to.close(code=ws_to.close_code, message=msg.extra)
+                await ws_to.close(code=ws_to.close_code, message=msg.extra)  # type: ignore[arg-type]
     except RuntimeError:
         _LOGGER.debug("Ingress Websocket runtime error")
     except ConnectionResetError:

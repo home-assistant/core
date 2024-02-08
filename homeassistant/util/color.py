@@ -7,6 +7,8 @@ from typing import NamedTuple
 
 import attr
 
+from .scaling import scale_to_ranged_value
+
 
 class RGBColor(NamedTuple):
     """RGB hex values."""
@@ -744,3 +746,38 @@ def check_valid_gamut(Gamut: GamutType) -> bool:
     )
 
     return not_on_line and red_valid and green_valid and blue_valid
+
+
+def brightness_to_value(low_high_range: tuple[float, float], brightness: int) -> float:
+    """Given a brightness_scale convert a brightness to a single value.
+
+    Do not include 0 if the light is off for value 0.
+
+    Given a brightness low_high_range of (1,100) this function
+    will return:
+
+    255: 100.0
+    127: ~49.8039
+    10: ~3.9216
+    """
+    return scale_to_ranged_value((1, 255), low_high_range, brightness)
+
+
+def value_to_brightness(low_high_range: tuple[float, float], value: float) -> int:
+    """Given a brightness_scale convert a single value to a brightness.
+
+    Do not include 0 if the light is off for value 0.
+
+    Given a brightness low_high_range of (1,100) this function
+    will return:
+
+    100: 255
+    50: 128
+    4: 10
+
+    The value will be clamped between 1..255 to ensure valid value.
+    """
+    return min(
+        255,
+        max(1, round(scale_to_ranged_value(low_high_range, (1, 255), value))),
+    )

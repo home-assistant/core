@@ -6,6 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import OptionsFlowWithConfigEntry
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
@@ -95,15 +96,11 @@ class MetConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Init MetConfigFlowHandler."""
-        self._errors: dict[str, Any] = {}
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initialized by the user."""
-        self._errors = {}
+        errors = {}
 
         if user_input is not None:
             if (
@@ -113,12 +110,12 @@ class MetConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
-            self._errors[CONF_NAME] = "already_configured"
+            errors[CONF_NAME] = "already_configured"
 
         return self.async_show_form(
             step_id="user",
             data_schema=_get_data_schema(self.hass),
-            errors=self._errors,
+            errors=errors,
         )
 
     async def async_step_onboarding(
@@ -146,13 +143,8 @@ class MetConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return MetOptionsFlowHandler(config_entry)
 
 
-class MetOptionsFlowHandler(config_entries.OptionsFlow):
+class MetOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Options flow for Met component."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize the Met OptionsFlow."""
-        self._config_entry = config_entry
-        self._errors: dict[str, Any] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -171,5 +163,4 @@ class MetOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=_get_data_schema(self.hass, config_entry=self._config_entry),
-            errors=self._errors,
         )

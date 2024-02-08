@@ -26,7 +26,7 @@ from .models import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class MelnorZoneNumberEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -34,7 +34,7 @@ class MelnorZoneNumberEntityDescriptionMixin:
     state_fn: Callable[[Valve], Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class MelnorZoneNumberEntityDescription(
     NumberEntityDescription, MelnorZoneNumberEntityDescriptionMixin
 ):

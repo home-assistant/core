@@ -18,26 +18,26 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class SmappeeRequiredKeysMixin:
     """Mixin for required keys."""
 
     sensor_id: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SmappeeSensorEntityDescription(SensorEntityDescription, SmappeeRequiredKeysMixin):
     """Describes Smappee sensor entity."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class SmappeePollingSensorEntityDescription(SmappeeSensorEntityDescription):
     """Describes Smappee sensor entity."""
 
     local_polling: bool = False
 
 
-@dataclass
+@dataclass(frozen=True)
 class SmappeeVoltageSensorEntityDescription(SmappeeSensorEntityDescription):
     """Describes Smappee sensor entity."""
 

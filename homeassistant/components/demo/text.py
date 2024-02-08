@@ -21,20 +21,17 @@ async def async_setup_entry(
             DemoText(
                 unique_id="text",
                 device_name="Text",
-                icon=None,
                 native_value="Hello world",
             ),
             DemoText(
                 unique_id="password",
                 device_name="Password",
-                icon="mdi:text",
                 native_value="Hello world",
                 mode=TextMode.PASSWORD,
             ),
             DemoText(
                 unique_id="text_1_to_5_char",
                 device_name="Text with 1 to 5 characters",
-                icon="mdi:text",
                 native_value="Hello",
                 native_min=1,
                 native_max=5,
@@ -42,7 +39,6 @@ async def async_setup_entry(
             DemoText(
                 unique_id="text_lowercase",
                 device_name="Text with only lower case characters",
-                icon="mdi:text",
                 native_value="world",
                 pattern=r"[a-z]+",
             ),
@@ -61,7 +57,6 @@ class DemoText(TextEntity):
         self,
         unique_id: str,
         device_name: str,
-        icon: str | None,
         native_value: str | None,
         mode: TextMode = TextMode.TEXT,
         native_max: int | None = None,
@@ -71,7 +66,6 @@ class DemoText(TextEntity):
         """Initialize the Demo text entity."""
         self._attr_unique_id = unique_id
         self._attr_native_value = native_value
-        self._attr_icon = icon
         self._attr_mode = mode
         if native_max is not None:
             self._attr_native_max = native_max
