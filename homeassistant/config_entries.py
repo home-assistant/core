@@ -259,6 +259,7 @@ class ConfigEntry:
     options: MappingProxyType[str, Any]
     unique_id: str | None
     state: ConfigEntryState
+    reason: str | None
     pref_disable_new_entities: bool
     pref_disable_polling: bool
 
@@ -347,7 +348,7 @@ class ConfigEntry:
         self.update_listeners: list[UpdateListenerType] = []
 
         # Reason why config entry is in a failed state
-        self.reason: str | None = None
+        object.__setattr__(self, "reason", None)
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
@@ -387,7 +388,7 @@ class ConfigEntry:
             "pref_disable_polling",
         ):
             raise AttributeError(f"{key} must only be updated via async_update_entry")
-        if key in ("entry_id", "domain", "state"):
+        if key in ("entry_id", "domain", "state", "reason"):
             raise AttributeError(f"{key} cannot be changed")
 
         super().__setattr__(key, value)
@@ -684,7 +685,7 @@ class ConfigEntry:
         if state not in NO_RESET_TRIES_STATES:
             self._tries = 0
         object.__setattr__(self, "state", state)
-        self.reason = reason
+        object.__setattr__(self, "reason", reason)
         async_dispatcher_send(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
         )

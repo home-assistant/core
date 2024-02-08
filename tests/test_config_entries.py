@@ -2026,7 +2026,7 @@ async def test_unique_id_update_existing_entry_with_reload(
 
     # Test we don't reload if entry not started
     updates["host"] = "2.2.2.2"
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
         "homeassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
@@ -3375,8 +3375,7 @@ async def test_setup_raise_auth_failed(
     assert flows[0]["context"]["title_placeholders"] == {"name": "test_title"}
 
     caplog.clear()
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
-    entry.reason = None
+    entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
 
     await entry.async_setup(hass)
     await hass.async_block_till_done()
@@ -3425,7 +3424,7 @@ async def test_setup_raise_auth_failed_from_first_coordinator_update(
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
 
     caplog.clear()
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
 
     await entry.async_setup(hass)
     await hass.async_block_till_done()
@@ -3475,7 +3474,7 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
 
     caplog.clear()
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
 
     await entry.async_setup(hass)
     await hass.async_block_till_done()
