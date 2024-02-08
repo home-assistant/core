@@ -380,10 +380,7 @@ async def async_get_translations(
     else:
         components = _async_get_components(hass, category, integrations)
 
-    if TRANSLATION_FLATTEN_CACHE in hass.data:
-        cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
-    else:
-        cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
+    cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
 
     return await cache.async_fetch(language, category, components)
 
@@ -402,10 +399,7 @@ async def _async_load_translations(
         hass, category, [integration] if integration is not None else None
     )
 
-    if TRANSLATION_FLATTEN_CACHE in hass.data:
-        cache = hass.data[TRANSLATION_FLATTEN_CACHE]
-    else:
-        cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
+    cache = hass.data[TRANSLATION_FLATTEN_CACHE]
     await cache.async_load(language, components)
 
 
@@ -424,9 +418,6 @@ def async_get_cached_translations(
     components = _async_get_components(
         hass, category, [integration] if integration is not None else None
     )
-
-    if TRANSLATION_FLATTEN_CACHE not in hass.data:
-        return {}
 
     cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
     return cache.get_cached(language, category, components)
