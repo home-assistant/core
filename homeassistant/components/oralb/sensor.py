@@ -53,10 +53,12 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         entity_registry_enabled_default=False,
     ),
     OralBSensor.TOOTHBRUSH_STATE: SensorEntityDescription(
-        key=OralBSensor.TOOTHBRUSH_STATE, translation_key="toothbrush_state"
+        key=OralBSensor.TOOTHBRUSH_STATE,
+        name=None,
     ),
     OralBSensor.PRESSURE: SensorEntityDescription(
-        key=OralBSensor.PRESSURE, translation_key="pressure"
+        key=OralBSensor.PRESSURE,
+        translation_key="pressure",
     ),
     OralBSensor.MODE: SensorEntityDescription(
         key=OralBSensor.MODE,
@@ -100,10 +102,7 @@ def sensor_update_to_bluetooth_data_update(
             device_key_to_bluetooth_entity_key(device_key): sensor_values.native_value
             for device_key, sensor_values in sensor_update.entity_values.items()
         },
-        entity_names={
-            device_key_to_bluetooth_entity_key(device_key): sensor_values.name
-            for device_key, sensor_values in sensor_update.entity_values.items()
-        },
+        entity_names={},
     )
 
 
