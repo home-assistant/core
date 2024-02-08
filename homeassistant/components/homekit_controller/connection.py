@@ -21,10 +21,6 @@ from aiohomekit.model import Accessories, Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components.homekit_controller.utils import (
-    IidTuple,
-    unique_id_to_iids,
-)
 from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
@@ -50,6 +46,7 @@ from .const import (
     SUBSCRIBE_COOLDOWN,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
+from .utils import IidTuple, unique_id_to_iids
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
