@@ -462,11 +462,11 @@ class DHCPWatcher(WatcherBase):
         """Start watching for dhcp packets."""
         # Local import because importing from scapy has side effects such as opening
         # sockets
-
         from scapy import arch  # pylint: disable=import-outside-toplevel # noqa: F401
         from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
         from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
         from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
+
         #
         # Importing scapy.sendrecv will cause a scapy resync which will
         # import scapy.arch.read_routes which will import scapy.sendrecv
