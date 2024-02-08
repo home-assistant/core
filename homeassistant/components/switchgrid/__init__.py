@@ -31,15 +31,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Switchgrid from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
-
     session = async_get_clientsession(hass)
 
     data = SwitchgridData(session)
 
     coordinator = SwitchgridCoordinator(hass, data)
     await coordinator.async_config_entry_first_refresh()
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     await coordinator.async_refresh()
