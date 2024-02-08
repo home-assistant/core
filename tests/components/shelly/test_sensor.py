@@ -43,7 +43,7 @@ DEVICE_BLOCK_ID = 4
 
 
 async def test_block_sensor(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device, entity_registry, monkeypatch
 ) -> None:
     """Test block sensor."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_channel_1_power"
@@ -56,8 +56,14 @@ async def test_block_sensor(
 
     assert hass.states.get(entity_id).state == "60.1"
 
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-relay_0-power"
 
-async def test_energy_sensor(hass: HomeAssistant, mock_block_device) -> None:
+
+async def test_energy_sensor(
+    hass: HomeAssistant, mock_block_device, entity_registry
+) -> None:
     """Test energy sensor."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_channel_1_energy"
     await init_integration(hass, 1)
@@ -68,13 +74,16 @@ async def test_energy_sensor(hass: HomeAssistant, mock_block_device) -> None:
     # suggested unit is KWh
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
 
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-relay_0-energy"
+
 
 async def test_power_factory_unit_migration(
-    hass: HomeAssistant, mock_block_device
+    hass: HomeAssistant, mock_block_device, entity_registry
 ) -> None:
     """Test migration unit of the power factory sensor."""
-    registry = async_get(hass)
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
         "123456789ABC-emeter_0-powerFactor",
@@ -90,9 +99,13 @@ async def test_power_factory_unit_migration(
     assert state.state == "98.0"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-emeter_0-powerFactor"
+
 
 async def test_power_factory_without_unit_migration(
-    hass: HomeAssistant, mock_block_device
+    hass: HomeAssistant, mock_block_device, entity_registry
 ) -> None:
     """Test unit and value of the power factory sensor without unit migration."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_power_factor"
@@ -101,6 +114,10 @@ async def test_power_factory_without_unit_migration(
     state = hass.states.get(entity_id)
     assert state.state == "0.98"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-emeter_0-powerFactor"
 
 
 async def test_block_rest_sensor(
@@ -119,7 +136,7 @@ async def test_block_rest_sensor(
 
 
 async def test_block_sleeping_sensor(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device, entity_registry, monkeypatch
 ) -> None:
     """Test block sleeping sensor."""
     monkeypatch.setattr(
@@ -141,6 +158,10 @@ async def test_block_sleeping_sensor(
     mock_block_device.mock_update()
 
     assert hass.states.get(entity_id).state == "23.4"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-sensor_0-temp"
 
 
 async def test_block_restored_sleeping_sensor(
@@ -197,7 +218,7 @@ async def test_block_restored_sleeping_sensor_no_last_state(
 
 
 async def test_block_sensor_error(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device, entity_registry, monkeypatch
 ) -> None:
     """Test block sensor unavailable on sensor error."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_battery"
@@ -210,12 +231,15 @@ async def test_block_sensor_error(
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-device_0-battery"
+
 
 async def test_block_sensor_removal(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device, entity_registry, monkeypatch
 ) -> None:
     """Test block sensor is removed due to removal_condition."""
-    entity_registry = async_get(hass)
     entity_id = register_entity(
         hass, SENSOR_DOMAIN, "test_name_battery", "device_0-battery"
     )
@@ -300,7 +324,7 @@ async def test_rpc_sensor(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> 
 
 
 async def test_rpc_illuminance_sensor(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, mock_rpc_device, entity_registry, monkeypatch
 ) -> None:
     """Test RPC illuminacne sensor."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_illuminance"
@@ -308,9 +332,13 @@ async def test_rpc_illuminance_sensor(
 
     assert hass.states.get(entity_id).state == "345"
 
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-illuminance:0-illuminance"
+
 
 async def test_rpc_sensor_error(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, mock_rpc_device, entity_registry, monkeypatch
 ) -> None:
     """Test RPC sensor unavailable on sensor error."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_voltmeter"
@@ -323,9 +351,17 @@ async def test_rpc_sensor_error(
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-voltmeter-voltmeter"
+
 
 async def test_rpc_polling_sensor(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory, mock_rpc_device, monkeypatch
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_rpc_device,
+    entity_registry,
+    monkeypatch,
 ) -> None:
     """Test RPC polling sensor."""
     entity_id = register_entity(hass, SENSOR_DOMAIN, "test_name_rssi", "wifi-rssi")
@@ -337,6 +373,10 @@ async def test_rpc_polling_sensor(
     await mock_polling_rpc_update(hass, freezer)
 
     assert hass.states.get(entity_id).state == "-70"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-wifi-rssi"
 
 
 async def test_rpc_sleeping_sensor(
@@ -470,7 +510,10 @@ async def test_rpc_em1_sensors(
 
 
 async def test_rpc_sleeping_update_entity_service(
-    hass: HomeAssistant, mock_rpc_device, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_rpc_device,
+    entity_registry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test RPC sleeping device when the update_entity service is used."""
     await async_setup_component(hass, "homeassistant", {})
@@ -500,6 +543,10 @@ async def test_rpc_sleeping_update_entity_service(
     state = hass.states.get(entity_id)
     assert state.state == "22.9"
 
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-temperature:0-temperature_0"
+
     assert (
         "Entity sensor.test_name_temperature comes from a sleeping device"
         in caplog.text
@@ -507,7 +554,10 @@ async def test_rpc_sleeping_update_entity_service(
 
 
 async def test_block_sleeping_update_entity_service(
-    hass: HomeAssistant, mock_block_device, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    mock_block_device,
+    entity_registry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test block sleeping device when the update_entity service is used."""
     await async_setup_component(hass, "homeassistant", {})
@@ -536,7 +586,25 @@ async def test_block_sleeping_update_entity_service(
     state = hass.states.get(entity_id)
     assert state.state == "22.1"
 
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-sensor_0-temp"
+
     assert (
         "Entity sensor.test_name_temperature comes from a sleeping device"
         in caplog.text
     )
+
+
+async def test_rpc_analog_input_xpercent_sensor(
+    hass: HomeAssistant, mock_rpc_device, entity_registry
+) -> None:
+    """Test RPC analog input xpercent sensor."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_input_0_analog_value"
+    await init_integration(hass, 2)
+
+    assert hass.states.get(entity_id).state == "8.9"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-input:0-analoginput_xpercent"

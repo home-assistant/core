@@ -36,6 +36,7 @@ from .const import (
     REPORT_STATE_BASE_URL,
     REQUEST_SYNC_BASE_URL,
     SOURCE_CLOUD,
+    STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
 from .helpers import AbstractConfig
 from .smart_home import async_handle_message
@@ -110,6 +111,34 @@ class GoogleConfig(AbstractConfig):
         """Return if states should be proactively reported."""
         return self._config.get(CONF_REPORT_STATE)
 
+    def get_local_user_id(self, webhook_id):
+        """Map webhook ID to a Home Assistant user ID.
+
+        Any action inititated by Google Assistant via the local SDK will be attributed
+        to the returned user ID.
+
+        Return None if no user id is found for the webhook_id.
+        """
+        # Note: The manually setup Google Assistant currently returns the Google agent
+        # user ID instead of a valid Home Assistant user ID
+        found_agent_user_id = None
+        for agent_user_id, agent_user_data in self._store.agent_user_ids.items():
+            if agent_user_data[STORE_GOOGLE_LOCAL_WEBHOOK_ID] == webhook_id:
+                found_agent_user_id = agent_user_id
+                break
+
+        return found_agent_user_id
+
+    def get_local_webhook_id(self, agent_user_id):
+        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
+        if data := self._store.agent_user_ids.get(agent_user_id):
+            return data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
+        return None
+
+    def get_agent_user_id(self, context):
+        """Get agent user ID making request."""
+        return context.user_id
+
     def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
         expose_by_default = self._config.get(CONF_EXPOSE_BY_DEFAULT)
@@ -148,10 +177,6 @@ class GoogleConfig(AbstractConfig):
         is_default_exposed = entity_exposed_by_default and explicit_expose is not False
 
         return is_default_exposed or explicit_expose
-
-    def get_agent_user_id(self, context):
-        """Get agent user ID making request."""
-        return context.user_id
 
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
