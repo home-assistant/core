@@ -425,9 +425,7 @@ class ServiceIntentHandler(IntentHandler):
         area: area_registry.AreaEntry | None = None
         if area_id is not None:
             areas = area_registry.async_get(hass)
-            area = areas.async_get_area(area_id) or areas.async_get_area_by_name(
-                area_name
-            )
+            area = areas.async_get_area(area_id)
             if area is None:
                 raise IntentHandleError(f"No area named {area_name}")
 

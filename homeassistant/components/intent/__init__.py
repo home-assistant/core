@@ -165,11 +165,9 @@ class GetStateIntentHandler(intent.IntentHandler):
         area_id = area_slot.get("value")
         area_name = area_slot.get("text")
         area: ar.AreaEntry | None = None
-        if area_name is not None:
+        if area_id is not None:
             areas = ar.async_get(hass)
-            area = areas.async_get_area(area_id) or areas.async_get_area_by_name(
-                area_name
-            )
+            area = areas.async_get_area(area_id)
             if area is None:
                 raise intent.IntentHandleError(f"No area named {area_name}")
 
