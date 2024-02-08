@@ -7,6 +7,7 @@ from collections.abc import (
     Callable,
     Coroutine,
     Generator,
+    Hashable,
     Iterable,
     Mapping,
     ValuesView,
@@ -49,6 +50,7 @@ from .helpers.event import (
 )
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
+from .loader import async_suggest_report_issue
 from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
 from .util import uuid as uuid_util
 from .util.decorator import Registry
@@ -1145,8 +1147,26 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         data[entry_id] = entry
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
+            unique_id_hash = entry.unique_id
+            # Guard against integrations using unhashable unique_id
+            if not isinstance(entry.unique_id, Hashable):
+                unique_id_hash = str(entry.unique_id)  # type: ignore[unreachable]
+                report_issue = async_suggest_report_issue(
+                    self.hass, integration_domain=entry.domain
+                )
+                _LOGGER.error(
+                    (
+                        "Config entry %s from integration %s has an invalid unique_id "
+                        "'%s', please %s"
+                    ),
+                    entry.title,
+                    entry.domain,
+                    entry.unique_id,
+                    report_issue,
+                )
+
             self._domain_unique_id_index.setdefault(entry.domain, {})[
-                entry.unique_id
+                unique_id_hash
             ] = entry
 
     def _unindex_entry(self, entry_id: str) -> None:
@@ -1157,7 +1177,8 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         if not self._domain_index[domain]:
             del self._domain_index[domain]
         if (unique_id := entry.unique_id) is not None:
-            del self._domain_unique_id_index[domain][unique_id]
+            unique_id_hash = str(unique_id)
+            del self._domain_unique_id_index[domain][unique_id_hash]
             if not self._domain_unique_id_index[domain]:
                 del self._domain_unique_id_index[domain]
 
@@ -1174,7 +1195,8 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self, domain: str, unique_id: str
     ) -> ConfigEntry | None:
         """Get entry by domain and unique id."""
-        return self._domain_unique_id_index.get(domain, {}).get(unique_id)
+        unique_id_hash = str(unique_id)
+        return self._domain_unique_id_index.get(domain, {}).get(unique_id_hash)
 
 
 class ConfigEntries:
