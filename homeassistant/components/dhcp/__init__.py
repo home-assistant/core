@@ -176,12 +176,6 @@ class WatcherBase(ABC):
     async def async_start(self) -> None:
         """Start the watcher."""
 
-    def process_client(self, ip_address: str, hostname: str, mac_address: str) -> None:
-        """Process a client."""
-        self.hass.loop.call_soon_threadsafe(
-            self.async_process_client, ip_address, hostname, mac_address
-        )
-
     @callback
     def async_process_client(
         self, ip_address: str, hostname: str, mac_address: str
