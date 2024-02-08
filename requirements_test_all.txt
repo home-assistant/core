@@ -212,7 +212,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2024.2.0
+aioecowitt==2024.2.1
 
 # homeassistant.components.co2signal
 aioelectricitymaps==0.4.0
@@ -562,7 +562,7 @@ dbus-fast==2.21.1
 debugpy==1.8.0
 
 # homeassistant.components.ecovacs
-deebot-client==5.1.0
+deebot-client==5.1.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns

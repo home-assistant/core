@@ -383,6 +383,12 @@ enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up
     "use-symbolic-message-instead",
 ]
+per-file-ignores = [
+    # hass-component-root-import: Tests test non-public APIs
+    # protected-access: Tests do often test internals a lot
+    # redefined-outer-name: Tests reference fixtures in the test function
+    "/tests/:hass-component-root-import,protected-access,redefined-outer-name",
+]
 
 [tool.pylint.REPORTS]
 score = false
@@ -408,12 +414,6 @@ runtime-typing = false
 
 [tool.pylint.CODE_STYLE]
 max-line-length-suggestions = 72
-
-[tool.pylint-per-file-ignores]
-# hass-component-root-import: Tests test non-public APIs
-# protected-access: Tests do often test internals a lot
-# redefined-outer-name: Tests reference fixtures in the test function
-"/tests/"="hass-component-root-import,protected-access,redefined-outer-name"
 
 [tool.pytest.ini_options]
 testpaths = [
