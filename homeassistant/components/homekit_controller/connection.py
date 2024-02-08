@@ -553,7 +553,7 @@ class HKDevice:
                     )
 
         # Remove the difference
-        if stale := existing_unique_id - current_unique_id:
+        if stale := existing_entities.keys() - current_unique_id:
             for parts in stale:
                 _LOGGER.debug(
                     "Removing stale entity registry entry %s for pairing %s",
