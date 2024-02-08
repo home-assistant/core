@@ -3,10 +3,13 @@ from collections.abc import Awaitable, Callable
 import datetime
 import threading
 from typing import Any, cast
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-from scapy import arch  # noqa: F401
+from scapy import (
+    arch,  # noqa: F401
+    interfaces,
+)
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
 from scapy.layers.l2 import Ether
@@ -140,29 +143,18 @@ async def _async_get_handle_dhcp_packet(
         {},
         integration_matchers,
     )
-    async_handle_dhcp_packet: Callable[[Any], Awaitable[None]] | None = None
-
-    def _mock_sniffer(*args, **kwargs):
-        nonlocal async_handle_dhcp_packet
-        callback = kwargs["prn"]
-
-        async def _async_handle_dhcp_packet(packet):
-            await hass.async_add_executor_job(callback, packet)
-
-        async_handle_dhcp_packet = _async_handle_dhcp_packet
-        return MagicMock()
-
     with patch(
-        "homeassistant.components.dhcp._verify_l2socket_setup",
-    ), patch(
         "scapy.arch.common.compile_filter",
-    ), patch(
-        "scapy.sendrecv.AsyncSniffer",
-        _mock_sniffer,
+    ), patch.object(
+        interfaces,
+        "resolve_iface",
     ):
         await dhcp_watcher.async_start()
 
-    return cast("Callable[[Any], Awaitable[None]]", async_handle_dhcp_packet)
+    async def _async_handle_dhcp_packet(packet):
+        dhcp_watcher._async_handle_dhcp_packet(packet)
+
+    return cast("Callable[[Any], Awaitable[None]]", _async_handle_dhcp_packet)
 
 
 async def test_dhcp_match_hostname_and_macaddress(hass: HomeAssistant) -> None:
@@ -541,9 +533,10 @@ async def test_setup_and_stop(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    with patch("scapy.sendrecv.AsyncSniffer.start") as start_call, patch(
-        "homeassistant.components.dhcp._verify_l2socket_setup",
-    ), patch("scapy.arch.common.compile_filter"), patch(
+    with patch.object(
+        interfaces,
+        "resolve_iface",
+    ) as resolve_iface_call, patch("scapy.arch.common.compile_filter"), patch(
         "homeassistant.components.dhcp.DiscoverHosts.async_discover"
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -552,7 +545,7 @@ async def test_setup_and_stop(hass: HomeAssistant) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    start_call.assert_called_once()
+    resolve_iface_call.assert_called_once()
 
 
 async def test_setup_fails_as_root(
@@ -569,8 +562,9 @@ async def test_setup_fails_as_root(
 
     wait_event = threading.Event()
 
-    with patch("os.geteuid", return_value=0), patch(
-        "homeassistant.components.dhcp._verify_l2socket_setup",
+    with patch("os.geteuid", return_value=0), patch.object(
+        interfaces,
+        "resolve_iface",
         side_effect=Scapy_Exception,
     ), patch("homeassistant.components.dhcp.DiscoverHosts.async_discover"):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -594,8 +588,9 @@ async def test_setup_fails_non_root(
     )
     await hass.async_block_till_done()
 
-    with patch("os.geteuid", return_value=10), patch(
-        "homeassistant.components.dhcp._verify_l2socket_setup",
+    with patch("os.geteuid", return_value=10), patch.object(
+        interfaces,
+        "resolve_iface",
         side_effect=Scapy_Exception,
     ), patch("homeassistant.components.dhcp.DiscoverHosts.async_discover"):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -618,10 +613,13 @@ async def test_setup_fails_with_broken_libpcap(
     )
     await hass.async_block_till_done()
 
-    with patch("homeassistant.components.dhcp._verify_l2socket_setup"), patch(
+    with patch(
         "scapy.arch.common.compile_filter",
         side_effect=ImportError,
-    ) as compile_filter, patch("scapy.sendrecv.AsyncSniffer") as async_sniffer, patch(
+    ) as compile_filter, patch.object(
+        interfaces,
+        "resolve_iface",
+    ) as resolve_iface_call, patch(
         "homeassistant.components.dhcp.DiscoverHosts.async_discover"
     ):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -630,7 +628,7 @@ async def test_setup_fails_with_broken_libpcap(
         await hass.async_block_till_done()
 
     assert compile_filter.called
-    assert not async_sniffer.called
+    assert not resolve_iface_call.called
     assert (
         "Cannot watch for dhcp packets without a functional packet filter"
         in caplog.text

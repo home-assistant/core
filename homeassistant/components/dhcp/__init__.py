@@ -13,7 +13,6 @@ import itertools
 import logging
 import os
 import re
-import threading
 from typing import TYPE_CHECKING, Any, Final, cast
 
 from aiodiscover import DiscoverHosts
@@ -63,7 +62,6 @@ from .const import DOMAIN
 
 if TYPE_CHECKING:
     from scapy.packet import Packet
-    from scapy.sendrecv import AsyncSniffer
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -437,31 +435,35 @@ class DHCPWatcher(WatcherBase):
     ) -> None:
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
-        self._sniffer: AsyncSniffer | None = None
-        self._started = threading.Event()
+        self._loop = asyncio.get_running_loop()
+        self._sock: Any | None = None
+        self._async_handle_dhcp_packet: Callable[[Packet], None] | None = None
 
     async def async_stop(self) -> None:
-        """Stop watching for new device trackers."""
-        await self.hass.async_add_executor_job(self._stop)
+        """Stop watching for DHCP packets."""
+        self._async_stop()
 
-    def _stop(self) -> None:
-        """Stop the thread."""
-        if self._started.is_set():
-            assert self._sniffer is not None
-            self._sniffer.stop()
+    @callback
+    def _async_stop(self) -> None:
+        """Stop watching for DHCP packets."""
+        if self._sock:
+            self._loop.remove_reader(self._sock.fileno())
+            self._sock.close()
+            self._sock = None
 
     async def async_start(self) -> None:
         """Start watching for dhcp packets."""
-        await self.hass.async_add_executor_job(self._start)
+        try:
+            await self._async_start()
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.exception("Error setting up DHCP watcher: %s", ex)
 
-    def _start(self) -> None:
+    async def _async_start(self) -> None:
         """Start watching for dhcp packets."""
         # Local import because importing from scapy has side effects such as opening
         # sockets
+
         from scapy import arch  # pylint: disable=import-outside-toplevel # noqa: F401
-        from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
-        from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
-        from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
 
         #
         # Importing scapy.sendrecv will cause a scapy resync which will
@@ -470,16 +472,20 @@ class DHCPWatcher(WatcherBase):
         # We avoid this circular import by importing arch above to ensure
         # the module is loaded and avoid the problem
         #
-        from scapy.sendrecv import (  # pylint: disable=import-outside-toplevel
-            AsyncSniffer,
-        )
+        from scapy.layers.dhcp import DHCP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.inet import IP  # pylint: disable=import-outside-toplevel
+        from scapy.layers.l2 import Ether  # pylint: disable=import-outside-toplevel
 
-        def _handle_dhcp_packet(packet: Packet) -> None:
+        @callback
+        def _async_handle_dhcp_packet(packet: Packet) -> None:
             """Process a dhcp packet."""
-            if DHCP not in packet:
+            if not (dhcp_packet := packet.getlayer(DHCP)):
                 return
 
-            options_dict = _dhcp_options_as_dict(packet[DHCP].options)
+            if TYPE_CHECKING:
+                dhcp_packet = cast(DHCP, dhcp_packet)
+
+            options_dict = _dhcp_options_as_dict(dhcp_packet.options)
             if options_dict.get(MESSAGE_TYPE) != DHCP_REQUEST:
                 # Not a DHCP request
                 return
@@ -495,13 +501,23 @@ class DHCPWatcher(WatcherBase):
             mac_address = _format_mac(cast(str, packet[Ether].src))
 
             if ip_address is not None and mac_address is not None:
-                self.process_client(ip_address, hostname, mac_address)
+                self.async_process_client(ip_address, hostname, mac_address)
 
         # disable scapy promiscuous mode as we do not need it
         conf.sniff_promisc = 0
 
         try:
-            _verify_l2socket_setup(FILTER)
+            self._verify_working_pcap(FILTER)
+        except (Scapy_Exception, ImportError) as ex:
+            _LOGGER.error(
+                "Cannot watch for dhcp packets without a functional packet filter: %s",
+                ex,
+            )
+            return
+
+        try:
+            sock = self._make_listen_socket(FILTER)
+            fileno = sock.fileno()
         except (Scapy_Exception, OSError) as ex:
             if os.geteuid() == 0:
                 _LOGGER.error("Cannot watch for dhcp packets: %s", ex)
@@ -511,25 +527,64 @@ class DHCPWatcher(WatcherBase):
                 )
             return
 
-        try:
-            _verify_working_pcap(FILTER)
-        except (Scapy_Exception, ImportError) as ex:
-            _LOGGER.error(
-                "Cannot watch for dhcp packets without a functional packet filter: %s",
-                ex,
-            )
+        self._sock = sock
+        self._async_handle_dhcp_packet = _async_handle_dhcp_packet
+        self._loop.add_reader(fileno, self._async_on_data)
+
+    def _async_on_data(self) -> None:
+        """Handle data from the socket."""
+        if not (sock := self._sock):
             return
 
-        self._sniffer = AsyncSniffer(
-            filter=FILTER,
-            started_callback=self._started.set,
-            prn=_handle_dhcp_packet,
-            store=0,
+        try:
+            data = sock.recv()
+        except (BlockingIOError, InterruptedError):
+            return
+        except BaseException as ex:  # pylint: disable=broad-except
+            _LOGGER.exception("Fatal error while processing dhcp packet: %s", ex)
+            self._async_stop()
+
+        if TYPE_CHECKING:
+            assert self._async_handle_dhcp_packet is not None
+
+        if data:
+            self._async_handle_dhcp_packet(data)
+
+    def _make_listen_socket(self, cap_filter: str) -> Any:
+        """Get a nonblocking listen socket."""
+        from scapy.data import ETH_P_ALL  # pylint: disable=import-outside-toplevel
+        from scapy.interfaces import (  # pylint: disable=import-outside-toplevel
+            resolve_iface,
         )
 
-        self._sniffer.start()
-        if self._sniffer.thread:
-            self._sniffer.thread.name = self.__class__.__name__
+        iface = conf.iface
+        sock = resolve_iface(iface).l2listen()(
+            type=ETH_P_ALL, iface=iface, filter=cap_filter
+        )
+        if hasattr(sock, "set_nonblock"):
+            # Not all classes have set_nonblock so we have to call fcntl directly
+            # in the event its not implemented
+            sock.set_nonblock()
+        else:
+            import fcntl  # pylint: disable=import-outside-toplevel
+
+            fcntl.fcntl(sock.fileno(), fcntl.F_SETFL, os.O_NONBLOCK)
+
+        return sock
+
+    def _verify_working_pcap(self, cap_filter: str) -> None:
+        """Verify we can create a packet filter.
+
+        If we cannot create a filter we will be listening for
+        all traffic which is too intensive.
+        """
+        # Local import because importing from scapy has side effects such as opening
+        # sockets
+        from scapy.arch.common import (  # pylint: disable=import-outside-toplevel
+            compile_filter,
+        )
+
+        compile_filter(cap_filter)
 
 
 def _dhcp_options_as_dict(
@@ -542,33 +597,6 @@ def _dhcp_options_as_dict(
 def _format_mac(mac_address: str) -> str:
     """Format a mac address for matching."""
     return format_mac(mac_address).replace(":", "")
-
-
-def _verify_l2socket_setup(cap_filter: str) -> None:
-    """Create a socket using the scapy configured l2socket.
-
-    Try to create the socket
-    to see if we have permissions
-    since AsyncSniffer will do it another
-    thread so we will not be able to capture
-    any permission or bind errors.
-    """
-    conf.L2socket(filter=cap_filter)
-
-
-def _verify_working_pcap(cap_filter: str) -> None:
-    """Verify we can create a packet filter.
-
-    If we cannot create a filter we will be listening for
-    all traffic which is too intensive.
-    """
-    # Local import because importing from scapy has side effects such as opening
-    # sockets
-    from scapy.arch.common import (  # pylint: disable=import-outside-toplevel
-        compile_filter,
-    )
-
-    compile_filter(cap_filter)
 
 
 @lru_cache(maxsize=4096, typed=True)
