@@ -41,21 +41,21 @@ DEVICE_POINT_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
-    "43108": SensorEntityDescription(
+    "NIBEF F730 CU 3x400V-43108": SensorEntityDescription(
         key="fan_mode",
         icon="mdi:fan",
     ),
-    "43427": SensorEntityDescription(
+    "NIBEF F730 CU 3x400V-43427": SensorEntityDescription(
         key="status_compressor",
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:heat-pump-outline",
     ),
-    "49993": SensorEntityDescription(
+    "NIBEF F730 CU 3x400V-49993": SensorEntityDescription(
         key="elect_add",
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:heat-wave",
     ),
-    "49994": SensorEntityDescription(
+    "NIBEF F730 CU 3x400V-49994": SensorEntityDescription(
         key="priority",
         device_class=SensorDeviceClass.ENUM,
         icon="mdi:priority-high",
