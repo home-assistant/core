@@ -237,8 +237,8 @@ def test_density_to_air_quality() -> None:
     assert density_to_air_quality(35.5) == 3
     assert density_to_air_quality(55.4) == 3
     assert density_to_air_quality(55.5) == 4
-    assert density_to_air_quality(150.4) == 4
-    assert density_to_air_quality(150.5) == 5
+    assert density_to_air_quality(125.4) == 4
+    assert density_to_air_quality(125.5) == 5
     assert density_to_air_quality(200) == 5
 
 

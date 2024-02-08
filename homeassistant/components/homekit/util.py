@@ -439,7 +439,7 @@ def density_to_air_quality(density: float) -> int:
         return 2
     if density <= 55.4:  # US AQI 101-150 (HomeKit: Fair)
         return 3
-    if density <= 150.4:  # US AQI 151-200 (HomeKit: Inferior)
+    if density <= 125.4:  # US AQI 151-200 (HomeKit: Inferior)
         return 4
     return 5  # US AQI 201+ (HomeKit: Poor)
 
