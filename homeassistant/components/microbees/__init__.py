@@ -5,7 +5,6 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-from microBeesPy.bee import Bee
 from microBeesPy.microbees import MicroBees
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,16 +16,6 @@ from .const import ACCESS_TOKEN, BEES, CONNECTOR, COORDINATOR, DOMAIN, PLATFORMS
 from .coordinator import MicroBeesUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class HomeAssistantMicroBeesData:
-    """Microbees data stored in the Home Assistant data object."""
-
-    client: MicroBees
-    bees: list[Bee]
-    session: config_entry_oauth2_flow.OAuth2Session
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up microBees from a config entry."""
@@ -51,27 +40,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = MicroBeesUpdateCoordinator(hass, microbees)
     try:
         bees = await microbees.getBees()
-        hass.data[DOMAIN] = {
-            entry.entry_id: HomeAssistantMicroBeesData(
-                client=microbees,
-                bees=bees,
-                session=session,
-            ),
+    except Exception as ex:
+        raise ConfigEntryNotReady from ex
+    hass.data[DOMAIN] = {
+        entry.entry_id: {
             BEES: bees,
             CONNECTOR: microbees,
             COORDINATOR: coordinator,
         }
+    }
 
-        await coordinator.async_config_entry_first_refresh()
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-        return True
-    except Exception as ex:
-        raise ConfigEntryNotReady from ex
+    await coordinator.async_config_entry_first_refresh()
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        del hass.data[DOMAIN][entry.entry_id]
+        hass.data[DOMAIN].pop(entry.entry_id)
+
 
     return unload_ok

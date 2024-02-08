@@ -18,9 +18,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Config entry."""
-    microbees = hass.data[DOMAIN][CONNECTOR]
-    bees = hass.data[DOMAIN][BEES]
-    coordinator = hass.data[DOMAIN][COORDINATOR]
+    microbees = hass.data[DOMAIN][entry.entry_id][CONNECTOR]
+    bees = hass.data[DOMAIN][entry.entry_id][BEES]
+    coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
     switches = []
     for bee in bees:
         match bee.productID:

@@ -34,37 +34,24 @@ class ConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMA
 
     async def async_oauth_create_entry(self, data: dict) -> FlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
-        existing_entry = await self.async_set_unique_id(DOMAIN)
+
+        microbees = microBeesPy.microbees.MicroBees(
+            session=aiohttp_client.async_get_clientsession(self.hass),
+            token=data["token"]["access_token"],
+        )
+
+        current_user = await microbees.getMyProfile()
+        existing_entry = await self.async_set_unique_id(current_user.id)
         if existing_entry:
             self.hass.config_entries.async_update_entry(existing_entry, data=data)
             await self.hass.config_entries.async_reload(existing_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
-        microBees = microBeesPy.microbees.MicroBees(
-            session=aiohttp_client.async_get_clientsession(self.hass),
-            token=data["token"]["access_token"],
-        )
-
-        current_user = await microBees.getMyProfile()
-
-        data["id"] = current_user.id
 
         name = current_user.firstName + " " + current_user.lastName
-        data["name"] = name
 
         return self.async_create_entry(title=name, data=data)
 
-    async def async_step_user(self, user_input: dict | None = None) -> FlowResult:
-        """Handle a flow start."""
-        await self.async_set_unique_id(DOMAIN)
-
-        if (
-            self.source != config_entries.SOURCE_REAUTH
-            and self._async_current_entries()
-        ):
-            return self.async_abort(reason="single_instance_allowed")
-
-        return await super().async_step_user(user_input)
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
