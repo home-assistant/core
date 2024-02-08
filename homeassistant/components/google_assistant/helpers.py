@@ -32,6 +32,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.redact import partial_redact
 from homeassistant.helpers.storage import Store
 from homeassistant.util.dt import utcnow
 
@@ -48,6 +49,7 @@ from .const import (
     STORE_AGENT_USER_IDS,
     STORE_GOOGLE_LOCAL_WEBHOOK_ID,
 )
+from .data_redaction import async_redact_request_msg, async_redact_response_msg
 from .error import SmartHomeError
 
 SYNC_DELAY = 15
@@ -103,6 +105,7 @@ class AbstractConfig(ABC):
         self._local_last_active: datetime | None = None
         self._local_sdk_version_warn = False
         self.is_supported_cache: dict[str, tuple[int | None, bool]] = {}
+        self._on_deinitialize: list[CALLBACK_TYPE] = []
 
     async def async_initialize(self) -> None:
         """Perform async initialization of config."""
@@ -116,22 +119,29 @@ class AbstractConfig(ABC):
             """Sync entities to Google."""
             await self.async_sync_entities_all()
 
-        start.async_at_start(self.hass, sync_google)
+        self._on_deinitialize.append(start.async_at_start(self.hass, sync_google))
+
+    @callback
+    def async_deinitialize(self) -> None:
+        """Remove listeners."""
+        _LOGGER.debug("async_deinitialize")
+        while self._on_deinitialize:
+            self._on_deinitialize.pop()()
 
     @property
+    @abstractmethod
     def enabled(self):
         """Return if Google is enabled."""
-        return False
 
     @property
+    @abstractmethod
     def entity_config(self):
         """Return entity config."""
-        return {}
 
     @property
+    @abstractmethod
     def secure_devices_pin(self):
         """Return entity config."""
-        return None
 
     @property
     def is_reporting_state(self):
@@ -144,9 +154,9 @@ class AbstractConfig(ABC):
         return self._local_sdk_active
 
     @property
+    @abstractmethod
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        return False
 
     @property
     def is_local_connected(self) -> bool:
@@ -157,24 +167,19 @@ class AbstractConfig(ABC):
             and self._local_last_active > utcnow() - timedelta(seconds=70)
         )
 
-    def get_local_agent_user_id(self, webhook_id):
-        """Return the user ID to be used for actions received via the local SDK.
+    @abstractmethod
+    def get_local_user_id(self, webhook_id):
+        """Map webhook ID to a Home Assistant user ID.
 
-        Return None is no agent user id is found.
+        Any action inititated by Google Assistant via the local SDK will be attributed
+        to the returned user ID.
+
+        Return None if no user id is found for the webhook_id.
         """
-        found_agent_user_id = None
-        for agent_user_id, agent_user_data in self._store.agent_user_ids.items():
-            if agent_user_data[STORE_GOOGLE_LOCAL_WEBHOOK_ID] == webhook_id:
-                found_agent_user_id = agent_user_id
-                break
 
-        return found_agent_user_id
-
+    @abstractmethod
     def get_local_webhook_id(self, agent_user_id):
         """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
-        if data := self._store.agent_user_ids.get(agent_user_id):
-            return data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
-        return None
 
     @abstractmethod
     def get_agent_user_id(self, context):
@@ -184,15 +189,15 @@ class AbstractConfig(ABC):
     def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
 
+    @abstractmethod
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
-        return True
 
+    @abstractmethod
     async def async_report_state(
         self, message: dict[str, Any], agent_user_id: str, event_id: str | None = None
     ) -> HTTPStatus | None:
         """Send a state report to Google."""
-        raise NotImplementedError
 
     async def async_report_state_all(self, message):
         """Send a state report to Google for all previously synced users."""
@@ -332,8 +337,8 @@ class AbstractConfig(ABC):
 
             _LOGGER.debug(
                 "Register webhook handler %s for agent user id %s",
-                webhook_id,
-                user_agent_id,
+                partial_redact(webhook_id),
+                partial_redact(user_agent_id),
             )
             try:
                 webhook.async_register(
@@ -348,8 +353,8 @@ class AbstractConfig(ABC):
             except ValueError:
                 _LOGGER.warning(
                     "Webhook handler %s for agent user id %s is already defined!",
-                    webhook_id,
-                    user_agent_id,
+                    partial_redact(webhook_id),
+                    partial_redact(user_agent_id),
                 )
                 setup_successful = False
                 break
@@ -374,8 +379,8 @@ class AbstractConfig(ABC):
             webhook_id = self.get_local_webhook_id(agent_user_id)
             _LOGGER.debug(
                 "Unregister webhook handler %s for agent user id %s",
-                webhook_id,
-                agent_user_id,
+                partial_redact(webhook_id),
+                partial_redact(agent_user_id),
             )
             webhook.async_unregister(self.hass, webhook_id)
 
@@ -410,10 +415,10 @@ class AbstractConfig(ABC):
                 "Received local message from %s (JS %s):\n%s\n",
                 request.remote,
                 request.headers.get("HA-Cloud-Version", "unknown"),
-                pprint.pformat(payload),
+                pprint.pformat(async_redact_request_msg(payload)),
             )
 
-        if (agent_user_id := self.get_local_agent_user_id(webhook_id)) is None:
+        if (agent_user_id := self.get_local_user_id(webhook_id)) is None:
             # No agent user linked to this webhook, means that the user has somehow unregistered
             # removing webhook and stopping processing of this request.
             _LOGGER.error(
@@ -421,8 +426,8 @@ class AbstractConfig(ABC):
                     "Cannot process request for webhook %s as no linked agent user is"
                     " found:\n%s\n"
                 ),
-                webhook_id,
-                pprint.pformat(payload),
+                partial_redact(webhook_id),
+                pprint.pformat(async_redact_request_msg(payload)),
             )
             webhook.async_unregister(self.hass, webhook_id)
             return None
@@ -441,7 +446,10 @@ class AbstractConfig(ABC):
         )
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Responding to local message:\n%s\n", pprint.pformat(result))
+            _LOGGER.debug(
+                "Responding to local message:\n%s\n",
+                pprint.pformat(async_redact_response_msg(result)),
+            )
 
         return json_response(result)
 

@@ -1,4 +1,5 @@
 """Standard conversation implementation for Home Assistant."""
+
 from __future__ import annotations
 
 import asyncio
@@ -222,22 +223,22 @@ class DefaultAgent(AbstractConversationAgent):
         # Check if a trigger matched
         if isinstance(result, SentenceTriggerResult):
             # Gather callback responses in parallel
-            trigger_responses = await asyncio.gather(
-                *(
-                    self._trigger_sentences[trigger_id].callback(
-                        result.sentence, trigger_result
-                    )
-                    for trigger_id, trigger_result in result.matched_triggers.items()
+            trigger_callbacks = [
+                self._trigger_sentences[trigger_id].callback(
+                    result.sentence, trigger_result
                 )
-            )
+                for trigger_id, trigger_result in result.matched_triggers.items()
+            ]
 
             # Use last non-empty result as response.
             #
             # There may be multiple copies of a trigger running when editing in
             # the UI, so it's critical that we filter out empty responses here.
             response_text: str | None = None
-            for trigger_response in trigger_responses:
-                response_text = response_text or trigger_response
+            for trigger_future in asyncio.as_completed(trigger_callbacks):
+                if trigger_response := await trigger_future:
+                    response_text = trigger_response
+                    break
 
             # Convert to conversation result
             response = intent.IntentResponse(language=language)
@@ -264,9 +265,11 @@ class DefaultAgent(AbstractConversationAgent):
             _LOGGER.debug(
                 "Recognized intent '%s' for template '%s' but had unmatched: %s",
                 result.intent.name,
-                result.intent_sentence.text
-                if result.intent_sentence is not None
-                else "",
+                (
+                    result.intent_sentence.text
+                    if result.intent_sentence is not None
+                    else ""
+                ),
                 result.unmatched_entities_list,
             )
             error_response_type, error_response_args = _get_unmatched_response(result)
@@ -285,7 +288,8 @@ class DefaultAgent(AbstractConversationAgent):
 
         # Slot values to pass to the intent
         slots = {
-            entity.name: {"value": entity.value} for entity in result.entities_list
+            entity.name: {"value": entity.value, "text": entity.text or entity.value}
+            for entity in result.entities_list
         }
 
         try:
@@ -474,9 +478,11 @@ class DefaultAgent(AbstractConversationAgent):
                     for entity_name, entity_value in recognize_result.entities.items()
                 },
                 # First matched or unmatched state
-                "state": template.TemplateState(self.hass, state1)
-                if state1 is not None
-                else None,
+                "state": (
+                    template.TemplateState(self.hass, state1)
+                    if state1 is not None
+                    else None
+                ),
                 "query": {
                     # Entity states that matched the query (e.g, "on")
                     "matched": [
@@ -718,7 +724,12 @@ class DefaultAgent(AbstractConversationAgent):
             if async_should_expose(self.hass, DOMAIN, state.entity_id)
         ]
 
-        # Gather exposed entity names
+        # Gather exposed entity names.
+        #
+        # NOTE: We do not pass entity ids in here because multiple entities may
+        # have the same name. The intent matcher doesn't gather all matching
+        # values for a list, just the first. So we will need to match by name no
+        # matter what.
         entity_names = []
         for state in states:
             # Checked against "requires_context" and "excludes_context" in hassil
@@ -742,12 +753,15 @@ class DefaultAgent(AbstractConversationAgent):
                     if not alias.strip():
                         continue
 
-                    entity_names.append((alias, alias, context))
+                    entity_names.append((alias, state.name, context))
 
             # Default name
             entity_names.append((state.name, state.name, context))
 
-        # Expose all areas
+        # Expose all areas.
+        #
+        # We pass in area id here with the expectation that no two areas will
+        # share the same name or alias.
         areas = ar.async_get(self.hass)
         area_names = []
         for area in areas.async_list_areas():
@@ -785,7 +799,7 @@ class DefaultAgent(AbstractConversationAgent):
         if device_area is None:
             return None
 
-        return {"area": device_area.id}
+        return {"area": {"value": device_area.id, "text": device_area.name}}
 
     def _get_error_text(
         self,

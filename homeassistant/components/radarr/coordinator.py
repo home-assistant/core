@@ -96,7 +96,7 @@ class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[RootFolder
         """Fetch the data."""
         root_folders = await self.api_client.async_get_root_folders()
         if isinstance(root_folders, RootFolder):
-            root_folders = [root_folders]
+            return [root_folders]
         return root_folders
 
 
@@ -105,7 +105,10 @@ class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
 
     async def _fetch_data(self) -> list[Health]:
         """Fetch the health data."""
-        return await self.api_client.async_get_failed_health_checks()
+        health = await self.api_client.async_get_failed_health_checks()
+        if isinstance(health, Health):
+            return [health]
+        return health
 
 
 class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):

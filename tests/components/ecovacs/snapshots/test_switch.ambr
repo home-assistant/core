@@ -42,7 +42,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switch_entities[yna5x1][switch.ozmo_950_carpet_auto_fan_speed_boost:entity-registry]
+# name: test_switch_entities[yna5x1][switch.ozmo_950_carpet_auto_boost_suction:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -54,7 +54,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.ozmo_950_carpet_auto_fan_speed_boost',
+    'entity_id': 'switch.ozmo_950_carpet_auto_boost_suction',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -64,7 +64,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Carpet auto fan speed boost',
+    'original_name': 'Carpet auto-boost suction',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -73,13 +73,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities[yna5x1][switch.ozmo_950_carpet_auto_fan_speed_boost:state]
+# name: test_switch_entities[yna5x1][switch.ozmo_950_carpet_auto_boost_suction:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Carpet auto fan speed boost',
+      'friendly_name': 'Ozmo 950 Carpet auto-boost suction',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.ozmo_950_carpet_auto_fan_speed_boost',
+    'entity_id': 'switch.ozmo_950_carpet_auto_boost_suction',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',

@@ -1,7 +1,7 @@
 """Tests for the Google Assistant integration."""
 from unittest.mock import MagicMock
 
-from homeassistant.components.google_assistant import helpers
+from homeassistant.components.google_assistant import helpers, http
 
 
 def mock_google_config_store(agent_user_ids=None):
@@ -14,7 +14,7 @@ def mock_google_config_store(agent_user_ids=None):
     return store
 
 
-class MockConfig(helpers.AbstractConfig):
+class MockConfig(http.GoogleConfig):
     """Fake config that always exposes everything."""
 
     def __init__(
@@ -30,7 +30,7 @@ class MockConfig(helpers.AbstractConfig):
         should_report_state=False,
     ):
         """Initialize config."""
-        super().__init__(hass)
+        helpers.AbstractConfig.__init__(self, hass)
         self._enabled = enabled
         self._entity_config = entity_config or {}
         self._secure_devices_pin = secure_devices_pin

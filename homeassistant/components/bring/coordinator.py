@@ -40,9 +40,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
 
     async def _async_update_data(self) -> dict[str, BringData]:
         try:
-            lists_response = await self.hass.async_add_executor_job(
-                self.bring.loadLists
-            )
+            lists_response = await self.bring.loadListsAsync()
         except BringRequestException as e:
             raise UpdateFailed("Unable to connect and retrieve data from bring") from e
         except BringParseException as e:
@@ -51,9 +49,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
         list_dict = {}
         for lst in lists_response["lists"]:
             try:
-                items = await self.hass.async_add_executor_job(
-                    self.bring.getItems, lst["listUuid"]
-                )
+                items = await self.bring.getItemsAsync(lst["listUuid"])
             except BringRequestException as e:
                 raise UpdateFailed(
                     "Unable to connect and retrieve data from bring"

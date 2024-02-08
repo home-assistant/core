@@ -1,5 +1,4 @@
 """Test the Hunter Douglas Powerview config flow."""
-import asyncio
 from ipaddress import ip_address
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -191,9 +190,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     )
     ignored_config_entry.add_to_hass(hass)
 
-    mock_powerview_userdata = _get_mock_powerview_userdata(
-        get_resources=asyncio.TimeoutError
-    )
+    mock_powerview_userdata = _get_mock_powerview_userdata(get_resources=TimeoutError)
     with patch(
         "homeassistant.components.hunterdouglas_powerview.UserData",
         return_value=mock_powerview_userdata,
@@ -300,9 +297,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_powerview_userdata = _get_mock_powerview_userdata(
-        get_resources=asyncio.TimeoutError
-    )
+    mock_powerview_userdata = _get_mock_powerview_userdata(get_resources=TimeoutError)
     with patch(
         "homeassistant.components.hunterdouglas_powerview.UserData",
         return_value=mock_powerview_userdata,

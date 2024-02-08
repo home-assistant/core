@@ -1,7 +1,6 @@
 """Connection session."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any
@@ -266,7 +265,7 @@ class ActiveConnection:
         elif isinstance(err, vol.Invalid):
             code = const.ERR_INVALID_FORMAT
             err_message = vol.humanize.humanize_error(msg, err)
-        elif isinstance(err, asyncio.TimeoutError):
+        elif isinstance(err, TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"
         elif isinstance(err, HomeAssistantError):

@@ -1,7 +1,6 @@
 """HTTP Support for Hass.io."""
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 import logging
 import os
@@ -193,7 +192,7 @@ class HassIOView(HomeAssistantView):
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on api %s request %s", path, err)
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error("Client timeout error on API request %s", path)
 
         raise HTTPBadGateway()
