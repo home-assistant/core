@@ -621,7 +621,7 @@ class TelegramNotificationService:
     def _send_msg(self, func_send, msg_error, message_tag, *args_msg, **kwargs_msg):
         """Send one message."""
         try:
-            out = func_send(*args_msg, **kwargs_msg)
+            out = self.hass.create_task(func_send(*args_msg, **kwargs_msg))
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
                 message_id = out[ATTR_MESSAGEID]
