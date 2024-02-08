@@ -323,6 +323,7 @@ class Thermostat(ClimateEntity):
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
     _attr_name = None
     _attr_has_entity_name = True
+    _attr_translation_key = "thermostat"
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(

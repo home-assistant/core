@@ -1,0 +1,22 @@
+{
+  "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "Away": "mdi:account-arrow-right",
+              "Home": "mdi:home",
+              "Sleep": "mdi:bed"
+            }
+          },
+          "fan_mode": {
+            "state": {
+              "auto": "mdi:fan-auto"
+            }
+          }
+        }
+      }
+    }
+  }
+}
