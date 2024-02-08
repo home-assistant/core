@@ -1,7 +1,5 @@
 """Constants for the MotionBlinds BLE integration."""
 
-from enum import StrEnum
-
 ATTR_CALIBRATION = "calibration"
 ATTR_CONNECTION_TYPE = "connection_type"
 ATTR_SPEED = "speed"
@@ -24,10 +22,6 @@ ERROR_INVALID_MAC_CODE = "invalid_mac_code"
 ERROR_NO_BLUETOOTH_ADAPTER = "no_bluetooth_adapter"
 ERROR_NO_DEVICES_FOUND = "no_devices_found"
 
-EXCEPTION_NOT_CALIBRATED = (
-    "{device_name} needs to be calibrated using the MotionBlinds BLE app before usage."
-)
-
 ICON_CALIBRATION = "mdi:tune"
 ICON_SPEED = "mdi:run-fast"
 ICON_CONNECT = "mdi:bluetooth"
@@ -37,26 +31,3 @@ ICON_CONNECTION_TYPE = "mdi:bluetooth-connect"
 ICON_VERTICAL_BLIND = "mdi:blinds-vertical-closed"
 
 MANUFACTURER = "MotionBlinds"
-
-SETTING_MAX_MOTOR_FEEDBACK_TIME = 2  # Seconds
-
-
-class MotionCalibrationType(StrEnum):
-    """Enum for the blind calibration type."""
-
-    CALIBRATED = "calibrated"
-    UNCALIBRATED = "uncalibrated"
-    CALIBRATING = "calibrating"
-
-
-class MotionBlindType(StrEnum):
-    """Enum for the blind type."""
-
-    ROLLER = "Roller blind"
-    HONEYCOMB = "Honeycomb blind"
-    ROMAN = "Roman blind"
-    VENETIAN = "Venetian blind"
-    VENETIAN_TILT_ONLY = "Venetian blind (tilt-only)"
-    DOUBLE_ROLLER = "Double Roller blind"
-    CURTAIN = "Curtain blind"
-    VERTICAL = "Vertical blind"
