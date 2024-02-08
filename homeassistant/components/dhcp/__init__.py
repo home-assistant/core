@@ -169,11 +169,14 @@ class WatcherBase(ABC):
         self.hass = hass
         self._integration_matchers = integration_matchers
         self._address_data = address_data
+        self._unsub: Callable[[], None] | None = None
 
-    @abstractmethod
     @callback
     def async_stop(self) -> None:
-        """Stop the watcher."""
+        """Stop scanning for new devices on the network."""
+        if self._unsub:
+            self._unsub()
+            self._unsub = None
 
     @abstractmethod
     @callback
@@ -278,16 +281,13 @@ class NetworkWatcher(WatcherBase):
     ) -> None:
         """Initialize class."""
         super().__init__(hass, address_data, integration_matchers)
-        self._unsub: Callable[[], None] | None = None
         self._discover_hosts: DiscoverHosts | None = None
         self._discover_task: asyncio.Task | None = None
 
     @callback
     def async_stop(self) -> None:
         """Stop scanning for new devices on the network."""
-        if self._unsub:
-            self._unsub()
-            self._unsub = None
+        super().async_stop()
         if self._discover_task:
             self._discover_task.cancel()
             self._discover_task = None
@@ -324,23 +324,6 @@ class NetworkWatcher(WatcherBase):
 
 class DeviceTrackerWatcher(WatcherBase):
     """Class to watch dhcp data from routers."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        address_data: dict[str, dict[str, str]],
-        integration_matchers: DhcpMatchers,
-    ) -> None:
-        """Initialize class."""
-        super().__init__(hass, address_data, integration_matchers)
-        self._unsub: Callable[[], None] | None = None
-
-    @callback
-    def async_stop(self) -> None:
-        """Stop watching for new device trackers."""
-        if self._unsub:
-            self._unsub()
-            self._unsub = None
 
     @callback
     def async_start(self) -> None:
@@ -382,23 +365,6 @@ class DeviceTrackerWatcher(WatcherBase):
 class DeviceTrackerRegisteredWatcher(WatcherBase):
     """Class to watch data from device tracker registrations."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        address_data: dict[str, dict[str, str]],
-        integration_matchers: DhcpMatchers,
-    ) -> None:
-        """Initialize class."""
-        super().__init__(hass, address_data, integration_matchers)
-        self._unsub: Callable[[], None] | None = None
-
-    @callback
-    def async_stop(self) -> None:
-        """Stop watching for device tracker registrations."""
-        if self._unsub:
-            self._unsub()
-            self._unsub = None
-
     @callback
     def async_start(self) -> None:
         """Stop watching for device tracker registrations."""
@@ -422,16 +388,6 @@ class DeviceTrackerRegisteredWatcher(WatcherBase):
 class DHCPWatcher(WatcherBase):
     """Class to watch dhcp requests."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        address_data: dict[str, dict[str, str]],
-        integration_matchers: DhcpMatchers,
-    ) -> None:
-        """Initialize class."""
-        super().__init__(hass, address_data, integration_matchers)
-        self._cancel: Callable[[], None] | None = None
-
     @callback
     def _async_process_dhcp_request(self, response: aiodhcpwatcher.DHCPRequest) -> None:
         """Process a dhcp request."""
@@ -440,15 +396,9 @@ class DHCPWatcher(WatcherBase):
         )
 
     @callback
-    def async_stop(self) -> None:
-        """Stop watching for DHCP packets."""
-        if self._cancel:
-            self._cancel()
-
-    @callback
     def async_start(self) -> None:
         """Start watching for dhcp packets."""
-        self._cancel = aiodhcpwatcher.start(self._async_process_dhcp_request)
+        self._unsub = aiodhcpwatcher.start(self._async_process_dhcp_request)
 
 
 def _format_mac(mac_address: str) -> str:
