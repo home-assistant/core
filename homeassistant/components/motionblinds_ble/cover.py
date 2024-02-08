@@ -10,7 +10,10 @@ import logging
 from typing import Any
 
 from motionblindsble.const import (
+    EXCEPTION_NOT_CALIBRATED,
     SETTING_CALIBRATION_DISCONNECT_TIME,
+    MotionBlindType,
+    MotionCalibrationType,
     MotionConnectionType,
     MotionRunningType,
     MotionSpeedLevel,
@@ -46,11 +49,8 @@ from .const import (
     CONF_MAC_CODE,
     DOMAIN,
     ENTITY_NAME,
-    EXCEPTION_NOT_CALIBRATED,
     ICON_VERTICAL_BLIND,
     MANUFACTURER,
-    MotionBlindType,
-    MotionCalibrationType,
 )
 
 _LOGGER = logging.getLogger(__name__)
