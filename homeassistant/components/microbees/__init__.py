@@ -14,7 +14,8 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
-from .const import ACCESS_TOKEN, AUTH, BEES, CONNECTOR, DOMAIN, PLATFORMS
+from .const import ACCESS_TOKEN, AUTH, BEES, CONNECTOR, COORDINATOR, DOMAIN, PLATFORMS
+from .coordinator import MicroBeesUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up microBees from a config entry."""
     hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -50,24 +52,30 @@ async def async_setup_entry(
         ):
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
         raise ConfigEntryNotReady from ex
+
     hass.data[DOMAIN][entry.entry_id] = {
         AUTH: api.ConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     }
     microbees = MicroBees(token=session.token[ACCESS_TOKEN])
+
     hass.data[DOMAIN][CONNECTOR] = microbees
-    bees = await microbees.getBees()
+    try:
+        bees = await microbees.getBees()
+        hass.data[DOMAIN][BEES] = bees
+        hass.data[DOMAIN][entry.entry_id] = HomeAssistantMicroBeesData(
+            client=microbees,
+            bees=bees,
+            session=session,
+        )
 
-    hass.data[DOMAIN][BEES] = bees
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = HomeAssistantMicroBeesData(
-        client=microbees,
-        bees=bees,
-        session=session,
-    )
+        coordinator = MicroBeesUpdateCoordinator(hass, microbees)
+        await coordinator.async_config_entry_first_refresh()
+        hass.data[DOMAIN][COORDINATOR] = coordinator
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
+        return True
+    except Exception as ex:
+        raise ConfigEntryNotReady from ex
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
