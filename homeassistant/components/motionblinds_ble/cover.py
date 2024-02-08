@@ -130,7 +130,7 @@ class GenericBlind(CoverEntity):
     device_address: str
     device_rssi: int | None = None
     _device: MotionDevice
-    _attr_connection_type: MotionConnectionType = MotionConnectionType.DISCONNECTED
+    _connection_type: MotionConnectionType = MotionConnectionType.DISCONNECTED
     _running_type: MotionRunningType | None = None
 
     _use_status_position_update_ui: bool = False
@@ -299,7 +299,7 @@ class GenericBlind(CoverEntity):
             self.config_entry.data[CONF_MAC_CODE],
             connection_type.value.title(),
         )
-        self._attr_connection_type = connection_type
+        self._connection_type = connection_type
         if self._connection_callback is not None:
             self._connection_callback(connection_type)
         # Reset states if connection is lost, since we don't know the cover position anymore
@@ -389,11 +389,11 @@ class GenericBlind(CoverEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, str]:
         """Return the state attributes."""
-        return {ATTR_CONNECTION_TYPE: self._attr_connection_type}
+        return {ATTR_CONNECTION_TYPE: self._connection_type}
 
     async def before_command_function(self, *args, **kwargs) -> None:
         """Run some code before executing any command."""
-        if self._attr_connection_type is MotionConnectionType.CONNECTED:
+        if self._connection_type is MotionConnectionType.CONNECTED:
             self.async_refresh_disconnect_timer()
 
     # Decorator
@@ -406,7 +406,7 @@ class GenericBlind(CoverEntity):
     ) -> bool:
         """Run some code before executing any command that moves the position of the blind."""
         await self.before_command_function(*args, **kwargs)
-        if self._attr_connection_type is not MotionConnectionType.CONNECTED:
+        if self._connection_type is not MotionConnectionType.CONNECTED:
             self._use_status_position_update_ui = False
         return await func(
             self,
@@ -419,7 +419,7 @@ class GenericBlind(CoverEntity):
     async def no_run_command_function(self, func: Callable, *args, **kwargs) -> bool:
         """Run some code before executing any command that does not move the position of the blind."""
         await self.before_command_function(*args, **kwargs)
-        if self._attr_connection_type is not MotionConnectionType.CONNECTED:
+        if self._connection_type is not MotionConnectionType.CONNECTED:
             self._use_status_position_update_ui = True
             self.async_update_running(MotionRunningType.STILL)
         return await func(self, *args, **kwargs)
