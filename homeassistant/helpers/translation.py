@@ -273,7 +273,13 @@ class _TranslationCache:
         for key, value in updated_resources.items():
             if key not in cached_resources:
                 continue
-            tuples = list(string.Formatter().parse(value))
+            try:
+                tuples = list(string.Formatter().parse(value))
+            except ValueError:
+                _LOGGER.error(
+                    ("Error while parsing localized (%s) string %s"), language, key
+                )
+                continue
             updated_placeholders = {tup[1] for tup in tuples if tup[1] is not None}
 
             tuples = list(string.Formatter().parse(cached_resources[key]))
