@@ -239,15 +239,8 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 self._attr_native_value = new_value
                 return
             try:
-                try:
-                    new_value_float = float(payload)
-                except ValueError:
-                    new_value_float = None
-
                 if (payload_datetime := dt_util.parse_datetime(new_value)) is None and (
-                    payload_datetime := datetime.fromtimestamp(new_value_float, tz=UTC)
-                    if new_value_float is not None
-                    else None
+                    payload_datetime := datetime.fromtimestamp(float(payload), tz=UTC)
                 ) is None:
                     raise ValueError
             except ValueError:
@@ -256,7 +249,10 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 )
                 self._attr_native_value = None
                 return
-            if self.device_class == SensorDeviceClass.DATE:
+            if (
+                self.device_class == SensorDeviceClass.DATE
+                and payload_datetime is not None
+            ):
                 self._attr_native_value = payload_datetime.date()
                 return
             self._attr_native_value = payload_datetime

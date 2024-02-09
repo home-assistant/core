@@ -261,6 +261,72 @@ async def test_setting_sensor_value_via_mqtt_message(
             "2024-02-07",
             False,
         ),
+        (
+            help_custom_config(
+                sensor.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"device_class": sensor.SensorDeviceClass.TIMESTAMP},),
+            ),
+            sensor.SensorDeviceClass.TIMESTAMP,
+            "",
+            STATE_UNKNOWN,
+            True,
+        ),
+        (
+            help_custom_config(
+                sensor.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"device_class": sensor.SensorDeviceClass.DATE},),
+            ),
+            sensor.SensorDeviceClass.DATE,
+            "",
+            STATE_UNKNOWN,
+            True,
+        ),
+        (
+            help_custom_config(
+                sensor.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"device_class": sensor.SensorDeviceClass.DATE},),
+            ),
+            sensor.SensorDeviceClass.DATE,
+            "0",
+            "1970-01-01",
+            False,
+        ),
+        (
+            help_custom_config(
+                sensor.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"device_class": sensor.SensorDeviceClass.TIMESTAMP},),
+            ),
+            sensor.SensorDeviceClass.TIMESTAMP,
+            "0",
+            "1970-01-01T00:00:00+00:00",
+            False,
+        ),
+        (
+            help_custom_config(
+                sensor.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"device_class": sensor.SensorDeviceClass.DATE},),
+            ),
+            sensor.SensorDeviceClass.DATE,
+            "-1234",
+            "1969-12-31",
+            False,
+        ),
+        (
+            help_custom_config(
+                sensor.DOMAIN,
+                DEFAULT_CONFIG,
+                ({"device_class": sensor.SensorDeviceClass.TIMESTAMP},),
+            ),
+            sensor.SensorDeviceClass.TIMESTAMP,
+            "-1234",
+            "1969-12-31T23:39:26+00:00",
+            False,
+        ),
     ],
 )
 async def test_setting_sensor_native_value_handling_via_mqtt_message(
