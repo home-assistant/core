@@ -136,8 +136,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         passive_watcher.async_start()
         watchers.append(passive_watcher)
 
-    @callback
-    def _async_initialize(event: Event) -> None:
+    async def _async_initialize(event: Event) -> None:
+        await aiodhcpwatcher.async_init()
+
         for active_cls in (DHCPWatcher, NetworkWatcher):
             active_watcher = active_cls(hass, address_data, integration_matchers)
             active_watcher.async_start()
