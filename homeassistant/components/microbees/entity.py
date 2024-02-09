@@ -16,9 +16,9 @@ class MicroBeesEntity(CoordinatorEntity[MicroBeesUpdateCoordinator]):
 
     def __init__(
         self,
-        actuator_id: int,
-        bee_id: int,
         coordinator: MicroBeesUpdateCoordinator,
+        bee_id: int,
+        actuator_id: int,
     ) -> None:
         """Initialize the microBees entity."""
         super().__init__(coordinator)
@@ -48,5 +48,5 @@ class MicroBeesEntity(CoordinatorEntity[MicroBeesUpdateCoordinator]):
 
     @property
     def actuator(self) -> Actuator:
-        """Return the act."""
+        """Return the actuator."""
         return self.coordinator.data.actuators[self.actuator_id]

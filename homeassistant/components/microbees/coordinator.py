@@ -4,7 +4,6 @@ import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from typing import Any
 
 from aioaseko import dataclass
 import aiohttp
@@ -21,11 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 class MicroBeesCoordinatorData:
     """Microbees data from the Coordinator."""
 
-    bees: dict[int:Bee]
-    actuators: dict[int:Actuator]
+    bees: dict[int, Bee]
+    actuators: dict[int, Actuator]
 
 
-class MicroBeesUpdateCoordinator(DataUpdateCoordinator):
+class MicroBeesUpdateCoordinator(DataUpdateCoordinator[MicroBeesCoordinatorData]):
     """MicroBees coordinator."""
 
     def __init__(self, hass: HomeAssistant, microbees: MicroBees) -> None:
@@ -38,7 +37,7 @@ class MicroBeesUpdateCoordinator(DataUpdateCoordinator):
         )
         self.microbees = microbees
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> MicroBeesCoordinatorData:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(10):
             try:
@@ -57,6 +56,6 @@ class MicroBeesUpdateCoordinator(DataUpdateCoordinator):
             actuators_dict = {}
             for bee in bees:
                 bees_dict[bee.id] = bee
-                for act in bee.actuators:
-                    actuators_dict[act.id] = act
+                for actuator in bee.actuators:
+                    actuators_dict[actuator.id] = actuator
             return MicroBeesCoordinatorData(bees=bees_dict, actuators=actuators_dict)

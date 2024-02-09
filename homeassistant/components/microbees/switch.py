@@ -1,5 +1,4 @@
 """Switch integration microBees."""
-import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -12,7 +11,7 @@ from .const import DOMAIN
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesEntity
 
-_LOGGER = logging.getLogger(__name__)
+SOCKET_TRANSLATIONS = {46: "socket_it", 38: "socket_eu"}
 
 
 async def async_setup_entry(
@@ -24,7 +23,7 @@ async def async_setup_entry(
     for bee_id, bee in coordinator.data.bees.items():
         if bee.productID in (25, 26, 27, 35, 38, 46, 63, 64, 65, 86):
             for switch in bee.actuators:
-                switches.append(MBSwitch(switch.id, bee_id, coordinator))
+                switches.append(MBSwitch(coordinator, bee_id, switch.id))
 
     async_add_entities(switches)
 
@@ -33,18 +32,18 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
     """Representation of a microBees switch."""
 
     def __init__(
-        self, actuator_id: int, bee_id: int, coordinator: MicroBeesUpdateCoordinator
+        self,
+        coordinator: MicroBeesUpdateCoordinator,
+        bee_id: int,
+        actuator_id: int,
     ) -> None:
         """Initialize the microBees switch."""
-        super().__init__(actuator_id, bee_id, coordinator)
-        if self.bee.productID == 46:
-            self._attr_icon = "mdi:power-socket-it"
-        if self.bee.productID == 38:
-            self._attr_icon = "mdi:power-socket-eu"
+        super().__init__(coordinator, bee_id, actuator_id)
+        self._attr_translation_key = SOCKET_TRANSLATIONS.get(self.bee.productID)
 
     @property
     def name(self) -> str:
-        """Status of the switch."""
+        """Name of the switch."""
         return self.actuator.name
 
     @property
