@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_ZONE,
     DOMAIN_RASCALSCHEDULER,
     EVENT_HOMEASSISTANT_STARTED,
+    FCFS,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -594,6 +595,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 name=self.raw_config["alias"],
                 routine_id=self.unique_id,
                 action_script=self.raw_config["action"],
+                scheduling_policy=FCFS,
             )
             self._routine.output()
 
@@ -698,15 +700,18 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             try:
                 with trace_path("action"):
-                    # change to execute rascal scheduler
-                    rascal = self.hass.data.get(DOMAIN_RASCALSCHEDULER)
+                    # Access the Rascal Scheduler instance
+                    rascal_scheduler = self.hass.data.get(DOMAIN_RASCALSCHEDULER)
 
-                    if rascal and self._routine:
-                        routine_entity = self._routine.duplicate(
-                            variables, trigger_context
-                        )
-                        routine_entity.output()
-                        rascal.init_routine(routine_entity)
+                    # Check if the Rascal Scheduler is available and a routine is set
+                    if rascal_scheduler and self._routine:
+                        # Duplicate the routine with the provided variables and trigger context
+                        # This step creates a new routine ready for initialization
+                        routine = self._routine.duplicate(variables, trigger_context)
+                        # routine.output()
+
+                        # Initialize the routine
+                        rascal_scheduler.initialize_routine(routine)
 
                     # await self.action_script.async_run(
                     #     variables, trigger_context, started_action

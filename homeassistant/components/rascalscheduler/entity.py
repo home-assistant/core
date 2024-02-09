@@ -47,24 +47,35 @@ class BaseRoutineEntity:
         name: str | None,
         routine_id: str | None,
         actions: dict[str, ActionEntity],
-        scheduling_policy: str
         # timeout: float,
     ) -> None:
         """Initialize a routine entity."""
         self._name = name
         self._routine_id = routine_id
         self.actions = actions
+        # self._timeout = timeout
         self._start_time: float | None = None
         self._last_trigger_time: float | None = None
-        self._scheduling_policy = scheduling_policy
-        # self._timeout = timeout
+
+    # def timeout(self)->bool:
+    #     """Check if the routine exceeds the timeout."""
+    #     now = time.time()
+    #     last_trigger_time = self._last_trigger_time
+    #     timeout = self._timeout
+
+    #     if last_trigger_time is None or (now - last_trigger_time) * TIME_MILLISECOND > timeout:
+    #         return False
+
+    #     return True
 
     @property
     def name(self) -> str | None:
         """Get name."""
         return self._name
 
-    def duplicate(self, var: dict[str, Any], ctx: Context | None) -> RoutineEntity:
+    def duplicate(
+        self, var: dict[str, Any] | None, ctx: Context | None
+    ) -> RoutineEntity:
         """Duplicate the routine entity. Only the base routine can call this function."""
 
         routine_entity = {}
@@ -78,9 +89,9 @@ class BaseRoutineEntity:
                     action_state=RASC_SCHEDULED,
                     routine_id=entity.routine_id,
                     delay=entity.delay,
+                    group=entity.group,
                     variables=var,
                     context=ctx,
-                    scheduling_policy=entity.scheduling_policy,
                     logger=entity.logger,
                 )
 
@@ -129,7 +140,6 @@ class BaseRoutineEntity:
             name=self._name,
             routine_id=self._routine_id,
             actions=routine_entity,
-            scheduling_policy=self._scheduling_policy,
             start_time=self._start_time,
             last_trigger_time=self._last_trigger_time,
             logger=_LOGGER,
@@ -172,14 +182,14 @@ class RoutineEntity(BaseRoutineEntity):
         name: str | None,
         routine_id: str | None,
         actions: dict[str, ActionEntity],
-        scheduling_policy: str,
+        timeout: float | None = None,
         start_time: float | None = None,
         last_trigger_time: float | None = None,
         logger: logging.Logger | None = None,
         log_exceptions: bool = True,
     ) -> None:
         """Initialize a routine entity."""
-        super().__init__(name, routine_id, actions, scheduling_policy)
+        super().__init__(name, routine_id, actions)
         self._start_time = start_time
         self._last_trigger_time = last_trigger_time
         self._set_logger(logger)
@@ -189,11 +199,6 @@ class RoutineEntity(BaseRoutineEntity):
     def routine_id(self) -> str | None:
         """Get routine id."""
         return self._routine_id
-
-    @property
-    def scheduling_policy(self) -> str:
-        """Get the scheduling policy."""
-        return self._scheduling_policy
 
     def _set_logger(self, logger: logging.Logger | None = None) -> None:
         """Set logger."""
@@ -213,8 +218,8 @@ class ActionEntity:
         action_id: str | None,
         action_state: str | None,
         routine_id: str | None,
-        scheduling_policy: str,
         delay: timedelta | None = None,
+        group: bool = False,
         variables: dict[str, Any] | None = None,
         context: Context | None = None,
         logger: logging.Logger | None = None,
@@ -227,8 +232,8 @@ class ActionEntity:
         self._routine_id = routine_id
         self.parents: list[ActionEntity] = []
         self.children: list[ActionEntity] = []
-        self._scheduling_policy = scheduling_policy
         self.delay = delay
+        self.group = group
         self.variables = variables
         self.context = context
         self._log_exceptions = False
@@ -254,11 +259,6 @@ class ActionEntity:
     def action_state(self, state: str) -> None:
         """Set action state."""
         self._action_state = state
-
-    @property
-    def scheduling_policy(self) -> str:
-        """Get scheduling policy."""
-        return self._scheduling_policy
 
     @property
     def logger(self) -> logging.Logger | None:
@@ -294,6 +294,7 @@ class ActionEntity:
     async def attach_triggered(self, log_exceptions: bool) -> None:
         """Trigger the function."""
         action = cv.determine_script_action(self.action)
+
         continue_on_error = self.action.get(CONF_CONTINUE_ON_ERROR, False)
 
         try:
@@ -491,7 +492,7 @@ class Queue(OrderedDict[_KT, _VT]):
     def next(self):
         """Get the first key (action_id) and its corresponding value (action_state) in the OrderedDict."""
         if self._queue:
-            key, value = list(self._queue.items())[0]
+            key, value = next(iter(self._queue))
             return key, value
         return None, None
 
@@ -507,14 +508,3 @@ class _StopScript(_HaltScript):
         """Initialize a halt exception."""
         super().__init__(message)
         self.response = response
-
-    # def timeout(self)->bool:
-    #     """Check if the routine exceeds the timeout."""
-    #     now = time.time()
-    #     last_trigger_time = self._last_trigger_time
-    #     timeout = self._timeout
-
-    #     if last_trigger_time is None or (now - last_trigger_time) * TIME_MILLISECOND > timeout:
-    #         return False
-
-    #     return True
