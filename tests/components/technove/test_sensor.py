@@ -120,3 +120,5 @@ async def test_sensor_unknown_status(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    # Other sensors should still be available
+    assert hass.states.get("sensor.technove_station_total_energy_usage").state == "1234"
