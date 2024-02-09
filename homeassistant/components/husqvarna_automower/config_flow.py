@@ -28,10 +28,12 @@ class HusqvarnaConfigFlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow."""
-        if self.reauth_entry:
-            return self.async_update_reload_and_abort(self.reauth_entry, data=data)
         token = data[CONF_TOKEN]
         user_id = token[CONF_USER_ID]
+        if self.reauth_entry:
+            if self.reauth_entry.unique_id != user_id:
+                return self.async_abort(reason="wrong_account")
+            return self.async_update_reload_and_abort(self.reauth_entry, data=data)
         structured_token = await async_structure_token(token[CONF_ACCESS_TOKEN])
         first_name = structured_token.user.first_name
         last_name = structured_token.user.last_name
