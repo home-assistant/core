@@ -550,7 +550,7 @@ class _WatchPendingSetups:
         self._setup_started = setup_started
         self._duration_count = 0
         self._handle: asyncio.TimerHandle | None = None
-        self._previous_was_empty = False
+        self._previous_was_empty = True
         self._loop = hass.loop
 
     def _async_watch(self) -> None:
