@@ -17,19 +17,18 @@ from homeassistant.const import (
     CONF_TARGET,
     CONF_TYPE,
     DOMAIN_SCRIPT,
+    FCFS_POST_LEASE,
     LOCK_STATE_ACQUIRED,
     LOCK_STATE_SCHEDULED,
-    POST_LEASE,
-    RASC_ACK,
     RASC_COMPLETE,
     RASC_RESPONSE,
-    RASC_START,
 )
 from homeassistant.core import Event, HomeAssistant
 
 if TYPE_CHECKING:
     from homeassistant.components.script import BaseScriptEntity
     from homeassistant.helpers.entity_component import EntityComponent
+
 from homeassistant.helpers.rascalscheduler import (
     async_get_entity_id_from_number,
     async_get_routine_id,
@@ -42,6 +41,7 @@ CONF_ROUTINE_ID = "routine_id"
 CONF_STEP = "step"
 CONF_ENTITY_REGISTRY = "entity_registry"
 CONF_END_VIRTUAL_NODE = "end_virtual_node"
+CONF_SCHEDULING_POLICY = "scheduling"
 
 TIMEOUT = 3000  # millisecond
 
@@ -54,8 +54,9 @@ def create_routine(
     name: str | None,
     routine_id: str | None,
     action_script: Sequence[dict[str, Any]],
+    scheduling_policy: str,
 ) -> BaseRoutineEntity:
-    """Convert the script to the DAG using dsf algorithm."""
+    """Convert the script to the DAG using dfs algorithm."""
     next_parents: list[ActionEntity] = []
     entities: dict[str, ActionEntity] = {}
     config: dict[str, Any] = {}
@@ -63,9 +64,9 @@ def create_routine(
     # configuration for each node
     config[CONF_STEP] = -1
     config[CONF_ROUTINE_ID] = routine_id
+    config[CONF_SCHEDULING_POLICY] = scheduling_policy
 
     for _, script in enumerate(action_script):
-        # print("script:", script)
         if (
             CONF_PARALLEL not in script
             and CONF_SEQUENCE not in script
@@ -82,6 +83,7 @@ def create_routine(
                 action_id=action_id,
                 action_state=None,
                 routine_id=config[CONF_ROUTINE_ID],
+                scheduling_policy=scheduling_policy,
                 logger=_LOGGER,
             )
 
@@ -95,7 +97,9 @@ def create_routine(
             next_parents.append(entities[action_id])
 
         else:
-            leaf_nodes = dfs(hass, script, config, next_parents, entities)
+            leaf_nodes = create_dag_from_script(
+                hass, script, config, next_parents, entities
+            )
             next_parents.clear()
             next_parents = leaf_nodes
 
@@ -107,6 +111,7 @@ def create_routine(
         action_id=None,
         action_state=None,
         routine_id=config[CONF_ROUTINE_ID],
+        scheduling_policy=scheduling_policy,
         logger=_LOGGER,
     )
 
@@ -114,10 +119,10 @@ def create_routine(
         parent.children.append(entities[CONF_END_VIRTUAL_NODE])
         entities[CONF_END_VIRTUAL_NODE].parents.append(parent)
 
-    return BaseRoutineEntity(name, routine_id, entities)
+    return BaseRoutineEntity(name, routine_id, entities, scheduling_policy)
 
 
-def dfs(
+def create_dag_from_script(
     hass: HomeAssistant,
     script: dict[str, Any],
     config: dict[str, Any],
@@ -130,14 +135,18 @@ def dfs(
     # print("script:", script)
     if CONF_PARALLEL in script:
         for item in list(script.values())[0]:
-            leaf_entities = dfs(hass, item, config, parents, entities)
+            leaf_entities = create_dag_from_script(
+                hass, item, config, parents, entities
+            )
             for entity in leaf_entities:
                 next_parents.append(entity)
 
     elif CONF_SEQUENCE in script:
         next_parents = parents
         for item in list(script.values())[0]:
-            leaf_entities = dfs(hass, item, config, next_parents, entities)
+            leaf_entities = create_dag_from_script(
+                hass, item, config, next_parents, entities
+            )
             next_parents = leaf_entities
 
     elif CONF_SERVICE in script:
@@ -152,11 +161,11 @@ def dfs(
                 if base_script is not None and base_script.raw_config is not None:
                     next_parents = parents
                     for item in base_script.raw_config[CONF_SEQUENCE]:
-                        leaf_entities = dfs(hass, item, config, next_parents, entities)
+                        leaf_entities = create_dag_from_script(
+                            hass, item, config, next_parents, entities
+                        )
                         next_parents = leaf_entities
         else:
-            target_entities = get_target_entities(hass, script)
-
             config[CONF_STEP] = config[CONF_STEP] + 1
             action_id = f"{config[CONF_ROUTINE_ID]}.{config[CONF_STEP]}"
 
@@ -166,7 +175,7 @@ def dfs(
                 action_id=action_id,
                 action_state=None,
                 routine_id=config[CONF_ROUTINE_ID],
-                group=len(target_entities) > 1,
+                scheduling_policy=config[CONF_SCHEDULING_POLICY],
                 logger=_LOGGER,
             )
 
@@ -201,6 +210,7 @@ def dfs(
             action_id=action_id,
             action_state=None,
             routine_id=config[CONF_ROUTINE_ID],
+            scheduling_policy=config[CONF_SCHEDULING_POLICY],
             logger=_LOGGER,
         )
 
@@ -261,26 +271,17 @@ class BaseReadyQueues:
         return self._ready_queues
 
     def _add_action(self, action_entity: ActionEntity) -> None:
-        """Add action."""
-        hass = action_entity.hass
-        target_entities = get_target_entities(hass, action_entity.action)
+        """Add the action to the ready queues."""
+        target_entities = get_target_entities(action_entity.hass, action_entity.action)
 
         for entity in target_entities:
-            entity_id = async_get_entity_id_from_number(hass, entity)
-
-            try:
-                self._ready_queues[entity_id][
-                    action_entity.action_id
-                ] = LOCK_STATE_SCHEDULED
-            except (KeyError, ValueError):
-                _LOGGER.exception(
-                    "While adding action %s to ready queue %s ",
-                    action_entity.action_id,
-                    entity_id,
-                )
+            entity_id = async_get_entity_id_from_number(action_entity.hass, entity)
+            self._ready_queues[entity_id][
+                action_entity.action_id
+            ] = LOCK_STATE_SCHEDULED
 
     def _remove_action(self, hass: HomeAssistant, action_entity: ActionEntity) -> None:
-        """Remove action."""
+        """Remove the action from the ready queues."""
         target_entities = get_target_entities(hass, action_entity.action)
 
         for entity in target_entities:
@@ -317,16 +318,18 @@ class LinageTable(BaseLocks, BaseReadyQueues):
 
     def __init__(self) -> None:
         """Initialize linage table entity."""
-        self._ready_queues: dict[str, Queue] = {}  # {action_id, lock_state}
+        self._ready_queues: dict[
+            str, Queue
+        ] = {}  # {entity_id, {action_id, lock_state}}
         self._locks: dict[str, str | None] = {}  # {entity_id, routine_id}
 
     def add_entity(self, entity_id: str) -> None:
-        """Add entity (entity_id) to lienage table."""
+        """Add the entity to the lienage table."""
         self._ready_queues[entity_id] = Queue()
         self._locks[entity_id] = None
 
     def delete_entity(self, entity_id: str) -> None:
-        """Delete entity (entity_id) in lienage table."""
+        """Delete the entity in the lienage table."""
         try:
             del self._ready_queues[entity_id]
             del self._locks[entity_id]
@@ -334,15 +337,15 @@ class LinageTable(BaseLocks, BaseReadyQueues):
             _LOGGER.exception("While deleting entity %s in lienage table", entity_id)
 
     def add_action(self, action_entity: ActionEntity) -> None:
-        """Add action."""
+        """Add the action to the lineage table."""
         return super()._add_action(action_entity)
 
     def remove_action(self, hass: HomeAssistant, action_entity: ActionEntity) -> None:
-        """Remove action."""
+        """Remove the action from the lineage table."""
         return super()._remove_action(hass, action_entity)
 
     def output_ready_queues(self) -> None:
-        """Output the content of ready routines."""
+        """Output the ready routines."""
         ready_routines = []
         for entity_id, actions in self._ready_queues.items():
             action_list = []
@@ -361,7 +364,7 @@ class LinageTable(BaseLocks, BaseReadyQueues):
         print(json.dumps(out, indent=2))  # noqa: T201
 
     def output_locks(self) -> None:
-        """Out locks."""
+        """Output the locks."""
         locks = []
         for entity_id, routine_id in self._locks.items():
             entity_json = {"entity_id": entity_id, "routine_id": routine_id}
@@ -372,18 +375,14 @@ class LinageTable(BaseLocks, BaseReadyQueues):
 
 
 class RascalSchedulerEntity(BaseReadyQueues):
-    """Representation of a rascal scehduler entity.
-
-    Scheduler decides when routines from wait queue are started, acquired locks, and maintains serialization order.
-
-    """
+    """Scheduler decides when routines from wait queue are started, acquired locks, and maintains serialization order."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize rascal scheduler entity."""
         self._hass = hass
         self._lienage_table = LinageTable()
         self._serialization_order: Queue = Queue()
-        self._wait_queues: list[RoutineEntity] = []
+        self._wait_queues: Queue = Queue()
         self._hass.bus.async_listen(RASC_RESPONSE, self.handle_event)
 
     @property
@@ -392,16 +391,16 @@ class RascalSchedulerEntity(BaseReadyQueues):
         return self._lienage_table
 
     @property
-    def wait_queues(self) -> list[RoutineEntity]:
+    def wait_queues(self) -> Queue:
         """Get wait queue."""
         return self._wait_queues
 
     def _add_routine_to_serialization_order(self, routine: RoutineEntity) -> None:
-        """Add routine to serialization order."""
+        """Add the routine to the serialization order queue."""
         self._serialization_order[routine.routine_id] = routine
 
     def _remove_routine_from_serialization_order(self, routine: RoutineEntity) -> None:
-        """Remove routine from serialization order."""
+        """Remove the routine from the serialization order."""
         try:
             del self._serialization_order[routine.routine_id]
         except (KeyError, ValueError):
@@ -410,146 +409,147 @@ class RascalSchedulerEntity(BaseReadyQueues):
             )
 
     def _add_routine_to_wait_queues(self, routine: RoutineEntity) -> None:
-        """Add routine to wait queues."""
-        self._wait_queues.append(routine)
+        """Add the routine to the wait queues."""
+        self._wait_queues[routine.routine_id] = routine
 
     def _add_routine_to_ready_queues(self, routine: RoutineEntity) -> None:
-        """Add routine to ready queues."""
-        for action_entity in routine.actions.values():
-            if action_entity.action_id is not None:
-                self._lienage_table.add_action(action_entity)
+        """Add the routine to the ready queues."""
+        for action_entity in list(routine.actions.values())[:-1]:
+            self._lienage_table.add_action(action_entity)
 
     def _get_next_routine(self) -> RoutineEntity | None:
-        """Get next routine from wait queues."""
-        if self._wait_queues:
-            return self._wait_queues[0]
-        return None
+        """Get the next routine from the wait queues."""
+        routine_id, routine = self._wait_queues.next()
+        return routine if routine_id else None
 
     def _get_active_action(self, entity_id: str) -> ActionEntity | None:
-        """Get active action from the entity. The active action is the first action in the ready queue with entity_id."""
+        """Get the active action from the entity's ready queue."""
 
-        action_id, _ = self._lienage_table.ready_queues[entity_id].next()
-
-        if action_id is not None:
-            routine_id = async_get_routine_id(action_id)
-
-            try:
-                return self._serialization_order[routine_id].actions[action_id]
-            except (KeyError, ValueError):
-                _LOGGER.exception(
-                    "While getting active action %s from serialization order", action_id
-                )
-        else:
-            _LOGGER.error(
+        try:
+            # Return the action if the lock state is acquired.
+            for action_id in self._lienage_table.ready_queues[entity_id]:
+                lock_state = self._lienage_table.ready_queues[entity_id][action_id]
+                if lock_state == LOCK_STATE_ACQUIRED:
+                    routine_id = async_get_routine_id(action_id)
+                    return self._serialization_order[routine_id].actions[action_id]
+        except (KeyError, ValueError):
+            _LOGGER.exception(
                 "While getting active action %s from serialization order", action_id
             )
 
+        # The entity's ready queue must have one action with the acquired not.
+        # If not, return error
+        _LOGGER.error("Failed to get active action")
         return None
 
-    def _attempt_lock(self, entity_id: str, routine_id: str) -> bool:
-        """Try to acquire the lock of entity (entity_id)."""
-        try:
-            return (
-                self._lienage_table.locks[entity_id] is None
-                or self._lienage_table.locks[entity_id] == routine_id
-            )
-        except (KeyError, ValueError):
-            _LOGGER.exception("While getting lock %s", entity_id)
+    def _acquire_routine_locks(self, routine: RoutineEntity) -> bool:
+        """Acquire all locks for the routine."""
+        if not routine.routine_id:
+            return False
 
-        return False
-
-    def _release_lock(self, entity_id: str) -> None:
-        """Release lock."""
-        try:
-            self._lienage_table.locks[entity_id] = None
-        except (KeyError, ValueError):
-            _LOGGER.exception("While getting lock %s", entity_id)
-
-    def _acquire_locks(self, action_entity: ActionEntity) -> None:
-        """Acquire lock for the action."""
-        if action_entity.action_id is not None:
+        for action_entity in list(routine.actions.values())[:-1]:
             target_entities = get_target_entities(self._hass, action_entity.action)
 
-            for entity in target_entities:
-                entity_id = async_get_entity_id_from_number(self._hass, entity)
+            # Try to acquire all locks for the target entities
+            if not self._acquire_all_locks(
+                target_entities, action_entity, routine.routine_id
+            ):
+                return False
 
-                try:
-                    routine_id = async_get_routine_id(action_entity.action_id)
-                    self._lienage_table.locks[entity_id] = routine_id
-                    self._update_action_lock_state_in_ready_queues(
-                        action_entity, LOCK_STATE_ACQUIRED
-                    )
-                except (KeyError, ValueError):
-                    _LOGGER.exception("While getting lock %s", entity_id)
+        return True
 
-    def _attempt_routine_locks(self, routine: RoutineEntity) -> bool:
-        """Try to acquire all locks for the routine."""
-        if routine.routine_id is not None:
-            return all(
-                self._attempt_lock(entity_id, routine.routine_id)
-                for action_entity in routine.actions.values()
-                if action_entity.action_id is not None
-                for entity_id in get_target_entities(self._hass, action_entity.action)
-            )
+    def _acquire_all_locks(
+        self, entities: list[str], action_entity: ActionEntity, routine_id: str
+    ) -> bool:
+        """Acquire all locks for the entities in the action_entity."""
+
+        # Track entities that successfully acquired locks
+        locked_entities: list[str] = []
+
+        for entity in entities:
+            entity_id = async_get_entity_id_from_number(self._hass, entity)
+
+            # Release all acquired locks if acquisition fails for any entity
+            if not self._acquire_lock(entity_id, routine_id):
+                self._release_all_locks(locked_entities)
+                return False
+
+            locked_entities.append(entity_id)
+
+        # If entities acquire all the locks, update the lock states in the ready queues for all entities
+        self._update_action_lock_state_in_ready_queues(
+            action_entity, LOCK_STATE_ACQUIRED
+        )
+        return True
+
+    def _acquire_lock(self, entity_id: str, routine_id: str) -> bool:
+        """Try to attempt the entity's lock for the routine)."""
+        try:
+            # Return true if the lock is available or the lock is accessing by the routine itself.
+            if self._lienage_table.locks.get(entity_id) in (None, routine_id):
+                self._lienage_table.locks[entity_id] = routine_id
+                return True
+        except (KeyError, ValueError):
+            _LOGGER.exception("While getting lock %s", entity_id)
 
         return False
-
-    def _acquire_routine_locks(self, routine: RoutineEntity) -> None:
-        """Acquire all locks for the routine."""
-        for action_entity in routine.actions.values():
-            if action_entity.action_id is not None:
-                self._acquire_locks(action_entity)
 
     def _release_routine_locks(self, routine: RoutineEntity) -> None:
-        """Release routine's locks."""
-        for action_entity in routine.actions.values():
-            if action_entity is not None:
-                self._release_action_locks(action_entity)
-
-    def _release_action_locks(self, action_entity: ActionEntity) -> None:
-        """Release action's locks."""
-        if action_entity.action_id is not None:
+        """Release all the locks for the routine."""
+        for action_entity in list(routine.actions.values())[:-1]:
             target_entities = get_target_entities(self._hass, action_entity.action)
-            for entity in target_entities:
-                entity_id = async_get_entity_id_from_number(self._hass, entity)
-                self._release_lock(entity_id)
+            self._release_all_locks(target_entities)
+
+    def _release_all_locks(self, entities: list[str]) -> None:
+        """Release all the locks for the entities."""
+        for entity in entities:
+            entity_id = async_get_entity_id_from_number(self._hass, entity)
+            self._release_lock(entity_id)
+
+    def _release_lock(self, entity_id: str) -> None:
+        """Release the entity's lock."""
+        self._lienage_table.locks[entity_id] = None
+
+        # Move the lock to the next aciton in the entity's ready queue.
+        self.post_lease(entity_id)
 
     def _update_action_lock_state_in_ready_queues(
         self, action_entity: ActionEntity, state: str
     ) -> None:
-        """Update lock state to new_lock_state."""
+        """Update the lock state for the action in ready queues."""
         target_entities = get_target_entities(self._hass, action_entity.action)
         for entity in target_entities:
             entity_id = async_get_entity_id_from_number(self._hass, entity)
             self._lienage_table.ready_queues[entity_id][action_entity.action_id] = state
 
-    def init_routine(self, routine: RoutineEntity) -> None:
-        """Init routine."""
+    def initialize_routine(self, routine: RoutineEntity) -> None:
+        """Initialize the triggered routine."""
 
+        # Add all the actions in the routine in the associated ready queue.
         self._add_routine_to_ready_queues(routine)
 
-        if self._attempt_routine_locks(routine) and not self._wait_queues:
-            self._acquire_routine_locks(routine)
+        # If the routine can require all the locks right now, start the routine, else
+        # Put the routine to the wait queues.
+        if self._acquire_routine_locks(routine):
             self._start_routine(routine)
         else:
             self._add_routine_to_wait_queues(routine)
 
     def _start_routine(self, routine: RoutineEntity) -> None:
-        """Start routine."""
+        """Start the routine."""
 
+        # Add the routine to the serialization order.
         self._add_routine_to_serialization_order(routine)
 
-        self._lienage_table.output_ready_queues()
-        self._lienage_table.output_locks()
-
-        for action_entity in routine.actions.values():
-            if action_entity.action_id is not None and not action_entity.parents:
+        # Start the action that doesn't have the parents
+        for action_entity in list(routine.actions.values())[:-1]:
+            if not action_entity.parents:
                 self._start_action(action_entity)
 
     def _start_action(self, action_entity: ActionEntity) -> None:
         """Start the action."""
 
-        if action_entity.action_id is not None:
+        if action_entity.action_id:
             self._hass.async_create_task(
                 action_entity.attach_triggered(log_exceptions=False)
             )
@@ -559,52 +559,56 @@ class RascalSchedulerEntity(BaseReadyQueues):
         event_type = event.data.get(CONF_TYPE)
         entity_id = event.data.get(CONF_ENTITY_ID)
 
-        if entity_id is not None:
-            action_entity = self._get_active_action(str(entity_id))
+        # Skip the event if the action is manually executed
+        if not self._serialization_order or not entity_id:
+            return
 
-        if action_entity is not None:
-            if event_type == RASC_COMPLETE:
-                if action_entity.delay is not None:
-                    await action_entity.async_delay_step()
+        # Get the active action in the entity's ready queue.
+        action_entity = self._get_active_action(str(entity_id))
 
-                if not action_entity.group or self.is_group_action_complete(
-                    action_entity
-                ):
-                    self._update_action_state(action_entity, RASC_COMPLETE)
-                    self._lienage_table.remove_action(self._hass, action_entity)
+        # If the triggered action access virtual device, it will go in this case.
+        # In general, the triggered action won't send the RASC_RESPONSE event.
+        if not action_entity:
+            _LOGGER.error("Failed to find the active action")
+            return
 
-                    if POST_LEASE:
-                        self.post_lease(entity_id)
+        if event_type == RASC_COMPLETE:
+            # Delay the action
+            if action_entity.delay:
+                await action_entity.async_delay_step()
 
-                    self._run_next_action(action_entity)
+            # Check if the action is completed.
+            if self._action_complete(action_entity):
+                self._update_action_state(action_entity, RASC_COMPLETE)
+                self._lienage_table.remove_action(self._hass, action_entity)
 
-            elif event_type == RASC_START:
-                self._update_action_state(action_entity, RASC_START)
+                if action_entity.scheduling_policy == FCFS_POST_LEASE:
+                    self._release_lock(entity_id)
 
-            elif event_type == RASC_ACK:
-                self._update_action_state(action_entity, RASC_ACK)
+                self._run_next_action(action_entity)
 
         else:
-            _LOGGER.error("Failed to find the active action")
+            self._update_action_state(action_entity, str(event_type))
 
     def _update_action_state(self, action_entity: ActionEntity, new_state: str) -> None:
-        """Update action state to new state."""
+        """Update the action state."""
         action_entity.action_state = new_state
 
-    def is_group_action_complete(self, action_entity: ActionEntity) -> bool:
-        """Check if the group command are completed."""
+    def _action_complete(self, action_entity: ActionEntity) -> bool:
+        """Check if the action is completed."""
         target_entities = get_target_entities(self._hass, action_entity.action)
 
         for entity in target_entities:
             entity_id = async_get_entity_id_from_number(self._hass, entity)
 
+            # If the action is still in the ready queues, this means that the action is still in proceee.
             if action_entity.action_id in self._lienage_table.ready_queues[entity_id]:
                 return False
 
         return True
 
     # continue to do, need to check condition variable
-    def condition_check(self, action_entity: ActionEntity) -> bool:
+    def _condition_check(self, action_entity: ActionEntity) -> bool:
         """Condition check."""
         for parent in action_entity.parents:
             if parent.action_state != RASC_COMPLETE:
@@ -613,49 +617,66 @@ class RascalSchedulerEntity(BaseReadyQueues):
         return True
 
     def _run_next_action(self, action_entity: ActionEntity) -> None:
-        """Run the next action for action_entity."""
+        """Run the entity's next action."""
         for child in action_entity.children:
             if child.action_id is not None:
-                if self.condition_check(child):
+                # Check if the child can execute.
+                if self._condition_check(child):
                     self._start_action(child)
             else:
                 _LOGGER.info("This is the end of the routine")
+
+                # Update the action state to RASC_COMPLETE
+                self._update_action_state(child, RASC_COMPLETE)
+
+                # Release all the locks held by the routine
                 self._release_routine_locks(
                     self._serialization_order[action_entity.routine_id]
                 )
+
+                # Remove the routine from the serialization order
                 self._remove_routine_from_serialization_order(
                     self._serialization_order[action_entity.routine_id]
                 )
-                self._schedule_next_routine()
-
-    def _schedule_next_routine(self) -> None:
-        """Schedule the next routine based on FIFO."""
-        if self._wait_queues:
-            routine_entity = self._get_next_routine()
-
-            if routine_entity is not None:
-                if self._attempt_routine_locks(routine_entity):
-                    self._acquire_routine_locks(routine_entity)
-                    self._start_routine(routine_entity)
-                else:
-                    _LOGGER.error("Failed to schedule the next routine")
 
     def post_lease(self, entity_id: str) -> None:
         """Post lease."""
-        self._release_lock(entity_id)
-        action_id, _ = self._lienage_table.ready_queues[entity_id].next()
+        action_id, lock_state = self._lienage_table.ready_queues[entity_id].next()
 
-        if action_id is not None:
-            routine_id = async_get_routine_id(action_id)
+        if not action_id:
+            return
+
+        routine_id = async_get_routine_id(action_id)
+
+        routine = self._wait_queues[routine_id]
+
+        if routine:
+            # Update the action's lock state in the ready queue
             self._update_action_lock_state_in_ready_queues(
-                self._serialization_order[routine_id].actions[action_id],
+                routine.actions[action_id],
                 LOCK_STATE_ACQUIRED,
             )
 
+            # Change the routine's owner.
             self._lienage_table.locks[entity_id] = routine_id
 
-            next_routine = self._get_next_routine()
-            if next_routine is not None:
-                if self._attempt_routine_locks(self._serialization_order[routine_id]):
-                    self._acquire_routine_locks(self._serialization_order[routine_id])
-                    self._start_routine(next_routine)
+            if self._acquire_routine_locks(routine):
+                self._start_routine(routine)
+
+    def output_wait_queues(self) -> None:
+        """Output wait queues."""
+        routines = []
+        for routine_id in self._wait_queues:
+            routines.append(routine_id)
+
+        out = {"Type": "Wait Queues", "routines": routines}
+        print(json.dumps(out, indent=2))  # noqa: T201
+
+    def output_serialization_order(self) -> None:
+        """Output serialization order."""
+        routines = []
+        for routine_id in self._serialization_order:
+            routines.append(routine_id)
+
+        out = {"Type": "Serialization Order", "routines": routines}
+        print(json.dumps(out, indent=2))  # noqa: T201

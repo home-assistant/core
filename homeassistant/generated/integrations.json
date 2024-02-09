@@ -4583,6 +4583,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "rascalscheduler": {
+      "name": "Rascal Scheduler",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "local_polling"
+    },
     "raspberry_pi": {
       "name": "Raspberry Pi",
       "integrations": {

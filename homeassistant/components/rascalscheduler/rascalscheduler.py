@@ -20,7 +20,6 @@ from homeassistant.const import (
     DOMAIN_SCRIPT,
     LOCK_STATE_ACQUIRED,
     LOCK_STATE_SCHEDULED,
-    POST_LEASE,
     RASC_ACK,
     RASC_COMPLETE,
     RASC_RESPONSE,
@@ -112,7 +111,11 @@ def create_routine(
         parent.children.append(entities[CONF_END_VIRTUAL_NODE])
         entities[CONF_END_VIRTUAL_NODE].parents.append(parent)
 
-    return BaseRoutineEntity(name, routine_id, entities)
+    return BaseRoutineEntity(
+        name,
+        routine_id,
+        entities,
+    )
 
 
 def dfs(
@@ -570,9 +573,6 @@ class RascalSchedulerEntity(BaseReadyQueues):
                 ):
                     self._update_action_state(action_entity, RASC_COMPLETE)
                     self._lienage_table.remove_action(self._hass, action_entity)
-
-                    if POST_LEASE:
-                        self.post_lease(entity_id)
 
                     self._run_next_action(action_entity)
 

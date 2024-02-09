@@ -17,11 +17,13 @@ from homeassistant import exceptions
 from homeassistant.components.device_automation import action as device_action
 from homeassistant.const import (
     CONF_CONTINUE_ON_ERROR,
+    CONF_ENTITY_ID,
     CONF_RESPONSE_VARIABLE,
     RASC_SCHEDULED,
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.rascalscheduler import async_get_entity_id_from_number
 from homeassistant.util import slugify
 
 _KT = TypeVar("_KT")
@@ -71,7 +73,9 @@ class BaseRoutineEntity:
         """Get name."""
         return self._name
 
-    def duplicate(self, var: dict[str, Any], ctx: Context | None) -> RoutineEntity:
+    def duplicate(
+        self, var: dict[str, Any] | None, ctx: Context | None
+    ) -> RoutineEntity:
         """Duplicate the routine entity. Only the base routine can call this function."""
 
         routine_entity = {}
@@ -160,7 +164,6 @@ class BaseRoutineEntity:
                 "action state": entity.action_state,
                 "parents": parents,
                 "children": children,
-                "group": entity.group,
                 "delay": str(entity.delay),
             }
 
@@ -306,7 +309,9 @@ class ActionEntity:
     async def _async_device_step(self) -> None:
         """Execute device automation."""
 
-        # self.action[CONF_ENTITY_ID] = async_get_entity_id_from_number(self.hass, self.action[CONF_ENTITY_ID])
+        self.action[CONF_ENTITY_ID] = async_get_entity_id_from_number(
+            self.hass, self.action[CONF_ENTITY_ID]
+        )
         if self.variables and self.context is not None:
             await device_action.async_call_action_from_config(
                 self.hass, self.action, self.variables, self.context
