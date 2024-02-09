@@ -555,6 +555,8 @@ class _WatchPendingSetups:
     def _async_watch(self) -> None:
         """Periodic log of setups that are pending."""
         now = monotonic()
+        self._duration_count += SLOW_STARTUP_CHECK_INTERVAL
+
         remaining_with_setup_started = {
             domain: (now - start_time)
             for domain, start_time in self._setup_started.items()
@@ -562,8 +564,11 @@ class _WatchPendingSetups:
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
         if remaining_with_setup_started:
             self._async_dispatch(remaining_with_setup_started)
+        else:
+            # If there are no integrations, we are waiting
+            # on internals (or something is blocking the loop)
+            self._async_dispatch({"homeassistant": self._duration_count})
 
-        self._duration_count += SLOW_STARTUP_CHECK_INTERVAL
         if self._duration_count >= LOG_SLOW_STARTUP_INTERVAL and self._setup_started:
             _LOGGER.warning(
                 "Waiting on integrations to complete setup: %s",
