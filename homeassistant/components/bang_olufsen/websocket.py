@@ -92,8 +92,27 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         self, notification: WebsocketNotificationTag
     ) -> None:
         """Send notification dispatch."""
+
         if notification.value:
-            if WEBSOCKET_NOTIFICATION.REMOTE_MENU_CHANGED in notification.value:
+            if notification.value in (
+                WEBSOCKET_NOTIFICATION.BEOLINK_LISTENERS.value,
+                WEBSOCKET_NOTIFICATION.BEOLINK_AVAILABLE_LISTENERS.value,
+            ):
+                async_dispatcher_send(
+                    self.hass,
+                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BEOLINK_LISTENERS}",
+                )
+            elif notification.value is WEBSOCKET_NOTIFICATION.BEOLINK_PEERS.value:
+                async_dispatcher_send(
+                    self.hass,
+                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.BEOLINK_PEERS}",
+                )
+            elif notification.value is WEBSOCKET_NOTIFICATION.CONFIGURATION.value:
+                async_dispatcher_send(
+                    self.hass,
+                    f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.CONFIGURATION}",
+                )
+            elif notification.value is WEBSOCKET_NOTIFICATION.REMOTE_MENU_CHANGED.value:
                 async_dispatcher_send(
                     self.hass,
                     f"{self._unique_id}_{WEBSOCKET_NOTIFICATION.REMOTE_MENU_CHANGED}",
