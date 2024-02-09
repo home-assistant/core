@@ -328,6 +328,32 @@ async def test_generic_text_sensor(
     assert state is not None
     assert state.state == "i am a teapot"
 
+
+async def test_generic_text_sensor_missing_state(
+    hass: HomeAssistant, mock_client: APIClient, mock_generic_device_entry
+) -> None:
+    """Test a generic text sensor that is missing state."""
+    entity_info = [
+        TextSensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            unique_id="my_sensor",
+        )
+    ]
+    states = [TextSensorState(key=1, state=True, missing_state=True)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_mysensor")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
 async def test_generic_text_sensor_device_class_timestamp(
     hass: HomeAssistant,
     mock_client: APIClient,
