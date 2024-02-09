@@ -33,6 +33,7 @@ from .const import (
     VICARE_DEVICE_CONFIG_LIST,
     HeatingType,
 )
+from .utils import get_token_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,11 +62,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.debug("Removing old token file %s", old_token_file)
             await hass.async_add_executor_job(os.remove, old_token_file)
 
-        vicare_token_dir = hass.config.path(STORAGE_DIR, DOMAIN)
-        if not os.path.isdir(vicare_token_dir):
-            _LOGGER.info("Creating token dir %s", vicare_token_dir)
-            await hass.async_add_executor_job(os.mkdir, vicare_token_dir)
-
         entry.version = 2
         _LOGGER.debug("Migration to version %s successful", entry.version)
     return True
@@ -90,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def vicare_login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare:
+def vicare_login(entry_data: Mapping[str, Any], token_file: str) -> PyViCare:
     """Login via PyVicare API."""
     vicare_api = PyViCare()
     vicare_api.setCacheDuration(DEFAULT_SCAN_INTERVAL)
@@ -98,14 +94,14 @@ def vicare_login(hass: HomeAssistant, entry_data: Mapping[str, Any]) -> PyViCare
         entry_data[CONF_USERNAME],
         entry_data[CONF_PASSWORD],
         entry_data[CONF_CLIENT_ID],
-        hass.config.path(STORAGE_DIR, DOMAIN, entry_data[CONF_USERNAME]),
+        token_file,
     )
     return vicare_api
 
 
 def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
-    vicare_api = vicare_login(hass, entry.data)
+    vicare_api = vicare_login(entry.data, get_token_path(hass, entry))
 
     device_config_list = get_supported_devices(vicare_api.devices)
 
@@ -131,9 +127,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     with suppress(FileNotFoundError):
-        await hass.async_add_executor_job(
-            os.remove, hass.config.path(STORAGE_DIR, DOMAIN, entry.data[CONF_USERNAME])
-        )
+        await hass.async_add_executor_job(os.remove, get_token_path(hass, entry))
 
     return unload_ok
 

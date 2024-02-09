@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import suppress
 import logging
+import os
 from typing import Any
 
 from PyViCare.PyViCareUtils import (
@@ -20,6 +22,7 @@ from homeassistant.helpers.device_registry import format_mac
 
 from . import vicare_login
 from .const import CONF_HEATING_TYPE, DEFAULT_HEATING_TYPE, DOMAIN, HeatingType
+from .utils import get_token_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,9 +56,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            token_path = get_token_path(self.hass, None)
             try:
                 await self.hass.async_add_executor_job(
-                    vicare_login, self.hass, user_input
+                    vicare_login, user_input, token_path
                 )
             except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
@@ -63,6 +67,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
+            finally:
+                with suppress(FileNotFoundError):
+                    await self.hass.async_add_executor_job(os.remove, token_path)
 
         return self.async_show_form(
             step_id="user",
