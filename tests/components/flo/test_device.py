@@ -117,7 +117,7 @@ async def test_device_failures(
 
     aioclient_mock.clear_requests()
     with patch(
-        "homeassistant.components.flo.device.FloDeviceDataUpdateCoordinator.send_presence_ping",
+        "aioflo.presence.Presence.ping",
         side_effect=RequestError,
     ):
         # simulate 4 updates failing. The failures should be buffered so that it takes 4

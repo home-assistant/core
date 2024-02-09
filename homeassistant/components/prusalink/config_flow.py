@@ -50,7 +50,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
         async with asyncio.timeout(5):
             version = await api.get_version()
 
-    except (asyncio.TimeoutError, ClientError) as err:
+    except (TimeoutError, ClientError) as err:
         _LOGGER.error("Could not connect to PrusaLink: %s", err)
         raise CannotConnect from err
 

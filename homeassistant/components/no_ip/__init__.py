@@ -114,7 +114,7 @@ async def _update_no_ip(
     except aiohttp.ClientError:
         _LOGGER.warning("Can't connect to NO-IP API")
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.warning("Timeout from NO-IP API for domain: %s", domain)
 
     return False
