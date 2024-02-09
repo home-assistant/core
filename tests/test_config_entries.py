@@ -3199,13 +3199,18 @@ async def test_updating_entry_with_and_without_changes(
     for change in (
         {"data": {"second": True, "third": 456}},
         {"data": {"second": True}},
+        {"minor_version": 2},
         {"options": {"hello": True}},
         {"pref_disable_new_entities": True},
         {"pref_disable_polling": True},
         {"title": "sometitle"},
         {"unique_id": "abcd1234"},
+        {"version": 2},
     ):
         assert manager.async_update_entry(entry, **change) is True
+        key = next(iter(change))
+        value = next(iter(change.values()))
+        assert getattr(entry, key) == value
         assert manager.async_update_entry(entry, **change) is False
 
     assert manager.async_entry_for_domain_unique_id("test", "abc123") is None
