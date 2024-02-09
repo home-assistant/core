@@ -266,7 +266,7 @@ class AppleTVManager(DeviceListener):
             connect_ok = True
         finally:
             if not connect_ok:
-                self.atv = None
+                await self.disconnect()
 
     async def connect_once(self, raise_missing_credentials: bool) -> None:
         """Try to connect once."""
@@ -284,7 +284,7 @@ class AppleTVManager(DeviceListener):
             pass
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Failed to connect")
-            self.atv = None
+            await self.disconnect()
 
     async def _connect_loop(self):
         """Connect loop background task function."""
