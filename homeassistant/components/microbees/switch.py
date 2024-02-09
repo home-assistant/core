@@ -2,8 +2,6 @@
 import logging
 from typing import Any
 
-from microBeesPy.microbees import Actuator, Bee, MicroBees
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,14 +19,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Config entry."""
-    microbees_data = hass.data[DOMAIN][entry.entry_id]
-    microbees = microbees_data.connector
-    coordinator = microbees_data.coordinator
+    coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
     switches = []
-    for bee in coordinator.data.bees.values():
+    for bee_id, bee in coordinator.data.bees.items():
         if bee.productID in (25, 26, 27, 35, 38, 46, 63, 64, 65, 86):
             for switch in bee.actuators:
-                switches.append(MBSwitch(switch, bee, microbees, coordinator))
+                switches.append(MBSwitch(switch.id, bee_id, coordinator))
 
     async_add_entities(switches)
 
@@ -37,39 +33,39 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
     """Representation of a microBees switch."""
 
     def __init__(
-        self,
-        act: Actuator,
-        bee: Bee,
-        microbees: MicroBees,
-        coordinator: MicroBeesUpdateCoordinator,
+        self, actuator_id: int, bee_id: int, coordinator: MicroBeesUpdateCoordinator
     ) -> None:
         """Initialize the microBees switch."""
-        super().__init__(coordinator, act.id, bee.id, microbees)
-        self._attr_name = act.name
+        super().__init__(actuator_id, bee_id, coordinator)
         if self.bee.productID == 46:
             self._attr_icon = "mdi:power-socket-it"
         if self.bee.productID == 38:
             self._attr_icon = "mdi:power-socket-eu"
 
     @property
+    def name(self) -> str:
+        """Status of the switch."""
+        return self.actuator.name
+
+    @property
     def is_on(self) -> bool:
         """Status of the switch."""
-        return self.act.value
+        return self.actuator.value
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        send_command = await self.microbees.sendCommand(self.act.id, 1)
+        send_command = await self.coordinator.microbees.sendCommand(self.actuator_id, 1)
         if send_command:
-            self.act.value = True
+            self.actuator.value = True
             self.async_write_ha_state()
         else:
             raise HomeAssistantError(f"Failed to turn on {self.name}")
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        send_command = await self.microbees.sendCommand(self.act.id, 0)
+        send_command = await self.coordinator.microbees.sendCommand(self.actuator_id, 0)
         if send_command:
-            self.act.value = False
+            self.actuator.value = False
             self.async_write_ha_state()
         else:
             raise HomeAssistantError(f"Failed to turn off {self.name}")

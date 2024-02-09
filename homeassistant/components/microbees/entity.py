@@ -1,6 +1,6 @@
 """Base entity for microBees."""
 
-from microBeesPy.microbees import Actuator, Bee, MicroBees
+from microBeesPy.microbees import Actuator, Bee
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -16,19 +16,17 @@ class MicroBeesEntity(CoordinatorEntity[MicroBeesUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: MicroBeesUpdateCoordinator,
-        act_id: int,
+        actuator_id: int,
         bee_id: int,
-        microbees: MicroBees,
+        coordinator: MicroBeesUpdateCoordinator,
     ) -> None:
         """Initialize the microBees entity."""
         super().__init__(coordinator)
         self.bee_id = bee_id
-        self.act_id = act_id
-        self.microbees = microbees
-        self._attr_unique_id = f"{self.bee.id}_{self.act.id}"
+        self.actuator_id = actuator_id
+        self._attr_unique_id = f"{bee_id}_{actuator_id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.bee.id)},
+            identifiers={(DOMAIN, str(bee_id))},
             manufacturer="microBees",
             name=self.bee.name,
             model=self.bee.prototypeName,
@@ -39,16 +37,16 @@ class MicroBeesEntity(CoordinatorEntity[MicroBeesUpdateCoordinator]):
         """Status of the bee."""
         return (
             super().available
-            and f"bee_{self.bee_id}" in self.coordinator.data.bees
+            and self.bee_id in self.coordinator.data.bees
             and self.bee.active
         )
 
     @property
     def bee(self) -> Bee:
-        """Return the updated bee."""
-        return self.coordinator.data.bees[f"bee_{self.bee_id}"]
+        """Return the bee."""
+        return self.coordinator.data.bees[self.bee_id]
 
     @property
-    def act(self) -> Actuator:
-        """Return the updated act."""
-        return self.coordinator.data.actuators[f"act_{self.act_id}"]
+    def actuator(self) -> Actuator:
+        """Return the act."""
+        return self.coordinator.data.actuators[self.actuator_id]

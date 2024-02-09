@@ -21,8 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 class MicroBeesCoordinatorData:
     """Microbees data from the Coordinator."""
 
-    bees: dict[str:Bee]
-    actuators: dict[str:Actuator]
+    bees: dict[int:Bee]
+    actuators: dict[int:Actuator]
 
 
 class MicroBeesUpdateCoordinator(DataUpdateCoordinator):
@@ -53,9 +53,10 @@ class MicroBeesUpdateCoordinator(DataUpdateCoordinator):
             except MicroBeesException as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-            data = MicroBeesCoordinatorData(bees={}, actuators={})
+            bees_dict = {}
+            actuators_dict = {}
             for bee in bees:
-                data.bees[f"bee_{bee.id}"] = bee
+                bees_dict[bee.id] = bee
                 for act in bee.actuators:
-                    data.actuators[f"act_{act.id}"] = act
-            return data
+                    actuators_dict[act.id] = act
+            return MicroBeesCoordinatorData(bees=bees_dict, actuators=actuators_dict)
