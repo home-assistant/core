@@ -260,9 +260,12 @@ async def test_options_flow(
     mock_setup_entry: None,
 ) -> None:
     """Test options flow."""
-    mock_config_entry.options = {
-        CONF_REPOSITORIES: ["homeassistant/core", "homeassistant/architecture"]
-    }
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            CONF_REPOSITORIES: ["homeassistant/core", "homeassistant/architecture"]
+        },
+    )
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
