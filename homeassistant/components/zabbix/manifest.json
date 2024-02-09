@@ -1,9 +1,13 @@
 {
   "domain": "zabbix",
   "name": "Zabbix",
-  "codeowners": [],
+  "codeowners": ["@autoantwort"],
+  "config_flow": false,
+  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/zabbix",
+  "homekit": {},
   "iot_class": "local_polling",
-  "loggers": ["pyzabbix"],
-  "requirements": ["py-zabbix==1.1.7"]
+  "requirements": ["zabbix_utils==1.1.0"],
+  "ssdp": [],
+  "zeroconf": []
 }
