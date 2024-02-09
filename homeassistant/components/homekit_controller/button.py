@@ -5,6 +5,7 @@ characteristics that don't map to a Home Assistant feature.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
@@ -32,6 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 class HomeKitButtonEntityDescription(ButtonEntityDescription):
     """Describes Homekit button."""
 
+    probe: Callable[[Characteristic], bool] | None = None
     write_value: int | str | None = None
 
 
@@ -78,6 +80,12 @@ async def async_setup_entry(
             entities.append(HomeKitButton(conn, info, char, description))
         elif entity_type := BUTTON_ENTITY_CLASSES.get(char.type):
             entities.append(entity_type(conn, info, char))
+        elif char.type == CharacteristicsTypes.THREAD_CONTROL_POINT:
+            if not conn.is_unprovisioned_thread_device:
+                return False
+            entities.append(
+                HomeKitProvisionPreferredThreadCredentials(conn, info, char)
+            )
         else:
             return False
 
@@ -179,5 +187,4 @@ class HomeKitProvisionPreferredThreadCredentials(CharacteristicEntity, ButtonEnt
 
 BUTTON_ENTITY_CLASSES: dict[str, type] = {
     CharacteristicsTypes.VENDOR_ECOBEE_CLEAR_HOLD: HomeKitEcobeeClearHoldButton,
-    CharacteristicsTypes.THREAD_CONTROL_POINT: HomeKitProvisionPreferredThreadCredentials,
 }
