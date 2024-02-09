@@ -281,7 +281,7 @@ class AppleTVManager(DeviceListener):
             )
             return
         except asyncio.CancelledError:
-            return
+            pass
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Failed to connect")
             self.atv = None
