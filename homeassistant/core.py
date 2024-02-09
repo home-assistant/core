@@ -22,6 +22,7 @@ from dataclasses import dataclass
 import datetime
 import enum
 import functools
+import inspect
 import logging
 import os
 import pathlib
@@ -1166,6 +1167,13 @@ class _OneTimeListener:
         self.remove()
         self.remove = None
         self.hass.async_run_job(self.listener, event)
+
+    def __repr__(self) -> str:
+        """Return the representation of the listener and source module."""
+        module = inspect.getmodule(self.listener)
+        if module:
+            return f"<_OneTimeListener {module.__name__}:{self.listener}>"
+        return f"<_OneTimeListener {self.listener}>"
 
 
 class EventBus:
