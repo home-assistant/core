@@ -10,7 +10,7 @@ astral==2.2
 async-upnp-client==0.38.1
 atomicwrites-homeassistant==1.4.1
 attrs==23.2.0
-awesomeversion==23.11.0
+awesomeversion==24.2.0
 bcrypt==4.0.1
 bleak-retry-connector==3.4.0
 bleak==0.21.1
@@ -29,7 +29,7 @@ habluetooth==2.4.0
 hass-nabucasa==0.78.0
 hassil==1.6.1
 home-assistant-bluetooth==1.12.0
-home-assistant-frontend==20240205.0
+home-assistant-frontend==20240207.1
 home-assistant-intents==2024.2.2
 httpx==0.26.0
 ifaddr==0.2.0

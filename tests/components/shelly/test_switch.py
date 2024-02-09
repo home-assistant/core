@@ -54,12 +54,13 @@ async def test_block_device_services(hass: HomeAssistant, mock_block_device) -> 
     assert hass.states.get("switch.test_name_channel_1").state == STATE_OFF
 
 
-async def test_block_device_unique_ids(hass: HomeAssistant, mock_block_device) -> None:
+async def test_block_device_unique_ids(
+    hass: HomeAssistant, entity_registry, mock_block_device
+) -> None:
     """Test block device unique_ids."""
     await init_integration(hass, 1)
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("switch.test_name_channel_1")
+    entry = entity_registry.async_get("switch.test_name_channel_1")
     assert entry
     assert entry.unique_id == "123456789ABC-relay_0"
 
@@ -187,13 +188,12 @@ async def test_rpc_device_services(
 
 
 async def test_rpc_device_unique_ids(
-    hass: HomeAssistant, mock_rpc_device, monkeypatch
+    hass: HomeAssistant, mock_rpc_device, entity_registry
 ) -> None:
     """Test RPC device unique_ids."""
     await init_integration(hass, 2)
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("switch.test_switch_0")
+    entry = entity_registry.async_get("switch.test_switch_0")
     assert entry
     assert entry.unique_id == "123456789ABC-switch:0"
 
