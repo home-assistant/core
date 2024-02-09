@@ -71,14 +71,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ) from ex
         except (
             asyncio.CancelledError,
+            exceptions.ConnectionLostError,
+            exceptions.ConnectionFailedError,
+        ) as ex:
+            raise ConfigEntryNotReady(f"{address}: {ex}") from ex
+        except (
             exceptions.ProtocolError,
             exceptions.NoServiceError,
             exceptions.PairingError,
-            exceptions.ConnectionLostError,
-            exceptions.ConnectionFailedError,
             exceptions.BackOffError,
             exceptions.DeviceIdMissingError,
         ) as ex:
+            _LOGGER.debug(
+                "Error setting up apple_tv at %s: %s", address, ex, exc_info=ex
+            )
             raise ConfigEntryNotReady(f"{address}: {ex}") from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.unique_id] = manager
