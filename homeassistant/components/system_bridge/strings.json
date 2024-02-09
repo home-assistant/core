@@ -29,6 +29,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "battery_is_charging": {
+        "name": "Battery charging"
+      },
+      "version_available": {
+        "name": "Version available"
+      }
+    },
     "media_player": {
       "media": {
         "name": "Media"
