@@ -689,8 +689,9 @@ class ConfigEntry:
         """Set the state of the config entry."""
         if state not in NO_RESET_TRIES_STATES:
             self._tries = 0
-        object.__setattr__(self, "state", state)
-        object.__setattr__(self, "reason", reason)
+        _setter = object.__setattr__
+        _setter(self, "state", state)
+        _setter(self, "reason", reason)
         async_dispatcher_send(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
         )
@@ -1560,6 +1561,7 @@ class ConfigEntries:
         not fired and this function returns False
         """
         changed = False
+        _setter = object.__setattr__
 
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Reindex the entry if the unique_id has changed
@@ -1576,16 +1578,16 @@ class ConfigEntries:
             if value is UNDEFINED or getattr(entry, attr) == value:
                 continue
 
-            object.__setattr__(entry, attr, value)
+            _setter(entry, attr, value)
             changed = True
 
         if data is not UNDEFINED and entry.data != data:
             changed = True
-            object.__setattr__(entry, "data", MappingProxyType(data))
+            _setter(entry, "data", MappingProxyType(data))
 
         if options is not UNDEFINED and entry.options != options:
             changed = True
-            object.__setattr__(entry, "options", MappingProxyType(options))
+            _setter(entry, "options", MappingProxyType(options))
 
         if not changed:
             return False
