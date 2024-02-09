@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
@@ -91,8 +90,6 @@ class SystemBridgeBinarySensor(SystemBridgeEntity, BinarySensorEntity):
             description.key,
         )
         self.entity_description = description
-        if description.name != UNDEFINED:
-            self._attr_has_entity_name = False
 
     @property
     def is_on(self) -> bool:
