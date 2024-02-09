@@ -54,7 +54,6 @@ class HusqvarnaConfigFlowHandler(
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        _LOGGER.debug("self.reauth_entry :%s", self.reauth_entry)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
