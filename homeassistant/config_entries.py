@@ -262,6 +262,8 @@ class ConfigEntry:
     reason: str | None
     pref_disable_new_entities: bool
     pref_disable_polling: bool
+    version: int
+    minor_version: int
 
     def __init__(
         self,
@@ -281,44 +283,45 @@ class ConfigEntry:
         disabled_by: ConfigEntryDisabler | None = None,
     ) -> None:
         """Initialize a config entry."""
+        _setter = object.__setattr__
         # Unique id of the config entry
-        object.__setattr__(self, "entry_id", entry_id or uuid_util.random_uuid_hex())
+        _setter(self, "entry_id", entry_id or uuid_util.random_uuid_hex())
 
         # Version of the configuration.
-        self.version = version
-        self.minor_version = minor_version
+        _setter(self, "version", version)
+        _setter(self, "minor_version", minor_version)
 
         # Domain the configuration belongs to
-        object.__setattr__(self, "domain", domain)
+        _setter(self, "domain", domain)
 
         # Title of the configuration
-        object.__setattr__(self, "title", title)
+        _setter(self, "title", title)
 
         # Config data
-        object.__setattr__(self, "data", MappingProxyType(data))
+        _setter(self, "data", MappingProxyType(data))
 
         # Entry options
-        object.__setattr__(self, "options", MappingProxyType(options or {}))
+        _setter(self, "options", MappingProxyType(options or {}))
 
         # Entry system options
         if pref_disable_new_entities is None:
             pref_disable_new_entities = False
 
-        object.__setattr__(self, "pref_disable_new_entities", pref_disable_new_entities)
+        _setter(self, "pref_disable_new_entities", pref_disable_new_entities)
 
         if pref_disable_polling is None:
             pref_disable_polling = False
 
-        object.__setattr__(self, "pref_disable_polling", pref_disable_polling)
+        _setter(self, "pref_disable_polling", pref_disable_polling)
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
 
         # State of the entry (LOADED, NOT_LOADED)
-        object.__setattr__(self, "state", state)
+        _setter(self, "state", state)
 
         # Unique ID of this entry.
-        object.__setattr__(self, "unique_id", unique_id)
+        _setter(self, "unique_id", unique_id)
 
         # Config entry is disabled
         if isinstance(disabled_by, str) and not isinstance(
@@ -348,7 +351,7 @@ class ConfigEntry:
         self.update_listeners: list[UpdateListenerType] = []
 
         # Reason why config entry is in a failed state
-        object.__setattr__(self, "reason", None)
+        _setter(self, "reason", None)
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
@@ -386,6 +389,8 @@ class ConfigEntry:
             "options",
             "pref_disable_new_entities",
             "pref_disable_polling",
+            "minor_version",
+            "version",
         ):
             raise AttributeError(f"{key} must only be updated via async_update_entry")
         if key in ("entry_id", "domain", "state", "reason"):
