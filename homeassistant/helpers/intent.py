@@ -155,6 +155,17 @@ class NoStatesMatchedError(IntentError):
         self.device_classes = device_classes
 
 
+class DuplicateNamesMatchedError(IntentError):
+    """Error when two or more entities with the same name matched."""
+
+    def __init__(self, name: str, area: str | None) -> None:
+        """Initialize error."""
+        super().__init__()
+
+        self.name = name
+        self.area = area
+
+
 def _is_device_class(
     state: State,
     entity: entity_registry.RegistryEntry | None,
@@ -318,8 +329,6 @@ def async_match_states(
         for state, entity in states_and_entities:
             if _has_name(state, entity, name):
                 yield state
-                break
-
     else:
         # Not filtered by name
         for state, _entity in states_and_entities:
@@ -416,9 +425,7 @@ class ServiceIntentHandler(IntentHandler):
         area: area_registry.AreaEntry | None = None
         if area_id is not None:
             areas = area_registry.async_get(hass)
-            area = areas.async_get_area(area_id) or areas.async_get_area_by_name(
-                area_name
-            )
+            area = areas.async_get_area(area_id)
             if area is None:
                 raise IntentHandleError(f"No area named {area_name}")
 
@@ -451,6 +458,13 @@ class ServiceIntentHandler(IntentHandler):
                 area=area_name or area_id,
                 domains=domains,
                 device_classes=device_classes,
+            )
+
+        if entity_name and (len(states) > 1):
+            # Multiple entities matched for the same name
+            raise DuplicateNamesMatchedError(
+                name=entity_text or entity_name,
+                area=area_name or area_id,
             )
 
         response = await self.async_handle_states(intent_obj, states, area)
