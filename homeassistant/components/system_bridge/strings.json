@@ -31,17 +31,11 @@
   },
   "entity": {
     "binary_sensor": {
-      "battery_is_charging": {
-        "name": "Battery charging"
-      },
       "camera_in_use": {
         "name": "Camera in use"
       },
       "pending_reboot": {
         "name": "Pending reboot"
-      },
-      "version_available": {
-        "name": "New version available"
       }
     },
     "media_player": {
