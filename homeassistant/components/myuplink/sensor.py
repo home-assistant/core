@@ -43,8 +43,6 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
 }
 
-UNIQUE_PARAMETER_DESCRIPTIONS: dict[str, SensorEntityDescription] = {}
-
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
     "NIBEF": {
         "43108": SensorEntityDescription(
@@ -76,17 +74,14 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
 
     Priorities:
     1. Category specific prefix e.g "NIBEF"
-    2. Global parameter_id e.g. "12345"
-    3. Global parameter_unit e.g. "°C"
-    4. Default to None
+    2. Global parameter_unit e.g. "°C"
+    3. Default to None
     """
     description = None
     prefix, _, _ = device_point.category.partition(" ")
     description = CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(
         device_point.parameter_id
     )
-    if description is None:
-        description = UNIQUE_PARAMETER_DESCRIPTIONS.get(device_point.parameter_id)
     if description is None:
         description = DEVICE_POINT_UNIT_DESCRIPTIONS.get(device_point.parameter_unit)
 
