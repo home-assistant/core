@@ -21,6 +21,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import (
     MockImageEntity,
     MockImageEntityInvalidContentType,
+    MockImageNoDataEntity,
     MockImageNoStateEntity,
     MockImagePlatform,
     MockImageSyncEntity,
@@ -362,6 +363,12 @@ async def test_image_stream(
 async def test_snapshot_service(hass: HomeAssistant) -> None:
     """Test snapshot service."""
     mopen = mock_open()
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockImageSyncEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
 
     with patch("homeassistant.components.image.open", mopen, create=True), patch(
         "homeassistant.components.image.os.makedirs",
@@ -370,7 +377,7 @@ async def test_snapshot_service(hass: HomeAssistant) -> None:
             image.DOMAIN,
             image.SERVICE_SNAPSHOT,
             {
-                ATTR_ENTITY_ID: "image.demo_image",
+                ATTR_ENTITY_ID: "image.test",
                 image.ATTR_FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
@@ -382,18 +389,72 @@ async def test_snapshot_service(hass: HomeAssistant) -> None:
         assert mock_write.mock_calls[0][1][0] == b"Test"
 
 
-async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
-    """Test snapshot service with a not allowed path."""
+async def test_snapshot_service_no_image(hass: HomeAssistant) -> None:
+    """Test snapshot service with no image."""
     mopen = mock_open()
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockImageNoDataEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
 
     with patch("homeassistant.components.image.open", mopen, create=True), patch(
         "homeassistant.components.image.os.makedirs",
-    ), pytest.raises(HomeAssistantError, match="/test/snapshot.jpg"):
+    ), patch.object(hass.config, "is_allowed_path", return_value=True):
         await hass.services.async_call(
             image.DOMAIN,
             image.SERVICE_SNAPSHOT,
             {
-                ATTR_ENTITY_ID: "image.demo_image",
+                ATTR_ENTITY_ID: "image.test",
+                image.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
+
+        mock_write = mopen().write
+
+        assert len(mock_write.mock_calls) == 0
+
+
+async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
+    """Test snapshot service with a not allowed path."""
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockURLImageEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError, match="/test/snapshot.jpg"):
+        await hass.services.async_call(
+            image.DOMAIN,
+            image.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "image.test",
+                image.ATTR_FILENAME: "/test/snapshot.jpg",
+            },
+            blocking=True,
+        )
+
+
+async def test_snapshot_service_os_error(hass: HomeAssistant) -> None:
+    """Test snapshot service with os error."""
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockImageSyncEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    with patch.object(hass.config, "is_allowed_path", return_value=True), patch(
+        "os.makedirs", side_effect=OSError
+    ):
+        await hass.services.async_call(
+            image.DOMAIN,
+            image.SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: "image.test",
                 image.ATTR_FILENAME: "/test/snapshot.jpg",
             },
             blocking=True,
