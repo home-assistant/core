@@ -29,7 +29,7 @@ def exists(value: Any) -> Any:
 CORE_INTEGRATION_FIELD_SCHEMA = vol.Schema(
     {
         vol.Optional("status"): vol.In(
-            {"primary", "secondary", "legacy", "deprecated"}
+            {"primary", "secondary", "hidden", "deprecated"}
         ),
         vol.Optional("example"): exists,
         vol.Optional("default"): exists,
@@ -58,7 +58,7 @@ CUSTOM_INTEGRATION_FIELD_SCHEMA = CORE_INTEGRATION_FIELD_SCHEMA.extend(
 CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
     vol.Schema(
         {
-            vol.Optional("status"): vol.In({"primary", "legacy", "deprecated"}),
+            vol.Optional("status"): vol.In({"primary", "hidden", "deprecated"}),
             vol.Optional("target"): vol.Any(
                 selector.TargetSelector.CONFIG_SCHEMA, None
             ),
@@ -71,7 +71,7 @@ CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
 CUSTOM_INTEGRATION_SERVICE_SCHEMA = vol.Any(
     vol.Schema(
         {
-            vol.Optional("status"): vol.In({"primary", "legacy", "deprecated"}),
+            vol.Optional("status"): vol.In({"primary", "hidden", "deprecated"}),
             vol.Optional("description"): str,
             vol.Optional("name"): str,
             vol.Optional("target"): vol.Any(

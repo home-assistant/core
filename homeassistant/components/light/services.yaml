@@ -53,7 +53,7 @@ turn_on:
       selector:
         object:
     color_name:
-      status: legacy
+      status: hidden
       filter:
         attribute:
           supported_color_modes:
@@ -216,7 +216,7 @@ turn_on:
             - "yellow"
             - "yellowgreen"
     hs_color:
-      status: legacy
+      status: hidden
       filter:
         attribute:
           supported_color_modes:
@@ -229,7 +229,7 @@ turn_on:
       selector:
         object:
     xy_color:
-      status: legacy
+      status: hidden
       filter:
         attribute:
           supported_color_modes:
@@ -242,7 +242,7 @@ turn_on:
       selector:
         object:
     color_temp:
-      status: legacy
+      status: hidden
       filter:
         attribute:
           supported_color_modes:
@@ -273,7 +273,7 @@ turn_on:
           min: 2000
           max: 6500
     brightness:
-      status: legacy
+      status: hidden
       filter:
         attribute:
           supported_color_modes:
@@ -305,7 +305,7 @@ turn_on:
           max: 100
           unit_of_measurement: "%"
     brightness_step:
-      status: legacy
+      status: hidden
       filter:
         attribute:
           supported_color_modes:
@@ -348,7 +348,7 @@ turn_on:
           value: true
           label: Enabled
     profile:
-      status: legacy
+      status: hidden
       example: relax
       selector:
         text:
@@ -428,7 +428,7 @@ toggle:
       selector:
         color_rgb:
     color_name:
-      status: legacy
+      status: hidden
       filter:
         attribute:
           supported_color_modes:
@@ -591,7 +591,7 @@ toggle:
             - "yellow"
             - "yellowgreen"
     hs_color:
-      status: legacy
+      status: hidden
       filter:
         attribute:
           supported_color_modes:
@@ -604,7 +604,7 @@ toggle:
       selector:
         object:
     xy_color:
-      status: legacy
+      status: hidden
       filter:
         attribute:
           supported_color_modes:
@@ -617,7 +617,7 @@ toggle:
       selector:
         object:
     color_temp:
-      status: legacy
+      status: hidden
       filter:
         attribute:
           supported_color_modes:
@@ -645,7 +645,7 @@ toggle:
           min: 2000
           max: 6500
     brightness:
-      status: legacy
+      status: hidden
       filter:
         attribute:
           supported_color_modes:
@@ -687,7 +687,7 @@ toggle:
           value: true
           label: Enabled
     profile:
-      status: legacy
+      status: hidden
       example: relax
       selector:
         text:
