@@ -147,9 +147,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
         supported_categories = sorted(obj_holidays.supported_categories)
 
-        if not supported_categories:
-            return self.async_abort(reason="no_options")
-
         configured_categories: list[str] = self.config_entry.options.get(
             CONF_CATEGORIES, ["public"]
         )

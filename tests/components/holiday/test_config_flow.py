@@ -266,5 +266,4 @@ async def test_options_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "no_options"
+    assert result["type"] == FlowResultType.FORM
