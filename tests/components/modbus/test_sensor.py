@@ -185,6 +185,28 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                 }
             ]
         },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_MIN_VALUE: 1,
+                    CONF_MAX_VALUE: 3,
+                }
+            ]
+        },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_MIN_VALUE: -3,
+                    CONF_MAX_VALUE: -1,
+                }
+            ]
+        },
     ],
 )
 async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
@@ -687,6 +709,16 @@ async def test_config_wrong_struct_sensor(
             [0x00AB, 0xCDEF],
             False,
             "112594",
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT16,
+                CONF_SCALE: -1,
+                CONF_OFFSET: 0,
+            },
+            [0x000A],
+            False,
+            "-10",
         ),
     ],
 )
