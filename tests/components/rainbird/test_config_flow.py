@@ -159,7 +159,7 @@ async def test_multiple_config_entries(
     expected_config_entry: dict[str, Any] | None,
 ) -> None:
     """Test setting up multiple config entries that refer to different devices."""
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
 
     responses.clear()
@@ -234,7 +234,7 @@ async def test_duplicate_config_entries(
     expected_config_entry_data: dict[str, Any],
 ) -> None:
     """Test that a device can not be registered twice."""
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
 
     responses.clear()
