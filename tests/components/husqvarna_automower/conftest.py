@@ -25,12 +25,6 @@ def load_jwt_fixture():
     return load_fixture("jwt", DOMAIN)
 
 
-@pytest.fixture(name="jwt_refreshed")
-def load_jwt_refreshed_fixture():
-    """Load Fixture data."""
-    return load_fixture("jwt", DOMAIN)
-
-
 @pytest.fixture(name="expires_at")
 def mock_expires_at() -> float:
     """Fixture to set the oauth token expiration time."""
