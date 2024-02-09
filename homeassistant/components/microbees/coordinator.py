@@ -6,14 +6,23 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
+from aioaseko import dataclass
 import aiohttp
-from microBeesPy.microbees import MicroBees, MicroBeesException
+from microBeesPy.microbees import Actuator, Bee, MicroBees, MicroBeesException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class MicroBeesCoordinatorData:
+    """Microbees data from the Coordinator."""
+
+    bees: dict[str:Bee]
+    actuators: dict[str:Actuator]
 
 
 class MicroBeesUpdateCoordinator(DataUpdateCoordinator):
@@ -35,21 +44,18 @@ class MicroBeesUpdateCoordinator(DataUpdateCoordinator):
             try:
                 bees = await self.microbees.getBees()
             except aiohttp.ClientResponseError as err:
-                if err.status in (
-                    HTTPStatus.BAD_REQUEST,
-                    HTTPStatus.UNAUTHORIZED,
-                    HTTPStatus.FORBIDDEN,
-                ):
+                if err.status is HTTPStatus.UNAUTHORIZED:
                     raise ConfigEntryAuthFailed(
                         "Token not valid, trigger renewal"
                     ) from err
-                raise ConfigEntryAuthFailed from err
+                raise UpdateFailed(f"Error communicating with API: {err}") from err
+
             except MicroBeesException as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-            data = {}
+            data = MicroBeesCoordinatorData(bees={}, actuators={})
             for bee in bees:
-                data[f"bee_{bee.id}"] = bee
+                data.bees[f"bee_{bee.id}"] = bee
                 for act in bee.actuators:
-                    data[f"act_{act.id}"] = act
+                    data.actuators[f"act_{act.id}"] = act
             return data

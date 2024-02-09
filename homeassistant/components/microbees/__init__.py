@@ -5,14 +5,15 @@ import logging
 
 from aioaseko import dataclass
 import aiohttp
-from microBeesPy.microbees import Bee, MicroBees
+from microBeesPy.microbees import MicroBees
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import ACCESS_TOKEN, DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .coordinator import MicroBeesUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 class HomeAssistantMicroBeesData:
     """Microbees data stored in the Home Assistant data object."""
 
-    bees: list[Bee]
     connector: MicroBees
     coordinator: MicroBeesUpdateCoordinator
     session: config_entry_oauth2_flow.OAuth2Session
@@ -47,14 +47,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ):
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
         raise ConfigEntryNotReady from ex
-    microbees = MicroBees(token=session.token[ACCESS_TOKEN])
+    microbees = MicroBees(token=session.token[CONF_ACCESS_TOKEN])
     coordinator = MicroBeesUpdateCoordinator(hass, microbees)
     await coordinator.async_config_entry_first_refresh()
-    bees = [value for key, value in coordinator.data.items() if "bee_" in key]
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantMicroBeesData(
         connector=microbees,
         coordinator=coordinator,
-        bees=bees,
         session=session,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

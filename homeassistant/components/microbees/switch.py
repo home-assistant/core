@@ -2,6 +2,8 @@
 import logging
 from typing import Any
 
+from microBeesPy.microbees import Actuator, Bee, MicroBees
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -9,6 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,14 +23,12 @@ async def async_setup_entry(
     """Config entry."""
     microbees_data = hass.data[DOMAIN][entry.entry_id]
     microbees = microbees_data.connector
-    bees = microbees_data.bees
     coordinator = microbees_data.coordinator
     switches = []
-    for bee in bees:
-        match bee.productID:
-            case 25 | 26 | 27 | 35 | 38 | 46 | 63 | 64 | 65 | 86:
-                for switch in bee.actuators:
-                    switches.append(MBSwitch(switch, bee, microbees, coordinator))
+    for bee in coordinator.data.bees.values():
+        if bee.productID in (25, 26, 27, 35, 38, 46, 63, 64, 65, 86):
+            for switch in bee.actuators:
+                switches.append(MBSwitch(switch, bee, microbees, coordinator))
 
     async_add_entities(switches)
 
@@ -35,9 +36,16 @@ async def async_setup_entry(
 class MBSwitch(MicroBeesEntity, SwitchEntity):
     """Representation of a microBees switch."""
 
-    def __init__(self, act, bee, microbees, coordinator) -> None:
+    def __init__(
+        self,
+        act: Actuator,
+        bee: Bee,
+        microbees: MicroBees,
+        coordinator: MicroBeesUpdateCoordinator,
+    ) -> None:
         """Initialize the microBees switch."""
-        super().__init__(coordinator, act, bee, microbees)
+        super().__init__(coordinator, act.id, bee.id, microbees)
+        self._attr_name = act.name
         if self.bee.productID == 46:
             self._attr_icon = "mdi:power-socket-it"
         if self.bee.productID == 38:
@@ -50,8 +58,8 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        sendCommand = await self.microbees.sendCommand(self.act.id, 1)
-        if sendCommand:
+        send_command = await self.microbees.sendCommand(self.act.id, 1)
+        if send_command:
             self.act.value = True
             self.async_write_ha_state()
         else:
@@ -59,8 +67,8 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        sendCommand = await self.microbees.sendCommand(self.act.id, 0)
-        if sendCommand:
+        send_command = await self.microbees.sendCommand(self.act.id, 0)
+        if send_command:
             self.act.value = False
             self.async_write_ha_state()
         else:
