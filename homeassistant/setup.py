@@ -4,8 +4,8 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Generator, Iterable
 import contextlib
-from datetime import timedelta
 import logging.handlers
+import time
 from timeit import default_timer as timer
 from types import ModuleType
 from typing import Any
@@ -21,7 +21,7 @@ from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, 
 from .exceptions import DependencyError, HomeAssistantError
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType
-from .util import dt as dt_util, ensure_unique_string
+from .util import ensure_unique_string
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -551,7 +551,7 @@ def async_start_setup(
 ) -> Generator[None, None, None]:
     """Keep track of when setup starts and finishes."""
     setup_started = hass.data.setdefault(DATA_SETUP_STARTED, {})
-    started = dt_util.utcnow()
+    started = time.monotonic()
     unique_components: dict[str, str] = {}
     for domain in components:
         unique = ensure_unique_string(domain, setup_started)
@@ -560,8 +560,8 @@ def async_start_setup(
 
     yield
 
-    setup_time: dict[str, timedelta] = hass.data.setdefault(DATA_SETUP_TIME, {})
-    time_taken = dt_util.utcnow() - started
+    setup_time: dict[str, float] = hass.data.setdefault(DATA_SETUP_TIME, {})
+    time_taken = time.monotonic() - started
     for unique, domain in unique_components.items():
         del setup_started[unique]
         integration = domain.partition(".")[0]
