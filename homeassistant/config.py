@@ -1044,9 +1044,10 @@ async def merge_packages_config(
         [HomeAssistant, str, str | None, dict, str], None
     ] = _log_pkg_error,
 ) -> dict:
-    """Merge packages into the top-level configuration. Ignores packages that cannot be setup. Mutates config.
+    """Merge packages into the top-level configuration.
 
-    Raises vol.Invalid if whole package config is invalid.
+    Ignores packages that cannot be setup. Mutates config. Raises
+    vol.Invalid if whole package config is invalid.
     """
 
     PACKAGES_CONFIG_SCHEMA(packages)
@@ -1061,7 +1062,8 @@ async def merge_packages_config(
                 pack_name,
                 None,
                 config,
-                f"Invalid package definition '{pack_name}': {str(exc)}. Package will not be initialized",
+                f"Invalid package definition '{pack_name}': {str(exc)}. Package "
+                f"will not be initialized",
             )
             invalid_packages.append(pack_name)
             continue
