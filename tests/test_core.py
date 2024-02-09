@@ -2818,3 +2818,16 @@ def test_deprecated_constants(
 ) -> None:
     """Test deprecated constants."""
     import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")
+
+
+def test_one_time_listener_repr(hass: HomeAssistant) -> None:
+    """Test one time listener repr."""
+
+    def _listener(event: ha.Event):
+        """Test listener."""
+
+    one_time_listener = ha._OneTimeListener(hass, _listener)
+    repr_str = repr(one_time_listener)
+    assert "OneTimeListener" in repr_str
+    assert "test_core" in repr_str
+    assert "_listener" in repr_str

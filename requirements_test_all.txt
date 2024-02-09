@@ -64,7 +64,7 @@ PyMetEireann==2021.8.0
 PyMetno==0.11.0
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.10
+PyMicroBot==0.0.12
 
 # homeassistant.components.nina
 PyNINA==0.3.3
@@ -152,13 +152,13 @@ aio-geojson-generic-client==0.4
 aio-geojson-geonetnz-quakes==0.16
 
 # homeassistant.components.geonetnz_volcano
-aio-geojson-geonetnz-volcano==0.8
+aio-geojson-geonetnz-volcano==0.9
 
 # homeassistant.components.nsw_rural_fire_service_feed
 aio-geojson-nsw-rfs-incidents==0.7
 
 # homeassistant.components.usgs_earthquakes_feed
-aio-geojson-usgs-earthquakes==0.2
+aio-geojson-usgs-earthquakes==0.3
 
 # homeassistant.components.gdacs
 aio-georss-gdacs==0.9
@@ -200,7 +200,10 @@ aiobotocore==2.9.1
 aiocomelit==0.8.3
 
 # homeassistant.components.dhcp
-aiodiscover==1.6.0
+aiodhcpwatcher==0.8.0
+
+# homeassistant.components.dhcp
+aiodiscover==1.6.1
 
 # homeassistant.components.dnsip
 aiodns==3.0.0
@@ -212,7 +215,7 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2024.2.0
+aioecowitt==2024.2.1
 
 # homeassistant.components.co2signal
 aioelectricitymaps==0.4.0
@@ -559,10 +562,10 @@ datadog==0.15.0
 dbus-fast==2.21.1
 
 # homeassistant.components.debugpy
-debugpy==1.8.0
+debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==5.1.0
+deebot-client==5.1.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -858,7 +861,7 @@ hole==0.8.0
 holidays==0.42
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240207.0
+home-assistant-frontend==20240207.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.2.2
@@ -1235,7 +1238,7 @@ pushover_complete==1.1.1
 pvo==2.1.1
 
 # homeassistant.components.aosmith
-py-aosmith==1.0.6
+py-aosmith==1.0.8
 
 # homeassistant.components.canary
 py-canary==0.5.3
@@ -1488,7 +1491,7 @@ pylitterbot==2023.4.9
 pylutron-caseta==0.19.0
 
 # homeassistant.components.lutron
-pylutron==0.2.8
+pylutron==0.2.11
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1506,7 +1509,7 @@ pymeteoclimatic==0.1.0
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.3
+pymodbus==3.6.4
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -1754,7 +1757,7 @@ python-songpal==0.16.1
 python-tado==0.17.4
 
 # homeassistant.components.technove
-python-technove==1.2.1
+python-technove==1.2.2
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
@@ -1895,9 +1898,6 @@ samsungctl[websocket]==0.7.1
 # homeassistant.components.samsungtv
 samsungtvws[async,encrypted]==2.6.0
 
-# homeassistant.components.dhcp
-scapy==2.5.0
-
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.0
 
@@ -1918,7 +1918,7 @@ sensorpro-ble==0.5.3
 sensorpush-ble==1.6.2
 
 # homeassistant.components.sentry
-sentry-sdk==1.40.0
+sentry-sdk==1.40.2
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.0.8

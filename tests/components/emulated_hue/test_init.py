@@ -1,7 +1,9 @@
 """Test the Emulated Hue component."""
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
+
+from aiohttp import web
 
 from homeassistant.components.emulated_hue.config import (
     DATA_KEY,
@@ -135,6 +137,9 @@ async def test_setup_works(hass: HomeAssistant) -> None:
         AsyncMock(),
     ) as mock_create_upnp_datagram_endpoint, patch(
         "homeassistant.components.emulated_hue.async_get_source_ip"
+    ), patch(
+        "homeassistant.components.emulated_hue.web.TCPSite",
+        return_value=Mock(spec_set=web.TCPSite),
     ):
         mock_create_upnp_datagram_endpoint.return_value = AsyncMock(
             spec=UPNPResponderProtocol
