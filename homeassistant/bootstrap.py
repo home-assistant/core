@@ -562,19 +562,23 @@ class _WatchPendingSetups:
             for domain, start_time in self._setup_started.items()
         }
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
-        if remaining_with_setup_started:
-            self._async_dispatch(remaining_with_setup_started)
-        else:
-            # If there are no integrations, we are waiting
-            # on internals (or something is blocking the loop)
-            self._async_dispatch({"homeassistant": self._duration_count})
+        self._async_dispatch(
+            # If we are not waiting on any more integrations, we are waiting
+            # on the event loop to finish up some work or homeassistant internals
+            remaining_with_setup_started or {"homeassistant": self._duration_count}
+        )
 
-        if self._duration_count >= LOG_SLOW_STARTUP_INTERVAL and self._setup_started:
+        if (
+            self._setup_started
+            and self._duration_count % LOG_SLOW_STARTUP_INTERVAL == 0
+        ):
+            # We log every LOG_SLOW_STARTUP_INTERVAL until all integrations are done
+            # once we take over LOG_SLOW_STARTUP_INTERVAL (60s) to start up
             _LOGGER.warning(
                 "Waiting on integrations to complete setup: %s",
                 ", ".join(self._setup_started),
             )
-            self.loop_count = 0
+
         _LOGGER.debug("Running timeout Zones: %s", self._hass.timeout.zones)
         self._async_schedule_next()
 
