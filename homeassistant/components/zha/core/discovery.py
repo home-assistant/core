@@ -586,6 +586,7 @@ class GroupProbe:
                         group.group_id,
                         zha_gateway.coordinator_zha_device,
                     ),
+                    {},
                 )
             )
         async_dispatcher_send(self._hass, zha_const.SIGNAL_ADD_ENTITIES)
