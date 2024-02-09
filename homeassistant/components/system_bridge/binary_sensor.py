@@ -108,8 +108,6 @@ class SystemBridgeBinarySensor(SystemBridgeEntity, BinarySensorEntity):
             description.key,
         )
         self.entity_description = description
-        if description.name != UNDEFINED:
-            self._attr_has_entity_name = False
 
     @property
     def is_on(self) -> bool:
