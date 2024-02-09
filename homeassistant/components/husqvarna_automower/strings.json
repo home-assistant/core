@@ -22,5 +22,12 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "entity": {
+    "switch": {
+      "park_until_further_notice": {
+        "name": "Park until further notice"
+      }
+    }
   }
 }

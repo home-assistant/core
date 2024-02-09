@@ -1,14 +1,14 @@
-"""Tests for lawn_mower module."""
+"""Tests for switch platform."""
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aioautomower.exceptions import ApiException
+from aioautomower.model import MowerStates
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
-from homeassistant.components.lawn_mower import LawnMowerActivity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -22,42 +22,38 @@ from tests.common import (
 )
 
 
-async def test_lawn_mower_states(
+async def test_switch_states(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test lawn_mower state."""
+    """Test switch state."""
     values = mower_list_to_dictionary_dataclass(
         load_json_value_fixture("mower.json", DOMAIN)
     )
     await setup_integration(hass, mock_config_entry)
-    state = hass.states.get("lawn_mower.test_mower_1")
-    assert state is not None
-    assert state.state == LawnMowerActivity.DOCKED
 
-    for activity, state, expected_state in [
-        ("UNKNOWN", "PAUSED", LawnMowerActivity.PAUSED),
-        ("MOWING", "NOT_APPLICABLE", LawnMowerActivity.MOWING),
-        ("NOT_APPLICABLE", "ERROR", LawnMowerActivity.ERROR),
+    for state, restricted_reson, expected_state in [
+        (MowerStates.RESTRICTED, "NOT_APPLICABLE", "on"),
+        (MowerStates.IN_OPERATION, "NONE", "off"),
     ]:
-        values[TEST_MOWER_ID].mower.activity = activity
         values[TEST_MOWER_ID].mower.state = state
+        values[TEST_MOWER_ID].planner.restricted_reason = restricted_reson
         mock_automower_client.get_status.return_value = values
         freezer.tick(timedelta(minutes=5))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        state = hass.states.get("lawn_mower.test_mower_1")
+        state = hass.states.get("switch.test_mower_1_park_until_further_notice")
         assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
-    ("aioautomower_command", "service"),
+    ("service", "aioautomower_command"),
     [
-        ("resume_schedule", "start_mowing"),
-        ("pause_mowing", "pause"),
-        ("park_until_next_schedule", "dock"),
+        ("turn_on", "park_until_further_notice"),
+        ("turn_off", "resume_schedule"),
+        ("toggle", "park_until_further_notice"),
     ],
 )
 async def test_lawn_mower_commands(
@@ -67,7 +63,7 @@ async def test_lawn_mower_commands(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test lawn_mower commands."""
+    """Test switch commands."""
     await setup_integration(hass, mock_config_entry)
 
     getattr(mock_automower_client, aioautomower_command).side_effect = ApiException(
@@ -76,9 +72,9 @@ async def test_lawn_mower_commands(
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            domain="lawn_mower",
+            domain="switch",
             service=service,
-            service_data={"entity_id": "lawn_mower.test_mower_1"},
+            service_data={"entity_id": "switch.test_mower_1_park_until_further_notice"},
             blocking=True,
         )
     assert (
