@@ -14,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
 
 from .const import DOMAIN
 from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
@@ -50,7 +49,6 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
     ),
     SystemBridgeBinarySensorEntityDescription(
         key="version_available",
-        translation_key="version_available",
         device_class=BinarySensorDeviceClass.UPDATE,
         value=lambda data: data.system.version_newer_available,
     ),
@@ -59,7 +57,6 @@ BASE_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] 
 BATTERY_BINARY_SENSOR_TYPES: tuple[SystemBridgeBinarySensorEntityDescription, ...] = (
     SystemBridgeBinarySensorEntityDescription(
         key="battery_is_charging",
-        translation_key="battery_is_charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         value=lambda data: data.battery.is_charging,
     ),
