@@ -7,25 +7,21 @@ import math
 import queue
 import threading
 import time
-from urllib.error import HTTPError
-from urllib.parse import urljoin
 
-from pyzabbix import ZabbixAPI, ZabbixAPIException, ZabbixMetric, ZabbixSender
 import voluptuous as vol
+from zabbix_utils import Sender
+from zabbix_utils.sender import ItemValue
 
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PATH,
-    CONF_SSL,
-    CONF_USERNAME,
+    CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import event as event_helper, state as state_helper
+from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -36,9 +32,7 @@ from homeassistant.helpers.typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PUBLISH_STATES_HOST = "publish_states_host"
-
-DEFAULT_SSL = False
-DEFAULT_PATH = "zabbix"
+DEFAULT_PORT = 10051
 DOMAIN = "zabbix"
 
 TIMEOUT = 5
@@ -55,11 +49,8 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             {
                 vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
-                vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-                vol.Optional(CONF_USERNAME): cv.string,
-                vol.Optional(CONF_PUBLISH_STATES_HOST): cv.string,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Required(CONF_PUBLISH_STATES_HOST): cv.string,
             }
         )
     },
@@ -71,34 +62,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Zabbix component."""
 
     conf = config[DOMAIN]
-    protocol = "https" if conf[CONF_SSL] else "http"
-
-    url = urljoin(f"{protocol}://{conf[CONF_HOST]}", conf[CONF_PATH])
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
 
     publish_states_host = conf.get(CONF_PUBLISH_STATES_HOST)
 
     entities_filter = convert_include_exclude_filter(conf)
-
-    try:
-        zapi = ZabbixAPI(url=url, user=username, password=password)
-        _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
-    except ZabbixAPIException as login_exception:
-        _LOGGER.error("Unable to login to the Zabbix API: %s", login_exception)
-        return False
-    except HTTPError as http_error:
-        _LOGGER.error("HTTPError when connecting to Zabbix API: %s", http_error)
-        zapi = None
-        _LOGGER.error(RETRY_MESSAGE, http_error)
-        event_helper.call_later(
-            hass,
-            RETRY_INTERVAL,
-            lambda _: setup(hass, config),  # type: ignore[arg-type,return-value]
-        )
-        return True
-
-    hass.data[DOMAIN] = zapi
 
     def event_to_metrics(event, float_keys, string_keys):
         """Add an event to the outgoing Zabbix list."""
@@ -141,14 +108,14 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         float_keys.update(floats)
         if len(float_keys) != float_keys_count:
             floats_discovery = [{"{#KEY}": float_key} for float_key in float_keys]
-            metric = ZabbixMetric(
+            metric = ItemValue(
                 publish_states_host,
                 "homeassistant.floats_discovery",
                 json.dumps(floats_discovery),
             )
             metrics.append(metric)
         for key, value in floats.items():
-            metric = ZabbixMetric(
+            metric = ItemValue(
                 publish_states_host, f"homeassistant.float[{key}]", value
             )
             metrics.append(metric)
@@ -156,10 +123,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         string_keys.update(strings)
         return metrics
 
-    if publish_states_host:
-        zabbix_sender = ZabbixSender(zabbix_server=conf[CONF_HOST])
-        instance = ZabbixThread(hass, zabbix_sender, event_to_metrics)
-        instance.setup(hass)
+    zabbix_sender = Sender(server=conf[CONF_HOST], port=conf.get(CONF_PORT, 10051))
+    instance = ZabbixThread(hass, zabbix_sender, event_to_metrics)
+    instance.setup(hass)
 
     return True
 
