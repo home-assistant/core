@@ -22,7 +22,7 @@ from . import MyUplinkDataCoordinator
 from .const import DOMAIN
 from .entity import MyUplinkEntity
 
-DEVICE_POINT_DESCRIPTIONS = {
+DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "°C": SensorEntityDescription(
         key="celsius",
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -41,25 +41,33 @@ DEVICE_POINT_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
-    "NIBEF-43108": SensorEntityDescription(
-        key="fan_mode",
-        icon="mdi:fan",
-    ),
-    "NIBEF-43427": SensorEntityDescription(
-        key="status_compressor",
-        device_class=SensorDeviceClass.ENUM,
-        icon="mdi:heat-pump-outline",
-    ),
-    "NIBEF-49993": SensorEntityDescription(
-        key="elect_add",
-        device_class=SensorDeviceClass.ENUM,
-        icon="mdi:heat-wave",
-    ),
-    "NIBEF-49994": SensorEntityDescription(
-        key="priority",
-        device_class=SensorDeviceClass.ENUM,
-        icon="mdi:priority-high",
-    ),
+}
+
+UNIQUE_PARAMETER_DESCRIPTIONS: dict[str, SensorEntityDescription] = {}
+
+CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
+    "NIBEF": {
+        "43108": SensorEntityDescription(
+            key="fan_mode",
+            icon="mdi:fan",
+        ),
+        "43427": SensorEntityDescription(
+            key="status_compressor",
+            device_class=SensorDeviceClass.ENUM,
+            icon="mdi:heat-pump-outline",
+        ),
+        "49993": SensorEntityDescription(
+            key="elect_add",
+            device_class=SensorDeviceClass.ENUM,
+            icon="mdi:heat-wave",
+        ),
+        "49994": SensorEntityDescription(
+            key="priority",
+            device_class=SensorDeviceClass.ENUM,
+            icon="mdi:priority-high",
+        ),
+    },
+    "NIBE": {},
 }
 
 
@@ -67,26 +75,20 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
     """Get description for a device point.
 
     Priorities:
-    1. Category specific prefix e.g "NIBEF-49994"
-    2. Global parameter_id e.g. "49994"
+    1. Category specific prefix e.g "NIBEF"
+    2. Global parameter_id e.g. "12345"
     3. Global parameter_unit e.g. "°C"
     4. Default to None
     """
-    model_prefix = ""
-    for prefix in ("NIBEF",):
-        if device_point.category.startswith(prefix):
-            model_prefix = prefix
-            break
-
     description = None
-    if model_prefix != "":
-        description = DEVICE_POINT_DESCRIPTIONS.get(
-            f"{model_prefix}-{device_point.parameter_id}"
-        )
+    prefix, _, _ = device_point.category.partition(" ")
+    description = CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(
+        device_point.parameter_id
+    )
     if description is None:
-        description = DEVICE_POINT_DESCRIPTIONS.get(device_point.parameter_id)
+        description = UNIQUE_PARAMETER_DESCRIPTIONS.get(device_point.parameter_id)
     if description is None:
-        description = DEVICE_POINT_DESCRIPTIONS.get(device_point.parameter_unit)
+        description = DEVICE_POINT_UNIT_DESCRIPTIONS.get(device_point.parameter_unit)
 
     return description
 
