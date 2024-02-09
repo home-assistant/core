@@ -195,6 +195,7 @@ class ProbeEndpoint:
             return
 
         self.discover_quirks_v2_entities(device)
+        zha_regs.ZHA_ENTITIES.clean_up()
 
     @callback
     def discover_quirks_v2_entities(self, device: ZHADevice) -> None:
@@ -332,7 +333,6 @@ class ProbeEndpoint:
         process_counters("broadcast_counters")
         process_counters("device_counters")
         process_counters("group_counters")
-        zha_regs.ZHA_ENTITIES.clean_up()
 
     @callback
     def discover_by_device_type(self, endpoint: Endpoint) -> None:

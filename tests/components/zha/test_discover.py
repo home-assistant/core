@@ -152,7 +152,9 @@ async def test_devices(
     for (platform, unique_id), ent_info in device[DEV_SIG_ENT_MAP].items():
         no_tail_id = NO_TAIL_ID.sub("", ent_info[DEV_SIG_ENT_MAP_ID])
         ha_entity_id = entity_registry.async_get_entity_id(platform, "zha", unique_id)
-        assert ha_entity_id is not None
+        assert (
+            ha_entity_id is not None
+        ), f"No entity found for platform[{platform}] unique_id[{unique_id}] no_tail_id[{no_tail_id}] with entity_id[{ha_entity_id}]"
         assert ha_entity_id.startswith(no_tail_id)
 
         entity = created_entities[ha_entity_id]
