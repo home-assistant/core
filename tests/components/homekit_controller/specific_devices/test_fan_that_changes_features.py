@@ -136,6 +136,7 @@ async def test_bridge_with_two_fans_one_removed(
 
     # Verify the first fan is still there
     fan_state = hass.states.get("fan.living_room_fan")
+    assert entity_registry.async_get("fan.living_room_fan") is not None
     assert (
         fan_state.attributes[ATTR_SUPPORTED_FEATURES]
         is FanEntityFeature.SET_SPEED

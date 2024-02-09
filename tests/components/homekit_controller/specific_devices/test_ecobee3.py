@@ -343,9 +343,11 @@ async def test_ecobee3_services_and_chars_removed(
 
     # Make sure the climate entity is still there
     assert hass.states.get("climate.homew") is not None
+    assert entity_registry.async_get("climate.homew") is not None
 
     # Make sure the basement temperature sensor is gone
     assert hass.states.get("sensor.basement_temperature") is None
+    assert entity_registry.async_get("select.basement_temperature") is None
 
     # Make sure the current mode select and clear hold button are gone
     assert hass.states.get("select.homew_current_mode") is None
