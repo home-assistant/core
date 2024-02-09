@@ -43,6 +43,8 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     ),
 }
 
+MARKER_FOR_UNKNOWN_VALUE = -32768
+
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
     "NIBEF": {
         "43108": SensorEntityDescription(
@@ -152,7 +154,7 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Sensor state value."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
-        if device_point.value == -32768:
+        if device_point.value == MARKER_FOR_UNKNOWN_VALUE:
             return None
         return device_point.value  # type: ignore[no-any-return]
 
