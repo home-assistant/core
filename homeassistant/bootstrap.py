@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 import contextlib
 from datetime import datetime, timedelta
 import logging
@@ -39,6 +40,7 @@ from .helpers import (
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.typing import ConfigType
 from .setup import (
+    BASE_PLATFORMS,
     DATA_SETUP_STARTED,
     DATA_SETUP_TIME,
     async_notify_setup_error,
@@ -596,17 +598,12 @@ async def async_setup_multi_components(
             )
 
 
-async def _async_set_up_integrations(
+async def _async_resolve_domains_to_setup(
     hass: core.HomeAssistant, config: dict[str, Any]
-) -> None:
-    """Set up all the integrations."""
-    hass.data[DATA_SETUP_STARTED] = {}
-    setup_time: dict[str, timedelta] = hass.data.setdefault(DATA_SETUP_TIME, {})
-
-    watch_task = asyncio.create_task(_async_watch_pending_setups(hass))
-
+) -> tuple[set[str], dict[str, loader.Integration]]:
+    """Resolve all dependencies and return list of domains to set up."""
+    base_platforms_loaded = False
     domains_to_setup = _get_domains(hass, config)
-
     needed_requirements: set[str] = set()
 
     # Resolve all dependencies so we know all integrations
@@ -617,48 +614,50 @@ async def _async_set_up_integrations(
         old_to_resolve: set[str] = to_resolve
         to_resolve = set()
 
-        integrations_to_process = [
-            int_or_exc
-            for int_or_exc in (
-                await loader.async_get_integrations(hass, old_to_resolve)
-            ).values()
-            if isinstance(int_or_exc, loader.Integration)
-        ]
+        if not base_platforms_loaded:
+            # Load base platforms right away since
+            # we do not require the manifest to list
+            # them as dependencies and we want
+            # to avoid the lock contention when multiple
+            # integrations try to resolve them at once
+            base_platforms_loaded = True
+            to_get = {*old_to_resolve, *BASE_PLATFORMS}
+        else:
+            to_get = old_to_resolve
 
         manifest_deps: set[str] = set()
-        for itg in integrations_to_process:
+        resolve_dependencies_tasks: list[Coroutine[Any, Any, bool]] = []
+        resolved_integrations: list[loader.Integration] = []
+
+        for domain, itg in (await loader.async_get_integrations(hass, to_get)).items():
+            if not isinstance(itg, loader.Integration) or domain not in old_to_resolve:
+                continue
+            resolved_integrations.append(itg)
+            integration_cache[domain] = itg
             manifest_deps.update(itg.dependencies)
             manifest_deps.update(itg.after_dependencies)
             needed_requirements.update(itg.requirements)
+            resolve_dependencies_tasks.append(itg.resolve_dependencies())
 
-        if manifest_deps:
+        if unseen_deps := manifest_deps - integration_cache.keys():
             # If there are dependencies, try to preload all
             # the integrations manifest at once and add them
             # to the list of requirements we need to install
             # so we can try to check if they are already installed
             # in a single call below which avoids each integration
             # having to wait for the lock to do it individually
-            deps = await loader.async_get_integrations(hass, manifest_deps)
+            deps = await loader.async_get_integrations(hass, unseen_deps)
             for dependant_itg in deps.values():
                 if isinstance(dependant_itg, loader.Integration):
                     needed_requirements.update(dependant_itg.requirements)
 
-        resolve_dependencies_tasks = [
-            itg.resolve_dependencies()
-            for itg in integrations_to_process
-            if not itg.all_dependencies_resolved
-        ]
-
         if resolve_dependencies_tasks:
             await asyncio.gather(*resolve_dependencies_tasks)
 
-        for itg in integrations_to_process:
-            integration_cache[itg.domain] = itg
-
+        for itg in resolved_integrations:
             for dep in itg.all_dependencies:
-                if dep in domains_to_setup:
+                if dep not in domains_to_setup:
                     continue
-
                 domains_to_setup.add(dep)
                 to_resolve.add(dep)
 
@@ -670,6 +669,21 @@ async def _async_set_up_integrations(
     hass.async_create_background_task(
         requirements.async_load_installed_versions(hass, needed_requirements),
         "check installed requirements",
+    )
+    return domains_to_setup, integration_cache
+
+
+async def _async_set_up_integrations(
+    hass: core.HomeAssistant, config: dict[str, Any]
+) -> None:
+    """Set up all the integrations."""
+    hass.data[DATA_SETUP_STARTED] = {}
+    setup_time: dict[str, timedelta] = hass.data.setdefault(DATA_SETUP_TIME, {})
+
+    watch_task = asyncio.create_task(_async_watch_pending_setups(hass))
+
+    domains_to_setup, integration_cache = await _async_resolve_domains_to_setup(
+        hass, config
     )
 
     # Initialize recorder
