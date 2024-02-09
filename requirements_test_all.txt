@@ -562,7 +562,7 @@ datadog==0.15.0
 dbus-fast==2.21.1
 
 # homeassistant.components.debugpy
-debugpy==1.8.0
+debugpy==1.8.1
 
 # homeassistant.components.ecovacs
 deebot-client==5.1.1
