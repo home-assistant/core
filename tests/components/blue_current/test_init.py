@@ -65,10 +65,10 @@ async def test_start_loop(hass: HomeAssistant, config_entry: MockConfigEntry) ->
     """Test start_loop."""
 
     with patch("homeassistant.components.blue_current.SMALL_DELAY", 0):
-        mock_client, started_loop, loop_future = await init_integration(
+        mock_client, started_loop, future_container = await init_integration(
             hass, config_entry
         )
-        loop_future.set_exception(BlueCurrentException)
+        future_container.future.set_exception(BlueCurrentException)
 
         await started_loop.wait()
         assert mock_client.connect.call_count == 2
@@ -80,10 +80,10 @@ async def test_reconnect_websocket_error(
     """Test reconnect when connect throws a WebsocketError."""
 
     with patch("homeassistant.components.blue_current.LARGE_DELAY", 0):
-        mock_client, started_loop, loop_future = await init_integration(
+        mock_client, started_loop, future_container = await init_integration(
             hass, config_entry
         )
-        loop_future.set_exception(BlueCurrentException)
+        future_container.future.set_exception(BlueCurrentException)
         mock_client.connect.side_effect = [WebsocketError, None]
 
         await started_loop.wait()
@@ -95,8 +95,10 @@ async def test_reconnect_request_limit_reached_error(
 ) -> None:
     """Test reconnect when connect throws a RequestLimitReached."""
 
-    mock_client, started_loop, loop_future = await init_integration(hass, config_entry)
-    loop_future.set_exception(BlueCurrentException)
+    mock_client, started_loop, future_container = await init_integration(
+        hass, config_entry
+    )
+    future_container.future.set_exception(BlueCurrentException)
     mock_client.connect.side_effect = [RequestLimitReached, None]
     mock_client.get_next_reset_delta.return_value = timedelta(seconds=0)
 

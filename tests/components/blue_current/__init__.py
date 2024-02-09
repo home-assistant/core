@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from asyncio import Event, Future
+from dataclasses import dataclass
 from unittest.mock import MagicMock, patch
 
 from bluecurrent_api import Client
@@ -17,8 +18,16 @@ DEFAULT_CHARGE_POINT = {
 }
 
 
+@dataclass
+class FutureContainer:
+    """Dataclass that stores a future."""
+
+    future: Future
+
+
 def create_client_mock(
-    loop_future: Future,
+    hass: HomeAssistant,
+    future_container: FutureContainer,
     started_loop: Event,
     charge_point: dict,
     status: dict | None,
@@ -34,7 +43,9 @@ def create_client_mock(
         started_loop.set()
         started_loop.clear()
 
-        await loop_future
+        if future_container.future.done():
+            future_container.future = hass.loop.create_future()
+        await future_container.future
 
     async def get_charge_points() -> None:
         """Send a list of charge points to the callback."""
@@ -74,17 +85,17 @@ async def init_integration(
     charge_point: dict | None = None,
     status: dict | None = None,
     grid: dict | None = None,
-) -> MagicMock:
+) -> tuple[MagicMock, Event, FutureContainer]:
     """Set up the Blue Current integration in Home Assistant."""
 
     if charge_point is None:
         charge_point = DEFAULT_CHARGE_POINT
 
-    loop_future = hass.loop.create_future()
+    future_container = FutureContainer(hass.loop.create_future())
     started_loop = Event()
 
     client_mock = create_client_mock(
-        loop_future, started_loop, charge_point, status, grid
+        hass, future_container, started_loop, charge_point, status, grid
     )
 
     with patch("homeassistant.components.blue_current.PLATFORMS", [platform]), patch(
@@ -94,4 +105,4 @@ async def init_integration(
 
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-    return client_mock, started_loop, loop_future
+    return client_mock, started_loop, future_container
