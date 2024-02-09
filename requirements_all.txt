@@ -170,7 +170,7 @@ agent-py==0.0.23
 aio-geojson-generic-client==0.4
 
 # homeassistant.components.geonetnz_quakes
-aio-geojson-geonetnz-quakes==0.15
+aio-geojson-geonetnz-quakes==0.16
 
 # homeassistant.components.geonetnz_volcano
 aio-geojson-geonetnz-volcano==0.8
@@ -182,7 +182,7 @@ aio-geojson-nsw-rfs-incidents==0.7
 aio-geojson-usgs-earthquakes==0.2
 
 # homeassistant.components.gdacs
-aio-georss-gdacs==0.8
+aio-georss-gdacs==0.9
 
 # homeassistant.components.airq
 aioairq==0.3.2
@@ -205,6 +205,9 @@ aioaseko==0.0.2
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
 
+# homeassistant.components.husqvarna_automower
+aioautomower==2024.1.5
+
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
 
@@ -218,7 +221,10 @@ aiobotocore==2.9.1
 aiocomelit==0.8.3
 
 # homeassistant.components.dhcp
-aiodiscover==1.6.0
+aiodhcpwatcher==0.8.0
+
+# homeassistant.components.dhcp
+aiodiscover==1.6.1
 
 # homeassistant.components.dnsip
 aiodns==3.0.0
@@ -230,10 +236,10 @@ aioeafm==0.1.2
 aioeagle==1.1.0
 
 # homeassistant.components.ecowitt
-aioecowitt==2024.2.0
+aioecowitt==2024.2.1
 
 # homeassistant.components.co2signal
-aioelectricitymaps==0.3.1
+aioelectricitymaps==0.4.0
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
@@ -684,7 +690,7 @@ debugpy==1.8.0
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==5.1.0
+deebot-client==5.1.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1059,7 +1065,7 @@ hole==0.8.0
 holidays==0.42
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240205.0
+home-assistant-frontend==20240207.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.2.2
@@ -1310,7 +1316,7 @@ moehlenhoff-alpha2==1.3.0
 mopeka-iot-ble==0.7.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.19
+motionblinds==0.6.20
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -1331,7 +1337,7 @@ mutesync==0.0.1
 mypermobil==0.1.8
 
 # homeassistant.components.myuplink
-myuplink==0.0.9
+myuplink==0.1.1
 
 # homeassistant.components.nad
 nad-receiver==0.3.0
@@ -1928,7 +1934,7 @@ pylitterbot==2023.4.9
 pylutron-caseta==0.19.0
 
 # homeassistant.components.lutron
-pylutron==0.2.8
+pylutron==0.2.11
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1940,7 +1946,7 @@ pymata-express==1.19
 pymediaroom==0.6.5.4
 
 # homeassistant.components.melcloud
-pymelcloud==2.5.8
+pymelcloud==2.5.9
 
 # homeassistant.components.meteoclimatic
 pymeteoclimatic==0.1.0
@@ -1952,7 +1958,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.6.3
+pymodbus==3.6.4
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2238,7 +2244,7 @@ python-kasa[speedups]==0.6.2.1
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==5.4.1
+python-matter-server==5.5.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -2481,9 +2487,6 @@ samsungtvws[async,encrypted]==2.6.0
 
 # homeassistant.components.satel_integra
 satel-integra==0.3.7
-
-# homeassistant.components.dhcp
-scapy==2.5.0
 
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.0
@@ -2934,7 +2937,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.62.2
+zigpy==0.62.3
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
