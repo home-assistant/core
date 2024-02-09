@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import AsyncIterable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
-from types import MappingProxyType
 from typing import Any
 from unittest.mock import ANY, DEFAULT, Mock, patch
 
@@ -215,7 +214,7 @@ async def test_setup_entry_no_options(
 
     Check that the device is constructed properly as part of the test.
     """
-    config_entry_mock.options = MappingProxyType({})
+    hass.config_entries.async_update_entry(config_entry_mock, options={})
     mock_entity_id = await setup_mock_component(hass, config_entry_mock)
     await async_update_entity(hass, mock_entity_id)
     await hass.async_block_till_done()
@@ -287,12 +286,13 @@ async def test_setup_entry_with_options(
     Check that the device is constructed properly as part of the test.
     """
     hass.set_state(core_state)
-    config_entry_mock.options = MappingProxyType(
-        {
+    hass.config_entries.async_update_entry(
+        config_entry_mock,
+        options={
             CONF_LISTEN_PORT: 2222,
             CONF_CALLBACK_URL_OVERRIDE: "http://198.51.100.10/events",
             CONF_POLL_AVAILABILITY: True,
-        }
+        },
     )
     mock_entity_id = await setup_mock_component(hass, config_entry_mock)
     await async_update_entity(hass, mock_entity_id)
@@ -2021,10 +2021,11 @@ async def test_poll_availability(
     """Test device becomes available and noticed via poll_availability."""
     # Start with a disconnected device and poll_availability=True
     domain_data_mock.upnp_factory.async_create_device.side_effect = UpnpConnectionError
-    config_entry_mock.options = MappingProxyType(
-        {
+    hass.config_entries.async_update_entry(
+        config_entry_mock,
+        options={
             CONF_POLL_AVAILABILITY: True,
-        }
+        },
     )
     mock_entity_id = await setup_mock_component(hass, config_entry_mock)
     mock_state = hass.states.get(mock_entity_id)
