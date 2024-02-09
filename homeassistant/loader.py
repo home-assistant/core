@@ -574,7 +574,7 @@ class Integration:
                 continue
 
             try:
-                manifest = cast(Manifest, json_loads(manifest_path.read_bytes()))
+                manifest = cast(Manifest, json_loads(manifest_path.read_text()))
             except JSON_DECODE_EXCEPTIONS as err:
                 _LOGGER.error(
                     "Error parsing manifest.json file at %s: %s", manifest_path, err
