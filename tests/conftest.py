@@ -487,6 +487,8 @@ def aiohttp_client(
         if isinstance(__param, Application):
             server_kwargs = server_kwargs or {}
             server = TestServer(__param, loop=loop, **server_kwargs)
+            # Registering a view after starting the server should still work.
+            server.app._router.freeze = lambda: None
             client = CoalescingClient(server, loop=loop, **kwargs)
         elif isinstance(__param, BaseTestServer):
             client = TestClient(__param, loop=loop, **kwargs)
@@ -515,14 +517,13 @@ def hass_fixture_setup() -> list[bool]:
 @pytest.fixture
 async def hass(
     hass_fixture_setup: list[bool],
-    event_loop: asyncio.AbstractEventLoop,
     load_registries: bool,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
 ) -> AsyncGenerator[HomeAssistant, None]:
     """Create a test instance of Home Assistant."""
 
-    loop = event_loop
+    loop = asyncio.get_running_loop()
     hass_fixture_setup.append(True)
 
     orig_tz = dt_util.DEFAULT_TIME_ZONE
@@ -575,12 +576,11 @@ async def hass(
 
 
 @pytest.fixture
-async def stop_hass(
-    event_loop: asyncio.AbstractEventLoop,
-) -> AsyncGenerator[None, None]:
+async def stop_hass() -> AsyncGenerator[None, None]:
     """Make sure all hass are stopped."""
     orig_hass = ha.HomeAssistant
 
+    event_loop = asyncio.get_running_loop()
     created = []
 
     def mock_hass(*args):
@@ -971,7 +971,7 @@ async def _mqtt_mock_entry(
     mock_mqtt_instance = None
 
     async def _setup_mqtt_entry(
-        setup_entry: Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]]
+        setup_entry: Callable[[HomeAssistant, ConfigEntry], Coroutine[Any, Any, bool]],
     ) -> MagicMock:
         """Set up the MQTT config entry."""
         assert await setup_entry(hass, entry)
@@ -1129,7 +1129,7 @@ def mock_zeroconf() -> Generator[None, None, None]:
     with patch(
         "homeassistant.components.zeroconf.HaZeroconf", autospec=True
     ) as mock_zc, patch(
-        "homeassistant.components.zeroconf.HaAsyncServiceBrowser", autospec=True
+        "homeassistant.components.zeroconf.AsyncServiceBrowser", autospec=True
     ):
         zc = mock_zc.return_value
         # DNSCache has strong Cython type checks, and MagicMock does not work
@@ -1507,7 +1507,7 @@ async def async_setup_recorder_instance(
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
             # The recorder's worker is not started until Home Assistant is running
-            if hass.state == CoreState.running:
+            if hass.state is CoreState.running:
                 await async_recorder_block_till_done(hass)
             return instance
 
@@ -1543,7 +1543,7 @@ async def mock_enable_bluetooth(
 @pytest.fixture(scope="session")
 def mock_bluetooth_adapters() -> Generator[None, None, None]:
     """Fixture to mock bluetooth adapters."""
-    with patch(
+    with patch("bluetooth_auto_recovery.recover_adapter"), patch(
         "bluetooth_adapters.systems.platform.system", return_value="Linux"
     ), patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
@@ -1576,9 +1576,10 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
-    with patch(
-        "habluetooth.scanner.OriginalBleakScanner.start",
-    ) as mock_bleak_scanner_start:
+    with patch.object(
+        bluetooth_scanner.OriginalBleakScanner,
+        "start",
+    ) as mock_bleak_scanner_start, patch.object(bluetooth_scanner, "HaScanner"):
         yield mock_bleak_scanner_start
 
 

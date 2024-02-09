@@ -107,19 +107,35 @@ async def test_switches_mqtt_update(
     assert entity
     assert entity.state == "on"
 
-    async_fire_mqtt_message(hass, "fully/event/onScreensaverStart/abcdef-123456", "{}")
+    async_fire_mqtt_message(
+        hass,
+        "fully/event/onScreensaverStart/abcdef-123456",
+        '{"deviceId": "abcdef-123456","event": "onScreensaverStart"}',
+    )
     entity = hass.states.get("switch.amazon_fire_screensaver")
     assert entity.state == "on"
 
-    async_fire_mqtt_message(hass, "fully/event/onScreensaverStop/abcdef-123456", "{}")
+    async_fire_mqtt_message(
+        hass,
+        "fully/event/onScreensaverStop/abcdef-123456",
+        '{"deviceId": "abcdef-123456","event": "onScreensaverStop"}',
+    )
     entity = hass.states.get("switch.amazon_fire_screensaver")
     assert entity.state == "off"
 
-    async_fire_mqtt_message(hass, "fully/event/screenOff/abcdef-123456", "{}")
+    async_fire_mqtt_message(
+        hass,
+        "fully/event/screenOff/abcdef-123456",
+        '{"deviceId": "abcdef-123456","event": "screenOff"}',
+    )
     entity = hass.states.get("switch.amazon_fire_screen")
     assert entity.state == "off"
 
-    async_fire_mqtt_message(hass, "fully/event/screenOn/abcdef-123456", "{}")
+    async_fire_mqtt_message(
+        hass,
+        "fully/event/screenOn/abcdef-123456",
+        '{"deviceId": "abcdef-123456","event": "screenOn"}',
+    )
     entity = hass.states.get("switch.amazon_fire_screen")
     assert entity.state == "on"
 

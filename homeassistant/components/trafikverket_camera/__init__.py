@@ -6,12 +6,12 @@ import logging
 from pytrafikverket.trafikverket_camera import TrafikverketCamera
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_ID
+from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_LOCATION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_LOCATION, DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .coordinator import TVDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)

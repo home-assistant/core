@@ -28,7 +28,7 @@ from .utils import is_supported
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ViCareButtonEntityDescription(
     ButtonEntityDescription, ViCareRequiredKeysMixinWithSet
 ):

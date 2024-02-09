@@ -1,4 +1,5 @@
 """Test the A. O. Smith config flow."""
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -6,7 +7,11 @@ from py_aosmith import AOSmithInvalidCredentialsException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.aosmith.const import DOMAIN, REGULAR_INTERVAL
+from homeassistant.components.aosmith.const import (
+    DOMAIN,
+    ENERGY_USAGE_INTERVAL,
+    REGULAR_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -87,21 +92,30 @@ async def test_form_exception(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("api_method", "wait_interval"),
+    [
+        ("get_devices", REGULAR_INTERVAL),
+        ("get_energy_use_data", ENERGY_USAGE_INTERVAL),
+    ],
+)
 async def test_reauth_flow(
     freezer: FrozenDateTimeFactory,
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
+    api_method: str,
+    wait_interval: timedelta,
 ) -> None:
     """Test reauth works."""
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
-    mock_client.get_devices.side_effect = AOSmithInvalidCredentialsException(
+    getattr(mock_client, api_method).side_effect = AOSmithInvalidCredentialsException(
         "Authentication error"
     )
-    freezer.tick(REGULAR_INTERVAL)
+    freezer.tick(wait_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -111,6 +125,9 @@ async def test_reauth_flow(
 
     with patch(
         "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_devices",
+        return_value=[],
+    ), patch(
+        "homeassistant.components.aosmith.config_flow.AOSmithAPIClient.get_energy_use_data",
         return_value=[],
     ), patch("homeassistant.components.aosmith.async_setup_entry", return_value=True):
         result2 = await hass.config_entries.flow.async_configure(

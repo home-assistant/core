@@ -23,11 +23,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _reauth_email: str | None
-
-    def __init__(self):
-        """Start the config flow."""
-        self._reauth_email = None
+    _reauth_email: str | None = None
 
     async def _async_validate_credentials(
         self, email: str, password: str
@@ -70,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_EMAIL, default=self._reauth_email): str,
+                    vol.Required(CONF_EMAIL): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
             ),
