@@ -15,7 +15,7 @@ from tests.typing import ClientSessionGenerator
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    config_entry: MockConfigEntry,
+    init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
@@ -28,11 +28,10 @@ async def test_diagnostics(
     ), patch(
         "homeassistant.components.myuplink.MyUplinkAPI.async_get_device_points_json",
         return_value=load_fixture("myuplink/device_points_nibe_f730.json"),
+    ), patch(
+        "homeassistant.components.myuplink.MyUplinkAPI",
     ):
-        snapshot.assert_match(
-            await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        assert (
+            await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+            == snapshot
         )
-        # assert (
-        #     await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-        #     == snapshot
-        # )
