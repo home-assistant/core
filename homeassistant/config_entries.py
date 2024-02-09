@@ -1146,6 +1146,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             _LOGGER.error("An entry with the id %s already exists", entry_id)
             self._unindex_entry(entry_id)
         data[entry_id] = entry
+        self._index_entry(entry)
+
+    def _index_entry(self, entry: ConfigEntry) -> None:
+        """Index an entry."""
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
             unique_id_hash = entry.unique_id
@@ -1190,6 +1194,16 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         """Remove an item."""
         self._unindex_entry(entry_id)
         super().__delitem__(entry_id)
+
+    def update_unique_id(self, entry: ConfigEntry, new_unique_id: str | None) -> None:
+        """Update unique id for an entry.
+
+        This method mutates the entry with the new unique id and updates the indexes.
+        """
+        entry_id = entry.entry_id
+        self._unindex_entry(entry_id)
+        entry.unique_id = new_unique_id
+        self._index_entry(entry)
 
     def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
         """Get entries for a domain."""
@@ -1517,10 +1531,7 @@ class ConfigEntries:
 
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Reindex the entry if the unique_id has changed
-            entry_id = entry.entry_id
-            del self._entries[entry_id]
-            entry.unique_id = unique_id
-            self._entries[entry_id] = entry
+            self._entries.update_unique_id(entry, unique_id)
             changed = True
 
         for attr, value in (
