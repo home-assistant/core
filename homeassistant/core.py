@@ -22,6 +22,7 @@ from dataclasses import dataclass
 import datetime
 import enum
 import functools
+import inspect
 import logging
 import os
 import pathlib
@@ -875,7 +876,7 @@ class HomeAssistant:
                     tasks.append(task_or_none)
                 if tasks:
                     await asyncio.gather(*tasks, return_exceptions=True)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for shutdown jobs to complete, the shutdown will"
                 " continue"
@@ -906,7 +907,7 @@ class HomeAssistant:
         try:
             async with self.timeout.async_timeout(STOP_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for integrations to stop, the shutdown will"
                 " continue"
@@ -919,7 +920,7 @@ class HomeAssistant:
         try:
             async with self.timeout.async_timeout(FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for final writes to complete, the shutdown will"
                 " continue"
@@ -951,7 +952,7 @@ class HomeAssistant:
                     await task
             except asyncio.CancelledError:
                 pass
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Task may be shielded from cancellation.
                 _LOGGER.exception(
                     "Task %s could not be canceled during final shutdown stage", task
@@ -971,7 +972,7 @@ class HomeAssistant:
         try:
             async with self.timeout.async_timeout(CLOSE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for close event to be processed, the shutdown will"
                 " continue"
@@ -1077,9 +1078,7 @@ class Event:
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         if not context:
-            context = Context(
-                id=ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
-            )
+            context = Context(id=ulid_at_time(self.time_fired.timestamp()))
         self.context = context
         if not context.origin_event:
             context.origin_event = self
@@ -1160,7 +1159,7 @@ class _OneTimeListener:
     remove: CALLBACK_TYPE | None = None
 
     @callback
-    def async_call(self, event: Event) -> None:
+    def __call__(self, event: Event) -> None:
         """Remove listener from event bus and then fire listener."""
         if not self.remove:
             # If the listener was already removed, we don't need to do anything
@@ -1168,6 +1167,13 @@ class _OneTimeListener:
         self.remove()
         self.remove = None
         self.hass.async_run_job(self.listener, event)
+
+    def __repr__(self) -> str:
+        """Return the representation of the listener and source module."""
+        module = inspect.getmodule(self.listener)
+        if module:
+            return f"<_OneTimeListener {module.__name__}:{self.listener}>"
+        return f"<_OneTimeListener {self.listener}>"
 
 
 class EventBus:
@@ -1366,7 +1372,7 @@ class EventBus:
             event_type,
             (
                 HassJob(
-                    one_time_listener.async_call,
+                    one_time_listener,
                     f"onetime listen {event_type} {listener}",
                     job_type=HassJobType.Callback,
                 ),
@@ -1757,7 +1763,9 @@ class StateMachine:
 
         Async friendly.
         """
-        return self._states_data.get(entity_id.lower())
+        return self._states_data.get(entity_id) or self._states_data.get(
+            entity_id.lower()
+        )
 
     def is_state(self, entity_id: str, state: str) -> bool:
         """Test if entity exists and is in specified state.
@@ -1795,7 +1803,6 @@ class StateMachine:
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": None},
-            EventOrigin.local,
             context=context,
         )
         return True
@@ -1870,10 +1877,16 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
-        entity_id = entity_id.lower()
         new_state = str(new_state)
         attributes = attributes or {}
-        if (old_state := self._states_data.get(entity_id)) is None:
+        old_state = self._states_data.get(entity_id)
+        if old_state is None:
+            # If the state is missing, try to convert the entity_id to lowercase
+            # and try again.
+            entity_id = entity_id.lower()
+            old_state = self._states_data.get(entity_id)
+
+        if old_state is None:
             same_state = False
             same_attr = False
             last_changed = None
@@ -1924,8 +1937,7 @@ class StateMachine:
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
-            EventOrigin.local,
-            context,
+            context=context,
             time_fired=now,
         )
 

@@ -30,6 +30,7 @@ from homeassistant.components.modbus.const import (
     CONF_FAN_MODE_OFF,
     CONF_FAN_MODE_ON,
     CONF_FAN_MODE_REGISTER,
+    CONF_FAN_MODE_TOP,
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
@@ -41,6 +42,8 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
@@ -166,6 +169,30 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                             "state_auto": 6,
                         },
                     },
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_MIN_TEMP: 23,
+                    CONF_MAX_TEMP: 57,
+                }
+            ],
+        },
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_MIN_TEMP: -57,
+                    CONF_MAX_TEMP: -23,
                 }
             ],
         },
@@ -491,7 +518,7 @@ async def test_service_climate_update(
                         CONF_SCAN_INTERVAL: 0,
                         CONF_DATA_TYPE: DataType.INT32,
                         CONF_FAN_MODE_REGISTER: {
-                            CONF_ADDRESS: 118,
+                            CONF_ADDRESS: [118],
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_LOW: 0,
                                 CONF_FAN_MODE_MEDIUM: 1,
@@ -504,6 +531,31 @@ async def test_service_climate_update(
             },
             FAN_HIGH,
             [0x02],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 117,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_FAN_MODE_REGISTER: {
+                            CONF_ADDRESS: [118],
+                            CONF_FAN_MODE_VALUES: {
+                                CONF_FAN_MODE_LOW: 0,
+                                CONF_FAN_MODE_MEDIUM: 1,
+                                CONF_FAN_MODE_HIGH: 2,
+                                CONF_FAN_MODE_TOP: 3,
+                            },
+                        },
+                    },
+                ]
+            },
+            FAN_TOP,
+            [0x03],
         ),
     ],
 )
@@ -740,7 +792,7 @@ async def test_service_set_hvac_mode(
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_FAN_MODE_REGISTER: {
-                            CONF_ADDRESS: 118,
+                            CONF_ADDRESS: [118],
                             CONF_FAN_MODE_VALUES: {
                                 CONF_FAN_MODE_ON: 1,
                                 CONF_FAN_MODE_OFF: 2,

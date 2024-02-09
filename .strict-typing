@@ -100,6 +100,7 @@ homeassistant.components.awair.*
 homeassistant.components.axis.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
+homeassistant.components.bang_olufsen.*
 homeassistant.components.bayesian.*
 homeassistant.components.binary_sensor.*
 homeassistant.components.bitcoin.*
@@ -360,6 +361,7 @@ homeassistant.components.rhasspy.*
 homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roku.*
+homeassistant.components.romy.*
 homeassistant.components.rpi_power.*
 homeassistant.components.rss_feed_template.*
 homeassistant.components.rtsp_to_webrtc.*

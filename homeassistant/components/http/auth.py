@@ -135,7 +135,8 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
 
     hass.data[STORAGE_KEY] = refresh_token.id
 
-    async def async_validate_auth_header(request: Request) -> bool:
+    @callback
+    def async_validate_auth_header(request: Request) -> bool:
         """Test authorization header against access token.
 
         Basic auth_type is legacy code, should be removed with api_password.
@@ -163,7 +164,8 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         request[KEY_HASS_REFRESH_TOKEN_ID] = refresh_token.id
         return True
 
-    async def async_validate_signed_request(request: Request) -> bool:
+    @callback
+    def async_validate_signed_request(request: Request) -> bool:
         """Validate a signed request."""
         if (secret := hass.data.get(DATA_SIGN_SECRET)) is None:
             return False
@@ -205,7 +207,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         """Authenticate as middleware."""
         authenticated = False
 
-        if hdrs.AUTHORIZATION in request.headers and await async_validate_auth_header(
+        if hdrs.AUTHORIZATION in request.headers and async_validate_auth_header(
             request
         ):
             authenticated = True
@@ -216,7 +218,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         elif (
             request.method == "GET"
             and SIGN_QUERY_PARAM in request.query_string
-            and await async_validate_signed_request(request)
+            and async_validate_signed_request(request)
         ):
             authenticated = True
             auth_type = "signed request"

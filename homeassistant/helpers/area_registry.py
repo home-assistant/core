@@ -17,7 +17,7 @@ DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 
 
@@ -33,6 +33,7 @@ class AreaEntry:
     """Area Registry Entry."""
 
     aliases: set[str]
+    icon: str | None
     id: str
     name: str
     normalized_name: str
@@ -107,6 +108,11 @@ class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
                 for area in old_data["areas"]:
                     area["aliases"] = []
 
+            if old_minor_version < 4:
+                # Version 1.4 adds icon
+                for area in old_data["areas"]:
+                    area["icon"] = None
+
         if old_major_version > 1:
             raise NotImplementedError
         return old_data
@@ -161,6 +167,7 @@ class AreaRegistry:
         name: str,
         *,
         aliases: set[str] | None = None,
+        icon: str | None = None,
         picture: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
@@ -172,6 +179,7 @@ class AreaRegistry:
         area_id = self._generate_area_id(name)
         area = AreaEntry(
             aliases=aliases or set(),
+            icon=icon,
             id=area_id,
             name=name,
             normalized_name=normalized_name,
@@ -207,12 +215,17 @@ class AreaRegistry:
         area_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
+        icon: str | None | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
         updated = self._async_update(
-            area_id, aliases=aliases, name=name, picture=picture
+            area_id,
+            aliases=aliases,
+            icon=icon,
+            name=name,
+            picture=picture,
         )
         self.hass.bus.async_fire(
             EVENT_AREA_REGISTRY_UPDATED, {"action": "update", "area_id": area_id}
@@ -225,6 +238,7 @@ class AreaRegistry:
         area_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
+        icon: str | None | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
@@ -235,6 +249,7 @@ class AreaRegistry:
 
         for attr_name, value in (
             ("aliases", aliases),
+            ("icon", icon),
             ("picture", picture),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
@@ -264,6 +279,7 @@ class AreaRegistry:
                 normalized_name = normalize_area_name(area["name"])
                 areas[area["id"]] = AreaEntry(
                     aliases=set(area["aliases"]),
+                    icon=area["icon"],
                     id=area["id"],
                     name=area["name"],
                     normalized_name=normalized_name,
@@ -286,8 +302,9 @@ class AreaRegistry:
         data["areas"] = [
             {
                 "aliases": list(entry.aliases),
-                "name": entry.name,
+                "icon": entry.icon,
                 "id": entry.id,
+                "name": entry.name,
                 "picture": entry.picture,
             }
             for entry in self.areas.values()

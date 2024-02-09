@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "jvc_power": {
+        "default": "mdi:projector-off",
+        "state": {
+          "on": "mdi:projector"
+        }
+      }
+    }
+  }
+}
