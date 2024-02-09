@@ -955,6 +955,27 @@ class MockConfigEntry(config_entries.ConfigEntry):
         """Test helper to add entry to entry manager."""
         manager._entries[self.entry_id] = self
 
+    def mock_state(
+        self,
+        hass: HomeAssistant,
+        state: config_entries.ConfigEntryState,
+        reason: str | None = None,
+    ) -> None:
+        """Mock the state of a config entry to be used in tests.
+
+        Currently this is a wrapper around _async_set_state, but it may
+        change in the future.
+
+        It is preferable to get the config entry into the desired state
+        by using the normal config entry methods, and this helper
+        is only intended to be used in cases where that is not possible.
+
+        When in doubt, this helper should not be used in new code
+        and is only intended for backwards compatibility with existing
+        tests.
+        """
+        self._async_set_state(hass, state, reason)
+
 
 def patch_yaml_files(files_dict, endswith=True):
     """Patch load_yaml with a dictionary of yaml files."""
