@@ -4,8 +4,7 @@ import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-
-from aioaseko import dataclass
+from dataclasses import dataclass
 import aiohttp
 from microBeesPy.microbees import Actuator, Bee, MicroBees, MicroBeesException
 

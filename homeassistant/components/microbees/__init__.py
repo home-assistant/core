@@ -2,8 +2,8 @@
 
 from http import HTTPStatus
 import logging
+from dataclasses import dataclass
 
-from aioaseko import dataclass
 import aiohttp
 from microBeesPy.microbees import MicroBees
 
