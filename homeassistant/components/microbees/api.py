@@ -10,7 +10,7 @@ from .const import ACCESS_TOKEN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigEntryAuth(config_entry_oauth2_flow.AbstractOAuth2FlowHandler):
+class ConfigEntryAuth:
     """Provide microBees authentication tied to an OAuth2 based config entry."""
 
     def __init__(

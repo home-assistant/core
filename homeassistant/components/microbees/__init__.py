@@ -3,6 +3,7 @@
 from http import HTTPStatus
 import logging
 
+from aioaseko import dataclass
 import aiohttp
 from microBeesPy.microbees import Bee, MicroBees
 
@@ -17,26 +18,14 @@ from .coordinator import MicroBeesUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True, kw_only=True)
 class HomeAssistantMicroBeesData:
     """Microbees data stored in the Home Assistant data object."""
 
-    connector: MicroBees
     bees: list[Bee]
-    session: config_entry_oauth2_flow.OAuth2Session
+    connector: MicroBees
     coordinator: MicroBeesUpdateCoordinator
-
-    def __init__(
-        self,
-        connector: MicroBees,
-        bees: list[Bee],
-        session: config_entry_oauth2_flow.OAuth2Session,
-        coordinator: MicroBeesUpdateCoordinator,
-    ) -> None:
-        """Initialize the data."""
-        self.connector = connector
-        self.bees = bees
-        self.session = session
-        self.coordinator = coordinator
+    session: config_entry_oauth2_flow.OAuth2Session
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -60,20 +49,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
     microbees = MicroBees(token=session.token[ACCESS_TOKEN])
     coordinator = MicroBeesUpdateCoordinator(hass, microbees)
-    try:
-        bees = await microbees.getBees()
-    except Exception as ex:
-        raise ConfigEntryNotReady from ex
-    hass.data[DOMAIN] = {
-        entry.entry_id: HomeAssistantMicroBeesData(
-            connector=microbees,
-            bees=bees,
-            session=session,
-            coordinator=coordinator,
-        )
-    }
-
     await coordinator.async_config_entry_first_refresh()
+    bees = [value for key, value in coordinator.data.items() if "bee_" in key]
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantMicroBeesData(
+        connector=microbees,
+        coordinator=coordinator,
+        bees=bees,
+        session=session,
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

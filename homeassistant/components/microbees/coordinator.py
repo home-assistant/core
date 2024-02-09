@@ -2,7 +2,9 @@
 
 import asyncio
 from datetime import timedelta
+from http import HTTPStatus
 import logging
+from typing import Any
 
 import aiohttp
 from microBeesPy.microbees import MicroBees, MicroBeesException
@@ -27,18 +29,27 @@ class MicroBeesUpdateCoordinator(DataUpdateCoordinator):
         )
         self.microbees = microbees
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
-        try:
-            async with asyncio.timeout(10):
+        async with asyncio.timeout(10):
+            try:
                 bees = await self.microbees.getBees()
-                data = {}
-                for bee in bees:
-                    data[f"bee_{bee.id}"] = bee
-                    for act in bee.actuators:
-                        data[f"act_{act.id}"] = act
-                return data
-        except aiohttp.ClientResponseError as err:
-            raise ConfigEntryAuthFailed from err
-        except MicroBeesException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            except aiohttp.ClientResponseError as err:
+                if err.status in (
+                    HTTPStatus.BAD_REQUEST,
+                    HTTPStatus.UNAUTHORIZED,
+                    HTTPStatus.FORBIDDEN,
+                ):
+                    raise ConfigEntryAuthFailed(
+                        "Token not valid, trigger renewal"
+                    ) from err
+                raise ConfigEntryAuthFailed from err
+            except MicroBeesException as err:
+                raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+            data = {}
+            for bee in bees:
+                data[f"bee_{bee.id}"] = bee
+                for act in bee.actuators:
+                    data[f"act_{act.id}"] = act
+            return data
