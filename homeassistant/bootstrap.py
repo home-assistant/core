@@ -550,6 +550,7 @@ class _WatchPendingSetups:
         self._setup_started = setup_started
         self._duration_count = 0
         self._handle: asyncio.TimerHandle | None = None
+        self._previous_was_empty = False
         self._loop = hass.loop
 
     def _async_watch(self) -> None:
@@ -562,11 +563,9 @@ class _WatchPendingSetups:
             for domain, start_time in self._setup_started.items()
         }
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
-        self._async_dispatch(
-            # If we are not waiting on any more integrations, we are waiting
-            # on the event loop to finish up some work or homeassistant internals
-            remaining_with_setup_started or {"homeassistant": self._duration_count}
-        )
+        if remaining_with_setup_started or not self._previous_was_empty:
+            self._async_dispatch(remaining_with_setup_started)
+        self._previous_was_empty = not remaining_with_setup_started
 
         if (
             self._setup_started
