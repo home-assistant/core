@@ -104,6 +104,7 @@ MOCK_BLOCKS = [
         sensor_ids={"roller": "stop", "rollerPos": 0},
         channel="1",
         type="roller",
+        description="roller_0",
         set_state=AsyncMock(
             side_effect=lambda go, roller_pos=0: {
                 "current_pos": roller_pos,
@@ -118,6 +119,7 @@ MOCK_BLOCKS = [
         colorTemp=mock_light_set_state()["temp"],
         **mock_light_set_state(),
         type="light",
+        description="light_0",
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
@@ -217,7 +219,7 @@ MOCK_STATUS_COAP = {
 
 MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
-    "input:0": {"id": 0, "state": None},
+    "input:0": {"id": 0, "state": None, "xpercent": 8.9},
     "light:0": {"output": True, "brightness": 53.0},
     "cloud": {"connected": False},
     "cover:0": {
