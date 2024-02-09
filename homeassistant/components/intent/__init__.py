@@ -156,16 +156,18 @@ class GetStateIntentHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
 
         # Entity name to match
-        entity_name: str | None = slots.get("name", {}).get("value")
+        name_slot = slots.get("name", {})
+        entity_name: str | None = name_slot.get("value")
+        entity_text: str | None = name_slot.get("text")
 
         # Look up area first to fail early
-        area_name = slots.get("area", {}).get("value")
+        area_slot = slots.get("area", {})
+        area_id = area_slot.get("value")
+        area_name = area_slot.get("text")
         area: ar.AreaEntry | None = None
-        if area_name is not None:
+        if area_id is not None:
             areas = ar.async_get(hass)
-            area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
-                area_name
-            )
+            area = areas.async_get_area(area_id)
             if area is None:
                 raise intent.IntentHandleError(f"No area named {area_name}")
 
@@ -204,6 +206,13 @@ class GetStateIntentHandler(intent.IntentHandler):
             device_classes,
             intent_obj.assistant,
         )
+
+        if entity_name and (len(states) > 1):
+            # Multiple entities matched for the same name
+            raise intent.DuplicateNamesMatchedError(
+                name=entity_text or entity_name,
+                area=area_name or area_id,
+            )
 
         # Create response
         response = intent_obj.create_response()
