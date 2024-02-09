@@ -566,6 +566,9 @@
       },
       "ias_zone": {
         "name": "IAS zone"
+      },
+      "hand_open": {
+        "name": "Opened by hand"
       }
     },
     "button": {
@@ -730,6 +733,12 @@
       },
       "presence_detection_timeout": {
         "name": "Presence detection timeout"
+      },
+      "max_heat_setpoint_limit": {
+        "name": "Max heat setpoint limit"
+      },
+      "min_heat_setpoint_limit": {
+        "name": "Min heat setpoint limit"
       }
     },
     "select": {
@@ -798,6 +807,9 @@
       },
       "detection_sensitivity": {
         "name": "Detection Sensitivity"
+      },
+      "keypad_lockout": {
+        "name": "Keypad lockout"
       }
     },
     "sensor": {
@@ -881,6 +893,21 @@
       },
       "last_illumination_state": {
         "name": "Last illumination state"
+      },
+      "pi_heating_demand": {
+        "name": "Pi heating demand"
+      },
+      "setpoint_change_source": {
+        "name": "Setpoint change source"
+      },
+      "power_source": {
+        "name": "Power source"
+      },
+      "window_covering_type": {
+        "name": "Window covering type"
+      },
+      "hooks_state": {
+        "name": "Hooks state"
       }
     },
     "switch": {
@@ -904,6 +931,12 @@
       },
       "invert_switch": {
         "name": "Invert switch"
+      },
+      "inverted": {
+        "name": "Inverted"
+      },
+      "hooks_locked": {
+        "name": "Hooks locked"
       },
       "smart_bulb_mode": {
         "name": "Smart bulb mode"

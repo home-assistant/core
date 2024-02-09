@@ -1,5 +1,4 @@
 """Test the Ukraine Alarm config flow."""
-import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
@@ -271,7 +270,7 @@ async def test_unknown_client_error(
 
 async def test_timeout_error(hass: HomeAssistant, mock_get_regions: AsyncMock) -> None:
     """Test timeout error."""
-    mock_get_regions.side_effect = asyncio.TimeoutError
+    mock_get_regions.side_effect = TimeoutError
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

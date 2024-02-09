@@ -36,7 +36,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from .const import DOMAIN, SUPPORTED_LIFESPANS
 from .controller import EcovacsController
 from .entity import (
     EcovacsCapabilityEntityDescription,
@@ -72,6 +72,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         capability_fn=lambda caps: caps.stats.clean,
         value_fn=lambda e: e.time,
         translation_key="stats_time",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
     ),
@@ -89,7 +90,8 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSensorEntityDescription, ...] = (
         value_fn=lambda e: e.time,
         key="total_stats_time",
         translation_key="total_stats_time",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -152,11 +154,7 @@ LIFESPAN_ENTITY_DESCRIPTIONS = tuple(
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
     )
-    for component in (
-        LifeSpan.BRUSH,
-        LifeSpan.FILTER,
-        LifeSpan.SIDE_BRUSH,
-    )
+    for component in SUPPORTED_LIFESPANS
 )
 
 

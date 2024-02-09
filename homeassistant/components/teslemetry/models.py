@@ -1,6 +1,7 @@
 """The Teslemetry integration models."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 
 from tesla_fleet_api import VehicleSpecific
@@ -15,3 +16,4 @@ class TeslemetryVehicleData:
     api: VehicleSpecific
     coordinator: TeslemetryVehicleDataCoordinator
     vin: str
+    wakelock = asyncio.Lock()
