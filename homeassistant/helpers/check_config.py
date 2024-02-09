@@ -157,8 +157,8 @@ async def async_check_ha_config_file(  # noqa: C901
         return result.add_error(f"Error loading {config_path}: {err}")
 
     # Extract and validate core [homeassistant] config
+    core_config = config.pop(CONF_CORE, {})
     try:
-        core_config = config.pop(CONF_CORE, {})
         core_config = CORE_CONFIG_SCHEMA(core_config)
         result[CONF_CORE] = core_config
 
@@ -166,7 +166,6 @@ async def async_check_ha_config_file(  # noqa: C901
         await merge_packages_config(
             hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error
         )
-        core_config.pop(CONF_PACKAGES, None)
     except vol.Invalid as err:
         result.add_error(
             format_schema_error(hass, err, CONF_CORE, core_config),
@@ -174,6 +173,7 @@ async def async_check_ha_config_file(  # noqa: C901
             core_config,
         )
         core_config = {}
+    core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
     components = {cv.domain_key(key) for key in config}
