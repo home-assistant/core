@@ -495,15 +495,6 @@ async def test_quirks_v2_entity_discovery(
         manufacturer="Ikea of Sweden",
         model="TRADFRI remote control",
     )
-    zigpy_device.endpoints[1].power.PLUGGED_ATTR_READS = {
-        "battery_voltage": 3,
-        "battery_percentage_remaining": 100,
-    }
-    update_attribute_cache(zigpy_device.endpoints[1].power)
-    zigpy_device.endpoints[1].on_off.PLUGGED_ATTR_READS = {
-        zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name: 3,
-    }
-    update_attribute_cache(zigpy_device.endpoints[1].on_off)
 
     add_to_registry_v2(
         "Ikea of Sweden", "TRADFRI remote control", zigpy.quirks._DEVICE_REGISTRY
