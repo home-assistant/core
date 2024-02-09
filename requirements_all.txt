@@ -222,9 +222,7 @@ aiocomelit==0.8.3
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==0.8.0
-
-# homeassistant.components.dhcp
-aiodiscover==1.6.0
+aiodiscover==1.6.1
 
 # homeassistant.components.dnsip
 aiodns==3.0.0
