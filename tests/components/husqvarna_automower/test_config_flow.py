@@ -172,7 +172,7 @@ async def test_reauth(
     aioclient_mock.post(
         OAUTH2_TOKEN,
         json={
-            "access_token": jwt_refreshed,
+            "access_token": "mock-updated-token",
             "scope": "iam:read amc:api",
             "expires_in": 86399,
             "refresh_token": "mock-refresh-token",
@@ -198,5 +198,5 @@ async def test_reauth(
     assert mock_config_entry.unique_id == USER_ID
     assert "token" in mock_config_entry.data
     # Verify access token is refreshed
-    assert mock_config_entry.data["token"].get("access_token") == jwt_refreshed
+    assert mock_config_entry.data["token"].get("access_token") == "mock-updated-token"
     assert mock_config_entry.data["token"].get("refresh_token") == "mock-refresh-token"
