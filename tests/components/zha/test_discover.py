@@ -10,6 +10,7 @@ from zhaquirks.ikea import PowerConfig1CRCluster, ScenesCluster
 from zigpy.const import SIG_ENDPOINTS, SIG_MANUFACTURER, SIG_MODEL, SIG_NODE_DESC
 import zigpy.profiles.zha
 import zigpy.quirks
+from zigpy.quirks.v2 import add_to_registry_v2
 import zigpy.types
 from zigpy.zcl import ClusterType
 import zigpy.zcl.clusters.closures
@@ -502,11 +503,11 @@ async def test_quirks_v2_entity_discovery(
     }
     update_attribute_cache(zigpy_device.endpoints[1].on_off)
 
-    zigpy.quirks._DEVICE_REGISTRY.add_to_registry_v2(
-        "Ikea of Sweden", "TRADFRI remote control"
+    add_to_registry_v2(
+        "Ikea of Sweden", "TRADFRI remote control", zigpy.quirks._DEVICE_REGISTRY
     ).replaces(PowerConfig1CRCluster).replaces(
         ScenesCluster, cluster_type=ClusterType.Client
-    ).exposes_number(
+    ).number(
         zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
         zigpy.zcl.clusters.general.OnOff.cluster_id,
     )

@@ -5,6 +5,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
+from zigpy.quirks.v2 import EntityMetadata
 from zigpy.zcl.clusters.hvac import Thermostat
 
 from homeassistant.components.number import NumberEntity, NumberMode
@@ -401,7 +402,8 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         """
         cluster_handler = cluster_handlers[0]
         if "entity_metadata" in kwargs:
-            attribute_name = kwargs["entity_metadata"].entity_metadata.attribute_name
+            entity_metadata: EntityMetadata = kwargs["entity_metadata"]
+            attribute_name: str = entity_metadata.entity_metadata.attribute_name
             if (
                 attribute_name in cluster_handler.cluster.unsupported_attributes
                 or attribute_name not in cluster_handler.cluster.attributes_by_name

@@ -4,16 +4,19 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from slugify import slugify
-from zigpy.quirks import CustomDeviceV2
-from zigpy.quirks.registry import (
-    ExposesBinarySensorMetadata,
-    ExposesEnumSelectMetadata,
-    ExposesNumberMetadata,
-    ExposesSwitchMetadata,
-    ExposesWriteAttributeButtonMetadata,
+from zigpy.quirks.v2 import (
+    BinarySensorMetadata,
+    CustomDeviceV2,
+    EntityType,
+    EnumMetadata,
+    NumberMetadata,
+    SwitchMetadata,
+    WriteAttributeButtonMetadata,
+    ZCLCommandButtonMetadata,
+    ZCLEnumMetadata,
 )
 from zigpy.state import State
 from zigpy.zcl import ClusterType
@@ -75,6 +78,65 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
+QUIRKS_ENTITY_META_TO_ENTITY_CLASS = {
+    (
+        Platform.BUTTON,
+        WriteAttributeButtonMetadata,
+        EntityType.CONFIG,
+    ): button.ZHAAttributeButton,
+    (Platform.BUTTON, ZCLCommandButtonMetadata, EntityType.CONFIG): button.ZHAButton,
+    (
+        Platform.BUTTON,
+        ZCLCommandButtonMetadata,
+        EntityType.DIAGNOSTIC,
+    ): button.ZHAButton,
+    (
+        Platform.BINARY_SENSOR,
+        BinarySensorMetadata,
+        EntityType.CONFIG,
+    ): binary_sensor.BinarySensor,
+    (
+        Platform.BINARY_SENSOR,
+        BinarySensorMetadata,
+        EntityType.DIAGNOSTIC,
+    ): binary_sensor.BinarySensor,
+    (
+        Platform.BINARY_SENSOR,
+        BinarySensorMetadata,
+        EntityType.STANDARD,
+    ): binary_sensor.BinarySensor,
+    (Platform.SENSOR, EnumMetadata, EntityType.CONFIG): sensor.EnumSensor,
+    (Platform.SENSOR, EnumMetadata, EntityType.DIAGNOSTIC): sensor.EnumSensor,
+    (Platform.SENSOR, EnumMetadata, EntityType.STANDARD): sensor.EnumSensor,
+    (Platform.SELECT, EnumMetadata, EntityType.CONFIG): select.ZHANonZCLSelectEntity,
+    (
+        Platform.SELECT,
+        EnumMetadata,
+        EntityType.DIAGNOSTIC,
+    ): select.ZHANonZCLSelectEntity,
+    (Platform.SELECT, EnumMetadata, EntityType.STANDARD): select.ZHANonZCLSelectEntity,
+    (Platform.SELECT, ZCLEnumMetadata, EntityType.CONFIG): select.ZCLEnumSelectEntity,
+    (
+        Platform.SELECT,
+        ZCLEnumMetadata,
+        EntityType.DIAGNOSTIC,
+    ): select.ZCLEnumSelectEntity,
+    (
+        Platform.NUMBER,
+        NumberMetadata,
+        EntityType.CONFIG,
+    ): number.ZHANumberConfigurationEntity,
+    (Platform.NUMBER, NumberMetadata, EntityType.DIAGNOSTIC): number.ZhaNumber,
+    (Platform.NUMBER, NumberMetadata, EntityType.STANDARD): number.ZhaNumber,
+    (
+        Platform.SWITCH,
+        SwitchMetadata,
+        EntityType.CONFIG,
+    ): switch.ZHASwitchConfigurationEntity,
+    (Platform.SWITCH, SwitchMetadata, EntityType.STANDARD): switch.Switch,
+}
+
+
 @callback
 async def async_add_entities(
     _async_add_entities: AddEntitiesCallback,
@@ -82,6 +144,7 @@ async def async_add_entities(
         tuple[
             type[ZhaEntity],
             tuple[str, ZHADevice, list[ClusterHandler]],
+            dict[str, Any],
         ]
     ],
     **kwargs,
@@ -95,23 +158,6 @@ async def async_add_entities(
     entities_to_add = [entity for entity in to_add if entity is not None]
     _async_add_entities(entities_to_add, update_before_add=False)
     entities.clear()
-
-
-EXPOSES_META_TO_PLATFORM = {
-    ExposesBinarySensorMetadata: Platform.BINARY_SENSOR,
-    ExposesEnumSelectMetadata: Platform.SELECT,
-    ExposesNumberMetadata: Platform.NUMBER,
-    ExposesSwitchMetadata: Platform.SWITCH,
-    ExposesWriteAttributeButtonMetadata: Platform.BUTTON,
-}
-
-EXPOSES_META_TO_ENTITY_CLASS = {
-    ExposesBinarySensorMetadata: binary_sensor.BinarySensor,
-    ExposesEnumSelectMetadata: select.ZCLEnumSelectEntity,
-    ExposesNumberMetadata: number.ZHANumberConfigurationEntity,
-    ExposesSwitchMetadata: switch.ZHASwitchConfigurationEntity,
-    ExposesWriteAttributeButtonMetadata: button.ZHAAttributeButton,
-}
 
 
 class ProbeEndpoint:
@@ -154,7 +200,7 @@ class ProbeEndpoint:
     def discover_quirks_v2_entities(self, device: ZHADevice) -> None:
         """Discover entities for a ZHA device exposed by quirks v2."""
         _LOGGER.debug(
-            "Discovering quirks v2 entities for device: %s-%s",
+            "Attempting to discover quirks v2 entities for device: %s-%s",
             str(device.ieee),
             device.name,
         )
@@ -167,7 +213,8 @@ class ProbeEndpoint:
             )
             return
 
-        if not device.device.exposes_metadata:
+        zigpy_device: CustomDeviceV2 = device.device
+        if not zigpy_device.exposes_metadata:
             _LOGGER.debug(
                 "Device: %s-%s does not expose any quirks v2 entities",
                 str(device.ieee),
@@ -178,7 +225,7 @@ class ProbeEndpoint:
         for (
             cluster_details,
             entity_metadata_list,
-        ) in device.device.exposes_metadata.items():
+        ) in zigpy_device.exposes_metadata.items():
             endpoint_id, cluster_id, cluster_type = cluster_details
             if endpoint_id not in device.endpoints:
                 _LOGGER.debug(
@@ -211,7 +258,7 @@ class ProbeEndpoint:
                 )
                 continue
             for entity_metadata in entity_metadata_list:
-                platform = EXPOSES_META_TO_PLATFORM.get(type(entity_metadata))
+                platform = Platform(entity_metadata.entity_platform.value)
                 if platform is None:
                     _LOGGER.debug(
                         "Device: %s-%s has an entity with details: %s that does not have a platform mapping - unable to create entity",
@@ -223,7 +270,10 @@ class ProbeEndpoint:
                         },
                     )
                     continue
-                entity_class = EXPOSES_META_TO_ENTITY_CLASS.get(type(entity_metadata))
+                metadata_type = type(entity_metadata.entity_metadata)
+                entity_class = QUIRKS_ENTITY_META_TO_ENTITY_CLASS.get(
+                    (platform, metadata_type, entity_metadata.entity_type)
+                )
                 if entity_class is None:
                     _LOGGER.debug(
                         "Device: %s-%s has an entity with details: %s that does not have an entity class mapping - unable to create entity",
