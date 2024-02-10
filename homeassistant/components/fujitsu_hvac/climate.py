@@ -1,6 +1,5 @@
 """Support for Fujitsu HVAC devices that use the Ayla Iot platform."""
 from asyncio import gather
-from contextlib import suppress
 from typing import Any
 
 from ayla_iot_unofficial import AylaAuthError
@@ -82,27 +81,19 @@ class FujitsuHVACDevice(ClimateEntity):
 
         Requires ClimateEntityFeature.FAN_MODE.
         """
-        with suppress(KeyError):
-            return FUJI_TO_HA_FAN[self._dev.fan_speed]
-
-        return None
+        return FUJI_TO_HA_FAN.get(self._dev.fan_speed)
 
     @property
-    def fan_modes(self) -> list[str] | None:
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes.
 
         Requires ClimateEntityFeature.FAN_MODE.
         """
-        ret = [
+        return [
             FUJI_TO_HA_FAN[mode]
             for mode in self._dev.supported_fan_speeds
             if mode in FUJI_TO_HA_FAN
         ]
-
-        if len(ret) > 0:
-            return ret
-
-        return None
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set Fan mode."""
@@ -111,21 +102,16 @@ class FujitsuHVACDevice(ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
-        with suppress(KeyError):
-            return FUJI_TO_HA_HVAC[self._dev.op_mode]
-
-        return None
+        return FUJI_TO_HA_HVAC.get(self._dev.op_mode)
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
-        ret = [
+        return [
             FUJI_TO_HA_HVAC[mode]
             for mode in self._dev.supported_op_modes
             if mode in FUJI_TO_HA_HVAC
         ]
-
-        return ret
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
@@ -137,27 +123,19 @@ class FujitsuHVACDevice(ClimateEntity):
 
         Requires ClimateEntityFeature.SWING_MODE.
         """
-        with suppress(KeyError):
-            return FUJI_TO_HA_SWING[self._dev.swing_mode]
-
-        return None
+        return FUJI_TO_HA_SWING.get(self._dev.swing_mode)
 
     @property
-    def swing_modes(self) -> list[str] | None:
+    def swing_modes(self) -> list[str]:
         """Return the list of available swing modes.
 
         Requires ClimateEntityFeature.SWING_MODE.
         """
-        ret = [
+        return [
             FUJI_TO_HA_SWING[mode]
             for mode in self._dev.supported_swing_modes
             if mode in FUJI_TO_HA_SWING
         ]
-
-        if len(ret) > 0:
-            return ret
-
-        return None
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set swing mode."""
@@ -174,12 +152,12 @@ class FujitsuHVACDevice(ClimateEntity):
         return float(self._dev.temperature_range[1])
 
     @property
-    def current_temperature(self) -> float | None:
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return float(self._dev.sensed_temp)
 
     @property
-    def target_temperature(self) -> float | None:
+    def target_temperature(self) -> float:
         """Return the target temperature."""
         return float(self._dev.set_temp)
 
