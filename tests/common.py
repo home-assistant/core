@@ -69,6 +69,7 @@ from homeassistant.helpers import (
     restore_state,
     restore_state as rs,
     storage,
+    translation,
 )
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -267,6 +268,11 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     # Load the registries
     entity.async_setup(hass)
     loader.async_setup(hass)
+
+    # setup translation cache instead of calling translation.async_setup(hass)
+    hass.data[translation.TRANSLATION_FLATTEN_CACHE] = translation._TranslationCache(
+        hass
+    )
     if load_registries:
         with patch(
             "homeassistant.helpers.storage.Store.async_load", return_value=None
@@ -934,7 +940,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             kwargs["state"] = state
         super().__init__(**kwargs)
         if reason is not None:
-            self.reason = reason
+            object.__setattr__(self, "reason", reason)
 
     def add_to_hass(self, hass: HomeAssistant) -> None:
         """Test helper to add entry to hass."""
@@ -943,6 +949,27 @@ class MockConfigEntry(config_entries.ConfigEntry):
     def add_to_manager(self, manager: config_entries.ConfigEntries) -> None:
         """Test helper to add entry to entry manager."""
         manager._entries[self.entry_id] = self
+
+    def mock_state(
+        self,
+        hass: HomeAssistant,
+        state: config_entries.ConfigEntryState,
+        reason: str | None = None,
+    ) -> None:
+        """Mock the state of a config entry to be used in tests.
+
+        Currently this is a wrapper around _async_set_state, but it may
+        change in the future.
+
+        It is preferable to get the config entry into the desired state
+        by using the normal config entry methods, and this helper
+        is only intended to be used in cases where that is not possible.
+
+        When in doubt, this helper should not be used in new code
+        and is only intended for backwards compatibility with existing
+        tests.
+        """
+        self._async_set_state(hass, state, reason)
 
 
 def patch_yaml_files(files_dict, endswith=True):
