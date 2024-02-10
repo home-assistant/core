@@ -30,6 +30,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -85,10 +86,6 @@ _DEPRECATED_SUPPORT_OPERATION_MODE = DeprecatedConstantEnum(
 _DEPRECATED_SUPPORT_AWAY_MODE = DeprecatedConstantEnum(
     WaterHeaterEntityFeature.AWAY_MODE, "2025.1"
 )
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
 
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
@@ -241,7 +238,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        if self.supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
+        if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features_compat:
             data[ATTR_OPERATION_LIST] = self.operation_list
 
         return data
@@ -277,10 +274,12 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        if self.supported_features & WaterHeaterEntityFeature.OPERATION_MODE:
+        supported_features = self.supported_features_compat
+
+        if WaterHeaterEntityFeature.OPERATION_MODE in supported_features:
             data[ATTR_OPERATION_MODE] = self.current_operation
 
-        if self.supported_features & WaterHeaterEntityFeature.AWAY_MODE:
+        if WaterHeaterEntityFeature.AWAY_MODE in supported_features:
             is_away = self.is_away_mode_on
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
 
@@ -399,6 +398,19 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the list of supported features."""
         return self._attr_supported_features
 
+    @property
+    def supported_features_compat(self) -> WaterHeaterEntityFeature:
+        """Return the supported features as WaterHeaterEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = WaterHeaterEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
+
 
 async def async_service_away_mode(
     entity: WaterHeaterEntity, service: ServiceCall
@@ -426,3 +438,11 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

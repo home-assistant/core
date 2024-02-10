@@ -1090,7 +1090,7 @@ async def test_setup_config_entry(
 ) -> None:
     """Test a calendar entity from a config entry."""
     config_entry.add_to_hass(hass)
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -1124,7 +1124,7 @@ async def test_config_entry_supported_components(
 ) -> None:
     """Test that calendars are only created for VEVENT types when using a config entry."""
     config_entry.add_to_hass(hass)
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get("calendar.calendar_1")
     assert state

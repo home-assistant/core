@@ -1,7 +1,7 @@
 """Support for Homekit covers."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
@@ -27,6 +27,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import HomeKitEntity
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 STATE_STOPPED = "stopped"
 
@@ -128,6 +134,12 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
 class HomeKitWindowCover(HomeKitEntity, CoverEntity):
     """Representation of a HomeKit Window or Window Covering."""
 
+    @callback
+    def _async_reconfigure(self) -> None:
+        """Reconfigure entity."""
+        self._async_clear_property_cache(("supported_features",))
+        super()._async_reconfigure()
+
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -142,7 +154,7 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
             CharacteristicsTypes.OBSTRUCTION_DETECTED,
         ]
 
-    @property
+    @cached_property
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         features = (

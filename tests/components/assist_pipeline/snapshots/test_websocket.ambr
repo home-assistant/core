@@ -771,14 +771,14 @@
         'card': dict({
         }),
         'data': dict({
-          'code': 'no_intent_match',
+          'code': 'no_valid_targets',
         }),
         'language': 'en',
         'response_type': 'error',
         'speech': dict({
           'plain': dict({
             'extra_data': None,
-            'speech': "Sorry, I couldn't understand that",
+            'speech': 'Sorry, I am not aware of any area called are',
           }),
         }),
       }),

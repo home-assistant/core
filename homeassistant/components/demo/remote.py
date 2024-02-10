@@ -19,8 +19,8 @@ async def async_setup_entry(
     """Set up the Demo config entry."""
     async_add_entities(
         [
-            DemoRemote("Remote One", False, None),
-            DemoRemote("Remote Two", True, "mdi:remote"),
+            DemoRemote("Remote One", False),
+            DemoRemote("Remote Two", True),
         ]
     )
 
@@ -30,11 +30,10 @@ class DemoRemote(RemoteEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, name: str | None, state: bool, icon: str | None) -> None:
+    def __init__(self, name: str | None, state: bool) -> None:
         """Initialize the Demo Remote."""
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_is_on = state
-        self._attr_icon = icon
         self._last_command_sent: str | None = None
 
     @property

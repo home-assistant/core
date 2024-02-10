@@ -7,11 +7,12 @@ from unittest.mock import patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 from bluetooth_adapters import AdvertisementHistory
-from habluetooth.manager import FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS
+from habluetooth.advertisement_tracker import TRACKER_BUFFERING_WOBBLE_SECONDS
 import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     MONOTONIC_TIME,
     BaseHaRemoteScanner,
     BluetoothChange,
@@ -309,6 +310,89 @@ async def test_switching_adapters_based_on_stale(
         "hci1",
     )
 
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_poor_signal_hci1
+    )
+
+
+async def test_switching_adapters_based_on_stale_with_discovered_interval(
+    hass: HomeAssistant,
+    enable_bluetooth: None,
+    register_hci0_scanner: None,
+    register_hci1_scanner: None,
+) -> None:
+    """Test switching with discovered interval."""
+
+    address = "44:44:33:11:23:41"
+    start_time_monotonic = 50.0
+
+    switchbot_device_poor_signal_hci0 = generate_ble_device(
+        address, "wohand_poor_signal_hci0"
+    )
+    switchbot_adv_poor_signal_hci0 = generate_advertisement_data(
+        local_name="wohand_poor_signal_hci0", service_uuids=[], rssi=-100
+    )
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device_poor_signal_hci0,
+        switchbot_adv_poor_signal_hci0,
+        start_time_monotonic,
+        "hci0",
+    )
+
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_poor_signal_hci0
+    )
+
+    bluetooth.async_set_fallback_availability_interval(hass, address, 10)
+
+    switchbot_device_poor_signal_hci1 = generate_ble_device(
+        address, "wohand_poor_signal_hci1"
+    )
+    switchbot_adv_poor_signal_hci1 = generate_advertisement_data(
+        local_name="wohand_poor_signal_hci1", service_uuids=[], rssi=-99
+    )
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device_poor_signal_hci1,
+        switchbot_adv_poor_signal_hci1,
+        start_time_monotonic,
+        "hci1",
+    )
+
+    # Should not switch adapters until the advertisement is stale
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_poor_signal_hci0
+    )
+
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device_poor_signal_hci1,
+        switchbot_adv_poor_signal_hci1,
+        start_time_monotonic + 10 + 1,
+        "hci1",
+    )
+
+    # Should not switch yet since we are not within the
+    # wobble period
+    assert (
+        bluetooth.async_ble_device_from_address(hass, address)
+        is switchbot_device_poor_signal_hci0
+    )
+
+    inject_advertisement_with_time_and_source(
+        hass,
+        switchbot_device_poor_signal_hci1,
+        switchbot_adv_poor_signal_hci1,
+        start_time_monotonic + 10 + TRACKER_BUFFERING_WOBBLE_SECONDS + 1,
+        "hci1",
+    )
+    # Should switch to hci1 since the previous advertisement is stale
+    # even though the signal is poor because the device is now
+    # likely unreachable via hci0
     assert (
         bluetooth.async_ble_device_from_address(hass, address)
         is switchbot_device_poor_signal_hci1

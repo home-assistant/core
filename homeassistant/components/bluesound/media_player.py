@@ -200,7 +200,6 @@ class BluesoundPlayer(MediaPlayerEntity):
     """Representation of a Bluesound Player."""
 
     _attr_media_content_type = MediaType.MUSIC
-    _attr_volume_step = 0.01
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
@@ -291,7 +290,7 @@ class BluesoundPlayer(MediaPlayerEntity):
             while True:
                 await self.async_update_status()
 
-        except (asyncio.TimeoutError, ClientError, BluesoundPlayer._TimeoutException):
+        except (TimeoutError, ClientError, BluesoundPlayer._TimeoutException):
             _LOGGER.info("Node %s:%s is offline, retrying later", self.name, self.port)
             await asyncio.sleep(NODE_OFFLINE_CHECK_TIMEOUT)
             self.start_polling()
@@ -318,7 +317,7 @@ class BluesoundPlayer(MediaPlayerEntity):
                 self._retry_remove = None
 
             await self.force_update_sync_status(self._init_callback, True)
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             _LOGGER.info("Node %s:%s is offline, retrying later", self.host, self.port)
             self._retry_remove = async_track_time_interval(
                 self._hass, self.async_init, NODE_RETRY_INITIATION
@@ -371,7 +370,7 @@ class BluesoundPlayer(MediaPlayerEntity):
                 _LOGGER.error("Error %s on %s", response.status, url)
                 return None
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             if raise_timeout:
                 _LOGGER.info("Timeout: %s:%s", self.host, self.port)
                 raise
@@ -438,7 +437,7 @@ class BluesoundPlayer(MediaPlayerEntity):
                     "Error %s on %s. Trying one more time", response.status, url
                 )
 
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             self._is_online = False
             self._last_status_update = None
             self._status = None
@@ -1027,6 +1026,20 @@ class BluesoundPlayer(MediaPlayerEntity):
         url = f"Play?url={media_id}"
 
         return await self.send_bluesound_command(url)
+
+    async def async_volume_up(self) -> None:
+        """Volume up the media player."""
+        current_vol = self.volume_level
+        if not current_vol or current_vol >= 1:
+            return
+        return await self.async_set_volume_level(current_vol + 0.01)
+
+    async def async_volume_down(self) -> None:
+        """Volume down the media player."""
+        current_vol = self.volume_level
+        if not current_vol or current_vol <= 0:
+            return
+        return await self.async_set_volume_level(current_vol - 0.01)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
