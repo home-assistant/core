@@ -1,31 +1,47 @@
-"""MotionBlinds BLE integration."""
+"""Motionblinds BLE integration."""
+
 from __future__ import annotations
 
+from functools import partial
 import logging
 
+from motionblindsble.const import MotionBlindType
 from motionblindsble.crypt import MotionCrypt
+from motionblindsble.device import MotionDevice
 
+from homeassistant.components.bluetooth import (
+    BluetoothCallbackMatcher,
+    BluetoothChange,
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+    async_ble_device_from_address,
+    async_register_callback,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_ADDRESS, Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_MAC_CODE, DOMAIN
+from .const import CONF_BLIND_TYPE, CONF_MAC_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.COVER,
+    Platform.SENSOR,
+    Platform.BUTTON,
+    Platform.SELECT,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up MotionBlinds BLE integration."""
+    """Set up Motionblinds BLE integration."""
 
-    _LOGGER.debug("Setting up MotionBlinds BLE integration")
+    _LOGGER.debug("Setting up Motionblinds BLE integration")
 
     # The correct time is needed for encryption
     _LOGGER.debug("Setting timezone for encryption: %s", hass.config.time_zone)
@@ -35,11 +51,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up MotionBlinds BLE device from a config entry."""
+    """Set up Motionblinds BLE device from a config entry."""
 
     _LOGGER.debug("(%s) Setting up device", entry.data[CONF_MAC_CODE])
 
     hass.data.setdefault(DOMAIN, {})
+
+    ble_device = async_ble_device_from_address(hass, entry.data[CONF_ADDRESS])
+    device = MotionDevice(
+        ble_device if ble_device is not None else entry.data[CONF_ADDRESS],
+        blind_type=MotionBlindType(entry.data[CONF_BLIND_TYPE]),
+    )
+
+    # Register Home Assistant functions to use in the library
+    device.set_ha_create_task(
+        partial(
+            entry.async_create_task,
+            hass=hass,
+            name=device.ble_device.address,
+        )
+    )
+    device.set_ha_call_later(partial(async_call_later, hass=hass))
+
+    # Register a callback that updates the BLEDevice in the library
+    @callback
+    def async_update_ble_device(
+        service_info: BluetoothServiceInfoBleak, change: BluetoothChange
+    ) -> None:
+        """Update the BLEDevice."""
+        _LOGGER.debug("(%s) New BLE device found", service_info.address)
+        device.set_ble_device(service_info.device, rssi=service_info.advertisement.rssi)
+
+    async_register_callback(
+        hass,
+        async_update_ble_device,
+        BluetoothCallbackMatcher(address=entry.data[CONF_ADDRESS]),
+        BluetoothScanningMode.ACTIVE,
+    )
+
+    hass.data[DOMAIN][entry.entry_id] = device
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -49,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload MotionBlinds BLE device from a config entry."""
+    """Unload Motionblinds BLE device from a config entry."""
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)

@@ -38,7 +38,7 @@
     "cover": {
       "blind": {
         "state_attributes": {
-          "connection_type": {
+          "connection": {
             "name": "Connected",
             "state": {
               "connected": "Yes",
@@ -75,7 +75,7 @@
       "battery": {
         "name": "Battery"
       },
-      "connection_type": {
+      "connection": {
         "name": "Connected",
         "state": {
           "connected": "Yes",
