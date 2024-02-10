@@ -465,6 +465,20 @@ def async_create_issue_unsupported_firmware(
     )
 
 
+async def parse_host(input_host: str) -> tuple[str, int]:
+    """Parse host to verify port."""
+
+    if ":" in input_host:
+        splited: list = input_host.split(":")
+        host = splited[0]
+        port = int(splited[1])
+    else:
+        host = input_host
+        port = 80
+
+    return (host, port)
+
+
 def is_rpc_wifi_stations_disabled(
     config: dict[str, Any], _status: dict[str, Any], key: str
 ) -> bool:

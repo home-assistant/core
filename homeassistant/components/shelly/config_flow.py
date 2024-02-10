@@ -48,6 +48,7 @@ from .utils import (
     get_rpc_device_wakeup_period,
     get_ws_context,
     mac_address_from_name,
+    parse_host,
 )
 
 HOST_SCHEMA: Final = vol.Schema({vol.Required(CONF_HOST): str})
@@ -72,7 +73,13 @@ async def validate_input(
 
     Data has the keys from HOST_SCHEMA with values provided by the user.
     """
-    options = ConnectionOptions(host, data.get(CONF_USERNAME), data.get(CONF_PASSWORD))
+    host, port = await parse_host(host)
+    options = ConnectionOptions(
+        ip_address=host,
+        username=data.get(CONF_USERNAME),
+        password=data.get(CONF_PASSWORD),
+        port=port,
+    )
 
     gen = get_info_gen(info)
 
@@ -363,7 +370,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_get_info(self, host: str) -> dict[str, Any]:
         """Get info from shelly device."""
-        return await get_info(async_get_clientsession(self.hass), host)
+        host, port = await parse_host(host)
+        return await get_info(async_get_clientsession(self.hass), host, None, port)
 
     @staticmethod
     @callback
