@@ -88,7 +88,7 @@ async def _check_cloud_panel_status(client: Elmax, panel_id: str) -> PanelEntry:
     # a config error as the user must reconfigure it in order to  make it work again
     if not panel:
         raise ConfigEntryAuthFailed(
-            f"Panel ID {panel_id} is no more linked to this user account"
+            f"Panel ID {panel_id} is no longer linked to this user account"
         )
     return panel
 
