@@ -290,7 +290,7 @@ async def test_block_device_gas_valve(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON  # valve is open
-    assert state.attributes.get(ATTR_ICON) == "mdi:valve-open"
+    assert state.attributes.get(ATTR_ICON) is None
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -302,7 +302,7 @@ async def test_block_device_gas_valve(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF  # valve is closed
-    assert state.attributes.get(ATTR_ICON) == "mdi:valve-closed"
+    assert state.attributes.get(ATTR_ICON) is None
 
     monkeypatch.setattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "valve", "opened")
     mock_block_device.mock_update()
@@ -311,7 +311,7 @@ async def test_block_device_gas_valve(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON  # valve is open
-    assert state.attributes.get(ATTR_ICON) == "mdi:valve-open"
+    assert state.attributes.get(ATTR_ICON) is None
 
 
 async def test_wall_display_thermostat_mode(
