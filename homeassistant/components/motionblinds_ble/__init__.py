@@ -30,9 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.COVER,
-    Platform.SENSOR,
-    Platform.BUTTON,
-    Platform.SELECT,
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
