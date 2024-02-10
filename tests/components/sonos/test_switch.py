@@ -1,5 +1,6 @@
 """Tests for the Sonos Alarm switch platform."""
 
+import asyncio
 from copy import copy
 from datetime import timedelta
 from unittest.mock import patch
@@ -28,6 +29,7 @@ async def test_entity_registry(
     hass: HomeAssistant, async_autosetup_sonos, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with alarm registered in the device registry."""
+    await asyncio.sleep(0.4)
     await hass.async_block_till_done()
     assert "media_player.zone_a" in entity_registry.entities
     assert "switch.sonos_alarm_14" in entity_registry.entities
@@ -48,6 +50,7 @@ async def test_switch_attributes(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for correct Sonos switch states."""
+    await asyncio.sleep(0.4)
     await hass.async_block_till_done()
     alarm = entity_registry.entities["switch.sonos_alarm_14"]
     alarm_state = hass.states.get(alarm.entity_id)
@@ -147,7 +150,7 @@ async def test_alarm_create_delete(
     two_alarms = copy(alarm_clock_extended.ListAlarms.return_value)
 
     await async_setup_sonos()
-
+    await asyncio.sleep(0.4)
     await hass.async_block_till_done()
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" not in entity_registry.entities
