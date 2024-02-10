@@ -1,68 +1,89 @@
 """Device tracker support for OPNSense routers."""
 from __future__ import annotations
 
-from homeassistant.components.device_tracker import DeviceScanner
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.typing import ConfigType
+import logging
 
-from . import CONF_TRACKER_INTERFACE, OPNSENSE_DATA
+from homeassistant.components.device_tracker import SourceType
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
+from .coordinator import OPNSenseUpdateCoordinator
 
-async def async_get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> OPNSenseDeviceScanner:
-    """Configure the OPNSense device_tracker."""
-    interface_client = hass.data[OPNSENSE_DATA]["interfaces"]
-    scanner = OPNSenseDeviceScanner(
-        interface_client, hass.data[OPNSENSE_DATA][CONF_TRACKER_INTERFACE]
-    )
-    return scanner
+_LOGGER = logging.getLogger(__name__)
 
 
-class OPNSenseDeviceScanner(DeviceScanner):
-    """Class which queries a router running OPNsense."""
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up a OPNSense config entry."""
 
-    def __init__(self, client, interfaces):
-        """Initialize the scanner."""
-        self.last_results = {}
-        self.client = client
-        self.interfaces = interfaces
+    data = hass.data[DOMAIN]
+    coordinator = data[entry.entry_id]
 
-    def _get_mac_addrs(self, devices):
-        """Create dict with mac address keys from list of devices."""
-        out_devices = {}
-        for device in devices:
-            if not self.interfaces:
-                out_devices[device["mac"]] = device
-            elif device["intf_description"] in self.interfaces:
-                out_devices[device["mac"]] = device
-        return out_devices
+    existing_macs = set()
 
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self.update_info()
-        return list(self.last_results)
+    @callback
+    def new_device_callback() -> None:
+        entities = []
+        for device_mac in coordinator.data:
+            if device_mac in existing_macs:
+                continue
+            entities.append(OPNSenseScannerEntity(coordinator, device_mac))
+            existing_macs.add(device_mac)
 
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        if device not in self.last_results:
+        async_add_entities(entities)
+
+    # Register the update listener and call it
+    entry.async_on_unload(coordinator.async_add_listener(new_device_callback))
+    new_device_callback()
+
+
+class OPNSenseScannerEntity(
+    CoordinatorEntity[OPNSenseUpdateCoordinator], ScannerEntity
+):
+    """Representation of a Ping device tracker."""
+
+    _mac: str
+
+    def __init__(self, coordinator, mac_address) -> None:
+        """Initialize a OPNSense client."""
+        super().__init__(coordinator)
+        self._mac = mac_address
+
+    @property
+    def ip_address(self) -> str | None:
+        """Return the primary ip address of the device."""
+        if not self.is_connected:
             return None
-        hostname = self.last_results[device].get("hostname") or None
-        return hostname
+        return self.coordinator.data[self._mac].ip_address
 
-    def update_info(self):
-        """Ensure the information from the OPNSense router is up to date.
+    @property
+    def mac_address(self) -> str | None:
+        """Return the mac address of the device."""
+        return self._mac
 
-        Return boolean if scanning successful.
-        """
-
-        devices = self.client.get_arp()
-        self.last_results = self._get_mac_addrs(devices)
-
-    def get_extra_attributes(self, device):
-        """Return the extra attrs of the given device."""
-        if device not in self.last_results:
+    @property
+    def hostname(self) -> str | None:
+        """Return hostname of the device."""
+        if not self.is_connected:
             return None
-        if not (mfg := self.last_results[device].get("manufacturer")):
-            return {}
-        return {"manufacturer": mfg}
+        return self.coordinator.data[self._mac].hostname
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the entity."""
+        return self.hostname or self._mac
+
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the device is connected to the network."""
+        return self._mac in self.coordinator.data
+
+    @property
+    def source_type(self) -> SourceType:
+        """Return the source type which is router."""
+        return SourceType.ROUTER
