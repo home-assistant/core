@@ -189,10 +189,10 @@ class Sensor(ZhaEntity, SensorEntity):
         **kwargs: Any,
     ) -> None:
         """Init this sensor."""
-        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         if QUIRK_METADATA in kwargs:
             self._init_from_quirks_metadata(kwargs[QUIRK_METADATA].entity_metadata)
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
     def _init_from_quirks_metadata(self, sensor_metadata: ZCLSensorMetadata) -> None:
         """Init this entity from the quirks metadata."""
