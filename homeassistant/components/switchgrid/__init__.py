@@ -7,6 +7,7 @@ from switchgrid_python_client import SwitchgridData
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
@@ -14,6 +15,8 @@ from .const import DOMAIN
 from .coordinator import SwitchgridCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
