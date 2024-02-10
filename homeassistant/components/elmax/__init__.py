@@ -84,7 +84,7 @@ async def _check_cloud_panel_status(client: Elmax, panel_id: str) -> PanelEntry:
     panels = await client.list_control_panels()
     panel = next((panel for panel in panels if panel.hash == panel_id), None)
 
-    # If the panel is no more available within the ones associated to that client, raise
+    # If the panel is no longer available within the ones associated to that client, raise
     # a config error as the user must reconfigure it in order to  make it work again
     if not panel:
         raise ConfigEntryAuthFailed(
