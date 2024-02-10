@@ -117,19 +117,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Store a global reference to the coordinator for later use
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     # Perform platform initialization.
     await hass.config_entries.async_forward_entry_setups(entry, ELMAX_PLATFORMS)
     return True
 
 
-async def update_listener(hass, entry):
-    """Handle options and config-entry update."""
-    coordinator: ElmaxCoordinator = hass.data[DOMAIN][entry.entry_id]
-    # Get a fresh/updated HTTP Client to be used with the coordinator.
-    client_panel = await _load_elmax_panel_client(entry)
-    coordinator.http_client = client_panel[0]
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle an options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
