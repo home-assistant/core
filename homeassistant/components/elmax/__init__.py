@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .common import (
-    DummyPanel,
+    DirectPanel,
     ElmaxCoordinator,
     build_direct_ssl_context,
     get_direct_api_url,
@@ -69,7 +69,7 @@ async def _load_elmax_panel_client(
             panel_code=entry.data[CONF_ELMAX_PANEL_PIN],
             ssl_context=custom_ssl_context,
         )
-        panel = DummyPanel(panel_uri=client_api_url)
+        panel = DirectPanel(panel_uri=client_api_url)
     else:
         raise ConfigEntryAuthFailed(
             f"Invalid configuration detected. Unsupported mode={mode}"
