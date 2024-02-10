@@ -779,7 +779,7 @@ eliqonline==1.2.2
 elkm1-lib==2.2.6
 
 # homeassistant.components.elmax
-elmax_api==0.0.4
+elmax-api==0.0.4
 
 # homeassistant.components.elvia
 elvia==0.1.0
