@@ -258,8 +258,8 @@ async def test_google_config_local_fulfillment(
         await hass.async_block_till_done()
 
     assert config.get_local_webhook_id(agent_user_id) == local_webhook_id
-    assert config.get_local_agent_user_id(local_webhook_id) == agent_user_id
-    assert config.get_local_agent_user_id("INCORRECT") is None
+    assert config.get_local_user_id(local_webhook_id) == agent_user_id
+    assert config.get_local_user_id("INCORRECT") is None
 
 
 async def test_secure_device_pin_config(hass: HomeAssistant) -> None:
@@ -466,6 +466,6 @@ async def test_async_enable_local_sdk(
     )
     assert resp.status == HTTPStatus.OK
     assert (
-        "Cannot process request for webhook mock_webhook_id as no linked agent user is found:"
+        "Cannot process request for webhook **REDACTED** as no linked agent user is found:"
         in caplog.text
     )

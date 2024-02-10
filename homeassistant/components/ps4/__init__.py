@@ -120,33 +120,35 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Prevent changing entity_id. Updates entity registry.
         registry = er.async_get(hass)
 
-        for entity_id, e_entry in registry.entities.items():
-            if e_entry.config_entry_id == entry.entry_id:
-                unique_id = e_entry.unique_id
+        for e_entry in registry.entities.get_entries_for_config_entry_id(
+            entry.entry_id
+        ):
+            unique_id = e_entry.unique_id
+            entity_id = e_entry.entity_id
 
-                # Remove old entity entry.
-                registry.async_remove(entity_id)
+            # Remove old entity entry.
+            registry.async_remove(entity_id)
 
-                # Format old unique_id.
-                unique_id = format_unique_id(entry.data[CONF_TOKEN], unique_id)
+            # Format old unique_id.
+            unique_id = format_unique_id(entry.data[CONF_TOKEN], unique_id)
 
-                # Create new entry with old entity_id.
-                new_id = split_entity_id(entity_id)[1]
-                registry.async_get_or_create(
-                    "media_player",
-                    DOMAIN,
-                    unique_id,
-                    suggested_object_id=new_id,
-                    config_entry=entry,
-                    device_id=e_entry.device_id,
-                )
-                entry.version = 3
-                _LOGGER.info(
-                    "PlayStation 4 identifier for entity: %s has changed",
-                    entity_id,
-                )
-                config_entries.async_update_entry(entry)
-                return True
+            # Create new entry with old entity_id.
+            new_id = split_entity_id(entity_id)[1]
+            registry.async_get_or_create(
+                "media_player",
+                DOMAIN,
+                unique_id,
+                suggested_object_id=new_id,
+                config_entry=entry,
+                device_id=e_entry.device_id,
+            )
+            entry.version = 3
+            _LOGGER.info(
+                "PlayStation 4 identifier for entity: %s has changed",
+                entity_id,
+            )
+            config_entries.async_update_entry(entry)
+            return True
 
     msg = f"""{reason[version]} for the PlayStation 4 Integration.
             Please remove the PS4 Integration and re-configure

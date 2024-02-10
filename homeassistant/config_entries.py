@@ -7,6 +7,7 @@ from collections.abc import (
     Callable,
     Coroutine,
     Generator,
+    Hashable,
     Iterable,
     Mapping,
     ValuesView,
@@ -23,15 +24,23 @@ from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
 from . import data_entry_flow, loader
 from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
-from .core import CALLBACK_TYPE, CoreState, Event, HassJob, HomeAssistant, callback
-from .data_entry_flow import FlowResult
+from .core import (
+    CALLBACK_TYPE,
+    DOMAIN as HA_DOMAIN,
+    CoreState,
+    Event,
+    HassJob,
+    HomeAssistant,
+    callback,
+)
+from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowResult
 from .exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
 )
-from .helpers import device_registry, entity_registry, storage
+from .helpers import device_registry, entity_registry, issue_registry as ir, storage
 from .helpers.debounce import Debouncer
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.event import (
@@ -41,6 +50,7 @@ from .helpers.event import (
 )
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
+from .loader import async_suggest_report_issue
 from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
 from .util import uuid as uuid_util
 from .util.decorator import Registry
@@ -53,6 +63,7 @@ if TYPE_CHECKING:
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -238,6 +249,7 @@ class ConfigEntry:
         "_integration_for_domain",
         "_tries",
         "_setup_again_job",
+        "_supports_options",
     )
 
     def __init__(
@@ -318,6 +330,9 @@ class ConfigEntry:
         # Supports remove device
         self.supports_remove_device: bool | None = None
 
+        # Supports options
+        self._supports_options: bool | None = None
+
         # Listeners to call on update
         self.update_listeners: list[UpdateListenerType] = []
 
@@ -350,6 +365,14 @@ class ConfigEntry:
             f"<ConfigEntry entry_id={self.entry_id} version={self.version} domain={self.domain} "
             f"title={self.title} state={self.state} unique_id={self.unique_id}>"
         )
+
+    @property
+    def supports_options(self) -> bool:
+        """Return if entry supports config options."""
+        if self._supports_options is None and (handler := HANDLERS.get(self.domain)):
+            # work out if handler has support for options flow
+            self._supports_options = handler.async_supports_options_flow(self)
+        return self._supports_options or False
 
     async def async_setup(
         self,
@@ -780,7 +803,7 @@ class ConfigEntry:
             if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
                 # Reauth flow already in progress for this entry
                 return
-            await hass.config_entries.flow.async_init(
+            result = await hass.config_entries.flow.async_init(
                 self.domain,
                 context={
                     "source": SOURCE_REAUTH,
@@ -791,6 +814,21 @@ class ConfigEntry:
                 | (context or {}),
                 data=self.data | (data or {}),
             )
+        if result["type"] not in FLOW_NOT_COMPLETE_STEPS:
+            return
+
+        # Create an issue, there's no need to hold the lock when doing that
+        issue_id = f"config_entry_reauth_{self.domain}_{self.entry_id}"
+        ir.async_create_issue(
+            hass,
+            HA_DOMAIN,
+            issue_id,
+            data={"flow_id": result["flow_id"]},
+            is_fixable=False,
+            issue_domain=self.domain,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="config_entry_reauth",
+        )
 
     @callback
     def async_get_active_flows(
@@ -968,6 +1006,14 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         if not self._async_has_other_discovery_flows(flow.flow_id):
             persistent_notification.async_dismiss(self.hass, DISCOVERY_NOTIFICATION_ID)
 
+        # Clean up issue if this is a reauth flow
+        if flow.context["source"] == SOURCE_REAUTH:
+            if (entry_id := flow.context.get("entry_id")) is not None and (
+                entry := self.config_entries.async_get_entry(entry_id)
+            ) is not None:
+                issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
+                ir.async_delete_issue(self.hass, HA_DOMAIN, issue_id)
+
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
 
@@ -1080,9 +1126,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
     - domain -> unique_id -> ConfigEntry
     """
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the container."""
         super().__init__()
+        self._hass = hass
         self._domain_index: dict[str, list[ConfigEntry]] = {}
         self._domain_unique_id_index: dict[str, dict[str, ConfigEntry]] = {}
 
@@ -1099,10 +1146,33 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             _LOGGER.error("An entry with the id %s already exists", entry_id)
             self._unindex_entry(entry_id)
         data[entry_id] = entry
+        self._index_entry(entry)
+
+    def _index_entry(self, entry: ConfigEntry) -> None:
+        """Index an entry."""
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
+            unique_id_hash = entry.unique_id
+            # Guard against integrations using unhashable unique_id
+            # In HA Core 2024.9, we should remove the guard and instead fail
+            if not isinstance(entry.unique_id, Hashable):
+                unique_id_hash = str(entry.unique_id)  # type: ignore[unreachable]
+                report_issue = async_suggest_report_issue(
+                    self._hass, integration_domain=entry.domain
+                )
+                _LOGGER.error(
+                    (
+                        "Config entry '%s' from integration %s has an invalid unique_id"
+                        " '%s', please %s"
+                    ),
+                    entry.title,
+                    entry.domain,
+                    entry.unique_id,
+                    report_issue,
+                )
+
             self._domain_unique_id_index.setdefault(entry.domain, {})[
-                entry.unique_id
+                unique_id_hash
             ] = entry
 
     def _unindex_entry(self, entry_id: str) -> None:
@@ -1113,6 +1183,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         if not self._domain_index[domain]:
             del self._domain_index[domain]
         if (unique_id := entry.unique_id) is not None:
+            # Check type first to avoid expensive isinstance call
+            if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
+                unique_id = str(entry.unique_id)  # type: ignore[unreachable]
             del self._domain_unique_id_index[domain][unique_id]
             if not self._domain_unique_id_index[domain]:
                 del self._domain_unique_id_index[domain]
@@ -1122,6 +1195,16 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self._unindex_entry(entry_id)
         super().__delitem__(entry_id)
 
+    def update_unique_id(self, entry: ConfigEntry, new_unique_id: str | None) -> None:
+        """Update unique id for an entry.
+
+        This method mutates the entry with the new unique id and updates the indexes.
+        """
+        entry_id = entry.entry_id
+        self._unindex_entry(entry_id)
+        entry.unique_id = new_unique_id
+        self._index_entry(entry)
+
     def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
         """Get entries for a domain."""
         return self._domain_index.get(domain, [])
@@ -1130,6 +1213,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self, domain: str, unique_id: str
     ) -> ConfigEntry | None:
         """Get entry by domain and unique id."""
+        # Check type first to avoid expensive isinstance call
+        if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
+            unique_id = str(unique_id)  # type: ignore[unreachable]
         return self._domain_unique_id_index.get(domain, {}).get(unique_id)
 
 
@@ -1145,7 +1231,7 @@ class ConfigEntries:
         self.flow = ConfigEntriesFlowManager(hass, self, hass_config)
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
-        self._entries = ConfigEntryItems()
+        self._entries = ConfigEntryItems(hass)
         self._store = storage.Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
@@ -1217,12 +1303,15 @@ class ConfigEntries:
         ent_reg.async_clear_config_entry(entry_id)
 
         # If the configuration entry is removed during reauth, it should
-        # abort any reauth flow that is active for the removed entry.
+        # abort any reauth flow that is active for the removed entry and
+        # linked issues.
         for progress_flow in self.hass.config_entries.flow.async_progress_by_handler(
             entry.domain, match_context={"entry_id": entry_id, "source": SOURCE_REAUTH}
         ):
             if "flow_id" in progress_flow:
                 self.hass.config_entries.flow.async_abort(progress_flow["flow_id"])
+                issue_id = f"config_entry_reauth_{entry.domain}_{entry.entry_id}"
+                ir.async_delete_issue(self.hass, HA_DOMAIN, issue_id)
 
         # After we have fully removed an "ignore" config entry we can try and rediscover
         # it so that a user is able to immediately start configuring it. We do this by
@@ -1267,10 +1356,10 @@ class ConfigEntries:
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
         if config is None:
-            self._entries = ConfigEntryItems()
+            self._entries = ConfigEntryItems(self.hass)
             return
 
-        entries: ConfigEntryItems = ConfigEntryItems()
+        entries: ConfigEntryItems = ConfigEntryItems(self.hass)
         for entry in config["entries"]:
             pref_disable_new_entities = entry.get("pref_disable_new_entities")
 
@@ -1421,12 +1510,14 @@ class ConfigEntries:
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
-        title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+        version: int | UndefinedType = UNDEFINED,
     ) -> bool:
         """Update a config entry.
 
@@ -1440,16 +1531,15 @@ class ConfigEntries:
 
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Reindex the entry if the unique_id has changed
-            entry_id = entry.entry_id
-            del self._entries[entry_id]
-            entry.unique_id = unique_id
-            self._entries[entry_id] = entry
+            self._entries.update_unique_id(entry, unique_id)
             changed = True
 
         for attr, value in (
-            ("title", title),
+            ("minor_version", minor_version),
             ("pref_disable_new_entities", pref_disable_new_entities),
             ("pref_disable_polling", pref_disable_polling),
+            ("title", title),
+            ("version", version),
         ):
             if value is UNDEFINED or getattr(entry, attr) == value:
                 continue
@@ -2202,7 +2292,7 @@ async def _load_integration(
             domain,
             err,
         )
-        raise data_entry_flow.UnknownHandler
+        raise data_entry_flow.UnknownHandler from err
 
 
 async def _async_get_flow_handler(

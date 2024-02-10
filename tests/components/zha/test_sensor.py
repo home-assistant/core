@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import zigpy.profiles.zha
-from zigpy.zcl.clusters import general, homeautomation, measurement, smartenergy
+from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
+from zigpy.zcl.clusters.hvac import Thermostat
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.zha.core.const import ZHA_CLUSTER_HANDLER_READS_PER_REQ
@@ -155,9 +156,33 @@ async def async_test_metering(hass: HomeAssistant, cluster, entity_id):
     )
 
     await send_attributes_report(
-        hass, cluster, {"status": 32, "metering_device_type": 1}
+        hass, cluster, {"status": 64 + 8, "metering_device_type": 1}
     )
-    # currently only statuses for electric meters are supported
+    assert hass.states.get(entity_id).attributes["status"] in (
+        "SERVICE_DISCONNECT|NOT_DEFINED",
+        "NOT_DEFINED|SERVICE_DISCONNECT",
+    )
+
+    await send_attributes_report(
+        hass, cluster, {"status": 64 + 8, "metering_device_type": 2}
+    )
+    assert hass.states.get(entity_id).attributes["status"] in (
+        "SERVICE_DISCONNECT|PIPE_EMPTY",
+        "PIPE_EMPTY|SERVICE_DISCONNECT",
+    )
+
+    await send_attributes_report(
+        hass, cluster, {"status": 64 + 8, "metering_device_type": 5}
+    )
+    assert hass.states.get(entity_id).attributes["status"] in (
+        "SERVICE_DISCONNECT|TEMPERATURE_SENSOR",
+        "TEMPERATURE_SENSOR|SERVICE_DISCONNECT",
+    )
+
+    # Status for other meter types
+    await send_attributes_report(
+        hass, cluster, {"status": 32, "metering_device_type": 4}
+    )
     assert hass.states.get(entity_id).attributes["status"] in ("<bitmap8.32: 32>", "32")
 
 
@@ -235,6 +260,24 @@ async def async_test_em_apparent_power(hass: HomeAssistant, cluster, entity_id):
     assert_state(hass, entity_id, "9.9", UnitOfApparentPower.VOLT_AMPERE)
 
 
+async def async_test_em_power_factor(hass: HomeAssistant, cluster, entity_id):
+    """Test electrical measurement Power Factor sensor."""
+    # update divisor cached value
+    await send_attributes_report(hass, cluster, {"ac_power_divisor": 1})
+    await send_attributes_report(hass, cluster, {0: 1, 0x0510: 100, 10: 1000})
+    assert_state(hass, entity_id, "100", PERCENTAGE)
+
+    await send_attributes_report(hass, cluster, {0: 1, 0x0510: 99, 10: 1000})
+    assert_state(hass, entity_id, "99", PERCENTAGE)
+
+    await send_attributes_report(hass, cluster, {"ac_power_divisor": 10})
+    await send_attributes_report(hass, cluster, {0: 1, 0x0510: 100, 10: 5000})
+    assert_state(hass, entity_id, "100", PERCENTAGE)
+
+    await send_attributes_report(hass, cluster, {0: 1, 0x0510: 99, 10: 5000})
+    assert_state(hass, entity_id, "99", PERCENTAGE)
+
+
 async def async_test_em_rms_current(hass: HomeAssistant, cluster, entity_id):
     """Test electrical measurement RMS Current sensor."""
 
@@ -300,6 +343,23 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
     assert_state(hass, entity_id, "29.0", UnitOfTemperature.CELSIUS)
 
 
+async def async_test_setpoint_change_source(hass, cluster, entity_id):
+    """Test the translation of numerical state into enum text."""
+    await send_attributes_report(
+        hass, cluster, {Thermostat.AttributeDefs.setpoint_change_source.id: 0x01}
+    )
+    hass_state = hass.states.get(entity_id)
+    assert hass_state.state == "Schedule"
+
+
+async def async_test_pi_heating_demand(hass, cluster, entity_id):
+    """Test pi heating demand is correctly returned."""
+    await send_attributes_report(
+        hass, cluster, {Thermostat.AttributeDefs.pi_heating_demand.id: 1}
+    )
+    assert_state(hass, entity_id, "1", "%")
+
+
 @pytest.mark.parametrize(
     (
         "cluster_id",
@@ -308,6 +368,7 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
         "report_count",
         "read_plug",
         "unsupported_attrs",
+        "initial_sensor_state",
     ),
     (
         (
@@ -317,6 +378,7 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
             1,
             None,
             None,
+            STATE_UNKNOWN,
         ),
         (
             measurement.TemperatureMeasurement.cluster_id,
@@ -325,6 +387,7 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
             1,
             None,
             None,
+            STATE_UNKNOWN,
         ),
         (
             measurement.PressureMeasurement.cluster_id,
@@ -333,6 +396,7 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
             1,
             None,
             None,
+            STATE_UNKNOWN,
         ),
         (
             measurement.IlluminanceMeasurement.cluster_id,
@@ -341,6 +405,7 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
             1,
             None,
             None,
+            STATE_UNKNOWN,
         ),
         (
             smartenergy.Metering.cluster_id,
@@ -355,6 +420,7 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
                 "status": 0x00,
             },
             {"current_summ_delivered", "current_summ_received"},
+            STATE_UNKNOWN,
         ),
         (
             smartenergy.Metering.cluster_id,
@@ -371,6 +437,7 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
                 "unit_of_measure": 0x00,
             },
             {"instaneneous_demand", "current_summ_received"},
+            STATE_UNKNOWN,
         ),
         (
             smartenergy.Metering.cluster_id,
@@ -385,8 +452,10 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
                 "status": 0x00,
                 "summation_formatting": 0b1_0111_010,
                 "unit_of_measure": 0x00,
+                "current_summ_received": 0,
             },
             {"instaneneous_demand", "current_summ_delivered"},
+            "0.0",
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
@@ -395,6 +464,7 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
             7,
             {"ac_power_divisor": 1000, "ac_power_multiplier": 1},
             {"apparent_power", "rms_current", "rms_voltage"},
+            STATE_UNKNOWN,
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
@@ -403,6 +473,16 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
             7,
             {"ac_power_divisor": 1000, "ac_power_multiplier": 1},
             {"active_power", "rms_current", "rms_voltage"},
+            STATE_UNKNOWN,
+        ),
+        (
+            homeautomation.ElectricalMeasurement.cluster_id,
+            "power_factor",
+            async_test_em_power_factor,
+            7,
+            {"ac_power_divisor": 1000, "ac_power_multiplier": 1},
+            {"active_power", "apparent_power", "rms_current", "rms_voltage"},
+            STATE_UNKNOWN,
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
@@ -411,6 +491,7 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
             7,
             {"ac_current_divisor": 1000, "ac_current_multiplier": 1},
             {"active_power", "apparent_power", "rms_voltage"},
+            STATE_UNKNOWN,
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
@@ -419,6 +500,7 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
             7,
             {"ac_voltage_divisor": 10, "ac_voltage_multiplier": 1},
             {"active_power", "apparent_power", "rms_current"},
+            STATE_UNKNOWN,
         ),
         (
             general.PowerConfiguration.cluster_id,
@@ -431,6 +513,7 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
                 "battery_quantity": 3,
             },
             None,
+            STATE_UNKNOWN,
         ),
         (
             general.PowerConfiguration.cluster_id,
@@ -443,6 +526,7 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
                 "battery_quantity": 3,
             },
             None,
+            STATE_UNKNOWN,
         ),
         (
             general.DeviceTemperature.cluster_id,
@@ -451,6 +535,25 @@ async def async_test_device_temperature(hass: HomeAssistant, cluster, entity_id)
             1,
             None,
             None,
+            STATE_UNKNOWN,
+        ),
+        (
+            hvac.Thermostat.cluster_id,
+            "setpoint_change_source",
+            async_test_setpoint_change_source,
+            10,
+            None,
+            None,
+            STATE_UNKNOWN,
+        ),
+        (
+            hvac.Thermostat.cluster_id,
+            "pi_heating_demand",
+            async_test_pi_heating_demand,
+            10,
+            None,
+            None,
+            STATE_UNKNOWN,
         ),
     ),
 )
@@ -464,6 +567,7 @@ async def test_sensor(
     report_count,
     read_plug,
     unsupported_attrs,
+    initial_sensor_state,
 ) -> None:
     """Test ZHA sensor platform."""
 
@@ -498,8 +602,8 @@ async def test_sensor(
     # allow traffic to flow through the gateway and devices
     await async_enable_traffic(hass, [zha_device])
 
-    # test that the sensor now have a state of unknown
-    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+    # test that the sensor now have their correct initial state (mostly unknown)
+    assert hass.states.get(entity_id).state == initial_sensor_state
 
     # test sensor associated logic
     await test_func(hass, cluster, entity_id)
@@ -742,7 +846,6 @@ async def test_electrical_measurement_init(
             },
             {
                 "summation_delivered",
-                "summation_received",
             },
             {
                 "instantaneous_demand",
@@ -750,12 +853,11 @@ async def test_electrical_measurement_init(
         ),
         (
             smartenergy.Metering.cluster_id,
-            {"instantaneous_demand", "current_summ_delivered", "current_summ_received"},
+            {"instantaneous_demand", "current_summ_delivered"},
             {},
             {
                 "instantaneous_demand",
                 "summation_delivered",
-                "summation_received",
             },
         ),
         (
@@ -764,7 +866,6 @@ async def test_electrical_measurement_init(
             {
                 "instantaneous_demand",
                 "summation_delivered",
-                "summation_received",
             },
             {},
         ),

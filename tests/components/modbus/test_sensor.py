@@ -185,6 +185,28 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                 }
             ]
         },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_MIN_VALUE: 1,
+                    CONF_MAX_VALUE: 3,
+                }
+            ]
+        },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_MIN_VALUE: -3,
+                    CONF_MAX_VALUE: -1,
+                }
+            ]
+        },
     ],
 )
 async def test_config_sensor(hass: HomeAssistant, mock_modbus) -> None:
@@ -445,7 +467,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x89AB, 0xCDEF, 0x0123, 0x4567],
             False,
-            "9920249030613615975",
+            "9920249030613616640",
         ),
         (
             {
@@ -456,7 +478,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0123, 0x4567, 0x89AB, 0xCDEF],
             False,
-            "163971058432973793",
+            "163971058432973792",
         ),
         (
             {
@@ -686,7 +708,17 @@ async def test_config_wrong_struct_sensor(
             },
             [0x00AB, 0xCDEF],
             False,
-            "112593.75",
+            "112594",
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT16,
+                CONF_SCALE: -1,
+                CONF_OFFSET: 0,
+            },
+            [0x000A],
+            False,
+            "-10",
         ),
     ],
 )
@@ -727,7 +759,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
             ],
             False,
-            ["34899771392", "0"],
+            ["34899771392.0", "0.0"],
         ),
         (
             {
@@ -742,7 +774,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
             ],
             False,
-            ["34899771392", "0"],
+            ["34899771392.0", "0.0"],
         ),
         (
             {
@@ -937,7 +969,7 @@ async def test_virtual_sensor(
             },
             [0x0102, 0x0304, 0x0506, 0x0708],
             False,
-            [str(0x0708050603040102)],
+            [str(0x0708050603040100)],
         ),
         (
             {
@@ -970,7 +1002,7 @@ async def test_virtual_sensor(
             },
             [0x0102, 0x0304, 0x0506, 0x0708, 0x0901, 0x0902, 0x0903, 0x0904],
             False,
-            [str(0x0708050603040102), str(0x0904090309020901)],
+            [str(0x0708050603040100), str(0x0904090309020900)],
         ),
         (
             {
@@ -1035,10 +1067,10 @@ async def test_virtual_sensor(
             ],
             False,
             [
-                str(0x0604060306020601),
-                str(0x0704070307020701),
-                str(0x0804080308020801),
-                str(0x0904090309020901),
+                str(0x0604060306020600),
+                str(0x0704070307020700),
+                str(0x0804080308020800),
+                str(0x0904090309020900),
             ],
         ),
     ],
@@ -1202,7 +1234,7 @@ async def test_unpack_ok(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 0x0000,
                 0x000A,
             ],
-            "0,10",
+            "0,10.00",
         ),
         (
             {

@@ -1,12 +1,15 @@
 """Tests for the auth store."""
 import asyncio
+from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.auth import auth_store
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 
 async def test_loading_no_group_data_format(
@@ -267,3 +270,67 @@ async def test_loading_only_once(hass: HomeAssistant) -> None:
         mock_dev_registry.assert_called_once_with(hass)
         mock_load.assert_called_once_with()
         assert results[0] == results[1]
+
+
+async def test_add_expire_at_property(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test we correctly add expired_at property if not existing."""
+    now = dt_util.utcnow()
+    with freeze_time(now):
+        hass_storage[auth_store.STORAGE_KEY] = {
+            "version": 1,
+            "data": {
+                "credentials": [],
+                "users": [
+                    {
+                        "id": "user-id",
+                        "is_active": True,
+                        "is_owner": True,
+                        "name": "Paulus",
+                        "system_generated": False,
+                    },
+                    {
+                        "id": "system-id",
+                        "is_active": True,
+                        "is_owner": True,
+                        "name": "Hass.io",
+                        "system_generated": True,
+                    },
+                ],
+                "refresh_tokens": [
+                    {
+                        "access_token_expiration": 1800.0,
+                        "client_id": "http://localhost:8123/",
+                        "created_at": "2018-10-03T13:43:19.774637+00:00",
+                        "id": "user-token-id",
+                        "jwt_key": "some-key",
+                        "last_used_at": str(now - timedelta(days=10)),
+                        "token": "some-token",
+                        "user_id": "user-id",
+                        "version": "1.2.3",
+                    },
+                    {
+                        "access_token_expiration": 1800.0,
+                        "client_id": "http://localhost:8123/",
+                        "created_at": "2018-10-03T13:43:19.774637+00:00",
+                        "id": "user-token-id2",
+                        "jwt_key": "some-key2",
+                        "token": "some-token",
+                        "user_id": "user-id",
+                    },
+                ],
+            },
+        }
+
+        store = auth_store.AuthStore(hass)
+        await store.async_load()
+
+    users = await store.async_get_users()
+
+    assert len(users[0].refresh_tokens) == 2
+    token1, token2 = users[0].refresh_tokens.values()
+    assert token1.expire_at
+    assert token1.expire_at == now.timestamp() + timedelta(days=80).total_seconds()
+    assert token2.expire_at
+    assert token2.expire_at == now.timestamp() + timedelta(days=90).total_seconds()

@@ -272,8 +272,14 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Device isn't paired with us or anyone else.
         # But we have a 'complete' config entry for it - that is probably
-        # invalid. Remove it automatically.
-        if not paired and existing_entry:
+        # invalid. Remove it automatically if it has an accessory pairing id
+        # (which means it was paired with us at some point) and was not
+        # ignored by the user.
+        if (
+            not paired
+            and existing_entry
+            and (accessory_pairing_id := existing_entry.data.get("AccessoryPairingID"))
+        ):
             if self.controller is None:
                 await self._async_setup_controller()
 
@@ -282,7 +288,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             assert self.controller
 
             pairing = self.controller.load_pairing(
-                existing_entry.data["AccessoryPairingID"], dict(existing_entry.data)
+                accessory_pairing_id, dict(existing_entry.data)
             )
 
             try:

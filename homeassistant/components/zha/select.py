@@ -471,25 +471,6 @@ class AqaraT2RelayDecoupledMode(ZCLEnumSelectEntity):
     _attr_translation_key: str = "decoupled_mode"
 
 
-class AqaraE1ReverseDirection(types.enum8):
-    """Aqara curtain reversal."""
-
-    Normal = 0x00
-    Inverted = 0x01
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names="window_covering", models={"lumi.curtain.agl001"}
-)
-class AqaraCurtainMode(ZCLEnumSelectEntity):
-    """Representation of a ZHA curtain mode configuration entity."""
-
-    _unique_id_suffix = "window_covering_mode"
-    _attribute_name = "window_covering_mode"
-    _enum = AqaraE1ReverseDirection
-    _attr_translation_key: str = "window_covering_mode"
-
-
 class InovelliOutputMode(types.enum1):
     """Inovelli output mode."""
 
@@ -673,3 +654,28 @@ class SonoffPresenceDetectionSensitivity(ZCLEnumSelectEntity):
     _attribute_name = "ultrasonic_u_to_o_threshold"
     _enum = SonoffPresenceDetectionSensitivityEnum
     _attr_translation_key: str = "detection_sensitivity"
+
+
+class KeypadLockoutEnum(types.enum8):
+    """Keypad lockout options."""
+
+    Unlock = 0x00
+    Lock1 = 0x01
+    Lock2 = 0x02
+    Lock3 = 0x03
+    Lock4 = 0x04
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names="thermostat_ui")
+class KeypadLockout(ZCLEnumSelectEntity):
+    """Mandatory attribute for thermostat_ui cluster.
+
+    Often only the first two are implemented, and Lock2 to Lock4 should map to Lock1 in the firmware.
+    This however covers all bases.
+    """
+
+    _unique_id_suffix = "keypad_lockout"
+    _attribute_name: str = "keypad_lockout"
+    _enum = KeypadLockoutEnum
+    _attr_translation_key: str = "keypad_lockout"
+    _attr_icon: str = "mdi:lock"

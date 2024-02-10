@@ -104,7 +104,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
+class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching data from the API."""
 
     def __init__(self, hass: HomeAssistant, client: MusicCastDevice) -> None:

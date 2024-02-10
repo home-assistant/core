@@ -141,18 +141,9 @@ async def test_discovery_auth(
         },
     )
 
-    assert result2["type"] == "form"
-    assert result2["step_id"] == "discovery_confirm"
-    assert not result2["errors"]
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"], user_input={}
-    )
-
-    await hass.async_block_till_done()
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == DEFAULT_ENTRY_TITLE
-    assert result3["data"] == CREATE_ENTRY_DATA_AUTH
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == DEFAULT_ENTRY_TITLE
+    assert result2["data"] == CREATE_ENTRY_DATA_AUTH
 
 
 @pytest.mark.parametrize(
@@ -213,17 +204,8 @@ async def test_discovery_auth_errors(
             CONF_PASSWORD: "fake_password",
         },
     )
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["step_id"] == "discovery_confirm"
-
-    await hass.async_block_till_done()
-
-    result4 = await hass.config_entries.flow.async_configure(
-        result3["flow_id"],
-        {},
-    )
-    assert result4["type"] is FlowResultType.CREATE_ENTRY
-    assert result4["data"] == CREATE_ENTRY_DATA_AUTH
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["data"] == CREATE_ENTRY_DATA_AUTH
 
 
 async def test_discovery_new_credentials(
@@ -325,15 +307,8 @@ async def test_discovery_new_credentials_invalid(
             CONF_PASSWORD: "fake_password",
         },
     )
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["step_id"] == "discovery_confirm"
-
-    result4 = await hass.config_entries.flow.async_configure(
-        result3["flow_id"],
-        {},
-    )
-    assert result4["type"] is FlowResultType.CREATE_ENTRY
-    assert result4["data"] == CREATE_ENTRY_DATA_AUTH
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["data"] == CREATE_ENTRY_DATA_AUTH
 
 
 async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> None:
