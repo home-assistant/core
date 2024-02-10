@@ -591,7 +591,7 @@ async def test_check_config_sensor(do_config) -> None:
                     },
                     {
                         CONF_NAME: TEST_ENTITY_NAME + " 2",
-                        CONF_ADDRESS: 118,
+                        CONF_ADDRESS: 117,
                         CONF_SLAVE: 0,
                         CONF_TARGET_TEMP: [117],
                         CONF_FAN_MODE_REGISTER: {
@@ -611,6 +611,7 @@ async def test_check_config_sensor(do_config) -> None:
                 CONF_TYPE: TCP,
                 CONF_HOST: TEST_MODBUS_HOST,
                 CONF_PORT: TEST_PORT_TCP,
+                CONF_TIMEOUT: 3,
                 CONF_CLIMATES: [
                     {
                         CONF_NAME: TEST_ENTITY_NAME,
