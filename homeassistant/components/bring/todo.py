@@ -75,7 +75,7 @@ class BringTodoListEntity(
         """Return the todo items."""
         return [
             TodoItem(
-                uid=item["name"],
+                uid=item["name"] + (item["specification"] or ""),
                 summary=item["name"],
                 description=item["specification"] or "",
                 status=TodoItemStatus.NEEDS_ACTION,
