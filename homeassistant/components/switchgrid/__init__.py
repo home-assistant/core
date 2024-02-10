@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from switchgrid_python_client import SwitchgridData
+from switchgrid_python_client import SwitchgridClient
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import Platform
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     session = async_get_clientsession(hass)
 
-    data = SwitchgridData(session)
+    data = SwitchgridClient(session)
 
     coordinator = SwitchgridCoordinator(hass, data)
     await coordinator.async_config_entry_first_refresh()

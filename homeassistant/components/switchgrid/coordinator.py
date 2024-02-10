@@ -4,7 +4,7 @@ from asyncio import timeout
 import logging
 
 import aiohttp
-from switchgrid_python_client import Event, SwitchgridData, SwitchgridEventsResponse
+from switchgrid_python_client import Event, SwitchgridClient, SwitchgridEventsResponse
 
 from homeassistant import core
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -15,13 +15,13 @@ from .const import UPDATE_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class SwitchgridCoordinator(DataUpdateCoordinator[SwitchgridData]):
+class SwitchgridCoordinator(DataUpdateCoordinator[SwitchgridClient]):
     """Coordinator for updating data from the Switchgrid API."""
 
     def __init__(
         self,
         hass: core.HomeAssistant,
-        data: SwitchgridData,
+        data: SwitchgridClient,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
