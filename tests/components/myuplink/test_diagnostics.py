@@ -1,17 +1,14 @@
-"""Tests for myuplink diagnostics data."""
+"""Tests for the diagnostics data provided by the myuplink integration."""
 
-from unittest.mock import patch
-
-from syrupy.assertion import SnapshotAssertion
+from syrupy import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
-# testing
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -19,19 +16,7 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    with patch(
-        "homeassistant.components.myuplink.MyUplinkAPI.async_get_systems_json",
-        return_value=load_fixture("myuplink/systems.json"),
-    ), patch(
-        "homeassistant.components.myuplink.MyUplinkAPI.async_get_device_json",
-        return_value=load_fixture("myuplink/device.json"),
-    ), patch(
-        "homeassistant.components.myuplink.MyUplinkAPI.async_get_device_points_json",
-        return_value=load_fixture("myuplink/device_points_nibe_f730.json"),
-    ), patch(
-        "homeassistant.components.myuplink.MyUplinkAPI",
-    ):
-        assert (
-            await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
-            == snapshot
-        )
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, init_integration)
+        == snapshot
+    )
