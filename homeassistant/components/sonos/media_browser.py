@@ -486,10 +486,10 @@ def get_content_id(item: DidlObject) -> str:
     return cast(str, item.item_id)
 
 
-def get_media(
+def get_media_list(
     media_library: MusicLibrary, item_id: str, search_type: str
-) -> MusicServiceItem:
-    """Fetch media/album."""
+) -> list[MusicServiceItem]:
+    """Return list of medias/albums."""
     search_type = MEDIA_TYPES_TO_SONOS.get(search_type, search_type)
 
     if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
@@ -499,5 +499,13 @@ def get_media(
     matches = media_library.get_music_library_information(
         search_type, search_term=search_term, full_album_art_uri=True
     )
+    return matches
+
+def get_media(
+    media_library: MusicLibrary, item_id: str, search_type: str
+) -> MusicServiceItem:
+    """Fetch a single media/album."""
+    matches = get_media_list(media_library, item_id, search_type)
     if len(matches) > 0:
         return matches[0]
+    return None

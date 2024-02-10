@@ -1,4 +1,5 @@
 """Support to interface with Sonos players."""
+
 from __future__ import annotations
 
 import datetime
@@ -638,13 +639,17 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.add_to_queue(playlist, timeout=LONG_SERVICE_TIMEOUT)
                 soco.play_from_queue(0)
         elif media_type in PLAYABLE_MEDIA_TYPES:
-            item = media_browser.get_media(self.media.library, media_id, media_type)
-
-            if not item:
+            item_list = media_browser.get_media_list(
+                self.media.library, media_id, media_type
+            )
+            if not item_list or len(item_list) == 0:
                 _LOGGER.error('Could not find "%s" in the library', media_id)
                 return
+            soco.clear_queue()
+            for item in item_list:
+                soco.add_to_queue(item, timeout=LONG_SERVICE_TIMEOUT)
+            soco.play_from_queue(0)
 
-            soco.play_uri(item.get_uri())
         else:
             _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
 
