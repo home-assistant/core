@@ -18,6 +18,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import (
+    CONF_MAX_DT,
     CONF_ROUND_DIGITS,
     CONF_SOURCE_SENSOR,
     CONF_UNIT_PREFIX,
@@ -86,6 +87,14 @@ CONFIG_SCHEMA = vol.Schema(
                 mode=selector.SelectSelectorMode.DROPDOWN,
                 translation_key=CONF_UNIT_TIME,
             ),
+        ),
+        vol.Optional(CONF_MAX_DT, default=60): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=1,
+                max=1000000000,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="seconds",
+            )
         ),
     }
 )

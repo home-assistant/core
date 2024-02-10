@@ -11,12 +11,14 @@
           "round": "Precision",
           "source": "Input sensor",
           "unit_prefix": "Metric prefix",
-          "unit_time": "Time unit"
+          "unit_time": "Time unit",
+          "max_dt": "Max update duration."
         },
         "data_description": {
           "round": "Controls the number of decimal digits in the output.",
           "unit_prefix": "The output will be scaled according to the selected metric prefix.",
-          "unit_time": "The output will be scaled according to the selected time unit."
+          "unit_time": "The output will be scaled according to the selected time unit.",
+          "max_dt": "If the source sensor is constant this duration will be used for time based updates."
         }
       }
     }

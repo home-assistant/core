@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
+from enum import Enum
 import logging
 from typing import Any, Final, Self
 
@@ -27,8 +29,9 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTime,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
 from homeassistant.helpers import (
+    condition,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
@@ -37,11 +40,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     EventStateChangedData,
+    async_call_later,
     async_track_state_change_event,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
+    CONF_MAX_DT,
     CONF_ROUND_DIGITS,
     CONF_SOURCE_SENSOR,
     CONF_UNIT_OF_MEASUREMENT,
@@ -81,12 +86,18 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_MAX_DT, default=None): vol.Any(None, vol.Coerce(int)),
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
                 INTEGRATION_METHODS
             ),
         }
     ),
 )
+
+
+class _IntegrationTrigger(Enum):
+    StateChange = "state_change"
+    TimeElapsed = "time_elapsed"
 
 
 @dataclass
@@ -183,6 +194,7 @@ async def async_setup_entry(
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
         device_info=device_info,
+        max_dt=config_entry.options.get(CONF_MAX_DT, None),
     )
 
     async_add_entities([integral])
@@ -203,6 +215,7 @@ async def async_setup_platform(
         unique_id=config.get(CONF_UNIQUE_ID),
         unit_prefix=config.get(CONF_UNIT_PREFIX),
         unit_time=config[CONF_UNIT_TIME],
+        max_dt=config[CONF_MAX_DT],
     )
 
     async_add_entities([integral])
@@ -224,6 +237,7 @@ class IntegrationSensor(RestoreSensor):
         unique_id: str | None,
         unit_prefix: str | None,
         unit_time: UnitOfTime,
+        max_dt: int | None,
         device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the integration sensor."""
@@ -243,6 +257,12 @@ class IntegrationSensor(RestoreSensor):
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
+        self._max_dt: timedelta | None = (
+            timedelta(seconds=max_dt) if max_dt is not None else None
+        )
+        self._max_dt_exceeded_callback: CALLBACK_TYPE = lambda *args: None
+        self._last_integration_time: datetime = datetime.now(tz=UTC)
+        self._last_integration_trigger = _IntegrationTrigger.StateChange
 
     def _unit(self, source_unit: str) -> str:
         """Derive unit from the source sensor, SI prefix and time unit."""
@@ -253,6 +273,21 @@ class IntegrationSensor(RestoreSensor):
             integral_unit = f"{source_unit}{unit_time}"
 
         return self._unit_template.format(integral_unit)
+
+    def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
+        unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if unit is not None:
+            self._unit_of_measurement = self._unit(unit)
+
+        if (
+            self.device_class is None
+            and source_state.attributes.get(ATTR_DEVICE_CLASS)
+            == SensorDeviceClass.POWER
+        ):
+            self._attr_device_class = SensorDeviceClass.ENERGY
+            self._attr_icon = None
+
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -292,108 +327,156 @@ class IntegrationSensor(RestoreSensor):
             self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        @callback
-        def calc_integration(event: Event[EventStateChangedData]) -> None:
-            """Handle the sensor state changes."""
-            old_state = event.data["old_state"]
-            new_state = event.data["new_state"]
-
-            if (
-                source_state := self.hass.states.get(self._sensor_source_id)
-            ) is None or source_state.state == STATE_UNAVAILABLE:
-                self._attr_available = False
-                self.async_write_ha_state()
-                return
-
-            self._attr_available = True
-
-            if old_state is None or new_state is None:
-                # we can't calculate the elapsed time, so we can't calculate the integral
-                return
-
-            unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            if unit is not None:
-                self._unit_of_measurement = self._unit(unit)
-
-            if (
-                self.device_class is None
-                and new_state.attributes.get(ATTR_DEVICE_CLASS)
-                == SensorDeviceClass.POWER
-            ):
-                self._attr_device_class = SensorDeviceClass.ENERGY
-                self._attr_icon = None
-
-            self.async_write_ha_state()
-
-            try:
-                # integration as the Riemann integral of previous measures.
-                elapsed_time = (
-                    new_state.last_updated - old_state.last_updated
-                ).total_seconds()
-
-                if (
-                    self._method == METHOD_TRAPEZOIDAL
-                    and new_state.state
-                    not in (
-                        STATE_UNKNOWN,
-                        STATE_UNAVAILABLE,
-                    )
-                    and old_state.state
-                    not in (
-                        STATE_UNKNOWN,
-                        STATE_UNAVAILABLE,
-                    )
-                ):
-                    area = (
-                        (Decimal(new_state.state) + Decimal(old_state.state))
-                        * Decimal(elapsed_time)
-                        / 2
-                    )
-                elif self._method == METHOD_LEFT and old_state.state not in (
-                    STATE_UNKNOWN,
-                    STATE_UNAVAILABLE,
-                ):
-                    area = Decimal(old_state.state) * Decimal(elapsed_time)
-                elif self._method == METHOD_RIGHT and new_state.state not in (
-                    STATE_UNKNOWN,
-                    STATE_UNAVAILABLE,
-                ):
-                    area = Decimal(new_state.state) * Decimal(elapsed_time)
-                else:
-                    _LOGGER.debug(
-                        "Could not apply method %s to %s -> %s",
-                        self._method,
-                        old_state.state,
-                        new_state.state,
-                    )
-                    return
-
-                integral = area / (self._unit_prefix * self._unit_time)
-                _LOGGER.debug(
-                    "area = %s, integral = %s state = %s", area, integral, self._state
-                )
-                assert isinstance(integral, Decimal)
-            except ValueError as err:
-                _LOGGER.warning("While calculating integration: %s", err)
-            except DecimalException as err:
-                _LOGGER.warning(
-                    "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
-                )
-            except AssertionError as err:
-                _LOGGER.error("Could not calculate integral: %s", err)
-            else:
-                if isinstance(self._state, Decimal):
-                    self._state += integral
-                else:
-                    self._state = integral
-                self._last_valid_state = self._state
-                self.async_write_ha_state()
+        if self._max_dt is not None:
+            self._schedule_max_dt_exceeded()
+            self.async_on_remove(self._cancel_max_dt_exceeded_callback)
 
         self.async_on_remove(
             async_track_state_change_event(
-                self.hass, [self._sensor_source_id], calc_integration
+                self.hass,
+                [self._sensor_source_id],
+                self._integrate_on_state_change_and_max_dt
+                if self._max_dt is not None
+                else self._integrate_on_state_change,
             )
         )
+
+    @callback
+    def _integrate_on_state_change_and_max_dt(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        try:
+            self._cancel_max_dt_exceeded_callback()
+            self._integrate_on_state_change(event)
+            self._last_integration_trigger = _IntegrationTrigger.StateChange
+            self._last_integration_time = datetime.now(tz=UTC)
+        finally:
+            self._schedule_max_dt_exceeded()
+
+    @callback
+    def _integrate_on_state_change(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        """Handle the sensor state changes."""
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
+
+        if (
+            source_state := self.hass.states.get(self._sensor_source_id)
+        ) is None or source_state.state == STATE_UNAVAILABLE:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+
+        self._attr_available = True
+
+        if old_state is None or new_state is None:
+            # we can't calculate the elapsed time, so we can't calculate the integral
+            return
+
+        self._derive_and_set_attributes_from_state(new_state)
+
+        try:
+            elapsed_time = (
+                (new_state.last_updated - old_state.last_updated).total_seconds()
+                if self._last_integration_trigger == _IntegrationTrigger.StateChange
+                else (
+                    new_state.last_updated - self._last_integration_time
+                ).total_seconds()
+            )
+
+            if (
+                self._method == METHOD_TRAPEZOIDAL
+                and new_state.state
+                not in (
+                    STATE_UNKNOWN,
+                    STATE_UNAVAILABLE,
+                )
+                and old_state.state
+                not in (
+                    STATE_UNKNOWN,
+                    STATE_UNAVAILABLE,
+                )
+            ):
+                area = (
+                    (Decimal(new_state.state) + Decimal(old_state.state))
+                    * Decimal(elapsed_time)
+                    / 2
+                )
+            elif self._method == METHOD_LEFT and old_state.state not in (
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
+            ):
+                area = Decimal(old_state.state) * Decimal(elapsed_time)
+            elif self._method == METHOD_RIGHT and new_state.state not in (
+                STATE_UNKNOWN,
+                STATE_UNAVAILABLE,
+            ):
+                area = Decimal(new_state.state) * Decimal(elapsed_time)
+            else:
+                _LOGGER.debug(
+                    "Could not apply method %s to %s -> %s",
+                    self._method,
+                    old_state.state,
+                    new_state.state,
+                )
+                return
+
+            integral = area / (self._unit_prefix * self._unit_time)
+            _LOGGER.debug(
+                "area = %s, integral = %s state = %s", area, integral, self._state
+            )
+            assert isinstance(integral, Decimal)
+        except ValueError as err:
+            _LOGGER.warning("While calculating integration: %s", err)
+        except DecimalException as err:
+            _LOGGER.warning(
+                "Invalid state (%s > %s): %s", old_state.state, new_state.state, err
+            )
+        except AssertionError as err:
+            _LOGGER.error("Could not calculate integral: %s", err)
+        else:
+            if isinstance(self._state, Decimal):
+                self._state += integral
+            else:
+                self._state = integral
+            self._last_valid_state = self._state
+            self.async_write_ha_state()
+
+    @callback
+    def _integrate_on_max_dt_exceeded(self, now: datetime) -> None:
+        source_state = self.hass.states.get(self._sensor_source_id)
+
+        if source_state is not None and condition.async_numeric_state(
+            self.hass, source_state
+        ):
+            elapsed_seconds = (now - self._last_integration_time).total_seconds()
+            self._derive_and_set_attributes_from_state(source_state)
+            area = Decimal(source_state.state) * Decimal(elapsed_seconds)
+            integral = area / (self._unit_prefix * self._unit_time)
+            if isinstance(self._state, Decimal):
+                self._state += integral
+            else:
+                self._state = integral
+
+            self._last_valid_state = self._state
+            self.async_write_ha_state()
+
+            self._last_integration_time = datetime.now(tz=UTC)
+            self._last_integration_trigger = _IntegrationTrigger.TimeElapsed
+
+        self._schedule_max_dt_exceeded()
+
+    def _schedule_max_dt_exceeded(self) -> None:
+        if self._max_dt is not None:
+            self._max_dt_exceeded_callback = async_call_later(
+                self.hass, self._max_dt, self._integrate_on_max_dt_exceeded
+            )
+        else:
+            _LOGGER.error("Config max_dt must be set when scheduling this")
+
+    def _cancel_max_dt_exceeded_callback(self) -> None:
+        return self._max_dt_exceeded_callback()
 
     @property
     def native_value(self) -> Decimal | None:
