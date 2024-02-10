@@ -5,7 +5,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zigpy.quirks.v2 import EntityMetadata
+from zigpy.quirks.v2 import EntityMetadata, NumberMetadata
 from zigpy.zcl.clusters.hvac import Thermostat
 
 from homeassistant.components.number import NumberEntity, NumberMode
@@ -25,6 +25,7 @@ from .core.const import (
     CLUSTER_HANDLER_LEVEL,
     CLUSTER_HANDLER_OCCUPANCY,
     CLUSTER_HANDLER_THERMOSTAT,
+    QUIRK_METADATA,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -401,9 +402,10 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if "entity_metadata" in kwargs:
-            entity_metadata: EntityMetadata = kwargs["entity_metadata"]
-            attribute_name: str = entity_metadata.entity_metadata.attribute_name
+        if QUIRK_METADATA in kwargs:
+            quirk_entity_metadata: EntityMetadata = kwargs[QUIRK_METADATA]
+            number_metadata: NumberMetadata = quirk_entity_metadata.entity_metadata
+            attribute_name: str = number_metadata.attribute_name
             if (
                 attribute_name in cluster_handler.cluster.unsupported_attributes
                 or attribute_name not in cluster_handler.cluster.attributes_by_name
@@ -438,12 +440,27 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     ) -> None:
         """Init this number configuration entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        if "entity_metadata" in kwargs:
-            self._attribute_name = kwargs[
-                "entity_metadata"
-            ].entity_metadata.attribute_name
-            self._unique_id_suffix = self._attribute_name
+        if QUIRK_METADATA in kwargs:
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA].entity_metadata)
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+
+    def _init_from_quirks_metadata(self, number_metadata: NumberMetadata) -> None:
+        """Init this entity from the quirks metadata."""
+        self._attribute_name = number_metadata.attribute_name
+        # standardize the unique id suffix and translation key to be the attribute name
+        self._attr_translation_key = self._attribute_name
+        self._unique_id_suffix = self._attribute_name
+
+        if number_metadata.min is not None:
+            self._attr_native_min_value = number_metadata.min
+        if number_metadata.max is not None:
+            self._attr_native_max_value = number_metadata.max
+        if number_metadata.step is not None:
+            self._attr_native_step = number_metadata.step
+        if number_metadata.unit is not None:
+            self._attr_native_unit_of_measurement = number_metadata.unit
+        if number_metadata.multiplier is not None:
+            self._attr_multiplier = number_metadata.multiplier
 
     @property
     def native_value(self) -> float:

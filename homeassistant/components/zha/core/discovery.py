@@ -225,7 +225,7 @@ class ProbeEndpoint:
 
         for (
             cluster_details,
-            entity_metadata_list,
+            quirk_metadata_list,
         ) in zigpy_device.exposes_metadata.items():
             endpoint_id, cluster_id, cluster_type = cluster_details
             if endpoint_id not in device.endpoints:
@@ -258,22 +258,22 @@ class ProbeEndpoint:
                     cluster_details,
                 )
                 continue
-            for entity_metadata in entity_metadata_list:
-                platform = Platform(entity_metadata.entity_platform.value)
+            for quirk_metadata in quirk_metadata_list:
+                platform = Platform(quirk_metadata.entity_platform.value)
                 if platform is None:
                     _LOGGER.debug(
                         "Device: %s-%s has an entity with details: %s that does not have a platform mapping - unable to create entity",
                         str(device.ieee),
                         device.name,
                         {
-                            "cluster_details": cluster_details,
-                            "entity_metadata": entity_metadata,
+                            zha_const.CLUSTER_DETAILS: cluster_details,
+                            zha_const.QUIRK_METADATA: quirk_metadata,
                         },
                     )
                     continue
-                metadata_type = type(entity_metadata.entity_metadata)
+                metadata_type = type(quirk_metadata.entity_metadata)
                 entity_class = QUIRKS_ENTITY_META_TO_ENTITY_CLASS.get(
-                    (platform, metadata_type, entity_metadata.entity_type)
+                    (platform, metadata_type, quirk_metadata.entity_type)
                 )
                 if entity_class is None:
                     _LOGGER.debug(
@@ -281,24 +281,24 @@ class ProbeEndpoint:
                         str(device.ieee),
                         device.name,
                         {
-                            "cluster_details": cluster_details,
-                            "entity_metadata": entity_metadata,
+                            zha_const.CLUSTER_DETAILS: cluster_details,
+                            zha_const.QUIRK_METADATA: quirk_metadata,
                         },
                     )
                     continue
                 if (
-                    entity_metadata.entity_metadata.attribute_name
+                    quirk_metadata.entity_metadata.attribute_name
                     not in cluster_handler.ZCL_INIT_ATTRS
                 ):
                     init_attrs = cluster_handler.ZCL_INIT_ATTRS.copy()
-                    init_attrs[entity_metadata.entity_metadata.attribute_name] = True
-                    cluster_handler.__dict__["ZCL_INIT_ATTRS"] = init_attrs
+                    init_attrs[quirk_metadata.entity_metadata.attribute_name] = True
+                    cluster_handler.__dict__[zha_const.ZCL_INIT_ATTRS] = init_attrs
                 endpoint.async_new_entity(
                     platform,
                     entity_class,
                     endpoint.unique_id,
                     [cluster_handler],
-                    entity_metadata=entity_metadata,
+                    quirk_metadata=quirk_metadata,
                 )
 
     @callback
