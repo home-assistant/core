@@ -399,7 +399,7 @@ class ConfigEntry:
                 f"{key} forced to fail to find core integration that need fixed"
             )
 
-            report(
+            report(  # type: ignore[unreachable]
                 f"sets {key} directly to update a config entry. This is deprecated and will"
                 " stop working in Home Assistant 2024.10, it should be updated to use"
                 " async_update_entry instead"
