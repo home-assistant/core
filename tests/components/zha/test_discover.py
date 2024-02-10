@@ -578,7 +578,7 @@ async def test_quirks_v2_entity_discovery_e1_curtain(
         Unlocking = 0x03
 
     # fmt: off
-    add_to_registry_v2("LUMI", "lumi.curtain.agl006").replaces(BasicCluster) \
+    add_to_registry_v2("LUMI", "lumi.curtain.agl006") \
         .adds(LocalIlluminanceMeasurementCluster) \
         .replaces(BasicCluster) \
         .replaces(XiaomiPowerConfigurationPercent) \
