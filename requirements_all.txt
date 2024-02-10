@@ -71,6 +71,8 @@ PyMVGLive==1.1.4
 # homeassistant.components.met_eireann
 PyMetEireann==2021.8.0
 
+# homeassistant.components.met
+
 # homeassistant.components.metoffice
 datapoint==0.9.9
 
