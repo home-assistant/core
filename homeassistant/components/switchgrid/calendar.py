@@ -31,7 +31,7 @@ class SwitchgridCalendarEntity(
     _attr_has_entity_name = True
     _attr_unique_id = "switchgrid_events"
     _attr_translation_key = "switchgrid_events"
-    _events: list[CalendarEvent] = []
+    _events: list[CalendarEvent]
 
     def __init__(
         self, coordinator: SwitchgridCoordinator, config_entry: ConfigEntry
@@ -39,6 +39,7 @@ class SwitchgridCalendarEntity(
         """Create the Calendar entity."""
         super().__init__(coordinator)
         self._config_entry = config_entry
+        self._events = []
 
     @property
     def event(self) -> CalendarEvent | None:
