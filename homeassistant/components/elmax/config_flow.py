@@ -132,8 +132,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_menu(
             step_id="choose_mode",
             menu_options={
-                "cloud_setup": "Connect to Elmax Panel via Elmax Cloud APIs",
-                "direct_setup": "Connect to Elmax Panel via local/direct IP",
+                CONF_ELMAX_MODE_CLOUD: "Connect to Elmax Panel via Elmax Cloud APIs",
+                CONF_ELMAX_MODE_DIRECT: "Connect to Elmax Panel via local/direct IP",
             },
         )
 
