@@ -87,7 +87,7 @@ class TotpAuthModule(MultiFactorAuthModule):
     @property
     def input_schema(self) -> vol.Schema:
         """Validate login flow input data."""
-        return vol.Schema({vol.Required(INPUT_FIELD_CODE): str})
+        return vol.Schema({vol.Required(INPUT_FIELD_CODE): int})
 
     async def _async_load(self) -> None:
         """Load stored data."""
