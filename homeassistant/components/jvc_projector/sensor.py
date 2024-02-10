@@ -25,7 +25,6 @@ JVC_SENSORS = (
         device_class=SensorDeviceClass.ENUM,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=[
-            const.OFF,
             const.STANDBY,
             const.ON,
             const.WARMING,
