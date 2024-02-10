@@ -11,6 +11,115 @@ import scipy.stats as st
 
 LOGGER = getLogger(__name__)
 
+dist_list = [
+    "alpha",
+    "anglit",
+    "arcsine",
+    "argus",
+    "beta",
+    "betaprime",
+    "bradford",
+    "burr",
+    "burr12",
+    "cauchy",
+    "chi",
+    "chi2",
+    "cosine",
+    "crystalball",
+    "dgamma",
+    "dweibull",
+    "erlang",
+    "expon",
+    "exponnorm",
+    "exponweib",
+    "exponpow",
+    "f",
+    "fatiguelife",
+    "fisk",
+    "foldcauchy",
+    "foldnorm",
+    "genlogistic",
+    "gennorm",
+    "genpareto",
+    "genexpon",
+    "genextreme",
+    "gausshyper",
+    "gamma",
+    "gengamma",
+    "genhalflogistic",
+    "genhyperbolic",
+    "geninvgauss",
+    "gibrat",
+    "gompertz",
+    "gumbel_r",
+    "gumbel_l",
+    "halfcauchy",
+    "halflogistic",
+    "halfnorm",
+    "halfgennorm",
+    "hypsecant",
+    "invgamma",
+    "invgauss",
+    "invweibull",
+    "jf_skew_t",
+    "johnsonsb",
+    "johnsonsu",
+    "kappa4",
+    "kappa3",
+    "ksone",
+    "kstwo",
+    "kstwobign",
+    "laplace",
+    "laplace_asymmetric",
+    "levy",
+    "levy_l",
+    "levy_stable",
+    "logistic",
+    "loggamma",
+    "loglaplace",
+    "lognorm",
+    "loguniform",
+    "lomax",
+    "maxwell",
+    "mielke",
+    "moyal",
+    "nakagami",
+    "ncx2",
+    "ncf",
+    "nct",
+    "norm",
+    "norminvgauss",
+    "pareto",
+    "pearson3",
+    "powerlaw",
+    "powerlognorm",
+    "powernorm",
+    "rdist",
+    "rayleigh",
+    "rel_breitwigner",
+    "rice",
+    "recipinvgauss",
+    "semicircular",
+    "skewcauchy",
+    "skewnorm",
+    "studentized_range",
+    "t",
+    "trapezoid",
+    "triang",
+    "truncexpon",
+    "truncnorm",
+    "truncpareto",
+    "truncweibull_min",
+    "tukeylambda",
+    "uniform",
+    "vonmises",
+    "vonmises_line",
+    "wald",
+    "weibull_min",
+    "weibull_max",
+    "wrapcauchy",
+]
+
 
 def get_best_distribution(data: list[float]) -> Any:
     """Get distribution based on p value."""
@@ -22,6 +131,7 @@ def get_best_distribution(data: list[float]) -> Any:
         "gamma",
         "genlogistic",
     ]
+    # dist_names = dist_list
     dist_results = []
     params = {}
     for dist_name in dist_names:
@@ -31,7 +141,6 @@ def get_best_distribution(data: list[float]) -> Any:
         params[dist_name] = param
         # Applying the Kolmogorov-Smirnov test
         _, p = st.kstest(data, dist_name, args=param)
-        # print("p value for " + dist_name + " = " + str(p))
         dist_results.append((dist_name, p))
 
     # select the best fitted distribution
@@ -42,6 +151,7 @@ def get_best_distribution(data: list[float]) -> Any:
         "Best fitting distribution: %s%s", str(best_dist), str(params[best_dist])
     )
     # print("Best p value: " + str(best_p))
+    # print(params[best_dist])
 
     return getattr(st, best_dist)(*params[best_dist])
 

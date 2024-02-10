@@ -451,9 +451,9 @@ class CoverEntity(Entity):
         """Return expected state when action is start/complete."""
 
         def _target_state(
-            target_complete_state: bool,
-        ) -> Callable[[bool], bool]:
-            def match(value: bool) -> bool:
+            target_complete_state: bool | int,
+        ) -> Callable[[bool | int], bool]:
+            def match(value: bool | int) -> bool:
                 return value == target_complete_state
 
             return match
@@ -466,6 +466,7 @@ class CoverEntity(Entity):
                 target["is_opening"] = _target_state(True)
                 target["is_closing"] = _target_state(False)
             else:
+                target["current_cover_position"] = _target_state(100)
                 target["is_closed"] = _target_state(False)
                 target["is_opening"] = _target_state(False)
                 target["is_closing"] = _target_state(False)
@@ -475,6 +476,7 @@ class CoverEntity(Entity):
                 target["is_opening"] = _target_state(False)
                 target["is_closing"] = _target_state(True)
             else:
+                target["current_cover_position"] = _target_state(0)
                 target["is_closed"] = _target_state(True)
                 target["is_opening"] = _target_state(False)
                 target["is_closing"] = _target_state(False)

@@ -10,9 +10,6 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 
 if TYPE_CHECKING:
-    from homeassistant.helpers.entity_platform import EntityPlatform
-    from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
     from .abstraction import RASCAbstraction
 
 RT = TypeVar("RT")
@@ -45,33 +42,33 @@ def rasc_push_event(
     return _wrapper
 
 
-@overload
-def rasc_track_service(func: Callable[..., Awaitable[RT]]):
-    ...
+# @overload
+# def rasc_track_service(func: Callable[..., Awaitable[RT]]):
+#     ...
 
 
-@overload
-def rasc_track_service(func: Callable[..., RT]):
-    ...
+# @overload
+# def rasc_track_service(func: Callable[..., RT]):
+#     ...
 
 
-def rasc_track_service(
-    func: Callable[..., RT] | Callable[..., Awaitable[RT]]
-) -> Callable[..., Coroutine[Any, Any, RT]]:
-    """RASC decorator for tracking a service."""
+# def rasc_track_service(
+#     func: Callable[..., RT] | Callable[..., Awaitable[RT]]
+# ) -> Callable[..., Coroutine[Any, Any, RT]]:
+#     """RASC decorator for tracking a service."""
 
-    async def _wrapper(
-        self: EntityPlatform | DataUpdateCoordinator,
-        entity: Entity,
-        *args: Any,
-        **kwargs: dict[str, Any],
-    ) -> RT:
-        if asyncio.iscoroutinefunction(func):
-            rt = await cast(Awaitable[RT], func(self, entity, *args, **kwargs))
-        else:
-            rt = cast(RT, func(self, entity, *args, **kwargs))
-        rasc: RASCAbstraction = self.hass.data[DOMAIN]
-        await rasc.update(entity, self)
-        return rt
+#     async def _wrapper(
+#         self: EntityPlatform | DataUpdateCoordinator,
+#         entity: Entity,
+#         *args: Any,
+#         **kwargs: dict[str, Any],
+#     ) -> RT:
+#         if asyncio.iscoroutinefunction(func):
+#             rt = await cast(Awaitable[RT], func(self, entity, *args, **kwargs))
+#         else:
+#             rt = cast(RT, func(self, entity, *args, **kwargs))
+#         rasc: RASCAbstraction = self.hass.data[DOMAIN]
+#         await rasc.update(entity)
+#         return rt
 
-    return _wrapper
+#     return _wrapper
