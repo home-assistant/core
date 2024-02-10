@@ -217,6 +217,18 @@ class OperationNotAllowed(ConfigError):
 
 UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Coroutine[Any, Any, None]]
 
+FROZEN_CONFIG_ENTRY_ATTRS = {"entry_id", "domain", "state", "reason"}
+UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
+    "unique_id",
+    "title",
+    "data",
+    "options",
+    "pref_disable_new_entities",
+    "pref_disable_polling",
+    "minor_version",
+    "version",
+}
+
 
 class ConfigEntry:
     """Hold a configuration entry."""
@@ -382,18 +394,17 @@ class ConfigEntry:
 
     def __setattr__(self, key: str, value: Any) -> None:
         """Set an attribute."""
-        if key in (
-            "unique_id",
-            "title",
-            "data",
-            "options",
-            "pref_disable_new_entities",
-            "pref_disable_polling",
-            "minor_version",
-            "version",
-        ):
-            raise AttributeError(f"{key} must only be updated via async_update_entry")
-        if key in ("entry_id", "domain", "state", "reason"):
+        if key in UPDATE_ENTRY_CONFIG_ENTRY_ATTRS:
+            raise AttributeError(
+                f"{key} forced to fail to find core integration that need fixed"
+            )
+
+            report(
+                f"sets {key} directly to update a config entry. This is deprecated and will"
+                " stop working in Home Assistant 2024.10, it should be updated to use"
+                " async_update_entry instead"
+            )
+        elif key in FROZEN_CONFIG_ENTRY_ATTRS:
             raise AttributeError(f"{key} cannot be changed")
 
         super().__setattr__(key, value)
