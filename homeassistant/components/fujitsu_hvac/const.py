@@ -29,6 +29,8 @@ HA_TO_FUJI_FAN = {
     FAN_HIGH: FanSpeed.HIGH,
     FAN_AUTO: FanSpeed.AUTO,
 }
+FUJI_TO_HA_FAN = {value: key for key, value in HA_TO_FUJI_FAN.items()}
+
 HA_TO_FUJI_HVAC = {
     HVACMode.OFF: OpMode.OFF,
     HVACMode.HEAT: OpMode.HEAT,
@@ -37,30 +39,12 @@ HA_TO_FUJI_HVAC = {
     HVACMode.DRY: OpMode.DRY,
     HVACMode.FAN_ONLY: OpMode.FAN,
 }
+FUJI_TO_HA_HVAC = {value: key for key, value in HA_TO_FUJI_HVAC.items()}
+
 HA_TO_FUJI_SWING = {
     SWING_OFF: SwingMode.OFF,
     SWING_VERTICAL: SwingMode.SWING_VERTICAL,
     SWING_HORIZONTAL: SwingMode.SWING_HORIZONTAL,
     SWING_BOTH: SwingMode.SWING_BOTH,
 }
-
-FUJI_TO_HA_FAN = {
-    FanSpeed.LOW: FAN_LOW,
-    FanSpeed.MEDIUM: FAN_MEDIUM,
-    FanSpeed.HIGH: FAN_HIGH,
-    FanSpeed.AUTO: FAN_AUTO,
-}
-FUJI_TO_HA_HVAC = {
-    OpMode.OFF: HVACMode.OFF,
-    OpMode.HEAT: HVACMode.HEAT,
-    OpMode.COOL: HVACMode.COOL,
-    OpMode.AUTO: HVACMode.AUTO,
-    OpMode.DRY: HVACMode.DRY,
-    OpMode.FAN: HVACMode.FAN_ONLY,
-}
-FUJI_TO_HA_SWING = {
-    SwingMode.OFF: SWING_OFF,
-    SwingMode.SWING_VERTICAL: SWING_VERTICAL,
-    SwingMode.SWING_HORIZONTAL: SWING_HORIZONTAL,
-    SwingMode.SWING_BOTH: SWING_BOTH,
-}
+FUJI_TO_HA_SWING = {value: key for key, value in HA_TO_FUJI_SWING.items()}
