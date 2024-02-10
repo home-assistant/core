@@ -17,6 +17,7 @@ from zigpy.quirks.v2 import (
     WriteAttributeButtonMetadata,
     ZCLCommandButtonMetadata,
     ZCLEnumMetadata,
+    ZCLSensorMetadata,
 )
 from zigpy.state import State
 from zigpy.zcl import ClusterType
@@ -105,9 +106,10 @@ QUIRKS_ENTITY_META_TO_ENTITY_CLASS = {
         BinarySensorMetadata,
         EntityType.STANDARD,
     ): binary_sensor.BinarySensor,
-    (Platform.SENSOR, EnumMetadata, EntityType.CONFIG): sensor.EnumSensor,
-    (Platform.SENSOR, EnumMetadata, EntityType.DIAGNOSTIC): sensor.EnumSensor,
-    (Platform.SENSOR, EnumMetadata, EntityType.STANDARD): sensor.EnumSensor,
+    (Platform.SENSOR, ZCLEnumMetadata, EntityType.DIAGNOSTIC): sensor.EnumSensor,
+    (Platform.SENSOR, ZCLEnumMetadata, EntityType.STANDARD): sensor.EnumSensor,
+    (Platform.SENSOR, ZCLSensorMetadata, EntityType.DIAGNOSTIC): sensor.Sensor,
+    (Platform.SENSOR, ZCLSensorMetadata, EntityType.STANDARD): sensor.Sensor,
     (Platform.SELECT, EnumMetadata, EntityType.CONFIG): select.ZHANonZCLSelectEntity,
     (
         Platform.SELECT,
