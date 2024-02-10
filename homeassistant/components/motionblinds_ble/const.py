@@ -1,7 +1,7 @@
-"""Constants for the MotionBlinds BLE integration."""
+"""Constants for the Motionblinds BLE integration."""
 
 ATTR_CALIBRATION = "calibration"
-ATTR_CONNECTION_TYPE = "connection_type"
+ATTR_CONNECTION = "connection"
 ATTR_SPEED = "speed"
 ATTR_BATTERY = "battery"
 ATTR_CONNECT = "connect"
@@ -14,8 +14,6 @@ CONF_MAC_CODE = "mac_code"
 CONF_BLIND_TYPE = "blind_type"
 
 DOMAIN = "motionblinds_ble"
-
-ENTITY_NAME = "MotionBlind {mac_code}"
 
 ERROR_COULD_NOT_FIND_MOTOR = "could_not_find_motor"
 ERROR_INVALID_MAC_CODE = "invalid_mac_code"
@@ -30,4 +28,4 @@ ICON_FAVORITE = "mdi:star"
 ICON_CONNECTION_TYPE = "mdi:bluetooth-connect"
 ICON_VERTICAL_BLIND = "mdi:blinds-vertical-closed"
 
-MANUFACTURER = "MotionBlinds"
+MANUFACTURER = "Motionblinds"

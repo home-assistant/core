@@ -3735,7 +3735,7 @@
       "iot_class": "local_push"
     },
     "motionblinds_ble": {
-      "name": "MotionBlinds BLE",
+      "name": "Motionblinds BLE",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "assumed_state"
