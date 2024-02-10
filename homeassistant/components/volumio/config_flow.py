@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyvolumio import CannotConnectError, Volumio
 import voluptuous as vol
@@ -13,13 +14,17 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CONF_CONN_ERROR_ASSUMES_OFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_HOST): str, vol.Required(CONF_PORT, default=3000): int}
+    {
+        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_PORT, default=3000): int,
+        vol.Required(CONF_CONN_ERROR_ASSUMES_OFF, default=False): bool,
+    }
 )
 
 
@@ -37,12 +42,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Volumio."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
         self._port: int | None = None
         self._name: str | None = None
+        self._conn_error_assumes_off: bool | None = None
         self._uuid: str | None = None
 
     @callback
@@ -53,6 +60,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_NAME: self._name,
                 CONF_HOST: self._host,
                 CONF_PORT: self._port,
+                CONF_CONN_ERROR_ASSUMES_OFF: self._conn_error_assumes_off,
                 CONF_ID: self._uuid,
             },
         )
@@ -64,6 +72,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self._host,
                 CONF_PORT: self._port,
                 CONF_NAME: self._name,
+                CONF_CONN_ERROR_ASSUMES_OFF: self._conn_error_assumes_off,
             }
         )
 
@@ -74,6 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             info = None
             self._host = user_input[CONF_HOST]
             self._port = user_input[CONF_PORT]
+            self._conn_error_assumes_off = user_input[CONF_CONN_ERROR_ASSUMES_OFF]
             try:
                 info = await validate_input(self.hass, self._host, self._port)
             except CannotConnect:
@@ -102,6 +112,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._port = discovery_info.port
         self._name = discovery_info.properties["volumioName"]
         self._uuid = discovery_info.properties["UUID"]
+        self._conn_error_assumes_off = False
 
         await self._set_uid_and_abort()
 
@@ -118,6 +129,55 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovery_confirm", description_placeholders={"name": self._name}
+        )
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
+        """Allow user to provide options."""
+        return VolumioOptionsFlowHandler(config_entry)
+
+
+class VolumioOptionsFlowHandler(config_entries.OptionsFlow):
+    """OptionFlow for Volumio."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow for Volumio."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Manage the options for Volumio."""
+        if user_input is not None:
+            merged_config_entry = self.config_entry.data.copy()
+            if CONF_CONN_ERROR_ASSUMES_OFF in user_input:
+                merged_config_entry[CONF_CONN_ERROR_ASSUMES_OFF] = user_input[
+                    CONF_CONN_ERROR_ASSUMES_OFF
+                ]
+
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data=merged_config_entry,
+                options=self.config_entry.options,
+            )
+
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_CONN_ERROR_ASSUMES_OFF,
+                        default=self.config_entry.options.get(
+                            CONF_CONN_ERROR_ASSUMES_OFF, False
+                        ),
+                    ): bool
+                }
+            ),
         )
 
 
