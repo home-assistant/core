@@ -6,7 +6,10 @@ from __future__ import annotations
 
 from datetime import timedelta
 import json
+import logging
 from typing import Any
+
+from pyvolumio import CannotConnectError
 
 from homeassistant.components.media_player import (
     BrowseMedia,
@@ -24,9 +27,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
 
 from .browse_media import browse_node, browse_top_level
-from .const import DATA_INFO, DATA_VOLUMIO, DOMAIN
+from .const import CONF_CONN_ERROR_ASSUMES_OFF, DATA_INFO, DATA_VOLUMIO, DOMAIN
 
 PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=15)
+
+_LOGGER = logging.getLogger(__name__)
+_LOGGER.setLevel(logging.DEBUG)
 
 
 async def async_setup_entry(
@@ -41,8 +47,9 @@ async def async_setup_entry(
     info = data[DATA_INFO]
     uid = config_entry.data[CONF_ID]
     name = config_entry.data[CONF_NAME]
+    conn_error_assumes_off = config_entry.data[CONF_CONN_ERROR_ASSUMES_OFF]
 
-    entity = Volumio(volumio, uid, name, info)
+    entity = Volumio(volumio, uid, name, info, conn_error_assumes_off)
     async_add_entities([entity])
 
 
@@ -70,8 +77,10 @@ class Volumio(MediaPlayerEntity):
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
     _attr_source_list = []
+    _connect_error_cnt: int = 0
+    _connect_error_cnt_threshold: int = 3
 
-    def __init__(self, volumio, uid, name, info):
+    def __init__(self, volumio, uid, name, info, conn_error_assumes_off):
         """Initialize the media player."""
         self._volumio = volumio
         unique_id = uid
@@ -85,15 +94,29 @@ class Volumio(MediaPlayerEntity):
             name=name,
             sw_version=info["systemversion"],
         )
+        self._conn_error_assumes_off = conn_error_assumes_off
 
     async def async_update(self) -> None:
         """Update state."""
-        self._state = await self._volumio.get_state()
-        await self._async_update_playlists()
+        try:
+            self._state = await self._volumio.get_state()
+            await self._async_update_playlists()
+            self.reset_connect_error()
+        except CannotConnectError as error:
+            self.increase_connect_error()
+            msg = f"Unable to connect to {self._volumio.canonic_url('/')}"
+            if self._conn_error_assumes_off:
+                _LOGGER.debug(msg)
+            else:
+                raise error
 
     @property
     def state(self) -> MediaPlayerState:
         """Return the state of the device."""
+
+        if self.is_connection_error():
+            return MediaPlayerState.OFF
+
         status = self._state.get("status", None)
         if status == "pause":
             return MediaPlayerState.PAUSED
@@ -101,6 +124,11 @@ class Volumio(MediaPlayerEntity):
             return MediaPlayerState.PLAYING
 
         return MediaPlayerState.IDLE
+
+    @property
+    def assumed_state(self) -> bool:
+        """Assumed state."""
+        return self.is_connection_error()
 
     @property
     def media_title(self):
@@ -256,3 +284,17 @@ class Volumio(MediaPlayerEntity):
         cached_url = self.thumbnail_cache.get(media_content_id)
         image_url = self._volumio.canonic_url(cached_url)
         return await self._async_fetch_image(image_url)
+
+    def reset_connect_error(self: Volumio) -> None:
+        """Reset the connection error counter."""
+        self._connect_error_cnt = 0
+
+    def increase_connect_error(self: Volumio) -> int:
+        """Increase the connection error counter until threshold is reached. Returns current counter."""
+        if self._connect_error_cnt < self._connect_error_cnt_threshold:
+            self._connect_error_cnt += 1
+        return self._connect_error_cnt
+
+    def is_connection_error(self: Volumio) -> bool:
+        """Return True in case the connection error counter reached the threshold. False otherwise."""
+        return self._connect_error_cnt >= self._connect_error_cnt_threshold

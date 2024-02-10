@@ -2,10 +2,13 @@
 from ipaddress import ip_address
 from unittest.mock import patch
 
-from homeassistant import config_entries
+import voluptuous as vol
+
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.volumio.config_flow import CannotConnectError
-from homeassistant.components.volumio.const import DOMAIN
+from homeassistant.components.volumio.const import CONF_CONN_ERROR_ASSUMES_OFF, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -16,6 +19,7 @@ TEST_SYSTEM_INFO = {"id": "1111-1111-1111-1111", "name": "TestVolumio"}
 TEST_CONNECTION = {
     "host": "1.1.1.1",
     "port": 3000,
+    "conn_error_assumes_off": False,
 }
 
 
@@ -32,6 +36,7 @@ TEST_DISCOVERY = zeroconf.ZeroconfServiceInfo(
 TEST_DISCOVERY_RESULT = {
     "host": TEST_DISCOVERY.host,
     "port": TEST_DISCOVERY.port,
+    "conn_error_assumes_off": False,
     "id": TEST_DISCOVERY.properties["UUID"],
     "name": TEST_DISCOVERY.properties["volumioName"],
 }
@@ -129,6 +134,7 @@ async def test_empty_system_info(hass: HomeAssistant) -> None:
         "host": TEST_CONNECTION["host"],
         "port": TEST_CONNECTION["port"],
         "name": TEST_CONNECTION["host"],
+        "conn_error_assumes_off": TEST_CONNECTION["conn_error_assumes_off"],
         "id": None,
     }
 
@@ -270,3 +276,86 @@ async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
 
     assert entry.data == TEST_DISCOVERY_RESULT
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_option_form(hass: HomeAssistant) -> None:
+    """Test the options form."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Mock Volumio",
+        data={
+            CONF_NAME: "Mock Volumio",
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 3000,
+            CONF_CONN_ERROR_ASSUMES_OFF: False,
+        },
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.volumio.config_flow.Volumio.get_system_info",
+        return_value=TEST_SYSTEM_INFO,
+    ), patch(
+        "homeassistant.components.volumio.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"] == vol.Schema(
+        {vol.Required(CONF_CONN_ERROR_ASSUMES_OFF): bool}
+    )
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_CONN_ERROR_ASSUMES_OFF: False},
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["data"][CONF_CONN_ERROR_ASSUMES_OFF] is False
+
+
+async def test_options_migration(hass: HomeAssistant) -> None:
+    """Test migration of options after update."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Mock Volumio",
+        data={
+            CONF_NAME: "Mock Volumio",
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 3000,
+        },
+        options={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.volumio.config_flow.Volumio.get_system_info",
+        return_value=TEST_SYSTEM_INFO,
+    ), patch(
+        "homeassistant.components.volumio.async_setup_entry",
+        return_value=True,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(
+            entry.entry_id, context={"source": config_entries.SOURCE_USER}, data=None
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["data"][CONF_CONN_ERROR_ASSUMES_OFF] is False
