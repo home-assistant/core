@@ -49,31 +49,6 @@
           }
         }
       }
-    },
-    "sensor": {
-      "battery": {
-        "name": "Battery"
-      },
-      "connection": {
-        "name": "Connected",
-        "state": {
-          "connected": "Yes",
-          "disconnected": "No",
-          "connecting": "Connecting...",
-          "disconnecting": "Disconnecting..."
-        }
-      },
-      "calibration": {
-        "name": "Calibrated",
-        "state": {
-          "calibrated": "Yes",
-          "uncalibrated": "No",
-          "calibrating": "Calibrating..."
-        }
-      },
-      "signal_strength": {
-        "name": "Signal strength"
-      }
     }
   }
 }
