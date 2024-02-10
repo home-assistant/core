@@ -233,11 +233,7 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
-        super().__init__(
-            unique_id,
-            coordinator,
-            description.protocol_listener
-        )
+        super().__init__(unique_id, coordinator, description.protocol_listener)
 
     @property
     def native_value(self) -> StateType | datetime.datetime:
