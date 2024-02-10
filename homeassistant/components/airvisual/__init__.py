@@ -255,7 +255,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             unique_id=first_id,
             title=f"Cloud API ({first_id})",
             data={CONF_API_KEY: entry.data[CONF_API_KEY], **first_geography},
-            version=2,
+            version=version,
         )
 
         # For any geographies that remain, create a new config entry for each one:
