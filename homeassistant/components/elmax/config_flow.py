@@ -172,13 +172,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await client.login()
         except (ElmaxNetworkError, httpx.ConnectError, httpx.ConnectTimeout):
             return self.async_show_form(
-                step_id="direct_setup",
+                step_id=CONF_ELMAX_MODE_DIRECT,
                 data_schema=DIRECT_SETUP_SCHEMA,
                 errors={"base": "network_error"},
             )
         except ElmaxBadLoginError:
             return self.async_show_form(
-                step_id="direct_setup",
+                step_id=CONF_ELMAX_MODE_DIRECT,
                 data_schema=DIRECT_SETUP_SCHEMA,
                 errors={"base": "invalid_auth"},
             )
@@ -211,7 +211,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._selected_mode = CONF_ELMAX_MODE_CLOUD
         if user_input is None:
             return self.async_show_form(
-                step_id="direct_setup",
+                step_id=CONF_ELMAX_MODE_DIRECT,
                 data_schema=DIRECT_SETUP_SCHEMA,
                 errors=None,
             )
@@ -241,7 +241,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
         return await self._handle_direct_and_create_entry(
-            fallback_step_id="direct_setup", schema=tmp_schema
+            fallback_step_id=CONF_ELMAX_MODE_DIRECT, schema=tmp_schema
         )
 
     async def async_step_zeroconf_setup(self, user_input: dict[str, Any]) -> FlowResult:
@@ -290,7 +290,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # When invokes without parameters, show the login form.
         if user_input is None:
             return self.async_show_form(
-                step_id="cloud_setup", data_schema=LOGIN_FORM_SCHEMA, errors={}
+                step_id=CONF_ELMAX_MODE_CLOUD, data_schema=LOGIN_FORM_SCHEMA, errors={}
             )
 
         # Otherwise, it means we are handling now the "submission" of the user form.
@@ -302,14 +302,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except ElmaxBadLoginError:
             return self.async_show_form(
-                step_id="cloud_setup",
+                step_id=CONF_ELMAX_MODE_CLOUD,
                 data_schema=LOGIN_FORM_SCHEMA,
                 errors={"base": "invalid_auth"},
             )
         except ElmaxNetworkError:
             _LOGGER.exception("A network error occurred")
             return self.async_show_form(
-                step_id="cloud_setup",
+                step_id=CONF_ELMAX_MODE_CLOUD,
                 data_schema=LOGIN_FORM_SCHEMA,
                 errors={"base": "network_error"},
             )
@@ -320,7 +320,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # If no online panel was found, we display an error in the next UI.
         if not online_panels:
             return self.async_show_form(
-                step_id="cloud_setup",
+                step_id=CONF_ELMAX_MODE_CLOUD,
                 data_schema=LOGIN_FORM_SCHEMA,
                 errors={"base": "no_panel_online"},
             )
