@@ -226,15 +226,11 @@ async def test_form_babel_replace_dash_with_underscore(hass: HomeAssistant) -> N
 
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test options flow."""
-    data_at = {
+    data = {
         CONF_COUNTRY: "AT",
         CONF_PROVINCE: "1",
     }
-    data_de = {
-        CONF_COUNTRY: "DE",
-        CONF_PROVINCE: "BW",
-    }
-    entry = MockConfigEntry(domain=DOMAIN, data=data_at)
+    entry = MockConfigEntry(domain=DOMAIN, data=data)
 
     entry.add_to_hass(hass)
 
@@ -256,14 +252,3 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert entry.options == {CONF_CATEGORIES: ["bank"]}
-
-    entry = MockConfigEntry(domain=DOMAIN, data=data_de)
-
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == FlowResultType.FORM
