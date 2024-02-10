@@ -639,7 +639,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.add_to_queue(playlist, timeout=LONG_SERVICE_TIMEOUT)
                 soco.play_from_queue(0)
         elif media_type in PLAYABLE_MEDIA_TYPES:
-            self._play_media_playable_media_types(soco, media_id, media_type)
+            self._play_media_playable_media_types(media_id, media_type)
         else:
             _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
 

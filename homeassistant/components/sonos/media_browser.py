@@ -489,7 +489,7 @@ def get_content_id(item: DidlObject) -> str:
 def get_media_list(
     media_library: MusicLibrary, item_id: str, search_type: str
 ) -> list[MusicServiceItem]:
-    """Return list of medias/albums."""
+    """Return list of media or albums."""
     search_type = MEDIA_TYPES_TO_SONOS.get(search_type, search_type)
 
     if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
