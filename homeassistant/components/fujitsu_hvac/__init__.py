@@ -11,7 +11,14 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import API, API_TIMEOUT, AYLA_APP_ID, AYLA_APP_SECRET, CONF_EUROPE, DOMAIN
+from .const import (
+    API,
+    API_TIMEOUT,
+    CONF_EUROPE,
+    DOMAIN,
+    FGLAIR_APP_ID,
+    FGLAIR_APP_SECRET,
+)
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
@@ -21,8 +28,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = new_ayla_api(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
-        AYLA_APP_ID,
-        AYLA_APP_SECRET,
+        FGLAIR_APP_ID,
+        FGLAIR_APP_SECRET,
         europe=entry.data[CONF_EUROPE],
     )
 

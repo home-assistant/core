@@ -12,7 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import API_TIMEOUT, AYLA_APP_ID, AYLA_APP_SECRET, CONF_EUROPE, DOMAIN
+from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_ID, FGLAIR_APP_SECRET
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +46,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api = new_ayla_api(
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
-                AYLA_APP_ID,
-                AYLA_APP_SECRET,
+                FGLAIR_APP_ID,
+                FGLAIR_APP_SECRET,
                 europe=user_input[CONF_EUROPE],
             )
             try:

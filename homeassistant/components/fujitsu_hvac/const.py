@@ -1,4 +1,8 @@
 """Constants for the Fujitsu HVAC (based on Ayla IOT) integration."""
+from ayla_iot_unofficial.fujitsu_consts import (  # noqa: F401
+    FGLAIR_APP_ID,
+    FGLAIR_APP_SECRET,
+)
 from ayla_iot_unofficial.fujitsu_hvac import FanSpeed, OpMode, SwingMode
 
 from homeassistant.components.climate import (
@@ -17,8 +21,6 @@ API = "api"
 API_TIMEOUT = 10
 
 DOMAIN = "fujitsu_hvac"
-AYLA_APP_ID = "CJIOSP-id"
-AYLA_APP_SECRET = "CJIOSP-Vb8MQL_lFiYQ7DKjN0eCFXznKZE"
 
 CONF_EUROPE = "is_europe"
 
