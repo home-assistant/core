@@ -1,4 +1,5 @@
 """Support for Netatmo Smart thermostats."""
+
 from __future__ import annotations
 
 import logging
