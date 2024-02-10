@@ -15,12 +15,6 @@ from homeassistant import config_entries
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.selector import (
-    SelectOptionDict,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
 
 from .common import (
     build_direct_ssl_context,
@@ -60,26 +54,6 @@ REAUTH_FORM_SCHEMA = vol.Schema(
         vol.Required(CONF_ELMAX_USERNAME): str,
         vol.Required(CONF_ELMAX_PASSWORD): str,
         vol.Required(CONF_ELMAX_PANEL_PIN): str,
-    }
-)
-
-CHOOSE_MODE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_ELMAX_MODE, default=CONF_ELMAX_MODE_CLOUD): SelectSelector(
-            SelectSelectorConfig(
-                options=[
-                    SelectOptionDict(
-                        value=CONF_ELMAX_MODE_CLOUD,
-                        label="Connect to Elmax Panel via Elmax Cloud APIs",
-                    ),
-                    SelectOptionDict(
-                        value=CONF_ELMAX_MODE_DIRECT,
-                        label="Connect to Elmax Panel via local/direct IP",
-                    ),
-                ],
-                mode=SelectSelectorMode.DROPDOWN,
-            )
-        )
     }
 )
 
@@ -155,20 +129,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle local vs cloud mode selection step."""
-        errors: dict[str, Any] = {}
-        if user_input is None:
-            return self.async_show_form(
-                step_id="choose_mode", data_schema=CHOOSE_MODE_SCHEMA, errors=errors
-            )
-
-        self._selected_mode = user_input[CONF_ELMAX_MODE]
-        if self._selected_mode == CONF_ELMAX_MODE_CLOUD:
-            return self.async_show_form(
-                step_id="cloud_setup", data_schema=LOGIN_FORM_SCHEMA, errors=errors
-            )
-        # Assume mode direct.
-        return self.async_show_form(
-            step_id="direct_setup", data_schema=DIRECT_SETUP_SCHEMA, errors=errors
+        return self.async_show_menu(
+            step_id="choose_mode",
+            menu_options={
+                "cloud_setup": "Connect to Elmax Panel via Elmax Cloud APIs",
+                "direct_setup": "Connect to Elmax Panel via local/direct IP",
+            },
         )
 
     async def _handle_direct_and_create_entry(
@@ -242,6 +208,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_direct_setup(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle the direct setup step."""
+        self._selected_mode = CONF_ELMAX_MODE_CLOUD
         if user_input is None:
             return self.async_show_form(
                 step_id="direct_setup",
@@ -318,12 +285,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_cloud_setup(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle the cloud setup flow."""
+        self._selected_mode = CONF_ELMAX_MODE_CLOUD
+
         # When invokes without parameters, show the login form.
-        username = user_input[CONF_ELMAX_USERNAME]
-        password = user_input[CONF_ELMAX_PASSWORD]
+        if user_input is None:
+            return self.async_show_form(
+                step_id="cloud_setup", data_schema=LOGIN_FORM_SCHEMA, errors={}
+            )
 
         # Otherwise, it means we are handling now the "submission" of the user form.
         # In this case, let's try to log in to the Elmax cloud and retrieve the available panels.
+        username = user_input[CONF_ELMAX_USERNAME]
+        password = user_input[CONF_ELMAX_PASSWORD]
         try:
             client = await self._async_login(username=username, password=password)
 
