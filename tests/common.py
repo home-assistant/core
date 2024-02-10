@@ -934,7 +934,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             kwargs["state"] = state
         super().__init__(**kwargs)
         if reason is not None:
-            self.reason = reason
+            object.__setattr__(self, "reason", reason)
 
     def add_to_hass(self, hass: HomeAssistant) -> None:
         """Test helper to add entry to hass."""
