@@ -8,7 +8,7 @@
           "direct": "Connect to Elmax Panel via local/direct IP"
         }
       },
-      "cloud_setup": {
+      "cloud": {
         "description": "Please login to the Elmax cloud using your credentials",
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
@@ -22,7 +22,7 @@
           "use_ssl": "Use SSL"
         }
       },
-      "direct_setup": {
+      "direct": {
         "description": "Specify the Elmax panel connection parameters below.",
         "data": {
           "panel_api_host": "Panel API Hostname or IP",
