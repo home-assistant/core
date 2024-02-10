@@ -27,9 +27,6 @@ class WireGuardConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    host: str
-    wireguard: WireguardApiClient
-
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
@@ -37,12 +34,12 @@ class WireGuardConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self.host = user_input[CONF_HOST]
-            self.wireguard = WireguardApiClient(self.host)
+            host: str = user_input[CONF_HOST]
+            wireguard: WireguardApiClient = WireguardApiClient(host)
 
             try:
-                await self.wireguard.get_peers()
-                await self.wireguard.close()
+                await wireguard.get_peers()
+                await wireguard.close()
             except WireGuardTimeoutError:
                 errors["base"] = "timeout_connect"
             except WireGuardResponseError:
