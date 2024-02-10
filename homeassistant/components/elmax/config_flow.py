@@ -206,7 +206,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_direct_setup(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_direct(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle the direct setup step."""
         self._selected_mode = CONF_ELMAX_MODE_CLOUD
         if user_input is None:
@@ -283,7 +283,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
-    async def async_step_cloud_setup(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_cloud(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle the cloud setup flow."""
         self._selected_mode = CONF_ELMAX_MODE_CLOUD
 
