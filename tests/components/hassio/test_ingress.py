@@ -368,7 +368,7 @@ async def test_ingress_request_get_compressed(
     aioclient_mock.get(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
         text=body,
-        headers={"Content-Length": len(body)},
+        headers={"Content-Length": len(body), "Content-Type": "text/plain"},
     )
 
     resp = await hassio_noauth_client.get(
@@ -403,6 +403,7 @@ async def test_ingress_request_get_compressed(
         "image/jpeg",
         "font/woff2",
         "video/mp4",
+        "application/tar",
     ],
 )
 async def test_ingress_request_not_compressed(
@@ -458,6 +459,7 @@ async def test_ingress_request_with_charset_in_content_type(
         "text/html",
         "application/javascript",
         "text/plain",
+        "application/json",
     ],
 )
 async def test_ingress_request_compressed(
