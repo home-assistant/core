@@ -4,13 +4,11 @@ import logging
 from typing import Any
 
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
-from ayla_iot_unofficial.fujitsu_hvac import FujitsuHVAC
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 
 from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_ID, FGLAIR_APP_SECRET
 
@@ -28,11 +26,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fujitsu HVAC (based on Ayla IOT)."""
-
-    def __init__(self) -> None:
-        """Create empty data."""
-        self.devices: dict[str, FujitsuHVAC] = {}
-        self.credentials: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -69,11 +62,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
