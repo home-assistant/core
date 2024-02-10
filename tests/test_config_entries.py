@@ -151,10 +151,11 @@ async def test_call_async_migrate_entry(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test we call <component>.async_migrate_entry when version mismatch."""
-    entry = MockConfigEntry(domain="comp")
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     assert not entry.supports_unload
-    entry.version = major_version
-    entry.minor_version = minor_version
+
     entry.add_to_hass(hass)
 
     mock_migrate_entry = AsyncMock(return_value=True)
@@ -185,9 +186,9 @@ async def test_call_async_migrate_entry_failure_false(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if returns false."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -217,9 +218,9 @@ async def test_call_async_migrate_entry_failure_exception(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if exception raised."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -249,9 +250,9 @@ async def test_call_async_migrate_entry_failure_not_bool(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if boolean not returned."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -281,9 +282,9 @@ async def test_call_async_migrate_entry_failure_not_supported(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if async_migrate_entry not implemented."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -304,9 +305,9 @@ async def test_call_async_migrate_entry_not_supported_minor_version(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration without async_migrate_entry and minor version changed."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
