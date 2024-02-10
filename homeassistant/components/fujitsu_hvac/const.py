@@ -17,7 +17,6 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 
-API = "api"
 API_TIMEOUT = 10
 
 DOMAIN = "fujitsu_hvac"

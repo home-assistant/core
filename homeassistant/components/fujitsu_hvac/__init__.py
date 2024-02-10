@@ -11,14 +11,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import (
-    API,
-    API_TIMEOUT,
-    CONF_EUROPE,
-    DOMAIN,
-    FGLAIR_APP_ID,
-    FGLAIR_APP_SECRET,
-)
+from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_ID, FGLAIR_APP_SECRET
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
@@ -41,8 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except AylaAuthError as e:
         raise ConfigEntryAuthFailed("Credentuials expired for Ayla IoT API") from e
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][API] = api
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -53,8 +45,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     with suppress(TimeoutError):
         async with timeout(API_TIMEOUT):
-            await hass.data[DOMAIN][API].async_sign_out()
+            await hass.data[DOMAIN][entry.entry_id].async_sign_out()
 
-    hass.data[DOMAIN].pop(API)
+    hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

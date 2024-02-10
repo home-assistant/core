@@ -18,7 +18,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    API,
     DOMAIN,
     FUJI_TO_HA_FAN,
     FUJI_TO_HA_HVAC,
@@ -35,7 +34,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up one Fujitsu HVAC device."""
-    api = hass.data[DOMAIN][API]
+    api = hass.data[DOMAIN][entry.entry_id]
 
     devices = await api.async_get_devices()
     devices = list(filter(lambda x: isinstance(x, FujitsuHVAC), devices))
