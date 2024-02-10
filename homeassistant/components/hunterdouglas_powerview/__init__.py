@@ -61,7 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
 
     if hub.role != "Primary":
-        # this should be caught in config_flow, but account for a hub changing roles (which only happens manually by a user)
+        # this should be caught in config_flow, but account for a hub changing roles
+        # this will only happen manually by a user
         _LOGGER.error(
             "%s (%s) is performing role of %s Hub. Only the Primary Hub can manage shades",
             hub.name,
