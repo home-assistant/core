@@ -183,7 +183,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.2.3.4"},
+            {CONF_HOST: "1.2.3.4"},
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -203,7 +203,7 @@ async def test_form_no_data(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.2.3.4"},
+            {CONF_HOST: "1.2.3.4"},
         )
 
     assert result2["type"] == FlowResultType.FORM
@@ -223,8 +223,28 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.2.3.4"},
+            {CONF_HOST: "1.2.3.4"},
         )
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_hunterdouglas_secondary")
+async def test_form_unsupported_device(hass: HomeAssistant) -> None:
+    """Test unsupported device failure."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.2.3.4"},
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "unsupported_device"}

@@ -44,13 +44,9 @@ async def validate_input(hass: core.HomeAssistant, hub_address: str) -> dict[str
         raise CannotConnect from err
 
     if hub.role != "Primary":
-        _LOGGER.debug(
-            "%s (%s) is the %s Hub. Only the Primary can manage shades",
-            hub.name,
-            hub.hub_address,
-            hub.role,
+        raise UnsupportedDevice(
+            f"{hub.name} ({hub.hub_address}) is the {hub.role} Hub. Only the Primary can manage shades"
         )
-        raise UnsupportedDevice
 
     _LOGGER.debug("Connection made using api version: %s", hub.api_version)
 
