@@ -50,16 +50,6 @@
         }
       }
     },
-    "select": {
-      "speed": {
-        "name": "Motor speed",
-        "state": {
-          "1": "Low",
-          "2": "Medium",
-          "3": "High"
-        }
-      }
-    },
     "sensor": {
       "battery": {
         "name": "Battery"
