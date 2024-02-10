@@ -50,17 +50,6 @@
         }
       }
     },
-    "button": {
-      "connect": {
-        "name": "Connect"
-      },
-      "disconnect": {
-        "name": "Disconnect"
-      },
-      "favorite": {
-        "name": "Favorite"
-      }
-    },
     "select": {
       "speed": {
         "name": "Motor speed",
