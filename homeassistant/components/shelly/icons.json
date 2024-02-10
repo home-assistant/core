@@ -11,11 +11,6 @@
         "default": "mdi:volume-high"
       }
     },
-    "climate": {
-      "thermostat": {
-        "default": "mdi:thermostat"
-      }
-    },
     "number": {
       "valve_position": {
         "default": "mdi:pipe-valve"
