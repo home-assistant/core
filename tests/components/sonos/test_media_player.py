@@ -59,6 +59,7 @@ async def test_entity_basic(
     assert attributes["is_volume_muted"] is False
     assert attributes["volume_level"] == 0.19
 
+
 async def test_play_media_music_library_album_artist(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,

@@ -465,6 +465,7 @@ def zgs_event_fixture(hass, soco, zgs_discovery):
 
     return _wrapper
 
+
 async def tests_setup_hass(hass: HomeAssistant):
     """Setup HASS for two hosts."""
     await async_setup_component(

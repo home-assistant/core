@@ -169,6 +169,7 @@ class _MockSoCoVisibleZones(MockSoCo):
     def visible_zones(self):
         return self.vz_return
 
+
 async def test_async_poll_manual_hosts_1(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,

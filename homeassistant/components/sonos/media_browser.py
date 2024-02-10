@@ -501,6 +501,7 @@ def get_media_list(
     )
     return matches
 
+
 def get_media(
     media_library: MusicLibrary, item_id: str, search_type: str
 ) -> MusicServiceItem:
