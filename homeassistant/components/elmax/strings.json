@@ -4,8 +4,8 @@
       "choose_mode": {
         "description": "Please choose the connection mode to Elmax panels.",
         "menu_options": {
-          "cloud_setup": "Connect to Elmax Panel via Elmax Cloud APIs",
-          "direct_setup": "Connect to Elmax Panel via local/direct IP"
+          "cloud": "Connect to Elmax Panel via Elmax Cloud APIs",
+          "direct": "Connect to Elmax Panel via local/direct IP"
         }
       },
       "cloud_setup": {
