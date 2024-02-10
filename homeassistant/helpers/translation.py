@@ -7,7 +7,13 @@ import logging
 import string
 from typing import Any
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
+    EVENT_CORE_CONFIG_UPDATE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import (
     Integration,
     async_get_config_flows,
@@ -199,12 +205,11 @@ class _TranslationCache:
         self.cache: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
         self.lock = asyncio.Lock()
 
-    async def async_fetch(
+    async def async_load(
         self,
         language: str,
-        category: str,
         components: set[str],
-    ) -> dict[str, str]:
+    ) -> None:
         """Load resources into the cache."""
         loaded = self.loaded.setdefault(language, set())
         if components_to_load := components - loaded:
@@ -218,6 +223,24 @@ class _TranslationCache:
                 if components_to_load := components - loaded:
                     await self._async_load(language, components_to_load)
 
+    async def async_fetch(
+        self,
+        language: str,
+        category: str,
+        components: set[str],
+    ) -> dict[str, str]:
+        """Load resources into the cache and return them."""
+        await self.async_load(language, components)
+
+        return self.get_cached(language, category, components)
+
+    def get_cached(
+        self,
+        language: str,
+        category: str,
+        components: set[str],
+    ) -> dict[str, str]:
+        """Read resources from the cache."""
         category_cache = self.cache.get(language, {}).get(category, {})
         # If only one component was requested, return it directly
         # to avoid merging the dictionaries and keeping additional
@@ -354,14 +377,67 @@ async def async_get_translations(
 ) -> dict[str, str]:
     """Return all backend translations.
 
-    If integration specified, load it for that one.
-    Otherwise default to loaded integrations combined with config flow
+    If integration is specified, load it for that one.
+    Otherwise, default to loaded integrations combined with config flow
     integrations if config_flow is true.
     """
+    if integrations is None and config_flow:
+        components = (await async_get_config_flows(hass)) - hass.config.components
+    else:
+        components = _async_get_components(hass, category, integrations)
+
+    cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
+
+    return await cache.async_fetch(language, category, components)
+
+
+async def _async_load_translations(
+    hass: HomeAssistant,
+    language: str,
+    category: str,
+    integration: str | None,
+) -> None:
+    """Prime backend translation cache.
+
+    If integration is not specified, translation cache is primed for all loaded integrations.
+    """
+    components = _async_get_components(
+        hass, category, [integration] if integration is not None else None
+    )
+
+    cache = hass.data[TRANSLATION_FLATTEN_CACHE]
+    await cache.async_load(language, components)
+
+
+@callback
+def async_get_cached_translations(
+    hass: HomeAssistant,
+    language: str,
+    category: str,
+    integration: str | None = None,
+) -> dict[str, str]:
+    """Return all cached backend translations.
+
+    If integration is specified, return translations for it.
+    Otherwise, default to all loaded integrations.
+    """
+    components = _async_get_components(
+        hass, category, [integration] if integration is not None else None
+    )
+
+    cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
+    return cache.get_cached(language, category, components)
+
+
+@callback
+def _async_get_components(
+    hass: HomeAssistant,
+    category: str,
+    integrations: Iterable[str] | None = None,
+) -> set[str]:
+    """Return a set of components for which translations should be loaded."""
     if integrations is not None:
         components = set(integrations)
-    elif config_flow:
-        components = (await async_get_config_flows(hass)) - hass.config.components
     elif category in ("state", "entity_component", "services"):
         components = hass.config.components
     else:
@@ -369,10 +445,91 @@ async def async_get_translations(
         components = {
             component for component in hass.config.components if "." not in component
         }
+    return components
 
-    if TRANSLATION_FLATTEN_CACHE in hass.data:
-        cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
-    else:
-        cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
 
-    return await cache.async_fetch(language, category, components)
+async def _async_load_state_translations_to_cache(
+    hass: HomeAssistant,
+    language: str,
+    integration: str | None,
+) -> None:
+    """Load state translations to cache."""
+    await _async_load_translations(hass, language, "entity", integration)
+    await _async_load_translations(hass, language, "state", integration)
+    await _async_load_translations(hass, language, "entity_component", integration)
+
+
+@callback
+def async_setup(hass: HomeAssistant) -> None:
+    """Create translation cache and register listeners for translation loaders.
+
+    Listeners load translations for every loaded component and after config change.
+    """
+
+    hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
+
+    async def load_translations(event: Event) -> None:
+        if "language" in event.data:
+            language = hass.config.language
+            _LOGGER.debug("Loading translations for language: %s", language)
+            await _async_load_state_translations_to_cache(hass, language, None)
+
+    async def load_translations_for_component(event: Event) -> None:
+        component = event.data.get("component")
+        # Platforms don't have their own translations, skip them
+        if component is None or "." in str(component):
+            return
+        language = hass.config.language
+        _LOGGER.debug(
+            "Loading translations for language: %s and component: %s",
+            hass.config.language,
+            component,
+        )
+        await _async_load_state_translations_to_cache(hass, language, component)
+
+    hass.bus.async_listen(EVENT_COMPONENT_LOADED, load_translations_for_component)
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, load_translations)
+
+
+@callback
+def async_translate_state(
+    hass: HomeAssistant,
+    state: str,
+    domain: str,
+    platform: str | None,
+    translation_key: str | None,
+    device_class: str | None,
+) -> str:
+    """Translate provided state using cached translations for currently selected language."""
+    if state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
+        return state
+    language = hass.config.language
+    if platform is not None and translation_key is not None:
+        localize_key = (
+            f"component.{platform}.entity.{domain}.{translation_key}.state.{state}"
+        )
+        translations = async_get_cached_translations(hass, language, "entity")
+        if localize_key in translations:
+            return translations[localize_key]
+
+    translations = async_get_cached_translations(hass, language, "entity_component")
+    if device_class is not None:
+        localize_key = (
+            f"component.{domain}.entity_component.{device_class}.state.{state}"
+        )
+        if localize_key in translations:
+            return translations[localize_key]
+    localize_key = f"component.{domain}.entity_component._.state.{state}"
+    if localize_key in translations:
+        return translations[localize_key]
+
+    translations = async_get_cached_translations(hass, language, "state", domain)
+    if device_class is not None:
+        localize_key = f"component.{domain}.state.{device_class}.{state}"
+        if localize_key in translations:
+            return translations[localize_key]
+    localize_key = f"component.{domain}.state._.{state}"
+    if localize_key in translations:
+        return translations[localize_key]
+
+    return state

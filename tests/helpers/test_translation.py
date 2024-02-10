@@ -2,10 +2,11 @@
 import asyncio
 from os import path
 import pathlib
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 
+from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import config_flows
 from homeassistant.helpers import translation
@@ -510,3 +511,217 @@ async def test_custom_component_translations(
     hass.config.components.add("test_embedded")
     hass.config.components.add("test_package")
     assert await translation.async_get_translations(hass, "en", "state") == {}
+
+
+async def test_load_state_translations_to_cache(
+    hass: HomeAssistant, mock_config_flows, enable_custom_integrations: None
+):
+    """Test the load state translations to cache helper."""
+
+    with patch(
+        "homeassistant.helpers.translation._async_load_translations",
+    ) as mock:
+        await translation._async_load_state_translations_to_cache(hass, "en", None)
+        mock.assert_has_calls(
+            [
+                call(hass, "en", "entity", None),
+                call(hass, "en", "state", None),
+                call(hass, "en", "entity_component", None),
+            ]
+        )
+
+    with patch(
+        "homeassistant.helpers.translation._async_load_translations",
+    ) as mock:
+        await translation._async_load_state_translations_to_cache(
+            hass, "en", "some_integration"
+        )
+        mock.assert_has_calls(
+            [
+                call(hass, "en", "entity", "some_integration"),
+                call(hass, "en", "state", "some_integration"),
+                call(hass, "en", "entity_component", "some_integration"),
+            ]
+        )
+
+
+async def test_get_cached_translations(
+    hass: HomeAssistant, mock_config_flows, enable_custom_integrations: None
+):
+    """Test the get cached translations helper."""
+    translations = translation.async_get_cached_translations(hass, "en", "state")
+    assert translations == {}
+
+    assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    await translation._async_load_state_translations_to_cache(hass, "en", None)
+    translations = translation.async_get_cached_translations(hass, "en", "state")
+
+    assert translations["component.switch.state.string1"] == "Value 1"
+    assert translations["component.switch.state.string2"] == "Value 2"
+
+    await translation._async_load_state_translations_to_cache(hass, "de", None)
+    translations = translation.async_get_cached_translations(hass, "de", "state")
+    assert "component.switch.something" not in translations
+    assert translations["component.switch.state.string1"] == "German Value 1"
+    assert translations["component.switch.state.string2"] == "German Value 2"
+
+    # Test a partial translation
+    await translation._async_load_state_translations_to_cache(hass, "es", None)
+    translations = translation.async_get_cached_translations(hass, "es", "state")
+    assert translations["component.switch.state.string1"] == "Spanish Value 1"
+    assert translations["component.switch.state.string2"] == "Value 2"
+
+    # Test that an untranslated language falls back to English.
+    await translation._async_load_state_translations_to_cache(
+        hass, "invalid-language", None
+    )
+    translations = translation.async_get_cached_translations(
+        hass, "invalid-language", "state"
+    )
+    assert translations["component.switch.state.string1"] == "Value 1"
+    assert translations["component.switch.state.string2"] == "Value 2"
+
+
+async def test_setup(hass: HomeAssistant):
+    """Test the setup load listeners helper."""
+    translation.async_setup(hass)
+
+    with patch(
+        "homeassistant.helpers.translation._async_load_state_translations_to_cache",
+    ) as mock:
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "loaded_component"})
+        await hass.async_block_till_done()
+        mock.assert_called_once_with(hass, hass.config.language, "loaded_component")
+
+    with patch(
+        "homeassistant.helpers.translation._async_load_state_translations_to_cache",
+    ) as mock:
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "config.component"})
+        await hass.async_block_till_done()
+        mock.assert_not_called()
+
+    with patch(
+        "homeassistant.helpers.translation._async_load_state_translations_to_cache",
+    ) as mock:
+        hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, {"language": "en"})
+        await hass.async_block_till_done()
+        mock.assert_called_once_with(hass, hass.config.language, None)
+
+    with patch(
+        "homeassistant.helpers.translation._async_load_state_translations_to_cache",
+    ) as mock:
+        hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, {})
+        await hass.async_block_till_done()
+        mock.assert_not_called()
+
+
+async def test_translate_state(hass: HomeAssistant):
+    """Test the state translation helper."""
+    result = translation.async_translate_state(
+        hass, "unavailable", "binary_sensor", "platform", "translation_key", None
+    )
+    assert result == "unavailable"
+
+    result = translation.async_translate_state(
+        hass, "unknown", "binary_sensor", "platform", "translation_key", None
+    )
+    assert result == "unknown"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={
+            "component.platform.entity.binary_sensor.translation_key.state.on": "TRANSLATED"
+        },
+    ) as mock:
+        result = translation.async_translate_state(
+            hass, "on", "binary_sensor", "platform", "translation_key", None
+        )
+        mock.assert_called_once_with(hass, hass.config.language, "entity")
+        assert result == "TRANSLATED"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={
+            "component.binary_sensor.entity_component.device_class.state.on": "TRANSLATED"
+        },
+    ) as mock:
+        result = translation.async_translate_state(
+            hass, "on", "binary_sensor", "platform", None, "device_class"
+        )
+        mock.assert_called_once_with(hass, hass.config.language, "entity_component")
+        assert result == "TRANSLATED"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={
+            "component.binary_sensor.entity_component._.state.on": "TRANSLATED"
+        },
+    ) as mock:
+        result = translation.async_translate_state(
+            hass, "on", "binary_sensor", "platform", None, None
+        )
+        mock.assert_called_once_with(hass, hass.config.language, "entity_component")
+        assert result == "TRANSLATED"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={"component.binary_sensor.state.device_class.on": "TRANSLATED"},
+    ) as mock:
+        result = translation.async_translate_state(
+            hass, "on", "binary_sensor", "platform", None, "device_class"
+        )
+        mock.assert_has_calls(
+            [
+                call(hass, hass.config.language, "entity_component"),
+                call(hass, hass.config.language, "state", "binary_sensor"),
+            ]
+        )
+        assert result == "TRANSLATED"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={"component.binary_sensor.state._.on": "TRANSLATED"},
+    ) as mock:
+        result = translation.async_translate_state(
+            hass, "on", "binary_sensor", "platform", None, None
+        )
+        mock.assert_has_calls(
+            [
+                call(hass, hass.config.language, "entity_component"),
+                call(hass, hass.config.language, "state", "binary_sensor"),
+            ]
+        )
+        assert result == "TRANSLATED"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={},
+    ) as mock:
+        result = translation.async_translate_state(
+            hass, "on", "binary_sensor", "platform", None, None
+        )
+        mock.assert_has_calls(
+            [
+                call(hass, hass.config.language, "entity_component"),
+                call(hass, hass.config.language, "state", "binary_sensor"),
+            ]
+        )
+        assert result == "on"
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        return_value={},
+    ) as mock:
+        result = translation.async_translate_state(
+            hass, "on", "binary_sensor", "platform", "translation_key", "device_class"
+        )
+        mock.assert_has_calls(
+            [
+                call(hass, hass.config.language, "entity"),
+                call(hass, hass.config.language, "entity_component"),
+                call(hass, hass.config.language, "state", "binary_sensor"),
+            ]
+        )
+        assert result == "on"
