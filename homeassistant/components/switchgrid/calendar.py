@@ -28,7 +28,6 @@ class SwitchgridCalendarEntity(
 ):
     """A calendar entity holding Switchgrid Electric Loadshaving events."""
 
-    entity_id = "calendar.switchgrid_events"
     _attr_has_entity_name = True
     _attr_unique_id = "switchgrid_events"
     _attr_translation_key = "switchgrid_events"
@@ -46,7 +45,7 @@ class SwitchgridCalendarEntity(
         """Return an eventual ongoing event."""
         now = dt_util.now()
         ongoing_events = list(
-            filter(lambda event: now >= event.start and now < event.end, self._events)
+            filter(lambda event: event.start <= now < event.end, self._events)
         )
         return ongoing_events[0] if len(ongoing_events) > 0 else None
 
