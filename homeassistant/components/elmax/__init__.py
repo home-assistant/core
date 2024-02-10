@@ -42,9 +42,7 @@ async def _load_elmax_panel_client(
     entry: ConfigEntry,
 ) -> tuple[GenericElmax, PanelEntry]:
     # Connection mode was not present in initial version, default to cloud if not set
-    client = None
     mode = entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD)
-    panel = None
     if mode == CONF_ELMAX_MODE_CLOUD:
         client = Elmax(
             username=entry.data[CONF_ELMAX_USERNAME],
@@ -72,6 +70,11 @@ async def _load_elmax_panel_client(
             ssl_context=custom_ssl_context,
         )
         panel = DummyPanel(panel_uri=client_api_url)
+    else:
+        raise ConfigEntryAuthFailed(
+            f"Invalid configuration detected. Unsupported mode={mode}"
+        )
+
     return client, panel
 
 
