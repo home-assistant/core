@@ -352,7 +352,7 @@ async def test_async_poll_manual_hosts_6(
         "homeassistant.components.sonos.DISCOVERY_INTERVAL"
     ) as mock_discovery_interval:
         # Speed up manual discovery interval so second iteration runs sooner
-        mock_discovery_interval.total_seconds = Mock(side_effect=[0.25, 60])
+        mock_discovery_interval.total_seconds = Mock(side_effect=[0.01, 60])
         await tests_setup_hass(hass)
 
         assert "media_player.bedroom" in entity_registry.entities
@@ -362,7 +362,7 @@ async def test_async_poll_manual_hosts_6(
             caplog.clear()
             # The discovery events should not fire, wait with a timeout.
             with pytest.raises(TimeoutError):
-                async with asyncio.timeout(0.5):
+                async with asyncio.timeout(0.1):
                     await speaker_1_activity.event.wait()
             await hass.async_block_till_done()
             assert "Activity on Living Room" not in caplog.text
