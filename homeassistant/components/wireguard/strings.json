@@ -2,8 +2,12 @@
   "config": {
     "step": {
       "user": {
+        "description": "Set up your WireGuard instance to allow monitoring.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the device running your WireGuard instance."
         }
       }
     },
