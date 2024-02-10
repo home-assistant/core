@@ -7,10 +7,19 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from zhaquirks.ikea import PowerConfig1CRCluster, ScenesCluster
+from zhaquirks.xiaomi import (
+    BasicCluster,
+    LocalIlluminanceMeasurementCluster,
+    XiaomiPowerConfigurationPercent,
+)
+from zhaquirks.xiaomi.aqara.driver_curtain_e1 import (
+    WindowCoveringE1,
+    XiaomiAqaraDriverE1,
+)
 from zigpy.const import SIG_ENDPOINTS, SIG_MANUFACTURER, SIG_MODEL, SIG_NODE_DESC
 import zigpy.profiles.zha
 import zigpy.quirks
-from zigpy.quirks.v2 import add_to_registry_v2
+from zigpy.quirks.v2 import EntityType, add_to_registry_v2
 import zigpy.types
 from zigpy.zcl import ClusterType
 import zigpy.zcl.clusters.closures
@@ -517,8 +526,6 @@ async def test_quirks_v2_entity_discovery(
     update_attribute_cache(zigpy_device.endpoints[1].on_off)
 
     zha_device = await zha_device_joined(zigpy_device)
-    zha_device.available = True
-    await hass.async_block_till_done()
 
     entity_id = find_entity_id(
         Platform.NUMBER,
@@ -529,3 +536,105 @@ async def test_quirks_v2_entity_discovery(
 
     state = hass.states.get(entity_id)
     assert state is not None
+
+
+async def test_quirks_v2_entity_discovery_e1_curtain(
+    hass,
+    zigpy_device_mock,
+    zha_device_joined,
+) -> None:
+    """Test quirks v2 discovery for e1 curtain motor."""
+    aqara_E1_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.WINDOW_COVERING_DEVICE,
+                SIG_EP_INPUT: [
+                    zigpy.zcl.clusters.general.Basic.cluster_id,
+                    zigpy.zcl.clusters.general.PowerConfiguration.cluster_id,
+                    zigpy.zcl.clusters.general.Identify.cluster_id,
+                    zigpy.zcl.clusters.general.Time.cluster_id,
+                    WindowCoveringE1.cluster_id,
+                    XiaomiAqaraDriverE1.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [
+                    zigpy.zcl.clusters.general.Identify.cluster_id,
+                    zigpy.zcl.clusters.general.Time.cluster_id,
+                    zigpy.zcl.clusters.general.Ota.cluster_id,
+                    XiaomiAqaraDriverE1.cluster_id,
+                ],
+            }
+        },
+        ieee="01:2d:6f:00:0a:90:69:e8",
+        manufacturer="LUMI",
+        model="lumi.curtain.agl006",
+    )
+
+    class AqaraE1HookState(zigpy.types.enum8):
+        """Aqara hook state."""
+
+        Unlocked = 0x00
+        Locked = 0x01
+        Locking = 0x02
+        Unlocking = 0x03
+
+    # fmt: off
+    add_to_registry_v2("LUMI", "lumi.curtain.agl006").replaces(BasicCluster) \
+        .adds(LocalIlluminanceMeasurementCluster) \
+        .replaces(BasicCluster) \
+        .replaces(XiaomiPowerConfigurationPercent) \
+        .replaces(WindowCoveringE1) \
+        .replaces(XiaomiAqaraDriverE1) \
+        .removes(XiaomiAqaraDriverE1, cluster_type=ClusterType.Client) \
+        .enum(BasicCluster.AttributeDefs.power_source.name, BasicCluster.PowerSource, BasicCluster.cluster_id, entity_platform=Platform.SENSOR, entity_type=EntityType.DIAGNOSTIC) \
+        .enum("hooks_state", AqaraE1HookState, XiaomiAqaraDriverE1.cluster_id, entity_platform=Platform.SENSOR, entity_type=EntityType.DIAGNOSTIC)
+    # fmt: on
+
+    aqara_E1_device = zigpy.quirks._DEVICE_REGISTRY.get_device(aqara_E1_device)
+
+    aqara_E1_device.endpoints[1].opple_cluster.PLUGGED_ATTR_READS = {
+        "hand_open": 0,
+        "positions_stored": 0,
+        "hooks_lock": 0,
+        "hooks_state": AqaraE1HookState.Unlocked,
+        "light_level": 0,
+    }
+    update_attribute_cache(aqara_E1_device.endpoints[1].opple_cluster)
+
+    aqara_E1_device.endpoints[1].basic.PLUGGED_ATTR_READS = {
+        BasicCluster.AttributeDefs.power_source.name: BasicCluster.PowerSource.Mains_single_phase,
+    }
+    update_attribute_cache(aqara_E1_device.endpoints[1].basic)
+
+    WCAttrs = zigpy.zcl.clusters.closures.WindowCovering.AttributeDefs
+    WCT = zigpy.zcl.clusters.closures.WindowCovering.WindowCoveringType
+    WCCS = zigpy.zcl.clusters.closures.WindowCovering.ConfigStatus
+    aqara_E1_device.endpoints[1].window_covering.PLUGGED_ATTR_READS = {
+        WCAttrs.current_position_lift_percentage.name: 0,
+        WCAttrs.window_covering_type.name: WCT.Drapery,
+        WCAttrs.config_status.name: WCCS(~WCCS.Open_up_commands_reversed),
+    }
+    update_attribute_cache(aqara_E1_device.endpoints[1].window_covering)
+
+    zha_device = await zha_device_joined(aqara_E1_device)
+
+    power_source_entity_id = find_entity_id(
+        Platform.SENSOR,
+        zha_device,
+        hass,
+        qualifier=BasicCluster.AttributeDefs.power_source.name,
+    )
+    assert power_source_entity_id is not None
+    state = hass.states.get(power_source_entity_id)
+    assert state is not None
+    assert state.state == BasicCluster.PowerSource.Mains_single_phase.name
+
+    hook_state_entity_id = find_entity_id(
+        Platform.SENSOR,
+        zha_device,
+        hass,
+        qualifier="hooks_state",
+    )
+    assert hook_state_entity_id is not None
+    state = hass.states.get(hook_state_entity_id)
+    assert state is not None
+    assert state.state == AqaraE1HookState.Unlocked.name
