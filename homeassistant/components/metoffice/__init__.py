@@ -5,6 +5,7 @@ import asyncio
 import logging
 import re
 import sys
+import datapoint
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -33,9 +34,6 @@ from .const import (
 )
 from .data import MetOfficeData
 from .helpers import fetch_data, fetch_site
-
-if sys.version_info < (3, 12):
-    import datapoint
 
 _LOGGER = logging.getLogger(__name__)
 
