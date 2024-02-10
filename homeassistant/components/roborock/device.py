@@ -78,7 +78,7 @@ class RoborockCoordinatedEntity(
         self,
         unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
-        listener_request: list[RoborockDataProtocol] | None = None,
+        listener_request: list[RoborockDataProtocol] | RoborockDataProtocol | None = None,
     ) -> None:
         """Initialize the coordinated Roborock Device."""
         RoborockEntity.__init__(
@@ -89,9 +89,9 @@ class RoborockCoordinatedEntity(
         )
         CoordinatorEntity.__init__(self, coordinator=coordinator)
         self._attr_unique_id = unique_id
-        self.listener_requests = (
-            listener_request if listener_request is not None else []
-        )
+        if isinstance(listener_request, RoborockDataProtocol):
+           listener_request = [listener_request] 
+        self.listener_requests = listener_request or []
 
     async def async_added_to_hass(self) -> None:
         """Add listeners when the device is added to hass."""

@@ -236,7 +236,7 @@ class RoborockSensorEntity(RoborockCoordinatedEntity, SensorEntity):
         super().__init__(
             unique_id,
             coordinator,
-            [description.protocol_listener] if description.protocol_listener else None,
+            description.protocol_listener
         )
 
     @property

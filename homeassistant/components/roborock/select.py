@@ -110,9 +110,7 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
         super().__init__(
             unique_id,
             coordinator,
-            [entity_description.protocol_listener]
-            if entity_description.protocol_listener
-            else None,
+            entity_description.protocol_listener
         )
         self._attr_options = options
 
