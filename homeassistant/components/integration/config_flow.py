@@ -26,6 +26,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import (
+    CONF_MAX_DT,
     CONF_ROUND_DIGITS,
     CONF_SOURCE_SENSOR,
     CONF_UNIT_PREFIX,
@@ -99,6 +100,14 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
             selector.NumberSelectorConfig(
                 min=0, max=6, mode=selector.NumberSelectorMode.BOX
             ),
+        ),
+        vol.Optional(CONF_MAX_DT, default=60): selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=1,
+                max=1000000000,
+                mode=selector.NumberSelectorMode.BOX,
+                unit_of_measurement="seconds",
+            )
         ),
     }
 

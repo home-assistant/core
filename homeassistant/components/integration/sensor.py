@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
+from enum import Enum
 import logging
 from typing import Any, Final, Self
 
@@ -29,6 +31,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -42,10 +45,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
+    CONF_MAX_DT,
     CONF_ROUND_DIGITS,
     CONF_SOURCE_SENSOR,
     CONF_UNIT_OF_MEASUREMENT,
@@ -87,6 +91,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_MAX_DT, default=None): vol.Any(None, vol.Coerce(int)),
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
                 INTEGRATION_METHODS
             ),
@@ -174,6 +179,11 @@ _NAME_TO_INTEGRATION_METHOD: dict[str, type[_IntegrationMethod]] = {
     METHOD_RIGHT: _Right,
     METHOD_TRAPEZOIDAL: _Trapezoidal,
 }
+
+
+class _IntegrationTrigger(Enum):
+    StateChange = "state_change"
+    TimeElapsed = "time_elapsed"
 
 
 @dataclass
@@ -274,6 +284,7 @@ async def async_setup_entry(
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
         device_info=device_info,
+        max_dt=config_entry.options.get(CONF_MAX_DT, None),
     )
 
     async_add_entities([integral])
@@ -294,6 +305,7 @@ async def async_setup_platform(
         unique_id=config.get(CONF_UNIQUE_ID),
         unit_prefix=config.get(CONF_UNIT_PREFIX),
         unit_time=config[CONF_UNIT_TIME],
+        max_dt=config[CONF_MAX_DT],
     )
 
     async_add_entities([integral])
@@ -315,6 +327,7 @@ class IntegrationSensor(RestoreSensor):
         unique_id: str | None,
         unit_prefix: str | None,
         unit_time: UnitOfTime,
+        max_dt: int | None,
         device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the integration sensor."""
@@ -334,6 +347,12 @@ class IntegrationSensor(RestoreSensor):
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
+        self._max_dt: timedelta | None = (
+            timedelta(seconds=max_dt) if max_dt is not None else None
+        )
+        self._max_dt_exceeded_callback: CALLBACK_TYPE = lambda *args: None
+        self._last_integration_time: datetime = datetime.now(tz=UTC)
+        self._last_integration_trigger = _IntegrationTrigger.StateChange
         self._attr_suggested_display_precision = round_digits or 2
 
     def _calculate_unit(self, source_unit: str) -> str:
@@ -421,16 +440,35 @@ class IntegrationSensor(RestoreSensor):
             self._attr_device_class = state.attributes.get(ATTR_DEVICE_CLASS)
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
+        if self._max_dt is not None:
+            self._schedule_max_dt_exceeded()
+            self.async_on_remove(self._cancel_max_dt_exceeded_callback)
+
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
                 [self._sensor_source_id],
-                self._handle_state_change,
+                self._integrate_on_state_change_and_max_dt
+                if self._max_dt is not None
+                else self._integrate_on_state_change,
             )
         )
 
     @callback
-    def _handle_state_change(self, event: Event[EventStateChangedData]) -> None:
+    def _integrate_on_state_change_and_max_dt(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
+        try:
+            self._cancel_max_dt_exceeded_callback()
+            self._integrate_on_state_change(event)
+            self._last_integration_trigger = _IntegrationTrigger.StateChange
+            self._last_integration_time = datetime.now(tz=UTC)
+        finally:
+            self._schedule_max_dt_exceeded()
+
+    @callback
+    def _integrate_on_state_change(self, event: Event[EventStateChangedData]) -> None:
+        """Handle the sensor state changes."""
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
 
@@ -451,12 +489,47 @@ class IntegrationSensor(RestoreSensor):
 
         elapsed_seconds = Decimal(
             (new_state.last_updated - old_state.last_updated).total_seconds()
+            if self._last_integration_trigger == _IntegrationTrigger.StateChange
+            else (new_state.last_updated - self._last_integration_time).total_seconds()
         )
 
         area = self._method.calculate_area_with_two_states(elapsed_seconds, *states)
 
         self._update_integral(area)
         self.async_write_ha_state()
+
+    @callback
+    def _integrate_on_max_dt_exceeded(self, now: datetime) -> None:
+        source_state = self.hass.states.get(self._sensor_source_id)
+
+        if source_state_dec := _decimal_state(source_state.state):
+            elapsed_seconds = Decimal((now - self._last_integration_time).total_seconds())
+            self._derive_and_set_attributes_from_state(source_state)
+            area = source_state_dec * elapsed_seconds
+            integral = area / (self._unit_prefix * self._unit_time)
+            if isinstance(self._state, Decimal):
+                self._state += integral
+            else:
+                self._state = integral
+
+            self._last_valid_state = self._state
+            self.async_write_ha_state()
+
+            self._last_integration_time = datetime.now(tz=UTC)
+            self._last_integration_trigger = _IntegrationTrigger.TimeElapsed
+
+        self._schedule_max_dt_exceeded()
+
+    def _schedule_max_dt_exceeded(self) -> None:
+        if self._max_dt is not None:
+            self._max_dt_exceeded_callback = async_call_later(
+                self.hass, self._max_dt, self._integrate_on_max_dt_exceeded
+            )
+        else:
+            _LOGGER.error("Config max_dt must be set when scheduling this")
+
+    def _cancel_max_dt_exceeded_callback(self) -> None:
+        return self._max_dt_exceeded_callback()
 
     @property
     def native_value(self) -> Decimal | None:
