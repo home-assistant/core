@@ -7,13 +7,11 @@ import sys
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util.dt import utcnow
 
+import datapoint
+from datapoint.Site import Site
+
 from .const import MODE_3HOURLY
 from .data import MetOfficeData
-
-if sys.version_info < (3, 12):
-    import datapoint
-    from datapoint.Site import Site
-
 
 _LOGGER = logging.getLogger(__name__)
 
