@@ -6,7 +6,7 @@ import logging
 import aiohttp
 from switchgrid_python_client import Event, SwitchgridClient, SwitchgridEventsResponse
 
-from homeassistant import core
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
@@ -20,7 +20,7 @@ class SwitchgridCoordinator(DataUpdateCoordinator[SwitchgridClient]):
 
     def __init__(
         self,
-        hass: core.HomeAssistant,
+        hass: HomeAssistant,
         data: SwitchgridClient,
     ) -> None:
         """Initialize the coordinator."""
