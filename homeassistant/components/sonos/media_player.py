@@ -639,19 +639,24 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.add_to_queue(playlist, timeout=LONG_SERVICE_TIMEOUT)
                 soco.play_from_queue(0)
         elif media_type in PLAYABLE_MEDIA_TYPES:
-            item_list = media_browser.get_media_list(
-                self.media.library, media_id, media_type
-            )
-            if not item_list or len(item_list) == 0:
-                _LOGGER.error('Could not find "%s" in the library', media_id)
-                return
-            soco.clear_queue()
-            for item in item_list:
-                soco.add_to_queue(item, timeout=LONG_SERVICE_TIMEOUT)
-            soco.play_from_queue(0)
-
+            self._play_media_playable_media_types(soco, media_id, media_type)
         else:
             _LOGGER.error('Sonos does not support a media type of "%s"', media_type)
+
+    def _play_media_playable_media_types(
+        self, media_type: MediaType | str, media_id: str
+    ):
+        soco = self.coordinator.soco
+        item_list = media_browser.get_media_list(
+            self.media.library, media_id, media_type
+        )
+        if not item_list or len(item_list) == 0:
+            _LOGGER.error('Could not find "%s" in the library', media_id)
+            return
+        soco.clear_queue()
+        for item in item_list:
+            soco.add_to_queue(item, timeout=LONG_SERVICE_TIMEOUT)
+        soco.play_from_queue(0)
 
     @soco_error()
     def set_sleep_timer(self, sleep_time: int) -> None:
