@@ -1,16 +1,14 @@
 """Config flow for Sanix integration."""
-from http import HTTPStatus
 import logging
 from typing import Any
 
 from sanix import Sanix
-from sanix.exceptions import SanixException
+from sanix.exceptions import SanixException, SanixInvalidAuthException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_TOKEN
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERIAL_NO, DOMAIN, MANUFACTURER
 
@@ -40,20 +38,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_SERIAL_NO])
             self._abort_if_unique_id_configured()
 
-            sanix_api = Sanix(
-                user_input[CONF_SERIAL_NO],
-                user_input[CONF_TOKEN],
-                async_get_clientsession(self.hass),
-            )
+            sanix_api = Sanix(user_input[CONF_SERIAL_NO], user_input[CONF_TOKEN])
 
             try:
-                await sanix_api.fetch_data()
-            except SanixException as err:
-                if err.status_code == HTTPStatus.UNAUTHORIZED:
-                    errors["base"] = "invalid_auth"
-                else:
-                    _LOGGER.exception("Unknown exception")
-                    errors["base"] = "unknown"
+                await self.hass.async_add_executor_job(sanix_api.fetch_data)
+            except SanixInvalidAuthException:
+                errors["base"] = "invalid_auth"
+            except SanixException:
+                errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
                     title=MANUFACTURER,

@@ -129,11 +129,11 @@ class SanixSensor(CoordinatorEntity[SanixCoordinator], SensorEntity):
         value = self.coordinator.data[self.entity_description.key]
         try:
             if key == ATTR_API_SERVICE_DATE:
-                value = datetime.datetime.strptime(value, "%d.%m.%Y").date()
+                value = datetime.datetime.strptime(str(value), "%d.%m.%Y").date()
             elif key == ATTR_API_TIME:
-                value = datetime.datetime.strptime(value, "%d.%m.%Y %H:%M:%S").replace(
-                    tzinfo=ZoneInfo("Europe/Warsaw")
-                )
+                value = datetime.datetime.strptime(
+                    str(value), "%d.%m.%Y %H:%M:%S"
+                ).replace(tzinfo=ZoneInfo("Europe/Warsaw"))
         except ValueError:
             _LOGGER.warning(
                 "Could not format the '%s' sensor. Retrieved value: %s", key, value

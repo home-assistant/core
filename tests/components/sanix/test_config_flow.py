@@ -1,86 +1,110 @@
 """Define tests for the Sanix config flow."""
-from http import HTTPStatus
+from unittest.mock import MagicMock
 
-from sanix.exceptions import SanixException
+import pytest
+from sanix.exceptions import SanixException, SanixInvalidAuthException
 
-from homeassistant import data_entry_flow
 from homeassistant.components.sanix.const import CONF_SERIAL_NO, DOMAIN, MANUFACTURER
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
-from . import API_URL
-
-from tests.common import MockConfigEntry, load_fixture, patch
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry, patch
 
 CONFIG = {CONF_SERIAL_NO: "1810088", CONF_TOKEN: "75868dcf8ea4c64e2063f6c4e70132d2"}
 
 
-async def test_show_form(hass: HomeAssistant) -> None:
-    """Test that the form is served with no input."""
+async def test_create_entry(hass: HomeAssistant, mock_sanix: MagicMock) -> None:
+    """Test that the user step works."""
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
+    with patch(
+        "homeassistant.components.sanix.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == MANUFACTURER
+    assert result["data"][CONF_TOKEN] == CONFIG[CONF_TOKEN]
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_unauthorized(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (SanixInvalidAuthException("Invalid auth"), "invalid_auth"),
+        (SanixException("Something went wrong"), "unknown"),
+    ],
+)
+async def test_form_exceptions(
+    hass: HomeAssistant, exception: Exception, error: str, mock_sanix: MagicMock
 ) -> None:
-    """Test that errors are shown when user was not authorized."""
-    aioclient_mock.get(API_URL, text=load_fixture("unauthorized.json", "sanix"))
+    """Test Form exceptions."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-async def test_bad_request(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that errors are shown when something went wrong while requesting the Sanix API."""
-    aioclient_mock.get(
-        API_URL, exc=SanixException(HTTPStatus.BAD_REQUEST, "Something went wrong")
+    mock_sanix.return_value.fetch_data.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
     )
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-    )
+    mock_sanix.return_value.fetch_data.side_effect = None
 
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    with patch(
+        "homeassistant.components.sanix.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Sanix"
+    assert result["data"] == {
+        CONF_SERIAL_NO: "1810088",
+        CONF_TOKEN: "75868dcf8ea4c64e2063f6c4e70132d2",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_duplicate_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_duplicate_error(hass: HomeAssistant, mock_sanix: MagicMock) -> None:
     """Test that errors are shown when duplicates are added."""
-    aioclient_mock.get(API_URL, text=load_fixture("authorized.json", "sanix"))
+
     MockConfigEntry(domain=DOMAIN, unique_id="1810088", data=CONFIG).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == "abort"
+    with patch(
+        "homeassistant.components.sanix.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-
-async def test_create_entry(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test that the user step works."""
-    aioclient_mock.get(API_URL, text=load_fixture("authorized.json", "sanix"))
-
-    with patch("homeassistant.components.sanix.async_setup_entry", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == MANUFACTURER
-    assert result["data"][CONF_TOKEN] == CONFIG[CONF_TOKEN]
+    assert len(mock_setup_entry.mock_calls) == 0

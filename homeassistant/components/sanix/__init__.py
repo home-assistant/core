@@ -4,7 +4,6 @@ from sanix import Sanix
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_SERIAL_NO, DOMAIN
 from .coordinator import SanixCoordinator
@@ -18,7 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     serial_no = entry.data[CONF_SERIAL_NO]
     token = entry.data[CONF_TOKEN]
 
-    sanix_api = Sanix(serial_no, token, async_get_clientsession(hass))
+    sanix_api = Sanix(serial_no, token)
     coordinator = SanixCoordinator(hass, sanix_api)
 
     await coordinator.async_config_entry_first_refresh()

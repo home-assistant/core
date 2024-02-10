@@ -3,6 +3,7 @@ from datetime import timedelta
 import logging
 
 from sanix import Sanix
+from sanix.exceptions import SanixException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -36,8 +37,10 @@ class SanixCoordinator(DataUpdateCoordinator):
         """Fetch data from API endpoint."""
         data: dict[str, str | float | int] = {}
         try:
-            response = await self._sanix_api.fetch_data()
-        except Exception as err:
+            response = await self.hass.async_add_executor_job(
+                self._sanix_api.fetch_data
+            )
+        except SanixException as err:
             raise UpdateFailed("Error while communicating with the API") from err
 
         data[ATTR_API_DEVICE_NO] = response.get("device_no")

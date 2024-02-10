@@ -2486,7 +2486,7 @@ samsungctl[websocket]==0.7.1
 samsungtvws[async,encrypted]==2.6.0
 
 # homeassistant.components.sanix
-sanix==1.0.2
+sanix==1.0.4
 
 # homeassistant.components.satel_integra
 satel-integra==0.3.7
