@@ -17,11 +17,16 @@ PING_MATCHER = re.compile(
     r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)"
 )
 
+LOSS_MATCHER = re.compile(r"(?P<loss>\d+)% packet loss")
+
 PING_MATCHER_BUSYBOX = re.compile(
     r"(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)"
 )
 
+LOSS_MATCHER_BUSYBOX = re.compile(r"(?P<loss>\d+\.\d+)% packet loss")
+
 WIN32_PING_MATCHER = re.compile(r"(?P<min>\d+)ms.+(?P<max>\d+)ms.+(?P<avg>\d+)ms")
+WIN32_LOSS_MATCHER = re.compile(r"(?P<loss>\d)% loss")
 
 
 class PingData:
@@ -70,6 +75,7 @@ class PingDataICMPLib(PingData):
             "min": data.min_rtt,
             "max": data.max_rtt,
             "avg": data.avg_rtt,
+            "loss": data.packet_loss,
             "mdev": "",
         }
 
@@ -129,18 +135,44 @@ class PingDataSubProcess(PingData):
                 )
 
             if "max/" not in str(out_data):
-                match = PING_MATCHER_BUSYBOX.search(
+                rtt_match = PING_MATCHER_BUSYBOX.search(
                     str(out_data).rsplit("\n", maxsplit=1)[-1]
                 )
+                loss_match = LOSS_MATCHER_BUSYBOX.search(str(out_data).rsplit("\n")[-2])
                 if TYPE_CHECKING:
-                    assert match is not None
-                rtt_min, rtt_avg, rtt_max = match.groups()
-                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
-            match = PING_MATCHER.search(str(out_data).rsplit("\n", maxsplit=1)[-1])
+                    assert rtt_match is not None
+                    assert loss_match is not None
+                (
+                    rtt_min,
+                    rtt_avg,
+                    rtt_max,
+                ) = rtt_match.groups()
+                loss = loss_match.groups()
+                return {
+                    "min": rtt_min,
+                    "avg": rtt_avg,
+                    "max": rtt_max,
+                    "loss": loss,
+                    "mdev": "",
+                }
+            rtt_match = PING_MATCHER.search(str(out_data).rsplit("\n", maxsplit=1)[-1])
+            loss_match = LOSS_MATCHER.search(
+                str(out_data).rsplit(
+                    "\n",
+                )[-2]
+            )
             if TYPE_CHECKING:
-                assert match is not None
-            rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
-            return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
+                assert rtt_match is not None
+                assert loss_match is not None
+            rtt_min, rtt_avg, rtt_max, rtt_mdev = rtt_match.groups()
+            loss = loss_match.groups()
+            return {
+                "min": rtt_min,
+                "avg": rtt_avg,
+                "max": rtt_max,
+                "loss": loss,
+                "mdev": rtt_mdev,
+            }
         except TimeoutError:
             _LOGGER.exception(
                 "Timed out running command: `%s`, after: %ss",
