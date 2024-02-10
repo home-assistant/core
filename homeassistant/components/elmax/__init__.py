@@ -41,8 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 async def _load_elmax_panel_client(
     entry: ConfigEntry,
 ) -> tuple[GenericElmax, PanelEntry]:
-    # Use a null-safe getter for the mode, as this attribute has been
-    # added later than first revisions. When null, assume cloud.
+    # Connection mode was not present in initial version, default to cloud if not set
     client = None
     mode = entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD)
     panel = None
