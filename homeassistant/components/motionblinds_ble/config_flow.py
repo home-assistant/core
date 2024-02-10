@@ -1,4 +1,4 @@
-"""Config flow for MotionBlinds BLE integration."""
+"""Config flow for Motionblinds BLE integration."""
 
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema({vol.Required(CONF_MAC_CODE): str})
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for MotionBlinds BLE."""
+    """Handle a config flow for Motionblinds BLE."""
 
     def __init__(self) -> None:
         """Initialize a ConfigFlow."""
@@ -53,7 +53,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug(
-            "Discovered MotionBlinds bluetooth device: %s", discovery_info.as_dict()
+            "Discovered Motionblinds bluetooth device: %s", discovery_info.as_dict()
         )
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
@@ -135,7 +135,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_discover_motionblind(self, mac_code: str) -> None:
-        """Discover MotionBlinds initialized by the user."""
+        """Discover Motionblinds initialized by the user."""
         if not is_valid_mac(mac_code):
             _LOGGER.error("Invalid MAC code: %s", mac_code.upper())
             raise InvalidMACCode()
