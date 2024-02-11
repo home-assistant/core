@@ -9,7 +9,6 @@ import logging
 from typing import Any, Optional
 
 import httpx
-from httpx import Proxy
 from telegram import (
     Bot,
     CallbackQuery,
@@ -459,7 +458,7 @@ def initialize_bot(p_config):
     if proxy_url is not None:
         # These have been kept for backwards compatibility, they can actually be stuffed into the URL.
         auth = proxy_params.pop("username"), proxy_params.pop("password")
-        proxy = Proxy(proxy_url, auth=auth, **proxy_params)
+        proxy = httpx.Proxy(proxy_url, auth=auth, **proxy_params)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
     else:
         request = HTTPXRequest(connection_pool_size=8)
