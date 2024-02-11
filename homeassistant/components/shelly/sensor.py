@@ -235,7 +235,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         key="sensor|concentration",
         name="Gas concentration",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        icon="mdi:gauge",
+        translation_key="gas_concentration",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("sensor", "temp"): BlockSensorDescription(
@@ -279,14 +279,14 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         key="sensor|tilt",
         name="Tilt",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:angle-acute",
+        translation_key="tilt",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("relay", "totalWorkTime"): BlockSensorDescription(
         key="relay|totalWorkTime",
         name="Lamp life",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:progress-wrench",
+        translation_key="lamp_life",
         value=lambda value: 100 - (value / 3600 / SHAIR_MAX_WORK_HOURS),
         suggested_display_precision=1,
         extra_state_attributes=lambda block: {
@@ -308,7 +308,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         device_class=SensorDeviceClass.ENUM,
         options=["unknown", "warmup", "normal", "fault"],
         translation_key="operation",
-        icon="mdi:cog-transfer",
         value=lambda value: value,
         extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
@@ -316,7 +315,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         key="valve|valve",
         name="Valve status",
         translation_key="valve_status",
-        icon="mdi:valve",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "checking",
