@@ -8,7 +8,7 @@ import string
 
 from telegram import Update
 from telegram.error import TimedOut
-from telegram.ext import Dispatcher, TypeHandler
+from telegram.ext import Application, TypeHandler
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -36,16 +36,18 @@ async def async_setup_platform(hass, bot, config):
         _LOGGER.error("Invalid telegram webhook %s must be https", pushbot.webhook_url)
         return False
 
+    await pushbot.start_application()
     webhook_registered = await pushbot.register_webhook()
     if not webhook_registered:
         return False
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pushbot.deregister_webhook)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pushbot.stop_application)
     hass.http.register_view(
         PushBotView(
             hass,
             bot,
-            pushbot.dispatcher,
+            pushbot.application,
             config[CONF_TRUSTED_NETWORKS],
             secret_token,
         )
@@ -57,13 +59,13 @@ class PushBot(BaseTelegramBotEntity):
     """Handles all the push/webhook logic and passes telegram updates to `self.handle_update`."""
 
     def __init__(self, hass, bot, config, secret_token):
-        """Create Dispatcher before calling super()."""
+        """Create Application before calling super()."""
         self.bot = bot
         self.trusted_networks = config[CONF_TRUSTED_NETWORKS]
         self.secret_token = secret_token
-        # Dumb dispatcher that just gets our updates to our handler callback (self.handle_update)
-        self.dispatcher = Dispatcher(bot, None)
-        self.dispatcher.add_handler(TypeHandler(Update, self.handle_update))
+        # Dumb Application that just gets our updates to our handler callback (self.handle_update)
+        self.application = Application.builder().bot(bot).updater(None).build()
+        self.application.add_handler(TypeHandler(Update, self.handle_update))
         super().__init__(hass, config)
 
         self.base_url = config.get(CONF_URL) or get_url(
@@ -86,6 +88,11 @@ class PushBot(BaseTelegramBotEntity):
                 _LOGGER.warning("Timeout trying to set webhook (retry #%d)", retry_num)
 
         return False
+
+    async def start_application(self):
+        """Handle starting the Application object."""
+        await self.application.initialize()
+        await self.application.start()
 
     async def register_webhook(self):
         """Query telegram and register the URL for our webhook."""
@@ -114,10 +121,15 @@ class PushBot(BaseTelegramBotEntity):
 
         return True
 
-    def deregister_webhook(self, event=None):
+    async def stop_application(self, event=None):
+        """Handle gracefully stopping the Application object."""
+        await self.application.stop()
+        await self.application.shutdown()
+
+    async def deregister_webhook(self, event=None):
         """Query telegram and deregister the URL for our webhook."""
         _LOGGER.debug("Deregistering webhook URL")
-        return self.bot.delete_webhook()
+        await self.bot.delete_webhook()
 
 
 class PushBotView(HomeAssistantView):
@@ -127,11 +139,11 @@ class PushBotView(HomeAssistantView):
     url = TELEGRAM_WEBHOOK_URL
     name = "telegram_webhooks"
 
-    def __init__(self, hass, bot, dispatcher, trusted_networks, secret_token):
+    def __init__(self, hass, bot, application, trusted_networks, secret_token):
         """Initialize by storing stuff needed for setting up our webhook endpoint."""
         self.hass = hass
         self.bot = bot
-        self.dispatcher = dispatcher
+        self.application = application
         self.trusted_networks = trusted_networks
         self.secret_token = secret_token
 
@@ -153,6 +165,6 @@ class PushBotView(HomeAssistantView):
 
         update = Update.de_json(update_data, self.bot)
         _LOGGER.debug("Received Update on %s: %s", self.url, update)
-        await self.hass.async_add_executor_job(self.dispatcher.process_update, update)
+        await self.application.process_update(update)
 
         return None
