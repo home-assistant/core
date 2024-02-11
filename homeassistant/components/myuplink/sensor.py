@@ -187,3 +187,9 @@ class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
         """Sensor state value for enum sensor."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
         return self.options_map[str(int(device_point.value))].capitalize()  # type: ignore[no-any-return]
+
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Add extra state attributes."""
+        device_point = self.coordinator.data.points[self.device_id][self.point_id]
+        return {"raw_value": str(int(device_point.value))}
