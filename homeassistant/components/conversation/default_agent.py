@@ -316,6 +316,20 @@ class DefaultAgent(AbstractConversationAgent):
                 ),
                 conversation_id,
             )
+        except intent.DuplicateNamesMatchedError as duplicate_names_error:
+            # Intent was valid, but two or more entities with the same name matched.
+            (
+                error_response_type,
+                error_response_args,
+            ) = _get_duplicate_names_matched_response(duplicate_names_error)
+            return _make_error_result(
+                language,
+                intent.IntentResponseErrorCode.NO_VALID_TARGETS,
+                self._get_error_text(
+                    error_response_type, lang_intents, **error_response_args
+                ),
+                conversation_id,
+            )
         except intent.IntentHandleError:
             # Intent was valid and entities matched constraints, but an error
             # occurred during handling.
@@ -753,7 +767,7 @@ class DefaultAgent(AbstractConversationAgent):
                     if not alias.strip():
                         continue
 
-                    entity_names.append((alias, state.name, context))
+                    entity_names.append((alias, alias, context))
 
             # Default name
             entity_names.append((state.name, state.name, context))
@@ -990,6 +1004,20 @@ def _get_no_states_matched_response(
 
     # Default error
     return ErrorKey.NO_INTENT, {}
+
+
+def _get_duplicate_names_matched_response(
+    duplicate_names_error: intent.DuplicateNamesMatchedError,
+) -> tuple[ErrorKey, dict[str, Any]]:
+    """Return key and template arguments for error when intent returns duplicate matches."""
+
+    if duplicate_names_error.area:
+        return ErrorKey.DUPLICATE_ENTITIES_IN_AREA, {
+            "entity": duplicate_names_error.name,
+            "area": duplicate_names_error.area,
+        }
+
+    return ErrorKey.DUPLICATE_ENTITIES, {"entity": duplicate_names_error.name}
 
 
 def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
