@@ -31,6 +31,7 @@ class AmbientNetworkEntity(CoordinatorEntity[AmbientNetworkDataUpdateCoordinator
         self._device_id = mac_address
         self._attr_unique_id = f"{mac_address}_{description.key}"
         self._attr_device_info = DeviceInfo(
+            name=coordinator.station_name,
             identifiers={(DOMAIN, mac_address)},
             manufacturer="Ambient Weather",
         )

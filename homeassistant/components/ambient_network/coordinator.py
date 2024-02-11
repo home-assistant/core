@@ -13,6 +13,7 @@ from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .config_flow import get_station_name
 from .const import API_LAST_DATA, DOMAIN, LOGGER, SCAN_INTERVAL
 
 
@@ -20,6 +21,7 @@ class AmbientNetworkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
     """The Ambient Network Data Update Coordinator."""
 
     config_entry: ConfigEntry
+    station_name: str
 
     def __init__(self, hass: HomeAssistant, api: OpenAPI) -> None:
         """Initialize the coordinator."""
@@ -35,6 +37,8 @@ class AmbientNetworkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]])
             )
         except RequestError as ex:
             raise UpdateFailed("Cannot connect to Ambient Network") from ex
+
+        self.station_name = get_station_name(response)
 
         if (last_data := response.get(API_LAST_DATA)) is None:
             raise UpdateFailed(
