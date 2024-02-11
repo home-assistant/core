@@ -1,8 +1,9 @@
 """Test data update coordinator for Linear Garage Door."""
 
+import asyncio
 from unittest.mock import patch
 
-from linear_garage_door.errors import InvalidLoginError, ResponseError
+from linear_garage_door.errors import InvalidLoginError
 
 from homeassistant.components.linear_garage_door.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -45,8 +46,8 @@ async def test_invalid_password(
     assert flows[0]["context"]["source"] == "reauth"
 
 
-async def test_response_error(hass: HomeAssistant) -> None:
-    """Test response error."""
+async def test_timeout_error(hass: HomeAssistant) -> None:
+    """Test timeout error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -60,7 +61,7 @@ async def test_response_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.linear_garage_door.coordinator.Linear.login",
-        side_effect=ResponseError,
+        side_effect=asyncio.TimeoutError,
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
