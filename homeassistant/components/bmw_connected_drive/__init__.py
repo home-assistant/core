@@ -158,7 +158,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     for device in device_entries:
         if not device.identifiers.intersection(account_vehicles):
-            device_registry.async_remove_device(device.id)
+            device_registry.async_update_device(
+                device.id, remove_config_entry_id=entry.entry_id
+            )
 
     return True
 
