@@ -65,7 +65,7 @@ class ImportGoogleConfigStore(GoogleConfigStore):
     when migrating to store version 1.3.
 
     Before version 1.3 of the cloud store, the gogle_assistant store was shared between
-    the cloud integration and manually configures Google assistant.
+    the cloud integration and manually configured Google assistant.
     """
 
     # pylint: disable-next=super-init-not-called
