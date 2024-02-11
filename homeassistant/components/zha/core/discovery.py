@@ -327,8 +327,8 @@ class ProbeEndpoint:
                                 counter_groups,
                                 counter_group,
                                 counter,
-                                {},
                             ),
+                            {},
                         )
                     )
 
