@@ -965,6 +965,22 @@ RPC_SENSORS: Final = {
         sub_key="xpercent",
         name="Analog value",
     ),
+    "pulse_counter": RpcSensorDescription(
+        key="input",
+        sub_key="counts",
+        name="Pulse counter",
+        value=lambda status, _: status["total"],
+        removal_condition=lambda config, _status, key: (config[key]["enable"] is False),
+    ),
+    "counter_value": RpcSensorDescription(
+        key="input",
+        sub_key="counts",
+        name="Counter value",
+        value=lambda status, _: status["xtotal"],
+        removal_condition=lambda config, status, key: (
+            config[key]["enable"] is False or not status[key]["counts"]["xtotal"]
+        ),
+    ),
 }
 
 
