@@ -8,15 +8,21 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Fujitsu HVAC integration needs to re-authenticate your account"
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "reauth_different_username": "Cannot reauthenticate with a different username"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }

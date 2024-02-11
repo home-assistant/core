@@ -14,10 +14,15 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 
+from tests.common import MockConfigEntry
+
 TEST_DEVICE_NAME = "Test device"
 TEST_DEVICE_SERIAL = "testserial"
 TEST_USERNAME = "test-username"
 TEST_PASSWORD = "test-password"
+
+TEST_USERNAME2 = "test-username2"
+TEST_PASSWORD2 = "test-password2"
 
 
 async def _initial_step(hass: HomeAssistant, apimock: AsyncMock) -> FlowResult:
@@ -133,3 +138,114 @@ async def test_form_cannot_connect(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_EUROPE: False,
     }
+
+
+async def test_reauth_success(hass: HomeAssistant) -> None:
+    """Test reauth flow."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_EUROPE: False,
+        },
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config.entry_id,
+        },
+        data={},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    apimock = AsyncMock()
+    with patch(
+        "homeassistant.components.fujitsu_hvac.config_flow.new_ayla_api",
+        return_value=apimock,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD2,
+                CONF_EUROPE: False,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config.data[CONF_PASSWORD] == TEST_PASSWORD2
+
+
+async def test_reauth_different_username(hass: HomeAssistant) -> None:
+    """Test reauth flow."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_EUROPE: False,
+        },
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config.entry_id,
+        },
+        data={},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: TEST_USERNAME2,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_EUROPE: False,
+        },
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "reauth_different_username"}
+
+    apimock = AsyncMock()
+    with patch(
+        "homeassistant.components.fujitsu_hvac.config_flow.new_ayla_api",
+        return_value=apimock,
+    ), patch(
+        "homeassistant.components.fujitsu_hvac.new_ayla_api", return_value=apimock
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+                CONF_EUROPE: False,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
