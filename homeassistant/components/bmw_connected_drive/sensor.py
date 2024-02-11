@@ -150,6 +150,12 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         unit_type=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "climate_status": BMWSensorEntityDescription(
+        key="activity",
+        translation_key="climate_status",
+        key_class="climate",
+        icon="mdi:fan",
+    ),
 }
 
 
