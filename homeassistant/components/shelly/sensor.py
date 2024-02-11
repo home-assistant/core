@@ -980,7 +980,7 @@ RPC_SENSORS: Final = {
         name="Counter value",
         value=lambda status, _: status["xtotal"],
         removal_condition=lambda config, status, key: (
-            config[key]["enable"] is False or not status[key]["counts"]["xtotal"]
+            config[key]["enable"] is False or status[key]["counts"]["xtotal"] is None
         ),
     ),
 }
