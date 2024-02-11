@@ -24,6 +24,7 @@ from homeassistant.helpers.typing import ConfigType, EventType
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TO = "to"
+CONF_FROM = "from"
 
 MATCH_ALL = "*"
 
@@ -33,12 +34,13 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_FOR): cv.positive_time_period_template,
         vol.Optional(CONF_TO): vol.Any(str, [str], None),
+        vol.Optional(CONF_FROM): vol.Any(str, [str], None),
     }
 )
 
 
-def _process_match(parameter: str | Iterable[str]):
-    if parameter == MATCH_ALL:
+def _process_match(parameter: str | Iterable[str] | None):
+    if parameter is None or parameter == MATCH_ALL:
         return lambda _: True
 
     if isinstance(parameter, str) or not hasattr(parameter, "__iter__"):
@@ -63,17 +65,18 @@ async def async_attach_trigger(
     value_template.hass = hass
     time_delta = config.get(CONF_FOR)
     to_value = config.get(CONF_TO)
+    from_value = config.get(CONF_FROM)
     template.attach(hass, time_delta)
     delay_cancel = None
     job = HassJob(action)
     armed = False
 
-    if to_value is None:
+    if to_value is None and from_value is None:
         result_matches = result_as_boolean
         result_arms = lambda result: not result_as_boolean(result)
     else:
         result_matches = _process_match(to_value)
-        result_arms = lambda _: True
+        result_arms = _process_match(from_value)
 
     # Arm at setup if the template is already false.
     try:
@@ -107,17 +110,18 @@ async def async_attach_trigger(
             delay_cancel()
             delay_cancel = None
 
+        was_armed = armed
+        armed = result_arms(result)
+
+        # Only fire if result matches criteria.
         if not result_matches(result):
-            armed = result_arms(result)
             return
 
         # Only fire when previously armed.
-        if not armed:
+        if not was_armed:
             return
 
         # Fire!
-        armed = result_arms(result)
-
         entity_id = event and event.data["entity_id"]
         from_s = event and event.data["old_state"]
         to_s = event and event.data["new_state"]
