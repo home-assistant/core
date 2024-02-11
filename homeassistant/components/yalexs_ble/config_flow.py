@@ -207,11 +207,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_SLOT],
                 )
             ):
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     reauth_entry, data={**reauth_entry.data, **user_input}
                 )
-                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_validate",

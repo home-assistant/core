@@ -43,7 +43,7 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.test_name"
 
 
 async def test_climate_hvac_mode(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device, monkeypatch, entity_registry
 ) -> None:
     """Test climate hvac mode service."""
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
@@ -64,6 +64,10 @@ async def test_climate_hvac_mode(
     # Test initial hvac mode - off
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.OFF
+
+    entry = entity_registry.async_get(ENTITY_ID)
+    assert entry
+    assert entry.unique_id == "123456789ABC-sensor_0"
 
     # Test set hvac mode heat
     await hass.services.async_call(
@@ -145,6 +149,29 @@ async def test_climate_set_temperature(
 
     mock_block_device.http_request.assert_called_once_with(
         "get", "thermostat/0", {"target_t_enabled": 1, "target_t": "23.0"}
+    )
+    mock_block_device.http_request.reset_mock()
+
+    # Test conversion from C to F
+    monkeypatch.setattr(
+        mock_block_device,
+        "settings",
+        {
+            "thermostats": [
+                {"target_t": {"units": "F"}},
+            ]
+        },
+    )
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 20},
+        blocking=True,
+    )
+
+    mock_block_device.http_request.assert_called_once_with(
+        "get", "thermostat/0", {"target_t_enabled": 1, "target_t": "68.0"}
     )
 
 

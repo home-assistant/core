@@ -1,0 +1,9 @@
+{
+  "domain": "traccar_server",
+  "name": "Traccar Server",
+  "codeowners": ["@ludeeus"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/traccar_server",
+  "iot_class": "local_polling",
+  "requirements": ["pytraccar==2.0.0"]
+}

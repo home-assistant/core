@@ -1,7 +1,6 @@
 """Test the Bond config flow."""
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 from ipaddress import ip_address
 from typing import Any
@@ -274,7 +273,7 @@ async def test_zeroconf_form_token_unavailable(hass: HomeAssistant) -> None:
 async def test_zeroconf_form_token_times_out(hass: HomeAssistant) -> None:
     """Test we get the discovery form and we handle the token request timeout."""
 
-    with patch_bond_version(), patch_bond_token(side_effect=asyncio.TimeoutError):
+    with patch_bond_version(), patch_bond_token(side_effect=TimeoutError):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},

@@ -22,6 +22,7 @@ from dataclasses import dataclass
 import datetime
 import enum
 import functools
+import inspect
 import logging
 import os
 import pathlib
@@ -393,15 +394,22 @@ class HomeAssistant:
         self._stop_future: concurrent.futures.Future[None] | None = None
         self._shutdown_jobs: list[HassJobWithArgs] = []
 
-    @property
+    @cached_property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
 
-    @property
+    @cached_property
     def is_stopping(self) -> bool:
         """Return if Home Assistant is stopping."""
         return self.state in (CoreState.stopping, CoreState.final_write)
+
+    def set_state(self, state: CoreState) -> None:
+        """Set the current state."""
+        self.state = state
+        for prop in ("is_running", "is_stopping"):
+            with suppress(AttributeError):
+                delattr(self, prop)
 
     def start(self) -> int:
         """Start Home Assistant.
@@ -451,7 +459,7 @@ class HomeAssistant:
         _LOGGER.info("Starting Home Assistant")
         setattr(self.loop, "_thread_ident", threading.get_ident())
 
-        self.state = CoreState.starting
+        self.set_state(CoreState.starting)
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
@@ -483,7 +491,7 @@ class HomeAssistant:
             )
             return
 
-        self.state = CoreState.running
+        self.set_state(CoreState.running)
         self.bus.async_fire(EVENT_CORE_CONFIG_UPDATE)
         self.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
 
@@ -868,7 +876,7 @@ class HomeAssistant:
                     tasks.append(task_or_none)
                 if tasks:
                     await asyncio.gather(*tasks, return_exceptions=True)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for shutdown jobs to complete, the shutdown will"
                 " continue"
@@ -894,12 +902,12 @@ class HomeAssistant:
 
         self.exit_code = exit_code
 
-        self.state = CoreState.stopping
+        self.set_state(CoreState.stopping)
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STOP_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for integrations to stop, the shutdown will"
                 " continue"
@@ -907,12 +915,12 @@ class HomeAssistant:
             self._async_log_running_tasks("stop integrations")
 
         # Stage 3 - Final write
-        self.state = CoreState.final_write
+        self.set_state(CoreState.final_write)
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
             async with self.timeout.async_timeout(FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for final writes to complete, the shutdown will"
                 " continue"
@@ -920,7 +928,7 @@ class HomeAssistant:
             self._async_log_running_tasks("final write")
 
         # Stage 4 - Close
-        self.state = CoreState.not_running
+        self.set_state(CoreState.not_running)
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
 
         # Make a copy of running_tasks since a task can finish
@@ -944,7 +952,7 @@ class HomeAssistant:
                     await task
             except asyncio.CancelledError:
                 pass
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Task may be shielded from cancellation.
                 _LOGGER.exception(
                     "Task %s could not be canceled during final shutdown stage", task
@@ -964,14 +972,14 @@ class HomeAssistant:
         try:
             async with self.timeout.async_timeout(CLOSE_STAGE_SHUTDOWN_TIMEOUT):
                 await self.async_block_till_done()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for close event to be processed, the shutdown will"
                 " continue"
             )
             self._async_log_running_tasks("close")
 
-        self.state = CoreState.stopped
+        self.set_state(CoreState.stopped)
 
         if self._stopped is not None:
             self._stopped.set()
@@ -1070,9 +1078,7 @@ class Event:
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         if not context:
-            context = Context(
-                id=ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
-            )
+            context = Context(id=ulid_at_time(self.time_fired.timestamp()))
         self.context = context
         if not context.origin_event:
             context.origin_event = self
@@ -1144,6 +1150,30 @@ _FilterableJobType = tuple[
     Callable[[Event], bool] | None,  # event_filter
     bool,  # run_immediately
 ]
+
+
+@dataclass(slots=True)
+class _OneTimeListener:
+    hass: HomeAssistant
+    listener: Callable[[Event], Coroutine[Any, Any, None] | None]
+    remove: CALLBACK_TYPE | None = None
+
+    @callback
+    def __call__(self, event: Event) -> None:
+        """Remove listener from event bus and then fire listener."""
+        if not self.remove:
+            # If the listener was already removed, we don't need to do anything
+            return
+        self.remove()
+        self.remove = None
+        self.hass.async_run_job(self.listener, event)
+
+    def __repr__(self) -> str:
+        """Return the representation of the listener and source module."""
+        module = inspect.getmodule(self.listener)
+        if module:
+            return f"<_OneTimeListener {module.__name__}:{self.listener}>"
+        return f"<_OneTimeListener {self.listener}>"
 
 
 class EventBus:
@@ -1337,39 +1367,21 @@ class EventBus:
 
         This method must be run in the event loop.
         """
-        filterable_job: _FilterableJobType | None = None
-
-        @callback
-        def _onetime_listener(event: Event) -> None:
-            """Remove listener from event bus and then fire listener."""
-            nonlocal filterable_job
-            if hasattr(_onetime_listener, "run"):
-                return
-            # Set variable so that we will never run twice.
-            # Because the event bus loop might have async_fire queued multiple
-            # times, its possible this listener may already be lined up
-            # multiple times as well.
-            # This will make sure the second time it does nothing.
-            setattr(_onetime_listener, "run", True)
-            assert filterable_job is not None
-            self._async_remove_listener(event_type, filterable_job)
-            self._hass.async_run_job(listener, event)
-
-        functools.update_wrapper(
-            _onetime_listener, listener, ("__name__", "__qualname__", "__module__"), []
-        )
-
-        filterable_job = (
-            HassJob(
-                _onetime_listener,
-                f"onetime listen {event_type} {listener}",
-                job_type=HassJobType.Callback,
+        one_time_listener = _OneTimeListener(self._hass, listener)
+        remove = self._async_listen_filterable_job(
+            event_type,
+            (
+                HassJob(
+                    one_time_listener,
+                    f"onetime listen {event_type} {listener}",
+                    job_type=HassJobType.Callback,
+                ),
+                None,
+                False,
             ),
-            None,
-            False,
         )
-
-        return self._async_listen_filterable_job(event_type, filterable_job)
+        one_time_listener.remove = remove
+        return remove
 
     @callback
     def _async_remove_listener(
@@ -1751,7 +1763,9 @@ class StateMachine:
 
         Async friendly.
         """
-        return self._states_data.get(entity_id.lower())
+        return self._states_data.get(entity_id) or self._states_data.get(
+            entity_id.lower()
+        )
 
     def is_state(self, entity_id: str, state: str) -> bool:
         """Test if entity exists and is in specified state.
@@ -1789,7 +1803,6 @@ class StateMachine:
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": None},
-            EventOrigin.local,
             context=context,
         )
         return True
@@ -1864,10 +1877,16 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
-        entity_id = entity_id.lower()
         new_state = str(new_state)
         attributes = attributes or {}
-        if (old_state := self._states_data.get(entity_id)) is None:
+        old_state = self._states_data.get(entity_id)
+        if old_state is None:
+            # If the state is missing, try to convert the entity_id to lowercase
+            # and try again.
+            entity_id = entity_id.lower()
+            old_state = self._states_data.get(entity_id)
+
+        if old_state is None:
             same_state = False
             same_attr = False
             last_changed = None
@@ -1918,8 +1937,7 @@ class StateMachine:
         self._bus.async_fire(
             EVENT_STATE_CHANGED,
             {"entity_id": entity_id, "old_state": old_state, "new_state": state},
-            EventOrigin.local,
-            context,
+            context=context,
             time_fired=now,
         )
 
@@ -2013,9 +2031,35 @@ class ServiceRegistry:
     def async_services(self) -> dict[str, dict[str, Service]]:
         """Return dictionary with per domain a list of available services.
 
+        This method makes a copy of the registry. This function is expensive,
+        and should only be used if has_service is not sufficient.
+
         This method must be run in the event loop.
         """
         return {domain: service.copy() for domain, service in self._services.items()}
+
+    @callback
+    def async_services_for_domain(self, domain: str) -> dict[str, Service]:
+        """Return dictionary with per domain a list of available services.
+
+        This method makes a copy of the registry for the domain.
+
+        This method must be run in the event loop.
+        """
+        return self._services.get(domain, {}).copy()
+
+    @callback
+    def async_services_internal(self) -> dict[str, dict[str, Service]]:
+        """Return dictionary with per domain a list of available services.
+
+        This method DOES NOT make a copy of the services like async_services does.
+        It is only expected to be called from the Home Assistant internals
+        as a performance optimization when the caller is not going to modify the
+        returned data.
+
+        This method must be run in the event loop.
+        """
+        return self._services
 
     def has_service(self, domain: str, service: str) -> bool:
         """Test if specified service exists.
@@ -2409,6 +2453,7 @@ class Config:
 
         Async friendly.
         """
+        allowlist_external_dirs = list(self.allowlist_external_dirs)
         return {
             "latitude": self.latitude,
             "longitude": self.longitude,
@@ -2416,12 +2461,12 @@ class Config:
             "unit_system": self.units.as_dict(),
             "location_name": self.location_name,
             "time_zone": self.time_zone,
-            "components": self.components,
+            "components": list(self.components),
             "config_dir": self.config_dir,
             # legacy, backwards compat
-            "whitelist_external_dirs": self.allowlist_external_dirs,
-            "allowlist_external_dirs": self.allowlist_external_dirs,
-            "allowlist_external_urls": self.allowlist_external_urls,
+            "whitelist_external_dirs": allowlist_external_dirs,
+            "allowlist_external_dirs": allowlist_external_dirs,
+            "allowlist_external_urls": list(self.allowlist_external_urls),
             "version": __version__,
             "config_source": self.config_source,
             "recovery_mode": self.recovery_mode,

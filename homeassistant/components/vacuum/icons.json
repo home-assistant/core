@@ -1,0 +1,21 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:robot-vacuum"
+    }
+  },
+  "services": {
+    "clean_spot": "mdi:target-variant",
+    "locate": "mdi:map-marker",
+    "pause": "mdi:pause",
+    "return_to_base": "mdi:home-import-outline",
+    "send_command": "mdi:send",
+    "set_fan_speed": "mdi:fan",
+    "start": "mdi:play",
+    "start_pause": "mdi:play-pause",
+    "stop": "mdi:stop",
+    "toggle": "mdi:play-pause",
+    "turn_off": "mdi:stop",
+    "turn_on": "mdi:play"
+  }
+}
