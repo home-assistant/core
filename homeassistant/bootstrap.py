@@ -629,12 +629,12 @@ async def _async_resolve_domains_to_setup(
 
         manifest_deps: set[str] = set()
         resolve_dependencies_tasks: list[Coroutine[Any, Any, bool]] = []
-        resolved_integrations: list[loader.Integration] = []
+        integrations_to_process: list[loader.Integration] = []
 
         for domain, itg in (await loader.async_get_integrations(hass, to_get)).items():
             if not isinstance(itg, loader.Integration) or domain not in old_to_resolve:
                 continue
-            resolved_integrations.append(itg)
+            integrations_to_process.append(itg)
             integration_cache[domain] = itg
             manifest_deps.update(itg.dependencies)
             manifest_deps.update(itg.after_dependencies)
@@ -649,16 +649,17 @@ async def _async_resolve_domains_to_setup(
             # in a single call below which avoids each integration
             # having to wait for the lock to do it individually
             deps = await loader.async_get_integrations(hass, unseen_deps)
-            for dependant_itg in deps.values():
+            for dependant_domain, dependant_itg in deps.items():
                 if isinstance(dependant_itg, loader.Integration):
+                    integration_cache[dependant_domain] = dependant_itg
                     needed_requirements.update(dependant_itg.requirements)
 
         if resolve_dependencies_tasks:
             await asyncio.gather(*resolve_dependencies_tasks)
 
-        for itg in resolved_integrations:
+        for itg in integrations_to_process:
             for dep in itg.all_dependencies:
-                if dep not in domains_to_setup:
+                if dep in domains_to_setup:
                     continue
                 domains_to_setup.add(dep)
                 to_resolve.add(dep)
