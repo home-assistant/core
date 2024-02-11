@@ -40,7 +40,7 @@ async def async_get_config_entry_diagnostics(
 
     diagnostics_data = {
         "config_entry_data": async_redact_data(dict(config_entry.data), TO_REDACT),
-        "myuplink_data": myuplink_data,
+        "myuplink_data": async_redact_data(myuplink_data, TO_REDACT),
     }
 
     return diagnostics_data
