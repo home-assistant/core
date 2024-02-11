@@ -122,6 +122,9 @@
       },
       "remaining_fuel_percent": {
         "name": "Remaining fuel percent"
+      },
+      "climate_status": {
+        "name": "Climate status"
       }
     },
     "switch": {
