@@ -3,8 +3,8 @@ from datetime import timedelta
 import logging
 
 from httpx import RequestError
-from wolf_smartset.token_auth import InvalidAuth
-from wolf_smartset.wolf_client import FetchFailed, ParameterReadError, WolfClient
+from wolf_comm.token_auth import InvalidAuth
+from wolf_comm.wolf_client import FetchFailed, ParameterReadError, WolfClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
