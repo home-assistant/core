@@ -23,6 +23,60 @@ class CommandStore:
     sent_commands: list[Command]
     mock_responses: dict[str, Any]
 
+    def register_device(
+        self, gateway: Gateway, device_response: dict[str, Any]
+    ) -> None:
+        """Register device response."""
+        get_devices_command = gateway.get_devices()
+        self.register_response(get_devices_command, [device_response[ATTR_ID]])
+        get_device_command = gateway.get_device(device_response[ATTR_ID])
+        self.register_response(get_device_command, device_response)
+
+    def register_response(self, command: Command, response: Any) -> None:
+        """Register command response."""
+        self.mock_responses[command.path_str] = response
+
+    def process_command(self, command: Command) -> Any | None:
+        """Process command."""
+        response = self.mock_responses.get(command.path_str)
+        if response is None or command.process_result is None:
+            return None
+        return command.process_result(response)
+
+    async def trigger_observe_callback(
+        self,
+        hass: HomeAssistant,
+        device: Device,
+        new_device_state: dict[str, Any] | None = None,
+    ) -> None:
+        """Trigger the observe callback."""
+        observe_command = next(
+            (
+                command
+                for command in self.sent_commands
+                if command.path == device.path and command.observe
+            ),
+            None,
+        )
+        assert observe_command
+
+        device_path = "/".join(str(v) for v in device.path)
+        device_state = deepcopy(device.raw)
+
+        # Create a default observed state based on the sent commands.
+        for command in self.sent_commands:
+            if (data := command.data) is None or command.path_str != device_path:
+                continue
+            device_state = modify_state(device_state, data)
+
+        # Allow the test to override the default observed state.
+        if new_device_state is not None:
+            device_state = modify_state(device_state, new_device_state)
+
+        observe_command.process_result(device_state)
+
+        await hass.async_block_till_done()
+
 
 async def setup_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Load the Tradfri integration with a mock gateway."""
@@ -41,66 +95,6 @@ async def setup_integration(hass: HomeAssistant) -> MockConfigEntry:
     await hass.async_block_till_done()
 
     return entry
-
-
-def register_device(
-    command_store: CommandStore, gateway: Gateway, device_response: dict[str, Any]
-) -> None:
-    """Register device response."""
-    get_devices_command = gateway.get_devices()
-    register_response(command_store, get_devices_command, [device_response[ATTR_ID]])
-    get_device_command = gateway.get_device(device_response[ATTR_ID])
-    register_response(command_store, get_device_command, device_response)
-
-
-def register_response(
-    command_store: CommandStore, command: Command, response: Any
-) -> None:
-    """Register command response."""
-    command_store.mock_responses[command.path_str] = response
-
-
-def process_command(command_store: CommandStore, command: Command) -> Any | None:
-    """Process command."""
-    response = command_store.mock_responses.get(command.path_str)
-    if response is None or command.process_result is None:
-        return None
-    return command.process_result(response)
-
-
-async def trigger_observe_callback(
-    hass: HomeAssistant,
-    command_store: CommandStore,
-    device: Device,
-    new_device_state: dict[str, Any] | None = None,
-) -> None:
-    """Trigger the observe callback."""
-    observe_command = next(
-        (
-            command
-            for command in command_store.sent_commands
-            if command.path == device.path and command.observe
-        ),
-        None,
-    )
-    assert observe_command
-
-    device_path = "/".join(str(v) for v in device.path)
-    device_state = deepcopy(device.raw)
-
-    # Create a default observed state based on the sent commands.
-    for command in command_store.sent_commands:
-        if (data := command.data) is None or command.path_str != device_path:
-            continue
-        device_state = modify_state(device_state, data)
-
-    # Allow the test to override the default observed state.
-    if new_device_state is not None:
-        device_state = modify_state(device_state, new_device_state)
-
-    observe_command.process_result(device_state)
-
-    await hass.async_block_till_done()
 
 
 def modify_state(

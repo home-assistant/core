@@ -12,7 +12,7 @@ from homeassistant.components.tradfri.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .common import CommandStore, setup_integration, trigger_observe_callback
+from .common import CommandStore, setup_integration
 
 from tests.common import load_fixture
 
@@ -37,8 +37,8 @@ async def test_switch_available(
     assert state
     assert state.state == STATE_OFF
 
-    await trigger_observe_callback(
-        hass, command_store, device, {ATTR_REACHABLE_STATE: 0}
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_REACHABLE_STATE: 0}
     )
 
     state = hass.states.get(entity_id)
@@ -79,7 +79,7 @@ async def test_turn_on_off(
     )
     await hass.async_block_till_done()
 
-    await trigger_observe_callback(hass, command_store, device)
+    await command_store.trigger_observe_callback(hass, device)
 
     state = hass.states.get(entity_id)
     assert state

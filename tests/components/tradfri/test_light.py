@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .common import CommandStore, setup_integration, trigger_observe_callback
+from .common import CommandStore, setup_integration
 
 from tests.common import load_fixture
 
@@ -116,8 +116,8 @@ async def test_light_available(
     assert state
     assert state.state == STATE_ON
 
-    await trigger_observe_callback(
-        hass, command_store, device, {ATTR_REACHABLE_STATE: 0}
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_REACHABLE_STATE: 0}
     )
 
     state = hass.states.get(entity_id)
@@ -256,8 +256,8 @@ async def test_turn_on(
     )
     await hass.async_block_till_done()
 
-    await trigger_observe_callback(
-        hass, command_store, device, {ATTR_LIGHT_CONTROL: [{ATTR_DEVICE_STATE: 1}]}
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_LIGHT_CONTROL: [{ATTR_DEVICE_STATE: 1}]}
     )
 
     state = hass.states.get(entity_id)
@@ -300,8 +300,8 @@ async def test_turn_off(
     )
     await hass.async_block_till_done()
 
-    await trigger_observe_callback(
-        hass, command_store, device, {ATTR_LIGHT_CONTROL: [{ATTR_DEVICE_STATE: 0}]}
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_LIGHT_CONTROL: [{ATTR_DEVICE_STATE: 0}]}
     )
 
     state = hass.states.get(entity_id)

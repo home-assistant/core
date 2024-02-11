@@ -31,7 +31,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .common import CommandStore, setup_integration, trigger_observe_callback
+from .common import CommandStore, setup_integration
 
 
 @pytest.mark.parametrize("device", ["air_purifier"], indirect=True)
@@ -53,8 +53,8 @@ async def test_fan_available(
     assert state.attributes[ATTR_PRESET_MODE] is None
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 9
 
-    await trigger_observe_callback(
-        hass, command_store, device, {ATTR_REACHABLE_STATE: 0}
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_REACHABLE_STATE: 0}
     )
 
     state = hass.states.get(entity_id)
@@ -181,9 +181,8 @@ async def test_services(
     )
     await hass.async_block_till_done()
 
-    await trigger_observe_callback(
+    await command_store.trigger_observe_callback(
         hass,
-        command_store,
         device,
         {ROOT_AIR_PURIFIER: [device_state]},
     )

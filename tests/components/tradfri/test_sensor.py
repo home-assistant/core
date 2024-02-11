@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import GATEWAY_ID
-from .common import CommandStore, setup_integration, trigger_observe_callback
+from .common import CommandStore, setup_integration
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -59,8 +59,8 @@ async def test_battery_sensor(
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.BATTERY
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
 
-    await trigger_observe_callback(
-        hass, command_store, device, {ATTR_DEVICE_INFO: {ATTR_DEVICE_BATTERY: 60}}
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_DEVICE_INFO: {ATTR_DEVICE_BATTERY: 60}}
     )
 
     state = hass.states.get(entity_id)
@@ -109,9 +109,8 @@ async def test_air_quality_sensor(
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     # The sensor returns 65535 if the fan is turned off
-    await trigger_observe_callback(
+    await command_store.trigger_observe_callback(
         hass,
-        command_store,
         device,
         {ROOT_AIR_PURIFIER: [{ATTR_AIR_PURIFIER_AIR_QUALITY: 65535}]},
     )
@@ -152,8 +151,8 @@ async def test_sensor_available(
     assert state
     assert state.state == "4320"
 
-    await trigger_observe_callback(
-        hass, command_store, device, {ATTR_REACHABLE_STATE: 0}
+    await command_store.trigger_observe_callback(
+        hass, device, {ATTR_REACHABLE_STATE: 0}
     )
 
     state = hass.states.get(entity_id)

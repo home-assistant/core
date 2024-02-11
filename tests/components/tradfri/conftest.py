@@ -15,7 +15,7 @@ from pytradfri.gateway import Gateway
 from homeassistant.components.tradfri.const import DOMAIN
 
 from . import GATEWAY_ID, TRADFRI_PATH
-from .common import CommandStore, process_command, register_device, register_response
+from .common import CommandStore
 
 from tests.common import load_fixture
 
@@ -32,13 +32,11 @@ def mock_entry_setup():
 def mock_gateway_fixture(command_store: CommandStore) -> None:
     """Mock a Tradfri gateway."""
     gateway = Gateway()
-    register_response(
-        command_store,
+    command_store.register_response(
         gateway.get_gateway_info(),
         {ATTR_GATEWAY_ID: GATEWAY_ID, ATTR_FIRMWARE_VERSION: "1.2.1234"},
     )
-    register_response(
-        command_store,
+    command_store.register_response(
         gateway.get_devices(),
         [],
     )
@@ -65,11 +63,11 @@ def mock_api_fixture(
             result = []
             for cmd in command:
                 command_store.sent_commands.append(cmd)
-                result.append(process_command(command_store, cmd))
+                result.append(command_store.process_command(cmd))
             return result
 
         command_store.sent_commands.append(command)
-        return process_command(command_store, command)
+        return command_store.process_command(command)
 
     return api
 
@@ -91,7 +89,7 @@ def device(
     """Return a device."""
     device_response: dict[str, Any] = json.loads(request.getfixturevalue(request.param))
     device = Device(device_response)
-    register_device(command_store, mock_gateway, device.raw)
+    command_store.register_device(mock_gateway, device.raw)
     return device
 
 
