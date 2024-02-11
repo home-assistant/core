@@ -153,6 +153,12 @@ SENSOR_TYPES: list[BMWSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         is_available=lambda v: v.is_lsc_enabled and v.has_combustion_drivetrain,
     ),
+    BMWSensorEntityDescription(
+        key="activity",
+        translation_key="climate_status",
+        key_class="climate",
+        icon="mdi:fan",
+    ),
 ]
 
 
