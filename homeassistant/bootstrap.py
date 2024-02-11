@@ -36,6 +36,7 @@ from .helpers import (
     recorder,
     restore_state,
     template,
+    translation,
 )
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.typing import ConfigType
@@ -293,6 +294,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         platform.uname().processor  # pylint: disable=expression-not-assigned
 
     # Load the registries and cache the result of platform.uname().processor
+    translation.async_setup(hass)
     entity.async_setup(hass)
     template.async_setup(hass)
     await asyncio.gather(
