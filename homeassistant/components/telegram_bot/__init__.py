@@ -1,15 +1,15 @@
 """Support to send and receive Telegram messages."""
 from __future__ import annotations
 
+import asyncio
 import importlib
 import io
 from ipaddress import ip_network
 import logging
 from typing import Any, Optional
 
+import httpx
 from httpx import Proxy
-import requests
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from telegram import (
     Bot,
     CallbackQuery,
@@ -283,7 +283,7 @@ SERVICE_MAP = {
 }
 
 
-def load_data(
+async def load_data(
     hass,
     url=None,
     filepath=None,
@@ -297,35 +297,48 @@ def load_data(
     try:
         if url is not None:
             # Load data from URL
-            params = {"timeout": 15}
+            params = {}
+            headers = {}
             if authentication == HTTP_BEARER_AUTHENTICATION and password is not None:
-                params["headers"] = {"Authorization": f"Bearer {password}"}
+                headers = {"Authorization": f"Bearer {password}"}
             elif username is not None and password is not None:
                 if authentication == HTTP_DIGEST_AUTHENTICATION:
-                    params["auth"] = HTTPDigestAuth(username, password)
+                    params["auth"] = httpx.DigestAuth(username, password)
                 else:
-                    params["auth"] = HTTPBasicAuth(username, password)
+                    params["auth"] = httpx.BasicAuth(username, password)
             if verify_ssl is not None:
                 params["verify"] = verify_ssl
+
             retry_num = 0
-            while retry_num < num_retries:
-                req = requests.get(url, **params)
-                if not req.ok:
-                    _LOGGER.warning(
-                        "Status code %s (retry #%s) loading %s",
-                        req.status_code,
-                        retry_num + 1,
-                        url,
-                    )
-                else:
-                    data = io.BytesIO(req.content)
-                    if data.read():
-                        data.seek(0)
-                        data.name = url
-                        return data
-                    _LOGGER.warning("Empty data (retry #%s) in %s)", retry_num + 1, url)
-                retry_num += 1
-            _LOGGER.warning("Can't load data in %s after %s retries", url, retry_num)
+            async with httpx.AsyncClient(
+                timeout=15, headers=headers, **params
+            ) as client:
+                while retry_num < num_retries:
+                    req = await client.get(url)
+                    if req.status_code != 200:
+                        _LOGGER.warning(
+                            "Status code %s (retry #%s) loading %s",
+                            req.status_code,
+                            retry_num + 1,
+                            url,
+                        )
+                    else:
+                        data = io.BytesIO(req.content)
+                        if data.read():
+                            data.seek(0)
+                            data.name = url
+                            return data
+                        _LOGGER.warning(
+                            "Empty data (retry #%s) in %s)", retry_num + 1, url
+                        )
+                    retry_num += 1
+                    if retry_num < num_retries:
+                        await asyncio.sleep(
+                            1
+                        )  # Add a sleep to allow other async operations to proceed
+                _LOGGER.warning(
+                    "Can't load data in %s after %s retries", url, retry_num
+                )
         elif filepath is not None:
             if hass.config.is_allowed_path(filepath):
                 return open(filepath, "rb")
@@ -747,7 +760,7 @@ class TelegramNotificationService:
     async def send_file(self, file_type=SERVICE_SEND_PHOTO, target=None, **kwargs):
         """Send a photo, sticker, video, or document."""
         params = self._get_msg_kwargs(kwargs)
-        file_content = load_data(
+        file_content = await load_data(
             self.hass,
             url=kwargs.get(ATTR_URL),
             filepath=kwargs.get(ATTR_FILE),
