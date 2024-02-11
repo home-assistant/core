@@ -969,6 +969,8 @@ RPC_SENSORS: Final = {
         key="input",
         sub_key="counts",
         name="Pulse counter",
+        native_unit_of_measurement="pulse",
+        state_class=SensorStateClass.TOTAL,
         value=lambda status, _: status["total"],
         removal_condition=lambda config, _status, key: (config[key]["enable"] is False),
     ),

@@ -623,7 +623,10 @@ async def test_rpc_pulse_counter_sensors(
     await init_integration(hass, 2)
 
     entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter"
-    assert hass.states.get(entity_id).state == "56174"
+    state = hass.states.get(entity_id)
+    assert state.state == "56174"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "pulse"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
 
     entry = entity_registry.async_get(entity_id)
     assert entry
