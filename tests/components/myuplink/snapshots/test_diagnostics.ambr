@@ -53,7 +53,7 @@
                 'id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
                 'product': dict({
                   'name': 'F730 CU 3x400V',
-                  'serialNumber': '123456',
+                  'serialNumber': '**REDACTED**',
                 }),
               }),
               'points': list([
@@ -1116,7 +1116,7 @@
                 'id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
                 'product': dict({
                   'name': 'F730 CU 3x400V',
-                  'serialNumber': '123456',
+                  'serialNumber': '**REDACTED**',
                 }),
               }),
             ]),
