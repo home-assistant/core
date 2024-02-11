@@ -22,7 +22,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-async def mock_hunterdouglas_base() -> MagicMock:
+def mock_hunterdouglas_base() -> Generator[MagicMock, None, None]:
     """Return a mocked Powerview Hub with no data."""
     with patch(
         "homeassistant.components.hunterdouglas_powerview.Hub",
@@ -33,7 +33,7 @@ async def mock_hunterdouglas_base() -> MagicMock:
 
 @pytest.fixture
 @pytest.mark.usefixtures("mock_hunterdouglas_base")
-async def mock_hunterdouglas_user(
+def mock_hunterdouglas_user(
     device_json: str,
 ) -> Generator[MagicMock, None, None]:
     """Return a mocked Powerview Hub with only base raw data."""
@@ -46,7 +46,7 @@ async def mock_hunterdouglas_user(
 
 @pytest.fixture
 @pytest.mark.usefixtures("mock_hunterdouglas_base")
-async def mock_hunterdouglas_secondary() -> Generator[MagicMock, None, None]:
+def mock_hunterdouglas_secondary() -> Generator[MagicMock, None, None]:
     """Return a mocked Powerview Hub with only base raw data."""
     with patch(
         "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
@@ -63,7 +63,7 @@ async def mock_hunterdouglas_secondary() -> Generator[MagicMock, None, None]:
 
 @pytest.fixture
 @pytest.mark.usefixtures("mock_hunterdouglas_base")
-async def mock_hunterdouglas_full(
+def mock_hunterdouglas_full(
     device_json: str,
     home_json: str,
     firmware_json: str,
@@ -102,7 +102,7 @@ async def mock_hunterdouglas_full(
 
 @pytest.fixture
 @pytest.mark.usefixtures("mock_hunterdouglas_base")
-async def mock_hub2(
+def mock_hub2(
     device_json: str,
     home_json: str,
     firmware_json: str,
