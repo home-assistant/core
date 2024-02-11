@@ -64,10 +64,12 @@ async def test_coordinator_update_errors(
 ) -> None:
     """Test WireGuardUpdateCoordinator."""
     config_entry.add_to_hass(hass)
-    coordinator_client.get_peers.side_effect = side_effect(message)
+    coordinator_client.side_effect = None
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+    coordinator_client.get_peers.side_effect = side_effect(message)
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     await coordinator.async_refresh()
     await hass.async_block_till_done()
