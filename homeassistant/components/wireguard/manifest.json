@@ -3,11 +3,8 @@
   "name": "WireGuard",
   "codeowners": ["@niro1987"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/wireguard",
-  "homekit": {},
+  "integration_type": "hub",
   "iot_class": "local_polling",
-  "requirements": ["ha_wireguard_api==0.2.4"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["ha_wireguard_api==0.2.4"]
 }

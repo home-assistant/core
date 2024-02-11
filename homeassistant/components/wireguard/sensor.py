@@ -20,7 +20,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the WireGuard binary sensors based on a config entry."""
+    """Set up the WireGuard sensors based on a config entry."""
     coordinator: WireGuardUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     sensors: list[SensorEntity] = []
     sensors.extend(
@@ -47,7 +47,7 @@ class WireGuardPeerHandshakeSensor(
         """Initialize the WireGuard latest_handshake Sensor."""
         super().__init__(coordinator)
         self._peer_id: str = peer_id
-        self._attr_name = "Latest Handshake"
+        self._attr_translation_key = "latest_handshake"
         self._attr_unique_id = f"{self._peer_id}_latest_handshake"
         self._latest_handshake: datetime | None = None
 
@@ -95,7 +95,7 @@ class WireGuardPeerBytesReceivedSensor(
         """Initialize the WireGuard Bytes Received Sensor."""
         super().__init__(coordinator)
         self._peer_id: str = peer_id
-        self._attr_name = "Received"
+        self._attr_translation_key = "received"
         self._attr_unique_id = f"{self._peer_id}_transfer_rx"
         self._attr_native_unit_of_measurement = UnitOfInformation.BYTES
         self._attr_suggested_unit_of_measurement = UnitOfInformation.MEGABYTES
@@ -138,7 +138,7 @@ class WireGuardPeerBytesSentSensor(
         """Initialize the WireGuard Bytes Received Sensor."""
         super().__init__(coordinator)
         self._peer_id: str = peer_id
-        self._attr_name = "Sent"
+        self._attr_translation_key = "sent"
         self._attr_unique_id = f"{self._peer_id}_transfer_tx"
         self._attr_native_unit_of_measurement = UnitOfInformation.BYTES
         self._attr_suggested_unit_of_measurement = UnitOfInformation.MEGABYTES
