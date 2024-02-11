@@ -2,6 +2,14 @@
 # name: test_diagnostics
   dict({
     'config_entry_data': dict({
+      'auth_implementation': 'myuplink',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_in': 86399,
+        'refresh_token': '**REDACTED**',
+        'scope': 'READSYSTEM offline',
+        'token_type': 'Bearer',
+      }),
     }),
     'myuplink_data': dict({
       'my_systems': dict({
