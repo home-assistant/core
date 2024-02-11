@@ -28,7 +28,7 @@
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_data": "No data is provided for the location you have selected."
+      "no_data": "No data is available for the location you have selected."
     },
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
