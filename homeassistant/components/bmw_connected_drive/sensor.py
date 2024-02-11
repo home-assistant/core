@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 import logging
 from typing import cast
 
@@ -124,7 +125,7 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         translation_key="remaining_fuel",
         key_class="fuel_and_battery",
         icon="mdi:gas-station",
-        device_class=SensorDeviceClass.VOLUME_STORAGE,
+        device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -190,7 +191,7 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
                 getattr(self.vehicle, self.entity_description.key_class),
                 self.entity_description.key,
             )
-        if isinstance(state, ValueWithUnit):
+        if isinstance(state, (ValueWithUnit, Enum)):
             state = state.value
         self._attr_native_value = cast(StateType, state)
         super()._handle_coordinator_update()
