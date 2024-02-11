@@ -1,5 +1,6 @@
 """Creates a switch entity for the mower."""
 import logging
+from typing import Any
 
 from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerStates, RestrictedReasons
@@ -50,7 +51,7 @@ class AutomowerSwitchEntity(AutomowerBaseEntity, SwitchEntity):
             and attributes.planner.restricted_reason == RestrictedReasons.NOT_APPLICABLE
         )
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         try:
             await self.coordinator.api.park_until_further_notice(self.mower_id)
@@ -59,7 +60,7 @@ class AutomowerSwitchEntity(AutomowerBaseEntity, SwitchEntity):
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         try:
             await self.coordinator.api.resume_schedule(self.mower_id)
