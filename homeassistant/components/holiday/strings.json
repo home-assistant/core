@@ -1,0 +1,20 @@
+{
+  "title": "Holiday",
+  "config": {
+    "abort": {
+      "already_configured": "Already configured. Only a single configuration for country/province combination possible."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "country": "Country"
+        }
+      },
+      "province": {
+        "data": {
+          "province": "Province"
+        }
+      }
+    }
+  }
+}

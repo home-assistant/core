@@ -55,6 +55,7 @@ ATTR_CALLBACK_QUERY_ID = "callback_query_id"
 ATTR_CAPTION = "caption"
 ATTR_CHAT_ID = "chat_id"
 ATTR_CHAT_INSTANCE = "chat_instance"
+ATTR_DATE = "date"
 ATTR_DISABLE_NOTIF = "disable_notification"
 ATTR_DISABLE_WEB_PREV = "disable_web_page_preview"
 ATTR_EDITED_MSG = "edited_message"
@@ -601,12 +602,8 @@ class TelegramNotificationService:
                 if keys:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
                         [[key.strip() for key in row.split(",")] for row in keys],
-                        resize_keyboard=data[ATTR_RESIZE_KEYBOARD]
-                        if ATTR_RESIZE_KEYBOARD in data
-                        else False,
-                        one_time_keyboard=data[ATTR_ONE_TIME_KEYBOARD]
-                        if ATTR_ONE_TIME_KEYBOARD in data
-                        else False,
+                        resize_keyboard=data.get(ATTR_RESIZE_KEYBOARD, False),
+                        one_time_keyboard=data.get(ATTR_ONE_TIME_KEYBOARD, False),
                     )
                 else:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardRemove(True)
@@ -991,6 +988,7 @@ class BaseTelegramBotEntity:
         event_data: dict[str, Any] = {
             ATTR_MSGID: message.message_id,
             ATTR_CHAT_ID: message.chat.id,
+            ATTR_DATE: message.date,
         }
         if Filters.command.filter(message):
             # This is a command message - set event type to command and split data into command and args

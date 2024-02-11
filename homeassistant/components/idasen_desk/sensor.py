@@ -22,14 +22,14 @@ from . import DeskData, IdasenDeskCoordinator
 from .const import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class IdasenDeskSensorDescriptionMixin:
     """Required values for IdasenDesk sensors."""
 
     value_fn: Callable[[IdasenDeskCoordinator], float | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IdasenDeskSensorDescription(
     SensorEntityDescription,
     IdasenDeskSensorDescriptionMixin,
@@ -67,7 +67,7 @@ async def async_setup_entry(
     )
 
 
-class IdasenDeskSensor(CoordinatorEntity, SensorEntity):
+class IdasenDeskSensor(CoordinatorEntity[IdasenDeskCoordinator], SensorEntity):
     """IdasenDesk sensor."""
 
     entity_description: IdasenDeskSensorDescription

@@ -31,6 +31,7 @@ from homeassistant.requirements import (
 )
 import homeassistant.util.yaml.loader as yaml_loader
 
+from . import config_validation as cv
 from .typing import ConfigType
 
 
@@ -95,13 +96,13 @@ async def async_check_ha_config_file(  # noqa: C901
     def _pack_error(
         hass: HomeAssistant,
         package: str,
-        component: str,
+        component: str | None,
         config: ConfigType,
         message: str,
     ) -> None:
         """Handle errors from packages."""
         message = f"Setup of package '{package}' failed: {message}"
-        domain = f"homeassistant.packages.{package}.{component}"
+        domain = f"homeassistant.packages.{package}{'.' + component if component is not None else ''}"
         pack_config = core_config[CONF_PACKAGES].get(package, config)
         result.add_warning(message, domain, pack_config)
 
@@ -156,10 +157,15 @@ async def async_check_ha_config_file(  # noqa: C901
         return result.add_error(f"Error loading {config_path}: {err}")
 
     # Extract and validate core [homeassistant] config
+    core_config = config.pop(CONF_CORE, {})
     try:
-        core_config = config.pop(CONF_CORE, {})
         core_config = CORE_CONFIG_SCHEMA(core_config)
         result[CONF_CORE] = core_config
+
+        # Merge packages
+        await merge_packages_config(
+            hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error
+        )
     except vol.Invalid as err:
         result.add_error(
             format_schema_error(hass, err, CONF_CORE, core_config),
@@ -167,15 +173,10 @@ async def async_check_ha_config_file(  # noqa: C901
             core_config,
         )
         core_config = {}
-
-    # Merge packages
-    await merge_packages_config(
-        hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error
-    )
     core_config.pop(CONF_PACKAGES, None)
 
     # Filter out repeating config sections
-    components = {key.partition(" ")[0] for key in config}
+    components = {cv.domain_key(key) for key in config}
 
     frontend_dependencies: set[str] = set()
     if "frontend" in components or "default_config" in components:
@@ -276,13 +277,17 @@ async def async_check_ha_config_file(  # noqa: C901
                 # show errors for a missing integration in recovery mode or safe mode to
                 # not confuse the user.
                 if not hass.config.recovery_mode and not hass.config.safe_mode:
-                    result.add_warning(f"Platform error {domain}.{p_name} - {ex}")
+                    result.add_warning(
+                        f"Platform error '{domain}' from integration '{p_name}' - {ex}"
+                    )
                 continue
             except (
                 RequirementsNotFound,
                 ImportError,
             ) as ex:
-                result.add_warning(f"Platform error {domain}.{p_name} - {ex}")
+                result.add_warning(
+                    f"Platform error '{domain}' from integration '{p_name}' - {ex}"
+                )
                 continue
 
             # Validate platform specific schema

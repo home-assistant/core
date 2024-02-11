@@ -55,7 +55,8 @@ async def test_invalid_sensor_data(hass: HomeAssistant) -> None:
         "homeassistant.components.gios.Gios._get_station",
         return_value=json.loads(load_fixture("gios/station.json")),
     ), patch(
-        "homeassistant.components.gios.Gios._get_sensor", return_value={}
+        "homeassistant.components.gios.Gios._get_sensor",
+        return_value={},
     ):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
@@ -83,7 +84,8 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
 async def test_create_entry(hass: HomeAssistant) -> None:
     """Test that the user step works."""
     with patch(
-        "homeassistant.components.gios.Gios._get_stations", return_value=STATIONS
+        "homeassistant.components.gios.Gios._get_stations",
+        return_value=STATIONS,
     ), patch(
         "homeassistant.components.gios.Gios._get_station",
         return_value=json.loads(load_fixture("gios/station.json")),

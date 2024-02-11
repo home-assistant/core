@@ -87,7 +87,7 @@ async def setup_config_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> list[Platform]:
     """Fixture to setup the config entry."""
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
 
 
@@ -115,7 +115,7 @@ def mock_insert_schedule_response(
 
 @pytest.fixture(name="get_events")
 def get_events_fixture(
-    hass_client: Callable[..., Awaitable[ClientSession]]
+    hass_client: Callable[..., Awaitable[ClientSession]],
 ) -> GetEventsFn:
     """Fetch calendar events from the HTTP API."""
 
@@ -191,7 +191,7 @@ async def test_event_state(
     """Test calendar upcoming event state."""
     freezer.move_to(freeze_time)
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
 
     state = hass.states.get(TEST_ENTITY)
@@ -232,7 +232,8 @@ async def test_calendar_not_supported_by_device(
 
 
 @pytest.mark.parametrize(
-    "mock_insert_schedule_response", [([None])]  # Disable success responses
+    "mock_insert_schedule_response",
+    [([None])],  # Disable success responses
 )
 async def test_no_schedule(
     hass: HomeAssistant,
@@ -297,7 +298,7 @@ async def test_no_unique_id(
     # Failure to migrate config entry to a unique id
     responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
 
     state = hass.states.get(TEST_ENTITY)

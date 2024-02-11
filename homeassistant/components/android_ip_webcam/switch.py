@@ -18,7 +18,7 @@ from .coordinator import AndroidIPCamDataUpdateCoordinator
 from .entity import AndroidIPCamBaseEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class AndroidIPWebcamSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -26,7 +26,7 @@ class AndroidIPWebcamSwitchEntityDescriptionMixin:
     off_func: Callable[[PyDroidIPCam], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AndroidIPWebcamSwitchEntityDescription(
     SwitchEntityDescription, AndroidIPWebcamSwitchEntityDescriptionMixin
 ):

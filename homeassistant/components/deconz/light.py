@@ -67,7 +67,7 @@ DECONZ_TO_COLOR_MODE = {
     LightColorMode.XY: ColorMode.XY,
 }
 
-TS0601_EFFECTS = [
+XMAS_LIGHT_EFFECTS = [
     "carnival",
     "collide",
     "fading",
@@ -200,8 +200,8 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
         if device.effect is not None:
             self._attr_supported_features |= LightEntityFeature.EFFECT
             self._attr_effect_list = [EFFECT_COLORLOOP]
-            if device.model_id == "TS0601":
-                self._attr_effect_list += TS0601_EFFECTS
+            if device.model_id in ("HG06467", "TS0601"):
+                self._attr_effect_list = XMAS_LIGHT_EFFECTS
 
     @property
     def color_mode(self) -> str | None:
@@ -212,6 +212,10 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
             color_mode = ColorMode.BRIGHTNESS
         else:
             color_mode = ColorMode.ONOFF
+        if color_mode not in self._attr_supported_color_modes:
+            # Some lights controlled by ZigBee scenes can get unsupported color mode
+            return self._attr_color_mode
+        self._attr_color_mode = color_mode
         return color_mode
 
     @property

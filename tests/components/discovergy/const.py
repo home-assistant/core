@@ -67,7 +67,7 @@ LAST_READING = Reading(
         "energyOut": 55048723044000.0,
         "energyOut1": 0.0,
         "energyOut2": 0.0,
-        "power": 531750.0,
+        "power": 0.0,
         "power1": 142680.0,
         "power2": 138010.0,
         "power3": 251060.0,

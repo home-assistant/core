@@ -1,4 +1,5 @@
 """ESPHome voice assistant support."""
+
 from __future__ import annotations
 
 import asyncio
@@ -67,7 +68,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     """Receive UDP packets and forward them to the voice assistant."""
 
     started = False
-    stopped = False
+    stop_requested = False
     transport: asyncio.DatagramTransport | None = None
     remote_addr: tuple[str, int] | None = None
 
@@ -92,6 +93,11 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         self._tts_done = asyncio.Event()
         self._tts_task: asyncio.Task | None = None
 
+    @property
+    def is_running(self) -> bool:
+        """True if the the UDP server is started and hasn't been asked to stop."""
+        return self.started and (not self.stop_requested)
+
     async def start_server(self) -> int:
         """Start accepting connections."""
 
@@ -99,7 +105,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             """Accept connection."""
             if self.started:
                 raise RuntimeError("Can only start once")
-            if self.stopped:
+            if self.stop_requested:
                 raise RuntimeError("No longer accepting connections")
 
             self.started = True
@@ -124,7 +130,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     @callback
     def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         """Handle incoming UDP packet."""
-        if not self.started or self.stopped:
+        if not self.is_running:
             return
         if self.remote_addr is None:
             self.remote_addr = addr
@@ -142,19 +148,19 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
     def stop(self) -> None:
         """Stop the receiver."""
         self.queue.put_nowait(b"")
-        self.started = False
-        self.stopped = True
+        self.close()
 
     def close(self) -> None:
         """Close the receiver."""
         self.started = False
-        self.stopped = True
+        self.stop_requested = True
+
         if self.transport is not None:
             self.transport.close()
 
     async def _iterate_packets(self) -> AsyncIterable[bytes]:
         """Iterate over incoming packets."""
-        if not self.started or self.stopped:
+        if not self.is_running:
             raise RuntimeError("Not running")
 
         while data := await self.queue.get():
@@ -186,16 +192,22 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             data_to_send = {"text": event.data["tts_input"]}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END:
             assert event.data is not None
-            path = event.data["tts_output"]["url"]
-            url = async_process_play_media_url(self.hass, path)
-            data_to_send = {"url": url}
+            tts_output = event.data["tts_output"]
+            if tts_output:
+                path = tts_output["url"]
+                url = async_process_play_media_url(self.hass, path)
+                data_to_send = {"url": url}
 
-            if self.device_info.voice_assistant_version >= 2:
-                media_id = event.data["tts_output"]["media_id"]
-                self._tts_task = self.hass.async_create_background_task(
-                    self._send_tts(media_id), "esphome_voice_assistant_tts"
-                )
+                if self.device_info.voice_assistant_version >= 2:
+                    media_id = tts_output["media_id"]
+                    self._tts_task = self.hass.async_create_background_task(
+                        self._send_tts(media_id), "esphome_voice_assistant_tts"
+                    )
+                else:
+                    self._tts_done.set()
             else:
+                # Empty TTS response
+                data_to_send = {}
                 self._tts_done.set()
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END:
             assert event.data is not None
@@ -297,13 +309,12 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
     async def _send_tts(self, media_id: str) -> None:
         """Send TTS audio to device via UDP."""
-        try:
-            if self.transport is None:
-                return
+        # Always send stream start/end events
+        self.handle_event(VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {})
 
-            self.handle_event(
-                VoiceAssistantEventType.VOICE_ASSISTANT_TTS_STREAM_START, {}
-            )
+        try:
+            if (not self.is_running) or (self.transport is None):
+                return
 
             extension, data = await tts.async_get_media_source_audio(
                 self.hass,
@@ -331,13 +342,15 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
                 audio_bytes = wav_file.readframes(wav_file.getnframes())
 
-            _LOGGER.debug("Sending %d bytes of audio", len(audio_bytes))
+            audio_bytes_size = len(audio_bytes)
+
+            _LOGGER.debug("Sending %d bytes of audio", audio_bytes_size)
 
             bytes_per_sample = stt.AudioBitRates.BITRATE_16 // 8
             sample_offset = 0
-            samples_left = len(audio_bytes) // bytes_per_sample
+            samples_left = audio_bytes_size // bytes_per_sample
 
-            while samples_left > 0:
+            while (samples_left > 0) and self.is_running:
                 bytes_offset = sample_offset * bytes_per_sample
                 chunk: bytes = audio_bytes[bytes_offset : bytes_offset + 1024]
                 samples_in_chunk = len(chunk) // bytes_per_sample

@@ -23,14 +23,14 @@ from .entity import ShadeEntity
 from .model import PowerviewDeviceInfo, PowerviewEntryData
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewButtonDescriptionMixin:
     """Mixin to describe a Button entity."""
 
     press_action: Callable[[BaseShade], Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewButtonDescription(
     ButtonEntityDescription, PowerviewButtonDescriptionMixin
 ):

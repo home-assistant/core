@@ -2,8 +2,9 @@
   "domain": "suez_water",
   "name": "Suez Water",
   "codeowners": ["@ooii"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/suez_water",
   "iot_class": "cloud_polling",
   "loggers": ["pysuez", "regex"],
-  "requirements": ["pysuez==0.1.19"]
+  "requirements": ["pysuez==0.2.0"]
 }

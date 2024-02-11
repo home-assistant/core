@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+import dataclasses
 from typing import Any
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
@@ -23,7 +23,7 @@ from . import MelCloudDevice
 from .const import DOMAIN
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class MelcloudRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -31,7 +31,7 @@ class MelcloudRequiredKeysMixin:
     enabled: Callable[[Any], bool]
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class MelcloudSensorEntityDescription(
     SensorEntityDescription, MelcloudRequiredKeysMixin
 ):
@@ -58,16 +58,6 @@ ATA_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         value_fn=lambda x: x.device.total_energy_consumed,
         enabled=lambda x: x.device.has_energy_consumed_meter,
     ),
-    MelcloudSensorEntityDescription(
-        key="daily_energy",
-        translation_key="daily_energy",
-        icon="mdi:factory",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda x: x.device.daily_energy_consumed,
-        enabled=lambda x: True,
-    ),
 )
 ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
     MelcloudSensorEntityDescription(
@@ -88,16 +78,6 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.device.tank_temperature,
-        enabled=lambda x: True,
-    ),
-    MelcloudSensorEntityDescription(
-        key="daily_energy",
-        translation_key="daily_energy",
-        icon="mdi:factory",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda x: x.device.daily_energy_consumed,
         enabled=lambda x: True,
     ),
 )
@@ -203,7 +183,10 @@ class AtwZoneSensor(MelDeviceSensor):
     ) -> None:
         """Initialize the sensor."""
         if zone.zone_index != 1:
-            description.key = f"{description.key}-zone-{zone.zone_index}"
+            description = dataclasses.replace(
+                description,
+                key=f"{description.key}-zone-{zone.zone_index}",
+            )
         super().__init__(api, description)
 
         self._attr_device_info = api.zone_device_info(zone)

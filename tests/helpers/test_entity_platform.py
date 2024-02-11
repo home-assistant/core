@@ -19,6 +19,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import (
+    area_registry as ar,
     device_registry as dr,
     entity_platform,
     entity_registry as er,
@@ -268,7 +269,7 @@ async def test_platform_error_slow_setup(
         await component.async_setup({DOMAIN: {"platform": "test_platform"}})
         await hass.async_block_till_done()
         assert len(called) == 1
-        assert "test_domain.test_platform" not in hass.config.components
+        assert "test_platform.test_domain" not in hass.config.components
         assert "test_platform is taking longer than 0 seconds" in caplog.text
 
     # Cleanup lingering (setup_platform) task after test is done
@@ -833,7 +834,7 @@ async def test_setup_entry(
 
     assert await entity_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
-    full_name = f"{entity_platform.domain}.{config_entry.domain}"
+    full_name = f"{config_entry.domain}.{entity_platform.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 1
     assert len(entity_registry.entities) == 1
@@ -856,7 +857,7 @@ async def test_setup_entry_platform_not_ready(
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
         assert not await ent_platform.async_setup_entry(config_entry)
 
-    full_name = f"{ent_platform.domain}.{config_entry.domain}"
+    full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
     assert len(async_setup_entry.mock_calls) == 1
     assert "Platform test not ready yet" in caplog.text
@@ -877,7 +878,7 @@ async def test_setup_entry_platform_not_ready_with_message(
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
         assert not await ent_platform.async_setup_entry(config_entry)
 
-    full_name = f"{ent_platform.domain}.{config_entry.domain}"
+    full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
     assert len(async_setup_entry.mock_calls) == 1
 
@@ -904,7 +905,7 @@ async def test_setup_entry_platform_not_ready_from_exception(
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
         assert not await ent_platform.async_setup_entry(config_entry)
 
-    full_name = f"{ent_platform.domain}.{config_entry.domain}"
+    full_name = f"{config_entry.domain}.{ent_platform.domain}"
     assert full_name not in hass.config.components
     assert len(async_setup_entry.mock_calls) == 1
 
@@ -937,7 +938,7 @@ async def test_reset_cancels_retry_setup(hass: HomeAssistant) -> None:
 
 async def test_reset_cancels_retry_setup_when_not_started(hass: HomeAssistant) -> None:
     """Test that resetting a platform will cancel scheduled a setup retry when not yet started."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     async_setup_entry = Mock(side_effect=PlatformNotReady)
     initial_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STARTED]
 
@@ -1628,6 +1629,87 @@ async def test_register_entity_service_response_data_multiple_matches_raises(
         )
 
 
+async def test_register_entity_service_limited_to_matching_platforms(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test an entity services only targets entities for the platform and domain."""
+
+    mock_area = area_registry.async_get_or_create("mock_area")
+
+    entity1_entry = entity_registry.async_get_or_create(
+        "base_platform", "mock_platform", "1234", suggested_object_id="entity1"
+    )
+    entity_registry.async_update_entity(entity1_entry.entity_id, area_id=mock_area.id)
+    entity2_entry = entity_registry.async_get_or_create(
+        "base_platform", "mock_platform", "5678", suggested_object_id="entity2"
+    )
+    entity_registry.async_update_entity(entity2_entry.entity_id, area_id=mock_area.id)
+    entity3_entry = entity_registry.async_get_or_create(
+        "base_platform", "other_mock_platform", "7891", suggested_object_id="entity3"
+    )
+    entity_registry.async_update_entity(entity3_entry.entity_id, area_id=mock_area.id)
+    entity4_entry = entity_registry.async_get_or_create(
+        "base_platform", "other_mock_platform", "1433", suggested_object_id="entity4"
+    )
+    entity_registry.async_update_entity(entity4_entry.entity_id, area_id=mock_area.id)
+
+    async def generate_response(
+        target: MockEntity, call: ServiceCall
+    ) -> ServiceResponse:
+        assert call.return_response
+        return {"response-key": f"response-value-{target.entity_id}"}
+
+    entity_platform = MockEntityPlatform(
+        hass, domain="base_platform", platform_name="mock_platform", platform=None
+    )
+    entity1 = MockEntity(
+        entity_id=entity1_entry.entity_id, unique_id=entity1_entry.unique_id
+    )
+    entity2 = MockEntity(
+        entity_id=entity2_entry.entity_id, unique_id=entity2_entry.unique_id
+    )
+    await entity_platform.async_add_entities([entity1, entity2])
+
+    other_entity_platform = MockEntityPlatform(
+        hass, domain="base_platform", platform_name="other_mock_platform", platform=None
+    )
+    entity3 = MockEntity(
+        entity_id=entity3_entry.entity_id, unique_id=entity3_entry.unique_id
+    )
+    entity4 = MockEntity(
+        entity_id=entity4_entry.entity_id, unique_id=entity4_entry.unique_id
+    )
+    await other_entity_platform.async_add_entities([entity3, entity4])
+
+    entity_platform.async_register_entity_service(
+        "hello",
+        {"some": str},
+        generate_response,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    response_data = await hass.services.async_call(
+        "mock_platform",
+        "hello",
+        service_data={"some": "data"},
+        target={"area_id": [mock_area.id]},
+        blocking=True,
+        return_response=True,
+    )
+    # We should not target entity3 and entity4 even though they are in the area
+    # because they are only part of the domain and not the platform
+    assert response_data == {
+        "base_platform.entity1": {
+            "response-key": "response-value-base_platform.entity1"
+        },
+        "base_platform.entity2": {
+            "response-key": "response-value-base_platform.entity2"
+        },
+    }
+
+
 async def test_invalid_entity_id(hass: HomeAssistant) -> None:
     """Test specifying an invalid entity id."""
     platform = MockEntityPlatform(hass)
@@ -1669,7 +1751,7 @@ async def test_setup_entry_with_entities_that_block_forever(
     ):
         assert await platform.async_setup_entry(config_entry)
         await hass.async_block_till_done()
-    full_name = f"{platform.domain}.{config_entry.domain}"
+    full_name = f"{config_entry.domain}.{platform.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 0
     assert len(entity_registry.entities) == 1

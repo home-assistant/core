@@ -46,6 +46,9 @@ def bypass_api_fixture() -> None:
         "homeassistant.components.roborock.coordinator.RoborockMqttClient.get_multi_maps_list",
         return_value=MULTI_MAP_LIST,
     ), patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.get_multi_maps_list",
+        return_value=MULTI_MAP_LIST,
+    ), patch(
         "homeassistant.components.roborock.image.RoborockMapDataParser.parse",
         return_value=MAP_DATA,
     ), patch(
@@ -55,11 +58,12 @@ def bypass_api_fixture() -> None:
     ), patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClient._wait_response"
     ), patch(
-        "roborock.api.AttributeCache.async_value"
+        "roborock.api.AttributeCache.async_value",
     ), patch(
-        "roborock.api.AttributeCache.value"
+        "roborock.api.AttributeCache.value",
     ), patch(
-        "homeassistant.components.roborock.image.MAP_SLEEP", 0
+        "homeassistant.components.roborock.image.MAP_SLEEP",
+        0,
     ):
         yield
 

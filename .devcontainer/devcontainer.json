@@ -5,12 +5,13 @@
   "postCreateCommand": "script/setup",
   "postStartCommand": "script/bootstrap",
   "containerEnv": { "DEVCONTAINER": "1" },
-  "appPort": ["8123:8123"],
+  // Port 5683 udp is used by Shelly integration
+  "appPort": ["8123:8123", "5683:5683/udp"],
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
   "customizations": {
     "vscode": {
       "extensions": [
-        "ms-python.black-formatter",
+        "charliermarsh.ruff",
         "ms-python.pylint",
         "ms-python.vscode-pylance",
         "visualstudioexptteam.vscodeintellicode",
@@ -39,7 +40,10 @@
           "!include_dir_list scalar",
           "!include_dir_merge_list scalar",
           "!include_dir_merge_named scalar"
-        ]
+        ],
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        }
       }
     }
   }
