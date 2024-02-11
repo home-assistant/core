@@ -772,6 +772,11 @@ class Integration:
             return None
         return AwesomeVersion(self.manifest["version"])
 
+    @cached_property
+    def single_instance_only(self) -> bool:
+        """Return if the integration supports a single instance only."""
+        return self.manifest.get("single_instance_only", False)
+
     @property
     def all_dependencies(self) -> set[str]:
         """Return all dependencies including sub-dependencies."""
