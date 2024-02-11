@@ -21,6 +21,7 @@ from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
     AvrNetworkError,
+    AvrProcessingError,
     AvrTimoutError,
     DenonAvrError,
 )
@@ -201,6 +202,16 @@ def async_log_errors(
                     self._receiver.host,
                 )
                 self._attr_available = False
+        except AvrProcessingError:
+            available = True
+            if self.available:
+                _LOGGER.warning(
+                    (
+                        "Update of Denon AVR receiver at host %s not complete. "
+                        "Device is still available"
+                    ),
+                    self._receiver.host,
+                )
         except AvrForbiddenError:
             available = False
             if self.available:
