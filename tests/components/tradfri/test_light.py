@@ -305,4 +305,5 @@ async def test_turn_off(
     )
 
     state = hass.states.get(entity_id)
+    assert state
     assert state.state == STATE_OFF

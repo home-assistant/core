@@ -1,8 +1,6 @@
 """Tradfri switch (recognised as sockets in the IKEA ecosystem) platform tests."""
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 from pytradfri.const import ATTR_REACHABLE_STATE
 from pytradfri.device import Device
@@ -18,7 +16,7 @@ from tests.common import load_fixture
 
 
 @pytest.fixture(scope="module")
-def outlet() -> dict[str, Any]:
+def outlet() -> str:
     """Return an outlet response."""
     return load_fixture("outlet.json", DOMAIN)
 
