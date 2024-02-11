@@ -210,13 +210,17 @@ async def test_form_no_data(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_hunterdouglas_base")
-async def test_form_unknown_exception(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_hunterdouglas_full")
+@pytest.mark.parametrize("api_version", [1, 2, 3])
+async def test_form_unknown_exception(
+    hass: HomeAssistant, api_version: int, mock_setup_entry: MagicMock
+) -> None:
     """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    # Simulate a transient error
     with patch(
         "homeassistant.components.hunterdouglas_powerview.config_flow.Hub.query_firmware",
         side_effect=SyntaxError,
@@ -228,6 +232,19 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    # Now try again without the patch in place to make sure we can recover
+    result2 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_HOST: "1.2.3.4"},
+    )
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == f"Powerview Generation {api_version}"
+    assert result2["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
+    assert result2["result"].unique_id == "A1B2C3D4E5G6H7"
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_hunterdouglas_secondary")
