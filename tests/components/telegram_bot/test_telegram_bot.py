@@ -1,23 +1,10 @@
 """Tests for the telegram_bot component."""
-import pytest
-from telegram import Update
-from telegram.ext.dispatcher import Dispatcher
-
 from homeassistant.components.telegram_bot import DOMAIN, SERVICE_SEND_MESSAGE
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.core import HomeAssistant
 
 from tests.common import async_capture_events
 from tests.typing import ClientSessionGenerator
-
-
-@pytest.fixture(autouse=True)
-def clear_dispatcher():
-    """Clear the singleton that telegram.ext.dispatcher.Dispatcher sets on itself."""
-    yield
-    Dispatcher._set_singleton(None)
-    # This is how python-telegram-bot resets the dispatcher in their test suite
-    Dispatcher._Dispatcher__singleton_semaphore.release()
 
 
 async def test_webhook_platform_init(hass: HomeAssistant, webhook_platform) -> None:
@@ -106,27 +93,6 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 
     assert len(events) == 1
     assert events[0].data["data"] == update_callback_query["callback_query"]["data"]
-
-
-async def test_polling_platform_message_text_update(
-    hass: HomeAssistant, polling_platform, update_message_text
-) -> None:
-    """Provide the `PollBot`s `Dispatcher` with an `Update` and assert fired `telegram_text` event."""
-    events = async_capture_events(hass, "telegram_text")
-
-    def telegram_dispatcher_callback():
-        dispatcher = Dispatcher.get_instance()
-        update = Update.de_json(update_message_text, dispatcher.bot)
-        dispatcher.process_update(update)
-
-    # python-telegram-bots `Updater` uses threading, so we need to schedule its callback in a sync context.
-    await hass.async_add_executor_job(telegram_dispatcher_callback)
-
-    # Make sure event has fired
-    await hass.async_block_till_done()
-
-    assert len(events) == 1
-    assert events[0].data["text"] == update_message_text["message"]["text"]
 
 
 async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_text_event(

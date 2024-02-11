@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+from telegram import User
 
 from homeassistant.components.telegram_bot import (
     CONF_ALLOWED_CHAT_IDS,
@@ -61,6 +62,23 @@ def mock_register_webhook():
     ), patch(
         "homeassistant.components.telegram_bot.webhooks.PushBot.deregister_webhook",
         return_value=True,
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_external_calls():
+    """Mock calls that make calls to the live Telegram API."""
+    test_user = User(123456, "Testbot", True)
+    with patch(
+        "telegram._bot.Bot.get_me",
+        return_value=test_user,
+    ), patch(
+        "telegram._bot.Bot._bot_user",
+        test_user,
+    ), patch(
+        "telegram._bot.Bot.bot",
+        test_user,
     ):
         yield
 
@@ -174,7 +192,11 @@ def update_callback_query():
 
 @pytest.fixture
 async def webhook_platform(
-    hass, config_webhooks, mock_register_webhook, mock_generate_secret_token
+    hass,
+    config_webhooks,
+    mock_register_webhook,
+    mock_external_calls,
+    mock_generate_secret_token,
 ):
     """Fixture for setting up the webhooks platform using appropriate config and mocks."""
     await async_setup_component(
