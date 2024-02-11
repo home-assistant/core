@@ -18,7 +18,7 @@ from aiohomekit.exceptions import (
     EncryptionError,
 )
 from aiohomekit.model import Accessories, Accessory, Transport
-from aiohomekit.model.characteristics import Characteristic
+from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
@@ -544,6 +544,10 @@ class HKDevice:
                 current_unique_id.add((accessory.aid, service.iid, None))
 
                 for char in service.characteristics:
+                    if self.pairing.transport != TransportType.BLE:
+                        if char.type == CharacteristicsTypes.THREAD_CONTROL_POINT:
+                            continue
+
                     current_unique_id.add(
                         (
                             accessory.aid,
