@@ -35,9 +35,10 @@
     },
     "switch": {
       "valve_switch": {
-        "default": "mdi:valve-open",
+        "default": "mdi:valve",
         "state": {
-          "off": "mdi:valve-closed"
+          "off": "mdi:valve-closed",
+          "on": "mdi:valve-open"
         }
       }
     }
