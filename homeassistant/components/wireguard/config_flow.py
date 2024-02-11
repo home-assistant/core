@@ -35,6 +35,7 @@ class WireGuardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host: str = user_input[CONF_HOST]
+            self._async_abort_entries_match({CONF_HOST: host})
             wireguard: WireguardApiClient = WireguardApiClient(host)
 
             try:
