@@ -22,7 +22,7 @@ async def async_setup_platform(hass, bot, config):
     return True
 
 
-def process_error(update: Update, context: CallbackContext) -> None:
+async def process_error(update: Update, context: CallbackContext) -> None:
     """Telegram bot error handler."""
     try:
         if context.error:

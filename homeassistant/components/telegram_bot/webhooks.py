@@ -73,12 +73,12 @@ class PushBot(BaseTelegramBotEntity):
         )
         self.webhook_url = f"{self.base_url}{TELEGRAM_WEBHOOK_URL}"
 
-    def _try_to_set_webhook(self):
+    async def _try_to_set_webhook(self):
         _LOGGER.debug("Registering webhook URL: %s", self.webhook_url)
         retry_num = 0
         while retry_num < 3:
             try:
-                return self.bot.set_webhook(
+                return await self.bot.set_webhook(
                     self.webhook_url,
                     api_kwargs={"secret_token": self.secret_token},
                     timeout=5,
@@ -96,9 +96,7 @@ class PushBot(BaseTelegramBotEntity):
 
     async def register_webhook(self):
         """Query telegram and register the URL for our webhook."""
-        current_status = await self.hass.async_add_executor_job(
-            self.bot.get_webhook_info
-        )
+        current_status = await self.bot.getWebhookInfo()
         # Some logging of Bot current status:
         last_error_date = getattr(current_status, "last_error_date", None)
         if (last_error_date is not None) and (isinstance(last_error_date, int)):
@@ -112,7 +110,7 @@ class PushBot(BaseTelegramBotEntity):
             _LOGGER.debug("telegram webhook status: %s", current_status)
 
         if current_status and current_status["url"] != self.webhook_url:
-            result = await self.hass.async_add_executor_job(self._try_to_set_webhook)
+            result = await self._try_to_set_webhook()
             if result:
                 _LOGGER.info("Set new telegram webhook %s", self.webhook_url)
             else:
