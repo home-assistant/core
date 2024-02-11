@@ -487,6 +487,181 @@ async def test_if_fires_on_change_bool(hass: HomeAssistant, start_ha, calls) -> 
                 (4, "foo", False),
             ],
         ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "not_to": "foo",
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (0, "foo", False),
+                (1, "bar", False),
+                (1, "bar", False),
+                (2, "baz", False),
+                (2, "foo", False),
+            ],
+        ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "not_to": ["foo"],
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (0, "foo", False),
+                (1, "bar", False),
+                (1, "bar", False),
+                (2, "baz", False),
+                (2, "foo", False),
+            ],
+        ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "not_to": ["foo", "bar"],
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (0, "foo", False),
+                (0, "bar", False),
+                (1, "baz", False),
+                (1, "baz", False),
+                (1, "foo", False),
+            ],
+        ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "not_from": "foo",
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (1, "foo", False),
+                (1, "bar", False),
+                (1, "bar", False),
+                (2, "baz", False),
+                (3, "foo", False),
+            ],
+        ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "not_from": ["foo"],
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (1, "foo", False),
+                (1, "bar", False),
+                (1, "bar", False),
+                (2, "baz", False),
+                (3, "foo", False),
+            ],
+        ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "not_from": ["foo", "bar"],
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (1, "foo", False),
+                (1, "bar", False),
+                (1, "baz", False),
+                (1, "baz", False),
+                (2, "bar", False),
+            ],
+        ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "not_to": "foo",
+                        "from": "bar",
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (0, "foo", False),
+                (0, "bar", False),
+                (1, "baz", False),
+                (1, "baz", False),
+                (1, "bar", False),
+            ],
+        ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "to": "foo",
+                        "not_from": "bar",
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (1, "foo", False),
+                (1, "foo", False),
+                (1, "bar", False),
+                (1, "foo", False),
+                (1, "baz", False),
+                (2, "foo", False),
+            ],
+        ),
+        (
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "template",
+                        "value_template": "{{ states('test.entity') }}",
+                        "not_to": "foo",
+                        "not_from": "bar",
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+            [
+                (0, "foo", False),
+                (1, "bar", False),
+                (1, "baz", False),
+                (2, "beep", False),
+                (3, "baz", False),
+            ],
+        ),
     ],
 )
 async def test_general(hass: HomeAssistant, call_setup, start_ha, calls) -> None:

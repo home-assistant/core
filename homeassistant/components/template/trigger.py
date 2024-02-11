@@ -25,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_TO = "to"
 CONF_FROM = "from"
+CONF_NOT_FROM = "not_from"
+CONF_NOT_TO = "not_to"
 
 MATCH_ALL = "*"
 
@@ -33,22 +35,24 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_PLATFORM): "template",
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_FOR): cv.positive_time_period_template,
-        vol.Optional(CONF_TO): vol.Any(str, [str], None),
-        vol.Optional(CONF_FROM): vol.Any(str, [str], None),
+        vol.Exclusive(CONF_TO, CONF_TO): vol.Any(str, [str], None),
+        vol.Exclusive(CONF_NOT_TO, CONF_TO): vol.Any(str, [str], None),
+        vol.Exclusive(CONF_FROM, CONF_FROM): vol.Any(str, [str], None),
+        vol.Exclusive(CONF_NOT_FROM, CONF_FROM): vol.Any(str, [str], None),
     }
 )
 
 
-def _process_match(parameter: str | Iterable[str] | None):
+def _process_match(parameter: str | Iterable[str] | None, invert: bool = False):
     if parameter is None or parameter == MATCH_ALL:
         return lambda _: True
 
     if isinstance(parameter, str) or not hasattr(parameter, "__iter__"):
-        return lambda value: str(value) == parameter
+        return lambda value: (str(value) == parameter) != invert
 
     parameter_set = set(parameter)
 
-    return lambda value: str(value) in parameter_set
+    return lambda value: (str(value) in parameter_set) != invert
 
 
 async def async_attach_trigger(
@@ -64,19 +68,29 @@ async def async_attach_trigger(
     value_template: Template = config[CONF_VALUE_TEMPLATE]
     value_template.hass = hass
     time_delta = config.get(CONF_FOR)
-    to_value = config.get(CONF_TO)
-    from_value = config.get(CONF_FROM)
     template.attach(hass, time_delta)
     delay_cancel = None
     job = HassJob(action)
     armed = False
 
+    if (to_value := config.get(CONF_NOT_TO)) is not None:
+        invert_to = True
+    else:
+        to_value = config.get(CONF_TO)
+        invert_to = False
+
+    if (from_value := config.get(CONF_NOT_FROM)) is not None:
+        invert_from = True
+    else:
+        from_value = config.get(CONF_FROM)
+        invert_from = False
+
     if to_value is None and from_value is None:
         result_matches = result_as_boolean
         result_arms = lambda result: not result_as_boolean(result)
     else:
-        result_matches = _process_match(to_value)
-        result_arms = _process_match(from_value)
+        result_matches = _process_match(to_value, invert_to)
+        result_arms = _process_match(from_value, invert_from)
 
     # Arm at setup if the template is already false.
     try:
