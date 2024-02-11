@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
+from enum import Enum
 import logging
 from typing import cast
 
@@ -40,6 +42,7 @@ class BMWSensorEntityDescription(SensorEntityDescription):
     """Describes BMW sensor entity."""
 
     key_class: str | None = None
+    is_available: Callable[[MyBMWVehicle], bool] = lambda v: v.is_lsc_enabled
 
 
 SENSOR_TYPES: list[BMWSensorEntityDescription] = [
@@ -203,8 +206,8 @@ class BMWSensor(BMWBaseEntity, SensorEntity):
         # For datetime without tzinfo, we assume it to be the same timezone as the HA instance
         if isinstance(state, datetime.datetime) and state.tzinfo is None:
             state = state.replace(tzinfo=dt_util.get_default_time_zone())
-        # For ValueWithUnit, we only want the value
-        elif isinstance(state, ValueWithUnit):
+        # For enum types, we only want the value
+        elif isinstance(state, (ValueWithUnit, Enum)):
             state = state.value
         self._attr_native_value = state
         super()._handle_coordinator_update()
