@@ -1704,7 +1704,7 @@ async def test_init_custom_integration(hass: HomeAssistant) -> None:
         "homeassistant.loader.async_get_integration",
         return_value=integration,
     ):
-        await hass.config_entries.flow.async_init("hue", context={"source": "user"})
+        await hass.config_entries.flow.async_init("bla", context={"source": "user"})
 
 
 async def test_init_custom_integration_with_missing_handler(
@@ -1726,7 +1726,7 @@ async def test_init_custom_integration_with_missing_handler(
         "homeassistant.loader.async_get_integration",
         return_value=integration,
     ):
-        await hass.config_entries.flow.async_init("hue", context={"source": "user"})
+        await hass.config_entries.flow.async_init("bla", context={"source": "user"})
 
 
 async def test_support_entry_unload(hass: HomeAssistant) -> None:
