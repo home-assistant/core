@@ -1,6 +1,4 @@
 """Tests for the Sonos Alarm switch platform."""
-
-import asyncio
 from copy import copy
 from datetime import timedelta
 from unittest.mock import patch
@@ -29,8 +27,6 @@ async def test_entity_registry(
     hass: HomeAssistant, async_autosetup_sonos, entity_registry: er.EntityRegistry
 ) -> None:
     """Test sonos device with alarm registered in the device registry."""
-    await asyncio.sleep(0.4)
-    await hass.async_block_till_done()
     assert "media_player.zone_a" in entity_registry.entities
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.zone_a_status_light" in entity_registry.entities
@@ -50,9 +46,7 @@ async def test_switch_attributes(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test for correct Sonos switch states."""
-    await asyncio.sleep(0.4)
-    await hass.async_block_till_done()
-    alarm = entity_registry.async_get("switch.sonos_alarm_14")
+    alarm = entity_registry.entities["switch.sonos_alarm_14"]
     alarm_state = hass.states.get(alarm.entity_id)
     assert alarm_state.state == STATE_ON
     assert alarm_state.attributes.get(ATTR_TIME) == "07:00:00"
@@ -131,8 +125,7 @@ async def test_switch_attributes(
     status_light_state = hass.states.get(status_light.entity_id)
     assert status_light_state.state == STATE_ON
 
-    touch_controls = entity_registry.async_get("switch.zone_a_touch_controls")
-
+    touch_controls = entity_registry.entities["switch.zone_a_touch_controls"]
     touch_controls_state = hass.states.get(touch_controls.entity_id)
     assert touch_controls_state.state == STATE_ON
 
@@ -151,10 +144,9 @@ async def test_alarm_create_delete(
     two_alarms = copy(alarm_clock_extended.ListAlarms.return_value)
 
     await async_setup_sonos()
-    await asyncio.sleep(0.4)
-    await hass.async_block_till_done()
-    assert entity_registry.async_get("switch.sonos_alarm_14") is not None
-    assert entity_registry.async_get("switch.sonos_alarm_15") is None
+
+    assert "switch.sonos_alarm_14" in entity_registry.entities
+    assert "switch.sonos_alarm_15" not in entity_registry.entities
 
     subscription = alarm_clock.subscribe.return_value
     sub_callback = subscription.callback
@@ -166,8 +158,8 @@ async def test_alarm_create_delete(
     sub_callback(event=alarm_event)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get("switch.sonos_alarm_14") is not None
-    assert entity_registry.async_get("switch.sonos_alarm_15") is not None
+    assert "switch.sonos_alarm_14" in entity_registry.entities
+    assert "switch.sonos_alarm_15" in entity_registry.entities
 
     one_alarm["CurrentAlarmListVersion"] = alarm_event.increment_variable(
         "alarm_list_version"
@@ -178,5 +170,5 @@ async def test_alarm_create_delete(
     sub_callback(event=alarm_event)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get("switch.sonos_alarm_14") is not None
-    assert entity_registry.async_get("switch.sonos_alarm_15") is None
+    assert "switch.sonos_alarm_14" in entity_registry.entities
+    assert "switch.sonos_alarm_15" not in entity_registry.entities

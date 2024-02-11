@@ -6,12 +6,10 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 from soco import SoCo
 
-from homeassistant.components import sonos, ssdp, zeroconf
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
-from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -464,20 +462,3 @@ def zgs_event_fixture(hass, soco, zgs_discovery):
         await hass.async_block_till_done()
 
     return _wrapper
-
-
-async def tests_setup_hass(hass: HomeAssistant):
-    """Setup HASS for two hosts."""
-    await async_setup_component(
-        hass,
-        sonos.DOMAIN,
-        {
-            "sonos": {
-                "media_player": {
-                    "interface_addr": "127.0.0.1",
-                    "hosts": ["10.10.10.1", "10.10.10.2"],
-                }
-            }
-        },
-    )
-    await hass.async_block_till_done()

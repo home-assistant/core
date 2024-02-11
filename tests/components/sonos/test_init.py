@@ -20,7 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from .conftest import MockSoCo, SoCoMockFactory, tests_setup_hass
+from .conftest import MockSoCo, SoCoMockFactory
 
 from tests.common import async_fire_time_changed
 
@@ -170,6 +170,22 @@ class _MockSoCoVisibleZones(MockSoCo):
         return self.vz_return
 
 
+async def _setup_hass(hass: HomeAssistant):
+    await async_setup_component(
+        hass,
+        sonos.DOMAIN,
+        {
+            "sonos": {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["10.10.10.1", "10.10.10.2"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
 async def test_async_poll_manual_hosts_1(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -181,7 +197,7 @@ async def test_async_poll_manual_hosts_1(
     soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
 
     with caplog.at_level(logging.WARNING):
-        await tests_setup_hass(hass)
+        await _setup_hass(hass)
         assert "media_player.bedroom" in entity_registry.entities
         assert "media_player.living_room" not in entity_registry.entities
         assert (
@@ -205,7 +221,7 @@ async def test_async_poll_manual_hosts_2(
     soco_2 = soco_factory.cache_mock(_MockSoCoOsError(), "10.10.10.2", "Bedroom")
 
     with caplog.at_level(logging.WARNING):
-        await tests_setup_hass(hass)
+        await _setup_hass(hass)
         assert "media_player.bedroom" not in entity_registry.entities
         assert "media_player.living_room" in entity_registry.entities
         assert (
@@ -229,7 +245,7 @@ async def test_async_poll_manual_hosts_3(
     soco_2 = soco_factory.cache_mock(_MockSoCoOsError(), "10.10.10.2", "Bedroom")
 
     with caplog.at_level(logging.WARNING):
-        await tests_setup_hass(hass)
+        await _setup_hass(hass)
         assert "media_player.bedroom" not in entity_registry.entities
         assert "media_player.living_room" not in entity_registry.entities
         assert (
@@ -253,7 +269,7 @@ async def test_async_poll_manual_hosts_4(
     soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
 
     with caplog.at_level(logging.WARNING):
-        await tests_setup_hass(hass)
+        await _setup_hass(hass)
         assert "media_player.bedroom" in entity_registry.entities
         assert "media_player.living_room" in entity_registry.entities
         assert (
@@ -313,7 +329,7 @@ async def test_async_poll_manual_hosts_5(
         with caplog.at_level(logging.DEBUG):
             caplog.clear()
 
-            await tests_setup_hass(hass)
+            await _setup_hass(hass)
 
             assert "media_player.bedroom" in entity_registry.entities
             assert "media_player.living_room" in entity_registry.entities
@@ -352,8 +368,8 @@ async def test_async_poll_manual_hosts_6(
         "homeassistant.components.sonos.DISCOVERY_INTERVAL"
     ) as mock_discovery_interval:
         # Speed up manual discovery interval so second iteration runs sooner
-        mock_discovery_interval.total_seconds = Mock(side_effect=[0.01, 60])
-        await tests_setup_hass(hass)
+        mock_discovery_interval.total_seconds = Mock(side_effect=[0.5, 60])
+        await _setup_hass(hass)
 
         assert "media_player.bedroom" in entity_registry.entities
         assert "media_player.living_room" in entity_registry.entities
@@ -361,8 +377,8 @@ async def test_async_poll_manual_hosts_6(
         with caplog.at_level(logging.DEBUG):
             caplog.clear()
             # The discovery events should not fire, wait with a timeout.
-            with pytest.raises(TimeoutError):
-                async with asyncio.timeout(0.1):
+            with pytest.raises(asyncio.TimeoutError):
+                async with asyncio.timeout(1.0):
                     await speaker_1_activity.event.wait()
             await hass.async_block_till_done()
             assert "Activity on Living Room" not in caplog.text
@@ -388,7 +404,7 @@ async def test_async_poll_manual_hosts_7(
     soco_1.set_visible_zones({soco_1, soco_2, soco_3, soco_4, soco_5})
     soco_2.set_visible_zones({soco_1, soco_2, soco_3, soco_4, soco_5})
 
-    await tests_setup_hass(hass)
+    await _setup_hass(hass)
     await hass.async_block_till_done()
 
     assert "media_player.bedroom" in entity_registry.entities
@@ -415,7 +431,7 @@ async def test_async_poll_manual_hosts_8(
     soco_1.set_visible_zones({soco_2, soco_3, soco_4, soco_5})
     soco_2.set_visible_zones({soco_2, soco_3, soco_4, soco_5})
 
-    await tests_setup_hass(hass)
+    await _setup_hass(hass)
     await hass.async_block_till_done()
 
     assert "media_player.bedroom" in entity_registry.entities
