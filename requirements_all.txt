@@ -821,7 +821,7 @@ eufylife-ble-client==0.1.8
 # evdev==1.6.1
 
 # homeassistant.components.evohome
-evohome-async==0.4.18
+evohome-async==0.4.19
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
