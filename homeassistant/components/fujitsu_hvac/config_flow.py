@@ -32,7 +32,7 @@ class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        if user_input is not None:
+        if user_input:
             await self.async_set_unique_id(f"{user_input[CONF_USERNAME].lower()}")
             self._abort_if_unique_id_configured()
 
@@ -53,8 +53,7 @@ class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-
-            if len(errors) == 0:
+            else:
                 return self.async_create_entry(
                     title=f"Fujitsu HVAC ({user_input[CONF_USERNAME]})", data=user_input
                 )
