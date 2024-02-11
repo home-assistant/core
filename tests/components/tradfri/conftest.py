@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 import json
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytradfri.command import Command
@@ -21,7 +21,7 @@ from tests.common import load_fixture
 
 
 @pytest.fixture
-def mock_entry_setup():
+def mock_entry_setup() -> Generator[AsyncMock, None, None]:
     """Mock entry setup."""
     with patch(f"{TRADFRI_PATH}.async_setup_entry") as mock_setup:
         mock_setup.return_value = True
@@ -29,7 +29,7 @@ def mock_entry_setup():
 
 
 @pytest.fixture(name="mock_gateway", autouse=True)
-def mock_gateway_fixture(command_store: CommandStore) -> None:
+def mock_gateway_fixture(command_store: CommandStore) -> Gateway:
     """Mock a Tradfri gateway."""
     gateway = Gateway()
     command_store.register_response(
@@ -44,7 +44,7 @@ def mock_gateway_fixture(command_store: CommandStore) -> None:
 
 
 @pytest.fixture(name="command_store", autouse=True)
-def command_store_fixture() -> dict[str, Any]:
+def command_store_fixture() -> CommandStore:
     """Store commands and command responses for the API."""
     return CommandStore([], {})
 
@@ -52,7 +52,7 @@ def command_store_fixture() -> dict[str, Any]:
 @pytest.fixture(name="mock_api")
 def mock_api_fixture(
     command_store: CommandStore,
-) -> Callable[[Command | list[Command], float | None], Command | list[Command]]:
+) -> Callable[[Command | list[Command], float | None], Any | None]:
     """Mock api."""
 
     async def api(
@@ -73,7 +73,9 @@ def mock_api_fixture(
 
 
 @pytest.fixture(autouse=True)
-def mock_api_factory(mock_api) -> Generator[MagicMock, None, None]:
+def mock_api_factory(
+    mock_api: Callable[[Command | list[Command], float | None], Any | None],
+) -> Generator[MagicMock, None, None]:
     """Mock pytradfri api factory."""
     with patch(f"{TRADFRI_PATH}.APIFactory", autospec=True) as factory_class:
         factory = factory_class.return_value
