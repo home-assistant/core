@@ -2,7 +2,7 @@
 import logging
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerStates
+from aioautomower.model import MowerStates, RestrictedReasons
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -47,10 +47,10 @@ class AutomowerSwitchEntity(AutomowerBaseEntity, SwitchEntity):
         attributes = self.mower_attributes
         return (
             attributes.mower.state == MowerStates.RESTRICTED
-            and attributes.planner.restricted_reason == "NOT_APPLICABLE"
+            and attributes.planner.restricted_reason == RestrictedReasons.NOT_APPLICABLE
         )
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self):
         """Turn the entity on."""
         try:
             await self.coordinator.api.park_until_further_notice(self.mower_id)
@@ -59,7 +59,7 @@ class AutomowerSwitchEntity(AutomowerBaseEntity, SwitchEntity):
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self):
         """Turn the entity on."""
         try:
             await self.coordinator.api.resume_schedule(self.mower_id)

@@ -3,7 +3,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aioautomower.exceptions import ApiException
-from aioautomower.model import MowerStates
+from aioautomower.model import MowerStates, RestrictedReasons
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -35,8 +35,8 @@ async def test_switch_states(
     await setup_integration(hass, mock_config_entry)
 
     for state, restricted_reson, expected_state in [
-        (MowerStates.RESTRICTED, "NOT_APPLICABLE", "on"),
-        (MowerStates.IN_OPERATION, "NONE", "off"),
+        (MowerStates.RESTRICTED, RestrictedReasons.NOT_APPLICABLE, "on"),
+        (MowerStates.IN_OPERATION, RestrictedReasons.NONE, "off"),
     ]:
         values[TEST_MOWER_ID].mower.state = state
         values[TEST_MOWER_ID].planner.restricted_reason = restricted_reson
