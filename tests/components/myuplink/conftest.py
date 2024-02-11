@@ -15,13 +15,7 @@ from homeassistant.setup import async_setup_component
 
 from .const import CLIENT_ID, CLIENT_SECRET
 
-from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
-
-
-@pytest.fixture(name="jwt")
-def load_jwt_fixture():
-    """Load Fixture data."""
-    return load_fixture("jwt", DOMAIN)
+from tests.common import MockConfigEntry, load_json_value_fixture
 
 
 @pytest.fixture(name="expires_at")
@@ -31,7 +25,7 @@ def mock_expires_at() -> float:
 
 
 @pytest.fixture
-def mock_config_entry(jwt, expires_at: int) -> MockConfigEntry:
+def mock_config_entry(expires_at: int) -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         version=1,
@@ -40,7 +34,7 @@ def mock_config_entry(jwt, expires_at: int) -> MockConfigEntry:
         data={
             "auth_implementation": DOMAIN,
             "token": {
-                "access_token": jwt,
+                "access_token": "Fake_token",
                 "scope": "READSYSTEM offline",
                 "expires_in": 86399,
                 "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
