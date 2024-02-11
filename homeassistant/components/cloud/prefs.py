@@ -59,7 +59,14 @@ class ReadOnlyStore(Store):
 
 
 class ImportGoogleConfigStore(GoogleConfigStore):
-    """A read only configuration store for google assistant."""
+    """A read only configuration store for google assistant.
+
+    This class is used to import settings from the google_assistant store
+    when migrating to store version 1.3.
+
+    Before version 1.3 of the cloud store, the gogle_assistant store was shared between
+    the cloud integration and manually configures Google assistant.
+    """
 
     # pylint: disable-next=super-init-not-called
     def __init__(self, hass: HomeAssistant) -> None:
@@ -82,7 +89,7 @@ class CloudPreferencesStore(Store):
         """Migrate to the new version."""
 
         async def google_connected() -> bool:
-            """Return True if connected to Google."""
+            """Return True if our user is preset in the google_assistant store."""
             # If we don't have a user, we can't be connected to Google
             if not (cur_username := old_data.get(PREF_USERNAME)):
                 return False
@@ -98,7 +105,9 @@ class CloudPreferencesStore(Store):
                 old_data.setdefault(PREF_ALEXA_SETTINGS_VERSION, 1)
                 old_data.setdefault(PREF_GOOGLE_SETTINGS_VERSION, 1)
             if old_minor_version < 3:
-                # Import settings from the google_assistant store.
+                # Import settings from the google_assistant store which was previously
+                # shared between the cloud integration and manually configured Google
+                # assistant.
                 # In HA Core 2024.9, remove the import and also remove the Google
                 # assistant store if it's not been migrated by manual Google assistant
                 old_data.setdefault(PREF_GOOGLE_CONNECTED, await google_connected())
