@@ -96,6 +96,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up myUplink sensor."""
+
     entities: list[SensorEntity] = []
     coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -108,6 +109,15 @@ async def async_setup_entry(
                 description is not None
                 and description.device_class == SensorDeviceClass.ENUM
             ):
+                entities.append(
+                    MyUplinkEnumRawSensor(
+                        coordinator=coordinator,
+                        device_id=device_id,
+                        device_point=device_point,
+                        entity_description=description,
+                        unique_id_suffix=f"{point_id}-raw",
+                    )
+                )
                 entity_class = MyUplinkEnumSensor
 
             entities.append(
@@ -188,8 +198,27 @@ class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
         return self.options_map[str(int(device_point.value))].capitalize()  # type: ignore[no-any-return]
 
-    @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Add extra state attributes."""
-        device_point = self.coordinator.data.points[self.device_id][self.point_id]
-        return {"raw_value": str(int(device_point.value))}
+
+class MyUplinkEnumRawSensor(MyUplinkDevicePointSensor):
+    """Representation of a myUplink device point sensor for raw value from ENUM device_class."""
+
+    def __init__(
+        self,
+        coordinator: MyUplinkDataCoordinator,
+        device_id: str,
+        device_point: DevicePoint,
+        entity_description: SensorEntityDescription | None,
+        unique_id_suffix: str,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(
+            coordinator=coordinator,
+            device_id=device_id,
+            device_point=device_point,
+            entity_description=entity_description,
+            unique_id_suffix=unique_id_suffix,
+        )
+
+        self._attr_device_class = None
+        self._attr_entity_registry_enabled_default = False
+        self._attr_name = f"{self.name} raw"
