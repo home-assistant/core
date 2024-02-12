@@ -35,6 +35,7 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entity_entry_helper,
+    write_state_on_attr_change,
 )
 from .models import (
     MqttValueTemplate,
@@ -120,6 +121,7 @@ class MqttEvent(MqttEntity, EventEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
+        @write_state_on_attr_change(self, set())
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             if msg.retain:
