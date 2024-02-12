@@ -85,7 +85,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             )
         if features.color_tmp:
             self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
-        if not self._attr_supported_color_modes and features.brightness:
+        if not self._attr_supported_color_modes:
             self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
         self._attr_effect_list = wiz_data.scenes
         if bulb_type.bulb_type != BulbClass.DW:
