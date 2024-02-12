@@ -68,7 +68,7 @@ class FujitsuHVACDevice(CoordinatorEntity, ClimateEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._dev = self.coordinator.data[self._dev.device_serial_number]
+        self._dev = self.coordinator.data[self.coordinator_context]
         self.async_write_ha_state()
 
     @property
