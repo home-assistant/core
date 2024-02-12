@@ -457,6 +457,7 @@ def initialize_bot(p_config):
 
     if proxy_url is not None:
         # These have been kept for backwards compatibility, they can actually be stuffed into the URL.
+        # Side note: In the future we should deprecate these and raise a repair issue if we find them here.
         auth = proxy_params.pop("username"), proxy_params.pop("password")
         proxy = httpx.Proxy(proxy_url, auth=auth, **proxy_params)
         request = HTTPXRequest(connection_pool_size=8, proxy=proxy)
