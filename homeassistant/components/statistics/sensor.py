@@ -663,12 +663,12 @@ class StatisticsSensor(SensorEntity):
 
     def _stat_datetime_value_max(self) -> datetime | None:
         if states := self.states:
-            return dt_util.utc_from_timestamp(self.ages[self.states.index(max(states))])
+            return dt_util.utc_from_timestamp(self.ages[states.index(max(states))])
         return None
 
     def _stat_datetime_value_min(self) -> datetime | None:
         if states := self.states:
-            return dt_util.utc_from_timestamp(self.ages[self.states.index(min(states))])
+            return dt_util.utc_from_timestamp(self.ages[states.index(min(states))])
         return None
 
     def _stat_distance_95_percent_of_values(self) -> StateType:
