@@ -18,7 +18,7 @@ async def test_unload_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert setup_entry.state is ConfigEntryState.LOADED
     with patch(
-        "homeassistant.components.roborock.coordinator.RoborockLocalClient.async_disconnect"
+        "homeassistant.components.roborock.coordinator.RoborockLocalClient.async_release"
     ) as mock_disconnect:
         assert await hass.config_entries.async_unload(setup_entry.entry_id)
         await hass.async_block_till_done()

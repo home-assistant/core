@@ -107,10 +107,8 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
     ) -> None:
         """Create a select entity."""
         self.entity_description = entity_description
-        super().__init__(unique_id, coordinator)
+        super().__init__(unique_id, coordinator, entity_description.protocol_listener)
         self._attr_options = options
-        if (protocol := self.entity_description.protocol_listener) is not None:
-            self.api.add_listener(protocol, self._update_from_listener, self.api.cache)
 
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
