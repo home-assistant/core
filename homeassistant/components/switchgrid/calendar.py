@@ -26,7 +26,7 @@ async def async_setup_entry(
 class SwitchgridCalendarEntity(
     CoordinatorEntity[SwitchgridCoordinator], CalendarEntity
 ):
-    """A calendar entity holding Switchgrid Electric Loadshaving events."""
+    """A calendar entity holding Switchgrid Electric LoadShedding events."""
 
     _attr_has_entity_name = True
     _attr_unique_id = "switchgrid_events"
@@ -38,7 +38,6 @@ class SwitchgridCalendarEntity(
     ) -> None:
         """Create the Calendar entity."""
         super().__init__(coordinator)
-        self._config_entry = config_entry
         self._events = map_coordinator_events(coordinator)
 
     @property
