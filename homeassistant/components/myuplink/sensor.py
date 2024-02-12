@@ -190,13 +190,15 @@ class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
         )
 
         self._attr_options = [x["text"].capitalize() for x in device_point.enum_values]
-        self.options_map = {x["value"]: x["text"] for x in device_point.enum_values}
+        self.options_map = {
+            x["value"]: x["text"].capitalize() for x in device_point.enum_values
+        }
 
     @property
     def native_value(self) -> str:
         """Sensor state value for enum sensor."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
-        return self.options_map[str(int(device_point.value))].capitalize()  # type: ignore[no-any-return]
+        return self.options_map[str(int(device_point.value))]  # type: ignore[no-any-return]
 
 
 class MyUplinkEnumRawSensor(MyUplinkDevicePointSensor):
