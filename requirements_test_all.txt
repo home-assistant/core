@@ -1770,7 +1770,7 @@ pytomorrowio==0.3.6
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
-pytraccar==2.0.0
+pytraccar==2.1.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
