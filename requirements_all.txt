@@ -128,7 +128,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.25
+SQLAlchemy==2.0.26
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -484,7 +484,7 @@ asterisk_mbox==0.5.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.38.1
+async-upnp-client==0.38.2
 
 # homeassistant.components.keyboard_remote
 asyncinotify==4.0.2
@@ -1615,7 +1615,7 @@ py-nightscout==1.2.2
 py-schluter==0.1.7
 
 # homeassistant.components.ecovacs
-py-sucks==0.9.8
+py-sucks==0.9.9
 
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.1.4
@@ -2495,7 +2495,7 @@ screenlogicpy==0.10.0
 scsgate==0.1.0
 
 # homeassistant.components.backup
-securetar==2023.3.0
+securetar==2024.2.0
 
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
