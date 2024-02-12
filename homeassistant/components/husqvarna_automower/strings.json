@@ -25,8 +25,8 @@
   },
   "entity": {
     "switch": {
-      "park_until_further_notice": {
-        "name": "Park until further notice"
+      "enable_schedule": {
+        "name": "Enable schedule"
       }
     }
   }

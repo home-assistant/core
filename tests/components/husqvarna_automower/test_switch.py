@@ -38,8 +38,8 @@ async def test_switch_states(
     await setup_integration(hass, mock_config_entry)
 
     for state, restricted_reson, expected_state in [
-        (MowerStates.RESTRICTED, RestrictedReasons.NOT_APPLICABLE, "on"),
-        (MowerStates.IN_OPERATION, RestrictedReasons.NONE, "off"),
+        (MowerStates.RESTRICTED, RestrictedReasons.NOT_APPLICABLE, "off"),
+        (MowerStates.IN_OPERATION, RestrictedReasons.NONE, "on"),
     ]:
         values[TEST_MOWER_ID].mower.state = state
         values[TEST_MOWER_ID].planner.restricted_reason = restricted_reson
@@ -47,15 +47,15 @@ async def test_switch_states(
         freezer.tick(timedelta(minutes=5))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        state = hass.states.get("switch.test_mower_1_park_until_further_notice")
+        state = hass.states.get("switch.test_mower_1_enable_schedule")
         assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
     ("service", "aioautomower_command"),
     [
-        ("turn_on", "park_until_further_notice"),
-        ("turn_off", "resume_schedule"),
+        ("turn_off", "park_until_further_notice"),
+        ("turn_on", "resume_schedule"),
         ("toggle", "park_until_further_notice"),
     ],
 )
@@ -77,7 +77,7 @@ async def test_lawn_mower_commands(
         await hass.services.async_call(
             domain="switch",
             service=service,
-            service_data={"entity_id": "switch.test_mower_1_park_until_further_notice"},
+            service_data={"entity_id": "switch.test_mower_1_enable_schedule"},
             blocking=True,
         )
     assert (

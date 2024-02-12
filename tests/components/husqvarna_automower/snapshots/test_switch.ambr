@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch[switch.test_mower_1_park_until_further_notice-entry]
+# name: test_switch[switch.test_mower_1_enable_schedule-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_mower_1_park_until_further_notice',
+    'entity_id': 'switch.test_mower_1_enable_schedule',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,24 +21,24 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Park until further notice',
+    'original_name': 'Enable schedule',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'park_until_further_notice',
-    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_park_until_further_notice',
+    'translation_key': 'enable_schedule',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_enable_schedule',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch[switch.test_mower_1_park_until_further_notice-state]
+# name: test_switch[switch.test_mower_1_enable_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Park until further notice',
+      'friendly_name': 'Test Mower 1 Enable schedule',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_mower_1_park_until_further_notice',
+    'entity_id': 'switch.test_mower_1_enable_schedule',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---

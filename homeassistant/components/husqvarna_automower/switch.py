@@ -31,7 +31,7 @@ async def async_setup_entry(
 class AutomowerSwitchEntity(AutomowerBaseEntity, SwitchEntity):
     """Defining the Automower switch."""
 
-    _attr_translation_key = "park_until_further_notice"
+    _attr_translation_key = "enable_schedule"
 
     def __init__(
         self,
@@ -40,19 +40,19 @@ class AutomowerSwitchEntity(AutomowerBaseEntity, SwitchEntity):
     ) -> None:
         """Set up Automower switch."""
         super().__init__(mower_id, coordinator)
-        self._attr_unique_id = f"{self.mower_id}_park_until_further_notice"
+        self._attr_unique_id = f"{self.mower_id}_{self._attr_translation_key}"
 
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
         attributes = self.mower_attributes
-        return (
+        return not (
             attributes.mower.state == MowerStates.RESTRICTED
             and attributes.planner.restricted_reason == RestrictedReasons.NOT_APPLICABLE
         )
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the entity on."""
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
         try:
             await self.coordinator.api.park_until_further_notice(self.mower_id)
         except ApiException as exception:
@@ -60,7 +60,7 @@ class AutomowerSwitchEntity(AutomowerBaseEntity, SwitchEntity):
                 f"Command couldn't be sent to the command queue: {exception}"
             ) from exception
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         try:
             await self.coordinator.api.resume_schedule(self.mower_id)
