@@ -84,7 +84,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.44.0
+PySwitchbot==0.45.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -297,7 +297,7 @@ aiooncue==0.3.5
 aioopenexchangerates==0.4.0
 
 # homeassistant.components.pegel_online
-aiopegelonline==0.0.6
+aiopegelonline==0.0.8
 
 # homeassistant.components.acmeda
 aiopulse==0.4.4
@@ -2053,7 +2053,7 @@ tessie-api==0.0.9
 thermobeacon-ble==0.6.2
 
 # homeassistant.components.thermopro
-thermopro-ble==0.9.0
+thermopro-ble==0.10.0
 
 # homeassistant.components.tilt_ble
 tilt-ble==0.2.3
@@ -2191,7 +2191,7 @@ xiaomi-ble==0.25.2
 xknx==2.12.0
 
 # homeassistant.components.knx
-xknxproject==3.5.0
+xknxproject==3.6.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
