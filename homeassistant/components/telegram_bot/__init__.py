@@ -635,7 +635,7 @@ class TelegramNotificationService:
                 }
                 if message_tag is not None:
                     event_data[ATTR_MESSAGE_TAG] = message_tag
-                self.hass.bus.fire(EVENT_TELEGRAM_SENT, event_data)
+                self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data)
             elif not isinstance(out, bool):
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out
@@ -971,7 +971,7 @@ class BaseTelegramBotEntity:
             return True
 
         _LOGGER.debug("Firing event %s: %s", event_type, event_data)
-        self.hass.bus.fire(event_type, event_data)
+        self.hass.bus.async_fire(event_type, event_data)
         return True
 
     @staticmethod
