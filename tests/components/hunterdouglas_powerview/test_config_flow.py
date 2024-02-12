@@ -153,7 +153,7 @@ async def test_form_homekit_and_dhcp(
     assert result3["type"] == FlowResultType.ABORT
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_hunterdouglas_full")
+@pytest.mark.usefixtures("mock_hunterdouglas_full")
 @pytest.mark.parametrize(
     ("homekit_source", "homekit_discovery", "api_version"), HOMEKIT_DATA
 )
@@ -162,12 +162,13 @@ async def test_form_homekit_and_dhcp(
 )
 async def test_discovered_by_homekit_and_dhcp(
     hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
     homekit_source: str,
     homekit_discovery: zeroconf.ZeroconfServiceInfo,
-    api_version: str,
+    api_version: int,
     dhcp_source: str,
     dhcp_discovery: dhcp.DhcpServiceInfo,
-    dhcp_api_version: str,
+    dhcp_api_version: int,
 ) -> None:
     """Test we get the form with homekit and abort for dhcp source when we get both."""
     result = await hass.config_entries.flow.async_init(
