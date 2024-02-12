@@ -860,6 +860,9 @@ home-assistant-frontend==20240205.0
 # homeassistant.components.conversation
 home-assistant-intents==2024.2.2
 
+# homeassistant.components.bring
+homeassistant-bring-api==0.1.0
+
 # homeassistant.components.home_connect
 homeconnect==0.7.2
 
@@ -1682,9 +1685,6 @@ python-MotionMount==0.3.1
 
 # homeassistant.components.awair
 python-awair==0.2.4
-
-# homeassistant.components.bring
-python-bring-api==3.0.0
 
 # homeassistant.components.bsblan
 python-bsblan==0.5.18
