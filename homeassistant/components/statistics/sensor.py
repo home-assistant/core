@@ -457,21 +457,24 @@ class StatisticsSensor(SensorEntity):
     def _purge_old_states(self, max_age: float) -> None:
         """Remove states which are older than a given age."""
         now_timestamp = time.time()
+        debug = _LOGGER.isEnabledFor(logging.DEBUG)
 
-        _LOGGER.debug(
-            "%s: purging records older then %s(%s)",
-            self.entity_id,
-            dt_util.as_local(dt_util.utc_from_timestamp(now_timestamp - max_age)),
-            self._samples_max_age,
-        )
+        if debug:
+            _LOGGER.debug(
+                "%s: purging records older then %s(%s)",
+                self.entity_id,
+                dt_util.as_local(dt_util.utc_from_timestamp(now_timestamp - max_age)),
+                self._samples_max_age,
+            )
 
         while self.ages and (now_timestamp - self.ages[0]) > max_age:
-            _LOGGER.debug(
-                "%s: purging record with datetime %s(%s)",
-                self.entity_id,
-                dt_util.as_local(dt_util.utc_from_timestamp(self.ages[0])),
-                (now_timestamp - self.ages[0]),
-            )
+            if debug:
+                _LOGGER.debug(
+                    "%s: purging record with datetime %s(%s)",
+                    self.entity_id,
+                    dt_util.as_local(dt_util.utc_from_timestamp(self.ages[0])),
+                    (now_timestamp - self.ages[0]),
+                )
             self.ages.popleft()
             self.states.popleft()
 
