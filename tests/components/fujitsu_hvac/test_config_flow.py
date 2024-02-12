@@ -140,7 +140,7 @@ async def test_form_cannot_connect(
     }
 
 
-async def test_reauth_success(hass: HomeAssistant) -> None:
+async def test_reauth_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test reauth flow."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -189,7 +189,9 @@ async def test_reauth_success(hass: HomeAssistant) -> None:
     assert mock_config.data[CONF_PASSWORD] == TEST_PASSWORD2
 
 
-async def test_reauth_different_username(hass: HomeAssistant) -> None:
+async def test_reauth_different_username(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test reauth flow."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
@@ -234,8 +236,6 @@ async def test_reauth_different_username(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.fujitsu_hvac.config_flow.new_ayla_api",
         return_value=apimock,
-    ), patch(
-        "homeassistant.components.fujitsu_hvac.new_ayla_api", return_value=apimock
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
