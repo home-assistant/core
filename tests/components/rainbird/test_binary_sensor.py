@@ -32,7 +32,7 @@ async def setup_config_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> list[Platform]:
     """Fixture to setup the config entry."""
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
 
 
@@ -74,7 +74,7 @@ async def test_no_unique_id(
     # Failure to migrate config entry to a unique id
     responses.insert(0, mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE))
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == ConfigEntryState.LOADED
 
     rainsensor = hass.states.get("binary_sensor.rain_bird_controller_rainsensor")
