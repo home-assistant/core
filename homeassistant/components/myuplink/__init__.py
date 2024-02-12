@@ -1,7 +1,7 @@
 """The myUplink integration."""
 from __future__ import annotations
 
-from myuplink.api import MyUplinkAPI
+from myuplink import MyUplinkAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
