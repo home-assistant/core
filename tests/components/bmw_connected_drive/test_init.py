@@ -166,7 +166,7 @@ async def test_remove_stale_devices(
 
     # Check that the test vehicles are still available but not the stale device
     assert len(device_entries) > 0
-    remaining_device_identifiers = set().union(*[d.identifiers for d in device_entries])
+    remaining_device_identifiers = set().union(*(d.identifiers for d in device_entries))
     assert not {(BMW_DOMAIN, "stale_device_id")}.intersection(
         remaining_device_identifiers
     )
