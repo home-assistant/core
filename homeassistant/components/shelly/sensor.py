@@ -964,7 +964,7 @@ RPC_SENSORS: Final = {
         sub_key="xpercent",
         name="Analog value",
         removal_condition=lambda config, status, key: (
-            config[key]["enable"] is False or status[key]["xpercent"] is None
+            config[key]["enable"] is False or status[key].get("xpercent") is None
         ),
     ),
     "pulse_counter": RpcSensorDescription(
