@@ -480,8 +480,7 @@ async def test_thermostat_turn_on_after_off_with_resume(
 ) -> None:
     """Test thermostat that is turned on after starting off with resume support."""
     node_state = copy.deepcopy(aeotec_radiator_thermostat_state)
-    # Only allow off and dry modes so we can test fallback logic when turning HVAC on
-    # without a last mode stored.
+    # Add resume thermostat mode so we can test that it prefers the resume mode
     value = next(
         value
         for value in node_state["values"]
