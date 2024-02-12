@@ -169,16 +169,21 @@ async def test_discovered_by_homekit_and_dhcp(
     assert result2["reason"] == "already_in_progress"
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_hunterdouglas_user")
+@pytest.mark.usefixtures("mock_hunterdouglas_full")
 @pytest.mark.parametrize("api_version", [1, 2, 3])
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
+    api_version: int,
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    # Simulate a timeout error
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
+        "homeassistant.components.hunterdouglas_powerview.Hub.query_firmware",
         side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -188,6 +193,19 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    # Now try again without the patch in place to make sure we can recover
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_HOST: "1.2.3.4"},
+    )
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == f"Powerview Generation {api_version}"
+    assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
+    assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_hunterdouglas_base")
