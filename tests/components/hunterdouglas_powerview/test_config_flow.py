@@ -15,7 +15,7 @@ from .const import DHCP_DATA, DISCOVERY_DATA, HOMEKIT_DATA
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_hunterdouglas_full")
+@pytest.mark.usefixtures("mock_hunterdouglas_full")
 @pytest.mark.parametrize("api_version", [1, 2, 3])
 async def test_user_form(
     hass: HomeAssistant,
@@ -54,6 +54,7 @@ async def test_user_form(
         {CONF_HOST: "1.2.3.4"},
     )
     assert result4["type"] == FlowResultType.ABORT
+    assert result4["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_hunterdouglas_user")
