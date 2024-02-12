@@ -29,6 +29,7 @@ from homeassistant.components.knx.const import (
 )
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
@@ -57,7 +58,9 @@ class KNXTestKit:
         for attribute, value in attributes.items():
             assert test_state.attributes.get(attribute) == value
 
-    async def setup_integration(self, config):
+    async def setup_integration(
+        self, config: ConfigType, add_entry_to_hass: bool = True
+    ) -> None:
         """Create the KNX integration."""
 
         async def patch_xknx_start():
