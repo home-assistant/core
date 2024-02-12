@@ -12,7 +12,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DHCP_DATA, DISCOVERY_DATA, HOMEKIT_DATA
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_hunterdouglas_full")
@@ -247,21 +247,40 @@ async def test_form_unknown_exception(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_hunterdouglas_secondary")
-async def test_form_unsupported_device(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_hunterdouglas_full")
+@pytest.mark.parametrize("api_version", [3])  # only gen 3 present secondary hubs
+async def test_form_unsupported_device(
+    hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
+    api_version: int,
+) -> None:
     """Test unsupported device failure."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "1.2.3.4"},
-    )
-    await hass.async_block_till_done()
+    # Simulate a gen 3 secondary hub
+    with patch(
+        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
+        return_value=load_json_object_fixture("gen3/gateway/secondary.json", DOMAIN),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.2.3.4"},
+        )
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unsupported_device"}
+
+    # Now try again without the patch in place to make sure we can recover
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {CONF_HOST: "1.2.3.4"},
+    )
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == f"Powerview Generation {api_version}"
+    assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
+    assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
+
+    assert len(mock_setup_entry.mock_calls) == 1
