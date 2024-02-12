@@ -394,7 +394,7 @@ async def async_get_users(hass: HomeAssistant) -> list[str]:
         not isinstance(store_data, dict)
         or not (data := store_data.get("data"))
         or not isinstance(data, dict)
-        or not (agent_user_ids := store_data.get("agent_user_ids"))
+        or not (agent_user_ids := data.get("agent_user_ids"))
         or not isinstance(agent_user_ids, dict)
     ):
         return []

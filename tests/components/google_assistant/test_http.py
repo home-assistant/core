@@ -1,10 +1,13 @@
 """Test Google http services."""
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
+import json
+import os
 from typing import Any
 from unittest.mock import ANY, patch
 from uuid import uuid4
 
+import py
 import pytest
 
 from homeassistant.components.google_assistant import GOOGLE_ASSISTANT_SCHEMA
@@ -21,6 +24,7 @@ from homeassistant.components.google_assistant.http import (
     GoogleConfigStore,
     _get_homegraph_jwt,
     _get_homegraph_token,
+    async_get_users,
 )
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, State
@@ -31,6 +35,7 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
+    async_test_home_assistant,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -541,3 +546,111 @@ async def test_agent_user_id_storage(
         STORE_GOOGLE_LOCAL_WEBHOOK_ID
         in hass_storage["google_assistant"]["data"]["agent_user_ids"]["agent_1"]
     )
+
+
+async def test_async_get_users_no_store(hass: HomeAssistant) -> None:
+    """Test async_get_users when there is no store."""
+    assert await async_get_users(hass) == []
+
+
+async def test_async_get_users_from_store(tmpdir: py.path.local) -> None:
+    """Test async_get_users from a store.
+
+    This test ensures we can load from data saved by GoogleConfigStore.
+    """
+    async with async_test_home_assistant() as hass:
+        hass.config.config_dir = await hass.async_add_executor_job(
+            tmpdir.mkdir, "temp_storage"
+        )
+
+        store = GoogleConfigStore(hass)
+        await store.async_initialize()
+
+        store.add_agent_user_id("agent_1")
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done()
+
+        assert await async_get_users(hass) == ["agent_1"]
+
+
+VALID_STORE_DATA = json.dumps(
+    {
+        "version": 1,
+        "minor_version": 2,
+        "key": "google_assistant",
+        "data": {
+            "agent_user_ids": {"agent_1": {}},
+        },
+    }
+)
+
+
+NO_DATA = json.dumps(
+    {
+        "version": 1,
+        "minor_version": 2,
+        "key": "google_assistant",
+    }
+)
+
+
+DATA_NOT_DICT = json.dumps(
+    {
+        "version": 1,
+        "minor_version": 2,
+        "key": "google_assistant",
+        "data": "hello",
+    }
+)
+
+
+NO_AGENT_USER_IDS = json.dumps(
+    {
+        "version": 1,
+        "minor_version": 2,
+        "key": "google_assistant",
+        "data": {},
+    }
+)
+
+
+AGENT_USER_IDS_NOT_DICT = json.dumps(
+    {
+        "version": 1,
+        "minor_version": 2,
+        "key": "google_assistant",
+        "data": {
+            "agent_user_ids": "hello",
+        },
+    }
+)
+
+
+@pytest.mark.parametrize(
+    ("store_data", "expected_users"),
+    [
+        (VALID_STORE_DATA, ["agent_1"]),
+        ("", []),
+        ("not_a_dict", []),
+        (NO_DATA, []),
+        (DATA_NOT_DICT, []),
+        (NO_AGENT_USER_IDS, []),
+        (AGENT_USER_IDS_NOT_DICT, []),
+    ],
+)
+async def test_async_get_users(
+    tmpdir: py.path.local, store_data: str, expected_users: list[str]
+) -> None:
+    """Test async_get_users from stored JSON data."""
+    async with async_test_home_assistant() as hass:
+        hass.config.config_dir = await hass.async_add_executor_job(
+            tmpdir.mkdir, "temp_storage"
+        )
+        path = hass.config.config_dir / ".storage" / GoogleConfigStore._STORAGE_KEY
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write(store_data)
+
+        assert await async_get_users(hass) == expected_users
+
+        await hass.async_stop()
