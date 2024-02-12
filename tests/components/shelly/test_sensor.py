@@ -638,18 +638,62 @@ async def test_block_sleeping_update_entity_service(
     )
 
 
-async def test_rpc_analog_input_xpercent_sensor(
+async def test_rpc_analog_input_sensors(
     hass: HomeAssistant, mock_rpc_device: Mock, entity_registry: EntityRegistry
 ) -> None:
     """Test RPC analog input xpercent sensor."""
-    entity_id = f"{SENSOR_DOMAIN}.test_name_input_0_analog_value"
     await init_integration(hass, 2)
 
+    entity_id = f"{SENSOR_DOMAIN}.test_name_analog_input"
+    assert hass.states.get(entity_id).state == "89"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-input:1-analoginput"
+
+    entity_id = f"{SENSOR_DOMAIN}.test_name_analog_value"
     assert hass.states.get(entity_id).state == "8.9"
 
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.unique_id == "123456789ABC-input:0-analoginput_xpercent"
+    assert entry.unique_id == "123456789ABC-input:1-analoginput_xpercent"
+
+
+async def test_rpc_disabled_analog_input_sensors(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test RPC disabled counter sensor."""
+    new_config = deepcopy(mock_rpc_device.config)
+    new_config["input:1"]["enable"] = False
+    monkeypatch.setattr(mock_rpc_device, "config", new_config)
+
+    await init_integration(hass, 2)
+
+    entity_id = f"{SENSOR_DOMAIN}.test_name_analog_input"
+    assert hass.states.get(entity_id) is None
+
+    entity_id = f"{SENSOR_DOMAIN}.test_name_analog_value"
+    assert hass.states.get(entity_id) is None
+
+
+async def test_rpc_disabled_xpercent(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test RPC empty xpercent value."""
+    mutate_rpc_device_status(
+        monkeypatch,
+        mock_rpc_device,
+        "input:1",
+        "xpercent",
+        None,
+    )
+    await init_integration(hass, 2)
+
+    entity_id = f"{SENSOR_DOMAIN}.test_name_analog_input"
+    assert hass.states.get(entity_id).state == "89"
+
+    entity_id = f"{SENSOR_DOMAIN}.test_name_analog_value"
+    assert hass.states.get(entity_id) is None
 
 
 async def test_rpc_pulse_counter_sensors(
