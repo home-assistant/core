@@ -1337,7 +1337,7 @@ mutesync==0.0.1
 mypermobil==0.1.8
 
 # homeassistant.components.myuplink
-myuplink==0.2
+myuplink==0.2.1
 
 # homeassistant.components.nad
 nad-receiver==0.3.0
