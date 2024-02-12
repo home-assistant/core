@@ -337,6 +337,7 @@ async def test_wall_display_relay_mode(
     assert hass.states.get(climate_entity_id) is None
     assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 0
 
+    # the switch entity should be created
     state = hass.states.get(switch_entity_id)
     assert state
     assert state.state == STATE_ON
