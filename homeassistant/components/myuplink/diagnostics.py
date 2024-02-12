@@ -24,8 +24,8 @@ async def async_get_config_entry_diagnostics(
     api: MyUplinkAPI = hass.data[DOMAIN][config_entry.entry_id].api
     myuplink_data = {}
     myuplink_data["my_systems"] = await api.async_get_systems_json()
+    myuplink_data["my_systems"]["devices"] = []
     for system in myuplink_data["my_systems"]["systems"]:
-        myuplink_data["my_systems"]["devices"] = []
         for device in system["devices"]:
             device_data = await api.async_get_device_json(device["id"])
             device_points = await api.async_get_device_points_json(device["id"])

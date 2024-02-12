@@ -3,7 +3,7 @@ from collections.abc import Generator
 import json
 import time
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from myuplink import Device, System
 import pytest
@@ -65,7 +65,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture
-def mock_myuplink_client() -> Generator[AsyncMock, AsyncMock, AsyncMock]:
+def mock_myuplink_client() -> Generator[MagicMock, None, None]:
     """Mock a myuplink client."""
 
     def process_json_system(data: dict[str, Any]) -> System:
