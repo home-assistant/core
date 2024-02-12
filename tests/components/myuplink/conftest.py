@@ -5,7 +5,7 @@ import time
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from myuplink import Device, System
+from myuplink import Device, DevicePoint, System
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -72,6 +72,10 @@ def mock_myuplink_client() -> Generator[MagicMock, None, None]:
         array = json.loads(data)
         return [System(system_data) for system_data in array["systems"]]
 
+    def process_json_device_points(data: dict[str, Any]) -> DevicePoint:
+        array = json.loads(data)
+        return [DevicePoint(point_data) for point_data in array]
+
     with patch(
         "homeassistant.components.myuplink.MyUplinkAPI",
         autospec=True,
@@ -79,6 +83,9 @@ def mock_myuplink_client() -> Generator[MagicMock, None, None]:
         client = mock_client.return_value
         client.async_get_device_points_json.return_value = load_json_value_fixture(
             "device_points_nibe_f730.json", DOMAIN
+        )
+        client.async_get_device_points.return_value = process_json_device_points(
+            load_fixture("device_points_nibe_f730.json", DOMAIN)
         )
         client.async_get_systems.return_value = process_json_system(
             load_fixture("systems.json", DOMAIN)
