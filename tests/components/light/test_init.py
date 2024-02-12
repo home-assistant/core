@@ -2701,5 +2701,5 @@ def test_report_invalid_color_mode(
 
     entity = MockLightEntityEntity()
     entity._async_calculate_state()
-    expected_warning = f"set to unsupported color_mode: {color_mode}"
+    expected_warning = f"set to unsupported color mode {color_mode}"
     assert (expected_warning in caplog.text) is warning_expected
