@@ -59,7 +59,7 @@ async def test_switch_states(
         ("toggle", "park_until_further_notice"),
     ],
 )
-async def test_lawn_mower_commands(
+async def test_switch_commands(
     hass: HomeAssistant,
     aioautomower_command: str,
     service: str,
@@ -68,11 +68,15 @@ async def test_lawn_mower_commands(
 ) -> None:
     """Test switch commands."""
     await setup_integration(hass, mock_config_entry)
-
+    await hass.services.async_call(
+        domain="switch",
+        service=service,
+        service_data={"entity_id": "switch.test_mower_1_enable_schedule"},
+        blocking=True,
+    )
     getattr(mock_automower_client, aioautomower_command).side_effect = ApiException(
         "Test error"
     )
-
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             domain="switch",
