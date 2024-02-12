@@ -1,7 +1,7 @@
 """Test the Bring! config flow."""
 from unittest.mock import AsyncMock
 
-from homeassistant_bring_api.exceptions import (
+from bring_api.exceptions import (
     BringAuthException,
     BringParseException,
     BringRequestException,

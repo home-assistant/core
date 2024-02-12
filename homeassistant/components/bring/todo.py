@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant_bring_api.exceptions import BringRequestException
+from bring_api.exceptions import BringRequestException
 
 from homeassistant.components.todo import (
     TodoItem,

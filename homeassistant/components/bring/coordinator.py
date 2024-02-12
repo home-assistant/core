@@ -4,12 +4,9 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from homeassistant_bring_api.bring import Bring
-from homeassistant_bring_api.exceptions import (
-    BringParseException,
-    BringRequestException,
-)
-from homeassistant_bring_api.types import BringItemsResponse, BringList
+from bring_api.bring import Bring
+from bring_api.exceptions import BringParseException, BringRequestException
+from bring_api.types import BringItemsResponse, BringList
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant

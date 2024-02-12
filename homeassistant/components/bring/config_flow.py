@@ -4,8 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant_bring_api.bring import Bring
-from homeassistant_bring_api.exceptions import BringAuthException, BringRequestException
+from bring_api.bring import Bring
+from bring_api.exceptions import BringAuthException, BringRequestException
 import voluptuous as vol
 
 from homeassistant import config_entries

@@ -593,6 +593,9 @@ boschshcpy==0.2.75
 # homeassistant.components.route53
 boto3==1.33.13
 
+# homeassistant.components.bring
+bring-api==0.1.1
+
 # homeassistant.components.broadlink
 broadlink==0.18.3
 
@@ -1063,9 +1066,6 @@ home-assistant-frontend==20240205.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.2.2
-
-# homeassistant.components.bring
-homeassistant-bring-api==0.1.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.2

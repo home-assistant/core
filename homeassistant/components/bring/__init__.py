@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant_bring_api.bring import Bring
-from homeassistant_bring_api.exceptions import (
+from bring_api.bring import Bring
+from bring_api.exceptions import (
     BringAuthException,
     BringParseException,
     BringRequestException,
