@@ -128,7 +128,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.25
+SQLAlchemy==2.0.26
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -2495,7 +2495,7 @@ screenlogicpy==0.10.0
 scsgate==0.1.0
 
 # homeassistant.components.backup
-securetar==2023.3.0
+securetar==2024.2.0
 
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
