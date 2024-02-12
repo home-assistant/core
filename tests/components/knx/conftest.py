@@ -90,12 +90,14 @@ class KNXTestKit:
             self.xknx = args[0]
             return DEFAULT
 
+        if add_entry_to_hass:
+            self.mock_config_entry.add_to_hass(self.hass)
+
         with patch(
             "xknx.xknx.knx_interface_factory",
             return_value=knx_ip_interface_mock(),
             side_effect=fish_xknx,
         ):
-            self.mock_config_entry.add_to_hass(self.hass)
             await async_setup_component(self.hass, KNX_DOMAIN, {KNX_DOMAIN: config})
             await self.hass.async_block_till_done()
 
