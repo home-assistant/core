@@ -156,7 +156,6 @@ class BlockSleepingClimate(
     """Representation of a Shelly climate device."""
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
-    _attr_icon = "mdi:thermostat"
     _attr_max_temp = SHTRV_01_TEMPERATURE_SETTINGS["max"]
     _attr_min_temp = SHTRV_01_TEMPERATURE_SETTINGS["min"]
     _attr_supported_features = (
@@ -167,6 +166,7 @@ class BlockSleepingClimate(
     )
     _attr_target_temperature_step = SHTRV_01_TEMPERATURE_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -438,7 +438,6 @@ class BlockSleepingClimate(
 class RpcClimate(ShellyRpcEntity, ClimateEntity):
     """Entity that controls a thermostat on RPC based Shelly devices."""
 
-    _attr_icon = "mdi:thermostat"
     _attr_max_temp = RPC_THERMOSTAT_SETTINGS["max"]
     _attr_min_temp = RPC_THERMOSTAT_SETTINGS["min"]
     _attr_supported_features = (
@@ -448,6 +447,7 @@ class RpcClimate(ShellyRpcEntity, ClimateEntity):
     )
     _attr_target_temperature_step = RPC_THERMOSTAT_SETTINGS["step"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize."""
