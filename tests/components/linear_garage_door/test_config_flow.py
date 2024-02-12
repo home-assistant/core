@@ -66,8 +66,8 @@ async def test_reauth(hass: HomeAssistant) -> None:
     """Test reauthentication."""
 
     with patch(
-        "homeassistant.components.linear_garage_door.coordinator.LinearUpdateCoordinator._async_update_data",
-        return_value={},
+        "homeassistant.components.linear_garage_door.async_setup_entry",
+        return_value=True,
     ):
         entry = await async_init_integration(hass)
 

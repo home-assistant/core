@@ -65,8 +65,6 @@ class LinearUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ):
                 raise ConfigEntryAuthFailed from err
             raise ConfigEntryNotReady from err
-        except TimeoutError as err:
-            raise ConfigEntryNotReady from err
 
         if not self._devices:
             self._devices = await linear.get_devices(self._site_id)
