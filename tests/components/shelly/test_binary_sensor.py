@@ -262,12 +262,14 @@ async def test_rpc_sleeping_binary_sensor(
 ) -> None:
     """Test RPC online sleeping binary sensor."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_cloud"
-    entry = await init_integration(hass, 2, sleep_period=1000)
+    config_entry = await init_integration(hass, 2, sleep_period=1000)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
 
-    register_entity(hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", entry)
+    register_entity(
+        hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", config_entry
+    )
 
     # Make device online
     mock_rpc_device.mock_update()
