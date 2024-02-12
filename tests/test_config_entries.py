@@ -4325,10 +4325,10 @@ async def test_hashable_non_string_unique_id(
     assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
 
 
-async def test_avoid_starting_config_flow_on_single_instance(
+async def test_avoid_starting_config_flow_on_single_config_entry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
-    """Test that we cannot start a config flow for a single instance only integration that already has an entry."""
+    """Test that we cannot start a config flow for a single config entry integration."""
     integration = loader.Integration(
         hass,
         "components.comp",
@@ -4338,7 +4338,7 @@ async def test_avoid_starting_config_flow_on_single_instance(
             "dependencies": [],
             "requirements": [],
             "domain": "comp",
-            "single_instance_only": True,
+            "single_config_entry": True,
         },
     )
     entry = MockConfigEntry(
@@ -4357,12 +4357,12 @@ async def test_avoid_starting_config_flow_on_single_instance(
         return_value=integration,
     ), pytest.raises(
         HomeAssistantError,
-        match=r"Can not start a config flow for a single instance only integration that already has an entry",
+        match=r"Cannot start a config flow, the integration supports only a single config entry but already has one",
     ):
         await hass.config_entries.flow.async_init("comp", context={"source": "user"})
 
 
-async def test_avoid_adding_second_config_entry_on_single_instance(
+async def test_avoid_adding_second_config_entry_on_single_config_entry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that we cannot add a second entry for a single instance only integration."""
@@ -4375,7 +4375,7 @@ async def test_avoid_adding_second_config_entry_on_single_instance(
             "dependencies": [],
             "requirements": [],
             "domain": "comp",
-            "single_instance_only": True,
+            "single_config_entry": True,
         },
     )
     entry = MockConfigEntry(
@@ -4392,7 +4392,7 @@ async def test_avoid_adding_second_config_entry_on_single_instance(
         return_value=integration,
     ), pytest.raises(
         HomeAssistantError,
-        match=r"An entry for comp already exists, but integration is single instance only",
+        match=r"An entry for comp already exists, but integration supports only one config entry",
     ):
         await hass.config_entries.async_add(
             MockConfigEntry(
@@ -4414,7 +4414,7 @@ async def test_in_progress_get_canceled_when_entry_is_created(
             "dependencies": [],
             "requirements": [],
             "domain": "comp",
-            "single_instance_only": True,
+            "single_config_entry": True,
         },
     )
     mock_integration(hass, MockModule("comp"))
@@ -4457,7 +4457,7 @@ async def test_in_progress_get_canceled_when_entry_is_created(
     assert len(manager.async_entries()) == 1
 
 
-async def test_start_reauth_still_possible_for_single_instance(
+async def test_start_reauth_still_possible_for_single_config_entry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ):
     """Test that we can still start a reauth on a single instance only integration."""
@@ -4470,7 +4470,7 @@ async def test_start_reauth_still_possible_for_single_instance(
             "dependencies": [],
             "requirements": [],
             "domain": "comp",
-            "single_instance_only": True,
+            "single_config_entry": True,
         },
     )
     entry = MockConfigEntry(

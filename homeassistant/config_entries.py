@@ -989,14 +989,17 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
-        # Avoid starting a config flow on a single instance only integration that already has an entry
+        # Avoid starting a config flow on an integration that only supports
+        # a single config entry, but which already has an entry
         if (
             context.get("source") != SOURCE_REAUTH
-            and await _support_single_instance_only(self.hass, handler)
+            and await _support_single_config_entry_only(self.hass, handler)
             and self.config_entries.async_has_entry(handler)
         ):
             raise HomeAssistantError(
-                "Can not start a config flow for a single instance only integration that already has an entry"
+                "Cannot start a config flow, the integration"
+                " supports only a single config entry"
+                " but already has one"
             )
 
         flow_id = uuid_util.random_uuid_hex()
@@ -1091,19 +1094,21 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         # or the default discovery ID
         for progress_flow in self.async_progress_by_handler(flow.handler):
             progress_unique_id = progress_flow["context"].get("unique_id")
-            if progress_flow["flow_id"] != flow.flow_id and (
+            progress_flow_id = progress_flow["flow_id"]
+
+            if progress_flow_id != flow.flow_id and (
                 (flow.unique_id and progress_unique_id == flow.unique_id)
                 or progress_unique_id == DEFAULT_DISCOVERY_UNIQUE_ID
             ):
-                self.async_abort(progress_flow["flow_id"])
+                self.async_abort(progress_flow_id)
 
-            # Abort any flows in progress for the same handler when integration allows only one instance
-            if progress_flow[
-                "flow_id"
-            ] != flow.flow_id and await _support_single_instance_only(
-                self.hass, flow.handler
+            # Abort any flows in progress for the same handler
+            # when integration allows only one config entry
+            if (
+                progress_flow_id != flow.flow_id
+                and await _support_single_config_entry_only(self.hass, flow.handler)
             ):
-                self.async_abort(progress_flow["flow_id"])
+                self.async_abort(progress_flow_id)
 
         if flow.unique_id is not None:
             # Reset unique ID when the default discovery ID has been used
@@ -1357,12 +1362,14 @@ class ConfigEntries:
                 f"An entry with the id {entry.entry_id} already exists."
             )
 
-        # avoid adding a config entry for a single instance only integration that already has an entry
-        if await _support_single_instance_only(
+        # Avoid adding a config entry for a integration
+        # that only supports a single config entry, but already has an entry
+        if await _support_single_config_entry_only(
             self.hass, entry.domain
         ) and self.async_has_entry(entry.domain):
             raise HomeAssistantError(
-                f"An entry for {entry.domain} already exists, but integration is single instance only."
+                f"An entry for {entry.domain} already exists,"
+                f" but integration supports only one config entry"
             )
 
         self._entries[entry.entry_id] = entry
@@ -2365,10 +2372,10 @@ async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     return hasattr(component, "async_remove_config_entry_device")
 
 
-async def _support_single_instance_only(hass: HomeAssistant, domain: str) -> bool:
-    """Test if a domain supports only a single instance."""
+async def _support_single_config_entry_only(hass: HomeAssistant, domain: str) -> bool:
+    """Test if a domain supports only a single config entry."""
     integration = await loader.async_get_integration(hass, domain)
-    return integration.single_instance_only
+    return integration.single_config_entry
 
 
 async def _load_integration(
