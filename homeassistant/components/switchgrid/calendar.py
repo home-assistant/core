@@ -39,7 +39,7 @@ class SwitchgridCalendarEntity(
         """Create the Calendar entity."""
         super().__init__(coordinator)
         self._config_entry = config_entry
-        self._events = []
+        self._events = map_coordinator_events(coordinator)
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -53,17 +53,7 @@ class SwitchgridCalendarEntity(
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.coordinator.data is None:
-            return
-        self._events = [
-            CalendarEvent(
-                start=event.startUtc,
-                end=event.endUtc,
-                summary=event.summary,
-                description=event.description,
-            )
-            for event in self.coordinator.data.events
-        ]
+        self._events = map_coordinator_events(self.coordinator)
         self.async_write_ha_state()
 
     async def async_get_events(
@@ -80,3 +70,18 @@ class SwitchgridCalendarEntity(
                 self._events,
             )
         )
+
+
+def map_coordinator_events(coordinator: SwitchgridCoordinator) -> list[CalendarEvent]:
+    """Map coordinator events to calendar events."""
+    if coordinator.data is None:
+        return []
+    return [
+        CalendarEvent(
+            start=event.startUtc,
+            end=event.endUtc,
+            summary=event.summary,
+            description=event.description,
+        )
+        for event in coordinator.data.events
+    ]
