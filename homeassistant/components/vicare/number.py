@@ -48,6 +48,23 @@ class ViCareNumberEntityDescription(NumberEntityDescription, ViCareRequiredKeysM
     stepping_getter: Callable[[PyViCareDevice], float | None] | None = None
 
 
+DEVICE_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
+    ViCareNumberEntityDescription(
+        key="dhw_secondary_temperature",
+        translation_key="dhw_secondary_temperature",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterConfiguredTemperature2(),
+        value_setter=lambda api, value: api.setDomesticHotWaterTemperature2(value),
+        # no getters for min, max, stepping exposed yet, using static values
+        native_min_value=10,
+        native_max_value=60,
+        native_step=1,
+    ),
+)
+
+
 CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve shift",
@@ -123,21 +140,34 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
 
 
 def _build_entities(
-    api: PyViCareDevice,
+    device: PyViCareDevice,
     device_config: PyViCareDeviceConfig,
 ) -> list[ViCareNumber]:
     """Create ViCare number entities for a component."""
 
-    return [
+    entities: list[ViCareNumber] = [
         ViCareNumber(
-            circuit,
+            device,
             device_config,
             description,
         )
-        for circuit in get_circuits(api)
-        for description in CIRCUIT_ENTITY_DESCRIPTIONS
-        if is_supported(description.key, description, circuit)
+        for description in DEVICE_ENTITY_DESCRIPTIONS
+        if is_supported(description.key, description, device)
     ]
+
+    entities.extend(
+        [
+            ViCareNumber(
+                circuit,
+                device_config,
+                description,
+            )
+            for circuit in get_circuits(device)
+            for description in CIRCUIT_ENTITY_DESCRIPTIONS
+            if is_supported(description.key, description, circuit)
+        ]
+    )
+    return entities
 
 
 async def async_setup_entry(
