@@ -12,6 +12,7 @@ from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
     REST_SENSORS_UPDATE_INTERVAL,
 )
+from homeassistant.core import HomeAssistant
 
 from . import MOCK_MAC
 
@@ -64,6 +65,24 @@ def mock_light_set_state(
     }
 
 
+def mock_white_light_set_state(
+    turn="on",
+    temp=4050,
+    gain=19,
+    brightness=128,
+    transition=0,
+):
+    """Mock white light block set_state."""
+    return {
+        "ison": turn == "on",
+        "mode": "white",
+        "gain": gain,
+        "temp": temp,
+        "brightness": brightness,
+        "transition": transition,
+    }
+
+
 MOCK_BLOCKS = [
     Mock(
         sensor_ids={
@@ -85,6 +104,7 @@ MOCK_BLOCKS = [
         sensor_ids={"roller": "stop", "rollerPos": 0},
         channel="1",
         type="roller",
+        description="roller_0",
         set_state=AsyncMock(
             side_effect=lambda go, roller_pos=0: {
                 "current_pos": roller_pos,
@@ -99,6 +119,7 @@ MOCK_BLOCKS = [
         colorTemp=mock_light_set_state()["temp"],
         **mock_light_set_state(),
         type="light",
+        description="light_0",
         set_state=AsyncMock(side_effect=mock_light_set_state),
     ),
     Mock(
@@ -146,6 +167,12 @@ MOCK_BLOCKS = [
 
 MOCK_CONFIG = {
     "input:0": {"id": 0, "name": "Test name input 0", "type": "button"},
+    "input:2": {
+        "id": 2,
+        "name": "Gas",
+        "type": "count",
+        "enable": True,
+    },
     "light:0": {"name": "test light_0"},
     "switch:0": {"name": "test switch_0"},
     "cover:0": {"name": "test cover_0"},
@@ -158,6 +185,7 @@ MOCK_CONFIG = {
         "ui_data": {},
         "device": {"name": "Test name"},
     },
+    "wifi": {"sta": {"enable": True}},
 }
 
 MOCK_SHELLY_COAP = {
@@ -197,7 +225,8 @@ MOCK_STATUS_COAP = {
 
 MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
-    "input:0": {"id": 0, "state": None},
+    "input:0": {"id": 0, "state": None, "xpercent": 8.9},
+    "input:2": {"id": 2, "counts": {"total": 56174, "xtotal": 561.74}},
     "light:0": {"output": True, "brightness": 53.0},
     "cloud": {"connected": False},
     "cover:0": {
@@ -252,19 +281,19 @@ def mock_ws_server():
 
 
 @pytest.fixture
-def device_reg(hass):
+def device_reg(hass: HomeAssistant):
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture
-def events(hass):
+def events(hass: HomeAssistant):
     """Yield caught shelly_click events."""
     return async_capture_events(hass, EVENT_SHELLY_CLICK)
 

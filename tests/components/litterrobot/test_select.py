@@ -12,6 +12,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
@@ -59,7 +60,7 @@ async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account) -> No
 
     data = {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "10"}
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             PLATFORM_DOMAIN,
             SERVICE_SELECT_OPTION,

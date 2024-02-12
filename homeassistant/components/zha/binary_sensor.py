@@ -74,7 +74,7 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
 
     _attribute_name: str
 
-    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs):
+    def __init__(self, unique_id, zha_device, cluster_handlers, **kwargs) -> None:
         """Initialize the ZHA binary sensor."""
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
         self._cluster_handler = cluster_handlers[0]
@@ -336,3 +336,16 @@ class AqaraLinkageAlarmState(BinarySensor):
     _unique_id_suffix = "linkage_alarm_state"
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.SMOKE
     _attr_translation_key: str = "linkage_alarm_state"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.curtain.agl001"}
+)
+class AqaraE1CurtainMotorOpenedByHandBinarySensor(BinarySensor):
+    """Opened by hand binary sensor."""
+
+    _unique_id_suffix = "hand_open"
+    _attribute_name = "hand_open"
+    _attr_translation_key = "hand_open"
+    _attr_icon = "mdi:hand-wave"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC

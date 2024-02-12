@@ -6,13 +6,15 @@ from aioshelly.const import MODEL_GAS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 import pytest
 
+from homeassistant.components import automation, script
+from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.shelly.const import DOMAIN, MODEL_WALL_DISPLAY
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -21,6 +23,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+import homeassistant.helpers.issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from . import init_integration, register_entity
 
@@ -47,6 +51,17 @@ async def test_block_device_services(hass: HomeAssistant, mock_block_device) -> 
         blocking=True,
     )
     assert hass.states.get("switch.test_name_channel_1").state == STATE_OFF
+
+
+async def test_block_device_unique_ids(
+    hass: HomeAssistant, entity_registry, mock_block_device
+) -> None:
+    """Test block device unique_ids."""
+    await init_integration(hass, 1)
+
+    entry = entity_registry.async_get("switch.test_name_channel_1")
+    assert entry
+    assert entry.unique_id == "123456789ABC-relay_0"
 
 
 async def test_block_set_state_connection_error(
@@ -171,6 +186,17 @@ async def test_rpc_device_services(
     assert hass.states.get("switch.test_switch_0").state == STATE_OFF
 
 
+async def test_rpc_device_unique_ids(
+    hass: HomeAssistant, mock_rpc_device, entity_registry
+) -> None:
+    """Test RPC device unique_ids."""
+    await init_integration(hass, 2)
+
+    entry = entity_registry.async_get("switch.test_switch_0")
+    assert entry
+    assert entry.unique_id == "123456789ABC-switch:0"
+
+
 async def test_rpc_device_switch_type_lights_mode(
     hass: HomeAssistant, mock_rpc_device, monkeypatch
 ) -> None:
@@ -238,9 +264,14 @@ async def test_block_device_gas_valve(
     hass: HomeAssistant, mock_block_device, monkeypatch
 ) -> None:
     """Test block device Shelly Gas with Valve addon."""
+    entity_id = register_entity(
+        hass,
+        SWITCH_DOMAIN,
+        "test_name_valve",
+        "valve_0-valve",
+    )
     registry = er.async_get(hass)
     await init_integration(hass, 1, MODEL_GAS)
-    entity_id = "switch.test_name_valve"
 
     entry = registry.async_get(entity_id)
     assert entry
@@ -258,7 +289,6 @@ async def test_block_device_gas_valve(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON  # valve is open
-    assert state.attributes.get(ATTR_ICON) == "mdi:valve-open"
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -270,7 +300,6 @@ async def test_block_device_gas_valve(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF  # valve is closed
-    assert state.attributes.get(ATTR_ICON) == "mdi:valve-closed"
 
     monkeypatch.setattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "valve", "opened")
     mock_block_device.mock_update()
@@ -279,7 +308,6 @@ async def test_block_device_gas_valve(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_ON  # valve is open
-    assert state.attributes.get(ATTR_ICON) == "mdi:valve-open"
 
 
 async def test_wall_display_thermostat_mode(
@@ -316,3 +344,63 @@ async def test_wall_display_relay_mode(
 
     # the climate entity should be removed
     assert hass.states.get(entity_id) is None
+
+
+async def test_create_issue_valve_switch(
+    hass: HomeAssistant,
+    mock_block_device,
+    entity_registry_enabled_by_default: None,
+    monkeypatch,
+) -> None:
+    """Test we create an issue when an automation or script is using a deprecated entity."""
+    monkeypatch.setitem(mock_block_device.status, "cloud", {"connected": False})
+    entity_id = register_entity(
+        hass,
+        SWITCH_DOMAIN,
+        "test_name_valve",
+        "valve_0-valve",
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "test",
+                "trigger": {"platform": "state", "entity_id": entity_id},
+                "action": {"service": "switch.turn_on", "entity_id": entity_id},
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {
+                            "service": "switch.turn_on",
+                            "data": {"entity_id": entity_id},
+                        },
+                    ],
+                }
+            }
+        },
+    )
+
+    await init_integration(hass, 1, MODEL_GAS)
+
+    assert automations_with_entity(hass, entity_id)[0] == "automation.test"
+    assert scripts_with_entity(hass, entity_id)[0] == "script.test"
+    issue_registry: ir.IssueRegistry = ir.async_get(hass)
+
+    assert issue_registry.async_get_issue(DOMAIN, "deprecated_valve_switch")
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_valve_switch.test_name_valve_automation.test"
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_valve_switch.test_name_valve_script.test"
+    )
+
+    assert len(issue_registry.issues) == 3

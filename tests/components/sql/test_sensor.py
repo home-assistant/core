@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -55,6 +56,22 @@ async def test_query_basic(recorder_mock: Recorder, hass: HomeAssistant) -> None
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
     assert state.attributes["value"] == 5
+
+
+async def test_query_cte(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+    """Test the SQL sensor with CTE."""
+    config = {
+        "db_url": "sqlite://",
+        "query": "WITH test AS (SELECT 1 AS row_num, 10 AS state) SELECT state FROM test WHERE row_num = 1 LIMIT 1;",
+        "column": "state",
+        "name": "Select value SQL query CTE",
+        "unique_id": "very_unique_id",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.select_value_sql_query_cte")
+    assert state.state == "10"
+    assert state.attributes["state"] == 10
 
 
 async def test_query_value_template(
@@ -385,9 +402,9 @@ async def test_attributes_from_yaml_setup(
     state = hass.states.get("sensor.get_value")
 
     assert state.state == "5"
-    assert state.attributes["device_class"] == SensorDeviceClass.DATA_RATE
+    assert state.attributes["device_class"] == SensorDeviceClass.DATA_SIZE
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
-    assert state.attributes["unit_of_measurement"] == "MiB"
+    assert state.attributes["unit_of_measurement"] == UnitOfInformation.MEBIBYTES
 
 
 async def test_binary_data_from_yaml_setup(

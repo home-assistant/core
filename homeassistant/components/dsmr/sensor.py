@@ -28,6 +28,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
     EntityCategory,
     UnitOfEnergy,
@@ -46,7 +47,6 @@ from homeassistant.util import Throttle
 
 from .const import (
     CONF_DSMR_VERSION,
-    CONF_PROTOCOL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
@@ -67,7 +67,7 @@ EVENT_FIRST_TELEGRAM = "dsmr_first_telegram_{}"
 UNIT_CONVERSION = {"m3": UnitOfVolume.CUBIC_METERS}
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class DSMRSensorEntityDescription(SensorEntityDescription):
     """Represents an DSMR Sensor."""
 
@@ -614,7 +614,7 @@ async def async_setup_entry(
         transport = None
         protocol = None
 
-        while hass.state == CoreState.not_running or hass.is_running:
+        while hass.state is CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
 
             # Reflect connected state in devices state by setting an
@@ -641,7 +641,7 @@ async def async_setup_entry(
                     await protocol.wait_closed()
 
                     # Unexpected disconnect
-                    if hass.state == CoreState.not_running or hass.is_running:
+                    if hass.state is CoreState.not_running or hass.is_running:
                         stop_listener()
 
                 transport = None
@@ -673,7 +673,7 @@ async def async_setup_entry(
                 update_entities_telegram(None)
 
                 if stop_listener and (
-                    hass.state == CoreState.not_running or hass.is_running
+                    hass.state is CoreState.not_running or hass.is_running
                 ):
                     stop_listener()
 

@@ -38,6 +38,7 @@ from homeassistant.util.network import is_ip_address
 
 from .config_flow import get_client_controller
 from .const import (
+    CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
     CONF_DURATION,
     CONF_USE_APP_RUN_TIMES,
@@ -48,6 +49,7 @@ from .const import (
     DATA_RESTRICTIONS_CURRENT,
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
+    DEFAULT_ZONE_RUN,
     DOMAIN,
     LOGGER,
 )
@@ -249,8 +251,13 @@ async def async_setup_entry(  # noqa: C901
             **entry.options,
             CONF_DEFAULT_ZONE_RUN_TIME: data.pop(CONF_DEFAULT_ZONE_RUN_TIME),
         }
+    entry_updates["options"] = {**entry.options}
     if CONF_USE_APP_RUN_TIMES not in entry.options:
-        entry_updates["options"] = {**entry.options, CONF_USE_APP_RUN_TIMES: False}
+        entry_updates["options"][CONF_USE_APP_RUN_TIMES] = False
+    if CONF_DEFAULT_ZONE_RUN_TIME not in entry.options:
+        entry_updates["options"][CONF_DEFAULT_ZONE_RUN_TIME] = DEFAULT_ZONE_RUN
+    if CONF_ALLOW_INACTIVE_ZONES_TO_RUN not in entry.options:
+        entry_updates["options"][CONF_ALLOW_INACTIVE_ZONES_TO_RUN] = False
     if entry_updates:
         hass.config_entries.async_update_entry(entry, **entry_updates)
 
@@ -335,7 +342,7 @@ async def async_setup_entry(  # noqa: C901
         """Hydrate a service call with the appropriate controller."""
 
         def decorator(
-            func: Callable[[ServiceCall, Controller], Coroutine[Any, Any, None]]
+            func: Callable[[ServiceCall, Controller], Coroutine[Any, Any, None]],
         ) -> Callable[[ServiceCall], Coroutine[Any, Any, None]]:
             """Define the decorator."""
 

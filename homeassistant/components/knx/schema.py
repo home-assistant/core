@@ -37,6 +37,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_MODE,
     CONF_NAME,
+    CONF_PAYLOAD,
     CONF_TYPE,
     Platform,
 )
@@ -46,7 +47,6 @@ from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from .const import (
     CONF_INVERT,
     CONF_KNX_EXPOSE,
-    CONF_PAYLOAD,
     CONF_PAYLOAD_LENGTH,
     CONF_RESET_AFTER,
     CONF_RESPOND_TO_READ,

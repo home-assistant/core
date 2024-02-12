@@ -27,7 +27,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class MeaterSensorEntityDescriptionMixin:
     """Mixin for MeaterSensorEntityDescription."""
 
@@ -35,7 +35,7 @@ class MeaterSensorEntityDescriptionMixin:
     value: Callable[[MeaterProbe], datetime | float | str | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class MeaterSensorEntityDescription(
     SensorEntityDescription, MeaterSensorEntityDescriptionMixin
 ):

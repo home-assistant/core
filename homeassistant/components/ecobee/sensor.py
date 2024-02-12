@@ -25,14 +25,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 
-@dataclass
+@dataclass(frozen=True)
 class EcobeeSensorEntityDescriptionMixin:
     """Represent the required ecobee entity description attributes."""
 
     runtime_key: str | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class EcobeeSensorEntityDescription(
     SensorEntityDescription, EcobeeSensorEntityDescriptionMixin
 ):

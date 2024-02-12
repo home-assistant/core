@@ -17,7 +17,12 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
-from tests.common import MockConfigEntry, flush_store
+from tests.common import (
+    MockConfigEntry,
+    flush_store,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+)
 
 
 @pytest.fixture
@@ -1403,7 +1408,7 @@ async def test_cleanup_device_registry_removes_expired_orphaned_devices(
 
 async def test_cleanup_startup(hass: HomeAssistant) -> None:
     """Test we run a cleanup on startup."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     with patch(
         "homeassistant.helpers.device_registry.Debouncer.async_call"
@@ -2012,3 +2017,17 @@ async def test_loading_invalid_configuration_url_from_storage(
         identifiers={("serial", "123456ABCDEF")},
     )
     assert entry.configuration_url == "invalid"
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(dr)
+
+
+@pytest.mark.parametrize(("enum"), list(dr.DeviceEntryDisabler))
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: dr.DeviceEntryDisabler,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(caplog, dr, enum, "DISABLED_", "2025.1")

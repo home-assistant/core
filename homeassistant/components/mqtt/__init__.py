@@ -247,7 +247,6 @@ async def async_check_config_schema(
                     schema(config)
                 except vol.Invalid as exc:
                     integration = await async_get_integration(hass, DOMAIN)
-                    # pylint: disable-next=protected-access
                     message = conf_util.format_schema_error(
                         hass, exc, domain, config, integration.documentation
                     )
@@ -545,7 +544,7 @@ async def websocket_subscribe(
         )
 
     # Perform UTF-8 decoding directly in callback routine
-    qos: int = msg["qos"] if "qos" in msg else DEFAULT_QOS
+    qos: int = msg.get("qos", DEFAULT_QOS)
     connection.subscriptions[msg["id"]] = await async_subscribe(
         hass, msg["topic"], forward_messages, encoding=None, qos=qos
     )

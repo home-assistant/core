@@ -40,7 +40,6 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State
-from homeassistant.helpers.entity import EntityInfo
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
@@ -296,7 +295,7 @@ class Events(Base):
             event_data=None,
             origin_idx=EVENT_ORIGIN_TO_IDX.get(event.origin),
             time_fired=None,
-            time_fired_ts=dt_util.utc_to_timestamp(event.time_fired),
+            time_fired_ts=event.time_fired_timestamp,
             context_id=None,
             context_id_bin=ulid_to_bytes_or_none(event.context.id),
             context_user_id=None,
@@ -495,16 +494,16 @@ class States(Base):
         # None state means the state was removed from the state machine
         if state is None:
             dbstate.state = ""
-            dbstate.last_updated_ts = dt_util.utc_to_timestamp(event.time_fired)
+            dbstate.last_updated_ts = event.time_fired_timestamp
             dbstate.last_changed_ts = None
             return dbstate
 
         dbstate.state = state.state
-        dbstate.last_updated_ts = dt_util.utc_to_timestamp(state.last_updated)
+        dbstate.last_updated_ts = state.last_updated_timestamp
         if state.last_updated == state.last_changed:
             dbstate.last_changed_ts = None
         else:
-            dbstate.last_changed_ts = dt_util.utc_to_timestamp(state.last_changed)
+            dbstate.last_changed_ts = state.last_changed_timestamp
 
         return dbstate
 
@@ -563,7 +562,6 @@ class StateAttributes(Base):
     @staticmethod
     def shared_attrs_bytes_from_event(
         event: Event,
-        entity_sources: dict[str, EntityInfo],
         dialect: SupportedDialect | None,
     ) -> bytes:
         """Create shared_attrs from a state_changed event."""
@@ -571,9 +569,13 @@ class StateAttributes(Base):
         # None state means the state was removed from the state machine
         if state is None:
             return b"{}"
-        exclude_attrs = set(ALL_DOMAIN_EXCLUDE_ATTRS)
         if state_info := state.state_info:
-            exclude_attrs |= state_info["unrecorded_attributes"]
+            exclude_attrs = {
+                *ALL_DOMAIN_EXCLUDE_ATTRS,
+                *state_info["unrecorded_attributes"],
+            }
+        else:
+            exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
         bytes_result = encoder(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}

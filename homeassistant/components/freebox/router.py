@@ -1,7 +1,7 @@
 """Represent the Freebox router and its devices and sensors."""
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from datetime import datetime
 import json
@@ -38,7 +38,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def is_json(json_str):
+def is_json(json_str: str) -> bool:
     """Validate if a String is a JSON value or not."""
     try:
         json.loads(json_str)
@@ -95,7 +95,7 @@ class FreeboxRouter:
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
-        self.listeners: list[dict[str, Any]] = []
+        self.listeners: list[Callable[[], None]] = []
 
     async def update_all(self, now: datetime | None = None) -> None:
         """Update all Freebox platforms."""

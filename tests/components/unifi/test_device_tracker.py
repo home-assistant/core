@@ -930,6 +930,7 @@ async def test_restoring_client(
 
     config_entry = config_entries.ConfigEntry(
         version=1,
+        minor_version=1,
         domain=UNIFI_DOMAIN,
         title="Mock Title",
         data=ENTRY_CONFIG,
