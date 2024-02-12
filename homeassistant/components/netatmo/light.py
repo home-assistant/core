@@ -68,6 +68,9 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
     _attr_is_on = False
     _attr_name = None
     _attr_configuration_url = CONF_URL_SECURITY
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_has_entity_name = True
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo Presence camera light."""
@@ -149,10 +152,11 @@ class NetatmoLight(NetatmoModuleEntity, LightEntity):
         super().__init__(netatmo_device)
         self._attr_unique_id = f"{self.device.entity_id}-light"
 
-        self._attr_supported_color_modes: set[str] = set()
-
-        if not self._attr_supported_color_modes and self.device.brightness is not None:
-            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
+        if self.device.brightness is not None:
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._attr_color_mode = ColorMode.ONOFF
+        self._attr_supported_color_modes = {self._attr_color_mode}
 
         self._signal_name = f"{HOME}-{self.home.entity_id}"
         self._publishers.extend(
