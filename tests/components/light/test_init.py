@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
-from tests.common import MockUser, async_mock_service
+from tests.common import MockEntityPlatform, MockUser, async_mock_service
 
 orig_Profiles = light.Profiles
 
@@ -2762,26 +2762,36 @@ def test_report_invalid_color_mode(
 
 
 @pytest.mark.parametrize(
-    ("color_mode", "supported_color_modes", "warning_expected"),
+    ("color_mode", "supported_color_modes", "platform_name", "warning_expected"),
     [
         (
             light.ColorMode.ONOFF,
             {light.ColorMode.ONOFF},
+            "test",
             False,
         ),
         (
             light.ColorMode.ONOFF,
             {light.ColorMode.ONOFF, light.ColorMode.BRIGHTNESS},
+            "test",
             True,
         ),
         (
             light.ColorMode.HS,
             {light.ColorMode.HS, light.ColorMode.BRIGHTNESS},
+            "test",
             True,
         ),
         (
             light.ColorMode.HS,
             {light.ColorMode.COLOR_TEMP, light.ColorMode.HS},
+            "test",
+            False,
+        ),
+        (
+            light.ColorMode.ONOFF,
+            {light.ColorMode.ONOFF, light.ColorMode.BRIGHTNESS},
+            "zha",  # We don't log issues for zha
             False,
         ),
     ],
@@ -2791,6 +2801,7 @@ def test_report_invalid_color_modes(
     caplog: pytest.LogCaptureFixture,
     color_mode: str,
     supported_color_modes: set[str],
+    platform_name: str,
     warning_expected: bool,
 ) -> None:
     """Test a light setting an invalid color mode."""
@@ -2800,6 +2811,7 @@ def test_report_invalid_color_modes(
         _attr_is_on = True
         _attr_supported_features = light.LightEntityFeature.EFFECT
         _attr_supported_color_modes = supported_color_modes
+        platform = MockEntityPlatform(hass, platform_name=platform_name)
 
     entity = MockLightEntityEntity()
     entity._async_calculate_state()
