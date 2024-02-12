@@ -152,20 +152,24 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
 
         raw_value = response
 
-        if self._value_template is not None:
+        if response is not None and self._value_template is not None:
             response = self._value_template.async_render_with_possible_json_value(
                 response, False
             )
 
         try:
-            self._attr_is_on = bool(int(response))
+            if response is not None:
+                self._attr_is_on = bool(int(response))
+            else:
+                self._attr_is_on = False
+                return
         except ValueError:
             self._attr_is_on = {
                 "true": True,
                 "on": True,
                 "open": True,
                 "yes": True,
-            }.get(response.lower(), False)
+            }.get(str(response).lower(), False)
 
         self._process_manual_data(raw_value)
         self.async_write_ha_state()
