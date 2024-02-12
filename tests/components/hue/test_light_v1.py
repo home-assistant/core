@@ -174,13 +174,15 @@ LIGHT_GAMUT = color.GamutType(
 LIGHT_GAMUT_TYPE = "A"
 
 
-async def setup_bridge(hass, mock_bridge_v1):
+async def setup_bridge(hass: HomeAssistant, mock_bridge_v1):
     """Load the Hue light platform with the provided bridge."""
     hass.config.components.add(hue.DOMAIN)
     config_entry = create_config_entry()
+    hass.config_entries.async_update_entry(
+        config_entry, options={CONF_ALLOW_HUE_GROUPS: True}
+    )
     config_entry.add_to_hass(hass)
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
-    config_entry.options = {CONF_ALLOW_HUE_GROUPS: True}
     mock_bridge_v1.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge_v1}
     await hass.config_entries.async_forward_entry_setup(config_entry, "light")
