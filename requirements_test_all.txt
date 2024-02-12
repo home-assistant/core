@@ -1073,7 +1073,7 @@ mutesync==0.0.1
 mypermobil==0.1.8
 
 # homeassistant.components.myuplink
-myuplink==0.1.1
+myuplink==0.2.1
 
 # homeassistant.components.keenetic_ndms2
 ndms2-client==0.1.2
@@ -1770,7 +1770,7 @@ pytomorrowio==0.3.6
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
-pytraccar==2.0.0
+pytraccar==2.1.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
@@ -1863,7 +1863,7 @@ renson-endura-delta==1.7.1
 reolink-aio==0.8.7
 
 # homeassistant.components.rflink
-rflink==0.0.65
+rflink==0.0.66
 
 # homeassistant.components.ring
 ring-doorbell[listen]==0.8.7
