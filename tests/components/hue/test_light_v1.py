@@ -178,10 +178,10 @@ async def setup_bridge(hass: HomeAssistant, mock_bridge_v1):
     """Load the Hue light platform with the provided bridge."""
     hass.config.components.add(hue.DOMAIN)
     config_entry = create_config_entry()
+    config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         config_entry, options={CONF_ALLOW_HUE_GROUPS: True}
     )
-    config_entry.add_to_hass(hass)
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_bridge_v1.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge_v1}
