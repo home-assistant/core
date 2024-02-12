@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import logging
 import math
 import statistics
+import time
 from typing import Any, cast
 
 import voluptuous as vol
@@ -296,7 +297,10 @@ class StatisticsSensor(SensorEntity):
         )
         self._state_characteristic: str = state_characteristic
         self._samples_max_buffer_size: int | None = samples_max_buffer_size
-        self._samples_max_age: timedelta | None = samples_max_age
+        if samples_max_age:
+            self._samples_max_age: float | None = samples_max_age.total_seconds()
+        else:
+            self._samples_max_age = None
         self._precision: int = precision
         self._percentile: int = percentile
         self._value: StateType | datetime = None
@@ -304,7 +308,7 @@ class StatisticsSensor(SensorEntity):
         self._available: bool = False
 
         self.states: deque[float | bool] = deque(maxlen=self._samples_max_buffer_size)
-        self.ages: deque[datetime] = deque(maxlen=self._samples_max_buffer_size)
+        self.ages: deque[float] = deque(maxlen=self._samples_max_buffer_size)
         self.attributes: dict[str, StateType] = {}
 
         self._state_characteristic_fn: Callable[
@@ -359,7 +363,7 @@ class StatisticsSensor(SensorEntity):
                 self.states.append(new_state.state == "on")
             else:
                 self.states.append(float(new_state.state))
-            self.ages.append(new_state.last_updated)
+            self.ages.append(new_state.last_updated_timestamp)
             self.attributes[STAT_SOURCE_VALUE_VALID] = True
         except ValueError:
             self.attributes[STAT_SOURCE_VALUE_VALID] = False
@@ -375,25 +379,26 @@ class StatisticsSensor(SensorEntity):
     def _derive_unit_of_measurement(self, new_state: State) -> str | None:
         base_unit: str | None = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         unit: str | None
-        if self.is_binary and self._state_characteristic in STATS_BINARY_PERCENTAGE:
+        state_characteristic = self._state_characteristic
+        if self.is_binary and state_characteristic in STATS_BINARY_PERCENTAGE:
             unit = PERCENTAGE
         elif not base_unit:
             unit = None
-        elif self._state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
+        elif state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
             unit = base_unit
-        elif self._state_characteristic in STATS_NOT_A_NUMBER:
+        elif state_characteristic in STATS_NOT_A_NUMBER:
             unit = None
-        elif self._state_characteristic in (
+        elif state_characteristic in (
             STAT_COUNT,
             STAT_COUNT_BINARY_ON,
             STAT_COUNT_BINARY_OFF,
         ):
             unit = None
-        elif self._state_characteristic == STAT_VARIANCE:
+        elif state_characteristic == STAT_VARIANCE:
             unit = base_unit + "²"
-        elif self._state_characteristic == STAT_CHANGE_SAMPLE:
+        elif state_characteristic == STAT_CHANGE_SAMPLE:
             unit = base_unit + "/sample"
-        elif self._state_characteristic == STAT_CHANGE_SECOND:
+        elif state_characteristic == STAT_CHANGE_SECOND:
             unit = base_unit + "/s"
         return unit
 
@@ -449,28 +454,28 @@ class StatisticsSensor(SensorEntity):
             key: value for key, value in self.attributes.items() if value is not None
         }
 
-    def _purge_old_states(self, max_age: timedelta) -> None:
+    def _purge_old_states(self, max_age: float) -> None:
         """Remove states which are older than a given age."""
-        now = dt_util.utcnow()
+        now_timestamp = time.time()
 
         _LOGGER.debug(
             "%s: purging records older then %s(%s)",
             self.entity_id,
-            dt_util.as_local(now - max_age),
+            dt_util.as_local(dt_util.utc_from_timestamp(now_timestamp - max_age)),
             self._samples_max_age,
         )
 
-        while self.ages and (now - self.ages[0]) > max_age:
+        while self.ages and (now_timestamp - self.ages[0]) > max_age:
             _LOGGER.debug(
                 "%s: purging record with datetime %s(%s)",
                 self.entity_id,
-                dt_util.as_local(self.ages[0]),
-                (now - self.ages[0]),
+                dt_util.as_local(dt_util.utc_from_timestamp(self.ages[0])),
+                (now_timestamp - self.ages[0]),
             )
             self.ages.popleft()
             self.states.popleft()
 
-    def _next_to_purge_timestamp(self) -> datetime | None:
+    def _next_to_purge_timestamp(self) -> float | None:
         """Find the timestamp when the next purge would occur."""
         if self.ages and self._samples_max_age:
             # Take the oldest entry from the ages list and add the configured max_age.
@@ -503,7 +508,7 @@ class StatisticsSensor(SensorEntity):
                 self._update_listener = None
 
             self._update_listener = async_track_point_in_utc_time(
-                self.hass, _scheduled_update, timestamp
+                self.hass, _scheduled_update, dt_util.utc_from_timestamp(timestamp)
             )
 
     def _fetch_states_from_database(self) -> list[State]:
@@ -512,7 +517,9 @@ class StatisticsSensor(SensorEntity):
         lower_entity_id = self._source_entity_id.lower()
         if self._samples_max_age is not None:
             start_date = (
-                dt_util.utcnow() - self._samples_max_age - timedelta(microseconds=1)
+                dt_util.utcnow()
+                - timedelta(seconds=self._samples_max_age)
+                - timedelta(microseconds=1)
             )
             _LOGGER.debug(
                 "%s: retrieve records not older then %s",
@@ -559,10 +566,10 @@ class StatisticsSensor(SensorEntity):
             )
 
         if self._samples_max_age is not None:
+            ages = self.ages
             if len(self.states) >= 1:
                 self.attributes[STAT_AGE_COVERAGE_RATIO] = round(
-                    (self.ages[-1] - self.ages[0]).total_seconds()
-                    / self._samples_max_age.total_seconds(),
+                    (ages[-1] - ages[0]) / self._samples_max_age,
                     2,
                 )
             else:
@@ -598,27 +605,22 @@ class StatisticsSensor(SensorEntity):
     # Statistics for numeric sensor
 
     def _stat_average_linear(self) -> StateType:
-        if len(self.states) >= 2:
-            area: float = 0
-            for i in range(1, len(self.states)):
-                area += (
-                    0.5
-                    * (self.states[i] + self.states[i - 1])
-                    * (self.ages[i] - self.ages[i - 1]).total_seconds()
-                )
-            age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
+        if (states := self.states) and len(states) >= 2:
+            ages = self.ages
+            area = 0.0
+            for i in range(1, len(states)):
+                area += 0.5 * (states[i] + states[i - 1]) * (ages[i] - ages[i - 1])
+            age_range_seconds = ages[-1] - ages[0]
             return area / age_range_seconds
         return None
 
     def _stat_average_step(self) -> StateType:
-        if len(self.states) >= 2:
-            area: float = 0
-            for i in range(1, len(self.states)):
-                area += (
-                    self.states[i - 1]
-                    * (self.ages[i] - self.ages[i - 1]).total_seconds()
-                )
-            age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
+        if (states := self.states) and len(states) >= 2:
+            ages = self.ages
+            area = 0.0
+            for i in range(1, len(states)):
+                area += states[i - 1] * (ages[i] - ages[i - 1])
+            age_range_seconds = ages[-1] - ages[0]
             return area / age_range_seconds
         return None
 
@@ -626,43 +628,44 @@ class StatisticsSensor(SensorEntity):
         return self._stat_mean()
 
     def _stat_change(self) -> StateType:
-        if len(self.states) > 0:
-            return self.states[-1] - self.states[0]
+        if states := self.states:
+            return states[-1] - states[0]
         return None
 
     def _stat_change_sample(self) -> StateType:
-        if len(self.states) > 1:
-            return (self.states[-1] - self.states[0]) / (len(self.states) - 1)
+        if (states := self.states) and len(states) > 1:
+            return (states[-1] - states[0]) / (len(states) - 1)
         return None
 
     def _stat_change_second(self) -> StateType:
-        if len(self.states) > 1:
-            age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
+        if (states := self.states) and len(states) > 1:
+            ages = self.ages
+            age_range_seconds = ages[-1] - ages[0]
             if age_range_seconds > 0:
-                return (self.states[-1] - self.states[0]) / age_range_seconds
+                return (states[-1] - states[0]) / age_range_seconds
         return None
 
     def _stat_count(self) -> StateType:
         return len(self.states)
 
     def _stat_datetime_newest(self) -> datetime | None:
-        if len(self.states) > 0:
-            return self.ages[-1]
+        if ages := self.ages:
+            return dt_util.utc_from_timestamp(ages[-1])
         return None
 
     def _stat_datetime_oldest(self) -> datetime | None:
-        if len(self.states) > 0:
-            return self.ages[0]
+        if ages := self.ages:
+            return dt_util.utc_from_timestamp(ages[0])
         return None
 
     def _stat_datetime_value_max(self) -> datetime | None:
-        if len(self.states) > 0:
-            return self.ages[self.states.index(max(self.states))]
+        if states := self.states:
+            return dt_util.utc_from_timestamp(self.ages[self.states.index(max(states))])
         return None
 
     def _stat_datetime_value_min(self) -> datetime | None:
-        if len(self.states) > 0:
-            return self.ages[self.states.index(min(self.states))]
+        if states := self.states:
+            return dt_util.utc_from_timestamp(self.ages[self.states.index(min(states))])
         return None
 
     def _stat_distance_95_percent_of_values(self) -> StateType:
@@ -676,61 +679,59 @@ class StatisticsSensor(SensorEntity):
         return None
 
     def _stat_distance_absolute(self) -> StateType:
-        if len(self.states) > 0:
-            return max(self.states) - min(self.states)
+        if states := self.states:
+            return max(states) - min(states)
         return None
 
     def _stat_mean(self) -> StateType:
-        if len(self.states) > 0:
-            return statistics.mean(self.states)
+        if states := self.states:
+            return statistics.mean(states)
         return None
 
     def _stat_mean_circular(self) -> StateType:
-        if len(self.states) > 0:
-            sin_sum = sum(math.sin(math.radians(x)) for x in self.states)
-            cos_sum = sum(math.cos(math.radians(x)) for x in self.states)
+        if states := self.states:
+            sin_sum = sum(math.sin(math.radians(x)) for x in states)
+            cos_sum = sum(math.cos(math.radians(x)) for x in states)
             return (math.degrees(math.atan2(sin_sum, cos_sum)) + 360) % 360
         return None
 
     def _stat_median(self) -> StateType:
-        if len(self.states) > 0:
-            return statistics.median(self.states)
+        if states := self.states:
+            return statistics.median(states)
         return None
 
     def _stat_noisiness(self) -> StateType:
-        if len(self.states) >= 2:
-            return cast(float, self._stat_sum_differences()) / (len(self.states) - 1)
+        if (states := self.states) and len(states) >= 2:
+            return cast(float, self._stat_sum_differences()) / (len(states) - 1)
         return None
 
     def _stat_percentile(self) -> StateType:
-        if len(self.states) >= 2:
-            percentiles = statistics.quantiles(self.states, n=100, method="exclusive")
+        if (states := self.states) and len(states) >= 2:
+            percentiles = statistics.quantiles(states, n=100, method="exclusive")
             return percentiles[self._percentile - 1]
         return None
 
     def _stat_standard_deviation(self) -> StateType:
-        if len(self.states) >= 2:
-            return statistics.stdev(self.states)
+        if (states := self.states) and len(states) >= 2:
+            return statistics.stdev(states)
         return None
 
     def _stat_sum(self) -> StateType:
-        if len(self.states) > 0:
-            return sum(self.states)
+        if states := self.states:
+            return sum(states)
         return None
 
     def _stat_sum_differences(self) -> StateType:
-        if len(self.states) >= 2:
-            diff_sum = sum(
-                abs(j - i) for i, j in zip(list(self.states), list(self.states)[1:])
-            )
+        if (states := self.states) and len(states) >= 2:
+            diff_sum = sum(abs(j - i) for i, j in zip(list(states), list(states)[1:]))
             return diff_sum
         return None
 
     def _stat_sum_differences_nonnegative(self) -> StateType:
-        if len(self.states) >= 2:
+        if (states := self.states) and len(states) >= 2:
             diff_sum_nn = sum(
                 (j - i if j >= i else j - 0)
-                for i, j in zip(list(self.states), list(self.states)[1:])
+                for i, j in zip(list(states), list(states)[1:])
             )
             return diff_sum_nn
         return None
@@ -739,29 +740,30 @@ class StatisticsSensor(SensorEntity):
         return self._stat_sum()
 
     def _stat_value_max(self) -> StateType:
-        if len(self.states) > 0:
-            return max(self.states)
+        if states := self.states:
+            return max(states)
         return None
 
     def _stat_value_min(self) -> StateType:
-        if len(self.states) > 0:
-            return min(self.states)
+        if states := self.states:
+            return min(states)
         return None
 
     def _stat_variance(self) -> StateType:
-        if len(self.states) >= 2:
-            return statistics.variance(self.states)
+        if (states := self.states) and len(states) >= 2:
+            return statistics.variance(states)
         return None
 
     # Statistics for binary sensor
 
     def _stat_binary_average_step(self) -> StateType:
-        if len(self.states) >= 2:
+        if (states := self.states) and len(states) >= 2:
+            ages = self.ages
             on_seconds: float = 0
-            for i in range(1, len(self.states)):
-                if self.states[i - 1] is True:
-                    on_seconds += (self.ages[i] - self.ages[i - 1]).total_seconds()
-            age_range_seconds = (self.ages[-1] - self.ages[0]).total_seconds()
+            for i in range(1, len(states)):
+                if states[i - 1] is True:
+                    on_seconds += ages[i] - ages[i - 1]
+            age_range_seconds = ages[-1] - ages[0]
             return 100 / age_range_seconds * on_seconds
         return None
 
@@ -784,6 +786,6 @@ class StatisticsSensor(SensorEntity):
         return self._stat_datetime_oldest()
 
     def _stat_binary_mean(self) -> StateType:
-        if len(self.states) > 0:
-            return 100.0 / len(self.states) * self.states.count(True)
+        if states := self.states:
+            return 100.0 / len(states) * states.count(True)
         return None
