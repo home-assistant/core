@@ -1,6 +1,5 @@
 """Test data update coordinator for Linear Garage Door."""
 
-import asyncio
 from unittest.mock import patch
 
 from linear_garage_door.errors import InvalidLoginError
