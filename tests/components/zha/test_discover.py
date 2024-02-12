@@ -505,13 +505,16 @@ async def test_quirks_v2_entity_discovery(
         model="TRADFRI remote control",
     )
 
-    add_to_registry_v2(
-        "Ikea of Sweden", "TRADFRI remote control", zigpy.quirks._DEVICE_REGISTRY
-    ).replaces(PowerConfig1CRCluster).replaces(
-        ScenesCluster, cluster_type=ClusterType.Client
-    ).number(
-        zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
-        zigpy.zcl.clusters.general.OnOff.cluster_id,
+    (
+        add_to_registry_v2(
+            "Ikea of Sweden", "TRADFRI remote control", zigpy.quirks._DEVICE_REGISTRY
+        )
+        .replaces(PowerConfig1CRCluster)
+        .replaces(ScenesCluster, cluster_type=ClusterType.Client)
+        .number(
+            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+            zigpy.zcl.clusters.general.OnOff.cluster_id,
+        )
     )
 
     zigpy_device = zigpy.quirks._DEVICE_REGISTRY.get_device(zigpy_device)
@@ -577,17 +580,29 @@ async def test_quirks_v2_entity_discovery_e1_curtain(
         Locking = 0x02
         Unlocking = 0x03
 
-    # fmt: off
-    add_to_registry_v2("LUMI", "lumi.curtain.agl006") \
-        .adds(LocalIlluminanceMeasurementCluster) \
-        .replaces(BasicCluster) \
-        .replaces(XiaomiPowerConfigurationPercent) \
-        .replaces(WindowCoveringE1) \
-        .replaces(XiaomiAqaraDriverE1) \
-        .removes(XiaomiAqaraDriverE1, cluster_type=ClusterType.Client) \
-        .enum(BasicCluster.AttributeDefs.power_source.name, BasicCluster.PowerSource, BasicCluster.cluster_id, entity_platform=Platform.SENSOR, entity_type=EntityType.DIAGNOSTIC) \
-        .enum("hooks_state", AqaraE1HookState, XiaomiAqaraDriverE1.cluster_id, entity_platform=Platform.SENSOR, entity_type=EntityType.DIAGNOSTIC)
-    # fmt: on
+    (
+        add_to_registry_v2("LUMI", "lumi.curtain.agl006")
+        .adds(LocalIlluminanceMeasurementCluster)
+        .replaces(BasicCluster)
+        .replaces(XiaomiPowerConfigurationPercent)
+        .replaces(WindowCoveringE1)
+        .replaces(XiaomiAqaraDriverE1)
+        .removes(XiaomiAqaraDriverE1, cluster_type=ClusterType.Client)
+        .enum(
+            BasicCluster.AttributeDefs.power_source.name,
+            BasicCluster.PowerSource,
+            BasicCluster.cluster_id,
+            entity_platform=Platform.SENSOR,
+            entity_type=EntityType.DIAGNOSTIC,
+        )
+        .enum(
+            "hooks_state",
+            AqaraE1HookState,
+            XiaomiAqaraDriverE1.cluster_id,
+            entity_platform=Platform.SENSOR,
+            entity_type=EntityType.DIAGNOSTIC,
+        )
+    )
 
     aqara_E1_device = zigpy.quirks._DEVICE_REGISTRY.get_device(aqara_E1_device)
 
