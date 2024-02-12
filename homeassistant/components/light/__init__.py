@@ -1196,20 +1196,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data[ATTR_BRIGHTNESS] = None
         elif supported_features_value & SUPPORT_BRIGHTNESS:
             # Backwards compatibility for ambiguous / incomplete states
-            # Warning added in 2024.3, remove in 2025.3
-            if not self.__color_mode_reported and self.__should_report_light_issue():
-                self.__color_mode_reported = True
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    (
-                        "%s (%s) is setting deprecated feature flag SUPPORT_BRIGHTNESS,"
-                        " this will stop working in Home Assistant "
-                        "Core 2025.3, please %s"
-                    ),
-                    self.entity_id,
-                    type(self),
-                    report_issue,
-                )
+            # Warning is printed by supported_features_compat, remove in 2025.1
             if _is_on:
                 data[ATTR_BRIGHTNESS] = self.brightness
             else:
@@ -1230,20 +1217,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data[ATTR_COLOR_TEMP] = None
         elif supported_features_value & SUPPORT_COLOR_TEMP:
             # Backwards compatibility
-            # Warning added in 2024.3, remove in 2025.3
-            if not self.__color_mode_reported and self.__should_report_light_issue():
-                self.__color_mode_reported = True
-                report_issue = self._suggest_report_issue()
-                _LOGGER.warning(
-                    (
-                        "%s (%s) is setting deprecated feature flag SUPPORT_COLOR_TEMP,"
-                        " this will stop working in Home Assistant "
-                        "Core 2025.3, please %s"
-                    ),
-                    self.entity_id,
-                    type(self),
-                    report_issue,
-                )
+            # Warning is printed by supported_features_compat, remove in 2025.1
             if _is_on:
                 color_temp_kelvin = self.color_temp_kelvin
                 data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
