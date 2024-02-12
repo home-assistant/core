@@ -484,6 +484,7 @@ omit =
     homeassistant/components/gpsd/sensor.py
     homeassistant/components/greenwave/light.py
     homeassistant/components/growatt_server/__init__.py
+    homeassistant/components/growatt_server/const.py
     homeassistant/components/growatt_server/sensor.py
     homeassistant/components/growatt_server/sensor_types/*
     homeassistant/components/gstreamer/media_player.py

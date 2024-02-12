@@ -23,7 +23,6 @@ from homeassistant.components.homeassistant.exposed_entities import (
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import (
-    CALLBACK_TYPE,
     CoreState,
     Event,
     HomeAssistant,
@@ -145,7 +144,6 @@ class CloudGoogleConfig(AbstractConfig):
         self._prefs = prefs
         self._cloud = cloud
         self._sync_entities_lock = asyncio.Lock()
-        self._on_deinitialize: list[CALLBACK_TYPE] = []
 
     @property
     def enabled(self) -> bool:
@@ -175,8 +173,12 @@ class CloudGoogleConfig(AbstractConfig):
         """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
         return self._prefs.google_local_webhook_id
 
-    def get_local_agent_user_id(self, webhook_id: Any) -> str:
-        """Return the user ID to be used for actions received via the local SDK."""
+    def get_local_user_id(self, webhook_id: Any) -> str:
+        """Map webhook ID to a Home Assistant user ID.
+
+        Any action inititated by Google Assistant via the local SDK will be attributed
+        to the returned user ID.
+        """
         return self._user
 
     @property
@@ -282,13 +284,6 @@ class CloudGoogleConfig(AbstractConfig):
                 self._handle_device_registry_updated,
             )
         )
-
-    @callback
-    def async_deinitialize(self) -> None:
-        """Remove listeners."""
-        _LOGGER.debug("async_deinitialize")
-        while self._on_deinitialize:
-            self._on_deinitialize.pop()()
 
     def should_expose(self, state: State) -> bool:
         """If a state object should be exposed."""
