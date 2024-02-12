@@ -64,9 +64,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, connection_options, _LOGGER, serial_number
     )
 
-    hass_data = hass.data.setdefault(DOMAIN, {}).setdefault(entry.entry_id, {})
-    hass_data[REMOOTIO_CLIENT] = remootio_client
-    hass_data[EVENT_HANDLER_CALLBACK] = handle_event
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        REMOOTIO_CLIENT: remootio_client,
+        EVENT_HANDLER_CALLBACK: handle_event,
+    }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
