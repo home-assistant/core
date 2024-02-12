@@ -1,16 +1,19 @@
 """Tests for switch platform."""
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerStates, RestrictedReasons
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
@@ -81,3 +84,28 @@ async def test_lawn_mower_commands(
         str(exc_info.value)
         == "Command couldn't be sent to the command queue: Test error"
     )
+
+
+async def test_switch(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test states of the switch."""
+    with patch(
+        "homeassistant.components.husqvarna_automower.PLATFORMS",
+        [Platform.SWITCH],
+    ):
+        await setup_integration(hass, mock_config_entry)
+        entity_entries = er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+
+        assert entity_entries
+        for entity_entry in entity_entries:
+            assert hass.states.get(entity_entry.entity_id) == snapshot(
+                name=f"{entity_entry.entity_id}-state"
+            )
+            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
