@@ -213,7 +213,9 @@ async def test_form_no_data(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("mock_hunterdouglas_full")
 @pytest.mark.parametrize("api_version", [1, 2, 3])
 async def test_form_unknown_exception(
-    hass: HomeAssistant, api_version: int, mock_setup_entry: MagicMock
+    hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
+    api_version: int,
 ) -> None:
     """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(
