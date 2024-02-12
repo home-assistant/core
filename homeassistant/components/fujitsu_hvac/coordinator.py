@@ -34,19 +34,20 @@ class FujitsuHVACCoordinator(DataUpdateCoordinator):
         try:
             async with timeout(API_TIMEOUT):
                 devices = await self.api.async_get_devices()
+        except AylaAuthError as e:
+            raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
 
-            if len(listening_entities) == 0:
-                devices = list(filter(lambda x: isinstance(x, FujitsuHVAC), devices))
-            else:
-                devices = list(
-                    filter(
-                        lambda x: x.device_serial_number in listening_entities, devices
-                    )
-                )
+        if len(listening_entities) == 0:
+            devices = list(filter(lambda x: isinstance(x, FujitsuHVAC), devices))
+        else:
+            devices = list(
+                filter(lambda x: x.device_serial_number in listening_entities, devices)
+            )
 
+        try:
             async with timeout(API_TIMEOUT):
                 await gather(*[dev.async_update() for dev in devices])
         except AylaAuthError as e:
-            raise ConfigEntryAuthFailed("Credentuials expired for Ayla IoT API") from e
+            raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
 
         return {d.device_serial_number: d for d in devices}
