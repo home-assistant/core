@@ -1863,7 +1863,7 @@ renson-endura-delta==1.7.1
 reolink-aio==0.8.7
 
 # homeassistant.components.rflink
-rflink==0.0.65
+rflink==0.0.66
 
 # homeassistant.components.ring
 ring-doorbell[listen]==0.8.7
