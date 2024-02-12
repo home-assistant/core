@@ -1073,7 +1073,7 @@ mutesync==0.0.1
 mypermobil==0.1.8
 
 # homeassistant.components.myuplink
-myuplink==0.1.1
+myuplink==0.2
 
 # homeassistant.components.keenetic_ndms2
 ndms2-client==0.1.2
