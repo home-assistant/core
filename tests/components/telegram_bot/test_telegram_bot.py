@@ -1,7 +1,17 @@
 """Tests for the telegram_bot component."""
-from homeassistant.components.telegram_bot import DOMAIN, SERVICE_SEND_MESSAGE
+from datetime import datetime
+from unittest.mock import patch
+
+from telegram import Chat, Message, Update
+
+from homeassistant.components.telegram_bot import (
+    CONF_ALLOWED_CHAT_IDS,
+    DOMAIN,
+    SERVICE_SEND_MESSAGE,
+)
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
 from tests.typing import ClientSessionGenerator
@@ -93,6 +103,50 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 
     assert len(events) == 1
     assert events[0].data["data"] == update_callback_query["callback_query"]["data"]
+
+
+async def test_polling_platform_message_text_update(
+    hass: HomeAssistant, config_polling, update_message_text
+) -> None:
+    """Provide the `BaseTelegramBotEntity.update_handler` with an `Update` and assert fired `telegram_text` event."""
+    events = async_capture_events(hass, "telegram_text")
+
+    with patch(
+        "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
+    ) as application_builder_class, patch(
+        "homeassistant.components.telegram_bot.polling.PollBot.stop_polling"
+    ):
+        await async_setup_component(
+            hass,
+            DOMAIN,
+            config_polling,
+        )
+        await hass.async_block_till_done()
+        # Set up the integration with the polling platform inside the patch context manager.
+        application = (
+            application_builder_class.return_value.bot.return_value.build.return_value
+        )
+        # Then call the callback and assert events fired.
+        handler = application.add_handler.call_args[0][0]
+        handle_update_callback = handler.callback
+
+        update = Update(
+            123456,
+            message=Message(
+                123456,
+                datetime.now(),
+                Chat(config_polling[DOMAIN][0][CONF_ALLOWED_CHAT_IDS][0], "PRIVATE"),
+                text=update_message_text["message"]["text"],
+            ),
+        )
+        # handle_update_callback == BaseTelegramBotEntity.update_handler
+        handle_update_callback(update, None)
+
+    # Make sure event has fired
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data["text"] == update_message_text["message"]["text"]
 
 
 async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_text_event(
