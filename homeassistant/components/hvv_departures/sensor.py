@@ -42,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
@@ -50,7 +50,7 @@ async def async_setup_entry(
     session = aiohttp_client.async_get_clientsession(hass)
 
     sensor = HVVDepartureSensor(hass, config_entry, session, hub)
-    async_add_devices([sensor], True)
+    async_add_entities([sensor], True)
 
 
 class HVVDepartureSensor(SensorEntity):

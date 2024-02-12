@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Generator, Mapping, Sequence
-from contextlib import contextmanager
+from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
+from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 import functools as ft
@@ -153,15 +153,17 @@ def get_test_config_dir(*add_path):
     return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
 
 
-def get_test_home_assistant():
+@contextmanager
+def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     """Return a Home Assistant object pointing at test config directory."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    hass = loop.run_until_complete(async_test_home_assistant(loop))
+    context_manager = async_test_home_assistant(loop)
+    hass = loop.run_until_complete(context_manager.__aenter__())
 
     loop_stop_event = threading.Event()
 
-    def run_loop():
+    def run_loop() -> None:
         """Run event loop."""
 
         loop._thread_ident = threading.get_ident()
@@ -171,25 +173,30 @@ def get_test_home_assistant():
     orig_stop = hass.stop
     hass._stopped = Mock(set=loop.stop)
 
-    def start_hass(*mocks):
+    def start_hass(*mocks: Any) -> None:
         """Start hass."""
         asyncio.run_coroutine_threadsafe(hass.async_start(), loop).result()
 
-    def stop_hass():
+    def stop_hass() -> None:
         """Stop hass."""
         orig_stop()
         loop_stop_event.wait()
-        loop.close()
 
     hass.start = start_hass
     hass.stop = stop_hass
 
     threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
 
-    return hass
+    yield hass
+    loop.run_until_complete(context_manager.__aexit__(None, None, None))
+    loop.close()
 
 
-async def async_test_home_assistant(event_loop, load_registries=True):
+@asynccontextmanager
+async def async_test_home_assistant(
+    event_loop: asyncio.AbstractEventLoop | None = None,
+    load_registries: bool = True,
+) -> AsyncGenerator[HomeAssistant, None]:
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(get_test_config_dir())
     store = auth_store.AuthStore(hass)
@@ -200,6 +207,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     orig_async_add_job = hass.async_add_job
     orig_async_add_executor_job = hass.async_add_executor_job
     orig_async_create_task = hass.async_create_task
+    orig_tz = dt_util.DEFAULT_TIME_ZONE
 
     def async_add_job(target, *args):
         """Add job."""
@@ -300,7 +308,10 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
-    return hass
+    yield hass
+
+    # Restore timezone, it is set when creating the hass object
+    dt_util.DEFAULT_TIME_ZONE = orig_tz
 
 
 def async_mock_service(

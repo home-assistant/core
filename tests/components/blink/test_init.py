@@ -86,7 +86,7 @@ async def test_migrate_V0(
 ) -> None:
     """Test migration script version 0."""
 
-    mock_config_entry.version = 0
+    hass.config_entries.async_update_entry(mock_config_entry, version=0)
 
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -105,8 +105,11 @@ async def test_migrate(
 ) -> None:
     """Test migration scripts."""
 
-    mock_config_entry.version = version
-    mock_config_entry.data = {**mock_config_entry.data, "login_response": "Blah"}
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        version=version,
+        data={**mock_config_entry.data, "login_response": "Blah"},
+    )
 
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
