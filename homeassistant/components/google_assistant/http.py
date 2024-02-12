@@ -15,10 +15,11 @@ from homeassistant.components import webhook
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.storage import Store
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.storage import STORAGE_DIR, Store
+from homeassistant.util import dt as dt_util, json as json_util
 
 from .const import (
     CONF_CLIENT_EMAIL,
@@ -375,3 +376,26 @@ class GoogleAssistantView(HomeAssistantView):
             SOURCE_CLOUD,
         )
         return self.json(result)
+
+
+async def async_get_users(hass: HomeAssistant) -> list[str]:
+    """Return stored users.
+
+    This is called by the cloud integration to import from the previously shared store.
+    """
+    # pylint: disable-next=protected-access
+    path = hass.config.path(STORAGE_DIR, GoogleConfigStore._STORAGE_KEY)
+    try:
+        store_data = await hass.async_add_executor_job(json_util.load_json, path)
+    except HomeAssistantError:
+        return []
+
+    if (
+        not isinstance(store_data, dict)
+        or not (data := store_data.get("data"))
+        or not isinstance(data, dict)
+        or not (agent_user_ids := store_data.get("agent_user_ids"))
+        or not isinstance(agent_user_ids, dict)
+    ):
+        return []
+    return list(agent_user_ids.keys())

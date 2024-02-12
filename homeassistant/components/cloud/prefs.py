@@ -8,7 +8,9 @@ import uuid
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import webhook
-from homeassistant.components.google_assistant.http import GoogleConfigStore
+from homeassistant.components.google_assistant.http import (
+    async_get_users as async_get_google_assistant_users,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -50,36 +52,6 @@ ALEXA_SETTINGS_VERSION = 3
 GOOGLE_SETTINGS_VERSION = 3
 
 
-class ReadOnlyStore(Store):
-    """A store which will never write."""
-
-    async def _async_handle_write_data(self, *_args: Any) -> None:
-        """Handle writing the config."""
-        # Do not write anything
-
-
-class ImportGoogleConfigStore(GoogleConfigStore):
-    """A read only configuration store for google assistant.
-
-    This class is used to import settings from the google_assistant store
-    when migrating to store version 1.3.
-
-    Before version 1.3 of the cloud store, the gogle_assistant store was shared between
-    the cloud integration and manually configured Google assistant.
-    """
-
-    # pylint: disable-next=super-init-not-called
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize a configuration store."""
-        self._hass = hass
-        self._store: Store[dict[str, Any]] = ReadOnlyStore(
-            hass,
-            self._STORAGE_VERSION,
-            self._STORAGE_KEY,
-            minor_version=self._STORAGE_VERSION_MINOR,
-        )
-
-
 class CloudPreferencesStore(Store):
     """Store cloud preferences."""
 
@@ -94,11 +66,8 @@ class CloudPreferencesStore(Store):
             if not (cur_username := old_data.get(PREF_USERNAME)):
                 return False
 
-            google_store = ImportGoogleConfigStore(self.hass)
-            await google_store.async_initialize()
-
             # If our user is in the Google store, we're connected
-            return cur_username in google_store.agent_user_ids
+            return cur_username in await async_get_google_assistant_users(self.hass)
 
         if old_major_version == 1:
             if old_minor_version < 2:
