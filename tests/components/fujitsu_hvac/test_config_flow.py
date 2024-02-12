@@ -2,6 +2,7 @@
 from unittest.mock import AsyncMock, patch
 
 from ayla_iot_unofficial import AylaAuthError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.fujitsu_hvac.const import (
@@ -68,53 +69,28 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     }
 
 
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+@pytest.mark.parametrize(
+    ("exception", "errmsg"),
+    [
+        (AylaAuthError, "invalid_auth"),
+        (TimeoutError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_exceptions(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    exception: Exception,
+    errmsg: str,
 ) -> None:
-    """Test we handle invalid auth."""
+    """Test we handle exceptions."""
     apimock = AsyncMock()
-    apimock.async_sign_in.side_effect = AylaAuthError
+    apimock.async_sign_in.side_effect = exception
 
     result = await _initial_step(hass, apimock)
 
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    apimock = AsyncMock()
-    with patch(
-        "homeassistant.components.fujitsu_hvac.config_flow.new_ayla_api",
-        return_value=apimock,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_EUROPE: False,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Fujitsu HVAC ({TEST_USERNAME})"
-    assert result["data"] == {
-        CONF_USERNAME: TEST_USERNAME,
-        CONF_PASSWORD: TEST_PASSWORD,
-        CONF_EUROPE: False,
-    }
-
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle cannot connect error."""
-    apimock = AsyncMock()
-    apimock.async_sign_in.side_effect = TimeoutError
-
-    result = await _initial_step(hass, apimock)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": errmsg}
 
     apimock = AsyncMock()
     with patch(
