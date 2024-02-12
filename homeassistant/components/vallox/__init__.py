@@ -1,20 +1,15 @@
 """Support for Vallox ventilation units."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 import ipaddress
 import logging
-from typing import Any, NamedTuple
+from typing import NamedTuple
 from uuid import UUID
 
 from vallox_websocket_api import PROFILE as VALLOX_PROFILE, Vallox, ValloxApiException
-from vallox_websocket_api.vallox import (
-    get_model as _api_get_model,
-    get_next_filter_change_date as _api_get_next_filter_change_date,
-    get_sw_version as _api_get_sw_version,
-    get_uuid as _api_get_uuid,
-)
+from vallox_websocket_api.vallox import MetricData
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -108,13 +103,13 @@ SERVICE_TO_METHOD = {
 class ValloxState:
     """Describes the current state of the unit."""
 
-    metric_cache: dict[str, Any] = field(default_factory=dict)
+    metric_cache: MetricData = MetricData(data={})
     profile: VALLOX_PROFILE = VALLOX_PROFILE.NONE
 
     def get_metric(self, metric_key: str) -> StateType:
         """Return cached state value."""
 
-        if (value := self.metric_cache.get(metric_key)) is None:
+        if (value := self.metric_cache[metric_key]) is None:
             return None
 
         if not isinstance(value, (str, int, float)):
@@ -125,7 +120,7 @@ class ValloxState:
     @property
     def model(self) -> str | None:
         """Return the model, if any."""
-        model = _api_get_model(self.metric_cache)
+        model = self.metric_cache.model
 
         if model == "Unknown":
             return None
@@ -135,19 +130,19 @@ class ValloxState:
     @property
     def sw_version(self) -> str:
         """Return the SW version."""
-        return _api_get_sw_version(self.metric_cache)
+        return self.metric_cache.sw_version
 
     @property
     def uuid(self) -> UUID | None:
         """Return cached UUID value."""
-        uuid = _api_get_uuid(self.metric_cache)
+        uuid = self.metric_cache.uuid
         if not isinstance(uuid, UUID):
             raise TypeError
         return uuid
 
     def get_next_filter_change_date(self) -> date | None:
         """Return the next filter change date."""
-        next_filter_change_date = _api_get_next_filter_change_date(self.metric_cache)
+        next_filter_change_date = self.metric_cache.next_filter_change_date
 
         if not isinstance(next_filter_change_date, date):
             return None
@@ -171,8 +166,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Updating Vallox state cache")
 
         try:
-            metric_cache = await client.fetch_metrics()
-            profile = await client.get_profile()
+            metric_cache = await client.fetch_metric_data()
+            profile = metric_cache.profile
 
         except ValloxApiException as err:
             raise UpdateFailed("Error during state cache update") from err

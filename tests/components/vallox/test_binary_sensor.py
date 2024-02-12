@@ -22,7 +22,7 @@ async def test_binary_sensor_entitity(
     expected_state: str,
     mock_entry: MockConfigEntry,
     hass: HomeAssistant,
-):
+) -> None:
     """Test binary sensor with metrics."""
     # Act
     with patch_metrics(metrics=metrics):
