@@ -104,13 +104,14 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_hunterdouglas_full")
 @pytest.mark.parametrize(("source", "discovery_info", "api_version"), DISCOVERY_DATA)
 async def test_form_homekit_and_dhcp(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
-    api_version: int,
     source: str,
     discovery_info: dhcp.DhcpServiceInfo | zeroconf.ZeroconfServiceInfo,
+    api_version: int,
 ) -> None:
     """Test we get the form with homekit and dhcp source."""
 
