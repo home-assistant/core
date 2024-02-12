@@ -18,6 +18,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration, mutate_rpc_device_status
 
@@ -25,7 +26,10 @@ ROLLER_BLOCK_ID = 1
 
 
 async def test_block_device_services(
-    hass: HomeAssistant, mock_block_device, monkeypatch, entity_registry
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test block device cover services."""
     entity_id = "cover.test_name"
@@ -71,7 +75,7 @@ async def test_block_device_services(
 
 
 async def test_block_device_update(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device update."""
     monkeypatch.setattr(mock_block_device.blocks[ROLLER_BLOCK_ID], "rollerPos", 0)
@@ -85,7 +89,7 @@ async def test_block_device_update(
 
 
 async def test_block_device_no_roller_blocks(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device without roller blocks."""
     monkeypatch.setattr(mock_block_device.blocks[ROLLER_BLOCK_ID], "type", None)
@@ -97,7 +101,7 @@ async def test_rpc_device_services(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
-    entity_registry,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test RPC device cover services."""
     entity_id = "cover.test_cover_0"

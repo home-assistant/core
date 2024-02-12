@@ -258,17 +258,6 @@ class CloudGoogleConfig(AbstractConfig):
         self._on_deinitialize.append(start.async_at_start(self.hass, on_hass_start))
         self._on_deinitialize.append(start.async_at_started(self.hass, on_hass_started))
 
-        # Remove any stored user agent id that is not ours
-        remove_agent_user_ids = []
-        for agent_user_id in self._store.agent_user_ids:
-            if agent_user_id != self.agent_user_id:
-                remove_agent_user_ids.append(agent_user_id)
-
-        if remove_agent_user_ids:
-            _LOGGER.debug("remove non cloud agent_user_ids: %s", remove_agent_user_ids)
-        for agent_user_id in remove_agent_user_ids:
-            await self.async_disconnect_agent_user(agent_user_id)
-
         self._on_deinitialize.append(
             self._prefs.async_listen_updates(self._async_prefs_updated)
         )
@@ -339,7 +328,7 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def has_registered_user_agent(self) -> bool:
         """Return if we have a Agent User Id registered."""
-        return len(self._store.agent_user_ids) > 0
+        return len(self.async_get_agent_users()) > 0
 
     def get_agent_user_id(self, context: Any) -> str:
         """Get agent user ID making request."""
@@ -379,6 +368,30 @@ class CloudGoogleConfig(AbstractConfig):
         async with self._sync_entities_lock:
             resp = await cloud_api.async_google_actions_request_sync(self._cloud)
             return resp.status
+
+    async def async_connect_agent_user(self, agent_user_id: str) -> None:
+        """Add a synced and known agent_user_id.
+
+        Called before sending a sync response to Google.
+        """
+        await self._prefs.async_update(google_connected=True)
+
+    async def async_disconnect_agent_user(self, agent_user_id: str) -> None:
+        """Turn off report state and disable further state reporting.
+
+        Called when:
+         - The user disconnects their account from Google.
+         - When the cloud configuration is initialized
+         - When sync entities fails with 404
+        """
+        await self._prefs.async_update(google_connected=False)
+
+    @callback
+    def async_get_agent_users(self) -> tuple:
+        """Return known agent users."""
+        if not self._prefs.google_connected or not self._cloud.username:
+            return ()
+        return (self._cloud.username,)
 
     async def _async_prefs_updated(self, prefs: CloudPreferences) -> None:
         """Handle updated preferences."""
