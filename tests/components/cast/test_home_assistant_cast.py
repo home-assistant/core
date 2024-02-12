@@ -13,7 +13,9 @@ from tests.common import MockConfigEntry, async_mock_signal
 
 async def test_service_show_view(hass: HomeAssistant, mock_zeroconf: None) -> None:
     """Test showing a view."""
-    await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    await home_assistant_cast.async_setup_ha_cast(hass, entry)
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
     # No valid URL
@@ -87,7 +89,9 @@ async def test_use_cloud_url(hass: HomeAssistant, mock_zeroconf: None) -> None:
     )
     hass.config.components.add("cloud")
 
-    await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    await home_assistant_cast.async_setup_ha_cast(hass, entry)
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
     with patch(
