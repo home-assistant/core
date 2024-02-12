@@ -10,6 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, dispatcher, instance_id
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service import async_register_admin_service
+from tests.common import MockConfigEntry
 
 from .const import DOMAIN, SIGNAL_HASS_CAST_SHOW_VIEW
 
@@ -23,12 +24,11 @@ NO_URL_AVAILABLE_ERROR = (
 )
 
 
-async def async_setup_ha_cast(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_setup_ha_cast(hass: core.HomeAssistant, entry: MockConfigEntry):
     """Set up Home Assistant Cast."""
     user_id: str | None = entry.data.get("user_id")
     user: auth.models.User | None = None
+    entry.add_to_hass(hass)
 
     if user_id is not None:
         user = await hass.auth.async_get_user(user_id)
