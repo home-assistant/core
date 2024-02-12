@@ -124,18 +124,15 @@ def _create_rfx(
 
     if config[CONF_PORT] is not None:
         # If port is set then we create a TCP connection
-        rfx = rfxtrxmod.Connect(
-            (config[CONF_HOST], config[CONF_PORT]),
-            event_callback,
-            transport_protocol=rfxtrxmod.PyNetworkTransport,
-            modes=modes,
-        )
+        transport = rfxtrxmod.PyNetworkTransport((config[CONF_HOST], config[CONF_PORT]))
     else:
-        rfx = rfxtrxmod.Connect(
-            config[CONF_DEVICE],
-            event_callback,
-            modes=modes,
-        )
+        transport = rfxtrxmod.PySerialTransport(config[CONF_DEVICE])
+
+    rfx = rfxtrxmod.Connect(
+        transport,
+        event_callback,
+        modes=modes,
+    )
     rfx.connect(30)
     return rfx
 

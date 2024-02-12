@@ -130,7 +130,7 @@ async def test_ws_device_remove(
     assert mock_entry.data["devices"] == {}
 
 
-async def test_connect(hass: HomeAssistant) -> None:
+async def test_connect(transport_mock, hass: HomeAssistant) -> None:
     """Test that we attempt to connect to the device."""
     entry_data = create_rfx_test_cfg(device="/dev/ttyUSBfake")
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -141,10 +141,11 @@ async def test_connect(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    connect.assert_called_once_with("/dev/ttyUSBfake", ANY, modes=ANY)
+    transport_mock.assert_called_once_with("/dev/ttyUSBfake")
+    connect.assert_called_once_with(transport_mock.return_value, ANY, modes=ANY)
 
 
-async def test_connect_with_protocols(hass: HomeAssistant) -> None:
+async def test_connect_with_protocols(transport_mock, hass: HomeAssistant) -> None:
     """Test that we attempt to set protocols."""
     entry_data = create_rfx_test_cfg(device="/dev/ttyUSBfake", protocols=SOME_PROTOCOLS)
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -155,4 +156,7 @@ async def test_connect_with_protocols(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-    connect.assert_called_once_with("/dev/ttyUSBfake", ANY, modes=SOME_PROTOCOLS)
+    transport_mock.assert_called_once_with("/dev/ttyUSBfake")
+    connect.assert_called_once_with(
+        transport_mock.return_value, ANY, modes=SOME_PROTOCOLS
+    )

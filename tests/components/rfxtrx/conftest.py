@@ -1,10 +1,11 @@
 """Common test tools."""
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
 import pytest
+from RFXtrx import Connect, RFXtrxTransport
 
 from homeassistant.components import rfxtrx
 from homeassistant.components.rfxtrx import DOMAIN
@@ -25,7 +26,7 @@ def create_rfx_test_cfg(
         "automatic_add": automatic_add,
         "protocols": protocols,
         "debug": False,
-        "devices": devices,
+        "devices": devices or {},
     }
 
 
@@ -46,12 +47,29 @@ async def setup_rfx_test_cfg(
     return mock_entry
 
 
+@pytest.fixture(autouse=True)
+async def transport_mock(hass):
+    """Fixture that make sure all transports are fake."""
+    transport = Mock(spec=RFXtrxTransport)
+    with patch("RFXtrx.PySerialTransport", new=transport), patch(
+        "RFXtrx.PyNetworkTransport", transport
+    ):
+        yield transport
+
+
 @pytest.fixture(autouse=True, name="rfxtrx")
 async def rfxtrx_fixture(hass):
     """Fixture that cleans up threads from integration."""
 
-    with patch("RFXtrx.Connect") as connect, patch("RFXtrx.DummyTransport2"):
-        rfx = connect.return_value
+    with patch("RFXtrx.Connect") as connect:
+        rfx = Mock(spec=Connect)
+
+        def _init(transport, event_callback=None, modes=None):
+            rfx.event_callback = event_callback
+            rfx.transport = transport
+            return rfx
+
+        connect.side_effect = _init
 
         async def _signal_event(packet_id):
             event = rfxtrx.get_rfx_object(packet_id)
