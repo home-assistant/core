@@ -666,7 +666,7 @@ async def test_rpc_disabled_xtotal_counter(
         mock_rpc_device,
         "input:2",
         "counts",
-        {"total": 20635, "xtotal": None},
+        {"total": 20635},
     )
     await init_integration(hass, 2)
 
