@@ -5,7 +5,13 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_2, MODEL_25, MODEL_GAS, RPC_GENERATIONS
+from aioshelly.const import (
+    MODEL_2,
+    MODEL_25,
+    MODEL_GAS,
+    MODEL_WALL_DISPLAY,
+    RPC_GENERATIONS,
+)
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -20,7 +26,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DOMAIN, GAS_VALVE_OPEN_STATES, MODEL_WALL_DISPLAY
+from .const import DOMAIN, GAS_VALVE_OPEN_STATES
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import (
     BlockEntityDescription,
