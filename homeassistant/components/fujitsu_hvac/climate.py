@@ -170,7 +170,11 @@ class FujitsuHVACDevice(CoordinatorEntity, ClimateEntity):
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
-        ret = ClimateEntityFeature.TARGET_TEMPERATURE
+        ret = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
         if self._dev.has_capability(Capability.OP_FAN):
             ret |= ClimateEntityFeature.FAN_MODE
 
