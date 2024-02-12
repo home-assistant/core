@@ -41,13 +41,12 @@ class PollBot(BaseTelegramBotEntity):
     """
 
     def __init__(self, hass, bot, config):
-        """Create Application before calling super()."""
-        self.hass = hass
+        """Create Application to poll for updates."""
+        super().__init__(hass, config)
         self.bot = bot
         self.application = ApplicationBuilder().bot(self.bot).build()
         self.application.add_handler(TypeHandler(Update, self.handle_update))
         self.application.add_error_handler(process_error)
-        super().__init__(hass, config)
 
     async def start_polling(self, event=None):
         """Start the polling task."""
