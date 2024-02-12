@@ -1571,6 +1571,9 @@ class ConfigEntries:
         If the entry was not changed, the update_listeners are
         not fired and this function returns False
         """
+        if entry.entry_id not in self._entries:
+            raise UnknownEntry(entry.entry_id)
+
         changed = False
         _setter = object.__setattr__
 
