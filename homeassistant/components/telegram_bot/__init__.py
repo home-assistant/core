@@ -6,7 +6,7 @@ import importlib
 import io
 from ipaddress import ip_network
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 from telegram import (
@@ -975,7 +975,7 @@ class BaseTelegramBotEntity:
         return True
 
     @staticmethod
-    def _get_command_event_data(command_text: Optional[str]) -> dict[str, str | list]:
+    def _get_command_event_data(command_text: str | None) -> dict[str, str | list]:
         if not command_text or not command_text.startswith("/"):
             return {}
         command_parts = command_text.split()
