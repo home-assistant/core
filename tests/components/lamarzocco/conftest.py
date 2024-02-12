@@ -36,6 +36,8 @@ async def init_integration(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_lamarzocco: MagicMock
 ) -> MockConfigEntry:
     """Set up the LaMetric integration for testing."""
+    if not hass.config_entries.async_get_entry(mock_config_entry.entry_id):
+        mock_config_entry.add_to_hass(hass)
     await async_init_integration(hass, mock_config_entry)
 
     return mock_config_entry
@@ -123,5 +125,6 @@ def remove_local_connection(
     """Remove the local connection."""
     data = mock_config_entry.data.copy()
     del data[CONF_HOST]
+    mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(mock_config_entry, data=data)
     return mock_config_entry
