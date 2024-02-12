@@ -398,4 +398,4 @@ async def async_get_users(hass: HomeAssistant) -> list[str]:
         or not isinstance(agent_user_ids, dict)
     ):
         return []
-    return list(agent_user_ids.keys())
+    return list(agent_user_ids)
