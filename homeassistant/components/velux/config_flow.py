@@ -6,8 +6,10 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN, LOGGER
 
@@ -26,15 +28,46 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
 
+        def create_repair(error: str | None = None) -> None:
+            if error:
+                async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    f"deprecated_yaml_import_issue_${error}",
+                    breaks_in_ha_version="2024.9.0",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=IssueSeverity.WARNING,
+                    translation_key=f"deprecated_yaml_import_issue_${error}",
+                )
+            else:
+                async_create_issue(
+                    self.hass,
+                    HOMEASSISTANT_DOMAIN,
+                    f"deprecated_yaml_{DOMAIN}",
+                    breaks_in_ha_version="2024.9.0",
+                    is_fixable=False,
+                    issue_domain=DOMAIN,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_yaml",
+                    translation_placeholders={
+                        "domain": DOMAIN,
+                        "integration_title": "Velux",
+                    },
+                )
+
         pyvlx = PyVLX(host=config[CONF_HOST], password=config[CONF_PASSWORD])
         try:
             await pyvlx.connect()
             await pyvlx.disconnect()
         except (PyVLXException, ConnectionError):
+            create_repair("cannot_connect")
             return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
+            create_repair("unknown")
             return self.async_abort(reason="unknown")
 
+        create_repair()
         return self.async_create_entry(
             title=config[CONF_HOST],
             data=config,

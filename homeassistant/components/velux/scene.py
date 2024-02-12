@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, LOGGER
+from . import DOMAIN
 
 PARALLEL_UPDATES = 1
 
@@ -28,7 +28,6 @@ class VeluxScene(Scene):
 
     def __init__(self, scene):
         """Init velux scene."""
-        LOGGER.info("Adding Velux scene: %s", scene)
         self.scene = scene
 
     @property
