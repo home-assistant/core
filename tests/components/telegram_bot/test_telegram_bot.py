@@ -140,7 +140,7 @@ async def test_polling_platform_message_text_update(
             ),
         )
         # handle_update_callback == BaseTelegramBotEntity.update_handler
-        handle_update_callback(update, None)
+        await handle_update_callback(update, None)
 
     # Make sure event has fired
     await hass.async_block_till_done()

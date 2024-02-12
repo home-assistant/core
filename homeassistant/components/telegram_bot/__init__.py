@@ -950,7 +950,7 @@ class BaseTelegramBotEntity:
         self.allowed_chat_ids = config[CONF_ALLOWED_CHAT_IDS]
         self.hass = hass
 
-    def handle_update(self, update: Update, context: CallbackContext) -> bool:
+    async def handle_update(self, update: Update, context: CallbackContext) -> bool:
         """Handle updates from bot application set up by the respective platform."""
         _LOGGER.debug("Handling update %s", update)
         if not self.authorize_update(update):
