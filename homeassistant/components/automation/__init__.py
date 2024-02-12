@@ -325,7 +325,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_RELOAD,
         reload_helper.execute_service,
-        schema=vol.Schema({CONF_ID: str}),
+        schema=vol.Schema({vol.Optional(CONF_ID): str}),
     )
 
     websocket_api.async_register_command(hass, websocket_config)
@@ -1004,6 +1004,18 @@ async def _async_process_config(
     await component.async_add_entities(entities)
 
 
+def _automation_matches_config(
+    automation: BaseAutomationEntity | None, config: AutomationEntityConfig | None
+) -> bool:
+    """Return False if an automation's config has been changed."""
+    if not automation:
+        return False
+    if not config:
+        return False
+    name = _automation_name(config)
+    return automation.name == name and automation.raw_config == config.raw_config
+
+
 async def _async_process_single_config(
     hass: HomeAssistant,
     config: dict[str, Any],
@@ -1012,31 +1024,19 @@ async def _async_process_single_config(
 ) -> None:
     """Process config and add a single automation."""
 
-    def automation_matches_config(
-        automation: BaseAutomationEntity | None, config: AutomationEntityConfig | None
-    ) -> bool:
-        if not automation:
-            return False
-        if not config:
-            return False
-        name = _automation_name(config)
-        return automation.name == name and automation.raw_config == config.raw_config
-
     automation_configs = await _prepare_automation_config(hass, config, automation_id)
     automation = next(
         (x for x in component.entities if x.unique_id == automation_id), None
     )
     automation_config = automation_configs[0] if automation_configs else None
 
-    if automation_matches_config(automation, automation_config):
+    if _automation_matches_config(automation, automation_config):
         return
 
     if automation:
         await automation.async_remove()
     entities = await _create_automation_entities(hass, automation_configs)
     await component.async_add_entities(entities)
-
-    return
 
 
 async def _async_process_if(
