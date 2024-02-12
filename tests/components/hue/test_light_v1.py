@@ -179,7 +179,7 @@ async def setup_bridge(hass, mock_bridge_v1):
     hass.config.components.add(hue.DOMAIN)
     config_entry = create_config_entry()
     config_entry.add_to_hass(hass)
-    config_entry.state = ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     config_entry.options = {CONF_ALLOW_HUE_GROUPS: True}
     mock_bridge_v1.config_entry = config_entry
     hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge_v1}

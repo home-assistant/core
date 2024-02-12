@@ -497,7 +497,7 @@ async def test_dhcp_discovery_updates_unique_id_when_entry_is_failed(
         unique_id="1.2.3.4",
     )
     entry.add_to_hass(hass)
-    entry.state = config_entries.ConfigEntryState.SETUP_ERROR
+    entry.mock_state(hass, config_entries.ConfigEntryState.SETUP_ERROR)
     mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
 
     with patch(
