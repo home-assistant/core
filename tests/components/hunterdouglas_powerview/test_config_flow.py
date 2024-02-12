@@ -57,12 +57,14 @@ async def test_user_form(
     assert result4["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_hunterdouglas_user")
+@pytest.mark.usefixtures("mock_hunterdouglas_full")
 @pytest.mark.parametrize(("source", "discovery_info", "api_version"), DISCOVERY_DATA)
 async def test_form_homekit_and_dhcp_cannot_connect(
     hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
     source: str,
     discovery_info: dhcp.DhcpServiceInfo,
+    api_version: int,
 ) -> None:
     """Test we get the form with homekit and dhcp source."""
 
@@ -72,7 +74,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     ignored_config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
+        "homeassistant.components.hunterdouglas_powerview.Hub.query_firmware",
         side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -84,8 +86,24 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
+    # test we can recover from the failed entry
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": source},
+        data=discovery_info,
+    )
 
-@pytest.mark.usefixtures("mock_setup_entry", "mock_hunterdouglas_full")
+    result3 = await hass.config_entries.flow.async_configure(result2["flow_id"], {})
+    await hass.async_block_till_done()
+
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["title"] == f"Powerview Generation {api_version}"
+    assert result3["data"] == {CONF_HOST: "1.2.3.4", CONF_API_VERSION: api_version}
+    assert result3["result"].unique_id == "A1B2C3D4E5G6H7"
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 @pytest.mark.parametrize(("source", "discovery_info", "api_version"), DISCOVERY_DATA)
 async def test_form_homekit_and_dhcp(
     hass: HomeAssistant,
