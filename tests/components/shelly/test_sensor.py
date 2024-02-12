@@ -1,4 +1,7 @@
 """Tests for Shelly sensor platform."""
+from copy import deepcopy
+from unittest.mock import Mock
+
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -23,7 +26,7 @@ from homeassistant.const import (
     UnitOfEnergy,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers.entity_registry import EntityRegistry, async_get
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -608,3 +611,67 @@ async def test_rpc_analog_input_xpercent_sensor(
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-input:0-analoginput_xpercent"
+
+
+async def test_rpc_pulse_counter_sensors(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC counter sensor."""
+    await init_integration(hass, 2)
+
+    entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter"
+    state = hass.states.get(entity_id)
+    assert state.state == "56174"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "pulse"
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-input:2-pulse_counter"
+
+    entity_id = f"{SENSOR_DOMAIN}.gas_counter_value"
+    assert hass.states.get(entity_id).state == "561.74"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-input:2-counter_value"
+
+
+async def test_rpc_disabled_pulse_counter_sensors(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test RPC disabled counter sensor."""
+    new_config = deepcopy(mock_rpc_device.config)
+    new_config["input:2"]["enable"] = False
+    monkeypatch.setattr(mock_rpc_device, "config", new_config)
+
+    await init_integration(hass, 2)
+
+    entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter"
+    assert hass.states.get(entity_id) is None
+
+    entity_id = f"{SENSOR_DOMAIN}.gas_counter_value"
+    assert hass.states.get(entity_id) is None
+
+
+async def test_rpc_disabled_xtotal_counter(
+    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test RPC disabled xtotal counter."""
+    mutate_rpc_device_status(
+        monkeypatch,
+        mock_rpc_device,
+        "input:2",
+        "counts",
+        {"total": 20635},
+    )
+    await init_integration(hass, 2)
+
+    entity_id = f"{SENSOR_DOMAIN}.gas_pulse_counter"
+    assert hass.states.get(entity_id).state == "20635"
+
+    entity_id = f"{SENSOR_DOMAIN}.gas_counter_value"
+    assert hass.states.get(entity_id) is None
