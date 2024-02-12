@@ -64,6 +64,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass, connection_options, _LOGGER, serial_number
     )
 
+    async def terminate_client() -> None:
+        _LOGGER.debug(
+            "Remootio client will be now terminated. entry [%s]", entry.as_dict()
+        )
+
+        terminated: bool = await remootio_client.terminate()
+        if terminated:
+            _LOGGER.debug(
+                "Remootio client successfully terminated. entry [%s]", entry.as_dict()
+            )
+
+    entry.async_on_unload(terminate_client)
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         REMOOTIO_CLIENT: remootio_client,
         EVENT_HANDLER_CALLBACK: handle_event,
@@ -88,17 +101,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     platforms_unloaded = await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS
     )
-
-    if platforms_unloaded and DOMAIN in hass.data:
-        hass_data = hass.data[DOMAIN].pop(entry.entry_id, {})
-        if REMOOTIO_CLIENT in hass_data:
-            remootio_client: RemootioClient = hass_data.pop(REMOOTIO_CLIENT, None)
-            if remootio_client is not None:
-                terminated: bool = await remootio_client.terminate()
-                if terminated:
-                    _LOGGER.debug(
-                        "Remootio client successfully terminated. entry [%s]",
-                        entry.as_dict(),
-                    )
 
     return platforms_unloaded
