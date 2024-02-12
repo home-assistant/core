@@ -36,7 +36,7 @@ HA_TO_FUJI_HVAC = {
     HVACMode.OFF: OpMode.OFF,
     HVACMode.HEAT: OpMode.HEAT,
     HVACMode.COOL: OpMode.COOL,
-    HVACMode.AUTO: OpMode.AUTO,
+    HVACMode.HEAT_COOL: OpMode.AUTO,
     HVACMode.DRY: OpMode.DRY,
     HVACMode.FAN_ONLY: OpMode.FAN,
 }
