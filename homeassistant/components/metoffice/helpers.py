@@ -2,13 +2,12 @@
 from __future__ import annotations
 
 import logging
-import sys
-
-from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util.dt import utcnow
 
 import datapoint
 from datapoint.Site import Site
+
+from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util.dt import utcnow
 
 from .const import MODE_3HOURLY
 from .data import MetOfficeData

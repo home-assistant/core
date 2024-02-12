@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import sys
 
 from datapoint.Forecast import Forecast
 from datapoint.Site import Site

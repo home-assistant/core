@@ -5,8 +5,9 @@ import asyncio
 import logging
 import re
 import sys
-import datapoint
 from typing import Any
+
+import datapoint
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
