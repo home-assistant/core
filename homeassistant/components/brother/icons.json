@@ -1,0 +1,105 @@
+{
+  "entity": {
+    "sensor": {
+      "belt_unit_remaining_life": {
+        "default": "mdi:current-ac"
+      },
+      "black_drum_page_counter": {
+        "default": "mdi:chart-donut"
+      },
+      "black_drum_remaining_life": {
+        "default": "mdi:chart-donut"
+      },
+      "black_drum_remaining_pages": {
+        "default": "mdi:chart-donut"
+      },
+      "black_toner_remaining": {
+        "default": "mdi:printer-3d-nozzle"
+      },
+      "black_ink_remaining": {
+        "default": "mdi:printer-3d-nozzle"
+      },
+      "bw_pages": {
+        "default": "mdi:file-document-outline"
+      },
+      "color_pages": {
+        "default": "mdi:file-document-outline"
+      },
+      "cyan_drum_page_counter": {
+        "default": "mdi:chart-donut"
+      },
+      "cyan_drum_remaining_life": {
+        "default": "mdi:chart-donut"
+      },
+      "cyan_drum_remaining_pages": {
+        "default": "mdi:chart-donut"
+      },
+      "cyan_ink_remaining": {
+        "default": "mdi:printer-3d-nozzle"
+      },
+      "cyan_toner_remaining": {
+        "default": "mdi:printer-3d-nozzle"
+      },
+      "drum_page_counter": {
+        "default": "mdi:chart-donut"
+      },
+      "drum_remaining_life": {
+        "default": "mdi:chart-donut"
+      },
+      "drum_remaining_pages": {
+        "default": "mdi:chart-donut"
+      },
+      "duplex_unit_page_counter": {
+        "default": "mdi:file-document-outline"
+      },
+      "fuser_remaining_life": {
+        "default": "mdi:water-outline"
+      },
+      "laser_remaining_life": {
+        "default": "mdi:spotlight-beam"
+      },
+      "magenta_drum_page_counter": {
+        "default": "mdi:chart-donut"
+      },
+      "magenta_drum_remaining_life": {
+        "default": "mdi:chart-donut"
+      },
+      "magenta_drum_remaining_pages": {
+        "default": "mdi:chart-donut"
+      },
+      "magenta_ink_remaining": {
+        "default": "mdi:printer-3d-nozzle"
+      },
+      "magenta_toner_remaining": {
+        "default": "mdi:printer-3d-nozzle"
+      },
+      "status": {
+        "default": "mdi:printer"
+      },
+      "page_counter": {
+        "default": "mdi:file-document-outline"
+      },
+      "pf_kit_1_remaining_life": {
+        "default": "mdi:printer-3d"
+      },
+      "pf_kit_mp_remaining_life": {
+        "default": "mdi:printer-3d"
+      },
+      "yellow_drum_page_counter": {
+        "default": "mdi:chart-donut"
+      },
+      "yellow_drum_remaining_life": {
+        "default": "mdi:chart-donut"
+      },
+      "yellow_drum_remaining_pages": {
+        "default": "mdi:chart-donut"
+      },
+      "yellow_ink_remaining": {
+        "default": "mdi:printer-3d-nozzle"
+      },
+      "yellow_toner_remaining": {
+        "default": "mdi:printer-3d-nozzle"
+      }
+    }
+  }
+}
