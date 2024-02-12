@@ -310,7 +310,7 @@ async def test_setup_component_with_delay(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test setup of the netatmo component with delayed startup."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     with patch(
         "pyatmo.AbstractAsyncAuth.async_addwebhook", side_effect=AsyncMock()

@@ -147,7 +147,7 @@ async def test_config_options(hass: HomeAssistant) -> None:
 
 async def test_methods_and_events(hass: HomeAssistant) -> None:
     """Test methods and events."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -393,7 +393,7 @@ async def test_start_service(hass: HomeAssistant) -> None:
 
 async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
     """Test for a timer to end."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 20}}})
 
@@ -460,7 +460,7 @@ async def test_wait_till_timer_expires(hass: HomeAssistant) -> None:
 
 async def test_no_initial_state_and_no_restore_state(hass: HomeAssistant) -> None:
     """Ensure that entity is create without initial and restore feature."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -569,7 +569,7 @@ async def test_config_reload(
 
 async def test_timer_restarted_event(hass: HomeAssistant) -> None:
     """Ensure restarted event is called after starting a paused or running timer."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 
@@ -636,7 +636,7 @@ async def test_timer_restarted_event(hass: HomeAssistant) -> None:
 
 async def test_state_changed_when_timer_restarted(hass: HomeAssistant) -> None:
     """Ensure timer's state changes when it restarted."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
 

@@ -82,6 +82,9 @@ class MatterEntity(Entity):
         self._attr_should_poll = entity_info.should_poll
         self._extra_poll_timer_unsub: CALLBACK_TYPE | None = None
 
+        # make sure to update the attributes once
+        self._update_from_device()
+
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
@@ -115,9 +118,6 @@ class MatterEntity(Entity):
             )
         )
 
-        # make sure to update the attributes once
-        self._update_from_device()
-
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._extra_poll_timer_unsub:
@@ -129,6 +129,9 @@ class MatterEntity(Entity):
 
     async def async_update(self) -> None:
         """Call when the entity needs to be updated."""
+        if not self._endpoint.node.available:
+            # skip poll when the node is not (yet) available
+            return
         # manually poll/refresh the primary value
         await self.matter_client.refresh_attribute(
             self._endpoint.node.node_id,

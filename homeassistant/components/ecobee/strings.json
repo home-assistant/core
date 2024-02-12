@@ -52,7 +52,7 @@
         },
         "start_date": {
           "name": "Start date",
-          "description": "Date the vacation starts in the YYYY-MM-DD format (optional, immediately if not provided along with start_time, end_date, and end_time)."
+          "description": "Date the vacation starts in the YYYY-MM-DD format (optional, immediately if not provided along with start_time)."
         },
         "start_time": {
           "name": "Start time",
@@ -60,7 +60,7 @@
         },
         "end_date": {
           "name": "End date",
-          "description": "Date the vacation ends in the YYYY-MM-DD format (optional, 14 days from now if not provided along with start_date, start_time, and end_time)."
+          "description": "Date the vacation ends in the YYYY-MM-DD format (optional, 14 days from now if not provided along with end_time)."
         },
         "end_time": {
           "name": "End time",

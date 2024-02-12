@@ -209,7 +209,9 @@ async def test_hap_with_name(
     entity_name = f"{home_name} Treppe CH"
     device_model = "HmIP-BSL"
 
-    hmip_config_entry.data = {**hmip_config_entry.data, "name": home_name}
+    hass.config_entries.async_update_entry(
+        hmip_config_entry, data={**hmip_config_entry.data, "name": home_name}
+    )
     mock_hap = await HomeFactory(
         hass, mock_connection, hmip_config_entry
     ).async_get_mock_hap(test_devices=["Treppe"])
