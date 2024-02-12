@@ -1,8 +1,6 @@
 """Support for Fujitsu HVAC devices that use the Ayla Iot platform."""
-from asyncio import gather
 from typing import Any
 
-from ayla_iot_unofficial import AylaAuthError
 from ayla_iot_unofficial.fujitsu_hvac import Capability, FujitsuHVAC
 
 from homeassistant.components.climate import (
@@ -12,9 +10,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
@@ -25,6 +24,7 @@ from .const import (
     HA_TO_FUJI_HVAC,
     HA_TO_FUJI_SWING,
 )
+from .coordinator import FujitsuHVACCoordinator
 
 
 async def async_setup_entry(
@@ -34,15 +34,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up one Fujitsu HVAC device."""
     api = hass.data[DOMAIN][entry.entry_id]
+    coordinator = FujitsuHVACCoordinator(hass, api)
+    await coordinator.async_config_entry_first_refresh()
 
-    devices = await api.async_get_devices()
-    devices = list(filter(lambda x: isinstance(x, FujitsuHVAC), devices))
-    await gather(*[dev.async_update() for dev in devices])
-
-    async_add_entities([FujitsuHVACDevice(dev) for dev in devices])
+    async_add_entities(
+        [FujitsuHVACDevice(coordinator, dev) for dev in coordinator.data.values()]
+    )
 
 
-class FujitsuHVACDevice(ClimateEntity):
+class FujitsuHVACDevice(CoordinatorEntity, ClimateEntity):
     """Represent a Fujitsu HVAC device."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -51,8 +51,9 @@ class FujitsuHVACDevice(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, dev: FujitsuHVAC) -> None:
+    def __init__(self, coordinator: FujitsuHVACCoordinator, dev: FujitsuHVAC) -> None:
         """Set up static attributes."""
+        super().__init__(coordinator, context=dev.device_serial_number)
         self._dev = dev
 
         self._attr_unique_id = dev.device_serial_number
@@ -65,15 +66,10 @@ class FujitsuHVACDevice(ClimateEntity):
             sw_version=self._dev.property_values["mcu_firmware_version"],
         )
 
-    async def async_update(self) -> None:
-        """Gather data from API and update our attributes."""
-        try:
-            if self._dev.ayla_api.token_expiring_soon:
-                await self._dev.ayla_api.async_refresh_auth()
-        except AylaAuthError:
-            await self._dev.ayla_api.async_sign_in()
-
-        await self._dev.async_update()
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self._dev = self.coordinator.data[self._dev.device_serial_number]
+        self.async_write_ha_state()
 
     @property
     def fan_mode(self) -> str | None:
@@ -98,6 +94,7 @@ class FujitsuHVACDevice(ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set Fan mode."""
         await self._dev.async_set_fan_speed(HA_TO_FUJI_FAN[fan_mode])
+        await self.coordinator.async_request_refresh()
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -116,6 +113,7 @@ class FujitsuHVACDevice(ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         await self._dev.async_set_op_mode(HA_TO_FUJI_HVAC[hvac_mode])
+        await self.coordinator.async_request_refresh()
 
     @property
     def swing_mode(self) -> str | None:
@@ -140,6 +138,7 @@ class FujitsuHVACDevice(ClimateEntity):
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set swing mode."""
         await self._dev.async_set_swing_mode(HA_TO_FUJI_SWING[swing_mode])
+        await self.coordinator.async_request_refresh()
 
     @property
     def min_temp(self) -> float:
@@ -166,6 +165,7 @@ class FujitsuHVACDevice(ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self._dev.async_set_set_temp(temperature)
+        await self.coordinator.async_request_refresh()
 
     @property
     def supported_features(self) -> ClimateEntityFeature:
