@@ -96,7 +96,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.44.0
+PySwitchbot==0.45.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -128,7 +128,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.25
+SQLAlchemy==2.0.26
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -324,7 +324,7 @@ aiooncue==0.3.5
 aioopenexchangerates==0.4.0
 
 # homeassistant.components.pegel_online
-aiopegelonline==0.0.6
+aiopegelonline==0.0.8
 
 # homeassistant.components.acmeda
 aiopulse==0.4.4
@@ -1337,7 +1337,7 @@ mutesync==0.0.1
 mypermobil==0.1.8
 
 # homeassistant.components.myuplink
-myuplink==0.1.1
+myuplink==0.2.1
 
 # homeassistant.components.nad
 nad-receiver==0.3.0
@@ -2312,7 +2312,7 @@ pytouchline==0.7
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
-pytraccar==2.0.0
+pytraccar==2.1.0
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
@@ -2432,7 +2432,7 @@ reolink-aio==0.8.7
 rfk101py==0.0.1
 
 # homeassistant.components.rflink
-rflink==0.0.65
+rflink==0.0.66
 
 # homeassistant.components.ring
 ring-doorbell[listen]==0.8.7
@@ -2495,7 +2495,7 @@ screenlogicpy==0.10.0
 scsgate==0.1.0
 
 # homeassistant.components.backup
-securetar==2023.12.0
+securetar==2024.2.0
 
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
@@ -2691,7 +2691,7 @@ tessie-api==0.0.9
 thermobeacon-ble==0.6.2
 
 # homeassistant.components.thermopro
-thermopro-ble==0.9.0
+thermopro-ble==0.10.0
 
 # homeassistant.components.thermoworks_smoke
 thermoworks-smoke==0.1.8
@@ -2862,7 +2862,7 @@ xiaomi-ble==0.25.2
 xknx==2.12.0
 
 # homeassistant.components.knx
-xknxproject==3.5.0
+xknxproject==3.6.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
