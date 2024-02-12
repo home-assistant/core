@@ -202,6 +202,9 @@ class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
 class MyUplinkEnumRawSensor(MyUplinkDevicePointSensor):
     """Representation of a myUplink device point sensor for raw value from ENUM device_class."""
 
+    _attr_entity_registry_enabled_default = False
+    _attr_device_class = None
+
     def __init__(
         self,
         coordinator: MyUplinkDataCoordinator,
@@ -219,6 +222,4 @@ class MyUplinkEnumRawSensor(MyUplinkDevicePointSensor):
             unique_id_suffix=unique_id_suffix,
         )
 
-        self._attr_device_class = None
-        self._attr_entity_registry_enabled_default = False
-        self._attr_name = f"{self.name} raw"
+        self._attr_name = f"{device_point.parameter_name} raw"
