@@ -142,7 +142,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
 
         try:
             result = await self.zha_device.device.update_firmware(
-                firmware_image=self._latest_firmware,
+                image=self._latest_firmware,
                 progress_callback=self._update_progress,
             )
         except Exception as ex:
