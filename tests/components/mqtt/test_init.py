@@ -624,13 +624,21 @@ async def test_service_call_with_bad_template(
 ) -> None:
     """Test the service call with a bad template does not publish."""
     mqtt_mock = await mqtt_mock_entry()
-    await hass.services.async_call(
-        mqtt.DOMAIN,
-        mqtt.SERVICE_PUBLISH,
-        {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 1 | bad }}"},
-        blocking=True,
-    )
+    with pytest.raises(MqttCommandTemplateException) as exc:
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC: "test/topic",
+                mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 1 | bad }}",
+            },
+            blocking=True,
+        )
     assert not mqtt_mock.async_publish.called
+    assert str(exc.value) == (
+        "TemplateError: TemplateAssertionError: No filter named 'bad'. "
+        "rendering template, template: '{{ 1 | bad }}' and payload: None"
+    )
 
 
 async def test_service_call_with_payload_doesnt_render_template(
