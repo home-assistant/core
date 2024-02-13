@@ -123,11 +123,6 @@ class MelCloudDevice:
             via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
         )
 
-    @property
-    def daily_energy_consumed(self) -> float | None:
-        """Return energy consumed during the current day in kWh."""
-        return self.device.daily_energy_consumed
-
 
 async def mel_devices_setup(
     hass: HomeAssistant, token: str

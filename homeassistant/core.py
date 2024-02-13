@@ -22,6 +22,7 @@ from dataclasses import dataclass
 import datetime
 import enum
 import functools
+import inspect
 import logging
 import os
 import pathlib
@@ -1158,7 +1159,7 @@ class _OneTimeListener:
     remove: CALLBACK_TYPE | None = None
 
     @callback
-    def async_call(self, event: Event) -> None:
+    def __call__(self, event: Event) -> None:
         """Remove listener from event bus and then fire listener."""
         if not self.remove:
             # If the listener was already removed, we don't need to do anything
@@ -1166,6 +1167,13 @@ class _OneTimeListener:
         self.remove()
         self.remove = None
         self.hass.async_run_job(self.listener, event)
+
+    def __repr__(self) -> str:
+        """Return the representation of the listener and source module."""
+        module = inspect.getmodule(self.listener)
+        if module:
+            return f"<_OneTimeListener {module.__name__}:{self.listener}>"
+        return f"<_OneTimeListener {self.listener}>"
 
 
 class EventBus:
@@ -1364,7 +1372,7 @@ class EventBus:
             event_type,
             (
                 HassJob(
-                    one_time_listener.async_call,
+                    one_time_listener,
                     f"onetime listen {event_type} {listener}",
                     job_type=HassJobType.Callback,
                 ),
