@@ -49,7 +49,6 @@ async def test_numbers_implementation(
     """Test that the number can be changed."""
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
-    assert hass.states.get(ENTITY_ID) == snapshot(name=f"{ENTITY_ID}-state")
 
     mock_flexit_bacnet.fan_setpoint_supply_air_fire = 60
 

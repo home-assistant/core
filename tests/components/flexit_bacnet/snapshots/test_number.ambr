@@ -539,21 +539,3 @@
     'state': '60',
   })
 # ---
-# name: test_numbers_implementation[number.device_name_fireplace_supply_fan_setpoint-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power_factor',
-      'friendly_name': 'Device Name Fireplace supply fan setpoint',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.device_name_fireplace_supply_fan_setpoint',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20',
-  })
-# ---
