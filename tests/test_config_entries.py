@@ -4323,3 +4323,57 @@ async def test_hashable_non_string_unique_id(
     del entries[entry.entry_id]
     assert not entries
     assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
+
+
+async def test_directly_mutating_blocked(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test directly mutating a ConfigEntry is blocked."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    with pytest.raises(AttributeError, match="entry_id cannot be changed"):
+        entry.entry_id = "new_entry_id"
+
+    with pytest.raises(AttributeError, match="domain cannot be changed"):
+        entry.domain = "new_domain"
+
+    with pytest.raises(AttributeError, match="state cannot be changed"):
+        entry.state = config_entries.ConfigEntryState.FAILED_UNLOAD
+
+    with pytest.raises(AttributeError, match="reason cannot be changed"):
+        entry.reason = "new_reason"
+
+    with pytest.raises(
+        AttributeError,
+        match="unique_id cannot be changed directly, use async_update_entry instead",
+    ):
+        entry.unique_id = "new_id"
+
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        "data",
+        "options",
+        "title",
+        "pref_disable_new_entities",
+        "pref_disable_polling",
+        "minor_version",
+        "version",
+    ),
+)
+async def test_report_direct_mutation_of_config_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, field: str
+) -> None:
+    """Test directly mutating a ConfigEntry is reported."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    setattr(entry, field, "new_value")
+
+    assert (
+        f'Detected code that sets "{field}" directly to update a config entry. '
+        "This is deprecated and will stop working in Home Assistant 2024.10, "
+        "it should be updated to use async_update_entry instead. Please report this issue."
+    ) in caplog.text
