@@ -1409,10 +1409,8 @@ class BitMapSensor(Sensor):
 
         state_attr = {}
 
-        for bit_description in list(self._bitmap):
-            state_attr[bit_description.name] = bool(
-                bit_description & self._bitmap(value)
-            )
+        for bit in list(self._bitmap):
+            state_attr[bit.name] = bit in self._bitmap(value)
 
         return state_attr
 
