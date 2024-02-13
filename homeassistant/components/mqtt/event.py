@@ -29,13 +29,13 @@ from .const import (
     CONF_STATE_TOPIC,
     PAYLOAD_EMPTY_JSON,
     PAYLOAD_NONE,
+    TEMPLATE_ERRORS,
 )
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entity_entry_helper,
-    write_state_on_attr_change,
 )
 from .models import (
     MqttValueTemplate,
@@ -121,7 +121,6 @@ class MqttEvent(MqttEntity, EventEntity):
 
         @callback
         @log_messages(self.hass, self.entity_id)
-        @write_state_on_attr_change(self, set())
         def message_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
             if msg.retain:
@@ -133,7 +132,10 @@ class MqttEvent(MqttEntity, EventEntity):
                 return
             event_attributes: dict[str, Any] = {}
             event_type: str
-            payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
+            try:
+                payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
+            except TEMPLATE_ERRORS:
+                return
             if (
                 not payload
                 or payload is PayloadSentinel.DEFAULT
