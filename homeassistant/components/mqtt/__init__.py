@@ -348,21 +348,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 return
 
         if payload_template is not None:
-            try:
-                payload = MqttCommandTemplate(
-                    template.Template(payload_template), hass=hass
-                ).async_render()
-            except TEMPLATE_ERRORS as exc:
-                _LOGGER.error(
-                    (
-                        "Unable to publish to %s: rendering payload template of "
-                        "%s failed because %s"
-                    ),
-                    msg_topic,
-                    payload_template,
-                    exc,
-                )
-                return
+            payload = MqttCommandTemplate(
+                template.Template(payload_template), hass=hass
+            ).async_render()
 
         if TYPE_CHECKING:
             assert msg_topic is not None
