@@ -43,10 +43,6 @@ PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Met Office entry."""
-    if sys.version_info >= (3, 12):
-        raise HomeAssistantError(
-            "Met Office is not supported on Python 3.12. Please use Python 3.11."
-        )
 
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
