@@ -27,7 +27,7 @@ class FlexitNumberEntityDescription(NumberEntityDescription):
     """Describes a Flexit number entity."""
 
     native_value_fn: Callable[[FlexitBACnet], float]
-    set_native_value_fn: Callable[[int, FlexitBACnet], Awaitable[None]]
+    set_native_value_fn: Callable[[FlexitBACnet], Callable[[int], Awaitable[None]]]
 
 
 NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
@@ -40,8 +40,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_fire,
-        set_native_value_fn=lambda value,
-        device: device.set_fan_setpoint_extract_air_fire(value),
+        set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_fire,
     ),
     FlexitNumberEntityDescription(
         key="fan_setpoint_fireplace_supply",
@@ -52,8 +51,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_fire,
-        set_native_value_fn=lambda value,
-        device: device.set_fan_setpoint_supply_air_fire(value),
+        set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_fire,
     ),
     FlexitNumberEntityDescription(
         key="fan_setpoint_away_extract",
@@ -64,8 +62,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_away,
-        set_native_value_fn=lambda value,
-        device: device.set_fan_setpoint_extract_air_away(value),
+        set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_away,
     ),
     FlexitNumberEntityDescription(
         key="fan_setpoint_away_supply",
@@ -76,8 +73,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_away,
-        set_native_value_fn=lambda value,
-        device: device.set_fan_setpoint_supply_air_away(value),
+        set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_away,
     ),
     FlexitNumberEntityDescription(
         key="fan_setpoint_home_extract",
@@ -88,8 +84,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_home,
-        set_native_value_fn=lambda value,
-        device: device.set_fan_setpoint_extract_air_home(value),
+        set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_home,
     ),
     FlexitNumberEntityDescription(
         key="fan_setpoint_home_supply",
@@ -100,8 +95,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_home,
-        set_native_value_fn=lambda value,
-        device: device.set_fan_setpoint_supply_air_home(value),
+        set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_home,
     ),
     FlexitNumberEntityDescription(
         key="fan_setpoint_high_extract",
@@ -112,8 +106,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_high,
-        set_native_value_fn=lambda value,
-        device: device.set_fan_setpoint_extract_air_high(value),
+        set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_high,
     ),
     FlexitNumberEntityDescription(
         key="fan_setpoint_high_supply",
@@ -124,8 +117,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_high,
-        set_native_value_fn=lambda value,
-        device: device.set_fan_setpoint_supply_air_high(value),
+        set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_high,
     ),
     FlexitNumberEntityDescription(
         key="fan_setpoint_cooker_hood_extract",
@@ -136,8 +128,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_cooker,
-        set_native_value_fn=lambda value,
-        device: device.set_fan_setpoint_extract_air_cooker(value),
+        set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_cooker,
     ),
     FlexitNumberEntityDescription(
         key="fan_setpoint_cooker_hood_supply",
@@ -148,8 +139,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         native_step=1,
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_cooker,
-        set_native_value_fn=lambda value,
-        device: device.set_fan_setpoint_supply_air_cooker(value),
+        set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_cooker,
     ),
 )
 
@@ -192,10 +182,11 @@ class FlexitNumber(FlexitEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
+        set_native_value_fn = self.entity_description.set_native_value_fn(
+            self.coordinator.device
+        )
         try:
-            await self.entity_description.set_native_value_fn(
-                int(value), self.coordinator.device
-            )
+            await set_native_value_fn(int(value))
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError from exc
         finally:
