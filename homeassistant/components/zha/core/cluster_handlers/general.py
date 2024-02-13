@@ -56,7 +56,6 @@ from ..const import (
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
     SIGNAL_UPDATE_DEVICE,
-    UNKNOWN as ZHA_UNKNOWN,
 )
 from . import (
     AttrReportConfig,
@@ -538,14 +537,9 @@ class OtaClusterHandler(ClusterHandler):
     }
 
     @property
-    def current_file_version(self) -> str:
+    def current_file_version(self) -> int | None:
         """Return cached value of current_file_version attribute."""
-        current_file_version = self.cluster.get(
-            Ota.AttributeDefs.current_file_version.name
-        )
-        if current_file_version is not None:
-            return f"0x{int(current_file_version):08x}"
-        return ZHA_UNKNOWN
+        return self.cluster.get(Ota.AttributeDefs.current_file_version.name)
 
 
 @registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(Ota.cluster_id)
@@ -559,14 +553,9 @@ class OtaClientClusterHandler(ClientClusterHandler):
     }
 
     @property
-    def current_file_version(self) -> str:
+    def current_file_version(self) -> int | None:
         """Return cached value of current_file_version attribute."""
-        current_file_version = self.cluster.get(
-            Ota.AttributeDefs.current_file_version.name
-        )
-        if current_file_version is not None:
-            return f"0x{int(current_file_version):08x}"
-        return ZHA_UNKNOWN
+        return self.cluster.get(Ota.AttributeDefs.current_file_version.name)
 
     @callback
     def cluster_command(
