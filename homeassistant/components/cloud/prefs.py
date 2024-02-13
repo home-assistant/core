@@ -8,6 +8,9 @@ import uuid
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import webhook
+from homeassistant.components.google_assistant.http import (
+    async_get_users as async_get_google_assistant_users,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -28,6 +31,7 @@ from .const import (
     PREF_ENABLE_ALEXA,
     PREF_ENABLE_GOOGLE,
     PREF_ENABLE_REMOTE,
+    PREF_GOOGLE_CONNECTED,
     PREF_GOOGLE_DEFAULT_EXPOSE,
     PREF_GOOGLE_ENTITY_CONFIGS,
     PREF_GOOGLE_LOCAL_WEBHOOK_ID,
@@ -42,7 +46,7 @@ from .const import (
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 2
+STORAGE_VERSION_MINOR = 3
 
 ALEXA_SETTINGS_VERSION = 3
 GOOGLE_SETTINGS_VERSION = 3
@@ -55,10 +59,27 @@ class CloudPreferencesStore(Store):
         self, old_major_version: int, old_minor_version: int, old_data: dict[str, Any]
     ) -> dict[str, Any]:
         """Migrate to the new version."""
+
+        async def google_connected() -> bool:
+            """Return True if our user is preset in the google_assistant store."""
+            # If we don't have a user, we can't be connected to Google
+            if not (cur_username := old_data.get(PREF_USERNAME)):
+                return False
+
+            # If our user is in the Google store, we're connected
+            return cur_username in await async_get_google_assistant_users(self.hass)
+
         if old_major_version == 1:
             if old_minor_version < 2:
                 old_data.setdefault(PREF_ALEXA_SETTINGS_VERSION, 1)
                 old_data.setdefault(PREF_GOOGLE_SETTINGS_VERSION, 1)
+            if old_minor_version < 3:
+                # Import settings from the google_assistant store which was previously
+                # shared between the cloud integration and manually configured Google
+                # assistant.
+                # In HA Core 2024.9, remove the import and also remove the Google
+                # assistant store if it's not been migrated by manual Google assistant
+                old_data.setdefault(PREF_GOOGLE_CONNECTED, await google_connected())
 
         return old_data
 
@@ -131,6 +152,7 @@ class CloudPreferences:
         remote_domain: str | None | UndefinedType = UNDEFINED,
         alexa_settings_version: int | UndefinedType = UNDEFINED,
         google_settings_version: int | UndefinedType = UNDEFINED,
+        google_connected: bool | UndefinedType = UNDEFINED,
     ) -> None:
         """Update user preferences."""
         prefs = {**self._prefs}
@@ -148,6 +170,7 @@ class CloudPreferences:
             (PREF_GOOGLE_SETTINGS_VERSION, google_settings_version),
             (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
             (PREF_REMOTE_DOMAIN, remote_domain),
+            (PREF_GOOGLE_CONNECTED, google_connected),
         ):
             if value is not UNDEFINED:
                 prefs[key] = value
@@ -240,6 +263,12 @@ class CloudPreferences:
         """Return if Google is enabled."""
         google_enabled: bool = self._prefs[PREF_ENABLE_GOOGLE]
         return google_enabled
+
+    @property
+    def google_connected(self) -> bool:
+        """Return if Google is connected."""
+        google_connected: bool = self._prefs[PREF_GOOGLE_CONNECTED]
+        return google_connected
 
     @property
     def google_report_state(self) -> bool:
@@ -338,6 +367,7 @@ class CloudPreferences:
             PREF_ENABLE_ALEXA: True,
             PREF_ENABLE_GOOGLE: True,
             PREF_ENABLE_REMOTE: False,
+            PREF_GOOGLE_CONNECTED: False,
             PREF_GOOGLE_DEFAULT_EXPOSE: DEFAULT_EXPOSED_DOMAINS,
             PREF_GOOGLE_ENTITY_CONFIGS: {},
             PREF_GOOGLE_SETTINGS_VERSION: GOOGLE_SETTINGS_VERSION,
