@@ -4,7 +4,6 @@ from dataclasses import dataclass
 
 from deebot_client.command import Command
 from deebot_client.commands.json import SetVolume
-from deebot_client.event_bus import EventBus
 from deebot_client.events import Event, VolumeEvent
 import pytest
 from syrupy import SnapshotAssertion
@@ -29,12 +28,6 @@ pytestmark = [pytest.mark.usefixtures("init_integration")]
 def platforms() -> Platform | list[Platform]:
     """Platforms, which should be loaded during the test."""
     return Platform.NUMBER
-
-
-async def notify_events(hass: HomeAssistant, event_bus: EventBus):
-    """Notify events."""
-    event_bus.notify(VolumeEvent(5, 11))
-    await block_till_done(hass, event_bus)
 
 
 @dataclass(frozen=True)

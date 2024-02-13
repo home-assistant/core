@@ -1,5 +1,4 @@
 """Test switch of NextDNS integration."""
-import asyncio
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
@@ -717,7 +716,7 @@ async def test_availability(hass: HomeAssistant) -> None:
     "exc",
     [
         ApiError(Mock()),
-        asyncio.TimeoutError,
+        TimeoutError,
         ClientConnectorError(Mock(), Mock()),
         ClientError,
     ],

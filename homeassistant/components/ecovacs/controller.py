@@ -49,7 +49,7 @@ class EcovacsController:
             create_rest_config(
                 aiohttp_client.async_get_clientsession(self._hass),
                 device_id=self._device_id,
-                country=country,
+                alpha_2_country=country,
                 override_rest_url=config.get(CONF_OVERRIDE_REST_URL),
             ),
             config[CONF_USERNAME],
@@ -74,11 +74,16 @@ class EcovacsController:
 
     async def initialize(self) -> None:
         """Init controller."""
+        mqtt_config_verfied = False
         try:
             devices = await self._api_client.get_devices()
             credentials = await self._authenticator.authenticate()
             for device_config in devices:
                 if isinstance(device_config, DeviceInfo):
+                    # MQTT device
+                    if not mqtt_config_verfied:
+                        await self._mqtt.verify_config()
+                        mqtt_config_verfied = True
                     device = Device(device_config, self._authenticator)
                     await device.initialize(self._mqtt)
                     self.devices.append(device)
