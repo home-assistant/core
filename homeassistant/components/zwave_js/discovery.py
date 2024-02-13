@@ -111,7 +111,7 @@ class ZwaveDiscoveryInfo:
     # node to which the value(s) belongs
     node: ZwaveNode
     # the value object itself for primary value
-    primary_value: ConfigurationValue | ZwaveValue
+    primary_value: ZwaveValue
     # bool to specify whether state is assumed and events should be fired on value
     # update
     assumed_state: bool
