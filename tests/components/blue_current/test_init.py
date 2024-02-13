@@ -55,27 +55,14 @@ async def test_config_exceptions(
 ) -> None:
     """Test if the correct config error is raised when connecting to the api fails."""
     with patch(
-        "homeassistant.components.blue_current.Client.connect",
+        "homeassistant.components.blue_current.Client.validate_api_token",
         side_effect=api_error,
     ), pytest.raises(config_error):
         config_entry.add_to_hass(hass)
         await async_setup_entry(hass, config_entry)
 
 
-async def test_start_loop(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
-    """Test start_loop."""
-
-    with patch("homeassistant.components.blue_current.SMALL_DELAY", 0):
-        mock_client, started_loop, future_container = await init_integration(
-            hass, config_entry
-        )
-        future_container.future.set_exception(BlueCurrentException)
-
-        await started_loop.wait()
-        assert mock_client.connect.call_count == 2
-
-
-async def test_reconnect_websocket_error(
+async def test_connect_websocket_error(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test reconnect when connect throws a WebsocketError."""
@@ -84,14 +71,13 @@ async def test_reconnect_websocket_error(
         mock_client, started_loop, future_container = await init_integration(
             hass, config_entry
         )
-        future_container.future.set_exception(BlueCurrentException)
-        mock_client.connect.side_effect = [WebsocketError, None]
+        future_container.future.set_exception(WebsocketError)
 
         await started_loop.wait()
-        assert mock_client.connect.call_count == 3
+        assert mock_client.connect.call_count == 2
 
 
-async def test_reconnect_request_limit_reached_error(
+async def test_connect_request_limit_reached_error(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test reconnect when connect throws a RequestLimitReached."""
@@ -99,10 +85,9 @@ async def test_reconnect_request_limit_reached_error(
     mock_client, started_loop, future_container = await init_integration(
         hass, config_entry
     )
-    future_container.future.set_exception(BlueCurrentException)
-    mock_client.connect.side_effect = [RequestLimitReached, None]
+    future_container.future.set_exception(RequestLimitReached)
     mock_client.get_next_reset_delta.return_value = timedelta(seconds=0)
 
     await started_loop.wait()
     assert mock_client.get_next_reset_delta.call_count == 1
-    assert mock_client.connect.call_count == 3
+    assert mock_client.connect.call_count == 2

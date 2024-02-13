@@ -127,6 +127,10 @@ async def test_reauth(
     ), patch(
         "homeassistant.components.blue_current.config_flow.Client.get_email",
         return_value="test@email.com",
+    ), patch(
+        "homeassistant.components.blue_current.config_flow.Client.wait_for_charge_points",
+    ), patch(
+        "homeassistant.components.blue_current.config_flow.Client.connect",
     ):
         config_entry.add_to_hass(hass)
         result = await hass.config_entries.flow.async_init(
