@@ -11,7 +11,7 @@
       "user": {
         "description": "Enter a opensensemap station id.",
         "data": {
-          "station_id": "Station Id",
+          "station_id": "Station id",
           "name": "Name"
         },
         "data_description": {

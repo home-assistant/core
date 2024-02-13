@@ -87,7 +87,7 @@ class OpenSenseMapQuality(AirQualityEntity):
         self._osm = osm
         self._attr_unique_id = f"{station_id}_sensor"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{station_id}")},
+            identifiers={(DOMAIN, station_id)},
             manufacturer=MANUFACTURER,
             name=name,
             entry_type=DeviceEntryType.SERVICE,

@@ -4,7 +4,6 @@ import logging
 
 from homeassistant.const import Platform
 
-CONF_SCAN_INTERVAL_MIN = "scan_interval"
 CONF_STATION_ID = "station_id"
 
 DOMAIN = "opensensemap"

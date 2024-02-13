@@ -32,7 +32,7 @@ class OpenSenseMapConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._station_id = user_input[CONF_STATION_ID]
-            self._name = user_input.get(CONF_NAME, None)
+            self._name = user_input.get(CONF_NAME)
             return await self._async_check_and_create_on_success(
                 return_form_on_error=True
             )
