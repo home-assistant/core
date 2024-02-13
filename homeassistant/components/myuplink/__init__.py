@@ -16,7 +16,11 @@ from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 from .coordinator import MyUplinkDataCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.UPDATE,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
