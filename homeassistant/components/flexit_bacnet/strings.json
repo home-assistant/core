@@ -23,35 +23,35 @@
       }
     },
     "number": {
-      "fan_setpoint_fireplace_extract": {
-        "name": "Fan setpoint fireplace extract"
+      "away_extract_fan_setpoint": {
+        "name": "Away extract fan setpoint"
       },
-      "fan_setpoint_fireplace_supply": {
-        "name": "Fan setpoint fireplace supply"
+      "away_supply_fan_setpoint": {
+        "name": "Away supply fan setpoint"
       },
-      "fan_setpoint_away_extract": {
-        "name": "Fan setpoint away extract"
+      "cooker_hood_extract_fan_setpoint": {
+        "name": "Cooker hood extract fan setpoint"
       },
-      "fan_setpoint_away_supply": {
-        "name": "Fan setpoint away supply"
+      "cooker_hood_supply_fan_setpoint": {
+        "name": "Cooker hood supply fan setpoint"
       },
-      "fan_setpoint_home_extract": {
-        "name": "Fan setpoint home extract"
+      "fireplace_extract_fan_setpoint": {
+        "name": "Fireplace extract fan setpoint"
       },
-      "fan_setpoint_home_supply": {
-        "name": "Fan setpoint home supply"
+      "fireplace_supply_fan_setpoint": {
+        "name": "Fireplace supply fan setpoint"
       },
-      "fan_setpoint_high_extract": {
-        "name": "Fan setpoint high extract"
+      "high_extract_fan_setpoint": {
+        "name": "High extract fan setpoint"
       },
-      "fan_setpoint_high_supply": {
-        "name": "Fan setpoint high supply"
+      "high_supply_fan_setpoint": {
+        "name": "High supply fan setpoint"
       },
-      "fan_setpoint_cooker_hood_extract": {
-        "name": "Fan setpoint cooker hood extract"
+      "home_extract_fan_setpoint": {
+        "name": "Home extract fan setpoint"
       },
-      "fan_setpoint_cooker_hood_supply": {
-        "name": "Fan setpoint cooker hood supply"
+      "home_supply_fan_setpoint": {
+        "name": "Home supply fan setpoint"
       }
     },
     "sensor": {

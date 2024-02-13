@@ -15,7 +15,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 from tests.components.flexit_bacnet import setup_with_selected_platforms
 
-ENTITY_ID = "number.device_name_fan_setpoint_fireplace_supply"
+ENTITY_ID = "number.device_name_fireplace_supply_fan_setpoint"
 
 
 async def test_numbers(
