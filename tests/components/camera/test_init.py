@@ -27,7 +27,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_turbo_jpeg
+from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, WEBRTC_CONFIG, mock_turbo_jpeg
 
 from tests.common import (
     async_fire_time_changed,
@@ -759,6 +759,253 @@ async def test_websocket_web_rtc_offer_invalid_stream_type(
     assert response["type"] == TYPE_RESULT
     assert not response["success"]
     assert response["error"]["code"] == "web_rtc_offer_failed"
+
+
+async def test_websocket_web_rtc_config(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_camera_web_rtc,
+) -> None:
+    """Test getting configuration for a WebRTC stream."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "camera/web_rtc_config",
+            "entity_id": "camera.demo_camera",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert response["success"]
+    assert (
+        response["result"]["rtc_configuration"]
+        == WEBRTC_CONFIG.rtc_configuration.as_ws_dict()
+    )
+    assert response["result"]["audio_direction"] == str(WEBRTC_CONFIG.audio_direction)
+    assert response["result"]["video_direction"] == str(WEBRTC_CONFIG.video_direction)
+
+
+async def test_websocket_web_rtc_config_invalid_entity(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_camera_web_rtc,
+) -> None:
+    """Test WebRTC with a camera entity that does not exist."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "camera/web_rtc_config",
+            "entity_id": "camera.does_not_exist",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+
+
+async def test_websocket_web_rtc_config_failure(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_camera_web_rtc,
+) -> None:
+    """Test WebRTC stream that fails while requesting config."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_get_web_rtc_config",
+        side_effect=HomeAssistantError("config failed"),
+    ):
+        await client.send_json(
+            {
+                "id": 9,
+                "type": "camera/web_rtc_config",
+                "entity_id": "camera.demo_camera",
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"]["code"] == "web_rtc_config_failed"
+    assert response["error"]["message"] == "config failed"
+
+
+async def test_websocket_web_rtc_config_timeout(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_camera_web_rtc,
+) -> None:
+    """Test WebRTC stream with timeout handling getting config."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_get_web_rtc_config",
+        side_effect=TimeoutError(),
+    ):
+        await client.send_json(
+            {
+                "id": 9,
+                "type": "camera/web_rtc_config",
+                "entity_id": "camera.demo_camera",
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"]["code"] == "web_rtc_config_failed"
+    assert response["error"]["message"] == "Timeout getting WebRTC configuration"
+
+
+async def test_websocket_web_rtc_config_invalid_stream_type(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_camera,
+) -> None:
+    """Test WebRTC getting config for a camera with a different stream_type."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "camera/web_rtc_config",
+            "entity_id": "camera.demo_camera",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"]["code"] == "web_rtc_config_failed"
+
+
+async def test_websocket_web_rtc_close(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_camera_web_rtc,
+) -> None:
+    """Test closing a WebRTC stream."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "camera/web_rtc_close",
+            "entity_id": "camera.demo_camera",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert response["success"]
+    assert response["result"] is None
+
+
+async def test_websocket_web_rtc_close_invalid_entity(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_camera_web_rtc,
+) -> None:
+    """Test WebRTC close with a camera entity that does not exist."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "camera/web_rtc_close",
+            "entity_id": "camera.does_not_exist",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+
+
+async def test_websocket_web_rtc_close_failure(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_camera_web_rtc,
+) -> None:
+    """Test WebRTC stream that fails while requesting close."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_handle_web_rtc_close",
+        side_effect=HomeAssistantError("close failed"),
+    ):
+        await client.send_json(
+            {
+                "id": 9,
+                "type": "camera/web_rtc_close",
+                "entity_id": "camera.demo_camera",
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"]["code"] == "web_rtc_close_failed"
+    assert response["error"]["message"] == "close failed"
+
+
+async def test_websocket_web_rtc_close_timeout(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_camera_web_rtc,
+) -> None:
+    """Test WebRTC stream with timeout calling close."""
+    client = await hass_ws_client(hass)
+
+    with patch(
+        "homeassistant.components.camera.Camera.async_handle_web_rtc_close",
+        side_effect=TimeoutError(),
+    ):
+        await client.send_json(
+            {
+                "id": 9,
+                "type": "camera/web_rtc_close",
+                "entity_id": "camera.demo_camera",
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"]["code"] == "web_rtc_close_failed"
+    assert response["error"]["message"] == "Timeout calling WebRTC close"
+
+
+async def test_websocket_web_rtc_close_invalid_stream_type(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_camera,
+) -> None:
+    """Test WebRTC calling close for a camera with a different stream_type."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {
+            "id": 9,
+            "type": "camera/web_rtc_close",
+            "entity_id": "camera.demo_camera",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["id"] == 9
+    assert response["type"] == TYPE_RESULT
+    assert not response["success"]
+    assert response["error"]["code"] == "web_rtc_close_failed"
 
 
 @pytest.mark.usefixtures("mock_camera")
