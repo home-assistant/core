@@ -1695,6 +1695,7 @@ omit =
     homeassistant/components/myuplink/binary_sensor.py
     homeassistant/components/myuplink/coordinator.py
     homeassistant/components/myuplink/entity.py
+    homeassistant/components/myuplink/helpers.py
     homeassistant/components/myuplink/sensor.py
 
 
