@@ -262,13 +262,16 @@ async def test_form_host_already_exists(
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "host": "1.1.1.1",
+            "host": "1.1.1.2",
             "username": "test-username",
-            "password": "test-password",
+            "password": "changed-password",
         },
     )
     assert result2["type"] == "abort"
-    assert result2["reason"] == "already_configured"
+    assert result2["reason"] == "reauth_successful"
+    assert config_entry.data["host"] == "1.1.1.2"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "changed-password"
 
 
 async def test_zeroconf_serial_already_exists(
