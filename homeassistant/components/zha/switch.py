@@ -175,6 +175,8 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     _attribute_name: str
     _inverter_attribute_name: str | None = None
     _force_inverted: bool = False
+    _off_value: int = 0
+    _on_value: int = 1
 
     @classmethod
     def create_entity(
@@ -241,6 +243,8 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
             self._inverter_attribute_name = switch_metadata.invert_attribute_name
         if switch_metadata.force_inverted:
             self._force_inverted = switch_metadata.force_inverted
+        self._off_value = switch_metadata.off_value
+        self._on_value = switch_metadata.on_value
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -266,14 +270,29 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
-        val = bool(self._cluster_handler.cluster.get(self._attribute_name))
+        if self._on_value != 1:
+            val = self._cluster_handler.cluster.get(self._attribute_name)
+            val = val == self._on_value
+        else:
+            val = bool(self._cluster_handler.cluster.get(self._attribute_name))
         return (not val) if self.inverted else val
 
     async def async_turn_on_off(self, state: bool) -> None:
         """Turn the entity on or off."""
-        await self._cluster_handler.write_attributes_safe(
-            {self._attribute_name: not state if self.inverted else state}
-        )
+        if self.inverted:
+            state = not state
+        if state and self._on_value != 1:
+            await self._cluster_handler.write_attributes_safe(
+                {self._attribute_name: self._on_value}
+            )
+        elif not state and self._off_value != 0:
+            await self._cluster_handler.write_attributes_safe(
+                {self._attribute_name: self._off_value}
+            )
+        else:
+            await self._cluster_handler.write_attributes_safe(
+                {self._attribute_name: state}
+            )
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
