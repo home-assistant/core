@@ -96,7 +96,7 @@ class PushBot(BaseTelegramBotEntity):
 
     async def register_webhook(self):
         """Query telegram and register the URL for our webhook."""
-        current_status = await self.bot.getWebhookInfo()
+        current_status = await self.bot.get_webhook_info()
         # Some logging of Bot current status:
         last_error_date = getattr(current_status, "last_error_date", None)
         if (last_error_date is not None) and (isinstance(last_error_date, int)):
