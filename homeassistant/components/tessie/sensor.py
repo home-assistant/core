@@ -115,6 +115,22 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     TessieSensorEntityDescription(
+        key="charge_state_est_battery_range",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+    ),
+    TessieSensorEntityDescription(
+        key="charge_state_ideal_battery_range",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+    ),
+    TessieSensorEntityDescription(
         key="drive_state_speed",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
