@@ -31,6 +31,14 @@
       "home_supply_fan_setpoint": {
         "default": "mdi:fan-plus"
       }
+    },
+    "switch": {
+      "electric_heater": {
+        "default": "mdi:radiator",
+        "state": {
+          "off": "mdi:radiator-off"
+        }
+      }
     }
   }
 }
