@@ -302,6 +302,12 @@ class ProbeEndpoint:
                     [cluster_handler],
                     quirk_metadata=quirk_metadata,
                 )
+                _LOGGER.debug(
+                    "'%s' platform -> '%s' using %s",
+                    platform,
+                    entity_class.__name__,
+                    [cluster_handler.name],
+                )
 
     @callback
     def discover_coordinator_device_entities(self, device: ZHADevice) -> None:
@@ -330,6 +336,12 @@ class ProbeEndpoint:
                             ),
                             {},
                         )
+                    )
+                    _LOGGER.debug(
+                        "'%s' platform -> '%s' using %s",
+                        Platform.SENSOR,
+                        sensor.DeviceCounterSensor.__name__,
+                        f"counter groups[{counter_groups}] counter group[{counter_group}] counter[{counter}]",
                     )
 
         process_counters("counters")
@@ -493,7 +505,7 @@ class ProbeEndpoint:
         for platform, ent_n_handler_list in matches.items():
             for entity_and_handler in ent_n_handler_list:
                 _LOGGER.debug(
-                    "'%s' component -> '%s' using %s",
+                    "'%s' platform -> '%s' using %s",
                     platform,
                     entity_and_handler.entity_class.__name__,
                     [ch.name for ch in entity_and_handler.claimed_cluster_handlers],
