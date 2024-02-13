@@ -67,7 +67,7 @@ async def test_connect_websocket_error(
 ) -> None:
     """Test reconnect when connect throws a WebsocketError."""
 
-    with patch("homeassistant.components.blue_current.LARGE_DELAY", 0):
+    with patch("homeassistant.components.blue_current.DELAY", 0):
         mock_client, started_loop, future_container = await init_integration(
             hass, config_entry
         )
