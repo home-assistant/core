@@ -33,7 +33,6 @@ def get_description(device_point: DevicePoint) -> BinarySensorEntityDescription 
     1. Category specific prefix e.g "NIBEF"
     2. Default to None
     """
-    description = None
     prefix, _, _ = device_point.category.partition(" ")
     description = CATEGORY_BASED_DESCRIPTIONS.get(prefix, {}).get(
         device_point.parameter_id
@@ -56,10 +55,9 @@ async def async_setup_entry(
         for point_id, device_point in point_data.items():
             if find_matching_platform(device_point) == Platform.BINARY_SENSOR:
                 description = get_description(device_point)
-                entity_class = MyUplinkDevicePointBinarySensor
 
                 entities.append(
-                    entity_class(
+                    MyUplinkDevicePointBinarySensor(
                         coordinator=coordinator,
                         device_id=device_id,
                         device_point=device_point,
