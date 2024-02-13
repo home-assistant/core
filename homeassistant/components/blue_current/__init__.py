@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import suppress
-from datetime import datetime
 from typing import Any
 
 from bluecurrent_api import Client
@@ -25,15 +24,15 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN, EVSE_ID, LOGGER, MODEL_TYPE
 
 PLATFORMS = [Platform.SENSOR]
 CHARGE_POINTS = "CHARGE_POINTS"
+CHARGE_CARDS = "CHARGE_CARDS"
+CARDS = "cards"
 DATA = "data"
-SMALL_DELAY = 1
-LARGE_DELAY = 20
+DELAY = 5
 
 GRID = "GRID"
 OBJECT = "object"
@@ -48,16 +47,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     connector = Connector(hass, config_entry, client)
 
     try:
-        await connector.connect(api_token)
+        await client.validate_api_token(api_token)
     except InvalidApiToken as err:
         raise ConfigEntryAuthFailed("Invalid API token.") from err
     except BlueCurrentException as err:
         raise ConfigEntryNotReady from err
 
-    hass.async_create_background_task(connector.start_loop(), "blue_current-websocket")
-    await client.get_charge_points()
+    hass.async_create_background_task(connector.connect(), "blue_current-websocket")
 
-    await client.wait_for_response()
+    await client.wait_for_charge_points()
     hass.data[DOMAIN][config_entry.entry_id] = connector
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -94,13 +92,9 @@ class Connector:
         self.hass = hass
         self.client = client
         self.charge_points: dict[str, dict] = {}
+        self.cards: list[dict[str, Any]] = []
         self.grid: dict[str, Any] = {}
         self.available = False
-
-    async def connect(self, token: str) -> None:
-        """Register on_data and connect to the websocket."""
-        await self.client.connect(token)
-        self.available = True
 
     async def on_data(self, message: dict) -> None:
         """Handle received data."""
@@ -111,6 +105,10 @@ class Connector:
         if object_name == CHARGE_POINTS:
             charge_points_data: list = message[DATA]
             await self.handle_charge_point_data(charge_points_data)
+
+        elif object_name == CHARGE_CARDS:
+            cards: list[dict[str, Any]] = message[CARDS]
+            self.cards = cards
 
         # gets charge point key / values
         elif object_name in VALUE_TYPES:
@@ -158,34 +156,37 @@ class Connector:
         """Dispatch a grid signal."""
         async_dispatcher_send(self.hass, f"{DOMAIN}_grid_update")
 
-    async def start_loop(self) -> None:
+    async def connect(self) -> None:
         """Start the receive loop."""
         try:
-            await self.client.start_loop(self.on_data)
-        except BlueCurrentException as err:
-            LOGGER.warning(
-                "Disconnected from the Blue Current websocket. Retrying to connect in background. %s",
-                err,
-            )
-
-            async_call_later(self.hass, SMALL_DELAY, self.reconnect)
-
-    async def reconnect(self, _event_time: datetime | None = None) -> None:
-        """Keep trying to reconnect to the websocket."""
-        try:
-            await self.connect(self.config.data[CONF_API_TOKEN])
-            LOGGER.debug("Reconnected to the Blue Current websocket")
-            self.hass.async_create_task(self.start_loop())
+            await self.client.connect(self.on_data)
         except RequestLimitReached:
-            self.available = False
-            async_call_later(
-                self.hass, self.client.get_next_reset_delta(), self.reconnect
+            LOGGER.warning(
+                "Request limit reached. reconnecting at 00:00 (Europe/Amsterdam)"
             )
+            self.on_disconnect()
+            delay = self.client.get_next_reset_delta()
+            await asyncio.sleep(delay.seconds)
+            await self.connect()
         except WebsocketError:
-            self.available = False
-            async_call_later(self.hass, LARGE_DELAY, self.reconnect)
+            LOGGER.debug("Disconnected, retrying in background")
+            self.on_disconnect()
+            await asyncio.sleep(DELAY)
+            await self.connect()
+
+    def on_disconnect(self) -> None:
+        """Dispatch signals to update entity states."""
+        for evse_id in self.charge_points:
+            self.dispatch_value_update_signal(evse_id)
+        self.dispatch_grid_update_signal()
 
     async def disconnect(self) -> None:
         """Disconnect from the websocket."""
         with suppress(WebsocketError):
             await self.client.disconnect()
+            self.on_disconnect()
+
+    @property
+    def connected(self) -> bool:
+        """Returns the connection status."""
+        return self.client.is_connected()
