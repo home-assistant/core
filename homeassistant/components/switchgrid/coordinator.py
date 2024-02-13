@@ -48,8 +48,3 @@ class SwitchgridCoordinator(DataUpdateCoordinator[SwitchgridEventsResponse]):
         return next(
             (event for event in self._client.data.events if event.startUtc > now), None
         )
-
-    @property
-    def last_updated(self) -> str | None:
-        """Return the time data was last updated."""
-        return self._client.last_updated if self._client.last_updated else None

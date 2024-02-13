@@ -1,6 +1,7 @@
 """Config flow for Switchgrid integration."""
 from __future__ import annotations
 
+from asyncio import timeout
 from typing import Any
 
 from switchgrid_python_client import SwitchgridClient
@@ -11,7 +12,6 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .coordinator import SwitchgridCoordinator
 
 STEP_USER_DATA_SCHEMA = vol.Schema({})
 
@@ -33,13 +33,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         session = async_get_clientsession(self.hass)
         client = SwitchgridClient(session)
-        coordinator = SwitchgridCoordinator(self.hass, client)
 
         try:
-            await coordinator.async_refresh()
+            async with timeout(10):
+                await client.update()
+                if client.last_updated is None:
+                    return self.async_abort(reason="cannot_connect")
         except Exception:  # pylint: disable=broad-except
-            return self.async_abort(reason="cannot_connect")
-        if coordinator.last_updated is None:
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title="Switchgrid", data=user_input)
