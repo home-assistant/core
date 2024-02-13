@@ -430,25 +430,27 @@ async def test_value_template_fails(
     entity.hass = hass
     tpl = template.Template("{{ value_json.some_var * 2 }}")
     val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass, entity=entity)
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError) as exc:
         val_tpl.async_render_with_possible_json_value('{"some_var": null }')
-    await hass.async_block_till_done()
+    assert str(exc.value) == "unsupported operand type(s) for *: 'NoneType' and 'int'"
     assert (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
         "rendering template for entity 'sensor.test', "
         "template: '{{ value_json.some_var * 2 }}'"
     ) in caplog.text
     caplog.clear()
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError) as exc:
         val_tpl.async_render_with_possible_json_value(
             '{"some_var": null }', default=100
         )
+    assert str(exc.value) == "unsupported operand type(s) for *: 'NoneType' and 'int'"
     assert (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
         "rendering template for entity 'sensor.test', "
         "template: '{{ value_json.some_var * 2 }}', default value: 100 and payload: "
         '{"some_var": null }'
     ) in caplog.text
+    await hass.async_block_till_done()
 
 
 async def test_service_call_without_topic_does_not_publish(
