@@ -80,6 +80,8 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
             pyvlx = PyVLX(
                 host=user_input[CONF_HOST], password=user_input[CONF_PASSWORD]
             )

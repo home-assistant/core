@@ -81,7 +81,8 @@ async def test_import_valid_config(hass: HomeAssistant) -> None:
         assert result["data"] == DUMMY_DATA
 
 
-async def test_import_duplicate_entry(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("flow_source", [SOURCE_IMPORT, SOURCE_USER])
+async def test_flow_duplicate_entry(hass: HomeAssistant, flow_source: str) -> None:
     """Test import initialized flow with a duplicate entry."""
     with patch(PYVLX_CONFIG_FLOW_CLASS_PATH, autospec=True):
         conf_entry: MockConfigEntry = MockConfigEntry(
@@ -92,7 +93,7 @@ async def test_import_duplicate_entry(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": SOURCE_IMPORT},
+            context={"source": flow_source},
             data=DUMMY_DATA,
         )
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
