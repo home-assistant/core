@@ -395,7 +395,7 @@ class ConfigEntry:
     def __setattr__(self, key: str, value: Any) -> None:
         """Set an attribute."""
         if key in UPDATE_ENTRY_CONFIG_ENTRY_ATTRS:
-            report(  # type: ignore[unreachable]
+            report(
                 f"sets {key} directly to update a config entry. This is deprecated and will"
                 " stop working in Home Assistant 2024.10, it should be updated to use"
                 " async_update_entry instead"
