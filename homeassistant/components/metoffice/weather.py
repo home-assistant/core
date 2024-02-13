@@ -7,6 +7,7 @@ from datapoint.Timestep import Timestep
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_IS_DAYTIME,
     ATTR_FORECAST_NATIVE_TEMP,
     ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
@@ -32,6 +33,7 @@ from .const import (
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
+    MODE_3HOURLY,
     MODE_DAILY,
 )
 from .data import MetOfficeData
@@ -48,8 +50,9 @@ async def async_setup_entry(
         MetOfficeWeather(
             hass_data[METOFFICE_DAILY_COORDINATOR],
             hass_data[METOFFICE_HOURLY_COORDINATOR],
+            hass_data[METOFFICE_DAILY_COORDINATOR],
             hass_data,
-            False,
+            MODE_DAILY,
         )
     ]
 
@@ -57,14 +60,15 @@ async def async_setup_entry(
     if entity_registry.async_get_entity_id(
         WEATHER_DOMAIN,
         DOMAIN,
-        _calculate_unique_id(hass_data[METOFFICE_COORDINATES], True),
+        _calculate_unique_id(hass_data[METOFFICE_COORDINATES], MODE_3HOURLY),
     ):
         entities.append(
             MetOfficeWeather(
                 hass_data[METOFFICE_DAILY_COORDINATOR],
                 hass_data[METOFFICE_HOURLY_COORDINATOR],
+                hass_data[METOFFICE_DAILY_COORDINATOR],
                 hass_data,
-                True,
+                MODE_3HOURLY,
             )
         )
 
@@ -73,6 +77,8 @@ async def async_setup_entry(
 
 def _build_forecast_data(timestep: Timestep) -> Forecast:
     data = Forecast(datetime=timestep.date.isoformat())
+    forecast_hour = timestep.date.hour
+    data[ATTR_FORECAST_IS_DAYTIME] = 6 <= forecast_hour < 21
     if timestep.weather:
         data[ATTR_FORECAST_CONDITION] = CONDITION_MAP.get(timestep.weather.value)
     if timestep.precipitation:
@@ -86,11 +92,11 @@ def _build_forecast_data(timestep: Timestep) -> Forecast:
     return data
 
 
-def _calculate_unique_id(coordinates: str, use_3hourly: bool) -> str:
+def _calculate_unique_id(coordinates: str, mode: str) -> str:
     """Calculate unique ID."""
-    if use_3hourly:
+    if mode == MODE_3HOURLY:
         return coordinates
-    return f"{coordinates}_{MODE_DAILY}"
+    return f"{coordinates}_{mode}"
 
 
 class MetOfficeWeather(
@@ -98,7 +104,7 @@ class MetOfficeWeather(
         TimestampDataUpdateCoordinator[MetOfficeData],
         TimestampDataUpdateCoordinator[MetOfficeData],
         TimestampDataUpdateCoordinator[MetOfficeData],
-        TimestampDataUpdateCoordinator[MetOfficeData],  # Can be removed in Python 3.12
+        TimestampDataUpdateCoordinator[MetOfficeData],
     ]
 ):
     """Implementation of a Met Office weather condition."""
@@ -110,24 +116,29 @@ class MetOfficeWeather(
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_wind_speed_unit = UnitOfSpeed.MILES_PER_HOUR
     _attr_supported_features = (
-        WeatherEntityFeature.FORECAST_HOURLY | WeatherEntityFeature.FORECAST_DAILY
+        WeatherEntityFeature.FORECAST_HOURLY
+        | WeatherEntityFeature.FORECAST_DAILY
+        | WeatherEntityFeature.FORECAST_TWICE_DAILY
     )
 
     def __init__(
         self,
         coordinator_daily: TimestampDataUpdateCoordinator[MetOfficeData],
         coordinator_hourly: TimestampDataUpdateCoordinator[MetOfficeData],
+        coordinator_twice_daily: TimestampDataUpdateCoordinator[MetOfficeData],
         hass_data: dict[str, Any],
-        use_3hourly: bool,
+        mode: str,
     ) -> None:
         """Initialise the platform with a data instance."""
-        self._hourly = use_3hourly
-        if use_3hourly:
+
+        if mode == MODE_3HOURLY:
             observation_coordinator = coordinator_hourly
         else:
             observation_coordinator = coordinator_daily
+
         super().__init__(
             observation_coordinator,
+            twice_daily_coordinator=coordinator_twice_daily,
             daily_coordinator=coordinator_daily,
             hourly_coordinator=coordinator_hourly,
         )
@@ -135,9 +146,9 @@ class MetOfficeWeather(
         self._attr_device_info = get_device_info(
             coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
         )
-        self._attr_name = "3-Hourly" if use_3hourly else "Daily"
+        self._attr_name = mode
         self._attr_unique_id = _calculate_unique_id(
-            hass_data[METOFFICE_COORDINATES], use_3hourly
+            hass_data[METOFFICE_COORDINATES], mode
         )
 
     @property
@@ -198,14 +209,28 @@ class MetOfficeWeather(
         return [
             _build_forecast_data(timestep)
             for timestep in self.coordinator.data.forecast
+            if self._attr_name != MODE_DAILY or timestep.date.hour > 6
         ]
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
-        """Return the twice daily forecast in native units."""
+        """Return the daily forecast in native units."""
         coordinator = cast(
             TimestampDataUpdateCoordinator[MetOfficeData],
             self.forecast_coordinators["daily"],
+        )
+        return [
+            _build_forecast_data(timestep)
+            for timestep in coordinator.data.forecast
+            if timestep.date.hour > 6
+        ]
+
+    @callback
+    def _async_forecast_twice_daily(self) -> list[Forecast] | None:
+        """Return the twice daily forecast in native units."""
+        coordinator = cast(
+            TimestampDataUpdateCoordinator[MetOfficeData],
+            self.forecast_coordinators["twice_daily"],
         )
         return [
             _build_forecast_data(timestep) for timestep in coordinator.data.forecast

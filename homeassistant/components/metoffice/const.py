@@ -32,8 +32,9 @@ METOFFICE_DAILY_COORDINATOR = "metoffice_daily_coordinator"
 METOFFICE_MONITORED_CONDITIONS = "metoffice_monitored_conditions"
 METOFFICE_NAME = "metoffice_name"
 
-MODE_3HOURLY = "3hourly"
+MODE_3HOURLY = "3-hourly"
 MODE_DAILY = "daily"
+MODE_TWICE_DAILY = "twice-daily"
 
 CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_CLEAR_NIGHT: ["0"],

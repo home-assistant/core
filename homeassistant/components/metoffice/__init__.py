@@ -30,6 +30,7 @@ from .const import (
     METOFFICE_NAME,
     MODE_3HOURLY,
     MODE_DAILY,
+    MODE_TWICE_DAILY,
 )
 from .data import MetOfficeData
 from .helpers import fetch_data, fetch_site
@@ -111,6 +112,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             fetch_data, connection, site, MODE_DAILY
         )
 
+    async def async_update_twice_daily() -> MetOfficeData:
+        return await hass.async_add_executor_job(
+            fetch_data, connection, site, MODE_TWICE_DAILY
+        )
+
     metoffice_hourly_coordinator = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -123,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         name=f"MetOffice Daily Coordinator for {site_name}",
-        update_method=async_update_daily,
+        update_method=async_update_twice_daily,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
