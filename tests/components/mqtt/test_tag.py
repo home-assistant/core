@@ -951,3 +951,25 @@ async def test_unload_entry(
     async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
     await hass.async_block_till_done()
     tag_mock.assert_not_called()
+
+
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mqtt_mock: MqttMockHAClient,
+    tag_mock: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    config = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
+    config["value_template"] = "{{ value_json.some_var * 1 }}"
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "foobar/tag_scanned", '{"some_var": null }')
+    await hass.async_block_till_done()
+
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

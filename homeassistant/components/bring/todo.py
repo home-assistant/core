@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from python_bring_api.exceptions import BringRequestException
+from bring_api.exceptions import BringRequestException
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -75,8 +75,8 @@ class BringTodoListEntity(
         """Return the todo items."""
         return [
             TodoItem(
-                uid=item["name"],
-                summary=item["name"],
+                uid=item["itemId"],
+                summary=item["itemId"],
                 description=item["specification"] or "",
                 status=TodoItemStatus.NEEDS_ACTION,
             )
@@ -91,11 +91,8 @@ class BringTodoListEntity(
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         try:
-            await self.hass.async_add_executor_job(
-                self.coordinator.bring.saveItem,
-                self.bring_list["listUuid"],
-                item.summary,
-                item.description or "",
+            await self.coordinator.bring.saveItem(
+                self.bring_list["listUuid"], item.summary, item.description or ""
             )
         except BringRequestException as e:
             raise HomeAssistantError("Unable to save todo item for bring") from e
@@ -126,16 +123,14 @@ class BringTodoListEntity(
             assert item.uid
 
         if item.status == TodoItemStatus.COMPLETED:
-            await self.hass.async_add_executor_job(
-                self.coordinator.bring.removeItem,
+            await self.coordinator.bring.removeItem(
                 bring_list["listUuid"],
                 item.uid,
             )
 
         elif item.summary == item.uid:
             try:
-                await self.hass.async_add_executor_job(
-                    self.coordinator.bring.updateItem,
+                await self.coordinator.bring.updateItem(
                     bring_list["listUuid"],
                     item.uid,
                     item.description or "",
@@ -144,13 +139,11 @@ class BringTodoListEntity(
                 raise HomeAssistantError("Unable to update todo item for bring") from e
         else:
             try:
-                await self.hass.async_add_executor_job(
-                    self.coordinator.bring.removeItem,
+                await self.coordinator.bring.removeItem(
                     bring_list["listUuid"],
                     item.uid,
                 )
-                await self.hass.async_add_executor_job(
-                    self.coordinator.bring.saveItem,
+                await self.coordinator.bring.saveItem(
                     bring_list["listUuid"],
                     item.summary,
                     item.description or "",
@@ -164,8 +157,8 @@ class BringTodoListEntity(
         """Delete an item from the To-do list."""
         for uid in uids:
             try:
-                await self.hass.async_add_executor_job(
-                    self.coordinator.bring.removeItem, self.bring_list["listUuid"], uid
+                await self.coordinator.bring.removeItem(
+                    self.bring_list["listUuid"], uid
                 )
             except BringRequestException as e:
                 raise HomeAssistantError("Unable to delete todo item for bring") from e
