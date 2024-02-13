@@ -920,7 +920,7 @@ geopy==2.3.0
 georss-generic-client==0.8
 
 # homeassistant.components.ign_sismologia
-georss-ign-sismologia-client==0.6
+georss-ign-sismologia-client==0.8
 
 # homeassistant.components.qld_bushfire
 georss-qld-bushfire-alert-client==0.5
