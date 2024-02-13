@@ -246,6 +246,9 @@
     }
   },
   "exceptions": {
+    "command_template_error": {
+      "message": "Parsing template `{command_template}` for entity `{entity_id}` failed with error: {error}."
+    },
     "invalid_platform_config": {
       "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. See logs for more details."
     },

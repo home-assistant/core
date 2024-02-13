@@ -16,7 +16,11 @@ from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.client import EnsureJobAfterCooldown
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
-from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
+from homeassistant.components.mqtt.models import (
+    MessageCallbackType,
+    MqttCommandTemplateException,
+    ReceiveMessage,
+)
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -367,6 +371,15 @@ async def test_command_template_variables(
         assert template_state_calls.call_count == 0
         state = hass.states.get("select.test_select")
         assert state and state.state == "milk"
+
+
+async def test_command_template_fails(hass: HomeAssistant) -> None:
+    """Test the exception handling of an MQTT command template."""
+    tpl = template.Template("{{ value * 2 }}")
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
+    with pytest.raises(MqttCommandTemplateException) as exc:
+        cmd_tpl.async_render(None)
+    assert "unsupported operand type(s) for *: 'NoneType' and 'int'" in str(exc.value)
 
 
 async def test_value_template_value(hass: HomeAssistant) -> None:
