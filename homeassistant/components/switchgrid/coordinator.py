@@ -21,7 +21,7 @@ class SwitchgridCoordinator(DataUpdateCoordinator[SwitchgridClient]):
     def __init__(
         self,
         hass: HomeAssistant,
-        data: SwitchgridClient,
+        client: SwitchgridClient,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -30,21 +30,21 @@ class SwitchgridCoordinator(DataUpdateCoordinator[SwitchgridClient]):
             name="Switchgrid Events Coordinator",
             update_interval=UPDATE_INTERVAL,
         )
-        self._data = data
+        self._client = client
 
     async def _async_update_data(self) -> SwitchgridEventsResponse:
         try:
             async with timeout(10):
-                await self._data.update()
-                return self._data.data
+                await self._client.update()
+                return self._client.data
         except aiohttp.ClientError as error:
             raise UpdateFailed(error) from error
 
     def next_event(self) -> Event | None:
         """Return the next (first) upcoming event."""
         now = dt_util.now()
-        if self._data.data is None:
+        if self._client.data is None:
             return None
         return next(
-            (event for event in self._data.data.events if event.startUtc > now), None
+            (event for event in self._client.data.events if event.startUtc > now), None
         )
