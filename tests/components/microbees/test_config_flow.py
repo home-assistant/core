@@ -1,67 +1,82 @@
-"""Test Config flow for microBees integration."""
+"""Test the MicroBees config flow."""
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from homeassistant.components.microbees.config_flow import ConfigFlow
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.components.microbees import config_flow
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+
+"""Test the MicroBees config flow."""
 
 
 class TestMicroBeesConfigFlow(unittest.TestCase):
     """Test the MicroBees config flow."""
 
     def setUp(self):
-        """Set up things to be run when tests are started."""
-        self.hass = self.create_patch("homeassistant.core.HomeAssistant")
-        self.hass.config_entries = self.create_patch(
-            "homeassistant.config_entries.ConfigEntries"
-        )
-        self.hass.helpers = self.create_patch("homeassistant.helpers")
-        self.hass.helpers.aiohttp_client = async_get_clientsession
-        self.flow = ConfigFlow()
+        """Initialize test data."""
+        self.hass = MagicMock(spec=HomeAssistant)
+        self.entry = MagicMock(spec=ConfigEntry)
 
-    def create_patch(self, *args, **kwargs):
-        """Create a patcher."""
-        patcher = patch(*args, **kwargs)
-        self.addCleanup(patcher.stop)
-        return patcher.start()
+    @patch("microBeesPy.microbees.MicroBees")
+    @patch("microBeesPy.microbees.MicroBees.getMyProfile")
+    async def test_async_oauth_create_entry_success(
+        self, mock_get_my_profile, mock_microbees
+    ):
+        """Test the entry success create."""
+        mock_microbees_instance = MagicMock()
+        mock_microbees.return_value = mock_microbees_instance
+        mock_get_my_profile.return_value = MagicMock(username="test_user", id="12345")
 
-    async def test_async_step_user(self):
-        """Test the async_step_user method."""
-        result = await self.flow.async_step_user()
-        self.assertEqual(result["type"], "form")
-        self.assertEqual(result["step_id"], "user")
+        data = {"token": {"access_token": "mock-access-token"}}
+        result = await config_flow.OAuth2FlowHandler(
+            self.hass
+        ).async_oauth_create_entry(data)
+        self.assertEqual(result["type"], "create_entry")
+        self.assertEqual(result["title"], "test_user")
+        self.assertEqual(result["data"], data)
 
-    @patch("homeassistant.config_entries.SOURCE_REAUTH", "reauth")
+    @patch("microBeesPy.microbees.MicroBees")
+    @patch("microBeesPy.microbees.MicroBees.getMyProfile")
+    async def test_async_oauth_create_entry_invalid_auth(
+        self, mock_get_my_profile, mock_microbees
+    ):
+        """Test the entry invalid auth."""
+        mock_microbees_instance = MagicMock()
+        mock_microbees.return_value = mock_microbees_instance
+        mock_get_my_profile.side_effect = Exception("Invalid authentication")
+
+        data = {"token": {"access_token": "mock-access-token"}}
+        result = await config_flow.OAuth2FlowHandler(
+            self.hass
+        ).async_oauth_create_entry(data)
+        """Test the MicroBees config flow."""
+        self.assertEqual(result["type"], "abort")
+        self.assertEqual(result["reason"], "invalid_auth")
+
     async def test_async_step_reauth(self):
-        """Test the async_step_reauth method."""
-        result = await self.flow.async_step_reauth({})
-        self.assertEqual(result["type"], "form")
-        self.assertEqual(result["step_id"], "reauth_confirm")
+        """Test the entry reauth."""
+        handler = config_flow.OAuth2FlowHandler(self.hass)
+        handler.context = {"entry_id": "123456"}
+
+        with patch.object(
+            handler.hass.config_entries, "async_get_entry", return_value=self.entry
+        ) as mock_get_entry:
+            """Test the MicroBees config flow."""
+            result = await handler.async_step_reauth({})
+            self.assertEqual(result["step_id"], "reauth_confirm")
+            mock_get_entry.assert_called_once_with("123456")
 
     async def test_async_step_reauth_confirm(self):
-        """Test the async_step_reauth_confirm method."""
-        result = await self.flow.async_step_reauth_confirm({})
+        """Test the entry reauth confirm."""
+        handler = config_flow.OAuth2FlowHandler(self.hass)
+        handler.context = {"entry_id": "123456"}
+
+        result = await handler.async_step_reauth_confirm({})
         self.assertEqual(result["type"], "form")
-        self.assertEqual(result["step_id"], "reauth_confirm")
 
-        result = await self.flow.async_step_reauth_confirm({"key": "value"})
-        self.assertEqual(result["type"], "create_entry")
-        self.assertEqual(result["title"], "John Doe")  # Adjust with your expected title
-
-    @patch(
-        "homeassistant.components.microbees.config_flow.MicroBeesConnector.getMyProfile"
-    )
-    async def test_async_oauth_create_entry(self, mock_get_my_profile):
-        """Test the async_oauth_create_entry method."""
-        mock_get_my_profile.return_value = MockMyProfile(
-            id="123", firstName="John", lastName="Doe"
-        )
-        result = await self.flow.async_oauth_create_entry(
-            {"token": {"access_token": "xyz"}}
-        )
-        self.assertEqual(result["type"], "create_entry")
-        self.assertEqual(result["title"], "John Doe")  # Adjust with your expected title
-        self.assertEqual(result["data"]["id"], "123")
+        result = await handler.async_step_reauth_confirm({"dummy_input": "dummy_value"})
+        self.assertEqual(result["type"], "abort")
+        self.assertEqual(result["reason"], "wrong_account")
 
 
 if __name__ == "__main__":

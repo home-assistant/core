@@ -1,8 +1,8 @@
 """The microBees integration."""
 
+from dataclasses import dataclass
 from http import HTTPStatus
 import logging
-from dataclasses import dataclass
 
 import aiohttp
 from microBeesPy.microbees import MicroBees

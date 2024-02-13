@@ -1,10 +1,11 @@
 """The microBees Coordinator."""
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
 import logging
-from dataclasses import dataclass
+
 import aiohttp
 from microBeesPy.microbees import Actuator, Bee, MicroBees, MicroBeesException
 

@@ -1,8 +1,12 @@
 {
   "entity": {
     "switch": {
-      "socket_it": "mdi:power-socket-it",
-      "socket_eu": "mdi:power-socket-eu"
+      "socket_eu": {
+        "default": "mdi:power-socket-eu"
+      },
+      "socket_it": {
+        "default": "mdi:power-socket-it"
+      }
     }
   }
 }

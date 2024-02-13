@@ -2,10 +2,9 @@
 
 import logging
 
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-
-from .const import ACCESS_TOKEN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,10 +20,10 @@ class ConfigEntryAuth:
         """Initialize microBees Auth."""
         self.hass = hass
         self.session = oauth_session
-        super().__init__(token=self.session.token[ACCESS_TOKEN])
+        super().__init__(token=self.session.token[CONF_ACCESS_TOKEN])
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self._oauth_session.async_ensure_token_valid()
 
-        return self._oauth_session.token[ACCESS_TOKEN]
+        return self._oauth_session.token[CONF_ACCESS_TOKEN]
