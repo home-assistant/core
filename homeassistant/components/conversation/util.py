@@ -1,8 +1,10 @@
 """Util for Conversation."""
+from __future__ import annotations
+
 import re
 
 
-def create_matcher(utterance):
+def create_matcher(utterance: str) -> re.Pattern[str]:
     """Create a regex that matches the utterance."""
     # Split utterance into parts that are type: NORMAL, GROUP or OPTIONAL
     # Pattern matches (GROUP|OPTIONAL): Change light to [the color] {name}

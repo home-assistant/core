@@ -140,7 +140,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
     # If version is specified, but not supported by the entity.
     if (
         version is not None
-        and UpdateEntityFeature.SPECIFIC_VERSION not in entity.supported_features
+        and UpdateEntityFeature.SPECIFIC_VERSION not in entity.supported_features_compat
     ):
         raise HomeAssistantError(
             f"Installing a specific version is not supported for {entity.entity_id}"
@@ -149,7 +149,7 @@ async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None
     # If backup is requested, but not supported by the entity.
     if (
         backup := service_call.data[ATTR_BACKUP]
-    ) and UpdateEntityFeature.BACKUP not in entity.supported_features:
+    ) and UpdateEntityFeature.BACKUP not in entity.supported_features_compat:
         raise HomeAssistantError(f"Backup is not supported for {entity.entity_id}")
 
     # Update is already in progress.

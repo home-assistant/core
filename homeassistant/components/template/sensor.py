@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+import logging
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    ATTR_LAST_RESET,
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
@@ -15,6 +17,7 @@ from homeassistant.components.sensor import (
     RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.config_entries import ConfigEntry
@@ -41,6 +44,7 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.trigger_template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import (
@@ -63,14 +67,29 @@ LEGACY_FIELDS = {
 }
 
 
-SENSOR_SCHEMA = (
+def validate_last_reset(val):
+    """Run extra validation checks."""
+    if (
+        val.get(ATTR_LAST_RESET) is not None
+        and val.get(CONF_STATE_CLASS) != SensorStateClass.TOTAL
+    ):
+        raise vol.Invalid(
+            "last_reset is only valid for template sensors with state_class 'total'"
+        )
+
+    return val
+
+
+SENSOR_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Required(CONF_STATE): cv.template,
+            vol.Optional(ATTR_LAST_RESET): cv.template,
         }
     )
     .extend(TEMPLATE_SENSOR_BASE_SCHEMA.schema)
-    .extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema),
+    validate_last_reset,
 )
 
 
@@ -137,6 +156,8 @@ PLATFORM_SCHEMA = vol.All(
     ),
     extra_validation_checks,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -236,6 +257,9 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
         self._template: template.Template = config[CONF_STATE]
+        self._attr_last_reset_template: None | template.Template = config.get(
+            ATTR_LAST_RESET
+        )
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
@@ -247,8 +271,19 @@ class SensorTemplate(TemplateEntity, SensorEntity):
         self.add_template_attribute(
             "_attr_native_value", self._template, None, self._update_state
         )
+        if self._attr_last_reset_template is not None:
+            self.add_template_attribute(
+                "_attr_last_reset",
+                self._attr_last_reset_template,
+                cv.datetime,
+                self._update_last_reset,
+            )
 
         super()._async_setup_templates()
+
+    @callback
+    def _update_last_reset(self, result):
+        self._attr_last_reset = result
 
     @callback
     def _update_state(self, result):
@@ -283,6 +318,13 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
     ) -> None:
         """Initialize."""
         super().__init__(hass, coordinator, config)
+
+        if (last_reset_template := config.get(ATTR_LAST_RESET)) is not None:
+            if last_reset_template.is_static:
+                self._static_rendered[ATTR_LAST_RESET] = last_reset_template.template
+            else:
+                self._to_render_simple.append(ATTR_LAST_RESET)
+
         self._attr_state_class = config.get(CONF_STATE_CLASS)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
@@ -309,6 +351,18 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
     def _process_data(self) -> None:
         """Process new data."""
         super()._process_data()
+
+        # Update last_reset
+        if ATTR_LAST_RESET in self._rendered:
+            parsed_timestamp = dt_util.parse_datetime(self._rendered[ATTR_LAST_RESET])
+            if parsed_timestamp is None:
+                _LOGGER.warning(
+                    "%s rendered invalid timestamp for last_reset attribute: %s",
+                    self.entity_id,
+                    self._rendered.get(ATTR_LAST_RESET),
+                )
+            else:
+                self._attr_last_reset = parsed_timestamp
 
         if (
             state := self._rendered.get(CONF_STATE)

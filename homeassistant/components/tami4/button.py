@@ -1,12 +1,13 @@
 """Button entities for Tami4Edge."""
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
 from Tami4EdgeAPI import Tami4EdgeAPI
 
-from homeassistant.components.button import ButtonEntity
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import API, DOMAIN
@@ -14,10 +15,21 @@ from .entity import Tami4EdgeBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_DESCRIPTION = EntityDescription(
-    key="boil_water",
-    translation_key="boil_water",
-    icon="mdi:kettle-steam",
+
+@dataclass(frozen=True, kw_only=True)
+class Tami4EdgeButtonEntityDescription(ButtonEntityDescription):
+    """A class that describes Tami4Edge button entities."""
+
+    press_fn: Callable[[Tami4EdgeAPI], None]
+
+
+BUTTONS: tuple[Tami4EdgeButtonEntityDescription] = (
+    Tami4EdgeButtonEntityDescription(
+        key="boil_water",
+        translation_key="boil_water",
+        icon="mdi:kettle-steam",
+        press_fn=lambda api: api.boil_water(),
+    ),
 )
 
 
@@ -27,16 +39,16 @@ async def async_setup_entry(
     """Perform the setup for Tami4Edge."""
     api: Tami4EdgeAPI = hass.data[DOMAIN][entry.entry_id][API]
 
-    async_add_entities([Tami4EdgeBoilButton(api)])
+    async_add_entities(
+        Tami4EdgeButton(api, entity_description) for entity_description in BUTTONS
+    )
 
 
-class Tami4EdgeBoilButton(Tami4EdgeBaseEntity, ButtonEntity):
-    """Boil button entity for Tami4Edge."""
+class Tami4EdgeButton(Tami4EdgeBaseEntity, ButtonEntity):
+    """Button entity for Tami4Edge."""
 
-    def __init__(self, api: Tami4EdgeAPI) -> None:
-        """Initialize the button entity."""
-        super().__init__(api, ENTITY_DESCRIPTION)
+    entity_description: Tami4EdgeButtonEntityDescription
 
     def press(self) -> None:
         """Handle the button press."""
-        self._api.boil_water()
+        self.entity_description.press_fn(self._api)

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.cover import CoverEntity
@@ -20,7 +20,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    ManualTriggerEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
@@ -50,6 +53,7 @@ async def async_setup_platform(
         trigger_entity_config = {
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
             CONF_NAME: Template(device_config.get(CONF_NAME, device_name), hass),
+            CONF_AVAILABILITY: device_config.get(CONF_AVAILABILITY),
         }
 
         covers.append(
@@ -147,7 +151,7 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
         if TYPE_CHECKING:
             return None
 
-    async def _update_entity_state(self, now) -> None:
+    async def _update_entity_state(self, now: datetime | None = None) -> None:
         """Update the state of the entity."""
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()
@@ -186,14 +190,14 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.hass.async_add_executor_job(self._move_cover, self._command_open)
-        await self._update_entity_state(None)
+        await self._update_entity_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.hass.async_add_executor_job(self._move_cover, self._command_close)
-        await self._update_entity_state(None)
+        await self._update_entity_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.hass.async_add_executor_job(self._move_cover, self._command_stop)
-        await self._update_entity_state(None)
+        await self._update_entity_state()

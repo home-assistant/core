@@ -1,4 +1,6 @@
 """The flume integration."""
+from __future__ import annotations
+
 from pyflume import FlumeAuth, FlumeDeviceList
 from requests import Session
 from requests.exceptions import RequestException
@@ -41,7 +43,9 @@ LIST_NOTIFICATIONS_SERVICE_SCHEMA = vol.All(
 )
 
 
-def _setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+def _setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> tuple[FlumeAuth, FlumeDeviceList, Session]:
     """Config entry set up in executor."""
     config = entry.data
 

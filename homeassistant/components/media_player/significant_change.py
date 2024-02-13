@@ -11,7 +11,6 @@ from homeassistant.helpers.significant_change import (
 
 from . import (
     ATTR_ENTITY_PICTURE_LOCAL,
-    ATTR_GROUP_MEMBERS,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_VOLUME_LEVEL,
@@ -25,9 +24,8 @@ INSIGNIFICANT_ATTRIBUTES: set[str] = {
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
     ATTR_ENTITY_PICTURE_LOCAL,
-    ATTR_GROUP_MEMBERS,
     *ATTR_TO_PROPERTY,
-}
+} - INSIGNIFICANT_ATTRIBUTES
 
 
 @callback
@@ -44,18 +42,10 @@ def async_check_significant_change(
         return True
 
     old_attrs_s = set(
-        {
-            k: v
-            for k, v in old_attrs.items()
-            if k in SIGNIFICANT_ATTRIBUTES - INSIGNIFICANT_ATTRIBUTES
-        }.items()
+        {k: v for k, v in old_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
     )
     new_attrs_s = set(
-        {
-            k: v
-            for k, v in new_attrs.items()
-            if k in SIGNIFICANT_ATTRIBUTES - INSIGNIFICANT_ATTRIBUTES
-        }.items()
+        {k: v for k, v in new_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
     )
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
 

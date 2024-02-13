@@ -885,3 +885,75 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
     caplog.clear()
     assert entity.supported_features_compat is UpdateEntityFeature(1)
     assert "is using deprecated supported features values" not in caplog.text
+
+
+async def test_deprecated_supported_features_ints_with_service_call(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test deprecated supported features ints with install service."""
+
+    async def async_setup_entry_init(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> bool:
+        """Set up test config entry."""
+        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        return True
+
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+    mock_integration(
+        hass,
+        MockModule(
+            TEST_DOMAIN,
+            async_setup_entry=async_setup_entry_init,
+        ),
+    )
+
+    class MockUpdateEntity(UpdateEntity):
+        _attr_supported_features = 1 | 2
+
+        def install(self, version: str | None = None, backup: bool = False) -> None:
+            """Install an update."""
+
+    entity = MockUpdateEntity()
+    entity.entity_id = (
+        "update.test_deprecated_supported_features_ints_with_service_call"
+    )
+
+    async def async_setup_entry_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddEntitiesCallback,
+    ) -> None:
+        """Set up test update platform via config entry."""
+        async_add_entities([entity])
+
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{DOMAIN}",
+        MockPlatform(async_setup_entry=async_setup_entry_platform),
+    )
+
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "is using deprecated supported features values" in caplog.text
+
+    assert isinstance(entity.supported_features, int)
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Backup is not supported for update.test_deprecated_supported_features_ints_with_service_call",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_INSTALL,
+            {
+                ATTR_VERSION: "0.9.9",
+                ATTR_BACKUP: True,
+                ATTR_ENTITY_ID: "update.test_deprecated_supported_features_ints_with_service_call",
+            },
+            blocking=True,
+        )
