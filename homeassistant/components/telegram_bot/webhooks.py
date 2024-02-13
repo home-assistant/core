@@ -81,7 +81,7 @@ class PushBot(BaseTelegramBotEntity):
                 return await self.bot.set_webhook(
                     self.webhook_url,
                     api_kwargs={"secret_token": self.secret_token},
-                    timeout=5,
+                    connect_timeout=5,
                 )
             except TimedOut:
                 retry_num += 1
