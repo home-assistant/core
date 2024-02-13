@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-import sys
 from typing import Any
 
 import datapoint
@@ -18,7 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
