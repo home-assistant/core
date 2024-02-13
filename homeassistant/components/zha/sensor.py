@@ -1461,9 +1461,9 @@ class DanfossLoadEstimate(Sensor):
 class DanfossAdaptationRunStatusBitmap(types.bitmap8):
     """Danfoss Adaptation run status bitmap."""
 
-    in_progress = 0x0001
-    run_successful = 0x0002
-    valve_characteristic_lost = 0x0004
+    In_progress = 0x0001
+    Valve_characteristic_found = 0x0002
+    Valve_characteristic_lost = 0x0004
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -1500,21 +1500,21 @@ class DanfossPreheatTime(Sensor):
 class DanfossSoftwareErrorCodeBitmap(types.bitmap16):
     """Danfoss software error code bitmap."""
 
-    top_pcb_sensor_error = 0x0001
-    side_pcb_sensor_error = 0x0002
-    non_volatile_memory_error = 0x0004
-    unknown_hw_error = 0x0008
+    Top_pcb_sensor_error = 0x0001
+    Side_pcb_sensor_error = 0x0002
+    Non_volatile_memory_error = 0x0004
+    Unknown_hw_error = 0x0008
     # 0x0010 = N/A
-    motor_error = 0x0020
+    Motor_error = 0x0020
     # 0x0040 = N/A
-    invalid_internal_communication = 0x0080
+    Invalid_internal_communication = 0x0080
     # 0x0100 = N/A
-    invalid_clock_information = 0x0200
+    Invalid_clock_information = 0x0200
     # 0x0400 = N/A
-    radio_communication_error = 0x0800
-    encoder_jammed = 0x1000
-    low_battery = 0x2000
-    critical_low_battery = 0x4000
+    Radio_communication_error = 0x0800
+    Encoder_jammed = 0x1000
+    Low_battery = 0x2000
+    Critical_low_battery = 0x4000
     # 0x8000 = Reserved
 
 
