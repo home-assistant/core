@@ -878,11 +878,14 @@ async def test_reauth_no_update_if_config_and_ip_the_same(
 ) -> None:
     """Test reauth discovery does not update when the host and config are the same."""
     mock_connect["connect"].side_effect = AuthenticationException()
-    mock_config_entry.data = {
-        **mock_config_entry.data,
-        CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
-    }
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+        },
+    )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR

@@ -459,7 +459,7 @@ class HassIO:
 
         This method returns a coroutine.
         """
-        return self.send_command("/refresh_updates", timeout=None)
+        return self.send_command("/refresh_updates", timeout=300)
 
     @api_data
     def retrieve_discovery_messages(self) -> Coroutine:
@@ -506,7 +506,6 @@ class HassIO:
         options = {
             "ssl": CONF_SSL_CERTIFICATE in http_config,
             "port": port,
-            "watchdog": True,
             "refresh_token": refresh_token.token,
         }
 
@@ -593,7 +592,7 @@ class HassIO:
 
             return await request.json(encoding="utf-8")
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error("Timeout on %s request", command)
 
         except aiohttp.ClientError as err:

@@ -468,7 +468,19 @@ async def test_logged_out(
     await cloud.logout()
     await hass.async_block_till_done()
 
-    # Alexa is not cleaned up, Google is
-    assert cloud.client._alexa_config is alexa_config_mock
+    # Check we clean up Alexa and Google
+    assert cloud.client._alexa_config is None
     assert cloud.client._google_config is None
     google_config_mock.async_deinitialize.assert_called_once_with()
+    alexa_config_mock.async_deinitialize.assert_called_once_with()
+
+
+async def test_remote_enable(hass: HomeAssistant) -> None:
+    """Test enabling remote UI."""
+    prefs = MagicMock(async_update=AsyncMock(return_value=None))
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = MagicMock(is_logged_in=True, username="mock-username")
+
+    result = await client.async_cloud_connect_update(True)
+    assert result is None
+    prefs.async_update.assert_called_once_with(remote_enabled=True)
