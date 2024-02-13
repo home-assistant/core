@@ -4879,6 +4879,7 @@
       "iot_class": "cloud_push"
     },
     "remootio": {
+      "name": "Remootio",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
@@ -7137,7 +7138,6 @@
     "nmap_tracker",
     "plant",
     "proximity",
-    "remootio",
     "rpi_power",
     "schedule",
     "season",

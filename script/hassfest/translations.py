@@ -43,7 +43,6 @@ ALLOW_NAME_TRANSLATION = {
     "rpi_power",
     "waze_travel_time",
     "zodiac",
-    "remootio",
 }
 
 REMOVED_TITLE_MSG = (
