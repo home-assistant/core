@@ -34,7 +34,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
-        if user_input is not None:
+        if user_input:
             await self.async_set_unique_id(user_input[CONF_SERIAL_NO])
             self._abort_if_unique_id_configured()
 
