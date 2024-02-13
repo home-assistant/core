@@ -26,19 +26,18 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
         """Import a config entry."""
-        self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
 
         def create_repair(error: str | None = None) -> None:
             if error:
                 async_create_issue(
                     self.hass,
                     DOMAIN,
-                    f"deprecated_yaml_import_issue_${error}",
+                    f"deprecated_yaml_import_issue_{error}",
                     breaks_in_ha_version="2024.9.0",
                     is_fixable=False,
                     issue_domain=DOMAIN,
                     severity=IssueSeverity.WARNING,
-                    translation_key=f"deprecated_yaml_import_issue_${error}",
+                    translation_key=f"deprecated_yaml_import_issue_{error}",
                 )
             else:
                 async_create_issue(
@@ -55,6 +54,11 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         "integration_title": "Velux",
                     },
                 )
+
+        for entry in self._async_current_entries():
+            if entry.data[CONF_HOST] == config[CONF_HOST]:
+                create_repair()
+                return self.async_abort(reason="already_configured")
 
         pyvlx = PyVLX(host=config[CONF_HOST], password=config[CONF_PASSWORD])
         try:
