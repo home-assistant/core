@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_COMFORT,
+    PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
@@ -86,6 +87,7 @@ CONF_PRESETS = {
     for p in (
         PRESET_AWAY,
         PRESET_COMFORT,
+        PRESET_ECO,
         PRESET_HOME,
         PRESET_SLEEP,
         PRESET_ACTIVITY,
