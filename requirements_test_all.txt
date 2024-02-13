@@ -356,7 +356,7 @@ aioswitcher==3.4.1
 aiosyncthing==0.5.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.3.0
+aiotankerkoenig==0.4.0
 
 # homeassistant.components.tractive
 aiotractive==0.5.6
@@ -506,6 +506,9 @@ bond-async==0.2.1
 
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.75
+
+# homeassistant.components.bring
+bring-api==0.1.1
 
 # homeassistant.components.broadlink
 broadlink==0.18.3
@@ -1688,9 +1691,6 @@ python-MotionMount==0.3.1
 
 # homeassistant.components.awair
 python-awair==0.2.4
-
-# homeassistant.components.bring
-python-bring-api==3.0.0
 
 # homeassistant.components.bsblan
 python-bsblan==0.5.18
