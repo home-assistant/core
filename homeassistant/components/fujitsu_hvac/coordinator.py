@@ -1,5 +1,5 @@
 """Coordinator for Fujitsu HVAC integration."""
-from asyncio import gather, timeout
+from asyncio import gather
 from datetime import timedelta
 import logging
 
@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import API_REFRESH_SECONDS, API_TIMEOUT
+from .const import API_REFRESH_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +32,13 @@ class FujitsuHVACCoordinator(DataUpdateCoordinator):
         """Fetch data from api endpoint."""
         listening_entities = set(self.async_contexts())
         try:
-            async with timeout(API_TIMEOUT):
-                devices = await self.api.async_get_devices()
+            if self.api.token_expired:
+                await self.api.async_sign_in()
+
+            if self.api.token_expiring_soon:
+                await self.api.async_refresh_auth()
+
+            devices = await self.api.async_get_devices()
         except AylaAuthError as e:
             raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
 
@@ -45,8 +50,7 @@ class FujitsuHVACCoordinator(DataUpdateCoordinator):
             )
 
         try:
-            async with timeout(API_TIMEOUT):
-                await gather(*[dev.async_update() for dev in devices])
+            await gather(*[dev.async_update() for dev in devices])
         except AylaAuthError as e:
             raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
 

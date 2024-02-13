@@ -1,5 +1,4 @@
 """Config flow for Fujitsu HVAC (based on Ayla IOT) integration."""
-from asyncio import timeout
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -51,10 +50,10 @@ class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
                 FGLAIR_APP_ID,
                 FGLAIR_APP_SECRET,
                 europe=user_input[CONF_EUROPE],
+                timeout=API_TIMEOUT,
             )
             try:
-                async with timeout(API_TIMEOUT):
-                    await api.async_sign_in()
+                await api.async_sign_in()
             except TimeoutError:
                 errors["base"] = "cannot_connect"
             except AylaAuthError:
