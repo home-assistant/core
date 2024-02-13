@@ -21,7 +21,11 @@ async def test_entry_diagnostics(
             "minor_version": 1,
             "domain": DOMAIN,
             "title": REDACTED,
-            "data": {"username": REDACTED, "password": REDACTED},
+            "data": {
+                "refresh_token": REDACTED,
+                "user_uuid": REDACTED,
+                "username": REDACTED,
+            },
             "options": {},
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,

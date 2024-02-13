@@ -2638,7 +2638,9 @@ async def test_default_entry_setting_are_applied(
 
     # Config entry data is incomplete but valid according the schema
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    entry.data = {"broker": "test-broker", "port": 1234}
+    hass.config_entries.async_update_entry(
+        entry, data={"broker": "test-broker", "port": 1234}
+    )
     await mqtt_mock_entry()
     await hass.async_block_till_done()
 
