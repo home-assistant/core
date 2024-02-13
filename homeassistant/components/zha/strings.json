@@ -866,13 +866,13 @@
           "inverted": "Inverted"
         }
       },
-      "setpoint_filter_timeconstant": {
-        "name": "Setpoint filter time constant",
+      "setpoint_response_time": {
+        "name": "Setpoint response time",
         "state": {
           "quick_5min": "5 Minutes",
-          "quick_11min": "11 Minutes",
-          "quick_17min": "17 Minutes",
-          "quick_23min": "23 Minutes",
+          "quick_10min": "10 Minutes",
+          "quick_15min": "15 Minutes",
+          "quick_25min": "25 Minutes",
           "moderate_30min": "30 Minutes",
           "moderate_40min": "40 Minutes",
           "moderate_50min": "50 Minutes",

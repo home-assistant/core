@@ -761,25 +761,26 @@ class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
 class DanfossControlAlgorithmScaleFactorEnum(types.enum8):
     """The time scale factor for changing the opening of the valve.
 
-    This is implemented as an enum here, but is a number on the device
+    Not all values were given, therefore there are some extrapolated values with a margin of error of about 5 minutes.
+    This is implemented as an enum here, but is a number on the device.
     """
 
-    quick_5min = 0x01
+    Quick_5min = 0x01
 
-    quick_11min = 0x02  # extrapolated
-    quick_17min = 0x03  # extrapolated
-    quick_23min = 0x04  # extrapolated
+    Quick_10min = 0x02  # extrapolated
+    Quick_15min = 0x03  # extrapolated
+    Quick_25min = 0x04  # extrapolated
 
-    moderate_30min = 0x05
+    Moderate_30min = 0x05
 
-    moderate_40min = 0x06  # extrapolated
-    moderate_50min = 0x07  # extrapolated
-    moderate_60min = 0x08  # extrapolated
-    moderate_70min = 0x09  # extrapolated
+    Moderate_40min = 0x06  # extrapolated
+    Moderate_50min = 0x07  # extrapolated
+    Moderate_60min = 0x08  # extrapolated
+    Moderate_70min = 0x09  # extrapolated
 
-    slow_80min = 0x0A
+    Slow_80min = 0x0A
 
-    quick_open_disabled = 0x11  # not sure what it does; also requires lower 4 bits to be in [1, 10] I assume
+    Quick_open_disabled = 0x11  # not sure what it does; also requires lower 4 bits to be in [1, 10] I assume
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -791,7 +792,7 @@ class DanfossControlAlgorithmScaleFactor(ZCLEnumSelectEntity):
 
     _unique_id_suffix = "control_algorithm_scale_factor"
     _attribute_name = "control_algorithm_scale_factor"
-    _attr_translation_key: str = "setpoint_filter_timeconstant"
+    _attr_translation_key: str = "setpoint_response_time"
     _enum = DanfossControlAlgorithmScaleFactorEnum
 
 
