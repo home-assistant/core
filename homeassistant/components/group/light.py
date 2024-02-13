@@ -72,6 +72,8 @@ SUPPORT_GROUP_LIGHT = (
     LightEntityFeature.EFFECT | LightEntityFeature.FLASH | LightEntityFeature.TRANSITION
 )
 
+ATTR_COLOR_LIST = "color_list"
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -157,7 +159,11 @@ class LightGroup(GroupEntity, LightEntity):
         self._entity_ids = entity_ids
 
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
+
+        self._attr_extra_state_attributes = {
+            ATTR_ENTITY_ID: entity_ids,
+            ATTR_COLOR_LIST: [],
+        }
         self._attr_unique_id = unique_id
         self.mode = any
         if mode:
@@ -174,14 +180,33 @@ class LightGroup(GroupEntity, LightEntity):
         data[ATTR_ENTITY_ID] = self._entity_ids
 
         _LOGGER.debug("Forwarded turn_on command: %s", data)
+        color_list_len = len(self._attr_extra_state_attributes[ATTR_COLOR_LIST])
+        if color_list_len > 0:
+            i = 0
+            for entity in self._entity_ids:
+                color = self._attr_extra_state_attributes[ATTR_COLOR_LIST][
+                    i % color_list_len
+                ]
+                _LOGGER.info("Kolor: %s, id %s", color, entity)
+                i += 1
 
-        await self.hass.services.async_call(
-            light.DOMAIN,
-            SERVICE_TURN_ON,
-            data,
-            blocking=True,
-            context=self._context,
-        )
+                data[ATTR_RGB_COLOR] = color
+                data[ATTR_ENTITY_ID] = [entity]
+                await self.hass.services.async_call(
+                    light.DOMAIN,
+                    SERVICE_TURN_ON,
+                    data,
+                    blocking=True,
+                    context=self._context,
+                )
+        else:
+            await self.hass.services.async_call(
+                light.DOMAIN,
+                SERVICE_TURN_ON,
+                data,
+                blocking=True,
+                context=self._context,
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to all lights in the light group."""
