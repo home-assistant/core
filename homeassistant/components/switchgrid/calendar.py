@@ -5,6 +5,7 @@ import datetime
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
@@ -39,6 +40,11 @@ class SwitchgridCalendarEntity(
         """Create the Calendar entity."""
         super().__init__(coordinator)
         self._events = map_coordinator_events(coordinator)
+        self._attr_device_info = DeviceInfo(
+            name="Switchgrid",
+            identifiers={(DOMAIN, DOMAIN)},
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     def event(self) -> CalendarEvent | None:
