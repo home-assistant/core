@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from datetime import datetime, timedelta
+import json_log_formatter
 import logging
 import logging.handlers
 import os
@@ -166,6 +167,7 @@ async def async_setup_hass(
         runtime_config.log_rotate_days,
         runtime_config.log_file,
         runtime_config.log_no_color,
+        runtime_config.log_json_format,
     )
 
     hass.config.safe_mode = runtime_config.safe_mode
@@ -396,6 +398,7 @@ def async_enable_logging(
     log_rotate_days: int | None = None,
     log_file: str | None = None,
     log_no_color: bool = False,
+    log_json_format: bool = False,
 ) -> None:
     """Set up the logging.
 
@@ -405,7 +408,13 @@ def async_enable_logging(
         "%(asctime)s.%(msecs)03d %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
     )
 
-    if not log_no_color:
+    if log_json_format:
+        formatter = json_log_formatter.VerboseJSONFormatter()
+        json_handler = logging.StreamHandler()
+        json_handler.setFormatter(formatter)
+        logging.root.addHandler(json_handler)
+
+    if not log_no_color and not log_json_format:
         try:
             # pylint: disable-next=import-outside-toplevel
             from colorlog import ColoredFormatter
@@ -434,7 +443,8 @@ def async_enable_logging(
 
     # If the above initialization failed for any reason, setup the default
     # formatting.  If the above succeeds, this will result in a no-op.
-    logging.basicConfig(format=fmt, datefmt=FORMAT_DATETIME, level=logging.INFO)
+    if not log_json_format:
+        logging.basicConfig(format=fmt, datefmt=FORMAT_DATETIME, level=logging.INFO)
 
     # Capture warnings.warn(...) and friends messages in logs.
     # The standard destination for them is stderr, which may end up unnoticed.

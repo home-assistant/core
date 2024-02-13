@@ -61,6 +61,7 @@ dependencies    = [
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.6.0",
     "yarl==1.9.4",
+    "json_log_formatter>=0.5.2",
 ]
 
 [project.urls]

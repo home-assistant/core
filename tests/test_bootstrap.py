@@ -5,6 +5,7 @@ import glob
 import os
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
+import logging
 
 import pytest
 
@@ -84,6 +85,26 @@ async def test_async_enable_logging(
             os.remove(f)
 
     assert "Error rolling over log file" in caplog.text
+
+
+async def test_async_enable_logging_with_json(
+    hass: HomeAssistant, capsys: pytest.CaptureFixture
+) -> None:
+    """Test to ensure json logging can be set up."""
+
+    with patch("homeassistant.bootstrap.async_activate_log_queue_handler"):
+        bootstrap.async_enable_logging(
+            hass,
+            log_json_format=True,
+        )
+        logger = logging.getLogger("json_test_logger")
+        logger.warning("TEST LOGGING")
+        for f in glob.glob("testing_config/home-assistant.log*"):
+            os.remove(f)
+
+    captured = capsys.readouterr()
+    assert "TEST LOGGING" in captured.err
+    assert '"funcName": "test_async_enable_logging_with_json"' in captured.err
 
 
 async def test_load_hassio(hass: HomeAssistant) -> None:

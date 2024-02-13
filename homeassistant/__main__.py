@@ -137,6 +137,9 @@ def get_arguments() -> argparse.Namespace:
         "--log-no-color", action="store_true", help="Disable color logs"
     )
     parser.add_argument(
+        "--log-json-format", action="store_true", help="Format logs as json"
+    )
+    parser.add_argument(
         "--script", nargs=argparse.REMAINDER, help="Run one of the embedded scripts"
     )
     parser.add_argument(
@@ -195,6 +198,7 @@ def main() -> int:
         log_rotate_days=args.log_rotate_days,
         log_file=args.log_file,
         log_no_color=args.log_no_color,
+        log_json_format=args.log_json_format,
         skip_pip=args.skip_pip,
         skip_pip_packages=args.skip_pip_packages,
         recovery_mode=args.recovery_mode,

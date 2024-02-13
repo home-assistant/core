@@ -50,6 +50,7 @@ class RuntimeConfig:
     log_rotate_days: int | None = None
     log_file: str | None = None
     log_no_color: bool = False
+    log_json_format: bool = False
 
     debug: bool = False
     open_ui: bool = False
