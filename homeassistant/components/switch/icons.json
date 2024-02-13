@@ -1,7 +1,10 @@
 {
   "entity_component": {
     "_": {
-      "default": "mdi:toggle-switch-variant"
+      "default": "mdi:toggle-switch-variant",
+      "state": {
+        "off": "mdi:toggle-switch-variant-off"
+      }
     },
     "switch": {
       "default": "mdi:toggle-switch-variant",
