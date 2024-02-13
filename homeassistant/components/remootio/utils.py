@@ -145,7 +145,7 @@ async def create_client(
                 raise ConfigEntryError(
                     f'Connecting to Remootio device "{result.host}" has been failed'
                 ) from ex
-    except asyncio.TimeoutError as ex:
+    except TimeoutError as ex:
         raise ConfigEntryNotReady(
             f'Timed out while connecting to Remootio device "{result.host}"'
         ) from ex
