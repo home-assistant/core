@@ -4,8 +4,6 @@ from unittest.mock import patch
 from datapoint.exceptions import APIException
 import pytest
 
-collect_ignore_glob = ["test_*.py"]
-
 
 @pytest.fixture
 def mock_simple_manager_fail():
