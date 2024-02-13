@@ -1,6 +1,6 @@
 """Sensor for myUplink."""
 
-from myuplink.models import DevicePoint
+from myuplink import DevicePoint
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,8 +11,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfElectricCurrent,
+    UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfPower,
+    UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,17 +34,62 @@ DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
+    "°F": SensorEntityDescription(
+        key="fahrenheit",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+    ),
     "A": SensorEntityDescription(
         key="ampere",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
+    "bar": SensorEntityDescription(
+        key="pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+    ),
+    "h": SensorEntityDescription(
+        key="hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        suggested_display_precision=1,
+    ),
     "Hz": SensorEntityDescription(
         key="hertz",
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
+    ),
+    "kW": SensorEntityDescription(
+        key="power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+    ),
+    "kWh": SensorEntityDescription(
+        key="energy",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    ),
+    "m3/h": SensorEntityDescription(
+        key="airflow",
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        icon="mdi:weather-windy",
+    ),
+    "s": SensorEntityDescription(
+        key="seconds",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_display_precision=0,
     ),
 }
 

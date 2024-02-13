@@ -113,7 +113,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.25
+SQLAlchemy==2.0.26
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -288,7 +288,7 @@ aiomusiccast==0.14.8
 aionanoleaf==0.2.1
 
 # homeassistant.components.notion
-aionotion==2024.02.0
+aionotion==2024.02.1
 
 # homeassistant.components.oncue
 aiooncue==0.3.5
@@ -436,7 +436,7 @@ arcam-fmj==1.4.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.38.1
+async-upnp-client==0.38.2
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.5.2
@@ -1265,7 +1265,7 @@ py-nextbusnext==1.0.2
 py-nightscout==1.2.2
 
 # homeassistant.components.ecovacs
-py-sucks==0.9.8
+py-sucks==0.9.9
 
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.1.4
@@ -1491,7 +1491,7 @@ pylitterbot==2023.4.9
 pylutron-caseta==0.19.0
 
 # homeassistant.components.lutron
-pylutron==0.2.11
+pylutron==0.2.12
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1902,7 +1902,7 @@ samsungtvws[async,encrypted]==2.6.0
 screenlogicpy==0.10.0
 
 # homeassistant.components.backup
-securetar==2023.3.0
+securetar==2024.2.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
