@@ -3,12 +3,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from switchgrid_python_client import SwitchgridClient
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .coordinator import SwitchgridCoordinator
 
 STEP_USER_DATA_SCHEMA = vol.Schema({})
 
@@ -25,7 +28,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
-        if user_input is not None:
-            return self.async_create_entry(title="Switchgrid", data=user_input)
+        if user_input is None:
+            return self.async_show_form(step_id="user")
 
-        return self.async_show_form(step_id="user")
+        session = async_get_clientsession(self.hass)
+        client = SwitchgridClient(session)
+        coordinator = SwitchgridCoordinator(self.hass, client)
+
+        try:
+            await coordinator.async_refresh()
+        except Exception:  # pylint: disable=broad-except
+            return self.async_abort(reason="cannot_connect")
+        if coordinator.last_updated is None:
+            return self.async_abort(reason="cannot_connect")
+
+        return self.async_create_entry(title="Switchgrid", data=user_input)
