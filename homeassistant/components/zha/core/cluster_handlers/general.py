@@ -570,7 +570,14 @@ class OtaClientClusterHandler(ClientClusterHandler):
         signal_id = self._endpoint.unique_id.split("-")[0]
         if cmd_name == Ota.ServerCommandDefs.query_next_image.name:
             assert args
-            self.async_send_signal(SIGNAL_UPDATE_DEVICE.format(signal_id), args[3])
+
+            current_file_version = args[3]
+            self.cluster.update_attribute(
+                Ota.AttributeDefs.current_file_version.id, current_file_version
+            )
+            self.async_send_signal(
+                SIGNAL_UPDATE_DEVICE.format(signal_id), current_file_version
+            )
 
     async def async_check_for_update(self):
         """Check for firmware availability by issuing an image notify command."""
