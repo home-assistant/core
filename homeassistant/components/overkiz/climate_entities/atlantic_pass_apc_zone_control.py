@@ -43,6 +43,7 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
+
         await self.executor.async_execute_command(
             OverkizCommand.SET_PASS_APC_OPERATING_MODE, HVAC_MODE_TO_OVERKIZ[hvac_mode]
         )
