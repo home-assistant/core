@@ -25,7 +25,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
+    'original_icon': 'mdi:fan-minus',
     'original_name': 'Away extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
@@ -40,6 +40,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
       'friendly_name': 'Device Name Away extract fan setpoint',
+      'icon': 'mdi:fan-minus',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -78,7 +79,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
+    'original_icon': 'mdi:fan-plus',
     'original_name': 'Away supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
@@ -93,6 +94,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
       'friendly_name': 'Device Name Away supply fan setpoint',
+      'icon': 'mdi:fan-plus',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -131,7 +133,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
+    'original_icon': 'mdi:fan-minus',
     'original_name': 'Cooker hood extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
@@ -146,6 +148,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
       'friendly_name': 'Device Name Cooker hood extract fan setpoint',
+      'icon': 'mdi:fan-minus',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -184,7 +187,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
+    'original_icon': 'mdi:fan-plus',
     'original_name': 'Cooker hood supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
@@ -199,6 +202,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
       'friendly_name': 'Device Name Cooker hood supply fan setpoint',
+      'icon': 'mdi:fan-plus',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -237,7 +241,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
+    'original_icon': 'mdi:fan-minus',
     'original_name': 'Fireplace extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
@@ -252,6 +256,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
       'friendly_name': 'Device Name Fireplace extract fan setpoint',
+      'icon': 'mdi:fan-minus',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -290,7 +295,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
+    'original_icon': 'mdi:fan-plus',
     'original_name': 'Fireplace supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
@@ -305,6 +310,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
       'friendly_name': 'Device Name Fireplace supply fan setpoint',
+      'icon': 'mdi:fan-plus',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -343,7 +349,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
+    'original_icon': 'mdi:fan-minus',
     'original_name': 'High extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
@@ -358,6 +364,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
       'friendly_name': 'Device Name High extract fan setpoint',
+      'icon': 'mdi:fan-minus',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -396,7 +403,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
+    'original_icon': 'mdi:fan-plus',
     'original_name': 'High supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
@@ -411,6 +418,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
       'friendly_name': 'Device Name High supply fan setpoint',
+      'icon': 'mdi:fan-plus',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -449,7 +457,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
+    'original_icon': 'mdi:fan-minus',
     'original_name': 'Home extract fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
@@ -464,6 +472,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
       'friendly_name': 'Device Name Home extract fan setpoint',
+      'icon': 'mdi:fan-minus',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -502,7 +511,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.POWER_FACTOR: 'power_factor'>,
-    'original_icon': None,
+    'original_icon': 'mdi:fan-plus',
     'original_name': 'Home supply fan setpoint',
     'platform': 'flexit_bacnet',
     'previous_unique_id': None,
@@ -517,6 +526,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
       'friendly_name': 'Device Name Home supply fan setpoint',
+      'icon': 'mdi:fan-plus',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -534,6 +544,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power_factor',
       'friendly_name': 'Device Name Fireplace supply fan setpoint',
+      'icon': 'mdi:fan-plus',
       'max': 100,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,

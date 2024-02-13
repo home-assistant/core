@@ -41,6 +41,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_away,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_away,
+        icon="mdi:fan-minus",
     ),
     FlexitNumberEntityDescription(
         key="away_supply_fan_setpoint",
@@ -52,6 +53,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_away,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_away,
+        icon="mdi:fan-plus",
     ),
     FlexitNumberEntityDescription(
         key="cooker_hood_extract_fan_setpoint",
@@ -63,6 +65,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_cooker,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_cooker,
+        icon="mdi:fan-minus",
     ),
     FlexitNumberEntityDescription(
         key="cooker_hood_supply_fan_setpoint",
@@ -74,6 +77,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_cooker,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_cooker,
+        icon="mdi:fan-plus",
     ),
     FlexitNumberEntityDescription(
         key="fireplace_extract_fan_setpoint",
@@ -85,6 +89,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_fire,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_fire,
+        icon="mdi:fan-minus",
     ),
     FlexitNumberEntityDescription(
         key="fireplace_supply_fan_setpoint",
@@ -96,6 +101,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_fire,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_fire,
+        icon="mdi:fan-plus",
     ),
     FlexitNumberEntityDescription(
         key="high_extract_fan_setpoint",
@@ -107,6 +113,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_high,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_high,
+        icon="mdi:fan-minus",
     ),
     FlexitNumberEntityDescription(
         key="high_supply_fan_setpoint",
@@ -118,6 +125,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_high,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_high,
+        icon="mdi:fan-plus",
     ),
     FlexitNumberEntityDescription(
         key="home_extract_fan_setpoint",
@@ -129,6 +137,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_extract_air_home,
         set_native_value_fn=lambda device: device.set_fan_setpoint_extract_air_home,
+        icon="mdi:fan-minus",
     ),
     FlexitNumberEntityDescription(
         key="home_supply_fan_setpoint",
@@ -140,6 +149,7 @@ NUMBERS: tuple[FlexitNumberEntityDescription, ...] = (
         mode=NumberMode.SLIDER,
         native_value_fn=lambda device: device.fan_setpoint_supply_air_home,
         set_native_value_fn=lambda device: device.set_fan_setpoint_supply_air_home,
+        icon="mdi:fan-plus",
     ),
 )
 
