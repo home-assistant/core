@@ -2,8 +2,12 @@
 # name: test_climate_entity
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'air_filter_exchange_interval': 8784,
+      'air_temp_setpoint_away': 18.0,
+      'air_temp_setpoint_home': 22.0,
       'current_temperature': 19.0,
       'friendly_name': 'Device Name',
+      'hvac_action': <HVACAction.PREHEATING: 'preheating'>,
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,

@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     PRESET_HOME,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -82,6 +83,22 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     async def async_update(self) -> None:
         """Refresh unit state."""
         await self.device.update()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return device specific state attributes."""
+        return {
+            "air_filter_exchange_interval": self.device.air_filter_exchange_interval,
+            "air_temp_setpoint_away": self.device.air_temp_setpoint_away,
+            "air_temp_setpoint_home": self.device.air_temp_setpoint_home,
+        }
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return current HVAC action."""
+        if self.device.electric_heater:
+            return HVACAction.PREHEATING
+        return HVACAction.FAN
 
     @property
     def current_temperature(self) -> float:
