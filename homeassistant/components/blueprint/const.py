@@ -8,5 +8,8 @@ CONF_SOURCE_URL = "source_url"
 CONF_HOMEASSISTANT = "homeassistant"
 CONF_MIN_VERSION = "min_version"
 CONF_AUTHOR = "author"
+CONF_INPUT_SECTIONS = "input_sections"
+CONF_SECTION = "section"
+CONF_COLLAPSE = "collapse"
 
 DOMAIN = "blueprint"
