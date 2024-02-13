@@ -273,7 +273,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Dose Key 1',
-      'icon': 'mdi:cup-water',
       'max': 999,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -291,7 +290,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Dose Key 2',
-      'icon': 'mdi:cup-water',
       'max': 999,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -309,7 +307,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Dose Key 3',
-      'icon': 'mdi:cup-water',
       'max': 999,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -327,7 +324,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Dose Key 4',
-      'icon': 'mdi:cup-water',
       'max': 999,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -346,7 +342,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Prebrew off time Key 1',
-      'icon': 'mdi:water-off',
       'max': 10,
       'min': 1,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -365,7 +360,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Prebrew off time Key 2',
-      'icon': 'mdi:water-off',
       'max': 10,
       'min': 1,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -384,7 +378,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Prebrew off time Key 3',
-      'icon': 'mdi:water-off',
       'max': 10,
       'min': 1,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -403,7 +396,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Prebrew off time Key 4',
-      'icon': 'mdi:water-off',
       'max': 10,
       'min': 1,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -422,7 +414,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Prebrew on time Key 1',
-      'icon': 'mdi:water',
       'max': 10,
       'min': 2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -441,7 +432,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Prebrew on time Key 2',
-      'icon': 'mdi:water',
       'max': 10,
       'min': 2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -460,7 +450,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Prebrew on time Key 3',
-      'icon': 'mdi:water',
       'max': 10,
       'min': 2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -479,7 +468,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Prebrew on time Key 4',
-      'icon': 'mdi:water',
       'max': 10,
       'min': 2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -498,7 +486,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Preinfusion time Key 1',
-      'icon': 'mdi:water-off',
       'max': 29,
       'min': 2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -517,7 +504,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Preinfusion time Key 2',
-      'icon': 'mdi:water-off',
       'max': 29,
       'min': 2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -536,7 +522,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Preinfusion time Key 3',
-      'icon': 'mdi:water-off',
       'max': 29,
       'min': 2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -555,7 +540,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'GS01234 Preinfusion time Key 4',
-      'icon': 'mdi:water-off',
       'max': 29,
       'min': 2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -574,7 +558,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'LM01234 Prebrew off time',
-      'icon': 'mdi:water-off',
       'max': 10,
       'min': 1,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -614,7 +597,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:water-off',
+    'original_icon': None,
     'original_name': 'Prebrew off time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -629,7 +612,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'MR01234 Prebrew off time',
-      'icon': 'mdi:water-off',
       'max': 10,
       'min': 1,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -669,7 +651,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:water-off',
+    'original_icon': None,
     'original_name': 'Prebrew off time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -684,7 +666,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'LM01234 Prebrew on time',
-      'icon': 'mdi:water',
       'max': 10,
       'min': 2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -724,7 +705,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:water',
+    'original_icon': None,
     'original_name': 'Prebrew on time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -739,7 +720,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'MR01234 Prebrew on time',
-      'icon': 'mdi:water',
       'max': 10,
       'min': 2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -779,7 +759,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:water',
+    'original_icon': None,
     'original_name': 'Prebrew on time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -794,7 +774,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'LM01234 Preinfusion time',
-      'icon': 'mdi:water-off',
       'max': 29,
       'min': 2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -834,7 +813,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:water-off',
+    'original_icon': None,
     'original_name': 'Preinfusion time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -849,7 +828,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'MR01234 Preinfusion time',
-      'icon': 'mdi:water-off',
       'max': 29,
       'min': 2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -889,7 +867,7 @@
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:water-off',
+    'original_icon': None,
     'original_name': 'Preinfusion time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,

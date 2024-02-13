@@ -1,6 +1,5 @@
 """Tests for the La Marzocco number entities."""
 
-
 from unittest.mock import MagicMock
 
 from lmcloud.const import KEYS_PER_MODEL, LaMarzoccoModel
@@ -266,26 +265,6 @@ async def test_disabled_entites(
         for key in range(1, KEYS_PER_MODEL[mock_lamarzocco.model_name] + 1):
             state = hass.states.get(f"number.{serial_number}_{entity_name}_key_{key}")
             assert state is None
-
-
-# @pytest.mark.parametrize("device_fixture", [LaMarzoccoModel.LINEA_MICRA])
-# async def test_disabled_entites2(
-#     hass: HomeAssistant,
-#     mock_lamarzocco: MagicMock,
-# ) -> None:
-#     """Test the La Marzocco prebrew/-infusion sensors for GS3AV model."""
-
-#     ENTITIES = (
-#         # "prebrew_off_time",
-#         # "prebrew_on_time",
-#         "preinfusion_time",
-#     )
-
-#     serial_number = mock_lamarzocco.serial_number
-
-#     for entity_name in ENTITIES:
-#         state = hass.states.get(f"number.{serial_number}_{entity_name}")
-#         assert state is None
 
 
 @pytest.mark.parametrize(

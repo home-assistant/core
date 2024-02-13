@@ -142,7 +142,6 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
     LaMarzoccoKeyNumberEntityDescription(
         key="prebrew_off",
         translation_key="prebrew_off",
-        icon="mdi:water-off",
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_step=PRECISION_TENTHS,
@@ -158,7 +157,6 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
     LaMarzoccoKeyNumberEntityDescription(
         key="prebrew_on",
         translation_key="prebrew_on",
-        icon="mdi:water",
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_step=PRECISION_TENTHS,
@@ -174,7 +172,6 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
     LaMarzoccoKeyNumberEntityDescription(
         key="preinfusion_off",
         translation_key="preinfusion_off",
-        icon="mdi:water-off",
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_step=PRECISION_TENTHS,
@@ -190,7 +187,6 @@ KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
     LaMarzoccoKeyNumberEntityDescription(
         key="dose",
         translation_key="dose",
-        icon="mdi:cup-water",
         native_unit_of_measurement="ticks",
         native_step=PRECISION_WHOLE,
         native_min_value=0,
