@@ -1112,23 +1112,6 @@ class DanfossLoadRoomMean(ZHANumberConfigurationEntity):
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
 )
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class DanfossControlAlgorithmScaleFactor(ZHANumberConfigurationEntity):
-    """Danfoss proprietary attribute to configure the aggressiveness of the control algorithm."""
-
-    _unique_id_suffix = "control_algorithm_scale_factor"
-    _attribute_name: str = "control_algorithm_scale_factor"
-    _attr_translation_key: str = "control_algorithm_scale_factor"
-    _attr_native_min_value: int = 1
-    _attr_native_max_value: int = 10
-    _attr_mode: NumberMode = NumberMode.SLIDER
-    _attr_icon: str = "mdi:knob"
-
-
-@CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
-)
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class DanfossRegulationSetpointOffset(ZHANumberConfigurationEntity):
     """Danfoss proprietary attribute to set the regulation setpoint offset."""
 

@@ -758,9 +758,6 @@
       "load_room_mean": {
         "name": "Load room mean"
       },
-      "control_algorithm_scale_factor": {
-        "name": "Control algorithm scale factor"
-      },
       "regulation_setpoint_offset": {
         "name": "Regulation setpoint offset"
       }
@@ -867,6 +864,22 @@
         "state": {
           "default": "Default",
           "inverted": "Inverted"
+        }
+      },
+      "setpoint_filter_timeconstant": {
+        "name": "Setpoint filter time constant",
+        "state": {
+          "quick_5min": "5 Minutes",
+          "quick_11min": "11 Minutes",
+          "quick_17min": "17 Minutes",
+          "quick_23min": "23 Minutes",
+          "moderate_30min": "30 Minutes",
+          "moderate_40min": "40 Minutes",
+          "moderate_50min": "50 Minutes",
+          "moderate_60min": "60 Minutes",
+          "moderate_70min": "70 Minutes",
+          "slow_80min": "80 Minutes",
+          "quick_open_disabled": "Disabled"
         }
       }
     },

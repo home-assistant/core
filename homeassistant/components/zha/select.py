@@ -696,6 +696,7 @@ class DanfossExerciseDayOfTheWeekEnum(types.enum8):
     Thursday = 4
     Friday = 5
     Saturday = 6
+    Undefined = 7
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -727,6 +728,7 @@ class DanfossOrientation(ZCLEnumSelectEntity):
     """Danfoss proprietary attribute for setting the orientation of the valve.
 
     Needed for biasing the internal temperature sensor.
+    This is implemented as an enum here, but is a boolean on the device.
     """
 
     _unique_id_suffix = "orientation"
@@ -754,6 +756,43 @@ class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
     _attribute_name = "adaptation_run_control"
     _attr_translation_key: str = "adaptation_run_command"
     _enum = DanfossAdaptationRunControlEnum
+
+
+class DanfossControlAlgorithmScaleFactorEnum(types.enum8):
+    """The time scale factor for changing the opening of the valve.
+
+    This is implemented as an enum here, but is a number on the device
+    """
+
+    quick_5min = 0x01
+
+    quick_11min = 0x02  # extrapolated
+    quick_17min = 0x03  # extrapolated
+    quick_23min = 0x04  # extrapolated
+
+    moderate_30min = 0x05
+
+    moderate_40min = 0x06  # extrapolated
+    moderate_50min = 0x07  # extrapolated
+    moderate_60min = 0x08  # extrapolated
+    moderate_70min = 0x09  # extrapolated
+
+    slow_80min = 0x0A
+
+    quick_open_disabled = 0x11  # not sure what it does; also requires lower 4 bits to be in [1, 10] I assume
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+)
+class DanfossControlAlgorithmScaleFactor(ZCLEnumSelectEntity):
+    """Danfoss proprietary attribute for setting the scale factor of the setpoint filter time constant."""
+
+    _unique_id_suffix = "control_algorithm_scale_factor"
+    _attribute_name = "control_algorithm_scale_factor"
+    _attr_translation_key: str = "setpoint_filter_timeconstant"
+    _enum = DanfossControlAlgorithmScaleFactorEnum
 
 
 class DanfossViewingDirectionEnum(types.enum8):

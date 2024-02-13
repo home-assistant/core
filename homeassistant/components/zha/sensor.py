@@ -1377,7 +1377,7 @@ class BitMapSensor(Sensor):
     The sensor value will be a sensor of the state attributes.
     """
 
-    _bitmap: dict[str, int]
+    _bitmap: types.bitmap8 | types.bitmap16
 
     def formatter(self, _value: int) -> str:
         """Summary of all attributes."""
@@ -1394,8 +1394,10 @@ class BitMapSensor(Sensor):
 
         state_attr = {}
 
-        for text, bit in self._bitmap.items():
-            state_attr[text] = bool(value & bit)
+        for bit_description in list(self._bitmap):
+            state_attr[bit_description.name] = bool(
+                bit_description & self._bitmap(value)
+            )
 
         return state_attr
 
@@ -1443,6 +1445,14 @@ class DanfossLoadEstimate(Sensor):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
+class DanfossAdaptationRunStatusBitmap(types.bitmap8):
+    """Danfoss Adaptation run status bitmap."""
+
+    in_progress = 0x0001
+    run_successful = 0x0002
+    valve_characteristic_lost = 0x0004
+
+
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
@@ -1455,11 +1465,7 @@ class DanfossAdaptationRunStatus(BitMapSensor):
     _attribute_name = "adaptation_run_status"
     _attr_translation_key: str = "adaptation_run_status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _bitmap = {
-        "in_progress": 0x0001,
-        "run_successful": 0x0002,
-        "valve_characteristic_lost": 0x0004,
-    }
+    _bitmap = DanfossAdaptationRunStatusBitmap
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -1478,6 +1484,27 @@ class DanfossPreheatTime(Sensor):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
+class DanfossSoftwareErrorCodeBitmap(types.bitmap16):
+    """Danfoss software error code bitmap."""
+
+    top_pcb_sensor_error = 0x0001
+    side_pcb_sensor_error = 0x0002
+    non_volatile_memory_error = 0x0004
+    unknown_hw_error = 0x0008
+    # 0x0010 = N/A
+    motor_error = 0x0020
+    # 0x0040 = N/A
+    invalid_internal_communication = 0x0080
+    # 0x0100 = N/A
+    invalid_clock_information = 0x0200
+    # 0x0400 = N/A
+    radio_communication_error = 0x0800
+    encoder_jammed = 0x1000
+    low_battery = 0x2000
+    critical_low_battery = 0x4000
+    # 0x8000 = Reserved
+
+
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="diagnostic",
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
@@ -1490,24 +1517,7 @@ class DanfossSoftwareErrorCode(BitMapSensor):
     _attribute_name = "sw_error_code"
     _attr_translation_key: str = "software_error"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _bitmap = {
-        "top_pcb_sensor_error": 0x0001,
-        "side_pcb_sensor_error": 0x0002,
-        "non_volatile_memory_error": 0x0004,
-        "unknown_hw_error": 0x0008,
-        # 0x0010 = N/A
-        "motor_error": 0x0020,
-        # 0x0040 = N/A
-        "invalid_internal_communication": 0x0080,
-        # 0x0100 = N/A
-        "invalid_clock_information": 0x0200,
-        # 0x0400 = N/A
-        "radio_communication_error": 0x0800,
-        "encoder_jammed": 0x1000,
-        "low_battery": 0x2000,
-        "critical_low_battery": 0x4000,
-        # 0x8000 = Reserved
-    }
+    _bitmap = DanfossSoftwareErrorCodeBitmap
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
