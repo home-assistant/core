@@ -409,7 +409,7 @@ class ConfigEntry:
                 self.domain,
                 err,
             )
-            if self.domain == integration.domain:
+            if domain_is_integration:
                 self._async_set_state(
                     hass, ConfigEntryState.SETUP_ERROR, "Import error"
                 )
@@ -475,12 +475,12 @@ class ConfigEntry:
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as exc:
-            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(exc) or None)
+            message = str(exc)
+            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, message or None)
             wait_time = 2 ** min(self._tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
-            message = str(exc)
             ready_message = f"ready yet: {message}" if message else "ready yet"
             _LOGGER.debug(
                 (
