@@ -15,7 +15,7 @@ from .const import UPDATE_INTERVAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class SwitchgridCoordinator(DataUpdateCoordinator[SwitchgridClient]):
+class SwitchgridCoordinator(DataUpdateCoordinator[SwitchgridEventsResponse]):
     """Coordinator for updating data from the Switchgrid API."""
 
     def __init__(
