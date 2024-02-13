@@ -288,7 +288,7 @@ aiomusiccast==0.14.8
 aionanoleaf==0.2.1
 
 # homeassistant.components.notion
-aionotion==2024.02.0
+aionotion==2024.02.1
 
 # homeassistant.components.oncue
 aiooncue==0.3.5
@@ -436,7 +436,7 @@ arcam-fmj==1.4.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.38.1
+async-upnp-client==0.38.2
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.5.2
