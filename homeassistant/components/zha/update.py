@@ -82,6 +82,7 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
             CLUSTER_HANDLER_OTA
         ]
         self._attr_installed_version: str | None = self._get_cluster_version()
+        self._attr_latest_version = self._attr_installed_version
         self._latest_firmware: OtaImageWithMetadata | None = None
 
     def _get_cluster_version(self) -> str | None:
