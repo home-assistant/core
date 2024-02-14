@@ -4,9 +4,11 @@ from unittest.mock import PropertyMock, patch
 import pytest
 
 from homeassistant.components import media_source
-from homeassistant.components.camera.const import StreamType
+from homeassistant.components.camera import Camera
+from homeassistant.components.camera.const import DOMAIN, StreamType
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
 
@@ -45,19 +47,24 @@ async def test_browsing_mjpeg(hass: HomeAssistant, mock_camera) -> None:
 
 async def test_browsing_web_rtc(hass: HomeAssistant, mock_camera_web_rtc) -> None:
     """Test browsing camera media source."""
-    item = await media_source.async_browse_media(hass, "media-source://camera")
-    assert item is not None
-    assert item.title == "Camera"
-    assert len(item.children) == 0
-    assert item.not_shown == 3
+    component: EntityComponent[Camera] = hass.data[DOMAIN]
+    cameras = list(component.entities)
+    with patch.object(cameras[0], "stream_source", return_value="test"), patch.object(
+        cameras[1], "stream_source", return_value=None
+    ), patch.object(cameras[2], "stream_source", side_effect=Exception):
+        item = await media_source.async_browse_media(hass, "media-source://camera")
+        assert item is not None
+        assert item.title == "Camera"
+        assert len(item.children) == 0
+        assert item.not_shown == 3
 
-    # Adding stream enables HLS camera
-    hass.config.components.add("stream")
+        # Adding stream enables HLS camera
+        hass.config.components.add("stream")
 
-    item = await media_source.async_browse_media(hass, "media-source://camera")
-    assert item.not_shown == 0
-    assert len(item.children) == 3
-    assert item.children[0].media_content_type == FORMAT_CONTENT_TYPE["hls"]
+        item = await media_source.async_browse_media(hass, "media-source://camera")
+        assert item.not_shown == 2
+        assert len(item.children) == 1
+        assert item.children[0].media_content_type == FORMAT_CONTENT_TYPE["hls"]
 
 
 async def test_resolving(hass: HomeAssistant, mock_camera_hls) -> None:
