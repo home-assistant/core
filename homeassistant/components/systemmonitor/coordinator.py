@@ -137,9 +137,12 @@ class SystemMonitorProcessorCoordinator(MonitorCoordinator[float | None]):
 
     def update_data(self) -> float | None:
         """Fetch data."""
-        cpu_percent = psutil.cpu_percent(interval=None)
+        cpu_percent = round(psutil.cpu_percent(interval=None))
         if cpu_percent > 0.0:
-            return cpu_percent
+            if cpu_percent <= 100.0:
+                return cpu_percent
+            else:
+                return 100.0
         return None
 
 
