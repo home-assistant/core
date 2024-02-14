@@ -9,7 +9,7 @@ from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 
 @dataclass(frozen=True)
 class ViCareDevice:
-    """Dataclass combinig device api and config."""
+    """Dataclass holding the device api and config."""
 
     config: PyViCareDeviceConfig
     api: PyViCareDevice
