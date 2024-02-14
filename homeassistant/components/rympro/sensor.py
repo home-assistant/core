@@ -1,6 +1,8 @@
 """Sensor for RymPro meters."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -17,11 +19,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import RymProDataUpdateCoordinator
 
-@dataclass(kw_only=True)
+
+@dataclass(kw_only=True, frozen=True)
 class RymProSensorEntityDescription(SensorEntityDescription):
     """Class describing RymPro sensor entities."""
 
     value_key: str
+
 
 SENSOR_DESCRIPTIONS: tuple[RymProSensorEntityDescription, ...] = (
     RymProSensorEntityDescription(
