@@ -2,7 +2,11 @@
 from datetime import timedelta
 from typing import Any
 
-from pylutron_caseta.color_value import FullColorValue, WarmCoolColorValue
+from pylutron_caseta.color_value import (
+    ColorMode as LutronColorMode,
+    FullColorValue,
+    WarmCoolColorValue,
+)
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -26,6 +30,17 @@ from .const import (
     DOMAIN as CASETA_DOMAIN,
 )
 from .models import LutronCasetaData
+
+SUPPORTED_COLOR_MODE_DICT = {
+    DEVICE_TYPE_SPECTRUM_TUNE: {
+        ColorMode.HS,
+        ColorMode.COLOR_TEMP,
+        ColorMode.WHITE,
+    },
+    DEVICE_TYPE_WHITE_TUNE: {ColorMode.COLOR_TEMP},
+}
+
+WARM_DEVICE_TYPES = {DEVICE_TYPE_WHITE_TUNE, DEVICE_TYPE_SPECTRUM_TUNE}
 
 
 def to_lutron_level(level):
@@ -61,14 +76,25 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
 
     _attr_supported_features = LightEntityFeature.TRANSITION
 
-    SUPPORTED_COLOR_MODE_DICT = {
-        DEVICE_TYPE_SPECTRUM_TUNE: {
-            ColorMode.HS,
-            ColorMode.COLOR_TEMP,
-            ColorMode.WHITE,
-        },
-        DEVICE_TYPE_WHITE_TUNE: {ColorMode.COLOR_TEMP},
-    }
+    def __init__(self, light: dict[str, Any], data: LutronCasetaData) -> None:
+        """Initialize the light and set the supported color modes.
+
+        :param light: The lutron light device to initialize.
+        :param data: The integration data
+        """
+        super().__init__(light, data)
+
+        self._attr_min_color_temp_kelvin = self._get_min_color_temp_kelvin(light)
+        self._attr_max_color_temp_kelvin = self._get_max_color_temp_kelvin(light)
+
+        light_type = light["type"]
+        self._attr_supported_color_modes = SUPPORTED_COLOR_MODE_DICT.get(
+            light_type, {ColorMode.BRIGHTNESS}
+        )
+
+        self.supports_warm_cool = light_type in WARM_DEVICE_TYPES
+        self.supports_warm_dim = light_type == DEVICE_TYPE_SPECTRUM_TUNE
+        self.supports_spectrum_tune = light_type == DEVICE_TYPE_SPECTRUM_TUNE
 
     def _get_min_color_temp_kelvin(self, light: dict[str, Any]) -> int:
         """Return minimum supported color temperature.
@@ -94,39 +120,14 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
 
         return white_tune_range.get("Max")
 
-    def __init__(self, light: dict[str, Any], data: LutronCasetaData) -> None:
-        """Initialize the light and set the supported color modes.
-
-        :param light: The lutron light device to initialize.
-        :param data: The integration data
-        """
-        super().__init__(light, data)
-
-        self._attr_min_color_temp_kelvin = self._get_min_color_temp_kelvin(light)
-        self._attr_max_color_temp_kelvin = self._get_max_color_temp_kelvin(light)
-
-        light_type = light["type"]
-        if light_type in self.SUPPORTED_COLOR_MODE_DICT:
-            self._attr_supported_color_modes = self.SUPPORTED_COLOR_MODE_DICT.get(
-                light_type, {ColorMode.BRIGHTNESS}
-            )
-        else:
-            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-
-        self.supports_warm_cool = light_type in [
-            DEVICE_TYPE_WHITE_TUNE,
-            DEVICE_TYPE_SPECTRUM_TUNE,
-        ]
-
-        self.supports_warm_dim = light_type == DEVICE_TYPE_SPECTRUM_TUNE
-        self.supports_spectrum_tune = light_type == DEVICE_TYPE_SPECTRUM_TUNE
-
     @property
     def brightness(self) -> int:
         """Return the brightness of the light."""
         return to_hass_level(self._device["current_state"])
 
-    async def _set_brightness(self, brightness, color_value, **kwargs):
+    async def _async_set_brightness(
+        self, brightness: int | None, color_value: LutronColorMode | None, **kwargs: Any
+    ) -> None:
         args = {}
         if ATTR_TRANSITION in kwargs:
             args["fade_time"] = timedelta(seconds=kwargs[ATTR_TRANSITION])
@@ -137,29 +138,33 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
             self.device_id, value=brightness, color_value=color_value, **args
         )
 
-    async def _set_warm_dim(self, brightness: int | None, **kwargs: Any):
+    async def _async_set_warm_dim(self, brightness: int | None, **kwargs: Any):
         """Set the light to warm dim mode."""
-        args = {}
+        set_warm_dim_kwargs: dict[str, Any] = {}
         if ATTR_TRANSITION in kwargs:
-            args["fade_time"] = timedelta(seconds=kwargs[ATTR_TRANSITION])
+            set_warm_dim_kwargs["fade_time"] = timedelta(
+                seconds=kwargs[ATTR_TRANSITION]
+            )
 
         if brightness is not None:
             brightness = to_lutron_level(brightness)
 
-        await self._smartbridge.set_warm_dim(self.device_id, brightness, **args)
+        await self._smartbridge.set_warm_dim(
+            self.device_id, brightness, **set_warm_dim_kwargs
+        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         # first check for "white mode" (WarmDim)
-        white_color = kwargs.pop(ATTR_WHITE, None)
-        if white_color is not None:
-            await self._set_warm_dim(white_color)
+        if (white_color := kwargs.get(ATTR_WHITE)) is not None:
+            await self._async_set_warm_dim(white_color)
             return
 
         brightness = kwargs.pop(ATTR_BRIGHTNESS, None)
-        color = None
-        hs_color = kwargs.pop(ATTR_HS_COLOR, None)
-        kelvin_color = kwargs.pop(ATTR_COLOR_TEMP_KELVIN, None)
+        color: LutronColorMode | None = None
+        hs_color: tuple[float, float] | None = kwargs.pop(ATTR_HS_COLOR, None)
+        kelvin_color: int | None = kwargs.pop(ATTR_COLOR_TEMP_KELVIN, None)
+
         if hs_color is not None:
             color = FullColorValue(hs_color[0], hs_color[1])
         elif kelvin_color is not None:
@@ -169,11 +174,11 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
         if color is None and brightness is None:
             brightness = 255
 
-        await self._set_brightness(brightness, color, **kwargs)
+        await self._async_set_brightness(brightness, color, **kwargs)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self._set_brightness(0, None, **kwargs)
+        await self._async_set_brightness(0, None, **kwargs)
 
     @property
     def color_mode(self) -> ColorMode:
@@ -200,7 +205,9 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
     @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the current color of the light."""
-        current_color = self._device.get("color")
+        current_color: FullColorValue | WarmCoolColorValue | None = self._device.get(
+            "color"
+        )
 
         # if bulb is set to full spectrum, return the hue and saturation
         if isinstance(current_color, FullColorValue):
@@ -211,7 +218,9 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value in kelvin."""
-        current_color = self._device.get("color")
+        current_color: FullColorValue | WarmCoolColorValue | None = self._device.get(
+            "color"
+        )
 
         # if bulb is set to warm cool mode, return the kelvin value
         if isinstance(current_color, WarmCoolColorValue):
