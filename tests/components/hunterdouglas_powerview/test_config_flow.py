@@ -38,7 +38,7 @@ ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
 DHCP_DISCOVERY_INFO = dhcp.DhcpServiceInfo(
     hostname="Hunter Douglas Powerview Hub",
     ip="1.2.3.4",
-    macaddress="AA:BB:CC:DD:EE:FF",
+    macaddress="aabbccddeeff",
 )
 
 DISCOVERY_DATA = [

@@ -128,7 +128,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.26
+SQLAlchemy==2.0.27
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -206,7 +206,7 @@ aioaseko==0.0.2
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.2.4
+aioautomower==2024.2.6
 
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
