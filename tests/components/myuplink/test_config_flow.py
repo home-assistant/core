@@ -56,7 +56,7 @@ async def test_full_flow(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}"
-        "&scope=READSYSTEM+offline_access"
+        "&scope=WRITESYSTEM+READSYSTEM+offline_access"
     )
 
     client = await hass_client_no_auth()
@@ -81,3 +81,18 @@ async def test_full_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+
+
+# async def test_step_reauth(
+#     hass: HomeAssistant, config_entry, setup_config_entry
+# ) -> None:
+#     """Test that the reauth step works."""
+#     result = await hass.config_entries.flow.async_init(
+#         DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=config_entry.data
+#     )
+#     assert result["type"] == data_entry_flow.FlowResultType.FORM
+#     assert result["step_id"] == "reauth_confirm"
+
+#     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+#     assert result["type"] == data_entry_flow.FlowResultType.FORM
+#     assert result["step_id"] == "reauth_confirm"
