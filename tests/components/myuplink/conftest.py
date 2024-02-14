@@ -38,7 +38,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
             "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "Fake_token",
-                "scope": "READSYSTEM offline",
+                "scope": "WRITESYSTEM READSYSTEM offline_access",
                 "expires_in": 86399,
                 "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
                 "token_type": "Bearer",
