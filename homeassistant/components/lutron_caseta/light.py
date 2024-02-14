@@ -20,7 +20,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LutronCasetaDeviceUpdatableEntity
-from .const import DOMAIN as CASETA_DOMAIN
+from .const import (
+    DEVICE_TYPE_SPECTRUM_TUNE,
+    DEVICE_TYPE_WHITE_TUNE,
+    DOMAIN as CASETA_DOMAIN,
+)
 from .models import LutronCasetaData
 
 
@@ -55,26 +59,43 @@ async def async_setup_entry(
 class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
     """Representation of a Lutron Light, including dimmable, white tune, and spectrum tune."""
 
+    _attr_supported_features = LightEntityFeature.TRANSITION
+
+    def get_min_color_temp_kelvin(self, light) -> int:
+        """Return minimum supported color temperature."""
+        white_tune_range = light.get("white_tuning_range")
+        # Default to 1.4k if not found
+        if white_tune_range is None or "Min" not in white_tune_range:
+            return 1400
+
+        return white_tune_range.get("Min")
+
+    def get_max_color_temp_kelvin(self, light) -> int:
+        """Return maximum supported color temperature."""
+        white_tune_range = light.get("white_tuning_range")
+        # Default to 10k if not found
+        if white_tune_range is None or "Max" not in white_tune_range:
+            return 10000
+
+        return white_tune_range.get("Max")
+
     def __init__(self, light, data) -> None:
         """Initialize the light and set the supported color modes."""
         super().__init__(light, data)
-        if light["type"] == "SpectrumTune":
+
+        self._attr_min_color_temp_kelvin = self.get_min_color_temp_kelvin(light)
+        self._attr_max_color_temp_kelvin = self.get_max_color_temp_kelvin(light)
+
+        if light["type"] == DEVICE_TYPE_SPECTRUM_TUNE:
             self._attr_supported_color_modes = {
                 ColorMode.HS,
                 ColorMode.COLOR_TEMP,
-                ColorMode.BRIGHTNESS,
                 ColorMode.WHITE,
             }
-        elif light["type"] == "WhiteTune":
-            self._attr_supported_color_modes = {
-                ColorMode.COLOR_TEMP,
-                ColorMode.BRIGHTNESS,
-                ColorMode.WHITE,
-            }
+        elif light["type"] == DEVICE_TYPE_WHITE_TUNE:
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
         else:
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-
-    _attr_supported_features = LightEntityFeature.TRANSITION
 
     @property
     def brightness(self) -> int:
@@ -133,20 +154,27 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
     @property
     def color_mode(self) -> ColorMode:
         """Return the current color mode of the light."""
-        warm_dim = self._device.get("warm_dim", False)
-        # check if warm dim is set, if so return white mode
-        if warm_dim:
+
+        device_type = self._device.get("type")
+        currently_warm_dim = self._device.get("warm_dim", False)
+        supports_warm_dim = device_type in [DEVICE_TYPE_SPECTRUM_TUNE]
+
+        if supports_warm_dim and currently_warm_dim:
             return ColorMode.WHITE
 
-        # check if color is set, if so return color mode
         current_color = self._device.get("color")
-        if isinstance(current_color, WarmCoolColorValue):
+
+        supports_warm_cool = device_type in [
+            DEVICE_TYPE_WHITE_TUNE,
+            DEVICE_TYPE_SPECTRUM_TUNE,
+        ]
+        if supports_warm_cool and isinstance(current_color, WarmCoolColorValue):
             return ColorMode.COLOR_TEMP
 
-        if isinstance(current_color, FullColorValue):
+        supports_spectrum_tune = device_type in [DEVICE_TYPE_SPECTRUM_TUNE]
+        if supports_spectrum_tune and isinstance(current_color, FullColorValue):
             return ColorMode.HS
 
-        # otherwise return default brightness mode
         return ColorMode.BRIGHTNESS
 
     @property
@@ -175,23 +203,3 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
             return current_color.kelvin
 
         return None
-
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return maximum supported color temperature."""
-        white_tune_range = self._device.get("white_tuning_range")
-        # Default to 10k if not found
-        if white_tune_range is None or "Max" not in white_tune_range:
-            return 10000
-
-        return white_tune_range.get("Max")
-
-    @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return minimum supported color temperature."""
-        white_tune_range = self._device.get("white_tuning_range")
-        # Default to 1.4k if not found
-        if white_tune_range is None or "Min" not in white_tune_range:
-            return 1400
-
-        return white_tune_range.get("Min")
