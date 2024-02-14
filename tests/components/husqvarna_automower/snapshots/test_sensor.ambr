@@ -47,6 +47,58 @@
     'state': '100',
   })
 # ---
+# name: test_sensor[sensor.test_mower_1_cutting_blade_usage_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_mower_1_cutting_blade_usage_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': 'mdi:clock-outline',
+    'original_name': 'Cutting blade usage time',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'cutting_blade_usage_time',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_cutting_blade_usage_time',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensor[sensor.test_mower_1_cutting_blade_usage_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Test Mower 1 Cutting blade usage time',
+      'icon': 'mdi:clock-outline',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_mower_1_cutting_blade_usage_time',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.034',
+  })
+# ---
 # name: test_sensor[sensor.test_mower_1_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
