@@ -60,20 +60,27 @@ class FlowManagerIndexView(_BaseFlowManagerView):
             extra=vol.ALLOW_EXTRA,
         )
     )
-    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+    async def post(
+        self,
+        request: web.Request,
+        data: dict[str, Any],
+        context: dict[str, Any] | None = None,
+    ) -> web.Response:
         """Handle a POST request."""
         if isinstance(data["handler"], list):
             handler = tuple(data["handler"])
         else:
             handler = data["handler"]
 
+        if not context:
+            context = {
+                "source": config_entries.SOURCE_USER,
+                "show_advanced_options": data["show_advanced_options"],
+            }
         try:
             result = await self._flow_mgr.async_init(
                 handler,  # type: ignore[arg-type]
-                context={
-                    "source": config_entries.SOURCE_USER,
-                    "show_advanced_options": data["show_advanced_options"],
-                },
+                context=context,
             )
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
