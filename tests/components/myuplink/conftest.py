@@ -69,8 +69,8 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 @pytest.fixture(scope="session")
 def load_device_file() -> str:
-    """Load fixture file for device endpoint."""
-    return load_json_value_fixture("device.json", DOMAIN)
+    """Fixture for loading device file."""
+    return load_fixture("device.json", DOMAIN)
 
 
 @pytest.fixture

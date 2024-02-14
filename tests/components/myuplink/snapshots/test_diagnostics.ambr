@@ -16,46 +16,49 @@
         'devices': list([
           dict({
             '123456-7890-1234': dict({
-              'device_data': dict({
-                'availableFeatures': dict({
-                  'boostHotWater': True,
-                  'boostVentilation': True,
-                  'forceUpdate': False,
-                  'forcesync': True,
-                  'getGuideQuestion': False,
-                  'getMenu': False,
-                  'getMenuChain': False,
-                  'getScheduleConfig': False,
-                  'getScheduleModes': False,
-                  'getScheduleVacation': False,
-                  'getScheduleWeekly': False,
-                  'getZones': False,
-                  'processIntent': False,
-                  'reboot': True,
-                  'requestUpdate': False,
-                  'resetAlarm': True,
-                  'sendHaystack': True,
-                  'setAidMode': True,
-                  'setScheduleModes': False,
-                  'setScheduleOverride': False,
-                  'setScheduleVacation': False,
-                  'setScheduleWeekly': False,
-                  'setSmartMode': False,
-                  'setVentilationMode': False,
-                  'settings': True,
-                  'triggerEvent': True,
-                }),
-                'connectionState': 'Connected',
-                'firmware': dict({
-                  'currentFwVersion': '9682R7',
-                  'desiredFwVersion': '9682R7',
-                }),
-                'id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
-                'product': dict({
-                  'name': 'F730 CU 3x400V',
-                  'serialNumber': '**REDACTED**',
-                }),
-              }),
+              'device_data': '''
+                {
+                  "id": "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
+                  "connectionState": "Connected",
+                  "firmware": {
+                    "currentFwVersion": "9682R7",
+                    "desiredFwVersion": "9682R7"
+                  },
+                  "product": {
+                    "serialNumber": "123456",
+                    "name": "F730 CU 3x400V"
+                  },
+                  "availableFeatures": {
+                    "settings": true,
+                    "reboot": true,
+                    "forcesync": true,
+                    "forceUpdate": false,
+                    "requestUpdate": false,
+                    "resetAlarm": true,
+                    "triggerEvent": true,
+                    "getMenu": false,
+                    "getMenuChain": false,
+                    "getGuideQuestion": false,
+                    "sendHaystack": true,
+                    "setSmartMode": false,
+                    "setAidMode": true,
+                    "getZones": false,
+                    "processIntent": false,
+                    "boostHotWater": true,
+                    "boostVentilation": true,
+                    "getScheduleConfig": false,
+                    "getScheduleModes": false,
+                    "getScheduleWeekly": false,
+                    "getScheduleVacation": false,
+                    "setScheduleModes": false,
+                    "setScheduleWeekly": false,
+                    "setScheduleOverride": false,
+                    "setScheduleVacation": false,
+                    "setVentilationMode": false
+                  }
+                }
+  
+              ''',
               'points': '''
                 [
                   {
