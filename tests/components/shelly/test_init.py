@@ -362,14 +362,10 @@ async def test_sleeping_rpc_device_offline_during_setup(
 )
 async def test_entry_unload(
     hass: HomeAssistant,
-
     gen: int,
-
     entity_id: str,
-
     mock_block_device: Mock,
-
-    mock_rpc_device: Mock,,
+    mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test entry unload."""

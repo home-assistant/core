@@ -1,4 +1,5 @@
 """Tests for Shelly switch platform."""
+from copy import deepcopy
 
 from unittest.mock import AsyncMock, Mock
 
@@ -16,6 +17,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ICON,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -188,7 +190,7 @@ async def test_block_device_unique_ids(
 
 
 async def test_block_set_state_connection_error(
-    hass: HomeAssistant, mock_block_device, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device set state connection error."""
     monkeypatch.setattr(
@@ -313,13 +315,9 @@ async def test_rpc_device_services(
 
 async def test_rpc_device_unique_ids(
     hass: HomeAssistant,
-    mock_rpc_device: Mock,
-    monkeypatch: pytest.MonkeyPatch,
-    entity_registry: EntityRegistry,
-    hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_rpc_device: Mock,
-    monkeypatch,: EntityRegistry
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC device unique_ids."""
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
@@ -427,7 +425,7 @@ async def test_remove_gas_valve_switch(
 
 async def test_wall_display_thermostat_mode(
     hass: HomeAssistant,
-    mock_rpc_device,
+    mock_rpc_device: Mock,
 ) -> None:
     """Test Wall Display in thermostat mode."""
     register_entity(

@@ -7,13 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import (
-    MODEL_2,
-    MODEL_25,
-    MODEL_GAS,
-    MODEL_WALL_DISPLAY,
-    RPC_GENERATIONS,
-)
+from aioshelly.const import MODEL_GAS, RPC_GENERATIONS
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_PLATFORM
 from homeassistant.components.switch import (
