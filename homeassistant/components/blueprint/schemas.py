@@ -75,6 +75,7 @@ BLUEPRINT_INPUT_SECTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): str,
         vol.Optional(CONF_ICON): str,
+        vol.Optional(CONF_DESCRIPTION): str,
         vol.Optional(CONF_DEFAULT_COLLAPSED): bool,
     }
 )
