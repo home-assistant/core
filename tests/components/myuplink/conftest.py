@@ -2,10 +2,9 @@
 from collections.abc import Generator
 import json
 import time
-from typing import Any
 from unittest.mock import MagicMock, patch
 
-from myuplink import Device, System
+from myuplink import Device, DevicePoint, System
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -64,34 +63,109 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.fixture
-def mock_myuplink_client() -> Generator[MagicMock, None, None]:
-    """Mock a myuplink client."""
+# Fixture group for device API endpoint.
 
-    def process_json_system(data: dict[str, Any]) -> System:
-        array = json.loads(data)
-        return [System(system_data) for system_data in array["systems"]]
+
+@pytest.fixture(scope="session")
+def load_device_file():
+    """Load fixture file for device endpoint."""
+    return load_json_value_fixture("device.json", DOMAIN)
+
+
+@pytest.fixture
+def device_fixture(load_device_file):
+    """Fixture for device."""
+    return Device(load_device_file)
+
+
+@pytest.fixture
+def device_json_fixture(load_device_file):
+    """Fixture for device in json format."""
+    return load_device_file
+
+
+# Fixture group for systems API endpoint.
+
+
+@pytest.fixture(scope="session")
+def load_systems_jv_file():
+    """Load fixture file for systems endpoint."""
+    return load_json_value_fixture("systems.json", DOMAIN)
+
+
+@pytest.fixture(scope="session")
+def load_systems_file():
+    """Load fixture file for systems."""
+    return load_fixture("systems.json", DOMAIN)
+
+
+@pytest.fixture
+def system_fixture(load_systems_file):
+    """Fixture for systems."""
+    array = json.loads(load_systems_file)
+    return [System(system_data) for system_data in array["systems"]]
+
+
+@pytest.fixture
+def system_json_fixture(load_systems_jv_file):
+    """Fixture for system in json format."""
+    return load_systems_jv_file
+
+
+# Fixture group for device points API endpoint.
+
+
+@pytest.fixture(scope="session")
+def load_device_points_file():
+    """Load fixture file for device-points endpoint."""
+    return load_fixture("device_points_nibe_f730.json", DOMAIN)
+
+
+@pytest.fixture(scope="session")
+def load_device_points_jv_file():
+    """Load fixture file for device_points."""
+    return load_json_value_fixture("device_points_nibe_f730.json", DOMAIN)
+
+
+@pytest.fixture
+def device_points_fixture(load_device_points_file):
+    """Fixture for devce_points."""
+    array = json.loads(load_device_points_file)
+    return [DevicePoint(point_data) for point_data in array]
+
+
+@pytest.fixture
+def device_points_json_fixture(load_device_points_file):
+    """Fixture for device_points in json format."""
+    return load_device_points_file
+
+
+@pytest.fixture
+def mock_myuplink_client(
+    device_json_fixture,
+    device_fixture,
+    device_points_json_fixture,
+    device_points_fixture,
+    system_fixture,
+    system_json_fixture,
+) -> Generator[MagicMock, None, None]:
+    """Mock a myuplink client."""
 
     with patch(
         "homeassistant.components.myuplink.MyUplinkAPI",
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
-        client.async_get_device_points_json.return_value = load_json_value_fixture(
-            "device_points_nibe_f730.json", DOMAIN
-        )
-        client.async_get_systems.return_value = process_json_system(
-            load_fixture("systems.json", DOMAIN)
-        )
-        client.async_get_device.return_value = Device(
-            load_json_value_fixture("device.json", DOMAIN)
-        )
-        client.async_get_device_json.return_value = load_json_value_fixture(
-            "device.json", DOMAIN
-        )
-        client.async_get_systems_json.return_value = load_json_value_fixture(
-            "systems.json", DOMAIN
-        )
+
+        client.async_get_systems.return_value = system_fixture
+        client.async_get_systems_json.return_value = system_json_fixture
+
+        client.async_get_device.return_value = device_fixture
+        client.async_get_device_json.return_value = device_json_fixture
+
+        client.async_get_device_points.return_value = device_points_fixture
+        client.async_get_device_points_json.return_value = device_points_json_fixture
+
         yield client
 
 

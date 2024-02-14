@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
@@ -83,16 +83,28 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-# async def test_step_reauth(
-#     hass: HomeAssistant, config_entry, setup_config_entry
-# ) -> None:
-#     """Test that the reauth step works."""
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=config_entry.data
-#     )
-#     assert result["type"] == data_entry_flow.FlowResultType.FORM
-#     assert result["step_id"] == "reauth_confirm"
+async def test_flow_reauth(
+    hass: HomeAssistant,
+    init_integration,
+) -> None:
+    """Test reauth step."""
+    # entry = mock_config_entry(hass)
+    entry = init_integration
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+            # "unique_id": entry.unique_id,
+        },
+        data=entry.data,
+    )
 
-#     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-#     assert result["type"] == data_entry_flow.FlowResultType.FORM
-#     assert result["step_id"] == "reauth_confirm"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=None,
+    )
+    assert result2["step_id"] == "reauth_successful"
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT

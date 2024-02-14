@@ -16,7 +16,8 @@ class OAuth2FlowHandler(
     """Config flow to handle myUplink OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    reauth_entry: ConfigEntry | None = None
+
+    config_entry_reauth: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -30,7 +31,7 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
+        self.config_entry_reauth = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
         return await self.async_step_reauth_confirm()
@@ -46,9 +47,13 @@ class OAuth2FlowHandler(
         return await self.async_step_user()
 
     async def async_oauth_create_entry(self, data: dict) -> FlowResult:
-        """Create an oauth config entry or update existing entry for reauth."""
-        if self.reauth_entry:
-            self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
+        """Create or update the config entry."""
+        if self.config_entry_reauth:
+            self.hass.config_entries.async_update_entry(
+                self.config_entry_reauth, data=data
+            )
+            await self.hass.config_entries.async_reload(
+                self.config_entry_reauth.entry_id
+            )
             return self.async_abort(reason="reauth_successful")
         return await super().async_oauth_create_entry(data)
