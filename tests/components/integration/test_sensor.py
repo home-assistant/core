@@ -102,7 +102,7 @@ async def test_state(hass: HomeAssistant, method) -> None:
     state = hass.states.get("sensor.integration")
     assert state.state == STATE_UNAVAILABLE
 
-    # 1 hour after last update, power sensor is back to normal at 2 KiloWatts and stays for 1 hour += 2kWh
+    # 1 hour after last update, power sensor is back to normal at 2 KiloWatts and stays for 1 hour
     now += timedelta(seconds=3600)
     with freeze_time(now):
         hass.states.async_set(
@@ -116,11 +116,8 @@ async def test_state(hass: HomeAssistant, method) -> None:
         )
         await hass.async_block_till_done()
     state = hass.states.get("sensor.integration")
-    assert (
-        round(float(state.state), config["sensor"]["round"]) == 3.0
-        if method == "right"
-        else 1.0
-    )
+
+    assert state.state == STATE_UNAVAILABLE
 
     now += timedelta(seconds=3600)
     with freeze_time(now):
@@ -135,11 +132,7 @@ async def test_state(hass: HomeAssistant, method) -> None:
         )
         await hass.async_block_till_done()
     state = hass.states.get("sensor.integration")
-    assert (
-        round(float(state.state), config["sensor"]["round"]) == 5.0
-        if method == "right"
-        else 3.0
-    )
+    assert round(float(state.state), config["sensor"]["round"]) == 3.0
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:
@@ -670,7 +663,7 @@ async def test_calc_errors(
     assert state.state == STATE_UNKNOWN
 
     # Moving from an unknown state to a value is a calc error and should
-    # not change the value of the Reimann sensor, unless the method used is "right".
+    # not change the value of the Riemann sensor.
     now += timedelta(seconds=3600)
     with freeze_time(now):
         hass.states.async_set(entity_id, 0, {"device_class": None})
@@ -681,7 +674,7 @@ async def test_calc_errors(
     assert state is not None
     assert state.state == expected_states[0]
 
-    # With the source sensor updated successfully, the Reimann sensor
+    # With the source sensor updated successfully, the Riemann sensor
     # should have a zero (known) value.
     now += timedelta(seconds=3600)
     with freeze_time(now):

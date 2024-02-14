@@ -505,18 +505,19 @@ class IntegrationSensor(RestoreSensor):
         if source_state_dec := _decimal_state(source_state.state):
             elapsed_seconds = Decimal((now - self._last_integration_time).total_seconds())
             self._derive_and_set_attributes_from_state(source_state)
-            area = source_state_dec * elapsed_seconds
-            integral = area / (self._unit_prefix * self._unit_time)
-            if isinstance(self._state, Decimal):
-                self._state += integral
-            else:
-                self._state = integral
-
-            self._last_valid_state = self._state
+            area = self._method.calculate_area_with_one_state(
+                elapsed_seconds, source_state_dec
+            )
+            self._update_integral(area)
             self.async_write_ha_state()
 
             self._last_integration_time = datetime.now(tz=UTC)
             self._last_integration_trigger = _IntegrationTrigger.TimeElapsed
+        else:
+            _LOGGER.warning(
+                "Cannot integrate because the source state is not numeric %s",
+                source_state,
+            )
 
         self._schedule_max_dt_exceeded()
 
