@@ -328,7 +328,7 @@ async def test_wall_display_relay_mode(
     switch_entity_id = "switch.test_switch_0"
 
     new_status = deepcopy(mock_rpc_device.status)
-    new_status["relay_in_thermostat"] = False
+    new_status["sys"]["relay_in_thermostat"] = False
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)

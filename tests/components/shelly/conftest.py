@@ -247,11 +247,11 @@ MOCK_STATUS_RPC = {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
             "stable": {"version": "some_beta_version"},
-        }
+        },
+        "relay_in_thermostat": True,
     },
     "voltmeter": {"voltage": 4.321},
     "wifi": {"rssi": -63},
-    "relay_in_thermostat": True,
 }
 
 
