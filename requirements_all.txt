@@ -128,7 +128,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.26
+SQLAlchemy==2.0.27
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -383,7 +383,7 @@ aioswitcher==3.4.1
 aiosyncthing==0.5.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.3.0
+aiotankerkoenig==0.4.0
 
 # homeassistant.components.tractive
 aiotractive==0.5.6
@@ -404,7 +404,7 @@ aiowaqi==3.0.1
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.3.3
+aiowebostv==0.4.0
 
 # homeassistant.components.withings
 aiowithings==2.1.0
@@ -599,6 +599,9 @@ boschshcpy==0.2.75
 # homeassistant.components.route53
 boto3==1.33.13
 
+# homeassistant.components.bring
+bring-api==0.1.1
+
 # homeassistant.components.broadlink
 broadlink==0.18.3
 
@@ -676,6 +679,9 @@ crownstone-uart==2.1.0
 
 # homeassistant.components.datadog
 datadog==0.15.0
+
+# homeassistant.components.metoffice
+datapoint==0.9.9
 
 # homeassistant.components.bluetooth
 dbus-fast==2.21.1
@@ -1934,7 +1940,7 @@ pylitterbot==2023.4.9
 pylutron-caseta==0.19.0
 
 # homeassistant.components.lutron
-pylutron==0.2.11
+pylutron==0.2.12
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -2185,9 +2191,6 @@ python-awair==0.2.4
 
 # homeassistant.components.blockchain
 python-blockchain-api==0.0.2
-
-# homeassistant.components.bring
-python-bring-api==3.0.0
 
 # homeassistant.components.bsblan
 python-bsblan==0.5.18
