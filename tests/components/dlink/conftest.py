@@ -60,7 +60,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 def config_entry_with_uid(hass: HomeAssistant) -> MockConfigEntry:
     """Add config entry with unique ID in Home Assistant."""
-    return create_entry(hass, unique_id="aa:bb:cc:dd:ee:ff")
+    return create_entry(hass, unique_id="aabbccddeeff")
 
 
 @pytest.fixture
