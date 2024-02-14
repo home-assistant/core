@@ -113,7 +113,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.26
+SQLAlchemy==2.0.27
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -377,7 +377,7 @@ aiowaqi==3.0.1
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.3.3
+aiowebostv==0.4.0
 
 # homeassistant.components.withings
 aiowithings==2.1.0
@@ -560,6 +560,9 @@ crownstone-uart==2.1.0
 
 # homeassistant.components.datadog
 datadog==0.15.0
+
+# homeassistant.components.metoffice
+datapoint==0.9.9
 
 # homeassistant.components.bluetooth
 dbus-fast==2.21.1
@@ -1801,6 +1804,9 @@ pyvesync==2.1.10
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
+
+# homeassistant.components.velux
+pyvlx==0.2.21
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
