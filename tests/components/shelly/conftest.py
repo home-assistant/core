@@ -201,7 +201,6 @@ MOCK_SHELLY_RPC = {
     "auth_en": False,
     "auth_domain": None,
     "profile": "cover",
-    "relay_in_thermostat": True,
 }
 
 MOCK_STATUS_COAP = {
@@ -252,6 +251,7 @@ MOCK_STATUS_RPC = {
     },
     "voltmeter": {"voltage": 4.321},
     "wifi": {"rssi": -63},
+    "relay_in_thermostat": True,
 }
 
 
