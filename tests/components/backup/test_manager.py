@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 
 from homeassistant.components.backup import BackupManager
+from homeassistant.components.backup.const import EVENT_BACKUP_CREATED
 from homeassistant.components.backup.manager import BackupPlatformProtocol
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -14,7 +15,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import TEST_BACKUP
 
-from tests.common import MockPlatform, mock_platform
+from tests.common import MockPlatform, async_capture_events, mock_platform
 
 
 async def _mock_backup_generation(manager: BackupManager):
@@ -175,11 +176,13 @@ async def test_generate_backup(
     manager = BackupManager(hass)
     manager.loaded_backups = True
 
+    test_created_event = async_capture_events(hass, EVENT_BACKUP_CREATED)
     await _mock_backup_generation(manager)
 
     assert "Generated new backup with slug " in caplog.text
     assert "Creating backup directory" in caplog.text
     assert "Loaded 0 platforms" in caplog.text
+    assert len(test_created_event) == 1, "Created event not fired"
 
 
 async def test_loading_platforms(
