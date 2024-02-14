@@ -385,12 +385,12 @@ class ConfigEntry:
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
-        if integration is None:
+        if integration is None and not (integration := self._integration_for_domain):
             integration = await loader.async_get_integration(hass, self.domain)
             self._integration_for_domain = integration
 
         # Only store setup result as state if it was not forwarded.
-        if self.domain == integration.domain:
+        if domain_is_integration := self.domain == integration.domain:
             self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
         if self.supports_unload is None:
@@ -409,13 +409,13 @@ class ConfigEntry:
                 self.domain,
                 err,
             )
-            if self.domain == integration.domain:
+            if domain_is_integration:
                 self._async_set_state(
                     hass, ConfigEntryState.SETUP_ERROR, "Import error"
                 )
             return
 
-        if self.domain == integration.domain:
+        if domain_is_integration:
             try:
                 integration.get_platform("config_flow")
             except ImportError as err:
@@ -475,12 +475,12 @@ class ConfigEntry:
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as exc:
-            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(exc) or None)
+            message = str(exc)
+            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, message or None)
             wait_time = 2 ** min(self._tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
-            message = str(exc)
             ready_message = f"ready yet: {message}" if message else "ready yet"
             _LOGGER.debug(
                 (
@@ -513,7 +513,7 @@ class ConfigEntry:
             result = False
 
         # Only store setup result as state if it was not forwarded.
-        if self.domain != integration.domain:
+        if not domain_is_integration:
             return
 
         #
