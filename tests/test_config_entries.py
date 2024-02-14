@@ -4365,7 +4365,7 @@ async def test_avoid_starting_config_flow_on_single_config_entry(
 async def test_avoid_adding_second_config_entry_on_single_config_entry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
-    """Test that we cannot add a second entry for a single instance only integration."""
+    """Test that we cannot add a second entry for a single config entry integration."""
     integration = loader.Integration(
         hass,
         "components.comp",
@@ -4460,7 +4460,7 @@ async def test_in_progress_get_canceled_when_entry_is_created(
 async def test_start_reauth_still_possible_for_single_config_entry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ):
-    """Test that we can still start a reauth on a single instance only integration."""
+    """Test that we can still start a reauth flow on a single config entry integration."""
     integration = loader.Integration(
         hass,
         "components.comp",
