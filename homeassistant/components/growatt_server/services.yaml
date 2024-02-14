@@ -1,0 +1,156 @@
+# Growatt Server services.yaml entries
+set_grid_first:
+  fields:
+    discharge_power_rate:
+      required: true
+      example: 100
+      default: 100
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    discharge_stopped_soc:
+      required: true
+      example: 50
+      default: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    time_slot_1_start:
+      required: true
+      example: 00:00:00
+      default: 00:00:00
+      selector:
+        time:
+    time_slot_1_end:
+      required: true
+      example: 00:00:00
+      default: 00:00:00
+      selector:
+        time:
+    time_slot_1_enabled:
+      required: true
+      example: false
+      default: false
+      selector:
+        boolean:
+    time_slot_2_start:
+      required: true
+      example: 00:00:00
+      default: 00:00:00
+      selector:
+        time:
+    time_slot_2_end:
+      required: true
+      example: 00:00:00
+      default: 00:00:00
+      selector:
+        time:
+    time_slot_2_enabled:
+      required: true
+      example: false
+      default: false
+      selector:
+        boolean:
+    time_slot_3_start:
+      required: true
+      example: 00:00:00
+      default: 00:00:00
+      selector:
+        time:
+    time_slot_3_end:
+      required: true
+      example: "00:00:00"
+      default: 00:00:00
+      selector:
+        time:
+    time_slot_3_enabled:
+      required: true
+      example: false
+      default: false
+      selector:
+        boolean:
+
+set_battery_first:
+  fields:
+    charge_power_rate:
+      required: true
+      example: "100"
+      default: "100"
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    charge_stopped_soc:
+      required: true
+      example: "50"
+      default: "100"
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+    ac_charge:
+      required: true
+      example: "true"
+      default: "true"
+      selector:
+        boolean:
+    time_slot_1_start:
+      required: true
+      example: "00:00:00"
+      default: "00:00:00"
+      selector:
+        time:
+    time_slot_1_end:
+      required: true
+      example: "00:00:00"
+      default: "00:00:00"
+      selector:
+        time:
+    time_slot_1_enabled:
+      required: true
+      example: "false"
+      default: "false"
+      selector:
+        boolean:
+    time_slot_2_start:
+      required: true
+      example: "00:00:00"
+      default: "00:00:00"
+      selector:
+        time:
+    time_slot_2_end:
+      required: true
+      example: "00:00:00"
+      default: "00:00:00"
+      selector:
+        time:
+    time_slot_2_enabled:
+      required: true
+      example: "false"
+      default: "false"
+      selector:
+        boolean:
+    time_slot_3_start:
+      required: true
+      example: "00:00:00"
+      default: "00:00:00"
+      selector:
+        time:
+    time_slot_3_end:
+      required: true
+      example: "00:00:00"
+      default: "00:00:00"
+      selector:
+        time:
+    time_slot_3_enabled:
+      required: true
+      example: "false"
+      default: "false"
+      selector:
+        boolean:

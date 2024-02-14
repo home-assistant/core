@@ -5,24 +5,17 @@ import datetime
 import json
 import logging
 
-import growattServer
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
 
-from .const import (
-    CONF_PLANT_ID,
-    DEFAULT_PLANT_ID,
-    DEFAULT_URL,
-    DEPRECATED_URLS,
-    DOMAIN,
-    LOGIN_INVALID_AUTH_CODE,
-)
+from .api import get_configured_api
+from .const import DOMAIN
+from .plant import get_device_list
 from .sensor_types.inverter import INVERTER_SENSOR_TYPES
 from .sensor_types.mix import MIX_SENSOR_TYPES
 from .sensor_types.sensor_entity_description import GrowattSensorEntityDescription
@@ -35,28 +28,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
 
 
-def get_device_list(api, config):
-    """Retrieve the device list for the selected plant."""
-    plant_id = config[CONF_PLANT_ID]
-
-    # Log in to api and fetch first plant if no plant id is defined.
-    login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    if (
-        not login_response["success"]
-        and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
-    ):
-        _LOGGER.error("Username, Password or URL may be incorrect!")
-        return
-    user_id = login_response["user"]["id"]
-    if plant_id == DEFAULT_PLANT_ID:
-        plant_info = api.plant_list(user_id)
-        plant_id = plant_info["data"][0]["plantId"]
-
-    # Get a list of devices for specified plant to add sensors for.
-    devices = api.device_list(plant_id)
-    return [devices, plant_id]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -66,23 +37,9 @@ async def async_setup_entry(
     config = {**config_entry.data}
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
-    url = config.get(CONF_URL, DEFAULT_URL)
     name = config[CONF_NAME]
 
-    # If the URL has been deprecated then change to the default instead
-    if url in DEPRECATED_URLS:
-        _LOGGER.info(
-            "URL: %s has been deprecated, migrating to the latest default: %s",
-            url,
-            DEFAULT_URL,
-        )
-        url = DEFAULT_URL
-        config[CONF_URL] = url
-        hass.config_entries.async_update_entry(config_entry, data=config)
-
-    # Initialise the library with the username & a random id each time it is started
-    api = growattServer.GrowattApi(add_random_user_id=True, agent_identifier=username)
-    api.server_url = url
+    api = get_configured_api(hass, config_entry)
 
     devices, plant_id = await hass.async_add_executor_job(get_device_list, api, config)
 
@@ -159,7 +116,7 @@ class GrowattInverter(SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> int:
         """Return the state of the sensor."""
         result = self.probe.get_data(self.entity_description)
         if self.entity_description.precision is not None:
@@ -181,15 +138,15 @@ class GrowattInverter(SensorEntity):
 class GrowattData:
     """The class for handling data retrieval."""
 
-    def __init__(self, api, username, password, device_id, growatt_type):
+    def __init__(self, api, username, password, device_id, growatt_type) -> None:
         """Initialize the probe."""
 
         self.growatt_type = growatt_type
         self.api = api
         self.device_id = device_id
         self.plant_id = None
-        self.data = {}
-        self.previous_values = {}
+        self.data: dict = {}
+        self.previous_values: dict = {}
         self.username = username
         self.password = password
 

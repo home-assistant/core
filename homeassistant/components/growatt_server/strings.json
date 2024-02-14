@@ -425,5 +425,111 @@
         "name": "Maximum power"
       }
     }
+  },
+  "services": {
+    "set_grid_first": {
+      "name": "Set grid first",
+      "description": "Set the inverter to export energy to the grid",
+      "fields": {
+        "discharge_power_rate": {
+          "name": "Discharge Power Rate",
+          "description": "Percentage of maximum discharge rate to use"
+        },
+        "discharge_stopped_soc": {
+          "name": "Discharge Stopped Soc",
+          "description": "Battery state of charge to stop discharging at"
+        },
+        "time_slot_1_start": {
+          "name": "Time Slot 1 start",
+          "description": "Start time of first time slot"
+        },
+        "time_slot_1_end": {
+          "name": "Time Slot 1 end",
+          "description": "End time of first time slot"
+        },
+        "time_slot_1_enabled": {
+          "name": "Time Slot 1 enabled",
+          "description": "Use this time slot for exporting energy"
+        },
+        "time_slot_2_start": {
+          "name": "Time Slot 2 start",
+          "description": "Start time of second time slot"
+        },
+        "time_slot_2_end": {
+          "name": "Time Slot 2 end",
+          "description": "End time of second time slot"
+        },
+        "time_slot_2_enabled": {
+          "name": "Time Slot 2 enabled",
+          "description": "Use this time slot for exporting energy"
+        },
+        "time_slot_3_start": {
+          "name": "Time Slot 3 start",
+          "description": "Start time of third time slot"
+        },
+        "time_slot_3_end": {
+          "name": "Time Slot 3 end",
+          "description": "End time of third time slot"
+        },
+        "time_slot_3_enabled": {
+          "name": "Time Slot 3 enabled",
+          "description": "Use this time slot for exporting energy"
+        }
+      }
+    },
+    "set_battery_first": {
+      "name": "Set battery first",
+      "description": "Set the inverter to charge the battery (optionally from the grid)",
+      "fields": {
+        "charge_power_rate": {
+          "name": "Charge Power Rate",
+          "description": "Percentage of maximum charge rate to use"
+        },
+        "charge_stopped_soc": {
+          "name": "Charge Stopped Soc",
+          "description": "Battery state of charge to stop charging at"
+        },
+        "ac_charge": {
+          "name": "AC charge",
+          "description": "Charge from the grid"
+        },
+        "time_slot_1_start": {
+          "name": "Time Slot 1 start",
+          "description": "Start time of first time slot"
+        },
+        "time_slot_1_end": {
+          "name": "Time Slot 1 end",
+          "description": "End time of first time slot"
+        },
+        "time_slot_1_enabled": {
+          "name": "Time Slot 1 enabled",
+          "description": "Use this time slot for charging battery"
+        },
+        "time_slot_2_start": {
+          "name": "Time Slot 2 start",
+          "description": "Start time of second time slot"
+        },
+        "time_slot_2_end": {
+          "name": "Time Slot 2 end",
+          "description": "End time of second time slot"
+        },
+        "time_slot_2_enabled": {
+          "name": "Time Slot 2 enabled",
+          "description": "Use this time slot for charging battery"
+        },
+        "time_slot_3_start": {
+          "name": "Time Slot 3 start",
+          "description": "Start time of third time slot"
+        },
+        "time_slot_3_end": {
+          "name": "Time Slot 3 end",
+          "description": "End time of third time slot"
+        },
+        "time_slot_3_enabled": {
+          "name": "Time Slot 3 enabled",
+          "description": "Use this time slot for charging battery"
+        }
+      }
+    }
   }
 }
