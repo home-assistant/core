@@ -1,4 +1,6 @@
-"""Platform for Sensor integration."""
+"""Platform for Sanix integration."""
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import date, datetime
 
 from sanix.const import (
@@ -10,6 +12,7 @@ from sanix.const import (
     ATTR_API_SSID,
     ATTR_API_TIME,
 )
+from sanix.models import Measurement
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -27,43 +30,61 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import SanixCoordinator
 
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass(frozen=True)
+class SanixSensorEntityDescription(SensorEntityDescription):
+    """Class describing Sanix Sensor entities."""
+
+    native_value_fn: Callable[[Measurement], int | datetime | date | str]
+
+
+SENSOR_TYPES: tuple[SanixSensorEntityDescription, ...] = (
+    SanixSensorEntityDescription(
         key=ATTR_API_BATTERY,
+        translation_key=ATTR_API_BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+        native_value_fn=lambda data: data.battery,
     ),
-    SensorEntityDescription(
+    SanixSensorEntityDescription(
         key=ATTR_API_DISTANCE,
+        translation_key=ATTR_API_DISTANCE,
         native_unit_of_measurement=UnitOfLength.CENTIMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        native_value_fn=lambda data: data.distance,
     ),
-    SensorEntityDescription(
+    SanixSensorEntityDescription(
         key=ATTR_API_SERVICE_DATE,
+        translation_key=ATTR_API_SERVICE_DATE,
         device_class=SensorDeviceClass.DATE,
-        translation_key="service_date",
+        native_value_fn=lambda data: data.service_date,
     ),
-    SensorEntityDescription(
+    SanixSensorEntityDescription(
         key=ATTR_API_TIME,
+        translation_key=ATTR_API_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
-        translation_key="time",
+        native_value_fn=lambda data: data.time,
     ),
-    SensorEntityDescription(
+    SanixSensorEntityDescription(
         key=ATTR_API_FILL_PERC,
+        translation_key=ATTR_API_FILL_PERC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        translation_key="fill_percentage",
-        icon="mdi:water-percent",
+        native_value_fn=lambda data: data.fill_perc,
     ),
-    SensorEntityDescription(
-        key=ATTR_API_SSID, translation_key="ssid", entity_registry_enabled_default=False
-    ),
-    SensorEntityDescription(
-        key=ATTR_API_DEVICE_NO,
-        translation_key="device_no",
+    SanixSensorEntityDescription(
+        key=ATTR_API_SSID,
+        translation_key=ATTR_API_SSID,
         entity_registry_enabled_default=False,
+        native_value_fn=lambda data: data.ssid,
+    ),
+    SanixSensorEntityDescription(
+        key=ATTR_API_DEVICE_NO,
+        translation_key=ATTR_API_DEVICE_NO,
+        entity_registry_enabled_default=False,
+        native_value_fn=lambda data: data.device_no,
     ),
 )
 
@@ -75,11 +96,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        SanixSensorEntity(
-            coordinator=coordinator,
-            description=description,
-        )
-        for description in SENSOR_TYPES
+        SanixSensorEntity(coordinator, description) for description in SENSOR_TYPES
     )
 
 
@@ -87,13 +104,12 @@ class SanixSensorEntity(CoordinatorEntity[SanixCoordinator], SensorEntity):
     """Sanix Sensor entity."""
 
     _attr_has_entity_name = True
-    entity_description: SensorEntityDescription
+    entity_description: SanixSensorEntityDescription
 
     def __init__(
         self,
-        *,
         coordinator: SanixCoordinator,
-        description: SensorEntityDescription,
+        description: SanixSensorEntityDescription,
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
@@ -112,4 +128,4 @@ class SanixSensorEntity(CoordinatorEntity[SanixCoordinator], SensorEntity):
     @property
     def native_value(self) -> int | datetime | date | str:
         """Return the state of the sensor."""
-        return getattr(self.coordinator.data, self.entity_description.key)
+        return self.entity_description.native_value_fn(self.coordinator.data)
