@@ -6,14 +6,14 @@ from typing import Any
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class ViCareRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_getter: Callable[[PyViCareDevice], Any]
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class ViCareRequiredKeysMixinWithSet(ViCareRequiredKeysMixin):
     """Mixin for required keys with setter."""
 
