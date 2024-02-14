@@ -20,7 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import DEFAULT_CACHE_DURATION, DEVICE_CONFIG_LIST, DOMAIN, PLATFORMS
+from .const import DEFAULT_CACHE_DURATION, DEVICE_LIST, DOMAIN, PLATFORMS
+from .types import ViCareDevice
 from .utils import get_device
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,8 +82,8 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
         )
 
-    hass.data[DOMAIN][entry.entry_id][DEVICE_CONFIG_LIST] = [
-        (device_config, get_device(entry, device_config))
+    hass.data[DOMAIN][entry.entry_id][DEVICE_LIST] = [
+        ViCareDevice(config=device_config, api=get_device(entry, device_config))
         for device_config in device_config_list
     ]
 
