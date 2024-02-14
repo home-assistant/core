@@ -10,6 +10,6 @@ CONF_MIN_VERSION = "min_version"
 CONF_AUTHOR = "author"
 CONF_INPUT_SECTIONS = "input_sections"
 CONF_SECTION = "section"
-CONF_COLLAPSE = "collapse"
+CONF_DEFAULT_COLLAPSED = "default_collapsed"
 
 DOMAIN = "blueprint"

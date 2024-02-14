@@ -7,6 +7,7 @@ from homeassistant.const import (
     CONF_DEFAULT,
     CONF_DESCRIPTION,
     CONF_DOMAIN,
+    CONF_ICON,
     CONF_NAME,
     CONF_PATH,
     CONF_SELECTOR,
@@ -17,7 +18,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from .const import (
     CONF_AUTHOR,
     CONF_BLUEPRINT,
-    CONF_COLLAPSE,
+    CONF_DEFAULT_COLLAPSED,
     CONF_HOMEASSISTANT,
     CONF_INPUT,
     CONF_INPUT_SECTIONS,
@@ -73,10 +74,8 @@ BLUEPRINT_INPUT_SCHEMA = vol.Schema(
 BLUEPRINT_INPUT_SECTION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): str,
-        vol.Optional(CONF_COLLAPSE): bool,
-        vol.Optional(CONF_INPUT_SECTIONS, default=dict): {
-            str: vol.Self,
-        },
+        vol.Optional(CONF_ICON): str,
+        vol.Optional(CONF_DEFAULT_COLLAPSED): bool,
     }
 )
 
