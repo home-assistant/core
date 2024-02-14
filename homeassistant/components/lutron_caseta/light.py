@@ -70,7 +70,7 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
         DEVICE_TYPE_WHITE_TUNE: {ColorMode.COLOR_TEMP},
     }
 
-    def get_min_color_temp_kelvin(self, light) -> int:
+    def get_min_color_temp_kelvin(self, light: dict[str, Any]) -> int:
         """Return minimum supported color temperature.
 
         :param light: The light to get the minimum color temperature for.
@@ -82,7 +82,7 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
 
         return white_tune_range.get("Min")
 
-    def get_max_color_temp_kelvin(self, light) -> int:
+    def get_max_color_temp_kelvin(self, light: dict[str, Any]) -> int:
         """Return maximum supported color temperature.
 
         :param light: The light to get the maximum color temperature for.
@@ -94,7 +94,7 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
 
         return white_tune_range.get("Max")
 
-    def __init__(self, light, data) -> None:
+    def __init__(self, light: dict[str, Any], data: LutronCasetaData) -> None:
         """Initialize the light and set the supported color modes.
 
         :param light: The lutron light device to initialize.
@@ -102,14 +102,12 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
         """
         super().__init__(light, data)
 
-        self._attr_min_color_temp_kelvin = self.get_min_color_temp_kelvin(light)
-        self._attr_max_color_temp_kelvin = self.get_max_color_temp_kelvin(light)
+        self._attr_min_color_temp_kelvin = self._get_min_color_temp_kelvin(light)
+        self._attr_max_color_temp_kelvin = self._get_max_color_temp_kelvin(light)
 
         light_type = light["type"]
         if light_type in self.SUPPORTED_COLOR_MODE_DICT:
-            self._attr_supported_color_modes = self.SUPPORTED_COLOR_MODE_DICT[
-                light_type
-            ]
+            self._attr_supported_color_modes = SUPPORTED_COLOR_MODES_BY_LIGHT_TYPE.get(light_type, {ColorMode.BRIGHTNESS})
         else:
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
@@ -118,8 +116,8 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
             DEVICE_TYPE_SPECTRUM_TUNE,
         ]
 
-        self.supports_warm_dim = light_type in [DEVICE_TYPE_SPECTRUM_TUNE]
-        self.supports_spectrum_tune = light_type in [DEVICE_TYPE_SPECTRUM_TUNE]
+        self.supports_warm_dim = light_type == DEVICE_TYPE_SPECTRUM_TUNE
+        self.supports_spectrum_tune = light_type == DEVICE_TYPE_SPECTRUM_TUNE
 
     @property
     def brightness(self) -> int:
@@ -137,7 +135,7 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
             self.device_id, value=brightness, color_value=color_value, **args
         )
 
-    async def _set_warm_dim(self, brightness, **kwargs):
+    async def _set_warm_dim(self, brightness: int | None, **kwargs: Any):
         """Set the light to warm dim mode."""
         args = {}
         if ATTR_TRANSITION in kwargs:
