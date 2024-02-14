@@ -1,7 +1,7 @@
 """Support for TPLink binary sensors."""
 from __future__ import annotations
 
-from kasa import Feature, FeatureCategory, FeatureType, SmartDevice
+from kasa import Feature, FeatureType, SmartDevice
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -29,7 +28,7 @@ def _async_sensors_for_device(
     sensors = [
         BinarySensor(device, coordinator, id_, feat)
         for id_, feat in device.features.items()
-        if feat.show_in_hass and feat.type == FeatureType.BinarySensor
+        if feat.type == FeatureType.BinarySensor
     ]
     return sensors
 
@@ -74,14 +73,9 @@ class BinarySensor(CoordinatedTPLinkEntity, BinarySensorEntity):
         self._device = device
         self._feature = feature
         self._attr_unique_id = f"{legacy_device_id(device)}_new_{id_}"
-        cat = (
-            EntityCategory.DIAGNOSTIC
-            if feature.category == FeatureCategory.Diagnostic
-            else EntityCategory.CONFIG
-        )
-        _ = BinarySensorDeviceClass  # no-op to avoid pre-commit removing the import
+        _ = BinarySensorDeviceClass  # TODO: no-op to avoid pre-commit removing the import
         self.entity_description = BinarySensorEntityDescription(
-            key=id_, name=feature.name, icon=feature.icon, entity_category=cat
+            key=id_, name=feature.name, icon=feature.icon
         )
         self._async_update_attrs()
 
