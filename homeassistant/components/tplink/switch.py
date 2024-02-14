@@ -1,13 +1,13 @@
-"""Support for TPLink HS100/HS110/HS200 smart switch."""
+"""Support for TPLink switch entities."""
 
 from __future__ import annotations
 
 import logging
 from typing import Any, cast
 
-from kasa import SmartDevice, SmartPlug
+from kasa import Feature, FeatureType, SmartDevice, SmartPlug
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -31,8 +31,6 @@ async def async_setup_entry(
     data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
     parent_coordinator = data.parent_coordinator
     device = cast(SmartPlug, parent_coordinator.device)
-    if not device.is_plug and not device.is_strip and not device.is_dimmer:
-        return
     entities: list = []
     if device.is_strip:
         # Historically we only add the children if the device is a strip
@@ -44,43 +42,56 @@ async def async_setup_entry(
     elif device.is_plug:
         entities.append(SmartPlugSwitch(device, parent_coordinator))
 
-    # this will be removed on the led is implemented
-    if hasattr(device, "led"):
-        entities.append(SmartPlugLedSwitch(device, parent_coordinator))
+    new_switches = [
+        Switch(device, data.parent_coordinator, id_, feat)
+        for id_, feat in device.features.items()
+        if feat.show_in_hass and feat.type == FeatureType.Switch
+    ]
 
-    async_add_entities(entities)
+    async_add_entities(entities + new_switches)
 
 
-class SmartPlugLedSwitch(CoordinatedTPLinkEntity, SwitchEntity):
-    """Representation of switch for the LED of a TPLink Smart Plug."""
-
-    device: SmartPlug
-
-    _attr_translation_key = "led"
-    _attr_entity_category = EntityCategory.CONFIG
+class Switch(CoordinatedTPLinkEntity, SwitchEntity):
+    """Representation of a feature-based TPLink sensor."""
 
     def __init__(
-        self, device: SmartPlug, coordinator: TPLinkDataUpdateCoordinator
-    ) -> None:
-        """Initialize the LED switch."""
+        self,
+        device: SmartDevice,
+        coordinator: TPLinkDataUpdateCoordinator,
+        id_: str,
+        feature: Feature,
+    ):
+        """Initialize the switch."""
         super().__init__(device, coordinator)
-        self._attr_unique_id = f"{device.mac}_led"
+        self._device = device
+        self._feature = feature
+        self._attr_unique_id = f"{legacy_device_id(device)}_new_{id_}"
+        self._attr_entity_category = EntityCategory.CONFIG
+        self.entity_description = SwitchEntityDescription(
+            key=id_, name=feature.name, icon=feature.icon
+        )
         self._async_update_attrs()
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the LED switch on."""
-        await self.device.set_led(True)
+        await self._feature.set_value(True)
 
     @async_refresh_after
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the LED switch off."""
-        await self.device.set_led(False)
+        await self._feature.set_value(False)
 
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        self._attr_is_on = self.device.led
+        is_on = self._feature.value
+
+        icon = self._feature.icon
+        # TODO: hacky way to support on/off icons..
+        if "{state}" in icon:
+            icon = icon.replace("{state}", "on" if is_on else "off")
+        self._attr_icon = icon
 
     @callback
     def _handle_coordinator_update(self) -> None:
