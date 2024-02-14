@@ -98,7 +98,7 @@ BLUEPRINT_SCHEMA = vol.Schema(
                         BLUEPRINT_INPUT_SCHEMA,
                     )
                 },
-                vol.Optional(CONF_INPUT_SECTIONS, default=dict): {
+                vol.Optional(CONF_INPUT_SECTIONS): {
                     str: BLUEPRINT_INPUT_SECTION_SCHEMA,
                 },
             }
