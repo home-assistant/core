@@ -1043,10 +1043,13 @@ async def test_profiles(hass: HomeAssistant) -> None:
     profiles = orig_Profiles(hass)
     await profiles.async_initialize()
     assert profiles.data == {
-        "concentrate": light.Profile("concentrate", 0.5119, 0.4147, 219, None),
-        "energize": light.Profile("energize", 0.368, 0.3686, 203, None),
-        "reading": light.Profile("reading", 0.4448, 0.4066, 240, None),
-        "relax": light.Profile("relax", 0.5119, 0.4147, 144, None),
+        "concentrate": light.Profile("concentrate", 0.5119, 0.4147, 219, None, None),
+        "energize": light.Profile("energize", 0.368, 0.3686, 203, None, None),
+        "reading": light.Profile("reading", 0.4448, 0.4066, 240, None, None),
+        "relax": light.Profile("relax", 0.5119, 0.4147, 144, None, None),
+        "warm_white": light.Profile("warm_white", None, None, 255, None, 3000),
+        "cool_white": light.Profile("cool_white", None, None, 255, None, 4000),
+        "daylight": light.Profile("daylight", None, None, 255, None, 5000),
     }
     assert profiles.data["concentrate"].hs_color == (35.932, 69.412)
     assert profiles.data["energize"].hs_color == (43.333, 21.176)

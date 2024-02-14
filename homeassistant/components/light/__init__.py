@@ -244,6 +244,7 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 # Service call validation schemas
 VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
+VALID_COLOR_TEMP_KELVIN = vol.All(vol.Coerce(int), vol.Clamp(min=1000, max=10000))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
@@ -457,7 +458,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 and ColorMode.COLOR_TEMP not in supported_color_modes
                 and ColorMode.RGBWW in supported_color_modes
             ):
-                params.pop(ATTR_COLOR_TEMP)
+                if ATTR_COLOR_TEMP in params:
+                    del params[ATTR_COLOR_TEMP]
                 color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
                 brightness = params.get(ATTR_BRIGHTNESS, light.brightness)
                 params[ATTR_RGBWW_COLOR] = color_util.color_temperature_to_rgbww(
@@ -467,7 +469,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                     light.max_color_temp_kelvin,
                 )
             elif ColorMode.COLOR_TEMP not in legacy_supported_color_modes:
-                params.pop(ATTR_COLOR_TEMP)
+                if ATTR_COLOR_TEMP in params:
+                    del params[ATTR_COLOR_TEMP]
                 color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
                 if color_supported(legacy_supported_color_modes):
                     params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(
@@ -701,25 +704,43 @@ class Profile:
     color_y: float | None = dataclasses.field(repr=False)
     brightness: int | None
     transition: int | None = None
+    kelvin: int | None = None
     hs_color: tuple[float, float] | None = dataclasses.field(init=False)
 
     SCHEMA = vol.Schema(
         vol.Any(
+            # Allow for profiles with just name, x, y, and brightness
             vol.ExactSequence(
                 (
-                    str,
-                    vol.Any(cv.small_float, _coerce_none),
-                    vol.Any(cv.small_float, _coerce_none),
-                    vol.Any(cv.byte, _coerce_none),
+                    str,  # Name
+                    vol.Any(cv.small_float, _coerce_none),  # x
+                    vol.Any(cv.small_float, _coerce_none),  # y
+                    vol.Any(cv.byte, _coerce_none),  # Brightness
                 )
             ),
+            # Allow for profiles including transition
             vol.ExactSequence(
                 (
-                    str,
-                    vol.Any(cv.small_float, _coerce_none),
-                    vol.Any(cv.small_float, _coerce_none),
-                    vol.Any(cv.byte, _coerce_none),
-                    vol.Any(VALID_TRANSITION, _coerce_none),
+                    str,  # Name
+                    vol.Any(cv.small_float, _coerce_none),  # x
+                    vol.Any(cv.small_float, _coerce_none),  # y
+                    vol.Any(cv.byte, _coerce_none),  # Brightness
+                    vol.Any(VALID_TRANSITION, _coerce_none),  # Transition
+                )
+            ),
+            # Allow for profiles with Kelvin instead of x, y, and optionally including transition
+            vol.ExactSequence(
+                (
+                    str,  # Name
+                    vol.Any(
+                        cv.small_float, _coerce_none
+                    ),  # x (kept for compatibility, but expected to be None for kelvin)
+                    vol.Any(
+                        cv.small_float, _coerce_none
+                    ),  # y (kept for compatibility, but expected to be None for kelvin)
+                    vol.Any(cv.byte, _coerce_none),  # Brightness
+                    vol.Any(VALID_TRANSITION, _coerce_none),  # Transition (optional)
+                    vol.Any(VALID_COLOR_TEMP_KELVIN, _coerce_none),  # Kelvin
                 )
             ),
         )
@@ -814,6 +835,11 @@ class Profiles:
             ATTR_XY_COLOR,
             ATTR_WHITE,
         )
+
+        if profile.kelvin is not None and not any(
+            color_attribute in params for color_attribute in color_attributes
+        ):
+            params[ATTR_COLOR_TEMP_KELVIN] = profile.kelvin
 
         if profile.hs_color is not None and not any(
             color_attribute in params for color_attribute in color_attributes

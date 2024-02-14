@@ -1,5 +1,8 @@
-id,x,y,brightness
+id,x,y,brightness,kelvin
 relax,0.5119,0.4147,144
 concentrate,0.5119,0.4147,219
 energize,0.368,0.3686,203
 reading,0.4448,0.4066,240
+warm_white,,,255,,3000
+cool_white,,,255,,4000
+daylight,,,255,,5000
