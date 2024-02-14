@@ -838,7 +838,7 @@ async def test_dhcp_can_finish(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="broadlink",
                 ip="1.2.3.4",
-                macaddress=dr.format_mac(device.mac),
+                macaddress=dr.format_mac(device.mac).replace(":", ""),
             ),
         )
         await hass.async_block_till_done()
@@ -872,7 +872,7 @@ async def test_dhcp_fails_to_connect(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="broadlink",
                 ip="1.2.3.4",
-                macaddress="34:ea:34:b4:3b:5a",
+                macaddress=dr.format_mac("34:ea:34:b4:3b:5a").replace(":", ""),
             ),
         )
         await hass.async_block_till_done()
@@ -956,7 +956,7 @@ async def test_dhcp_already_exists(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="broadlink",
                 ip="1.2.3.4",
-                macaddress="34:ea:34:b4:3b:5a",
+                macaddress=dr.format_mac("34:ea:34:b4:3b:5a").replace(":", ""),
             ),
         )
         await hass.async_block_till_done()
@@ -981,7 +981,7 @@ async def test_dhcp_updates_host(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="broadlink",
                 ip="4.5.6.7",
-                macaddress="34:ea:34:b4:3b:5a",
+                macaddress=dr.format_mac("34:ea:34:b4:3b:5a").replace(":", ""),
             ),
         )
         await hass.async_block_till_done()
