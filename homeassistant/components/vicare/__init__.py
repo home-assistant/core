@@ -67,9 +67,7 @@ def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     device_config_list = get_supported_devices(vicare_api.devices)
     if number_of_devices := len(device_config_list) > 1:
-        cache_duration = max(
-            DEFAULT_CACHE_DURATION, DEFAULT_CACHE_DURATION * number_of_devices
-        )
+        cache_duration = DEFAULT_CACHE_DURATION * number_of_devices
         _LOGGER.debug(
             "Found %s devices, adjusting cache duration to %s",
             number_of_devices,
