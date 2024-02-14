@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
+from homeassistant.components.notify import ATTR_MESSAGE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -80,7 +81,10 @@ else:
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
-    {vol.Optional(ATTR_VARIABLES): {str: cv.match_all}}
+    {
+        vol.Optional(ATTR_VARIABLES): {str: cv.match_all},
+        vol.Optional(ATTR_MESSAGE): cv.string,
+    }
 )
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
