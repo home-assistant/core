@@ -29,9 +29,9 @@ from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_CONFIG_LIST, DOMAIN
+from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import ViCareRequiredKeysMixin
+from .types import ViCareDevice, ViCareRequiredKeysMixin
 from .utils import get_circuits, is_supported
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,18 +123,18 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
 
 
 def _build_entities(
-    device_tuples: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+    device_list: list[ViCareDevice],
 ) -> list[ViCareNumber]:
     """Create ViCare number entities for a device."""
 
     return [
         ViCareNumber(
             circuit,
-            device_config,
+            device.config,
             description,
         )
-        for device_config, device in device_tuples
-        for circuit in get_circuits(device)
+        for device in device_list
+        for circuit in get_circuits(device.api)
         for description in CIRCUIT_ENTITY_DESCRIPTIONS
         if is_supported(description.key, description, circuit)
     ]
@@ -146,12 +146,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare number devices."""
-    device_tuples = hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]
+    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_tuples,
+            device_list,
         )
     )
 
