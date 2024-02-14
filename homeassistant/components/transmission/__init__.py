@@ -1,7 +1,6 @@
 """Support for the Transmission BitTorrent client API."""
 from __future__ import annotations
 
-from datetime import timedelta
 from functools import partial
 import logging
 import re
@@ -22,7 +21,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     Platform,
 )
@@ -69,7 +67,7 @@ MIGRATION_NAME_TO_KEY = {
 
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
-        vol.Exclusive(CONF_ENTRY_ID, "identifier"): selector.ConfigEntrySelector(),
+        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(),
     }
 )
 
@@ -135,7 +133,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    config_entry.add_update_listener(async_options_updated)
 
     async def add_torrent(service: ServiceCall) -> None:
         """Add new torrent to download."""
@@ -244,10 +241,3 @@ async def get_api(
     except TransmissionError as error:
         _LOGGER.error(error)
         raise UnknownError from error
-
-
-async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Triggered by config entry options updates."""
-    coordinator: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    coordinator.update_interval = timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
-    await coordinator.async_request_refresh()

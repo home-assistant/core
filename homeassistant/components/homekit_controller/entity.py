@@ -1,6 +1,7 @@
 """Homekit Controller entities."""
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
 from aiohomekit.model.characteristics import (
@@ -27,6 +28,7 @@ class HomeKitEntity(Entity):
     pollable_characteristics: list[tuple[int, int]]
     watchable_characteristics: list[tuple[int, int]]
     all_characteristics: set[tuple[int, int]]
+    all_iids: set[int]
     accessory_info: Service
 
     def __init__(self, accessory: HKDevice, devinfo: ConfigType) -> None:
@@ -74,6 +76,16 @@ class HomeKitEntity(Entity):
             self._async_reconfigure()
 
     @callback
+    def _async_clear_property_cache(self, properties: tuple[str, ...]) -> None:
+        """Clear the cache of properties."""
+        for prop in properties:
+            # suppress is slower than try-except-pass, but
+            # we do not expect to have many properties to clear
+            # or this to be called often.
+            with contextlib.suppress(AttributeError):
+                delattr(self, prop)
+
+    @callback
     def _async_reconfigure(self) -> None:
         """Reconfigure the entity."""
         self._async_unsubscribe_chars()
@@ -97,7 +109,7 @@ class HomeKitEntity(Entity):
         self._accessory.async_entity_key_removed(self._entity_key)
 
     @callback
-    def _async_unsubscribe_chars(self):
+    def _async_unsubscribe_chars(self) -> None:
         """Handle unsubscribing from characteristics."""
         if self._char_subscription:
             self._char_subscription()
@@ -106,7 +118,7 @@ class HomeKitEntity(Entity):
         self._accessory.remove_watchable_characteristics(self.watchable_characteristics)
 
     @callback
-    def _async_subscribe_chars(self):
+    def _async_subscribe_chars(self) -> None:
         """Handle registering characteristics to watch and subscribe."""
         self._accessory.add_pollable_characteristics(self.pollable_characteristics)
         self._accessory.add_watchable_characteristics(self.watchable_characteristics)
@@ -149,6 +161,7 @@ class HomeKitEntity(Entity):
         self.pollable_characteristics = []
         self.watchable_characteristics = []
         self.all_characteristics = set()
+        self.all_iids = set()
 
         char_types = self.get_characteristic_types()
 
@@ -164,6 +177,7 @@ class HomeKitEntity(Entity):
 
         self.all_characteristics.update(self.pollable_characteristics)
         self.all_characteristics.update(self.watchable_characteristics)
+        self.all_iids = {iid for _, iid in self.all_characteristics}
 
     def _setup_characteristic(self, char: Characteristic) -> None:
         """Configure an entity based on a HomeKit characteristics metadata."""
@@ -219,11 +233,11 @@ class HomeKitEntity(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._accessory.available and all(
-            c.available
-            for c in self.service.characteristics
-            if (self._aid, c.iid) in self.all_characteristics
-        )
+        all_iids = self.all_iids
+        for char in self.service.characteristics:
+            if char.iid in all_iids and not char.available:
+                return False
+        return self._accessory.available
 
     @property
     def device_info(self) -> DeviceInfo:

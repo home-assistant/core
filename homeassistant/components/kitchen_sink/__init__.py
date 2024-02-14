@@ -27,10 +27,12 @@ DOMAIN = "kitchen_sink"
 
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
+    Platform.BUTTON,
     Platform.IMAGE,
     Platform.LAWN_MOWER,
     Platform.LOCK,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.WEATHER,
 ]
 
@@ -60,6 +62,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Insert some external statistics
     if "recorder" in hass.config.components:
         await _insert_statistics(hass)
+
+    # Start a reauth flow
+    config_entry.async_start_reauth(hass)
 
     return True
 

@@ -118,9 +118,7 @@ class AirzoneHotWaterEntity(AirzoneEntity):
         try:
             await self.coordinator.airzone.set_dhw_parameters(_params)
         except AirzoneError as error:
-            raise HomeAssistantError(
-                f"Failed to set dhw {self.name}: {error}"
-            ) from error
+            raise HomeAssistantError(f"Failed to set DHW: {error}") from error
 
         self.coordinator.async_set_updated_data(self.coordinator.airzone.data())
 
@@ -205,7 +203,7 @@ class AirzoneZoneEntity(AirzoneEntity):
             await self.coordinator.airzone.set_hvac_parameters(_params)
         except AirzoneError as error:
             raise HomeAssistantError(
-                f"Failed to set zone {self.name}: {error}"
+                f"Failed to set zone {self.entity_id}: {error}"
             ) from error
 
         self.coordinator.async_set_updated_data(self.coordinator.airzone.data())

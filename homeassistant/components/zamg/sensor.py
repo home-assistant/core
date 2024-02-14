@@ -37,14 +37,14 @@ from .const import (
 from .coordinator import ZamgDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZamgRequiredKeysMixin:
     """Mixin for required keys."""
 
     para_name: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZamgSensorEntityDescription(SensorEntityDescription, ZamgRequiredKeysMixin):
     """Describes Zamg sensor entity."""
 
@@ -202,7 +202,7 @@ class ZamgSensor(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, station_id)},
             manufacturer=ATTRIBUTION,
             configuration_url=MANUFACTURER_URL,
-            name=coordinator.name,
+            name=name,
         )
         coordinator.api_fields = API_FIELDS
 

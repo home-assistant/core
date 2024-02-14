@@ -1,0 +1,109 @@
+[
+  {
+    "idle_duration": 0,
+    "read_error_requests": 0,
+    "read_requests": 1815106,
+    "spinning": true,
+    "table_type": "raid",
+    "firmware": "0001",
+    "type": "sata",
+    "idle": true,
+    "connector": 2,
+    "id": 1000,
+    "write_error_requests": 0,
+    "time_before_spindown": 600,
+    "state": "disabled",
+    "write_requests": 80386151,
+    "total_bytes": 2000000000000,
+    "model": "ST2000LM015-2E8174",
+    "active_duration": 0,
+    "temp": 30,
+    "serial": "ZDZLBFHC",
+    "partitions": [
+      {
+        "fstype": "raid",
+        "total_bytes": 0,
+        "label": "Volume 2000Go",
+        "id": 1000,
+        "internal": false,
+        "fsck_result": "no_run_yet",
+        "state": "umounted",
+        "disk_id": 1000,
+        "free_bytes": 0,
+        "used_bytes": 0,
+        "path": "L1ZvbHVtZSAyMDAwR28="
+      }
+    ]
+  },
+  {
+    "idle_duration": 0,
+    "read_error_requests": 0,
+    "read_requests": 3622038,
+    "spinning": true,
+    "table_type": "raid",
+    "firmware": "0001",
+    "type": "sata",
+    "idle": true,
+    "connector": 0,
+    "id": 2000,
+    "write_error_requests": 0,
+    "time_before_spindown": 600,
+    "state": "disabled",
+    "write_requests": 80386151,
+    "total_bytes": 2000000000000,
+    "model": "ST2000LM015-2E8174",
+    "active_duration": 0,
+    "temp": 31,
+    "serial": "ZDZLEJXE",
+    "partitions": [
+      {
+        "fstype": "raid",
+        "total_bytes": 0,
+        "label": "Volume 2000Go 1",
+        "id": 2000,
+        "internal": false,
+        "fsck_result": "no_run_yet",
+        "state": "umounted",
+        "disk_id": 2000,
+        "free_bytes": 0,
+        "used_bytes": 0,
+        "path": "L1ZvbHVtZSAyMDAwR28gMQ=="
+      }
+    ]
+  },
+  {
+    "idle_duration": 0,
+    "read_error_requests": 0,
+    "read_requests": 0,
+    "spinning": false,
+    "table_type": "superfloppy",
+    "firmware": "",
+    "type": "raid",
+    "idle": false,
+    "connector": 0,
+    "id": 3000,
+    "write_error_requests": 0,
+    "state": "enabled",
+    "write_requests": 0,
+    "total_bytes": 2000000000000,
+    "model": "",
+    "active_duration": 0,
+    "temp": 0,
+    "serial": "",
+    "partitions": [
+      {
+        "fstype": "ext4",
+        "total_bytes": 1960000000000,
+        "label": "Freebox",
+        "id": 3000,
+        "internal": false,
+        "fsck_result": "no_run_yet",
+        "state": "mounted",
+        "disk_id": 3000,
+        "free_bytes": 1730000000000,
+        "used_bytes": 236910000000,
+        "path": "L0ZyZWVib3g="
+      }
+    ]
+  }
+]

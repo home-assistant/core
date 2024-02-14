@@ -66,7 +66,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._reauth_entry.data if self._reauth_entry else {}
             )
             return self.async_show_form(
-                step_id="user", data_schema=get_data_schema(currencies, existing_data)
+                step_id="user",
+                data_schema=get_data_schema(currencies, existing_data),
+                description_placeholders={
+                    "signup": "https://openexchangerates.org/signup"
+                },
             )
 
         errors = {}
@@ -77,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except OpenExchangeRatesClientError:
             errors["base"] = "cannot_connect"
-        except asyncio.TimeoutError:
+        except TimeoutError:
             errors["base"] = "timeout_connect"
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unexpected exception")
@@ -122,6 +126,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.currencies = await client.get_currencies()
             except OpenExchangeRatesClientError as err:
                 raise AbortFlow("cannot_connect") from err
-            except asyncio.TimeoutError as err:
+            except TimeoutError as err:
                 raise AbortFlow("timeout_connect") from err
         return self.currencies

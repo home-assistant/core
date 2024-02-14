@@ -15,6 +15,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for LiteJet config entry."""
     system: LiteJet = hass.data[DOMAIN]
     return {
+        "model": system.model_name,
         "loads": list(system.loads()),
         "button_switches": list(system.button_switches()),
         "scenes": list(system.scenes()),

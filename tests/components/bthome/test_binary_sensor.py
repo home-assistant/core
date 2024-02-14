@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 import time
-from unittest.mock import patch
 
 import pytest
 
@@ -25,6 +24,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.bluetooth import (
     inject_bluetooth_service_info,
     patch_all_discovered_devices,
+    patch_bluetooth_time,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -236,10 +236,7 @@ async def test_unavailable(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -290,10 +287,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -344,10 +338,7 @@ async def test_sleepy_device_restores_state(hass: HomeAssistant) -> None:
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()

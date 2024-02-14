@@ -1,0 +1,337 @@
+{
+  "items": [
+    {
+      "type": "ORDER_LINE",
+      "id": "763",
+      "items": [
+        {
+          "type": "ORDER_ARTICLE",
+          "id": "s1001194",
+          "name": "Knoflook",
+          "image_ids": [
+            "4054013cb82da80abbdcd7c8eec54f486bfa180b9cf499e94cc4013470d0dfd7"
+          ],
+          "unit_quantity": "2 stuks",
+          "unit_quantity_sub": "€9.08/kg",
+          "price": 109,
+          "max_count": 50,
+          "perishable": false,
+          "tags": [],
+          "decorators": [
+            {
+              "type": "QUANTITY",
+              "quantity": 1
+            },
+            {
+              "type": "UNIT_QUANTITY",
+              "unit_quantity_text": "2 stuks"
+            }
+          ]
+        }
+      ],
+      "display_price": 109,
+      "price": 109
+    },
+    {
+      "type": "ORDER_LINE",
+      "id": "765_766",
+      "items": [
+        {
+          "type": "ORDER_ARTICLE",
+          "id": "s1046297",
+          "name": "Picnic magere melk",
+          "image_ids": [
+            "c2a96757634ada380726d3307e564f244cfa86e89d94c2c0e382306dbad599a3"
+          ],
+          "unit_quantity": "2 x 1 liter",
+          "unit_quantity_sub": "€1.02/l",
+          "price": 204,
+          "max_count": 18,
+          "perishable": true,
+          "tags": [],
+          "decorators": [
+            {
+              "type": "QUANTITY",
+              "quantity": 2
+            },
+            {
+              "type": "UNIT_QUANTITY",
+              "unit_quantity_text": "2 x 1 liter"
+            }
+          ]
+        }
+      ],
+      "display_price": 408,
+      "price": 408
+    },
+    {
+      "type": "ORDER_LINE",
+      "id": "767",
+      "items": [
+        {
+          "type": "ORDER_ARTICLE",
+          "id": "s1010532",
+          "name": "Picnic magere melk",
+          "image_ids": [
+            "aa8880361f045ffcfb9f787e9b7fc2b49907be46921bf42985506dc03baa6c2c"
+          ],
+          "unit_quantity": "1 liter",
+          "unit_quantity_sub": "€1.05/l",
+          "price": 105,
+          "max_count": 18,
+          "perishable": true,
+          "tags": [],
+          "decorators": [
+            {
+              "type": "QUANTITY",
+              "quantity": 1
+            },
+            {
+              "type": "UNIT_QUANTITY",
+              "unit_quantity_text": "1 liter"
+            }
+          ]
+        }
+      ],
+      "display_price": 105,
+      "price": 105
+    },
+    {
+      "type": "ORDER_LINE",
+      "id": "774_775",
+      "items": [
+        {
+          "type": "ORDER_ARTICLE",
+          "id": "s1018253",
+          "name": "Robijn wascapsules wit",
+          "image_ids": [
+            "c78b809ccbcd65760f8ce897e083587ee7b3f2b9719affd80983fad722b5c2d9"
+          ],
+          "unit_quantity": "40 wasbeurten",
+          "price": 2899,
+          "max_count": 50,
+          "perishable": false,
+          "tags": [],
+          "decorators": [
+            {
+              "type": "QUANTITY",
+              "quantity": 1
+            },
+            {
+              "type": "IMMUTABLE"
+            },
+            {
+              "type": "UNIT_QUANTITY",
+              "unit_quantity_text": "40 wasbeurten"
+            }
+          ]
+        },
+        {
+          "type": "ORDER_ARTICLE",
+          "id": "s1007025",
+          "name": "Robijn wascapsules kleur",
+          "image_ids": [
+            "ef9c8a371a639906ef20dfdcdc99296fce4102c47f0018e6329a2e4ae9f846b7"
+          ],
+          "unit_quantity": "15 wasbeurten",
+          "price": 879,
+          "max_count": 50,
+          "perishable": false,
+          "tags": [],
+          "decorators": [
+            {
+              "type": "QUANTITY",
+              "quantity": 1
+            },
+            {
+              "type": "IMMUTABLE"
+            },
+            {
+              "type": "UNIT_QUANTITY",
+              "unit_quantity_text": "15 wasbeurten"
+            }
+          ]
+        }
+      ],
+      "display_price": 3778,
+      "price": 3778,
+      "decorators": [
+        {
+          "type": "PROMO",
+          "text": "1+1 gratis"
+        },
+        {
+          "type": "PRICE",
+          "display_price": 1889
+        }
+      ]
+    },
+    {
+      "type": "ORDER_LINE",
+      "id": "776_777_778_779_780",
+      "items": [
+        {
+          "type": "ORDER_ARTICLE",
+          "id": "s1012699",
+          "name": "Chinese wokgroenten",
+          "image_ids": [
+            "b0b547a03d1d6021565618a5d32bd35df34c57b348d73252defb776ab8f8ab76"
+          ],
+          "unit_quantity": "600 gram",
+          "unit_quantity_sub": "€4.92/kg",
+          "price": 295,
+          "max_count": 50,
+          "perishable": true,
+          "tags": [],
+          "decorators": [
+            {
+              "type": "QUANTITY",
+              "quantity": 1
+            },
+            {
+              "type": "IMMUTABLE"
+            },
+            {
+              "type": "UNIT_QUANTITY",
+              "unit_quantity_text": "600 gram"
+            }
+          ]
+        },
+        {
+          "type": "ORDER_ARTICLE",
+          "id": "s1003425",
+          "name": "Picnic boerderij-eitjes",
+          "image_ids": [
+            "8be72b8144bfb7ff637d4703cfcb11e1bee789de79c069d00e879650dbf19840"
+          ],
+          "unit_quantity": "6 stuks M/L",
+          "price": 305,
+          "max_count": 50,
+          "perishable": true,
+          "tags": [],
+          "decorators": [
+            {
+              "type": "QUANTITY",
+              "quantity": 1
+            },
+            {
+              "type": "IMMUTABLE"
+            },
+            {
+              "type": "UNIT_QUANTITY",
+              "unit_quantity_text": "6 stuks M/L"
+            }
+          ]
+        },
+        {
+          "type": "ORDER_ARTICLE",
+          "id": "s1016692",
+          "name": "Picnic witte snelkookrijst",
+          "image_ids": [
+            "9c76c0a0143bfef650ab85fff4f0918e0b4e2927d79caa2a2bf394f292a86213"
+          ],
+          "unit_quantity": "400 gram",
+          "unit_quantity_sub": "€3.23/kg",
+          "price": 129,
+          "max_count": 99,
+          "perishable": false,
+          "tags": [],
+          "decorators": [
+            {
+              "type": "QUANTITY",
+              "quantity": 1
+            },
+            {
+              "type": "IMMUTABLE"
+            },
+            {
+              "type": "UNIT_QUANTITY",
+              "unit_quantity_text": "400 gram"
+            }
+          ]
+        },
+        {
+          "type": "ORDER_ARTICLE",
+          "id": "s1012503",
+          "name": "Conimex kruidenmix nasi",
+          "image_ids": [
+            "2eb78de465aa327a9739d9b204affce17fdf6bf7675c4fe9fa2d4ec102791c69"
+          ],
+          "unit_quantity": "20 gram",
+          "unit_quantity_sub": "€42.50/kg",
+          "price": 85,
+          "max_count": 50,
+          "perishable": false,
+          "tags": [],
+          "decorators": [
+            {
+              "type": "QUANTITY",
+              "quantity": 1
+            },
+            {
+              "type": "IMMUTABLE"
+            },
+            {
+              "type": "UNIT_QUANTITY",
+              "unit_quantity_text": "20 gram"
+            }
+          ]
+        },
+        {
+          "type": "ORDER_ARTICLE",
+          "id": "s1005028",
+          "name": "Conimex satésaus mild kant & klaar",
+          "image_ids": [
+            "0273de24577ba25526cdf31c53ef2017c62611b2bb4d82475abb2dcd9b2f5b83"
+          ],
+          "unit_quantity": "400 gram",
+          "unit_quantity_sub": "€5.98/kg",
+          "price": 239,
+          "max_count": 50,
+          "perishable": false,
+          "tags": [],
+          "decorators": [
+            {
+              "type": "QUANTITY",
+              "quantity": 1
+            },
+            {
+              "type": "IMMUTABLE"
+            },
+            {
+              "type": "UNIT_QUANTITY",
+              "unit_quantity_text": "400 gram"
+            }
+          ]
+        }
+      ],
+      "display_price": 1053,
+      "price": 1053,
+      "decorators": [
+        {
+          "type": "PROMO",
+          "text": "Receptkorting"
+        },
+        {
+          "type": "PRICE",
+          "display_price": 880
+        }
+      ]
+    }
+  ],
+  "delivery_slots": [
+    {
+      "slot_id": "611a3b074872b23576bef456a",
+      "window_start": "2021-03-03T14:45:00.000+01:00",
+      "window_end": "2021-03-03T15:45:00.000+01:00",
+      "cut_off_time": "2021-03-02T22:00:00.000+01:00",
+      "minimum_order_value": 3500
+    }
+  ],
+  "selected_slot": {
+    "slot_id": "611a3b074872b23576bef456a",
+    "state": "EXPLICIT"
+  },
+  "total_count": 10,
+  "total_price": 2535
+}

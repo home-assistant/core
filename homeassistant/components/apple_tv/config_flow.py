@@ -126,8 +126,8 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _entry_unique_id_from_identifers(self, all_identifiers: set[str]) -> str | None:
         """Search existing entries for an identifier and return the unique id."""
-        for entry in self._async_current_entries():
-            if all_identifiers.intersection(
+        for entry in self._async_current_entries(include_ignore=True):
+            if not all_identifiers.isdisjoint(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
             ):
                 return entry.unique_id
@@ -186,7 +186,6 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_not_supported")
         host = discovery_info.host
-        self._async_abort_entries_match({CONF_ADDRESS: host})
         service_type = discovery_info.type[:-1]  # Remove leading .
         name = discovery_info.name.replace(f".{service_type}.", "")
         properties = discovery_info.properties
@@ -195,6 +194,15 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         unique_id = get_unique_id(service_type, name, properties)
         if unique_id is None:
             return self.async_abort(reason="unknown")
+
+        # The unique id for the zeroconf service may not be
+        # the same as the unique id for the device. If the
+        # device is already configured so if we don't
+        # find a match here, we will fallback to
+        # looking up the device by all its identifiers
+        # in the next block.
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_ADDRESS: host})
 
         if existing_unique_id := self._entry_unique_id_from_identifers({unique_id}):
             await self.async_set_unique_id(existing_unique_id)
@@ -326,7 +334,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             existing_identifiers = set(
                 entry.data.get(CONF_IDENTIFIERS, [entry.unique_id])
             )
-            if not all_identifiers.intersection(existing_identifiers):
+            if all_identifiers.isdisjoint(existing_identifiers):
                 continue
             combined_identifiers = existing_identifiers | all_identifiers
             if entry.data.get(
@@ -538,13 +546,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # If an existing config entry is updated, then this was a re-auth
         if existing_entry:
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 existing_entry, data=data, unique_id=self.unique_id
             )
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(existing_entry.entry_id)
-            )
-            return self.async_abort(reason="reauth_successful")
 
         return self.async_create_entry(title=self.atv.name, data=data)
 

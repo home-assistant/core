@@ -150,7 +150,6 @@ async def test_remove_device_trigger(
         },
     )
 
-    assert len(hass.data[DOMAIN].telegrams._jobs) == 1
     await knx.receive_write("0/0/1", (0x03, 0x2F))
     assert len(calls) == 1
     assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
@@ -161,8 +160,6 @@ async def test_remove_device_trigger(
         {ATTR_ENTITY_ID: f"automation.{automation_name}"},
         blocking=True,
     )
-
-    assert len(hass.data[DOMAIN].telegrams._jobs) == 0
     await knx.receive_write("0/0/1", (0x03, 0x2F))
     assert len(calls) == 0
 

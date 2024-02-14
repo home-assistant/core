@@ -4,11 +4,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.frontier_silicon.const import (
-    CONF_PIN,
-    CONF_WEBFSAPI_URL,
-    DOMAIN,
-)
+from homeassistant.components.frontier_silicon.const import CONF_WEBFSAPI_URL, DOMAIN
+from homeassistant.const import CONF_PIN
 
 from tests.common import MockConfigEntry
 

@@ -30,7 +30,7 @@ ATTR_IS_CONFIGURED = "is_configured"
 ATTR_REMAINING_DURATION = "remaining_duration"
 
 
-@dataclass
+@dataclass(frozen=True)
 class DeclarativeSwitchEntityDescription(SwitchEntityDescription):
     """Describes Homekit button."""
 

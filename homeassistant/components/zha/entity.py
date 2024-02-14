@@ -92,7 +92,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
             manufacturer=zha_device_info[ATTR_MANUFACTURER],
             model=zha_device_info[ATTR_MODEL],
             name=zha_device_info[ATTR_NAME],
-            via_device=(DOMAIN, zha_gateway.coordinator_ieee),
+            via_device=(DOMAIN, zha_gateway.state.node_info.ieee),
         )
 
     @callback

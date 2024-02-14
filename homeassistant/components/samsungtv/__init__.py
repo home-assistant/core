@@ -211,7 +211,9 @@ async def _async_create_bridge_with_updated_data(
                 partial(getmac.get_mac_address, ip=host)
             )
 
-        if mac:
+        if mac and mac != "none":
+            # Samsung sometimes returns a value of "none" for the mac address
+            # this should be ignored
             LOGGER.info("Updated mac to %s for %s", mac, host)
             updated_data[CONF_MAC] = mac
         else:
@@ -267,7 +269,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         en_reg = er.async_get(hass)
         en_reg.async_clear_config_entry(config_entry.entry_id)
 
-        version = config_entry.version = 2
+        version = 2
+        hass.config_entries.async_update_entry(config_entry, version=2)
+
     LOGGER.debug("Migration to version %s successful", version)
 
     return True

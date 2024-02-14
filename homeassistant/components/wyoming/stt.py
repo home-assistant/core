@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
 from .data import WyomingService
 from .error import WyomingError
+from .models import DomainDataItem
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,10 +25,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Wyoming speech-to-text."""
-    service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
+    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
-            WyomingSttProvider(config_entry, service),
+            WyomingSttProvider(config_entry, item.service),
         ]
     )
 

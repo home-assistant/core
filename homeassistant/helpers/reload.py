@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, Literal, overload
 
 from homeassistant import config as conf_util
 from homeassistant.const import SERVICE_RELOAD
@@ -13,7 +13,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
-from . import config_per_platform
 from .entity import Entity
 from .entity_component import EntityComponent
 from .entity_platform import EntityPlatform, async_get_platforms
@@ -26,7 +25,7 @@ PLATFORM_RESET_LOCK = "lock_async_reset_platform_{}"
 
 
 async def async_reload_integration_platforms(
-    hass: HomeAssistant, integration_name: str, integration_platforms: Iterable[str]
+    hass: HomeAssistant, integration_domain: str, platform_domains: Iterable[str]
 ) -> None:
     """Reload an integration's platforms.
 
@@ -44,10 +43,8 @@ async def async_reload_integration_platforms(
         return
 
     tasks = [
-        _resetup_platform(
-            hass, integration_name, integration_platform, unprocessed_conf
-        )
-        for integration_platform in integration_platforms
+        _resetup_platform(hass, integration_domain, platform_domain, unprocessed_conf)
+        for platform_domain in platform_domains
     ]
 
     await asyncio.gather(*tasks)
@@ -55,27 +52,27 @@ async def async_reload_integration_platforms(
 
 async def _resetup_platform(
     hass: HomeAssistant,
-    integration_name: str,
-    integration_platform: str,
-    unprocessed_conf: ConfigType,
+    integration_domain: str,
+    platform_domain: str,
+    unprocessed_config: ConfigType,
 ) -> None:
     """Resetup a platform."""
-    integration = await async_get_integration(hass, integration_platform)
+    integration = await async_get_integration(hass, platform_domain)
 
-    conf = await conf_util.async_process_component_config(
-        hass, unprocessed_conf, integration
+    conf = await conf_util.async_process_component_and_handle_errors(
+        hass, unprocessed_config, integration
     )
 
     if not conf:
         return
 
-    root_config: dict[str, list[ConfigType]] = {integration_platform: []}
+    root_config: dict[str, list[ConfigType]] = {platform_domain: []}
     # Extract only the config for template, ignore the rest.
-    for p_type, p_config in config_per_platform(conf, integration_platform):
-        if p_type != integration_name:
+    for p_type, p_config in conf_util.config_per_platform(conf, platform_domain):
+        if p_type != integration_domain:
             continue
 
-        root_config[integration_platform].append(p_config)
+        root_config[platform_domain].append(p_config)
 
     component = integration.get_component()
 
@@ -83,47 +80,47 @@ async def _resetup_platform(
         # If the integration has its own way to reset
         # use this method.
         async with hass.data.setdefault(
-            PLATFORM_RESET_LOCK.format(integration_platform), asyncio.Lock()
+            PLATFORM_RESET_LOCK.format(platform_domain), asyncio.Lock()
         ):
-            await component.async_reset_platform(hass, integration_name)
+            await component.async_reset_platform(hass, integration_domain)
             await component.async_setup(hass, root_config)
         return
 
     # If it's an entity platform, we use the entity_platform
     # async_reset method
     platform = async_get_platform_without_config_entry(
-        hass, integration_name, integration_platform
+        hass, integration_domain, platform_domain
     )
     if platform:
-        await _async_reconfig_platform(platform, root_config[integration_platform])
+        await _async_reconfig_platform(platform, root_config[platform_domain])
         return
 
-    if not root_config[integration_platform]:
+    if not root_config[platform_domain]:
         # No config for this platform
         # and it's not loaded. Nothing to do.
         return
 
     await _async_setup_platform(
-        hass, integration_name, integration_platform, root_config[integration_platform]
+        hass, integration_domain, platform_domain, root_config[platform_domain]
     )
 
 
 async def _async_setup_platform(
     hass: HomeAssistant,
-    integration_name: str,
-    integration_platform: str,
+    integration_domain: str,
+    platform_domain: str,
     platform_configs: list[dict[str, Any]],
 ) -> None:
     """Platform for the first time when new configuration is added."""
-    if integration_platform not in hass.data:
+    if platform_domain not in hass.data:
         await async_setup_component(
-            hass, integration_platform, {integration_platform: platform_configs}
+            hass, platform_domain, {platform_domain: platform_configs}
         )
         return
 
-    entity_component: EntityComponent[Entity] = hass.data[integration_platform]
+    entity_component: EntityComponent[Entity] = hass.data[platform_domain]
     tasks = [
-        entity_component.async_setup_platform(integration_name, p_config)
+        entity_component.async_setup_platform(integration_domain, p_config)
         for p_config in platform_configs
     ]
     await asyncio.gather(*tasks)
@@ -138,14 +135,41 @@ async def _async_reconfig_platform(
     await asyncio.gather(*tasks)
 
 
+@overload
 async def async_integration_yaml_config(
     hass: HomeAssistant, integration_name: str
 ) -> ConfigType | None:
+    ...
+
+
+@overload
+async def async_integration_yaml_config(
+    hass: HomeAssistant,
+    integration_name: str,
+    *,
+    raise_on_failure: Literal[True],
+) -> ConfigType:
+    ...
+
+
+@overload
+async def async_integration_yaml_config(
+    hass: HomeAssistant,
+    integration_name: str,
+    *,
+    raise_on_failure: Literal[False] | bool,
+) -> ConfigType | None:
+    ...
+
+
+async def async_integration_yaml_config(
+    hass: HomeAssistant, integration_name: str, *, raise_on_failure: bool = False
+) -> ConfigType | None:
     """Fetch the latest yaml configuration for an integration."""
     integration = await async_get_integration(hass, integration_name)
-
-    return await conf_util.async_process_component_config(
-        hass, await conf_util.async_hass_config_yaml(hass), integration
+    config = await conf_util.async_hass_config_yaml(hass)
+    return await conf_util.async_process_component_and_handle_errors(
+        hass, config, integration, raise_on_failure=raise_on_failure
     )
 
 

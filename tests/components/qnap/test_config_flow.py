@@ -84,27 +84,3 @@ async def test_config_flow(hass: HomeAssistant, qnap_connect: MagicMock) -> None
         CONF_VERIFY_SSL: const.DEFAULT_VERIFY_SSL,
         CONF_PORT: const.DEFAULT_PORT,
     }
-
-
-async def test_config_flow_import(hass: HomeAssistant) -> None:
-    """Test import of YAML config."""
-    data = STANDARD_CONFIG
-    data[CONF_SSL] = const.DEFAULT_SSL
-    data[CONF_VERIFY_SSL] = const.DEFAULT_VERIFY_SSL
-    data[CONF_PORT] = const.DEFAULT_PORT
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=data,
-    )
-
-    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test NAS name"
-    assert result["data"] == {
-        CONF_HOST: "1.2.3.4",
-        CONF_USERNAME: "admin",
-        CONF_PASSWORD: "password",
-        CONF_SSL: const.DEFAULT_SSL,
-        CONF_VERIFY_SSL: const.DEFAULT_VERIFY_SSL,
-        CONF_PORT: const.DEFAULT_PORT,
-    }

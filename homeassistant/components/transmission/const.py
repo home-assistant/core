@@ -7,8 +7,6 @@ from transmission_rpc import Torrent
 
 DOMAIN = "transmission"
 
-SWITCH_TYPES = {"on_off": "Switch", "turtle_mode": "Turtle mode"}
-
 ORDER_NEWEST_FIRST = "newest_first"
 ORDER_OLDEST_FIRST = "oldest_first"
 ORDER_BEST_RATIO_FIRST = "best_ratio_first"
@@ -16,9 +14,9 @@ ORDER_WORST_RATIO_FIRST = "worst_ratio_first"
 
 SUPPORTED_ORDER_MODES: dict[str, Callable[[list[Torrent]], list[Torrent]]] = {
     ORDER_NEWEST_FIRST: lambda torrents: sorted(
-        torrents, key=lambda t: t.date_added, reverse=True
+        torrents, key=lambda t: t.added_date, reverse=True
     ),
-    ORDER_OLDEST_FIRST: lambda torrents: sorted(torrents, key=lambda t: t.date_added),
+    ORDER_OLDEST_FIRST: lambda torrents: sorted(torrents, key=lambda t: t.added_date),
     ORDER_WORST_RATIO_FIRST: lambda torrents: sorted(torrents, key=lambda t: t.ratio),
     ORDER_BEST_RATIO_FIRST: lambda torrents: sorted(
         torrents, key=lambda t: t.ratio, reverse=True

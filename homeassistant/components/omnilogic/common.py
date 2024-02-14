@@ -20,7 +20,7 @@ from .const import ALL_ITEM_KINDS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any]]]):
+class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any]]]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching update data from single endpoint."""
 
     def __init__(

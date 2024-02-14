@@ -78,6 +78,8 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
 
         _LOGGER.debug("Switchbot to open curtain %s", self._address)
         self._last_run_success = bool(await self._device.open())
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -85,6 +87,8 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
 
         _LOGGER.debug("Switchbot to close the curtain %s", self._address)
         self._last_run_success = bool(await self._device.close())
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -92,6 +96,8 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
 
         _LOGGER.debug("Switchbot to stop %s", self._address)
         self._last_run_success = bool(await self._device.stop())
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -100,14 +106,18 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
 
         _LOGGER.debug("Switchbot to move at %d %s", position, self._address)
         self._last_run_success = bool(await self._device.set_position(position))
+        self._attr_is_opening = self._device.is_opening()
+        self._attr_is_closing = self._device.is_closing()
         self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        self._attr_is_closing = self._device.is_closing()
+        self._attr_is_opening = self._device.is_opening()
         self._attr_current_cover_position = self.parsed_data["position"]
         self._attr_is_closed = self.parsed_data["position"] <= 20
-        self._attr_is_opening = self.parsed_data["inMotion"]
+
         self.async_write_ha_state()
 
 

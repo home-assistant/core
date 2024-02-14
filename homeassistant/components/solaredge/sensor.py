@@ -33,14 +33,14 @@ from .coordinator import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class SolarEdgeSensorEntityRequiredKeyMixin:
     """Sensor entity description with json_key for SolarEdge."""
 
     json_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SolarEdgeSensorEntityDescription(
     SensorEntityDescription, SolarEdgeSensorEntityRequiredKeyMixin
 ):

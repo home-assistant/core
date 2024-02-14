@@ -1,8 +1,8 @@
 """System Bridge Media Source Implementation."""
 from __future__ import annotations
 
-from systembridgeconnector.models.media_directories import MediaDirectories
-from systembridgeconnector.models.media_files import File as MediaFile, MediaFiles
+from systembridgemodels.media_directories import MediaDirectories
+from systembridgemodels.media_files import File as MediaFile, MediaFiles
 
 from homeassistant.components.media_player import MediaClass
 from homeassistant.components.media_source import MEDIA_CLASS_MAP, MEDIA_MIME_TYPES

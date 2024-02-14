@@ -6,6 +6,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -17,7 +18,7 @@ from .const import DOMAIN
 BINARY_SENSORS = (
     BinarySensorEntityDescription(
         key="mullvad_exit_ip",
-        name="Mullvad Exit IP",
+        translation_key="exit_ip",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
     ),
 )
@@ -40,6 +41,8 @@ async def async_setup_entry(
 class MullvadBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Represents a Mullvad binary sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -50,6 +53,11 @@ class MullvadBinarySensor(CoordinatorEntity, BinarySensorEntity):
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = f"{config_entry.entry_id}_{entity_description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, config_entry.entry_id)},
+            name="Mullvad VPN",
+            manufacturer="Mullvad",
+        )
 
     @property
     def is_on(self) -> bool:

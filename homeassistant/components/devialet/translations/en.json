@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect"
+        },
+        "flow_title": "{title}",
+        "step": {
+            "confirm": {
+                "description": "Do you want to set up Devialet device {device}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Please enter the host name or IP address of the Devialet device."
+            }
+        }
+    }
+}

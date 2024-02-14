@@ -34,7 +34,7 @@ async def async_setup_entry(
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
     async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if device.model == ModelType.LIGHT and device.can_write(
+        if device.model is ModelType.LIGHT and device.can_write(
             data.api.bootstrap.auth_user
         ):
             async_add_entities([ProtectLight(data, device)])
@@ -69,6 +69,16 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _attr_icon = "mdi:spotlight-beam"
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (self._attr_available, self._attr_brightness)
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:

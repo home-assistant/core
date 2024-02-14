@@ -11,11 +11,7 @@ from vallox_websocket_api import (
     ValloxInvalidInputException,
 )
 
-from homeassistant.components.fan import (
-    FanEntity,
-    FanEntityFeature,
-    NotValidPresetModeError,
-)
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -200,12 +196,6 @@ class ValloxFanEntity(ValloxEntity, FanEntity):
 
         Returns true if the mode has been changed, false otherwise.
         """
-        try:
-            self._valid_preset_mode_or_raise(preset_mode)
-
-        except NotValidPresetModeError as err:
-            raise ValueError(f"Not valid preset mode: {preset_mode}") from err
-
         if preset_mode == self.preset_mode:
             return False
 

@@ -58,7 +58,7 @@ async def async_get_device_diagnostics(
     """Return diagnostics for a device."""
     matter = get_matter(hass)
     server_diagnostics = await matter.matter_client.get_diagnostics()
-    node = await get_node_from_device_entry(hass, device)
+    node = get_node_from_device_entry(hass, device)
 
     return {
         "server_info": dataclass_to_dict(server_diagnostics.info),

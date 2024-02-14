@@ -5,6 +5,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Vilfo router."
         }
       }
     },

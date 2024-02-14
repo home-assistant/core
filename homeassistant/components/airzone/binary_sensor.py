@@ -29,7 +29,7 @@ from .coordinator import AirzoneUpdateCoordinator
 from .entity import AirzoneEntity, AirzoneSystemEntity, AirzoneZoneEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirzoneBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes airzone binary sensor entities."""
 

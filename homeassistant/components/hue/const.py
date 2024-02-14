@@ -7,7 +7,6 @@ from aiohue.v2.models.relative_rotary import (
 
 DOMAIN = "hue"
 
-CONF_API_VERSION = "api_version"
 CONF_IGNORE_AVAILABILITY = "ignore_availability"
 
 CONF_SUBTYPE = "subtype"

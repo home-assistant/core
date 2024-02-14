@@ -36,8 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         api = await get_unifi_controller(hass, config_entry.data)
-        controller = UniFiController(hass, config_entry, api)
-        await controller.initialize()
 
     except CannotConnect as err:
         raise ConfigEntryNotReady from err
@@ -45,7 +43,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except AuthenticationRequired as err:
         raise ConfigEntryAuthFailed from err
 
+    controller = UniFiController(hass, config_entry, api)
+    await controller.initialize()
     hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     controller.async_update_device_registry()
 

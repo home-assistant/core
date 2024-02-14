@@ -5,12 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.environment_canada.const import (
-    CONF_LANGUAGE,
-    CONF_STATION,
-    DOMAIN,
-)
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.components.environment_canada.const import CONF_STATION, DOMAIN
+from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture

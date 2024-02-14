@@ -269,7 +269,7 @@ PREVIEW_OPTIONS_SCHEMA: dict[str, vol.Schema] = {}
 
 CREATE_PREVIEW_ENTITY: dict[
     str,
-    Callable[[str, dict[str, Any]], GroupEntity | MediaPlayerGroup],
+    Callable[[HomeAssistant, str, dict[str, Any]], GroupEntity | MediaPlayerGroup],
 ] = {
     "binary_sensor": async_create_preview_binary_sensor,
     "cover": async_create_preview_cover,
@@ -392,7 +392,9 @@ def ws_start_preview(
             )
         )
 
-    preview_entity = CREATE_PREVIEW_ENTITY[group_type](name, validated)
+    preview_entity: GroupEntity | MediaPlayerGroup = CREATE_PREVIEW_ENTITY[group_type](
+        hass, name, validated
+    )
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry
 

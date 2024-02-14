@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import DOMAIN
 from .domain_data import DomainData
 from .entity import (
     EsphomeAssistEntity,
@@ -75,7 +76,7 @@ class EsphomeAssistPipelineSelect(EsphomeAssistEntity, AssistPipelineSelect):
     def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
         """Initialize a pipeline selector."""
         EsphomeAssistEntity.__init__(self, entry_data)
-        AssistPipelineSelect.__init__(self, hass, self._device_info.mac_address)
+        AssistPipelineSelect.__init__(self, hass, DOMAIN, self._device_info.mac_address)
 
 
 class EsphomeVadSensitivitySelect(EsphomeAssistEntity, VadSensitivitySelect):

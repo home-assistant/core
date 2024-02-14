@@ -17,7 +17,7 @@ from .const import ATTR_STARTED, ATTR_STATE, DATA_KEY_ADDONS
 from .entity import HassioAddonEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class HassioBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Hassio binary sensor entity description."""
 

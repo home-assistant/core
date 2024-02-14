@@ -84,7 +84,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_update_huisbaasje(energyflip: EnergyFlip) -> dict[str, dict[str, Any]]:
     """Update the data by performing a request to Huisbaasje."""
     try:
-        # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+        # Note: TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.
         async with asyncio.timeout(FETCH_TIMEOUT):
             if not energyflip.is_authenticated():

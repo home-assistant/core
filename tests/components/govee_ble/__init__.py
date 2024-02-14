@@ -74,3 +74,13 @@ GVH5178_SERVICE_INFO_ERROR = BluetoothServiceInfo(
     service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
     source="local",
 )
+
+GVH5106_SERVICE_INFO = BluetoothServiceInfo(
+    name="GVH5106_4E05",
+    address="CC:32:37:35:4E:05",
+    rssi=-66,
+    manufacturer_data={1: b"\x01\x01\x0e\xd12\x98"},
+    service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
+    service_data={},
+    source="local",
+)

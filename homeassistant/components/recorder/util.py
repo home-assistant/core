@@ -1,7 +1,7 @@
 """SQLAlchemy util functions."""
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable, Sequence
+from collections.abc import Callable, Collection, Generator, Iterable, Sequence
 from contextlib import contextmanager
 from datetime import date, datetime, timedelta
 import functools
@@ -470,6 +470,24 @@ def _async_create_mariadb_range_index_regression_issue(
     )
 
 
+@callback
+def async_create_backup_failure_issue(
+    hass: HomeAssistant,
+    local_start_time: datetime,
+) -> None:
+    """Create an issue when the backup fails because we run out of resources."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "backup_failed_out_of_resources",
+        is_fixable=False,
+        severity=ir.IssueSeverity.CRITICAL,
+        learn_more_url="https://www.home-assistant.io/integrations/recorder",
+        translation_key="backup_failed_out_of_resources",
+        translation_placeholders={"start_time": local_start_time.strftime("%H:%M:%S")},
+    )
+
+
 def setup_connection_for_dialect(
     instance: Recorder,
     dialect_name: str,
@@ -658,7 +676,7 @@ def database_job_retry_wrapper(
     """
 
     def decorator(
-        job: _WrappedFuncType[_RecorderT, _P]
+        job: _WrappedFuncType[_RecorderT, _P],
     ) -> _WrappedFuncType[_RecorderT, _P]:
         @functools.wraps(job)
         def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> None:
@@ -855,6 +873,20 @@ def chunked(iterable: Iterable, chunked_num: int) -> Iterable[Any]:
     From more-itertools
     """
     return iter(partial(take, chunked_num, iter(iterable)), [])
+
+
+def chunked_or_all(iterable: Collection[Any], chunked_num: int) -> Iterable[Any]:
+    """Break *collection* into iterables of length *n*.
+
+    Returns the collection if its length is less than *n*.
+
+    Unlike chunked, this function requires a collection so it can
+    determine the length of the collection and return the collection
+    if it is less than *n*.
+    """
+    if len(iterable) <= chunked_num:
+        return (iterable,)
+    return chunked(iterable, chunked_num)
 
 
 def get_index_by_name(session: Session, table_name: str, index_name: str) -> str | None:

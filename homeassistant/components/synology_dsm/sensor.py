@@ -39,7 +39,7 @@ from .entity import (
 from .models import SynologyDSMData
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMSensorEntityDescription(
     SensorEntityDescription, SynologyDSMEntityDescription
 ):

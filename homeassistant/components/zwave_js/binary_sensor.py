@@ -50,7 +50,7 @@ NOTIFICATION_IRRIGATION = "17"
 NOTIFICATION_GAS = "18"
 
 
-@dataclass
+@dataclass(frozen=True)
 class NotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
     """Represent a Z-Wave JS binary sensor entity description."""
 
@@ -58,14 +58,14 @@ class NotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
     states: tuple[str, ...] | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class PropertyZWaveJSMixin:
     """Represent the mixin for property sensor descriptions."""
 
     on_states: tuple[str, ...]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PropertyZWaveJSEntityDescription(
     BinarySensorEntityDescription, PropertyZWaveJSMixin
 ):
@@ -276,9 +276,7 @@ async def async_setup_entry(
                 if state_key == "0":
                     continue
 
-                notification_description: NotificationZWaveJSEntityDescription | None = (
-                    None
-                )
+                notification_description: NotificationZWaveJSEntityDescription | None = None
 
                 for description in NOTIFICATION_SENSOR_MAPPINGS:
                     if (

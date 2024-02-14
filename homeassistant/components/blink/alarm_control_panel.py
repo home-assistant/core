@@ -1,7 +1,6 @@
 """Support for Blink Alarm Control Panel."""
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from blinkpy.blinkpy import Blink, BlinkSyncModule
@@ -58,7 +57,6 @@ class BlinkSyncModuleHA(
         """Initialize the alarm control panel."""
         super().__init__(coordinator)
         self.api: Blink = coordinator.api
-        self._coordinator = coordinator
         self.sync = sync
         self._attr_unique_id: str = sync.serial
         self._attr_device_info = DeviceInfo(
@@ -66,6 +64,7 @@ class BlinkSyncModuleHA(
             name=f"{DOMAIN} {name}",
             manufacturer=DEFAULT_BRAND,
             serial_number=sync.serial,
+            sw_version=sync.version,
         )
         self._update_attr()
 
@@ -91,18 +90,17 @@ class BlinkSyncModuleHA(
         try:
             await self.sync.async_arm(False)
 
-        except asyncio.TimeoutError as er:
+        except TimeoutError as er:
             raise HomeAssistantError("Blink failed to disarm camera") from er
 
-        await self._coordinator.async_refresh()
+        await self.coordinator.async_refresh()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
         try:
             await self.sync.async_arm(True)
 
-        except asyncio.TimeoutError as er:
+        except TimeoutError as er:
             raise HomeAssistantError("Blink failed to arm camera away") from er
 
-        await self._coordinator.async_refresh()
-        self.async_write_ha_state()
+        await self.coordinator.async_refresh()

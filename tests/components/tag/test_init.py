@@ -1,6 +1,6 @@
 """Tests for the tag component."""
-from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.tag import DOMAIN, TAGS, async_scan_tag
@@ -76,7 +76,10 @@ async def test_ws_update(
 
 
 async def test_tag_scanned(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+    storage_setup,
 ) -> None:
     """Test scanning tags."""
     assert await storage_setup()
@@ -93,8 +96,8 @@ async def test_tag_scanned(
     assert "test tag" in result
 
     now = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await async_scan_tag(hass, "new tag", "some_scanner")
+    freezer.move_to(now)
+    await async_scan_tag(hass, "new tag", "some_scanner")
 
     await client.send_json({"id": 7, "type": f"{DOMAIN}/list"})
     resp = await client.receive_json()
@@ -131,5 +134,5 @@ async def test_tag_id_exists(
     await client.send_json({"id": 2, "type": f"{DOMAIN}/create", "tag_id": "test tag"})
     response = await client.receive_json()
     assert not response["success"]
-    assert response["error"]["code"] == "unknown_error"
+    assert response["error"]["code"] == "home_assistant_error"
     assert len(changes) == 0

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+import dataclasses
 from datetime import datetime, timedelta
 from typing import Final
 
@@ -33,7 +33,7 @@ KEY_LAST_ELECTRICITY_COST: Final = "last_electricity_cost"
 KEY_LAST_GAS_COST: Final = "last_gas_cost"
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class OVOEnergySensorEntityDescription(SensorEntityDescription):
     """Class describing System Bridge sensor entities."""
 
@@ -130,8 +130,11 @@ async def async_setup_entry(
                     and coordinator.data.electricity[-1] is not None
                     and coordinator.data.electricity[-1].cost is not None
                 ):
-                    description.native_unit_of_measurement = (
-                        coordinator.data.electricity[-1].cost.currency_unit
+                    description = dataclasses.replace(
+                        description,
+                        native_unit_of_measurement=(
+                            coordinator.data.electricity[-1].cost.currency_unit
+                        ),
                     )
                 entities.append(OVOEnergySensor(coordinator, description, client))
         if coordinator.data.gas:
@@ -141,9 +144,12 @@ async def async_setup_entry(
                     and coordinator.data.gas[-1] is not None
                     and coordinator.data.gas[-1].cost is not None
                 ):
-                    description.native_unit_of_measurement = coordinator.data.gas[
-                        -1
-                    ].cost.currency_unit
+                    description = dataclasses.replace(
+                        description,
+                        native_unit_of_measurement=coordinator.data.gas[
+                            -1
+                        ].cost.currency_unit,
+                    )
                 entities.append(OVOEnergySensor(coordinator, description, client))
 
     async_add_entities(entities, True)

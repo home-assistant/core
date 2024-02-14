@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
+from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -22,7 +22,6 @@ from .const import (
     ATTR_CID,
     ATTR_MAC,
     ATTR_MODEL,
-    CONF_CLIENT_ID,
     CONF_NICKNAME,
     CONF_USE_PSK,
     DOMAIN,

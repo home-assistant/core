@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DISCOVERY, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
@@ -252,6 +252,7 @@ class WemoDiscovery:
         self._stop: CALLBACK_TYPE | None = None
         self._scan_delay = 0
         self._static_config = static_config
+        self._discover_job: HassJob[[datetime], Coroutine[Any, Any, None]] | None = None
 
     async def async_discover_and_schedule(
         self, event_time: datetime | None = None
@@ -271,10 +272,12 @@ class WemoDiscovery:
                 self._scan_delay + self.ADDITIONAL_SECONDS_BETWEEN_SCANS,
                 self.MAX_SECONDS_BETWEEN_SCANS,
             )
+            if not self._discover_job:
+                self._discover_job = HassJob(self.async_discover_and_schedule)
             self._stop = async_call_later(
                 self._hass,
                 self._scan_delay,
-                self.async_discover_and_schedule,
+                self._discover_job,
             )
 
     @callback

@@ -1,0 +1,100 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "water_mop_attached": {
+        "default": "mdi:water-off",
+        "state": {
+          "on": "mdi:water"
+        }
+      }
+    },
+    "button": {
+      "relocate": {
+        "default": "mdi:map-marker-question"
+      },
+      "reset_lifespan_brush": {
+        "default": "mdi:broom"
+      },
+      "reset_lifespan_filter": {
+        "default": "mdi:air-filter"
+      },
+      "reset_lifespan_side_brush": {
+        "default": "mdi:broom"
+      }
+    },
+    "number": {
+      "clean_count": {
+        "default": "mdi:counter"
+      },
+      "volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      }
+    },
+    "sensor": {
+      "error": {
+        "default": "mdi:alert-circle"
+      },
+      "lifespan_brush": {
+        "default": "mdi:broom"
+      },
+      "lifespan_filter": {
+        "default": "mdi:air-filter"
+      },
+      "lifespan_side_brush": {
+        "default": "mdi:broom"
+      },
+      "network_ip": {
+        "default": "mdi:ip-network-outline"
+      },
+      "network_rssi": {
+        "default": "mdi:signal-variant"
+      },
+      "network_ssid": {
+        "default": "mdi:wifi"
+      },
+      "stats_area": {
+        "default": "mdi:floor-plan"
+      },
+      "stats_time": {
+        "default": "mdi:timer-outline"
+      },
+      "total_stats_area": {
+        "default": "mdi:floor-plan"
+      },
+      "total_stats_time": {
+        "default": "mdi:timer-outline"
+      },
+      "total_stats_cleanings": {
+        "default": "mdi:counter"
+      }
+    },
+    "select": {
+      "water_amount": {
+        "default": "mdi:water"
+      },
+      "work_mode": {
+        "default": "mdi:cog"
+      }
+    },
+    "switch": {
+      "advanced_mode": {
+        "default": "mdi:tune"
+      },
+      "carpet_auto_fan_boost": {
+        "default": "mdi:fan-auto"
+      },
+      "clean_preference": {
+        "default": "mdi:broom"
+      },
+      "continuous_cleaning": {
+        "default": "mdi:refresh-auto"
+      },
+      "true_detect": {
+        "default": "mdi:laser-pointer"
+      }
+    }
+  }
+}

@@ -112,7 +112,8 @@
         "Bios Schema met Film Avond",
         "GF7  Woonkamer",
         "Badkamer Schema",
-        "CV Jessie"
+        "CV Jessie",
+        "off"
       ],
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
@@ -251,7 +252,8 @@
         "Bios Schema met Film Avond",
         "GF7  Woonkamer",
         "Badkamer Schema",
-        "CV Jessie"
+        "CV Jessie",
+        "off"
       ],
       "dev_class": "zone_thermostat",
       "firmware": "2016-08-02T02:00:00+02:00",
@@ -334,7 +336,8 @@
         "Bios Schema met Film Avond",
         "GF7  Woonkamer",
         "Badkamer Schema",
-        "CV Jessie"
+        "CV Jessie",
+        "off"
       ],
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
@@ -344,7 +347,7 @@
       "model": "Lisa",
       "name": "Zone Lisa Bios",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "select_schedule": "None",
+      "select_schedule": "off",
       "sensors": {
         "battery": 67,
         "setpoint": 13.0,
@@ -373,7 +376,8 @@
         "Bios Schema met Film Avond",
         "GF7  Woonkamer",
         "Badkamer Schema",
-        "CV Jessie"
+        "CV Jessie",
+        "off"
       ],
       "dev_class": "thermostatic_radiator_valve",
       "firmware": "2019-03-27T01:00:00+01:00",
@@ -383,7 +387,7 @@
       "model": "Tom/Floor",
       "name": "CV Kraan Garage",
       "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
-      "select_schedule": "None",
+      "select_schedule": "off",
       "sensors": {
         "battery": 68,
         "setpoint": 5.5,
@@ -414,7 +418,8 @@
         "Bios Schema met Film Avond",
         "GF7  Woonkamer",
         "Badkamer Schema",
-        "CV Jessie"
+        "CV Jessie",
+        "off"
       ],
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
@@ -468,6 +473,7 @@
     "cooling_present": false,
     "gateway_id": "fe799307f1624099878210aa0b9f1475",
     "heater_id": "90986d591dcd426cae3ec3e8111ff730",
+    "item_count": 315,
     "notifications": {
       "af82e4ccf9c548528166d38e560662a4": {
         "warning": "Node Plug (with MAC address 000D6F000D13CB01, in room 'n.a.') has been unreachable since 23:03 2020-01-18. Please check the connection and restart the device."

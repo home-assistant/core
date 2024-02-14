@@ -9,10 +9,11 @@ from aiolivisi import AioLivisi, errors as livisi_errors
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_HOST, CONF_PASSWORD, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
 
 
 class LivisiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

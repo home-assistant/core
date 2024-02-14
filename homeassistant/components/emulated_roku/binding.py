@@ -155,7 +155,7 @@ class EmulatedRoku:
                 )
 
         # start immediately if already running
-        if self.hass.state == CoreState.running:
+        if self.hass.state is CoreState.running:
             await emulated_roku_start(None)
         else:
             self._unsub_start_listener = self.hass.bus.async_listen_once(

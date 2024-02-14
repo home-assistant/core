@@ -224,6 +224,7 @@ async def main():
 
     code, _ = await async_exec(
         "python3",
+        "-b",
         "-m",
         "pytest",
         "-vv",

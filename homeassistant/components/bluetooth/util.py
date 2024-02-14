@@ -2,10 +2,9 @@
 from __future__ import annotations
 
 from bluetooth_adapters import BluetoothAdapters
-from bluetooth_auto_recovery import recover_adapter
+from bluetooth_data_tools import monotonic_time_coarse
 
 from homeassistant.core import callback
-from homeassistant.util.dt import monotonic_time_coarse
 
 from .models import BluetoothServiceInfoBleak
 from .storage import BluetoothStorage
@@ -69,11 +68,3 @@ def async_load_history_from_system(
                 connectable_loaded_history[address] = service_info
 
     return all_loaded_history, connectable_loaded_history
-
-
-async def async_reset_adapter(adapter: str | None, mac_address: str) -> bool | None:
-    """Reset the adapter."""
-    if adapter and adapter.startswith("hci"):
-        adapter_id = int(adapter[3:])
-        return await recover_adapter(adapter_id, mac_address)
-    return False

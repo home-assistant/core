@@ -114,10 +114,11 @@ async def test_setup_config_entry_not_ready_load_state_fail(
     assert hass.states.get(TEST_ENTITY_ID_1) is None
 
 
-async def test_setup_config_entry_dynamic_instances(hass: HomeAssistant) -> None:
+async def test_setup_config_entry_dynamic_instances(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test dynamic changes in the instance configuration."""
-    registry = er.async_get(hass)
-
     config_entry = add_test_config_entry(hass)
 
     master_client = create_mock_client()
@@ -164,7 +165,7 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistant) -> None
     assert hass.states.get(TEST_ENTITY_ID_3) is not None
 
     # Instance 1 is stopped, it should still be registered.
-    assert registry.async_is_registered(TEST_ENTITY_ID_1)
+    assert entity_registry.async_is_registered(TEST_ENTITY_ID_1)
 
     # == Inject a new instances update (remove instance 1)
     assert master_client.set_callbacks.called
@@ -188,7 +189,7 @@ async def test_setup_config_entry_dynamic_instances(hass: HomeAssistant) -> None
     assert hass.states.get(TEST_ENTITY_ID_3) is not None
 
     # Instance 1 is removed, it should not still be registered.
-    assert not registry.async_is_registered(TEST_ENTITY_ID_1)
+    assert not entity_registry.async_is_registered(TEST_ENTITY_ID_1)
 
     # == Inject a new instances update (re-add instance 1, but not running)
     with patch(
@@ -766,14 +767,17 @@ async def test_light_option_effect_hide_list(hass: HomeAssistant) -> None:
     ]
 
 
-async def test_device_info(hass: HomeAssistant) -> None:
+async def test_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Verify device information includes expected details."""
     client = create_mock_client()
 
     await setup_test_config_entry(hass, hyperion_client=client)
 
     device_id = get_hyperion_device_id(TEST_SYSINFO_ID, TEST_INSTANCE)
-    device_registry = dr.async_get(hass)
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
@@ -783,7 +787,6 @@ async def test_device_info(hass: HomeAssistant) -> None:
     assert device.model == HYPERION_MODEL_NAME
     assert device.name == TEST_INSTANCE_1["friendly_name"]
 
-    entity_registry = er.async_get(hass)
     entities_from_device = [
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, device.id)

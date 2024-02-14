@@ -1,10 +1,9 @@
 """Tests for sensors."""
 
 
+from habluetooth.advertisement_tracker import ADVERTISING_TIMES_NEEDED
+
 from homeassistant.components.bluetooth import async_set_fallback_availability_interval
-from homeassistant.components.bluetooth.advertisement_tracker import (
-    ADVERTISING_TIMES_NEEDED,
-)
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -82,7 +81,7 @@ async def test_estimated_broadcast_interval(
         "sensor.private_ble_device_000000_estimated_broadcast_interval"
     )
     assert state
-    assert state.state == "90"
+    assert state.state == "90.0"
 
     # Learned broadcast interval takes over from fallback interval
 
@@ -95,7 +94,7 @@ async def test_estimated_broadcast_interval(
         "sensor.private_ble_device_000000_estimated_broadcast_interval"
     )
     assert state
-    assert state.state == "10"
+    assert state.state == "10.0"
 
     # MAC address changes, the broadcast interval is kept
 
@@ -105,4 +104,4 @@ async def test_estimated_broadcast_interval(
         "sensor.private_ble_device_000000_estimated_broadcast_interval"
     )
     assert state
-    assert state.state == "10"
+    assert state.state == "10.0"

@@ -35,11 +35,16 @@ from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
-# Typing imports that create a circular dependency
 if TYPE_CHECKING:
+    from functools import cached_property
+
+    # The relative imports below are guarded by TYPE_CHECKING
+    # because they would cause a circular import otherwise.
     from .config_entries import ConfigEntry
     from .helpers import device_registry as dr
     from .helpers.typing import ConfigType
+else:
+    from .backports.functools import cached_property
 
 _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
@@ -129,6 +134,14 @@ class HomeKitDiscoveredIntegration:
 
     domain: str
     always_discover: bool
+
+
+class ZeroconfMatcher(TypedDict, total=False):
+    """Matcher for zeroconf."""
+
+    domain: str
+    name: str
+    properties: dict[str, str]
 
 
 class Manifest(TypedDict, total=False):
@@ -374,7 +387,7 @@ async def async_get_application_credentials(hass: HomeAssistant) -> list[str]:
     ]
 
 
-def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
+def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> ZeroconfMatcher:
     """Handle backwards compat with zeroconf matchers."""
     entry_without_type: dict[str, Any] = entry.copy()
     del entry_without_type["type"]
@@ -396,23 +409,21 @@ def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
             else:
                 prop_dict = entry_without_type["properties"]
             prop_dict[moved_prop] = value.lower()
-    return entry_without_type
+    return cast(ZeroconfMatcher, entry_without_type)
 
 
 async def async_get_zeroconf(
     hass: HomeAssistant,
-) -> dict[str, list[dict[str, str | dict[str, str]]]]:
+) -> dict[str, list[ZeroconfMatcher]]:
     """Return cached list of zeroconf types."""
-    zeroconf: dict[
-        str, list[dict[str, str | dict[str, str]]]
-    ] = ZEROCONF.copy()  # type: ignore[assignment]
+    zeroconf: dict[str, list[ZeroconfMatcher]] = ZEROCONF.copy()  # type: ignore[assignment]
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.zeroconf:
             continue
         for entry in integration.zeroconf:
-            data: dict[str, str | dict[str, str]] = {"domain": integration.domain}
+            data: ZeroconfMatcher = {"domain": integration.domain}
             if isinstance(entry, dict):
                 typ = entry["type"]
                 data.update(async_process_zeroconf_match_dict(entry))
@@ -644,67 +655,67 @@ class Integration:
 
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
-    @property
+    @cached_property
     def name(self) -> str:
         """Return name."""
         return self.manifest["name"]
 
-    @property
+    @cached_property
     def disabled(self) -> str | None:
         """Return reason integration is disabled."""
         return self.manifest.get("disabled")
 
-    @property
+    @cached_property
     def domain(self) -> str:
         """Return domain."""
         return self.manifest["domain"]
 
-    @property
+    @cached_property
     def dependencies(self) -> list[str]:
         """Return dependencies."""
         return self.manifest.get("dependencies", [])
 
-    @property
+    @cached_property
     def after_dependencies(self) -> list[str]:
         """Return after_dependencies."""
         return self.manifest.get("after_dependencies", [])
 
-    @property
+    @cached_property
     def requirements(self) -> list[str]:
         """Return requirements."""
         return self.manifest.get("requirements", [])
 
-    @property
+    @cached_property
     def config_flow(self) -> bool:
         """Return config_flow."""
         return self.manifest.get("config_flow") or False
 
-    @property
+    @cached_property
     def documentation(self) -> str | None:
         """Return documentation."""
         return self.manifest.get("documentation")
 
-    @property
+    @cached_property
     def issue_tracker(self) -> str | None:
         """Return issue tracker link."""
         return self.manifest.get("issue_tracker")
 
-    @property
+    @cached_property
     def loggers(self) -> list[str] | None:
         """Return list of loggers used by the integration."""
         return self.manifest.get("loggers")
 
-    @property
+    @cached_property
     def quality_scale(self) -> str | None:
         """Return Integration Quality Scale."""
         return self.manifest.get("quality_scale")
 
-    @property
+    @cached_property
     def iot_class(self) -> str | None:
         """Return the integration IoT Class."""
         return self.manifest.get("iot_class")
 
-    @property
+    @cached_property
     def integration_type(
         self,
     ) -> Literal["entity", "device", "hardware", "helper", "hub", "service", "system"]:
@@ -776,11 +787,9 @@ class Integration:
         if self._all_dependencies_resolved is not None:
             return self._all_dependencies_resolved
 
+        self._all_dependencies_resolved = False
         try:
             dependencies = await _async_component_dependencies(self.hass, self)
-            dependencies.discard(self.domain)
-            self._all_dependencies = dependencies
-            self._all_dependencies_resolved = True
         except IntegrationNotFound as err:
             _LOGGER.error(
                 (
@@ -790,7 +799,6 @@ class Integration:
                 self.domain,
                 err.domain,
             )
-            self._all_dependencies_resolved = False
         except CircularDependency as err:
             _LOGGER.error(
                 (
@@ -801,7 +809,10 @@ class Integration:
                 err.from_domain,
                 err.to_domain,
             )
-            self._all_dependencies_resolved = False
+        else:
+            dependencies.discard(self.domain)
+            self._all_dependencies = dependencies
+            self._all_dependencies_resolved = True
 
         return self._all_dependencies_resolved
 
@@ -1013,9 +1024,7 @@ def _load_file(
     Async friendly.
     """
     with suppress(KeyError):
-        return hass.data[DATA_COMPONENTS][  # type: ignore[no-any-return]
-            comp_or_platform
-        ]
+        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore[no-any-return]
 
     cache = hass.data[DATA_COMPONENTS]
 
@@ -1173,8 +1182,12 @@ def _async_mount_config_dir(hass: HomeAssistant) -> None:
 
     Async friendly but not a coroutine.
     """
-    if hass.config.config_dir not in sys.path:
-        sys.path.insert(0, hass.config.config_dir)
+
+    sys.path.insert(0, hass.config.config_dir)
+    with suppress(ImportError):
+        import custom_components  # pylint: disable=import-outside-toplevel  # noqa: F401
+    sys.path.remove(hass.config.config_dir)
+    sys.path_importer_cache.pop(hass.config.config_dir, None)
 
 
 def _lookup_path(hass: HomeAssistant) -> list[str]:

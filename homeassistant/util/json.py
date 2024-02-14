@@ -33,9 +33,18 @@ class SerializationError(HomeAssistantError):
     """Error serializing the data to JSON."""
 
 
-json_loads: Callable[[bytes | bytearray | memoryview | str], JsonValueType]
-json_loads = orjson.loads
-"""Parse JSON data."""
+def json_loads(__obj: bytes | bytearray | memoryview | str) -> JsonValueType:
+    """Parse JSON data.
+
+    This adds a workaround for orjson not handling subclasses of str,
+    https://github.com/ijl/orjson/issues/445.
+    """
+    # Avoid isinstance overhead for the common case
+    if type(__obj) not in (bytes, bytearray, memoryview, str) and isinstance(
+        __obj, str
+    ):
+        return orjson.loads(str(__obj))  # type:ignore[no-any-return]
+    return orjson.loads(__obj)  # type:ignore[no-any-return]
 
 
 def json_loads_array(__obj: bytes | bytearray | memoryview | str) -> JsonArrayType:
@@ -57,14 +66,15 @@ def json_loads_object(__obj: bytes | bytearray | memoryview | str) -> JsonObject
 
 
 def load_json(
-    filename: str | PathLike, default: JsonValueType = _SENTINEL  # type: ignore[assignment]
+    filename: str | PathLike[str],
+    default: JsonValueType = _SENTINEL,  # type: ignore[assignment]
 ) -> JsonValueType:
     """Load JSON data from a file.
 
     Defaults to returning empty dict if file is not found.
     """
     try:
-        with open(filename, encoding="utf-8") as fdesc:
+        with open(filename, mode="rb") as fdesc:
             return orjson.loads(fdesc.read())  # type: ignore[no-any-return]
     except FileNotFoundError:
         # This is not a fatal error
@@ -79,7 +89,8 @@ def load_json(
 
 
 def load_json_array(
-    filename: str | PathLike, default: JsonArrayType = _SENTINEL  # type: ignore[assignment]
+    filename: str | PathLike[str],
+    default: JsonArrayType = _SENTINEL,  # type: ignore[assignment]
 ) -> JsonArrayType:
     """Load JSON data from a file and return as list.
 
@@ -98,7 +109,8 @@ def load_json_array(
 
 
 def load_json_object(
-    filename: str | PathLike, default: JsonObjectType = _SENTINEL  # type: ignore[assignment]
+    filename: str | PathLike[str],
+    default: JsonObjectType = _SENTINEL,  # type: ignore[assignment]
 ) -> JsonObjectType:
     """Load JSON data from a file and return as dict.
 

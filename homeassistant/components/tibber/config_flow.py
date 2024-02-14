@@ -1,7 +1,6 @@
 """Adds config flow for Tibber integration."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import aiohttp
@@ -19,6 +18,7 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
 ERR_TIMEOUT = "timeout"
 ERR_CLIENT = "cannot_connect"
 ERR_TOKEN = "invalid_access_token"
+TOKEN_URL = "https://developer.tibber.com/settings/access-token"
 
 
 class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -45,7 +45,7 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await tibber_connection.update_info()
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 errors[CONF_ACCESS_TOKEN] = ERR_TIMEOUT
             except tibber.InvalidLogin:
                 errors[CONF_ACCESS_TOKEN] = ERR_TOKEN
@@ -60,6 +60,7 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_show_form(
                     step_id="user",
                     data_schema=DATA_SCHEMA,
+                    description_placeholders={"url": TOKEN_URL},
                     errors=errors,
                 )
 
@@ -75,5 +76,6 @@ class TibberConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=DATA_SCHEMA,
+            description_placeholders={"url": TOKEN_URL},
             errors={},
         )

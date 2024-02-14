@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'host': 'localhost',
+        'mac': '**REDACTED**',
+        'pin': '**REDACTED**',
+        'use_psk': True,
+      }),
+      'disabled_by': None,
+      'domain': 'braviatv',
+      'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': 'very_unique_string',
+      'version': 1,
+    }),
+    'device_info': dict({
+      'area': 'POL',
+      'cid': 'very_unique_string',
+      'generation': '5.2.0',
+      'language': 'pol',
+      'macAddr': '**REDACTED**',
+      'model': 'TV-Model',
+      'name': 'BRAVIA',
+      'product': 'TV',
+      'region': 'XEU',
+      'serial': 'serial_number',
+    }),
+  })
+# ---

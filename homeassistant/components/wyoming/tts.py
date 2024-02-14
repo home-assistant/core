@@ -4,7 +4,7 @@ import io
 import logging
 import wave
 
-from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStop
+from wyoming.audio import AudioChunk, AudioStop
 from wyoming.client import AsyncTcpClient
 from wyoming.tts import Synthesize, SynthesizeVoice
 
@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import ATTR_SPEAKER, DOMAIN
 from .data import WyomingService
 from .error import WyomingError
+from .models import DomainDataItem
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,10 +27,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Wyoming speech-to-text."""
-    service: WyomingService = hass.data[DOMAIN][config_entry.entry_id]
+    item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
         [
-            WyomingTtsProvider(config_entry, service),
+            WyomingTtsProvider(config_entry, item.service),
         ]
     )
 
@@ -88,12 +89,16 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
     @property
     def supported_options(self):
         """Return list of supported options like voice, emotion."""
-        return [tts.ATTR_AUDIO_OUTPUT, tts.ATTR_VOICE, ATTR_SPEAKER]
+        return [
+            tts.ATTR_AUDIO_OUTPUT,
+            tts.ATTR_VOICE,
+            ATTR_SPEAKER,
+        ]
 
     @property
     def default_options(self):
         """Return a dict include default options."""
-        return {tts.ATTR_AUDIO_OUTPUT: "wav"}
+        return {}
 
     @callback
     def async_get_supported_voices(self, language: str) -> list[tts.Voice] | None:
@@ -143,27 +148,4 @@ class WyomingTtsProvider(tts.TextToSpeechEntity):
         except (OSError, WyomingError):
             return (None, None)
 
-        if options[tts.ATTR_AUDIO_OUTPUT] == "wav":
-            return ("wav", data)
-
-        # Raw output (convert to 16Khz, 16-bit mono)
-        with io.BytesIO(data) as wav_io:
-            wav_reader: wave.Wave_read = wave.open(wav_io, "rb")
-            raw_data = (
-                AudioChunkConverter(
-                    rate=16000,
-                    width=2,
-                    channels=1,
-                )
-                .convert(
-                    AudioChunk(
-                        audio=wav_reader.readframes(wav_reader.getnframes()),
-                        rate=wav_reader.getframerate(),
-                        width=wav_reader.getsampwidth(),
-                        channels=wav_reader.getnchannels(),
-                    )
-                )
-                .audio
-            )
-
-        return ("raw", raw_data)
+        return ("wav", data)

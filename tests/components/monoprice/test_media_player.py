@@ -360,13 +360,13 @@ async def test_supported_features(hass: HomeAssistant) -> None:
 
     state = hass.states.get(ZONE_1_ID)
     assert (
-        MediaPlayerEntityFeature.VOLUME_MUTE
+        state.attributes["supported_features"]
+        == MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
-        == state.attributes["supported_features"]
     )
 
 
@@ -489,45 +489,45 @@ async def test_volume_up_down(hass: HomeAssistant) -> None:
     assert monoprice.zones[11].volume == 37
 
 
-async def test_first_run_with_available_zones(hass: HomeAssistant) -> None:
+async def test_first_run_with_available_zones(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test first run with all zones available."""
     monoprice = MockMonoprice()
     await _setup_monoprice(hass, monoprice)
 
-    registry = er.async_get(hass)
-
-    entry = registry.async_get(ZONE_7_ID)
+    entry = entity_registry.async_get(ZONE_7_ID)
     assert not entry.disabled
 
 
-async def test_first_run_with_failing_zones(hass: HomeAssistant) -> None:
+async def test_first_run_with_failing_zones(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test first run with failed zones."""
     monoprice = MockMonoprice()
 
     with patch.object(MockMonoprice, "zone_status", side_effect=SerialException):
         await _setup_monoprice(hass, monoprice)
 
-    registry = er.async_get(hass)
-
-    entry = registry.async_get(ZONE_1_ID)
+    entry = entity_registry.async_get(ZONE_1_ID)
     assert not entry.disabled
 
-    entry = registry.async_get(ZONE_7_ID)
+    entry = entity_registry.async_get(ZONE_7_ID)
     assert entry.disabled
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-async def test_not_first_run_with_failing_zone(hass: HomeAssistant) -> None:
+async def test_not_first_run_with_failing_zone(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test first run with failed zones."""
     monoprice = MockMonoprice()
 
     with patch.object(MockMonoprice, "zone_status", side_effect=SerialException):
         await _setup_monoprice_not_first_run(hass, monoprice)
 
-    registry = er.async_get(hass)
-
-    entry = registry.async_get(ZONE_1_ID)
+    entry = entity_registry.async_get(ZONE_1_ID)
     assert not entry.disabled
 
-    entry = registry.async_get(ZONE_7_ID)
+    entry = entity_registry.async_get(ZONE_7_ID)
     assert not entry.disabled

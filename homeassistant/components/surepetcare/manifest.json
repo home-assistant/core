@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/surepetcare",
   "iot_class": "cloud_polling",
   "loggers": ["rich", "surepy"],
-  "requirements": ["surepy==0.8.0"]
+  "requirements": ["surepy==0.9.0"]
 }

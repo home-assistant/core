@@ -11,6 +11,7 @@ from zoneminder.zm import ZoneMinder
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -42,8 +43,9 @@ def setup_platform(
     zm_client: ZoneMinder
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         if not (monitors := zm_client.get_monitors()):
-            _LOGGER.warning("Could not fetch monitors from ZoneMinder")
-            return
+            raise PlatformNotReady(
+                "Switch could not fetch any monitors from ZoneMinder"
+            )
 
         for monitor in monitors:
             switches.append(ZMSwitchMonitors(monitor, on_state, off_state))

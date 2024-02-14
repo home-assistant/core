@@ -112,8 +112,11 @@ class TasmotaAvailability(TasmotaEntity):
 
     def __init__(self, **kwds: Any) -> None:
         """Initialize the availability mixin."""
-        self._available = False
         super().__init__(**kwds)
+        if self._tasmota_entity.deep_sleep_enabled:
+            self._available = True
+        else:
+            self._available = False
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
@@ -122,6 +125,8 @@ class TasmotaAvailability(TasmotaEntity):
             async_subscribe_connection_status(self.hass, self.async_mqtt_connected)
         )
         await super().async_added_to_hass()
+        if self._tasmota_entity.deep_sleep_enabled:
+            await self._tasmota_entity.poll_status()
 
     async def availability_updated(self, available: bool) -> None:
         """Handle updated availability."""
@@ -135,6 +140,8 @@ class TasmotaAvailability(TasmotaEntity):
         if not self.hass.is_stopping:
             if not mqtt_connected(self.hass):
                 self._available = False
+            elif self._tasmota_entity.deep_sleep_enabled:
+                self._available = True
             self.async_write_ha_state()
 
     @property

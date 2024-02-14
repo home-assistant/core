@@ -11,3 +11,5 @@ CONF_DEBUG_RECORDING_DIR = "debug_recording_dir"
 
 DATA_LAST_WAKE_UP = f"{DOMAIN}.last_wake_up"
 DEFAULT_WAKE_WORD_COOLDOWN = 2  # seconds
+
+EVENT_RECORDING = f"{DOMAIN}_recording"

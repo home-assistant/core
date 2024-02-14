@@ -22,6 +22,8 @@ from .test_common import (
     help_test_availability_discovery_update,
     help_test_availability_poll_state,
     help_test_availability_when_connection_lost,
+    help_test_deep_sleep_availability,
+    help_test_deep_sleep_availability_when_connection_lost,
     help_test_discovery_device_remove,
     help_test_discovery_removal,
     help_test_discovery_update_unchanged,
@@ -33,16 +35,16 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClient, MqttMockPahoClient
 
 COVER_SUPPORT = (
-    cover.SUPPORT_OPEN
-    | cover.SUPPORT_CLOSE
-    | cover.SUPPORT_STOP
-    | cover.SUPPORT_SET_POSITION
+    cover.CoverEntityFeature.OPEN
+    | cover.CoverEntityFeature.CLOSE
+    | cover.CoverEntityFeature.STOP
+    | cover.CoverEntityFeature.SET_POSITION
 )
 TILT_SUPPORT = (
-    cover.SUPPORT_OPEN_TILT
-    | cover.SUPPORT_CLOSE_TILT
-    | cover.SUPPORT_STOP_TILT
-    | cover.SUPPORT_SET_TILT_POSITION
+    cover.CoverEntityFeature.OPEN_TILT
+    | cover.CoverEntityFeature.CLOSE_TILT
+    | cover.CoverEntityFeature.STOP_TILT
+    | cover.CoverEntityFeature.SET_TILT_POSITION
 )
 
 
@@ -663,6 +665,27 @@ async def test_availability_when_connection_lost(
     )
 
 
+async def test_deep_sleep_availability_when_connection_lost(
+    hass: HomeAssistant,
+    mqtt_client_mock: MqttMockPahoClient,
+    mqtt_mock: MqttMockHAClient,
+    setup_tasmota,
+) -> None:
+    """Test availability after MQTT disconnection."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["dn"] = "Test"
+    config["rl"][0] = 3
+    config["rl"][1] = 3
+    await help_test_deep_sleep_availability_when_connection_lost(
+        hass,
+        mqtt_client_mock,
+        mqtt_mock,
+        Platform.COVER,
+        config,
+        object_id="test_cover_1",
+    )
+
+
 async def test_availability(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
 ) -> None:
@@ -672,6 +695,19 @@ async def test_availability(
     config["rl"][0] = 3
     config["rl"][1] = 3
     await help_test_availability(
+        hass, mqtt_mock, Platform.COVER, config, object_id="test_cover_1"
+    )
+
+
+async def test_deep_sleep_availability(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_tasmota
+) -> None:
+    """Test availability."""
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["dn"] = "Test"
+    config["rl"][0] = 3
+    config["rl"][1] = 3
+    await help_test_deep_sleep_availability(
         hass, mqtt_mock, Platform.COVER, config, object_id="test_cover_1"
     )
 

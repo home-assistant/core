@@ -80,12 +80,12 @@ def _async_device_entities(
         can_write = device.can_write(data.api.bootstrap.auth_user)
         for description in descs:
             if description.ufp_perm is not None:
-                if description.ufp_perm == PermRequired.WRITE and not can_write:
+                if description.ufp_perm is PermRequired.WRITE and not can_write:
                     continue
-                if description.ufp_perm == PermRequired.NO_WRITE and can_write:
+                if description.ufp_perm is PermRequired.NO_WRITE and can_write:
                     continue
                 if (
-                    description.ufp_perm == PermRequired.DELETE
+                    description.ufp_perm is PermRequired.DELETE
                     and not device.can_delete(data.api.bootstrap.auth_user)
                 ):
                     continue
@@ -157,17 +157,17 @@ def async_all_device_entities(
         )
 
     descs = []
-    if ufp_device.model == ModelType.CAMERA:
+    if ufp_device.model is ModelType.CAMERA:
         descs = camera_descs
-    elif ufp_device.model == ModelType.LIGHT:
+    elif ufp_device.model is ModelType.LIGHT:
         descs = light_descs
-    elif ufp_device.model == ModelType.SENSOR:
+    elif ufp_device.model is ModelType.SENSOR:
         descs = sense_descs
-    elif ufp_device.model == ModelType.VIEWPORT:
+    elif ufp_device.model is ModelType.VIEWPORT:
         descs = viewer_descs
-    elif ufp_device.model == ModelType.DOORLOCK:
+    elif ufp_device.model is ModelType.DOORLOCK:
         descs = lock_descs
-    elif ufp_device.model == ModelType.CHIME:
+    elif ufp_device.model is ModelType.CHIME:
         descs = chime_descs
 
     if not descs and not unadopted_descs or ufp_device.model is None:
@@ -249,17 +249,43 @@ class ProtectDeviceEntity(Entity):
         self._attr_available = (
             last_update_success
             and (
-                device.state == StateType.CONNECTED
+                device.state is StateType.CONNECTED
                 or (not device.is_adopted_by_us and device.can_adopt)
             )
             and (not async_get_ufp_enabled or async_get_ufp_enabled(device))
         )
 
     @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (self._attr_available,)
+
+    @callback
     def _async_updated_event(self, device: ProtectModelWithId) -> None:
-        """Call back for incoming data."""
+        """When device is updated from Protect."""
+
+        previous_attrs = self._async_get_state_attrs()
         self._async_update_device_from_protect(device)
-        self.async_write_ha_state()
+        current_attrs = self._async_get_state_attrs()
+        if previous_attrs != current_attrs:
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                device_name = device.name
+                if hasattr(self, "entity_description") and self.entity_description.name:
+                    device_name += f" {self.entity_description.name}"
+
+                _LOGGER.debug(
+                    "Updating state [%s (%s)] %s -> %s",
+                    device_name,
+                    device.mac,
+                    previous_attrs,
+                    current_attrs,
+                )
+            self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

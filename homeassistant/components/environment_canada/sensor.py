@@ -33,14 +33,14 @@ from .const import ATTR_STATION, DOMAIN
 ATTR_TIME = "alert time"
 
 
-@dataclass
+@dataclass(frozen=True)
 class ECSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Any], Any]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ECSensorEntityDescription(
     SensorEntityDescription, ECSensorEntityDescriptionMixin
 ):

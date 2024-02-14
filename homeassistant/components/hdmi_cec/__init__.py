@@ -195,9 +195,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
 
     loop = (
         # Create own thread if more than 1 CPU
-        hass.loop
-        if multiprocessing.cpu_count() < 2
-        else None
+        hass.loop if multiprocessing.cpu_count() < 2 else None
     )
     host = base_config[DOMAIN].get(CONF_HOST)
     display_name = base_config[DOMAIN].get(CONF_DISPLAY_NAME, DEFAULT_DISPLAY_NAME)

@@ -21,6 +21,11 @@
     }
   },
   "entity": {
+    "todo": {
+      "shopping_cart": {
+        "name": "Shopping cart"
+      }
+    },
     "sensor": {
       "cart_items_count": {
         "name": "Cart items count"

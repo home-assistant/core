@@ -35,25 +35,25 @@ from .const import DEV_TYPE_TO_HA, DOMAIN, SKU_TO_BASE_DEVICE, VS_DISCOVERY, VS_
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class VeSyncSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class VeSyncSensorEntityDescription(
     SensorEntityDescription, VeSyncSensorEntityDescriptionMixin
 ):
     """Describe VeSync sensor entity."""
 
-    exists_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], bool
-    ] = lambda _: True
-    update_fn: Callable[
-        [VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], None
-    ] = lambda _: None
+    exists_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], bool] = (
+        lambda _: True
+    )
+    update_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], None] = (
+        lambda _: None
+    )
 
 
 def update_energy(device):

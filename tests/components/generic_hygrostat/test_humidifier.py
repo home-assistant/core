@@ -170,7 +170,9 @@ async def test_humidifier_switch(
     assert hass.states.get(ENTITY).attributes.get("action") == "humidifying"
 
 
-async def test_unique_id(hass: HomeAssistant, setup_comp_1) -> None:
+async def test_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, setup_comp_1
+) -> None:
     """Test setting a unique ID."""
     unique_id = "some_unique_id"
     _setup_sensor(hass, 18)
@@ -189,8 +191,6 @@ async def test_unique_id(hass: HomeAssistant, setup_comp_1) -> None:
         },
     )
     await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(ENTITY)
     assert entry
@@ -1376,7 +1376,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1414,7 +1414,7 @@ async def test_restore_state_target_humidity(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1457,7 +1457,7 @@ async def test_restore_state_and_return_to_normal(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,
@@ -1512,7 +1512,7 @@ async def test_no_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     await async_setup_component(
         hass,

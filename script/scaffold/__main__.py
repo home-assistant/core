@@ -4,22 +4,13 @@ from pathlib import Path
 import subprocess
 import sys
 
+from script.util import valid_integration
+
 from . import docs, error, gather_info, generate
-from .const import COMPONENT_DIR
 
 TEMPLATES = [
     p.name for p in (Path(__file__).parent / "templates").glob("*") if p.is_dir()
 ]
-
-
-def valid_integration(integration):
-    """Test if it's a valid integration."""
-    if not (COMPONENT_DIR / integration).exists():
-        raise argparse.ArgumentTypeError(
-            f"The integration {integration} does not exist."
-        )
-
-    return integration
 
 
 def get_arguments() -> argparse.Namespace:
@@ -103,10 +94,11 @@ def main():
 
     if args.develop:
         print("Running tests")
-        print(f"$ python3 -m pytest -vvv tests/components/{info.domain}")
+        print(f"$ python3 -b -m pytest -vvv tests/components/{info.domain}")
         subprocess.run(
             [
                 "python3",
+                "-b",
                 "-m",
                 "pytest",
                 "-vvv",

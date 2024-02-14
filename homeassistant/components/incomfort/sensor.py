@@ -23,7 +23,7 @@ INCOMFORT_PRESSURE = "CV Pressure"
 INCOMFORT_TAP_TEMP = "Tap Temp"
 
 
-@dataclass
+@dataclass(frozen=True)
 class IncomfortSensorEntityDescription(SensorEntityDescription):
     """Describes Incomfort sensor entity."""
 

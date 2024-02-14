@@ -1,0 +1,23 @@
+{
+  "entity": {
+    "sensor": {
+      "drive_state_shift_state": {
+        "default": "mdi:car-shift-pattern"
+      },
+      "drive_state_active_route_destination": {
+        "default": "mdi:map-marker"
+      }
+    },
+    "binary_sensor": {
+      "climate_state_auto_seat_climate_left": {
+        "default": "mdi:car-seat-heater"
+      },
+      "climate_state_auto_seat_climate_right": {
+        "default": "mdi:car-seat-heater"
+      },
+      "climate_state_auto_steering_wheel_heat": {
+        "default": "mdi:steering"
+      }
+    }
+  }
+}

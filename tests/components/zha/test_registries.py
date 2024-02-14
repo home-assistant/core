@@ -585,18 +585,18 @@ def test_quirk_classes() -> None:
 def test_entity_names() -> None:
     """Make sure that all handlers expose entities with valid names."""
 
-    for _, entities in iter_all_rules():
-        for entity in entities:
-            if hasattr(entity, "_attr_name"):
+    for _, entity_classes in iter_all_rules():
+        for entity_class in entity_classes:
+            if hasattr(entity_class, "__attr_name"):
                 # The entity has a name
-                assert isinstance(entity._attr_name, str) and entity._attr_name
-            elif hasattr(entity, "_attr_translation_key"):
+                assert (name := entity_class.__attr_name) and isinstance(name, str)
+            elif hasattr(entity_class, "__attr_translation_key"):
                 assert (
-                    isinstance(entity._attr_translation_key, str)
-                    and entity._attr_translation_key
+                    isinstance(entity_class.__attr_translation_key, str)
+                    and entity_class.__attr_translation_key
                 )
-            elif hasattr(entity, "_attr_device_class"):
-                assert entity._attr_device_class
+            elif hasattr(entity_class, "__attr_device_class"):
+                assert entity_class.__attr_device_class
             else:
                 # The only exception (for now) is IASZone
-                assert entity is IASZone
+                assert entity_class is IASZone

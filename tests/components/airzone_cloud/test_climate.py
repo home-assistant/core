@@ -40,9 +40,27 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     # Aidoos
     state = hass.states.get("climate.bron")
     assert state.state == HVACMode.OFF
-    assert state.attributes.get(ATTR_CURRENT_HUMIDITY) is None
+    assert ATTR_CURRENT_HUMIDITY not in state.attributes
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.0
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
+    assert state.attributes[ATTR_HVAC_MODES] == [
+        HVACMode.HEAT_COOL,
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.FAN_ONLY,
+        HVACMode.DRY,
+        HVACMode.OFF,
+    ]
+    assert state.attributes[ATTR_MAX_TEMP] == 30
+    assert state.attributes[ATTR_MIN_TEMP] == 15
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_TEMPERATURE_STEP
+    assert state.attributes[ATTR_TEMPERATURE] == 22.0
+
+    state = hass.states.get("climate.bron_pro")
+    assert state.state == HVACMode.COOL
+    assert ATTR_CURRENT_HUMIDITY not in state.attributes
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
     assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.HEAT_COOL,
         HVACMode.COOL,
@@ -78,7 +96,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     state = hass.states.get("climate.house")
     assert state.state == HVACMode.COOL
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 27
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.0
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 21.5
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
     assert state.attributes[ATTR_HVAC_MODES] == [
         HVACMode.HEAT_COOL,
@@ -91,7 +109,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
     assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_TEMPERATURE_STEP
-    assert state.attributes[ATTR_TEMPERATURE] == 23.3
+    assert state.attributes[ATTR_TEMPERATURE] == 23.0
 
     # Zones
     state = hass.states.get("climate.dormitorio")
@@ -453,12 +471,14 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: "climate.house",
+                ATTR_HVAC_MODE: HVACMode.HEAT,
                 ATTR_TEMPERATURE: 20.5,
             },
             blocking=True,
         )
 
     state = hass.states.get("climate.house")
+    assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 20.5
 
     # Zones
@@ -471,12 +491,14 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: "climate.salon",
+                ATTR_HVAC_MODE: HVACMode.HEAT,
                 ATTR_TEMPERATURE: 20.5,
             },
             blocking=True,
         )
 
     state = hass.states.get("climate.salon")
+    assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 20.5
 
 
@@ -537,7 +559,7 @@ async def test_airzone_climate_set_temp_error(hass: HomeAssistant) -> None:
         )
 
     state = hass.states.get("climate.house")
-    assert state.attributes[ATTR_TEMPERATURE] == 23.3
+    assert state.attributes[ATTR_TEMPERATURE] == 23.0
 
     # Zones
     with patch(

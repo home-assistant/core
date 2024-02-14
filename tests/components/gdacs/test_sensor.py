@@ -5,6 +5,7 @@ from freezegun import freeze_time
 
 from homeassistant.components import gdacs
 from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.gdacs.const import CONF_CATEGORIES
 from homeassistant.components.gdacs.sensor import (
     ATTR_CREATED,
     ATTR_LAST_UPDATE,
@@ -16,18 +17,18 @@ from homeassistant.components.gdacs.sensor import (
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     CONF_RADIUS,
+    CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from . import _generate_mock_feed_entry
 
-from tests.common import async_fire_time_changed
-
-CONFIG = {gdacs.DOMAIN: {CONF_RADIUS: 200}}
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(hass: HomeAssistant) -> None:
@@ -60,7 +61,24 @@ async def test_setup(hass: HomeAssistant) -> None:
         "aio_georss_client.feed.GeoRssFeed.update"
     ) as mock_feed_update:
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
-        assert await async_setup_component(hass, gdacs.DOMAIN, CONFIG)
+        latitude = 32.87336
+        longitude = -117.22743
+        radius = 200
+        entry_data = {
+            CONF_RADIUS: radius,
+            CONF_LATITUDE: latitude,
+            CONF_LONGITUDE: longitude,
+            CONF_CATEGORIES: [],
+            CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL.seconds,
+        }
+        config_entry = MockConfigEntry(
+            domain=gdacs.DOMAIN,
+            title=f"{latitude}, {longitude}",
+            data=entry_data,
+            unique_id="my_very_unique_id",
+        )
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         # Artificially trigger update and collect events.
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
@@ -72,10 +90,10 @@ async def test_setup(hass: HomeAssistant) -> None:
             == 4
         )
 
-        state = hass.states.get("sensor.gdacs_32_87336_117_22743")
+        state = hass.states.get("sensor.32_87336_117_22743")
         assert state is not None
         assert int(state.state) == 3
-        assert state.name == "GDACS (32.87336, -117.22743)"
+        assert state.name == "32.87336, -117.22743"
         attributes = state.attributes
         assert attributes[ATTR_STATUS] == "OK"
         assert attributes[ATTR_CREATED] == 3
@@ -96,7 +114,7 @@ async def test_setup(hass: HomeAssistant) -> None:
             == 4
         )
 
-        state = hass.states.get("sensor.gdacs_32_87336_117_22743")
+        state = hass.states.get("sensor.32_87336_117_22743")
         attributes = state.attributes
         assert attributes[ATTR_CREATED] == 1
         assert attributes[ATTR_UPDATED] == 2
@@ -125,6 +143,6 @@ async def test_setup(hass: HomeAssistant) -> None:
             == 1
         )
 
-        state = hass.states.get("sensor.gdacs_32_87336_117_22743")
+        state = hass.states.get("sensor.32_87336_117_22743")
         attributes = state.attributes
         assert attributes[ATTR_REMOVED] == 3

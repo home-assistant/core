@@ -13,6 +13,7 @@ from tests.common import MockConfigEntry
 
 async def test_entity_attributes(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_fibaro_client: Mock,
     mock_config_entry: MockConfigEntry,
     mock_scene: Mock,
@@ -22,7 +23,6 @@ async def test_entity_attributes(
     # Arrange
     mock_fibaro_client.read_rooms.return_value = [mock_room]
     mock_fibaro_client.read_scenes.return_value = [mock_scene]
-    entity_registry = er.async_get(hass)
     # Act
     await init_integration(hass, mock_config_entry)
     # Assert
@@ -35,6 +35,7 @@ async def test_entity_attributes(
 
 async def test_entity_attributes_without_room(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_fibaro_client: Mock,
     mock_config_entry: MockConfigEntry,
     mock_scene: Mock,
@@ -45,7 +46,6 @@ async def test_entity_attributes_without_room(
     mock_room.name = None
     mock_fibaro_client.read_rooms.return_value = [mock_room]
     mock_fibaro_client.read_scenes.return_value = [mock_scene]
-    entity_registry = er.async_get(hass)
     # Act
     await init_integration(hass, mock_config_entry)
     # Assert

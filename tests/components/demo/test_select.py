@@ -11,6 +11,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 ENTITY_SPEED = "select.speed"
@@ -51,7 +52,7 @@ async def test_select_option_bad_attr(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "ridiculous_speed"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_OPTION,

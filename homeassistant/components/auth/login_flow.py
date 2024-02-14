@@ -71,14 +71,14 @@ from __future__ import annotations
 from collections.abc import Callable
 from http import HTTPStatus
 from ipaddress import ip_address
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp import web
 import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant import data_entry_flow
-from homeassistant.auth import AuthManagerFlowManager
+from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
 from homeassistant.auth.models import Credentials
 from homeassistant.components import onboarding
 from homeassistant.components.http.auth import async_user_not_allowed_do_auth
@@ -90,10 +90,16 @@ from homeassistant.components.http.ban import (
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.network import is_cloud_connection
+from homeassistant.util.network import is_local
 
 from . import indieauth
 
 if TYPE_CHECKING:
+    from homeassistant.auth.providers.trusted_networks import (
+        TrustedNetworksAuthProvider,
+    )
+
     from . import StoreResultType
 
 
@@ -146,11 +152,47 @@ class AuthProvidersView(HomeAssistantView):
                 message_code="onboarding_required",
             )
 
+        try:
+            remote_address = ip_address(request.remote)  # type: ignore[arg-type]
+        except ValueError:
+            return self.json_message(
+                message="Invalid remote IP",
+                status_code=HTTPStatus.BAD_REQUEST,
+                message_code="invalid_remote_ip",
+            )
+
+        cloud_connection = is_cloud_connection(hass)
+
+        providers = []
+        for provider in hass.auth.auth_providers:
+            if provider.type == "trusted_networks":
+                if cloud_connection:
+                    # Skip quickly as trusted networks are not available on cloud
+                    continue
+
+                try:
+                    cast("TrustedNetworksAuthProvider", provider).async_validate_access(
+                        remote_address
+                    )
+                except InvalidAuthError:
+                    # Not a trusted network, so we don't expose that trusted_network authenticator is setup
+                    continue
+
+            providers.append(
+                {
+                    "name": provider.name,
+                    "id": provider.id,
+                    "type": provider.type,
+                }
+            )
+
+        preselect_remember_me = not cloud_connection and is_local(remote_address)
+
         return self.json(
-            [
-                {"name": provider.name, "id": provider.id, "type": provider.type}
-                for provider in hass.auth.auth_providers
-            ]
+            {
+                "providers": providers,
+                "preselect_remember_me": preselect_remember_me,
+            }
         )
 
 
@@ -235,7 +277,7 @@ class LoginFlowBaseView(HomeAssistantView):
                 f"Login blocked: {user_access_error}", HTTPStatus.FORBIDDEN
             )
 
-        await process_success_login(request)
+        process_success_login(request)
         result["result"] = self._store_result(client_id, result_obj)
 
         return self.json(result)

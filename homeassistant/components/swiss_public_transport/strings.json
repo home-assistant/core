@@ -1,0 +1,46 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "Cannot connect to server",
+      "bad_config": "Request failed due to bad config: Check at [stationboard]({stationboard_url}) if your station names are valid",
+      "unknown": "An unknown error was raised by python-opendata-transport"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "Cannot connect to server",
+      "bad_config": "Request failed due to bad config: Check the [stationboard]({stationboard_url}) for valid stations.",
+      "unknown": "An unknown error was raised by python-opendata-transport"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "from": "Start station",
+          "to": "End station"
+        },
+        "description": "Provide start and end station for your connection\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
+        "title": "Swiss Public Transport"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "departure": {
+        "name": "Departure"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The swiss public transport YAML configuration import cannot connect to server",
+      "description": "Configuring swiss public transport using YAML is being removed but there was an connection error importing your YAML configuration.\n\nMake sure your home assistant can reach the [opendata server]({opendata_url}). In case the server is down, try again later."
+    },
+    "deprecated_yaml_import_issue_bad_config": {
+      "title": "The swiss public transport YAML configuration import request failed due to bad config",
+      "description": "Configuring swiss public transport using YAML is being removed but there was bad config imported in your YAML configuration.\n\nCheck the [stationboard]({stationboard_url}) for valid stations."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "The swiss public transport YAML configuration import failed with unknown error raised by python-opendata-transport",
+      "description": "Configuring swiss public transport using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nCheck your configuration or have a look at the documentation of the integration."
+    }
+  }
+}

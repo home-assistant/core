@@ -33,7 +33,7 @@ from .entity import ShadeEntity
 from .model import PowerviewDeviceInfo, PowerviewEntryData
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSensorDescriptionMixin:
     """Mixin to describe a Sensor entity."""
 
@@ -42,7 +42,7 @@ class PowerviewSensorDescriptionMixin:
     create_sensor_fn: Callable[[BaseShade], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class PowerviewSensorDescription(
     SensorEntityDescription, PowerviewSensorDescriptionMixin
 ):

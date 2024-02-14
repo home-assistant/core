@@ -1,0 +1,139 @@
+{
+  "data": [
+    {
+      "type": "mower",
+      "id": "c7233734-b219-4287-a173-08e3643f89f0",
+      "attributes": {
+        "system": {
+          "name": "Test Mower 1",
+          "model": "450XH-TEST",
+          "serialNumber": 123
+        },
+        "battery": {
+          "batteryPercent": 100
+        },
+        "capabilities": {
+          "headlights": true,
+          "workAreas": false,
+          "position": true,
+          "stayOutZones": false
+        },
+        "mower": {
+          "mode": "MAIN_AREA",
+          "activity": "PARKED_IN_CS",
+          "state": "RESTRICTED",
+          "errorCode": 0,
+          "errorCodeTimestamp": 0
+        },
+        "calendar": {
+          "tasks": [
+            {
+              "start": 1140,
+              "duration": 300,
+              "monday": true,
+              "tuesday": false,
+              "wednesday": true,
+              "thursday": false,
+              "friday": true,
+              "saturday": false,
+              "sunday": false
+            },
+            {
+              "start": 0,
+              "duration": 480,
+              "monday": false,
+              "tuesday": true,
+              "wednesday": false,
+              "thursday": true,
+              "friday": false,
+              "saturday": true,
+              "sunday": false
+            }
+          ]
+        },
+        "planner": {
+          "nextStartTimestamp": 1685991600000,
+          "override": {
+            "action": "NOT_ACTIVE"
+          },
+          "restrictedReason": "WEEK_SCHEDULE"
+        },
+        "metadata": {
+          "connected": true,
+          "statusTimestamp": 1697669932683
+        },
+        "positions": [
+          {
+            "latitude": 35.5402913,
+            "longitude": -82.5527055
+          },
+          {
+            "latitude": 35.5407693,
+            "longitude": -82.5521503
+          },
+          {
+            "latitude": 35.5403241,
+            "longitude": -82.5522924
+          },
+          {
+            "latitude": 35.5406973,
+            "longitude": -82.5518579
+          },
+          {
+            "latitude": 35.5404659,
+            "longitude": -82.5516567
+          },
+          {
+            "latitude": 35.5406318,
+            "longitude": -82.5515709
+          },
+          {
+            "latitude": 35.5402477,
+            "longitude": -82.5519437
+          },
+          {
+            "latitude": 35.5403503,
+            "longitude": -82.5516889
+          },
+          {
+            "latitude": 35.5401429,
+            "longitude": -82.551536
+          },
+          {
+            "latitude": 35.5405489,
+            "longitude": -82.5512195
+          },
+          {
+            "latitude": 35.5404005,
+            "longitude": -82.5512115
+          },
+          {
+            "latitude": 35.5405969,
+            "longitude": -82.551418
+          },
+          {
+            "latitude": 35.5403437,
+            "longitude": -82.5523917
+          },
+          {
+            "latitude": 35.5403481,
+            "longitude": -82.5520054
+          }
+        ],
+        "cuttingHeight": 4,
+        "headlight": {
+          "mode": "EVENING_ONLY"
+        },
+        "statistics": {
+          "numberOfChargingCycles": 1380,
+          "numberOfCollisions": 11396,
+          "totalChargingTime": 4334400,
+          "totalCuttingTime": 4194000,
+          "totalDriveDistance": 1780272,
+          "totalRunningTime": 4564800,
+          "totalSearchingTime": 370800
+        }
+      }
+    }
+  ]
+}

@@ -6,6 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .const import DOMAIN
 from .coordinator import HWEnergyDeviceUpdateCoordinator
@@ -21,30 +22,32 @@ async def async_setup_entry(
     """Set up numbers for device."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     if coordinator.supports_state():
-        async_add_entities([HWEnergyNumberEntity(coordinator, entry)])
+        async_add_entities([HWEnergyNumberEntity(coordinator)])
 
 
 class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
     """Representation of status light number."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:lightbulb-on"
     _attr_translation_key = "status_light_brightness"
     _attr_native_unit_of_measurement = PERCENTAGE
 
     def __init__(
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
-        entry: ConfigEntry,
     ) -> None:
         """Initialize the control number."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.unique_id}_status_light_brightness"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_status_light_brightness"
+        )
 
     @homewizard_exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
-        await self.coordinator.api.state_set(brightness=int(value * (255 / 100)))
+        await self.coordinator.api.state_set(
+            brightness=value_to_brightness((0, 100), value)
+        )
         await self.coordinator.async_refresh()
 
     @property
@@ -60,4 +63,4 @@ class HWEnergyNumberEntity(HomeWizardEntity, NumberEntity):
             or (brightness := self.coordinator.data.state.brightness) is None
         ):
             return None
-        return round(brightness * (100 / 255))
+        return brightness_to_value((0, 100), brightness)

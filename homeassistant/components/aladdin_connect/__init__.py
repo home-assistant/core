@@ -1,5 +1,4 @@
 """The aladdin_connect component."""
-import asyncio
 import logging
 from typing import Final
 
@@ -29,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     try:
         await acc.login()
-    except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError) as ex:
+    except (ClientError, TimeoutError, Aladdin.ConnectionError) as ex:
         raise ConfigEntryNotReady("Can not connect to host") from ex
     except Aladdin.InvalidPasswordError as ex:
         raise ConfigEntryAuthFailed("Incorrect Password") from ex

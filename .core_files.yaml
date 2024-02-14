@@ -45,6 +45,7 @@ base_platforms: &base_platforms
   - homeassistant/components/switch/**
   - homeassistant/components/text/**
   - homeassistant/components/time/**
+  - homeassistant/components/todo/**
   - homeassistant/components/tts/**
   - homeassistant/components/update/**
   - homeassistant/components/vacuum/**

@@ -88,140 +88,6 @@
   "isControllerNode": false,
   "keepAwake": false,
   "lastSeen": "2023-08-09T13:26:05.031Z",
-  "endpoints": {
-    "0": {
-      "nodeId": 23,
-      "index": 0,
-      "installerIcon": 3327,
-      "userIcon": 3327,
-      "deviceClass": {
-        "basic": {
-          "key": 4,
-          "label": "Routing Slave"
-        },
-        "generic": {
-          "key": 7,
-          "label": "Notification Sensor"
-        },
-        "specific": {
-          "key": 1,
-          "label": "Notification Sensor"
-        },
-        "mandatorySupportedCCs": [],
-        "mandatoryControlledCCs": []
-      },
-      "commandClasses": [
-        {
-          "id": 94,
-          "name": "Z-Wave Plus Info",
-          "version": 2,
-          "isSecure": false
-        },
-        {
-          "id": 133,
-          "name": "Association",
-          "version": 3,
-          "isSecure": true
-        },
-        {
-          "id": 142,
-          "name": "Multi Channel Association",
-          "version": 4,
-          "isSecure": true
-        },
-        {
-          "id": 89,
-          "name": "Association Group Information",
-          "version": 3,
-          "isSecure": true
-        },
-        {
-          "id": 49,
-          "name": "Multilevel Sensor",
-          "version": 11,
-          "isSecure": true
-        },
-        {
-          "id": 85,
-          "name": "Transport Service",
-          "version": 2,
-          "isSecure": false
-        },
-        {
-          "id": 134,
-          "name": "Version",
-          "version": 3,
-          "isSecure": true
-        },
-        {
-          "id": 114,
-          "name": "Manufacturer Specific",
-          "version": 2,
-          "isSecure": true
-        },
-        {
-          "id": 90,
-          "name": "Device Reset Locally",
-          "version": 1,
-          "isSecure": true
-        },
-        {
-          "id": 115,
-          "name": "Powerlevel",
-          "version": 1,
-          "isSecure": true
-        },
-        {
-          "id": 128,
-          "name": "Battery",
-          "version": 3,
-          "isSecure": true
-        },
-        {
-          "id": 159,
-          "name": "Security 2",
-          "version": 1,
-          "isSecure": true
-        },
-        {
-          "id": 113,
-          "name": "Notification",
-          "version": 8,
-          "isSecure": true
-        },
-        {
-          "id": 135,
-          "name": "Indicator",
-          "version": 4,
-          "isSecure": true
-        },
-        {
-          "id": 112,
-          "name": "Configuration",
-          "version": 4,
-          "isSecure": true
-        },
-        {
-          "id": 132,
-          "name": "Wake Up",
-          "version": 1,
-          "isSecure": true
-        },
-        {
-          "id": 108,
-          "name": "Supervision",
-          "version": 2,
-          "isSecure": false
-        },
-        {
-          "id": 122,
-          "name": "Firmware Update Meta Data",
-          "version": 7,
-          "isSecure": true
-        }
-      ]
-    }
-  },
   "values": [
     {
       "endpoint": 0,
@@ -1325,6 +1191,140 @@
         "secret": false
       },
       "value": 0
+    }
+  ],
+  "endpoints": [
+    {
+      "nodeId": 23,
+      "index": 0,
+      "installerIcon": 3327,
+      "userIcon": 3327,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing Slave"
+        },
+        "generic": {
+          "key": 7,
+          "label": "Notification Sensor"
+        },
+        "specific": {
+          "key": 1,
+          "label": "Notification Sensor"
+        },
+        "mandatorySupportedCCs": [],
+        "mandatoryControlledCCs": []
+      },
+      "commandClasses": [
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 49,
+          "name": "Multilevel Sensor",
+          "version": 11,
+          "isSecure": true
+        },
+        {
+          "id": 85,
+          "name": "Transport Service",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": true
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 3,
+          "isSecure": true
+        },
+        {
+          "id": 159,
+          "name": "Security 2",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": true
+        },
+        {
+          "id": 135,
+          "name": "Indicator",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 4,
+          "isSecure": true
+        },
+        {
+          "id": 132,
+          "name": "Wake Up",
+          "version": 1,
+          "isSecure": true
+        },
+        {
+          "id": 108,
+          "name": "Supervision",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 7,
+          "isSecure": true
+        }
+      ]
     }
   ]
 }

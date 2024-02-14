@@ -22,13 +22,13 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON,
     STATE_UNAVAILABLE,
-    VOLUME_LITERS,
     UnitOfLength,
     UnitOfMass,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
@@ -38,6 +38,7 @@ from homeassistant.helpers import (
     entity,
     entity_registry as er,
     template,
+    translation,
 )
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
@@ -60,7 +61,7 @@ def _set_up_units(hass: HomeAssistant) -> None:
         mass=UnitOfMass.GRAMS,
         pressure=UnitOfPressure.PA,
         temperature=UnitOfTemperature.CELSIUS,
-        volume=VOLUME_LITERS,
+        volume=UnitOfVolume.LITERS,
         wind_speed=UnitOfSpeed.KILOMETERS_PER_HOUR,
     )
 
@@ -1151,7 +1152,6 @@ def test_as_datetime(hass: HomeAssistant, input) -> None:
     expected = dt_util.parse_datetime(input)
     if expected is not None:
         expected = str(expected)
-
     assert (
         template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
         == expected
@@ -1162,34 +1162,64 @@ def test_as_datetime(hass: HomeAssistant, input) -> None:
     )
 
 
-def test_as_datetime_from_timestamp(hass: HomeAssistant) -> None:
-    """Test converting a UNIX timestamp to a date object."""
-    tests = [
+@pytest.mark.parametrize(
+    ("input", "output"),
+    [
         (1469119144, "2016-07-21 16:39:04+00:00"),
         (1469119144.0, "2016-07-21 16:39:04+00:00"),
         (-1, "1969-12-31 23:59:59+00:00"),
-    ]
-    for input, output in tests:
-        # expected = dt_util.parse_datetime(input)
-        if output is not None:
-            output = str(output)
+    ],
+)
+def test_as_datetime_from_timestamp(
+    hass: HomeAssistant,
+    input: int | float,
+    output: str,
+) -> None:
+    """Test converting a UNIX timestamp to a date object."""
+    assert (
+        template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
+        == output
+    )
+    assert (
+        template.Template(f"{{{{ {input} | as_datetime }}}}", hass).async_render()
+        == output
+    )
+    assert (
+        template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
+        == output
+    )
+    assert (
+        template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
+        == output
+    )
 
-        assert (
-            template.Template(f"{{{{ as_datetime({input}) }}}}", hass).async_render()
-            == output
-        )
-        assert (
-            template.Template(f"{{{{ {input} | as_datetime }}}}", hass).async_render()
-            == output
-        )
-        assert (
-            template.Template(f"{{{{ as_datetime('{input}') }}}}", hass).async_render()
-            == output
-        )
-        assert (
-            template.Template(f"{{{{ '{input}' | as_datetime }}}}", hass).async_render()
-            == output
-        )
+
+@pytest.mark.parametrize(
+    ("input", "default", "output"),
+    [
+        (1469119144, 123, "2016-07-21 16:39:04+00:00"),
+        ('"invalid"', ["default output"], ["default output"]),
+        (["a", "list"], 0, 0),
+        ({"a": "dict"}, None, None),
+    ],
+)
+def test_as_datetime_default(
+    hass: HomeAssistant, input: Any, default: Any, output: str
+) -> None:
+    """Test invalid input and return default value."""
+
+    assert (
+        template.Template(
+            f"{{{{ as_datetime({input}, default={default}) }}}}", hass
+        ).async_render()
+        == output
+    )
+    assert (
+        template.Template(
+            f"{{{{ {input} | as_datetime({default}) }}}}", hass
+        ).async_render()
+        == output
+    )
 
 
 def test_as_local(hass: HomeAssistant) -> None:
@@ -1232,6 +1262,22 @@ def test_to_json(hass: HomeAssistant) -> None:
 
     with pytest.raises(TemplateError):
         template.Template("{{ {'Foo': now()} | to_json }}", hass).async_render()
+
+    # Test special case where substring class cannot be rendered
+    # See: https://github.com/ijl/orjson/issues/445
+    class MyStr(str):
+        pass
+
+    expected_result = '{"mykey1":11.0,"mykey2":"myvalue2","mykey3":["opt3b","opt3a"]}'
+    test_dict = {
+        MyStr("mykey2"): "myvalue2",
+        MyStr("mykey1"): 11.0,
+        MyStr("mykey3"): ["opt3b", "opt3a"],
+    }
+    actual_result = template.Template(
+        "{{ test_dict | to_json(sort_keys=True) }}", hass
+    ).async_render(parse_result=False, variables={"test_dict": test_dict})
+    assert actual_result == expected_result
 
 
 def test_to_json_ensure_ascii(hass: HomeAssistant) -> None:
@@ -1300,6 +1346,88 @@ def test_average(hass: HomeAssistant) -> None:
 
     with pytest.raises(TemplateError):
         template.Template("{{ average([]) }}", hass).async_render()
+
+
+def test_median(hass: HomeAssistant) -> None:
+    """Test the median filter."""
+    assert template.Template("{{ [1, 3, 2] | median }}", hass).async_render() == 2
+    assert template.Template("{{ median([1, 3, 2, 4]) }}", hass).async_render() == 2.5
+    assert template.Template("{{ median(1, 3, 2) }}", hass).async_render() == 2
+    assert template.Template("{{ median('cdeba') }}", hass).async_render() == "c"
+
+    # Testing of default values
+    assert template.Template("{{ median([1, 2, 3], -1) }}", hass).async_render() == 2
+    assert template.Template("{{ median([], -1) }}", hass).async_render() == -1
+    assert template.Template("{{ median([], default=-1) }}", hass).async_render() == -1
+    assert template.Template("{{ median('abcd', -1) }}", hass).async_render() == -1
+    assert (
+        template.Template("{{ median([], 5, default=-1) }}", hass).async_render() == -1
+    )
+    assert (
+        template.Template("{{ median(1, 'a', 3, default=-1) }}", hass).async_render()
+        == -1
+    )
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | median }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ median() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ median([]) }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ median('abcd') }}", hass).async_render()
+
+
+def test_statistical_mode(hass: HomeAssistant) -> None:
+    """Test the mode filter."""
+    assert (
+        template.Template("{{ [1, 2, 2, 3] | statistical_mode }}", hass).async_render()
+        == 2
+    )
+    assert (
+        template.Template("{{ statistical_mode([1, 2, 3]) }}", hass).async_render() == 1
+    )
+    assert (
+        template.Template(
+            "{{ statistical_mode('hello', 'bye', 'hello') }}", hass
+        ).async_render()
+        == "hello"
+    )
+    assert (
+        template.Template("{{ statistical_mode('banana') }}", hass).async_render()
+        == "a"
+    )
+
+    # Testing of default values
+    assert (
+        template.Template("{{ statistical_mode([1, 2, 3], -1) }}", hass).async_render()
+        == 1
+    )
+    assert (
+        template.Template("{{ statistical_mode([], -1) }}", hass).async_render() == -1
+    )
+    assert (
+        template.Template("{{ statistical_mode([], default=-1) }}", hass).async_render()
+        == -1
+    )
+    assert (
+        template.Template(
+            "{{ statistical_mode([], 5, default=-1) }}", hass
+        ).async_render()
+        == -1
+    )
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ 1 | statistical_mode }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ statistical_mode() }}", hass).async_render()
+
+    with pytest.raises(TemplateError):
+        template.Template("{{ statistical_mode([]) }}", hass).async_render()
 
 
 def test_min(hass: HomeAssistant) -> None:
@@ -1630,6 +1758,26 @@ def test_render_with_possible_json_value_non_string_value(hass: HomeAssistant) -
     assert tpl.async_render_with_possible_json_value(value) == expected
 
 
+def test_render_with_possible_json_value_and_parse_result(hass: HomeAssistant) -> None:
+    """Render with possible JSON value with valid JSON."""
+    tpl = template.Template("{{ value_json.hello }}", hass)
+    result = tpl.async_render_with_possible_json_value(
+        """{"hello": {"world": "value1"}}""", parse_result=True
+    )
+    assert isinstance(result, dict)
+
+
+def test_render_with_possible_json_value_and_dont_parse_result(
+    hass: HomeAssistant,
+) -> None:
+    """Render with possible JSON value with valid JSON."""
+    tpl = template.Template("{{ value_json.hello }}", hass)
+    result = tpl.async_render_with_possible_json_value(
+        """{"hello": {"world": "value1"}}""", parse_result=False
+    )
+    assert isinstance(result, str)
+
+
 def test_if_state_exists(hass: HomeAssistant) -> None:
     """Test if state exists works."""
     hass.states.async_set("test.object", "available")
@@ -1808,6 +1956,129 @@ def test_states_function(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "available"
 
 
+async def test_state_translated(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+):
+    """Test state_translated method."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "group",
+                "name": "Grouped",
+                "entities": ["binary_sensor.first", "binary_sensor.second"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await translation._async_load_state_translations_to_cache(hass, "en", None)
+
+    hass.states.async_set("switch.without_translations", "on", attributes={})
+    hass.states.async_set("binary_sensor.without_device_class", "on", attributes={})
+    hass.states.async_set(
+        "binary_sensor.with_device_class", "on", attributes={"device_class": "motion"}
+    )
+    hass.states.async_set(
+        "binary_sensor.with_unknown_device_class",
+        "on",
+        attributes={"device_class": "unknown_class"},
+    )
+    hass.states.async_set(
+        "some_domain.with_device_class_1",
+        "off",
+        attributes={"device_class": "some_device_class"},
+    )
+    hass.states.async_set(
+        "some_domain.with_device_class_2",
+        "foo",
+        attributes={"device_class": "some_device_class"},
+    )
+    hass.states.async_set("domain.is_unavailable", "unavailable", attributes={})
+    hass.states.async_set("domain.is_unknown", "unknown", attributes={})
+
+    config_entry = MockConfigEntry(domain="light")
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        translation_key="translation_key",
+    )
+    hass.states.async_set("light.hue_5678", "on", attributes={})
+
+    tpl = template.Template(
+        '{{ state_translated("switch.without_translations") }}', hass
+    )
+    assert tpl.async_render() == "on"
+
+    tp2 = template.Template(
+        '{{ state_translated("binary_sensor.without_device_class") }}', hass
+    )
+    assert tp2.async_render() == "On"
+
+    tpl3 = template.Template(
+        '{{ state_translated("binary_sensor.with_device_class") }}', hass
+    )
+    assert tpl3.async_render() == "Detected"
+
+    tpl4 = template.Template(
+        '{{ state_translated("binary_sensor.with_unknown_device_class") }}', hass
+    )
+    assert tpl4.async_render() == "On"
+
+    with pytest.raises(TemplateError):
+        template.Template(
+            '{{ state_translated("contextfunction") }}', hass
+        ).async_render()
+
+    tpl6 = template.Template('{{ state_translated("switch.invalid") }}', hass)
+    assert tpl6.async_render() == "unknown"
+
+    with pytest.raises(TemplateError):
+        template.Template('{{ state_translated("-invalid") }}', hass).async_render()
+
+    def mock_get_cached_translations(
+        _hass: HomeAssistant,
+        _language: str,
+        category: str,
+        _integrations: Iterable[str] | None = None,
+    ):
+        if category == "entity":
+            return {
+                "component.hue.entity.light.translation_key.state.on": "state_is_on"
+            }
+        if category == "state":
+            return {
+                "component.some_domain.state.some_device_class.off": "state_is_off",
+                "component.some_domain.state._.foo": "state_is_foo",
+            }
+        return {}
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        side_effect=mock_get_cached_translations,
+    ):
+        tpl8 = template.Template('{{ state_translated("light.hue_5678") }}', hass)
+        assert tpl8.async_render() == "state_is_on"
+
+        tpl9 = template.Template(
+            '{{ state_translated("some_domain.with_device_class_1") }}', hass
+        )
+        assert tpl9.async_render() == "state_is_off"
+
+        tpl10 = template.Template(
+            '{{ state_translated("some_domain.with_device_class_2") }}', hass
+        )
+        assert tpl10.async_render() == "state_is_foo"
+
+    tpl11 = template.Template('{{ state_translated("domain.is_unavailable") }}', hass)
+    assert tpl11.async_render() == "unavailable"
+
+    tpl12 = template.Template('{{ state_translated("domain.is_unknown") }}', hass)
+    assert tpl12.async_render() == "unknown"
+
+
 def test_has_value(hass: HomeAssistant) -> None:
     """Test has_value method."""
     hass.states.async_set("test.value1", 1)
@@ -1853,7 +2124,7 @@ def test_has_value(hass: HomeAssistant) -> None:
 def test_now(mock_is_safe, hass: HomeAssistant) -> None:
     """Test now method."""
     now = dt_util.now()
-    with patch("homeassistant.util.dt.now", return_value=now):
+    with freeze_time(now):
         info = template.Template("{{ now().isoformat() }}", hass).async_render_to_info()
         assert now.isoformat() == info.result()
 
@@ -1867,7 +2138,7 @@ def test_now(mock_is_safe, hass: HomeAssistant) -> None:
 def test_utcnow(mock_is_safe, hass: HomeAssistant) -> None:
     """Test now method."""
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
+    with freeze_time(utcnow):
         info = template.Template(
             "{{ utcnow().isoformat() }}", hass
         ).async_render_to_info()
@@ -1954,7 +2225,7 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
     relative_time_template = (
         '{{relative_time(strptime("2000-01-01 09:00:00", "%Y-%m-%d %H:%M:%S"))}}'
     )
-    with patch("homeassistant.util.dt.now", return_value=now):
+    with freeze_time(now):
         result = template.Template(
             relative_time_template,
             hass,
@@ -2026,7 +2297,7 @@ def test_relative_time(mock_is_safe, hass: HomeAssistant) -> None:
 def test_timedelta(mock_is_safe, hass: HomeAssistant) -> None:
     """Test relative_time method."""
     now = datetime.strptime("2000-01-01 10:00:00 +00:00", "%Y-%m-%d %H:%M:%S %z")
-    with patch("homeassistant.util.dt.now", return_value=now):
+    with freeze_time(now):
         result = template.Template(
             "{{timedelta(seconds=120)}}",
             hass,
@@ -2305,6 +2576,22 @@ def test_bitwise_or(hass: HomeAssistant) -> None:
         hass,
     )
     assert tpl.async_render() == 8 | 2
+
+
+@pytest.mark.parametrize(
+    ("value", "xor_value", "expected"),
+    [(8, 8, 0), (10, 2, 8), (0x8000, 0xFAFA, 31482), (True, False, 1), (True, True, 0)],
+)
+def test_bitwise_xor(
+    hass: HomeAssistant, value: Any, xor_value: Any, expected: int
+) -> None:
+    """Test bitwise_xor method."""
+    assert (
+        template.Template("{{ value | bitwise_xor(xor_value) }}", hass).async_render(
+            {"value": value, "xor_value": xor_value}
+        )
+        == expected
+    )
 
 
 def test_pack(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
@@ -4080,9 +4367,10 @@ def test_state_with_unit(hass: HomeAssistant) -> None:
     assert tpl.async_render() == ""
 
 
-def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
+def test_state_with_unit_and_rounding(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test formatting the state rounded and with unit."""
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get_or_create(
         "sensor", "test", "very_unique", suggested_object_id="test"
     )
@@ -4153,6 +4441,7 @@ def test_state_with_unit_and_rounding(hass: HomeAssistant) -> None:
 )
 def test_state_with_unit_and_rounding_options(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     rounded: str,
     with_unit: str,
     output1_1,
@@ -4161,7 +4450,6 @@ def test_state_with_unit_and_rounding_options(
     output2_2,
 ) -> None:
     """Test formatting the state rounded and with unit."""
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get_or_create(
         "sensor", "test", "very_unique", suggested_object_id="test"
     )

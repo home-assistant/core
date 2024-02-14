@@ -57,6 +57,13 @@
       }
     }
   },
+  "entity": {
+    "button": {
+      "scan_clients": {
+        "name": "Scan clients"
+      }
+    }
+  },
   "services": {
     "refresh_library": {
       "name": "Refresh library",

@@ -21,6 +21,17 @@ from bluetooth_adapters import (
     adapter_unique_name,
     get_adapters,
 )
+from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
+from habluetooth import (
+    BaseHaRemoteScanner,
+    BaseHaScanner,
+    BluetoothScannerDevice,
+    BluetoothScanningMode,
+    HaBluetoothConnector,
+    HaScanner,
+    ScannerStartError,
+    set_manager,
+)
 from home_assistant_bluetooth import BluetoothServiceInfo, BluetoothServiceInfoBleak
 
 from homeassistant.components import usb
@@ -59,7 +70,6 @@ from .api import (
     async_set_fallback_availability_interval,
     async_track_unavailable,
 )
-from .base_scanner import BaseHaRemoteScanner, BaseHaScanner, BluetoothScannerDevice
 from .const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_ADAPTER,
@@ -71,15 +81,9 @@ from .const import (
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
 )
-from .manager import BluetoothManager
+from .manager import HomeAssistantBluetoothManager
 from .match import BluetoothCallbackMatcher, IntegrationMatcher
-from .models import (
-    BluetoothCallback,
-    BluetoothChange,
-    BluetoothScanningMode,
-    HaBluetoothConnector,
-)
-from .scanner import MONOTONIC_TIME, HaScanner, ScannerStartError
+from .models import BluetoothCallback, BluetoothChange
 from .storage import BluetoothStorage
 
 if TYPE_CHECKING:
@@ -102,8 +106,9 @@ __all__ = [
     "async_scanner_by_source",
     "async_scanner_count",
     "async_scanner_devices_by_address",
+    "async_get_advertisement_callback",
     "BaseHaScanner",
-    "BaseHaRemoteScanner",
+    "HomeAssistantRemoteScanner",
     "BluetoothCallbackMatcher",
     "BluetoothChange",
     "BluetoothServiceInfo",
@@ -112,6 +117,7 @@ __all__ = [
     "BluetoothCallback",
     "BluetoothScannerDevice",
     "HaBluetoothConnector",
+    "BaseHaRemoteScanner",
     "SOURCE_LOCAL",
     "FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS",
     "MONOTONIC_TIME",
@@ -139,11 +145,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await bluetooth_storage.async_setup()
     slot_manager = BleakSlotManager()
     await slot_manager.async_setup()
-    manager = BluetoothManager(
+    manager = HomeAssistantBluetoothManager(
         hass, integration_matcher, bluetooth_adapters, bluetooth_storage, slot_manager
     )
+    set_manager(manager)
     await manager.async_setup()
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.async_stop)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, lambda event: manager.async_stop()
+    )
     hass.data[DATA_MANAGER] = models.MANAGER = manager
     adapters = await manager.async_get_bluetooth_adapters()
 
@@ -279,9 +288,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     passive = entry.options.get(CONF_PASSIVE)
     mode = BluetoothScanningMode.PASSIVE if passive else BluetoothScanningMode.ACTIVE
-    new_info_callback = async_get_advertisement_callback(hass)
-    manager: BluetoothManager = hass.data[DATA_MANAGER]
-    scanner = HaScanner(hass, mode, adapter, address, new_info_callback)
+    manager: HomeAssistantBluetoothManager = hass.data[DATA_MANAGER]
+    scanner = HaScanner(mode, adapter, address)
     try:
         scanner.async_setup()
     except RuntimeError as err:
@@ -295,7 +303,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     adapters = await manager.async_get_bluetooth_adapters()
     details = adapters[adapter]
     slots: int = details.get(ADAPTER_CONNECTION_SLOTS) or DEFAULT_CONNECTION_SLOTS
-    entry.async_on_unload(async_register_scanner(hass, scanner, True, slots))
+    entry.async_on_unload(async_register_scanner(hass, scanner, connection_slots=slots))
     await async_update_device(hass, entry, adapter, details)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = scanner
     entry.async_on_unload(entry.add_update_listener(async_update_listener))

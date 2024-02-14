@@ -89,10 +89,14 @@ class SmartTubSensor(SmartTubSensorBase, SensorEntity):
     """Generic class for SmartTub status sensors."""
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the current state of the sensor."""
+        if self._state is None:
+            return None
+
         if isinstance(self._state, Enum):
             return self._state.name.lower()
+
         return self._state.lower()
 
 

@@ -17,6 +17,7 @@ async def test_entry_diagnostics(
         "entry": {
             "entry_id": config_entry.entry_id,
             "version": 1,
+            "minor_version": 1,
             "domain": "purpleair",
             "title": REDACTED,
             "data": {

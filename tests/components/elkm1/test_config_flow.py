@@ -229,9 +229,7 @@ async def test_form_user_with_insecure_elk_times_out(hass: HomeAssistant) -> Non
         0,
     ), patch(
         "homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT", 0
-    ), _patch_discovery(), _patch_elk(
-        elk=mocked_elk
-    ):
+    ), _patch_discovery(), _patch_elk(elk=mocked_elk):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

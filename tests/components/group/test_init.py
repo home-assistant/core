@@ -1139,7 +1139,7 @@ async def test_group_alarm(hass: HomeAssistant) -> None:
     hass.states.async_set("alarm_control_panel.one", "armed_away")
     hass.states.async_set("alarm_control_panel.two", "armed_home")
     hass.states.async_set("alarm_control_panel.three", "armed_away")
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     assert await async_setup_component(
         hass,
@@ -1187,7 +1187,7 @@ async def test_group_vacuum_off(hass: HomeAssistant) -> None:
     hass.states.async_set("vacuum.one", "docked")
     hass.states.async_set("vacuum.two", "off")
     hass.states.async_set("vacuum.three", "off")
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     assert await async_setup_component(
         hass,
@@ -1280,7 +1280,7 @@ async def test_switch_removed(hass: HomeAssistant) -> None:
     hass.states.async_set("switch.two", "off")
     hass.states.async_set("switch.three", "on")
 
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
     assert await async_setup_component(
         hass,
         "group",
@@ -1409,7 +1409,7 @@ async def test_group_that_references_a_group_of_lights(hass: HomeAssistant) -> N
         "light.living_front_ri",
         "light.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "off")
@@ -1443,7 +1443,7 @@ async def test_group_that_references_a_group_of_covers(hass: HomeAssistant) -> N
         "cover.living_front_ri",
         "cover.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "closed")
@@ -1479,7 +1479,7 @@ async def test_group_that_references_two_groups_of_covers(hass: HomeAssistant) -
         "cover.living_front_ri",
         "cover.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "closed")
@@ -1523,7 +1523,7 @@ async def test_group_that_references_two_types_of_groups(hass: HomeAssistant) ->
         "device_tracker.living_front_ri",
         "device_tracker.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in group_1_entity_ids:
         hass.states.async_set(entity_id, "closed")
@@ -1641,13 +1641,12 @@ async def test_plant_group(hass: HomeAssistant) -> None:
 )
 async def test_setup_and_remove_config_entry(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     group_type: str,
     member_state: str,
     extra_options: dict[str, Any],
 ) -> None:
     """Test removing a config entry."""
-    registry = er.async_get(hass)
-
     members1 = [f"{group_type}.one", f"{group_type}.two"]
 
     for member in members1:
@@ -1672,7 +1671,7 @@ async def test_setup_and_remove_config_entry(
     # Check the state and entity registry entry are present
     state = hass.states.get(f"{group_type}.bed_room")
     assert state.attributes["entity_id"] == members1
-    assert registry.async_get(f"{group_type}.bed_room") is not None
+    assert entity_registry.async_get(f"{group_type}.bed_room") is not None
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(group_config_entry.entry_id)
@@ -1680,7 +1679,7 @@ async def test_setup_and_remove_config_entry(
 
     # Check the state and entity registry entry are removed
     assert hass.states.get(f"{group_type}.bed_room") is None
-    assert registry.async_get(f"{group_type}.bed_room") is None
+    assert entity_registry.async_get(f"{group_type}.bed_room") is None
 
 
 @pytest.mark.parametrize(
@@ -1706,6 +1705,7 @@ async def test_setup_and_remove_config_entry(
 )
 async def test_unhide_members_on_remove(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     group_type: str,
     extra_options: dict[str, Any],
     hide_members: bool,
@@ -1713,10 +1713,7 @@ async def test_unhide_members_on_remove(
     hidden_by: str,
 ) -> None:
     """Test removing a config entry."""
-    registry = er.async_get(hass)
-
-    registry = er.async_get(hass)
-    entry1 = registry.async_get_or_create(
+    entry1 = entity_registry.async_get_or_create(
         group_type,
         "test",
         "unique1",
@@ -1725,7 +1722,7 @@ async def test_unhide_members_on_remove(
     )
     assert entry1.entity_id == f"{group_type}.one"
 
-    entry3 = registry.async_get_or_create(
+    entry3 = entity_registry.async_get_or_create(
         group_type,
         "test",
         "unique3",
@@ -1734,7 +1731,7 @@ async def test_unhide_members_on_remove(
     )
     assert entry3.entity_id == f"{group_type}.three"
 
-    entry4 = registry.async_get_or_create(
+    entry4 = entity_registry.async_get_or_create(
         group_type,
         "test",
         "unique4",
@@ -1766,12 +1763,12 @@ async def test_unhide_members_on_remove(
 
     # Remove one entity registry entry, to make sure this does not trip up config entry
     # removal
-    registry.async_remove(entry4.entity_id)
+    entity_registry.async_remove(entry4.entity_id)
 
     # Remove the config entry
     assert await hass.config_entries.async_remove(group_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Check the group members are unhidden
-    assert registry.async_get(f"{group_type}.one").hidden_by == hidden_by
-    assert registry.async_get(f"{group_type}.three").hidden_by == hidden_by
+    assert entity_registry.async_get(f"{group_type}.one").hidden_by == hidden_by
+    assert entity_registry.async_get(f"{group_type}.three").hidden_by == hidden_by

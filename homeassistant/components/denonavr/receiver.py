@@ -5,6 +5,7 @@ from collections.abc import Callable
 import logging
 
 from denonavr import DenonAVR
+import httpx
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class ConnectDenonAVR:
         zone3: bool,
         use_telnet: bool,
         update_audyssey: bool,
-        async_client_getter: Callable,
+        async_client_getter: Callable[[], httpx.AsyncClient],
     ) -> None:
         """Initialize the class."""
         self._async_client_getter = async_client_getter

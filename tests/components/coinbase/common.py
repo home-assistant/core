@@ -6,7 +6,12 @@ from homeassistant.components.coinbase.const import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 
-from .const import GOOD_EXCHANGE_RATE, GOOD_EXCHANGE_RATE_2, MOCK_ACCOUNTS_RESPONSE
+from .const import (
+    GOOD_CURRENCY_2,
+    GOOD_EXCHANGE_RATE,
+    GOOD_EXCHANGE_RATE_2,
+    MOCK_ACCOUNTS_RESPONSE,
+)
 
 from tests.common import MockConfigEntry
 
@@ -60,7 +65,11 @@ def mock_get_exchange_rates():
     """Return a heavily reduced mock list of exchange rates for testing."""
     return {
         "currency": "USD",
-        "rates": {GOOD_EXCHANGE_RATE_2: "0.109", GOOD_EXCHANGE_RATE: "0.00002"},
+        "rates": {
+            GOOD_CURRENCY_2: "1.0",
+            GOOD_EXCHANGE_RATE_2: "0.109",
+            GOOD_EXCHANGE_RATE: "0.00002",
+        },
     }
 
 

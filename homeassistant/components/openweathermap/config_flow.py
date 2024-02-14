@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
@@ -17,7 +18,6 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    CONF_LANGUAGE,
     CONFIG_FLOW_VERSION,
     DEFAULT_FORECAST_MODE,
     DEFAULT_LANGUAGE,

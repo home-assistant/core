@@ -152,7 +152,7 @@ _HOMEKIT_CONFIG_UPDATE_TIME = (
 
 
 def _has_all_unique_names_and_ports(
-    bridges: list[dict[str, Any]]
+    bridges: list[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """Validate that each homekit bridge configured has a unique name."""
     names = [bridge[CONF_NAME] for bridge in bridges]
@@ -353,7 +353,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hass.data[DOMAIN][entry.entry_id] = entry_data
 
-    if hass.state == CoreState.running:
+    if hass.state is CoreState.running:
         await homekit.async_start()
     else:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, homekit.async_start)

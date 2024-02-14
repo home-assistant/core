@@ -1,4 +1,4 @@
-"""Constants and mock for the twkinly component tests."""
+"""Constants and mock for the twinkly component tests."""
 
 
 from aiohttp.client_exceptions import ClientConnectionError

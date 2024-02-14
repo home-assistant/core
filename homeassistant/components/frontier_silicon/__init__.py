@@ -6,11 +6,11 @@ import logging
 from afsapi import AFSAPI, ConnectionError as FSConnectionError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_PIN, CONF_WEBFSAPI_URL, DOMAIN
+from .const import CONF_WEBFSAPI_URL, DOMAIN
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 

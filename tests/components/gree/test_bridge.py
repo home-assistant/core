@@ -1,7 +1,7 @@
 """Tests for gree component."""
 from datetime import timedelta
-from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.climate import DOMAIN
@@ -24,7 +24,7 @@ def mock_now():
 
 
 async def test_discovery_after_setup(
-    hass: HomeAssistant, discovery, device, mock_now
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, discovery, device, mock_now
 ) -> None:
     """Test gree devices don't change after multiple discoveries."""
     mock_device_1 = build_device_mock(
@@ -58,8 +58,8 @@ async def test_discovery_after_setup(
     device.side_effect = [mock_device_1, mock_device_2]
 
     next_update = mock_now + timedelta(minutes=6)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
+    freezer.move_to(next_update)
+    async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done()
 
     assert discovery.return_value.scan_count == 2

@@ -18,14 +18,13 @@ from homeassistant.components.mqtt import (
     ReceivePayloadType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_DEVICE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_BAUD_RATE,
-    CONF_DEVICE,
     CONF_GATEWAY_TYPE,
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,
@@ -110,7 +109,7 @@ async def try_connect(
             async with asyncio.timeout(GATEWAY_READY_TIMEOUT):
                 await gateway_ready.wait()
                 return True
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.info("Try gateway connect failed with timeout")
             return False
         finally:
@@ -302,7 +301,7 @@ async def _gw_start(
     try:
         async with asyncio.timeout(GATEWAY_READY_TIMEOUT):
             await gateway_ready.wait()
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.warning(
             "Gateway %s not connected after %s secs so continuing with setup",
             entry.data[CONF_DEVICE],

@@ -75,7 +75,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching AccuWeather data API."""
 
     def __init__(

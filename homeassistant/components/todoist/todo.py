@@ -1,7 +1,10 @@
 """A todo platform for Todoist."""
 
 import asyncio
-from typing import cast
+import datetime
+from typing import Any, cast
+
+from todoist_api_python.models import Task
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -13,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import TodoistCoordinator
@@ -30,6 +34,31 @@ async def async_setup_entry(
     )
 
 
+def _task_api_data(item: TodoItem, api_data: Task | None = None) -> dict[str, Any]:
+    """Convert a TodoItem to the set of add or update arguments."""
+    item_data: dict[str, Any] = {
+        "content": item.summary,
+        # Description needs to be empty string to be cleared
+        "description": item.description or "",
+    }
+    if due := item.due:
+        if isinstance(due, datetime.datetime):
+            item_data["due_datetime"] = due.isoformat()
+        else:
+            item_data["due_date"] = due.isoformat()
+        # In order to not lose any recurrence metadata for the task, we need to
+        # ensure that we send the `due_string` param if the task has it set.
+        # NOTE: It's ok to send stale data for non-recurring tasks. Any provided
+        # date/datetime will override this string.
+        if api_data and api_data.due:
+            item_data["due_string"] = api_data.due.string
+    else:
+        # Special flag "no date" clears the due date/datetime.
+        # See https://developer.todoist.com/rest/v2/#update-a-task for more.
+        item_data["due_string"] = "no date"
+    return item_data
+
+
 class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntity):
     """A Todoist TodoListEntity."""
 
@@ -37,6 +66,9 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
         TodoListEntityFeature.CREATE_TODO_ITEM
         | TodoListEntityFeature.UPDATE_TODO_ITEM
         | TodoListEntityFeature.DELETE_TODO_ITEM
+        | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+        | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
+        | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
     )
 
     def __init__(
@@ -62,15 +94,28 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
             for task in self.coordinator.data:
                 if task.project_id != self._project_id:
                     continue
+                if task.parent_id is not None:
+                    # Filter out sub-tasks until they are supported by the UI.
+                    continue
                 if task.is_completed:
                     status = TodoItemStatus.COMPLETED
                 else:
                     status = TodoItemStatus.NEEDS_ACTION
+                due: datetime.date | datetime.datetime | None = None
+                if task_due := task.due:
+                    if task_due.datetime:
+                        due = dt_util.as_local(
+                            datetime.datetime.fromisoformat(task_due.datetime)
+                        )
+                    elif task_due.date:
+                        due = datetime.date.fromisoformat(task_due.date)
                 items.append(
                     TodoItem(
                         summary=task.content,
                         uid=task.id,
                         status=status,
+                        due=due,
+                        description=task.description or None,  # Don't use empty string
                     )
                 )
             self._attr_todo_items = items
@@ -81,7 +126,7 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
         if item.status != TodoItemStatus.NEEDS_ACTION:
             raise ValueError("Only active tasks may be created.")
         await self.coordinator.api.add_task(
-            content=item.summary or "",
+            **_task_api_data(item),
             project_id=self._project_id,
         )
         await self.coordinator.async_refresh()
@@ -89,13 +134,20 @@ class TodoistTodoListEntity(CoordinatorEntity[TodoistCoordinator], TodoListEntit
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a To-do item."""
         uid: str = cast(str, item.uid)
-        if item.summary:
-            await self.coordinator.api.update_task(task_id=uid, content=item.summary)
+        api_data = next((d for d in self.coordinator.data if d.id == uid), None)
+        if update_data := _task_api_data(item, api_data):
+            await self.coordinator.api.update_task(task_id=uid, **update_data)
         if item.status is not None:
-            if item.status == TodoItemStatus.COMPLETED:
-                await self.coordinator.api.close_task(task_id=uid)
-            else:
-                await self.coordinator.api.reopen_task(task_id=uid)
+            # Only update status if changed
+            for existing_item in self._attr_todo_items or ():
+                if existing_item.uid != item.uid:
+                    continue
+
+                if item.status != existing_item.status:
+                    if item.status == TodoItemStatus.COMPLETED:
+                        await self.coordinator.api.close_task(task_id=uid)
+                    else:
+                        await self.coordinator.api.reopen_task(task_id=uid)
         await self.coordinator.async_refresh()
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:

@@ -16,7 +16,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DEFAULT_CHANNEL, DOMAIN
-from .util import OTBRData, get_allowed_channel, update_issues
+from .util import (
+    OTBRData,
+    compose_default_network_name,
+    generate_random_pan_id,
+    get_allowed_channel,
+    update_issues,
+)
 
 
 @callback
@@ -99,10 +105,13 @@ async def websocket_create_network(
         connection.send_error(msg["id"], "factory_reset_failed", str(exc))
         return
 
+    pan_id = generate_random_pan_id()
     try:
         await data.create_active_dataset(
             python_otbr_api.ActiveDataSet(
-                channel=channel, network_name="home-assistant"
+                channel=channel,
+                network_name=compose_default_network_name(pan_id),
+                pan_id=pan_id,
             )
         )
     except HomeAssistantError as exc:

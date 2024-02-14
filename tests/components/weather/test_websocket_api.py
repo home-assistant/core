@@ -1,11 +1,11 @@
 """Test the weather websocket API."""
-from homeassistant.components.weather import WeatherEntityFeature
+from homeassistant.components.weather import Forecast, WeatherEntityFeature
 from homeassistant.components.weather.const import DOMAIN
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import create_entity
+from . import MockWeatherTest, create_entity
 
 from tests.typing import WebSocketGenerator
 
@@ -40,16 +40,23 @@ async def test_device_class_units(
 async def test_subscribe_forecast(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    enable_custom_integrations: None,
+    config_flow_fixture: None,
 ) -> None:
     """Test multiple forecast."""
 
-    entity0 = await create_entity(
-        hass,
-        native_temperature=38,
-        native_temperature_unit=UnitOfTemperature.CELSIUS,
-        supported_features=WeatherEntityFeature.FORECAST_DAILY,
-    )
+    class MockWeatherMockForecast(MockWeatherTest):
+        """Mock weather class."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            """Return the forecast_daily."""
+            return self.forecast_list
+
+    kwargs = {
+        "native_temperature": 38,
+        "native_temperature_unit": UnitOfTemperature.CELSIUS,
+        "supported_features": WeatherEntityFeature.FORECAST_DAILY,
+    }
+    weather_entity = await create_entity(hass, MockWeatherMockForecast, None, **kwargs)
 
     client = await hass_ws_client(hass)
 
@@ -57,7 +64,7 @@ async def test_subscribe_forecast(
         {
             "type": "weather/subscribe_forecast",
             "forecast_type": "daily",
-            "entity_id": entity0.entity_id,
+            "entity_id": weather_entity.entity_id,
         }
     )
     msg = await client.receive_json()
@@ -82,16 +89,16 @@ async def test_subscribe_forecast(
         ],
     }
 
-    await entity0.async_update_listeners(None)
+    await weather_entity.async_update_listeners(None)
     msg = await client.receive_json()
     assert msg["event"] == forecast
 
-    await entity0.async_update_listeners(["daily"])
+    await weather_entity.async_update_listeners(["daily"])
     msg = await client.receive_json()
     assert msg["event"] == forecast
 
-    entity0.forecast_list = None
-    await entity0.async_update_listeners(None)
+    weather_entity.forecast_list = None
+    await weather_entity.async_update_listeners(None)
     msg = await client.receive_json()
     assert msg["event"] == {"type": "daily", "forecast": None}
 
@@ -99,7 +106,6 @@ async def test_subscribe_forecast(
 async def test_subscribe_forecast_unknown_entity(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    enable_custom_integrations: None,
 ) -> None:
     """Test multiple forecast."""
 
@@ -125,23 +131,25 @@ async def test_subscribe_forecast_unknown_entity(
 async def test_subscribe_forecast_unsupported(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    enable_custom_integrations: None,
+    config_flow_fixture: None,
 ) -> None:
     """Test multiple forecast."""
 
-    entity0 = await create_entity(
-        hass,
-        native_temperature=38,
-        native_temperature_unit=UnitOfTemperature.CELSIUS,
-    )
+    class MockWeatherMock(MockWeatherTest):
+        """Mock weather class."""
 
+    kwargs = {
+        "native_temperature": 38,
+        "native_temperature_unit": UnitOfTemperature.CELSIUS,
+    }
+    weather_entity = await create_entity(hass, MockWeatherMock, None, **kwargs)
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
         {
             "type": "weather/subscribe_forecast",
             "forecast_type": "daily",
-            "entity_id": entity0.entity_id,
+            "entity_id": weather_entity.entity_id,
         }
     )
     msg = await client.receive_json()

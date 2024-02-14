@@ -39,7 +39,7 @@ from .const import (
     WEBHOOK_PUSH_TYPE,
 )
 from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoDevice
-from .netatmo_entity_base import NetatmoBase
+from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ async def async_setup_entry(
     )
 
 
-class NetatmoCamera(NetatmoBase, Camera):
+class NetatmoCamera(NetatmoBaseEntity, Camera):
     """Representation of a Netatmo camera."""
 
     _attr_brand = MANUFACTURER

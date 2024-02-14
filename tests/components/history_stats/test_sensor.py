@@ -1664,7 +1664,9 @@ async def test_history_stats_handles_floored_timestamps(
     assert last_times == (start_time, start_time + timedelta(hours=2))
 
 
-async def test_unique_id(recorder_mock: Recorder, hass: HomeAssistant) -> None:
+async def test_unique_id(
+    recorder_mock: Recorder, hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique_id property."""
 
     config = {
@@ -1682,5 +1684,7 @@ async def test_unique_id(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    registry = er.async_get(hass)
-    assert registry.async_get("sensor.test").unique_id == "some_history_stats_unique_id"
+    assert (
+        entity_registry.async_get("sensor.test").unique_id
+        == "some_history_stats_unique_id"
+    )

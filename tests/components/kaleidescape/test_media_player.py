@@ -170,11 +170,11 @@ async def test_services(
 
 async def test_device(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     mock_device: MagicMock,
     mock_integration: MockConfigEntry,
 ) -> None:
     """Test device attributes."""
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(
         identifiers={("kaleidescape", MOCK_SERIAL)}
     )

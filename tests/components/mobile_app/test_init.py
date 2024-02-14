@@ -1,16 +1,34 @@
 """Tests for the mobile app integration."""
-from homeassistant.components.mobile_app.const import DATA_DELETED_IDS, DOMAIN
+from collections.abc import Awaitable, Callable
+from typing import Any
+from unittest.mock import Mock, patch
+
+import pytest
+
+from homeassistant.components.mobile_app.const import (
+    ATTR_DEVICE_NAME,
+    CONF_CLOUDHOOK_URL,
+    CONF_USER_ID,
+    DATA_DELETED_IDS,
+    DOMAIN,
+)
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import CALL_SERVICE
+from .const import CALL_SERVICE, REGISTER_CLEARTEXT
 
-from tests.common import async_mock_service
+from tests.common import (
+    MockConfigEntry,
+    MockUser,
+    async_mock_cloud_connection_status,
+    async_mock_service,
+)
 
 
-async def test_unload_unloads(
-    hass: HomeAssistant, create_registrations, webhook_client
-) -> None:
+@pytest.mark.usefixtures("create_registrations")
+async def test_unload_unloads(hass: HomeAssistant, webhook_client) -> None:
     """Test we clean up when we unload."""
     # Second config entry is the one without encryption
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
@@ -28,14 +46,113 @@ async def test_unload_unloads(
     assert len(calls) == 1
 
 
-async def test_remove_entry(hass: HomeAssistant, create_registrations) -> None:
+@pytest.mark.usefixtures("create_registrations")
+async def test_remove_entry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test we clean up when we remove entry."""
     for config_entry in hass.config_entries.async_entries("mobile_app"):
         await hass.config_entries.async_remove(config_entry.entry_id)
         assert config_entry.data["webhook_id"] in hass.data[DOMAIN][DATA_DELETED_IDS]
 
-    dev_reg = dr.async_get(hass)
-    assert len(dev_reg.devices) == 0
+    assert len(device_registry.devices) == 0
+    assert len(entity_registry.entities) == 0
 
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 0
+
+async def _test_create_cloud_hook(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    additional_config: dict[str, Any],
+    async_active_subscription_return_value: bool,
+    additional_steps: Callable[[ConfigEntry, Mock, str], Awaitable[None]],
+) -> None:
+    config_entry = MockConfigEntry(
+        data={
+            **REGISTER_CLEARTEXT,
+            CONF_WEBHOOK_ID: "test-webhook-id",
+            ATTR_DEVICE_NAME: "Test",
+            ATTR_DEVICE_ID: "Test",
+            CONF_USER_ID: hass_admin_user.id,
+            **additional_config,
+        },
+        domain=DOMAIN,
+        title="Test",
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.cloud.async_active_subscription",
+        return_value=async_active_subscription_return_value,
+    ), patch(
+        "homeassistant.components.cloud.async_is_connected", return_value=True
+    ), patch(
+        "homeassistant.components.cloud.async_get_or_create_cloudhook", autospec=True
+    ) as mock_async_get_or_create_cloudhook:
+        cloud_hook = "https://hook-url"
+        mock_async_get_or_create_cloudhook.return_value = cloud_hook
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state is ConfigEntryState.LOADED
+        await additional_steps(
+            config_entry, mock_async_get_or_create_cloudhook, cloud_hook
+        )
+
+
+async def test_create_cloud_hook_on_setup(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test creating a cloud hook during setup."""
+
+    async def additional_steps(
+        config_entry: ConfigEntry, mock_create_cloudhook: Mock, cloud_hook: str
+    ) -> None:
+        assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
+        mock_create_cloudhook.assert_called_once_with(
+            hass, config_entry.data[CONF_WEBHOOK_ID]
+        )
+
+    await _test_create_cloud_hook(hass, hass_admin_user, {}, True, additional_steps)
+
+
+async def test_create_cloud_hook_aleady_exists(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test creating a cloud hook is not called, when a cloud hook already exists."""
+    cloud_hook = "https://hook-url-already-exists"
+
+    async def additional_steps(
+        config_entry: ConfigEntry, mock_create_cloudhook: Mock, _: str
+    ) -> None:
+        assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
+        mock_create_cloudhook.assert_not_called()
+
+    await _test_create_cloud_hook(
+        hass, hass_admin_user, {CONF_CLOUDHOOK_URL: cloud_hook}, True, additional_steps
+    )
+
+
+async def test_create_cloud_hook_after_connection(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test creating a cloud hook when connected to the cloud."""
+
+    async def additional_steps(
+        config_entry: ConfigEntry, mock_create_cloudhook: Mock, cloud_hook: str
+    ) -> None:
+        assert CONF_CLOUDHOOK_URL not in config_entry.data
+        mock_create_cloudhook.assert_not_called()
+
+        async_mock_cloud_connection_status(hass, True)
+        await hass.async_block_till_done()
+        assert config_entry.data[CONF_CLOUDHOOK_URL] == cloud_hook
+        mock_create_cloudhook.assert_called_once_with(
+            hass, config_entry.data[CONF_WEBHOOK_ID]
+        )
+
+    await _test_create_cloud_hook(hass, hass_admin_user, {}, False, additional_steps)

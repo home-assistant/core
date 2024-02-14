@@ -1,0 +1,385 @@
+# serializer version: 1
+# name: test_entity[climate.bureau-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 7,
+      'preset_modes': list([
+        'away',
+        'boost',
+        'Frost Guard',
+        'Schedule',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.bureau',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Bureau',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '222452125-DeviceType.OTM',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[climate.bureau-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'friendly_name': 'Bureau',
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 7,
+      'preset_modes': list([
+        'away',
+        'boost',
+        'Frost Guard',
+        'Schedule',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.bureau',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_entity[climate.cocina-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 7,
+      'preset_modes': list([
+        'away',
+        'boost',
+        'Frost Guard',
+        'Schedule',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.cocina',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cocina',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '2940411577-DeviceType.NRV',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[climate.cocina-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'current_temperature': 27,
+      'friendly_name': 'Cocina',
+      'heating_power_request': 0,
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 7,
+      'preset_mode': 'Frost Guard',
+      'preset_modes': list([
+        'away',
+        'boost',
+        'Frost Guard',
+        'Schedule',
+      ]),
+      'selected_schedule': 'Default',
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.5,
+      'temperature': 7,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.cocina',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_entity[climate.corridor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 7,
+      'preset_modes': list([
+        'away',
+        'boost',
+        'Frost Guard',
+        'Schedule',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.corridor',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Corridor',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '1002003001-DeviceType.BNS',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[climate.corridor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'current_temperature': 22,
+      'friendly_name': 'Corridor',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 7,
+      'preset_mode': 'Schedule',
+      'preset_modes': list([
+        'away',
+        'boost',
+        'Frost Guard',
+        'Schedule',
+      ]),
+      'selected_schedule': 'Default',
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.5,
+      'temperature': 22,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.corridor',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_entity[climate.entrada-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 7,
+      'preset_modes': list([
+        'away',
+        'boost',
+        'Frost Guard',
+        'Schedule',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.entrada',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Entrada',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '2833524037-DeviceType.NRV',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[climate.entrada-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'current_temperature': 24.5,
+      'friendly_name': 'Entrada',
+      'heating_power_request': 0,
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 7,
+      'preset_mode': 'Frost Guard',
+      'preset_modes': list([
+        'away',
+        'boost',
+        'Frost Guard',
+        'Schedule',
+      ]),
+      'selected_schedule': 'Default',
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.5,
+      'temperature': 7,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.entrada',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_entity[climate.livingroom-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 7,
+      'preset_modes': list([
+        'away',
+        'boost',
+        'Frost Guard',
+        'Schedule',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.livingroom',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Livingroom',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '2746182631-DeviceType.NATherm1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[climate.livingroom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'current_temperature': 19.8,
+      'friendly_name': 'Livingroom',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 30,
+      'min_temp': 7,
+      'preset_mode': 'away',
+      'preset_modes': list([
+        'away',
+        'boost',
+        'Frost Guard',
+        'Schedule',
+      ]),
+      'selected_schedule': 'Default',
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.5,
+      'temperature': 12,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.livingroom',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---

@@ -91,7 +91,9 @@ async def async_setup_entry(
 
 
 @callback
-def async_create_preview_lock(name: str, validated_config: dict[str, Any]) -> LockGroup:
+def async_create_preview_lock(
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
+) -> LockGroup:
     """Create a preview sensor."""
     return LockGroup(
         None,

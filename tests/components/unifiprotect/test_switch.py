@@ -33,11 +33,14 @@ from .utils import (
 CAMERA_SWITCHES_BASIC = [
     d
     for d in CAMERA_SWITCHES
-    if d.name != "Detections: Face"
-    and d.name != "Detections: Package"
-    and d.name != "Detections: License Plate"
-    and d.name != "Detections: Smoke/CO"
-    and d.name != "SSH Enabled"
+    if (
+        not d.name.startswith("Detections:")
+        and d.name != "SSH Enabled"
+        and d.name != "Color Night Vision"
+    )
+    or d.name == "Detections: Motion"
+    or d.name == "Detections: Person"
+    or d.name == "Detections: Vehicle"
 ]
 CAMERA_SWITCHES_NO_EXTRA = [
     d for d in CAMERA_SWITCHES_BASIC if d.name not in ("High FPS", "Privacy Mode")

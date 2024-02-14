@@ -24,14 +24,14 @@ from .const import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class VilfoRequiredKeysMixin:
     """Mixin for required keys."""
 
     api_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class VilfoSensorEntityDescription(SensorEntityDescription, VilfoRequiredKeysMixin):
     """Describes Vilfo sensor entity."""
 

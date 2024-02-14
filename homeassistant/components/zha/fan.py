@@ -13,7 +13,6 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODE,
     FanEntity,
     FanEntityFeature,
-    NotValidPresetModeError,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE, Platform
@@ -21,10 +20,10 @@ from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
 from .core import discovery
 from .core.cluster_handlers import wrap_zigpy_exceptions
@@ -131,11 +130,6 @@ class BaseFan(FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode for the fan."""
-        if preset_mode not in self.preset_modes:
-            raise NotValidPresetModeError(
-                f"The preset_mode {preset_mode} is not a valid preset_mode:"
-                f" {self.preset_modes}"
-            )
         await self._async_set_fan_mode(self.preset_name_to_mode[preset_mode])
 
     @abstractmethod

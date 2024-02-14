@@ -22,14 +22,14 @@ from .coordinator import QswDataCoordinator
 from .entity import QswDataEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class QswButtonDescriptionMixin:
     """Mixin to describe a Button entity."""
 
     press_action: Callable[[QnapQswApi], Awaitable[bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class QswButtonDescription(ButtonEntityDescription, QswButtonDescriptionMixin):
     """Class to describe a Button entity."""
 

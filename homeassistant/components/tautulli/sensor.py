@@ -43,14 +43,14 @@ def get_top_stats(
     return value
 
 
-@dataclass
+@dataclass(frozen=True)
 class TautulliSensorEntityMixin:
     """Mixin for Tautulli sensor."""
 
     value_fn: Callable[[PyTautulliApiHomeStats, PyTautulliApiActivity, str], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TautulliSensorEntityDescription(
     SensorEntityDescription, TautulliSensorEntityMixin
 ):
@@ -151,14 +151,14 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class TautulliSessionSensorEntityMixin:
     """Mixin for Tautulli session sensor."""
 
     value_fn: Callable[[PyTautulliApiSession], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TautulliSessionSensorEntityDescription(
     SensorEntityDescription, TautulliSessionSensorEntityMixin
 ):

@@ -33,7 +33,7 @@ class PingData:
     def __init__(self, hass: HomeAssistant, host: str, count: int) -> None:
         """Initialize the data object."""
         self.hass = hass
-        self._ip_address = host
+        self.ip_address = host
         self._count = count
 
 
@@ -49,10 +49,10 @@ class PingDataICMPLib(PingData):
 
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
-        _LOGGER.debug("ping address: %s", self._ip_address)
+        _LOGGER.debug("ping address: %s", self.ip_address)
         try:
             data = await async_ping(
-                self._ip_address,
+                self.ip_address,
                 count=self._count,
                 timeout=ICMP_TIMEOUT,
                 privileged=self._privileged,
@@ -89,7 +89,7 @@ class PingDataSubProcess(PingData):
             "-c",
             str(self._count),
             "-W1",
-            self._ip_address,
+            self.ip_address,
         ]
 
     async def async_ping(self) -> dict[str, Any] | None:
@@ -141,7 +141,7 @@ class PingDataSubProcess(PingData):
                 assert match is not None
             rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
             return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": rtt_mdev}
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.exception(
                 "Timed out running command: `%s`, after: %ss",
                 self._ping_cmd,

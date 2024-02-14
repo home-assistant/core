@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
@@ -38,34 +39,33 @@ def setup_comp(hass):
     mock_component(hass, "group")
 
 
-async def test_if_fires_using_at(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_using_at(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
+) -> None:
     """Test for firing at."""
     now = dt_util.now()
 
     trigger_dt = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(2)
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.as_utc(time_that_will_not_match_right_away),
-    ):
-        assert await async_setup_component(
-            hass,
-            automation.DOMAIN,
-            {
-                automation.DOMAIN: {
-                    "trigger": {"platform": "time", "at": "5:00:00"},
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": "{{ trigger.platform }} - {{ trigger.now.hour }}",
-                            "id": "{{ trigger.id}}",
-                        },
+    freezer.move_to(time_that_will_not_match_right_away)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "time", "at": "5:00:00"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.platform }} - {{ trigger.now.hour }}",
+                        "id": "{{ trigger.id}}",
                     },
-                }
-            },
-        )
-        await hass.async_block_till_done()
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
@@ -79,7 +79,7 @@ async def test_if_fires_using_at(hass: HomeAssistant, calls) -> None:
     ("has_date", "has_time"), [(True, True), (True, False), (False, True)]
 )
 async def test_if_fires_using_at_input_datetime(
-    hass: HomeAssistant, calls, has_date, has_time
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls, has_date, has_time
 ) -> None:
     """Test for firing at input_datetime."""
     await async_setup_component(
@@ -107,24 +107,22 @@ async def test_if_fires_using_at_input_datetime(
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
     some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{trigger.entity_id}}"
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.as_utc(time_that_will_not_match_right_away),
-    ):
-        assert await async_setup_component(
-            hass,
-            automation.DOMAIN,
-            {
-                automation.DOMAIN: {
-                    "trigger": {"platform": "time", "at": "input_datetime.trigger"},
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {"some": some_data},
-                    },
-                }
-            },
-        )
-        await hass.async_block_till_done()
+
+    freezer.move_to(dt_util.as_utc(time_that_will_not_match_right_away))
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "time", "at": "input_datetime.trigger"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"some": some_data},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
@@ -161,7 +159,9 @@ async def test_if_fires_using_at_input_datetime(
     )
 
 
-async def test_if_fires_using_multiple_at(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_using_multiple_at(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
+) -> None:
     """Test for firing at."""
 
     now = dt_util.now()
@@ -169,26 +169,23 @@ async def test_if_fires_using_multiple_at(hass: HomeAssistant, calls) -> None:
     trigger_dt = now.replace(hour=5, minute=0, second=0, microsecond=0) + timedelta(2)
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.as_utc(time_that_will_not_match_right_away),
-    ):
-        assert await async_setup_component(
-            hass,
-            automation.DOMAIN,
-            {
-                automation.DOMAIN: {
-                    "trigger": {"platform": "time", "at": ["5:00:00", "6:00:00"]},
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {
-                            "some": "{{ trigger.platform }} - {{ trigger.now.hour }}"
-                        },
+    freezer.move_to(dt_util.as_utc(time_that_will_not_match_right_away))
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "time", "at": ["5:00:00", "6:00:00"]},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {
+                        "some": "{{ trigger.platform }} - {{ trigger.now.hour }}"
                     },
-                }
-            },
-        )
-        await hass.async_block_till_done()
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()
@@ -203,7 +200,9 @@ async def test_if_fires_using_multiple_at(hass: HomeAssistant, calls) -> None:
     assert calls[1].data["some"] == "time - 6"
 
 
-async def test_if_not_fires_using_wrong_at(hass: HomeAssistant, calls) -> None:
+async def test_if_not_fires_using_wrong_at(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
+) -> None:
     """YAML translates time values to total seconds.
 
     This should break the before rule.
@@ -214,25 +213,23 @@ async def test_if_not_fires_using_wrong_at(hass: HomeAssistant, calls) -> None:
         year=now.year + 1, hour=1, minute=0, second=0
     )
 
-    with patch(
-        "homeassistant.util.dt.utcnow", return_value=time_that_will_not_match_right_away
-    ):
-        with assert_setup_component(1, automation.DOMAIN):
-            assert await async_setup_component(
-                hass,
-                automation.DOMAIN,
-                {
-                    automation.DOMAIN: {
-                        "trigger": {
-                            "platform": "time",
-                            "at": 3605,
-                            # Total seconds. Hour = 3600 second
-                        },
-                        "action": {"service": "test.automation"},
-                    }
-                },
-            )
-        await hass.async_block_till_done()
+    freezer.move_to(time_that_will_not_match_right_away)
+    with assert_setup_component(1, automation.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "trigger": {
+                        "platform": "time",
+                        "at": 3605,
+                        # Total seconds. Hour = 3600 second
+                    },
+                    "action": {"service": "test.automation"},
+                }
+            },
+        )
+    await hass.async_block_till_done()
     assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
 
     async_fire_time_changed(
@@ -409,7 +406,9 @@ async def test_untrack_time_change(hass: HomeAssistant) -> None:
     assert len(mock_track_time_change.mock_calls) == 3
 
 
-async def test_if_fires_using_at_sensor(hass: HomeAssistant, calls) -> None:
+async def test_if_fires_using_at_sensor(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, calls
+) -> None:
     """Test for firing at sensor time."""
     now = dt_util.now()
 
@@ -424,24 +423,22 @@ async def test_if_fires_using_at_sensor(hass: HomeAssistant, calls) -> None:
     time_that_will_not_match_right_away = trigger_dt - timedelta(minutes=1)
 
     some_data = "{{ trigger.platform }}-{{ trigger.now.day }}-{{ trigger.now.hour }}-{{trigger.entity_id}}"
-    with patch(
-        "homeassistant.util.dt.utcnow",
-        return_value=dt_util.as_utc(time_that_will_not_match_right_away),
-    ):
-        assert await async_setup_component(
-            hass,
-            automation.DOMAIN,
-            {
-                automation.DOMAIN: {
-                    "trigger": {"platform": "time", "at": "sensor.next_alarm"},
-                    "action": {
-                        "service": "test.automation",
-                        "data_template": {"some": some_data},
-                    },
-                }
-            },
-        )
-        await hass.async_block_till_done()
+
+    freezer.move_to(dt_util.as_utc(time_that_will_not_match_right_away))
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "time", "at": "sensor.next_alarm"},
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {"some": some_data},
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
     async_fire_time_changed(hass, trigger_dt + timedelta(seconds=1))
     await hass.async_block_till_done()

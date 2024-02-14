@@ -1,6 +1,5 @@
 """Tests for rest component."""
 
-import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import ssl
@@ -33,7 +32,7 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) ->
     """Test setup with an endpoint that times out that recovers."""
     await async_setup_component(hass, "homeassistant", {})
 
-    respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
+    respx.get("http://localhost").mock(side_effect=TimeoutError())
     assert await async_setup_component(
         hass,
         DOMAIN,
@@ -99,7 +98,7 @@ async def test_setup_with_endpoint_timeout_with_recovery(hass: HomeAssistant) ->
     assert hass.states.get("binary_sensor.binary_sensor2").state == "off"
 
     # Now the end point flakes out again
-    respx.get("http://localhost").mock(side_effect=asyncio.TimeoutError())
+    respx.get("http://localhost").mock(side_effect=TimeoutError())
 
     # Refresh the coordinator
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))

@@ -1,5 +1,7 @@
 """Support for powerwall binary sensors."""
 
+from typing import TYPE_CHECKING
+
 from tesla_powerwall import GridStatus, MeterType
 
 from homeassistant.components.binary_sensor import (
@@ -131,5 +133,9 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Powerwall is charging."""
+        meter = self.data.meters.get_meter(MeterType.BATTERY)
+        # Meter cannot be None because of the available property
+        if TYPE_CHECKING:
+            assert meter is not None
         # is_sending_to returns true for values greater than 100 watts
-        return self.data.meters.get_meter(MeterType.BATTERY).is_sending_to()
+        return meter.is_sending_to()

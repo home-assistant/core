@@ -23,7 +23,9 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 @pytest.fixture
 async def setup_automation(
-    hass, automation_config, stub_blueprint_populate  # noqa: F811
+    hass,
+    automation_config,
+    stub_blueprint_populate,  # noqa: F811
 ):
     """Set up automation integration."""
     assert await async_setup_component(
@@ -337,13 +339,13 @@ async def test_bad_formatted_automations(
 async def test_delete_automation(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
     hass_config_store,
     setup_automation,
 ) -> None:
     """Test deleting an automation."""
-    ent_reg = er.async_get(hass)
 
-    assert len(ent_reg.entities) == 2
+    assert len(entity_registry.entities) == 2
 
     with patch.object(config, "SECTIONS", ["automation"]):
         assert await async_setup_component(hass, "config", {})
@@ -371,7 +373,7 @@ async def test_delete_automation(
 
     assert hass_config_store["automations.yaml"] == [{"id": "moon"}]
 
-    assert len(ent_reg.entities) == 1
+    assert len(entity_registry.entities) == 1
 
 
 @pytest.mark.parametrize("automation_config", ({},))

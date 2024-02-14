@@ -5,6 +5,8 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
+from zigpy.zcl.clusters.hvac import Thermostat
+
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemperature
@@ -20,6 +22,8 @@ from .core.const import (
     CLUSTER_HANDLER_COLOR,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_LEVEL,
+    CLUSTER_HANDLER_OCCUPANCY,
+    CLUSTER_HANDLER_THERMOSTAT,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
@@ -629,7 +633,7 @@ class InovelliRemoteDimmingUpSpeed(ZHANumberConfigurationEntity):
 class InovelliButtonDelay(ZHANumberConfigurationEntity):
     """Inovelli button delay configuration entity."""
 
-    _unique_id_suffix = "dimming_speed_up_local"
+    _unique_id_suffix = "button_delay"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[3]
     _attr_native_min_value: float = 0
@@ -776,6 +780,22 @@ class InovelliAutoShutoffTimer(ZHANumberConfigurationEntity):
     _attr_native_max_value: float = 32767
     _attribute_name = "auto_off_timer"
     _attr_translation_key: str = "auto_off_timer"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM35-SN"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class InovelliQuickStartTime(ZHANumberConfigurationEntity):
+    """Inovelli fan quick start time configuration entity."""
+
+    _unique_id_suffix = "quick_start_time"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 10
+    _attribute_name = "quick_start_time"
+    _attr_translation_key: str = "quick_start_time"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
@@ -931,3 +951,105 @@ class AqaraThermostatAwayTemp(ZHANumberConfigurationEntity):
     _attr_mode: NumberMode = NumberMode.SLIDER
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
     _attr_icon: str = ICONS[0]
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
+    """Local temperature calibration."""
+
+    _unique_id_suffix = "local_temperature_calibration"
+    _attr_native_min_value: float = -2.5
+    _attr_native_max_value: float = 2.5
+    _attr_native_step: float = 0.1
+    _attr_multiplier: float = 0.1
+    _attribute_name = "local_temperature_calibration"
+    _attr_translation_key: str = "local_temperature_calibration"
+
+    _attr_mode: NumberMode = NumberMode.SLIDER
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
+    _attr_icon: str = ICONS[0]
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_OCCUPANCY, models={"SNZB-06P"}
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SonoffPresenceSenorTimeout(ZHANumberConfigurationEntity):
+    """Configuration of Sonoff sensor presence detection timeout."""
+
+    _unique_id_suffix = "presence_detection_timeout"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value: int = 15
+    _attr_native_max_value: int = 60
+    _attribute_name = "ultrasonic_o_to_u_delay"
+    _attr_translation_key: str = "presence_detection_timeout"
+
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_icon: str = "mdi:timer-edit"
+
+
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ZCLTemperatureEntity(ZHANumberConfigurationEntity):
+    """Common entity class for ZCL temperature input."""
+
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
+    _attr_mode: NumberMode = NumberMode.BOX
+    _attr_native_step: float = 0.01
+    _attr_multiplier: float = 0.01
+
+
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ZCLHeatSetpointLimitEntity(ZCLTemperatureEntity):
+    """Min or max heat setpoint setting on thermostats."""
+
+    _attr_icon: str = "mdi:thermostat"
+    _attr_native_step: float = 0.5
+
+    _min_source = Thermostat.AttributeDefs.abs_min_heat_setpoint_limit.name
+    _max_source = Thermostat.AttributeDefs.abs_max_heat_setpoint_limit.name
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the minimum value."""
+        # The spec says 0x954D, which is a signed integer, therefore the value is in decimals
+        min_present_value = self._cluster_handler.cluster.get(self._min_source, -27315)
+        return min_present_value * self._attr_multiplier
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the maximum value."""
+        max_present_value = self._cluster_handler.cluster.get(self._max_source, 0x7FFF)
+        return max_present_value * self._attr_multiplier
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class MaxHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
+    """Max heat setpoint setting on thermostats.
+
+    Optional thermostat attribute.
+    """
+
+    _unique_id_suffix = "max_heat_setpoint_limit"
+    _attribute_name: str = "max_heat_setpoint_limit"
+    _attr_translation_key: str = "max_heat_setpoint_limit"
+    _attr_entity_category = EntityCategory.CONFIG
+
+    _min_source = Thermostat.AttributeDefs.min_heat_setpoint_limit.name
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class MinHeatSetpointLimit(ZCLHeatSetpointLimitEntity):
+    """Min heat setpoint setting on thermostats.
+
+    Optional thermostat attribute.
+    """
+
+    _unique_id_suffix = "min_heat_setpoint_limit"
+    _attribute_name: str = "min_heat_setpoint_limit"
+    _attr_translation_key: str = "min_heat_setpoint_limit"
+    _attr_entity_category = EntityCategory.CONFIG
+
+    _max_source = Thermostat.AttributeDefs.max_heat_setpoint_limit.name

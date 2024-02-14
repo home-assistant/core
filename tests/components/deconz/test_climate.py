@@ -41,6 +41,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -602,7 +603,7 @@ async def test_climate_device_with_fan_support(
 
     # Service set fan mode to unsupported value
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
@@ -725,7 +726,7 @@ async def test_climate_device_with_preset(
 
     # Service set preset to unsupported value
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,

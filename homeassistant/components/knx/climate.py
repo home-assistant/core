@@ -134,12 +134,17 @@ class KNXClimate(KnxEntity, ClimateEntity):
 
     _device: XknxClimate
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, xknx: XKNX, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
         super().__init__(_create_climate(xknx, config))
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.TURN_ON
+        )
+        if self._device.supports_on_off:
+            self._attr_supported_features |= ClimateEntityFeature.TURN_OFF
         if self.preset_modes:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
         self._attr_target_temperature_step = self._device.temperature_step

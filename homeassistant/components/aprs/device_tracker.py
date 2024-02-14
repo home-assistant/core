@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from typing import Any
 
 import aprslib
 from aprslib import ConnectionError as AprsConnectionError, LoginError
@@ -23,7 +24,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
@@ -66,7 +67,7 @@ def make_filter(callsigns: list) -> str:
     return " ".join(f"b/{sign.upper()}" for sign in callsigns)
 
 
-def gps_accuracy(gps, posambiguity: int) -> int:
+def gps_accuracy(gps: tuple[float, float], posambiguity: int) -> int:
     """Calculate the GPS accuracy based on APRS posambiguity."""
 
     pos_a_map = {0: 0, 1: 1 / 600, 2: 1 / 60, 3: 1 / 6, 4: 1}
@@ -74,7 +75,7 @@ def gps_accuracy(gps, posambiguity: int) -> int:
         degrees = pos_a_map[posambiguity]
 
         gps2 = (gps[0], gps[1] + degrees)
-        dist_m = geopy.distance.distance(gps, gps2).m
+        dist_m: float = geopy.distance.distance(gps, gps2).m
 
         accuracy = round(dist_m)
     else:
@@ -100,7 +101,7 @@ def setup_scanner(
     timeout = config[CONF_TIMEOUT]
     aprs_listener = AprsListenerThread(callsign, password, host, server_filter, see)
 
-    def aprs_disconnect(event):
+    def aprs_disconnect(event: Event) -> None:
         """Stop the APRS connection."""
         aprs_listener.stop()
 
@@ -145,13 +146,13 @@ class AprsListenerThread(threading.Thread):
             self.callsign, passwd=password, host=self.host, port=FILTER_PORT
         )
 
-    def start_complete(self, success: bool, message: str):
+    def start_complete(self, success: bool, message: str) -> None:
         """Complete startup process."""
         self.start_message = message
         self.start_success = success
         self.start_event.set()
 
-    def run(self):
+    def run(self) -> None:
         """Connect to APRS and listen for data."""
         self.ais.set_filter(self.server_filter)
 
@@ -171,11 +172,11 @@ class AprsListenerThread(threading.Thread):
                 "Closing connection to %s with callsign %s", self.host, self.callsign
             )
 
-    def stop(self):
+    def stop(self) -> None:
         """Close the connection to the APRS network."""
         self.ais.close()
 
-    def rx_msg(self, msg: dict):
+    def rx_msg(self, msg: dict[str, Any]) -> None:
         """Receive message and process if position."""
         _LOGGER.debug("APRS message received: %s", str(msg))
         if msg[ATTR_FORMAT] in MSG_FORMATS:

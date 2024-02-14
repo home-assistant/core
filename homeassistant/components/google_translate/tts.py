@@ -77,17 +77,17 @@ class GoogleTTSEntity(TextToSpeechEntity):
         self._attr_unique_id = config_entry.entry_id
 
     @property
-    def default_language(self):
+    def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
-    def supported_options(self):
+    def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return SUPPORT_OPTIONS
 
@@ -120,7 +120,7 @@ class GoogleTTSEntity(TextToSpeechEntity):
 class GoogleProvider(Provider):
     """The Google speech API provider."""
 
-    def __init__(self, hass, lang, tld):
+    def __init__(self, hass: HomeAssistant, lang: str, tld: str) -> None:
         """Init Google TTS service."""
         self.hass = hass
         if lang in MAP_LANG_TLD:
@@ -132,21 +132,23 @@ class GoogleProvider(Provider):
         self.name = "Google"
 
     @property
-    def default_language(self):
+    def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
-    def supported_languages(self):
+    def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
-    def supported_options(self):
+    def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return SUPPORT_OPTIONS
 
-    def get_tts_audio(self, message, language, options):
+    def get_tts_audio(
+        self, message: str, language: str, options: dict[str, Any]
+    ) -> TtsAudioType:
         """Load TTS from google."""
         tld = self._tld
         if language in MAP_LANG_TLD:

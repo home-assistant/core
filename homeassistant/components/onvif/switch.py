@@ -16,7 +16,7 @@ from .device import ONVIFDevice
 from .models import Profile
 
 
-@dataclass
+@dataclass(frozen=True)
 class ONVIFSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -31,7 +31,7 @@ class ONVIFSwitchEntityDescriptionMixin:
     supported_fn: Callable[[ONVIFDevice], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ONVIFSwitchEntityDescription(
     SwitchEntityDescription, ONVIFSwitchEntityDescriptionMixin
 ):

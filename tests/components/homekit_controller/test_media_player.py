@@ -61,7 +61,7 @@ def create_tv_service_with_target_media_state(accessory):
     return service
 
 
-async def test_tv_read_state(hass: HomeAssistant, utcnow) -> None:
+async def test_tv_read_state(hass: HomeAssistant) -> None:
     """Test that we can read the state of a HomeKit fan accessory."""
     helper = await setup_test_component(hass, create_tv_service)
 
@@ -90,7 +90,7 @@ async def test_tv_read_state(hass: HomeAssistant, utcnow) -> None:
     assert state.state == "idle"
 
 
-async def test_tv_read_sources(hass: HomeAssistant, utcnow) -> None:
+async def test_tv_read_sources(hass: HomeAssistant) -> None:
     """Test that we can read the input source of a HomeKit TV."""
     helper = await setup_test_component(hass, create_tv_service)
 
@@ -99,7 +99,7 @@ async def test_tv_read_sources(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["source_list"] == ["HDMI 1", "HDMI 2"]
 
 
-async def test_play_remote_key(hass: HomeAssistant, utcnow) -> None:
+async def test_play_remote_key(hass: HomeAssistant) -> None:
     """Test that we can play media on a media player."""
     helper = await setup_test_component(hass, create_tv_service)
 
@@ -146,7 +146,7 @@ async def test_play_remote_key(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_pause_remote_key(hass: HomeAssistant, utcnow) -> None:
+async def test_pause_remote_key(hass: HomeAssistant) -> None:
     """Test that we can pause a media player."""
     helper = await setup_test_component(hass, create_tv_service)
 
@@ -193,7 +193,7 @@ async def test_pause_remote_key(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_play(hass: HomeAssistant, utcnow) -> None:
+async def test_play(hass: HomeAssistant) -> None:
     """Test that we can play media on a media player."""
     helper = await setup_test_component(hass, create_tv_service_with_target_media_state)
 
@@ -242,7 +242,7 @@ async def test_play(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_pause(hass: HomeAssistant, utcnow) -> None:
+async def test_pause(hass: HomeAssistant) -> None:
     """Test that we can turn pause a media player."""
     helper = await setup_test_component(hass, create_tv_service_with_target_media_state)
 
@@ -290,7 +290,7 @@ async def test_pause(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_stop(hass: HomeAssistant, utcnow) -> None:
+async def test_stop(hass: HomeAssistant) -> None:
     """Test that we can  stop a media player."""
     helper = await setup_test_component(hass, create_tv_service_with_target_media_state)
 
@@ -331,7 +331,7 @@ async def test_stop(hass: HomeAssistant, utcnow) -> None:
     )
 
 
-async def test_tv_set_source(hass: HomeAssistant, utcnow) -> None:
+async def test_tv_set_source(hass: HomeAssistant) -> None:
     """Test that we can set the input source of a HomeKit TV."""
     helper = await setup_test_component(hass, create_tv_service)
 
@@ -352,7 +352,7 @@ async def test_tv_set_source(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["source"] == "HDMI 2"
 
 
-async def test_tv_set_source_fail(hass: HomeAssistant, utcnow) -> None:
+async def test_tv_set_source_fail(hass: HomeAssistant) -> None:
     """Test that we can set the input source of a HomeKit TV."""
     helper = await setup_test_component(hass, create_tv_service)
 
@@ -368,9 +368,10 @@ async def test_tv_set_source_fail(hass: HomeAssistant, utcnow) -> None:
     assert state.attributes["source"] == "HDMI 1"
 
 
-async def test_migrate_unique_id(hass: HomeAssistant, utcnow) -> None:
+async def test_migrate_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a we can migrate a media_player unique id."""
-    entity_registry = er.async_get(hass)
     aid = get_next_aid()
     media_player_entry = entity_registry.async_get_or_create(
         "media_player",

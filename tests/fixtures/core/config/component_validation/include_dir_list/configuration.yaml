@@ -1,0 +1,1 @@
+iot_domain: !include_dir_list iot_domain

@@ -152,7 +152,7 @@ class WallConnectorEntity(CoordinatorEntity):
         )
 
 
-@dataclass()
+@dataclass(frozen=True)
 class WallConnectorLambdaValueGetterMixin:
     """Mixin with a function pointer for getting sensor value."""
 

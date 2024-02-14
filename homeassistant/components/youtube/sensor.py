@@ -26,7 +26,7 @@ from .const import (
 from .entity import YouTubeChannelEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YouTubeMixin:
     """Mixin for required keys."""
 
@@ -36,7 +36,7 @@ class YouTubeMixin:
     attributes_fn: Callable[[Any], dict[str, Any] | None] | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class YouTubeSensorEntityDescription(SensorEntityDescription, YouTubeMixin):
     """Describes YouTube sensor entity."""
 

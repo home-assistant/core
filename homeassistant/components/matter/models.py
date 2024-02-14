@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TypedDict
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterAttributeDescriptor
@@ -14,6 +15,20 @@ from homeassistant.helpers.entity import EntityDescription
 SensorValueTypes = type[
     clusters.uint | int | clusters.Nullable | clusters.float32 | float
 ]
+
+
+class MatterDeviceInfo(TypedDict):
+    """Dictionary with Matter Device info.
+
+    Used to send to other Matter controllers,
+    such as Google Home to prevent duplicated devices.
+
+    Reference: https://developers.home.google.com/matter/device-deduplication
+    """
+
+    unique_id: str
+    vendor_id: str  # vendorId hex string
+    product_id: str  # productId hex string
 
 
 @dataclass
@@ -34,6 +49,9 @@ class MatterEntityInfo:
 
     # entity class to use to instantiate the entity
     entity_class: type
+
+    # [optional] bool to specify if this primary value should be polled
+    should_poll: bool
 
     @property
     def primary_attribute(self) -> type[ClusterAttributeDescriptor]:
@@ -91,3 +109,6 @@ class MatterDiscoverySchema:
     # [optional] bool to specify if this primary value may be discovered
     # by multiple platforms
     allow_multi: bool = False
+
+    # [optional] bool to specify if this primary value should be polled
+    should_poll: bool = False

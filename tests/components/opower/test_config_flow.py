@@ -277,7 +277,7 @@ async def test_form_valid_reauth(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that we can handle a valid reauth."""
-    mock_config_entry.state = ConfigEntryState.LOADED
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
@@ -326,7 +326,7 @@ async def test_form_valid_reauth_with_mfa(
             "utility": "Consolidated Edison (ConEd)",
         },
     )
-    mock_config_entry.state = ConfigEntryState.LOADED
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 

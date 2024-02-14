@@ -1,7 +1,6 @@
 """Helpers to deal with Cast devices."""
 from __future__ import annotations
 
-import asyncio
 import configparser
 from dataclasses import dataclass
 import logging
@@ -257,7 +256,7 @@ async def _fetch_playlist(hass, url, supported_content_types):
                 playlist_data = (await resp.content.read(64 * 1024)).decode(charset)
             except ValueError as err:
                 raise PlaylistError(f"Could not decode playlist {url}") from err
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise PlaylistError(f"Timeout while fetching playlist {url}") from err
     except aiohttp.client_exceptions.ClientError as err:
         raise PlaylistError(f"Error while fetching playlist {url}") from err

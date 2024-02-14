@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_entity[cover.bubendorff_blind-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.bubendorff_blind',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': 'Bubendorff blind',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': '0009999993-DeviceType.NBO',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[cover.bubendorff_blind-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Bubendorff blind',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.bubendorff_blind',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_entity[cover.entrance_blinds-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.entrance_blinds',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
+    'original_icon': None,
+    'original_name': 'Entrance Blinds',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': None,
+    'unique_id': '0009999992-DeviceType.NBR',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[cover.entrance_blinds-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'current_position': 0,
+      'device_class': 'shutter',
+      'friendly_name': 'Entrance Blinds',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.entrance_blinds',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---

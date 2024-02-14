@@ -176,6 +176,12 @@ ECOWITT_SENSORS_MAPPING: Final = {
         native_unit_of_measurement=UnitOfLength.MILES,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    EcoWittSensorTypes.SOIL_RAWADC: SensorEntityDescription(
+        key="SOIL_RAWADC",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     EcoWittSensorTypes.SPEED_KPH: SensorEntityDescription(
         key="SPEED_KPH",
         device_class=SensorDeviceClass.WIND_SPEED,

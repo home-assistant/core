@@ -1,7 +1,9 @@
 """The tests for the Button component."""
 from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from datetime import timedelta
+from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.button import (
@@ -12,7 +14,12 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_PLATFORM,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.setup import async_setup_component
@@ -51,6 +58,7 @@ async def test_custom_integration(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we integration."""
     platform = getattr(hass.components, f"test.{DOMAIN}")
@@ -62,16 +70,30 @@ async def test_custom_integration(
     assert hass.states.get("button.button_1").state == STATE_UNKNOWN
 
     now = dt_util.utcnow()
-    with patch("homeassistant.core.dt_util.utcnow", return_value=now):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.button_1"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.button_1"},
+        blocking=True,
+    )
 
     assert hass.states.get("button.button_1").state == now.isoformat()
     assert "The button has been pressed" in caplog.text
+
+    now_isoformat = dt_util.utcnow().isoformat()
+    assert hass.states.get("button.button_1").state == now_isoformat
+
+    new_time = dt_util.utcnow() + timedelta(weeks=1)
+    freezer.move_to(new_time)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.button_1"},
+        blocking=True,
+    )
+
+    new_time_isoformat = new_time.isoformat()
+    assert hass.states.get("button.button_1").state == new_time_isoformat
 
 
 async def test_restore_state(
@@ -87,6 +109,21 @@ async def test_restore_state(
     await hass.async_block_till_done()
 
     assert hass.states.get("button.button_1").state == "2021-01-01T23:59:59+00:00"
+
+
+async def test_restore_state_does_not_restore_unavailable(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
+    """Test we restore state integration except for unavailable."""
+    mock_restore_cache(hass, (State("button.button_1", STATE_UNAVAILABLE),))
+
+    platform = getattr(hass.components, f"test.{DOMAIN}")
+    platform.init()
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("button.button_1").state == STATE_UNKNOWN
 
 
 class MockFlow(ConfigFlow):

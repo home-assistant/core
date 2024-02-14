@@ -74,7 +74,7 @@ class AsteriskMailbox(Mailbox):
     async def async_get_messages(self) -> list[dict[str, Any]]:
         """Return a list of the current messages."""
         data: AsteriskData = self.hass.data[ASTERISK_DOMAIN]
-        return data.messages
+        return data.messages or []
 
     async def async_delete(self, msgid: str) -> bool:
         """Delete the specified messages."""

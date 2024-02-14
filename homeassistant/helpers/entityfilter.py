@@ -93,7 +93,7 @@ FILTER_SCHEMA = vol.All(BASE_FILTER_SCHEMA, convert_filter)
 
 
 def convert_include_exclude_filter(
-    config: dict[str, dict[str, list[str]]]
+    config: dict[str, dict[str, list[str]]],
 ) -> EntityFilter:
     """Convert the include exclude filter schema into a filter."""
     include = config[CONF_INCLUDE]

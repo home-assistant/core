@@ -18,6 +18,7 @@ from homeassistant.components.mqtt import (
     valid_subscribe_topic,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
@@ -25,7 +26,6 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_BAUD_RATE,
-    CONF_DEVICE,
     CONF_GATEWAY_TYPE,
     CONF_GATEWAY_TYPE_MQTT,
     CONF_GATEWAY_TYPE_SERIAL,

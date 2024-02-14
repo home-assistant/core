@@ -3,33 +3,17 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from typing import Any
+from typing import Any, cast
 
-import voluptuous as vol
-
-from homeassistant.components.notify import (
-    DOMAIN as NOTIFY_DOMAIN,
-    PLATFORM_SCHEMA,
-    BaseNotificationService,
-)
-from homeassistant.const import CONF_COMMAND, CONF_NAME
+from homeassistant.components.notify import BaseNotificationService
+from homeassistant.const import CONF_COMMAND
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.process import kill_subprocess
 
-from .const import CONF_COMMAND_TIMEOUT, DEFAULT_TIMEOUT, DOMAIN
+from .const import CONF_COMMAND_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COMMAND): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
-)
 
 
 def get_service(
@@ -38,19 +22,9 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> CommandLineNotificationService:
     """Get the Command Line notification service."""
-    if notify_config := config:
-        create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_yaml_notify",
-            breaks_in_ha_version="2023.12.0",
-            is_fixable=False,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_platform_yaml",
-            translation_placeholders={"platform": NOTIFY_DOMAIN},
-        )
-    if discovery_info:
-        notify_config = discovery_info
+
+    discovery_info = cast(DiscoveryInfoType, discovery_info)
+    notify_config = discovery_info
     command: str = notify_config[CONF_COMMAND]
     timeout: int = notify_config[CONF_COMMAND_TIMEOUT]
 

@@ -5,8 +5,7 @@ from http import HTTPStatus
 from ipaddress import ip_network
 import logging
 from pathlib import Path
-import time
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -21,7 +20,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
 from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMockResponse
 from tests.typing import ClientSessionGenerator
 
 
@@ -501,22 +499,3 @@ async def test_logging(
     response = await client.get("/api/states/logging.entity")
     assert response.status == HTTPStatus.OK
     assert "GET /api/states/logging.entity" not in caplog.text
-
-
-async def test_hass_access_logger_at_info_level(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that logging happens at info level."""
-    test_logger = logging.getLogger("test.aiohttp.logger")
-    logger = http.HomeAssistantAccessLogger(test_logger)
-    mock_request = MagicMock()
-    response = AiohttpClientMockResponse(
-        "POST", "http://127.0.0.1", status=HTTPStatus.OK
-    )
-    setattr(response, "body_length", 42)
-    logger.log(mock_request, response, time.time())
-    assert "42" in caplog.text
-    caplog.clear()
-    test_logger.setLevel(logging.WARNING)
-    logger.log(mock_request, response, time.time())
-    assert "42" not in caplog.text

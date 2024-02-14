@@ -1,0 +1,12 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:speaker-message"
+    }
+  },
+  "services": {
+    "clear_cache": "mdi:delete",
+    "say": "mdi:speaker-message",
+    "speak": "mdi:speaker-message"
+  }
+}

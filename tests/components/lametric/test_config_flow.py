@@ -813,8 +813,8 @@ async def test_reauth_cloud_abort_device_not_found(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth flow importing api keys from the cloud."""
-    mock_config_entry.unique_id = "UKNOWN_DEVICE"
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id="UKNOWN_DEVICE")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

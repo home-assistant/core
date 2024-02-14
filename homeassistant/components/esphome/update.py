@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aioesphomeapi import DeviceInfo as ESPHomeDeviceInfo, EntityInfo
 
@@ -27,6 +27,7 @@ from .entry_data import RuntimeEntryData
 
 KEY_UPDATE_LOCK = "esphome_update_lock"
 
+NO_FEATURES = UpdateEntityFeature(0)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +77,7 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_title = "ESPHome"
     _attr_name = "Firmware"
+    _attr_release_url = "https://esphome.io/changelog/"
 
     def __init__(
         self, entry_data: RuntimeEntryData, coordinator: ESPHomeDashboard
@@ -90,15 +92,36 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
                 (dr.CONNECTION_NETWORK_MAC, entry_data.device_info.mac_address)
             }
         )
+        self._update_attrs()
 
+    @callback
+    def _update_attrs(self) -> None:
+        """Update the supported features."""
         # If the device has deep sleep, we can't assume we can install updates
         # as the ESP will not be connectable (by design).
+        coordinator = self.coordinator
+        device_info = self._device_info
+        # Install support can change at run time
         if (
             coordinator.last_update_success
             and coordinator.supports_update
-            and not self._device_info.has_deep_sleep
+            and not device_info.has_deep_sleep
         ):
             self._attr_supported_features = UpdateEntityFeature.INSTALL
+        else:
+            self._attr_supported_features = NO_FEATURES
+        self._attr_installed_version = device_info.esphome_version
+        device = coordinator.data.get(device_info.name)
+        if device is None:
+            self._attr_latest_version = None
+        else:
+            self._attr_latest_version = device["current_version"]
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attrs()
+        super()._handle_coordinator_update()
 
     @property
     def _device_info(self) -> ESPHomeDeviceInfo:
@@ -119,44 +142,29 @@ class ESPHomeUpdateEntity(CoordinatorEntity[ESPHomeDashboard], UpdateEntity):
             or self._device_info.has_deep_sleep
         )
 
-    @property
-    def installed_version(self) -> str | None:
-        """Version currently installed and in use."""
-        return self._device_info.esphome_version
-
-    @property
-    def latest_version(self) -> str | None:
-        """Latest version available for install."""
-        device = self.coordinator.data.get(self._device_info.name)
-        if device is None:
-            return None
-        return cast(str, device["current_version"])
-
-    @property
-    def release_url(self) -> str | None:
-        """URL to the full release notes of the latest version available."""
-        return "https://esphome.io/changelog/"
-
     @callback
-    def _async_static_info_updated(self, _: list[EntityInfo]) -> None:
-        """Handle static info update."""
+    def _handle_device_update(self, static_info: EntityInfo | None = None) -> None:
+        """Handle updated data from the device."""
+        self._update_attrs()
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
         await super().async_added_to_hass()
+        hass = self.hass
+        entry_data = self._entry_data
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass,
-                self._entry_data.signal_static_info_updated,
-                self._async_static_info_updated,
+                hass,
+                entry_data.signal_static_info_updated,
+                self._handle_device_update,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
-                self.hass,
-                self._entry_data.signal_device_updated,
-                self.async_write_ha_state,
+                hass,
+                entry_data.signal_device_updated,
+                self._handle_device_update,
             )
         )
 

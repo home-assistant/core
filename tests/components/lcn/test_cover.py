@@ -38,9 +38,10 @@ async def test_setup_lcn_cover(hass: HomeAssistant, entry, lcn_connection) -> No
         assert state.state == STATE_OPEN
 
 
-async def test_entity_attributes(hass: HomeAssistant, entry, lcn_connection) -> None:
+async def test_entity_attributes(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, entry, lcn_connection
+) -> None:
     """Test the attributes of an entity."""
-    entity_registry = er.async_get(hass)
 
     entity_outputs = entity_registry.async_get(COVER_OUTPUTS)
 

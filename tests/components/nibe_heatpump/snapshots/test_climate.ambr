@@ -1,0 +1,517 @@
+# serializer version: 1
+# name: test_active_accessory[Model.F1155-s2-climate.climate_system_s2][initial]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S2',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': 30.0,
+      'target_temp_low': 21.0,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_active_accessory[Model.F1155-s2-climate.climate_system_s2][unavailable (not supported)]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Climate System S2',
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_step': 0.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_active_accessory[Model.F1155-s3-climate.climate_system_s3][initial]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S3',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': 30.0,
+      'target_temp_low': 21.0,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s3',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_active_accessory[Model.F1155-s3-climate.climate_system_s3][unavailable (not supported)]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Climate System S3',
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_step': 0.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s3',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_active_accessory[Model.S320-s2-climate.climate_system_21][initial]
+  None
+# ---
+# name: test_active_accessory[Model.S320-s2-climate.climate_system_s1][initial]
+  None
+# ---
+# name: test_basic[Model.F1155-s2-climate.climate_system_s2][cooling]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S2',
+      'hvac_action': <HVACAction.COOLING: 'cooling'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': 30.0,
+      'target_temp_low': 21.0,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_basic[Model.F1155-s2-climate.climate_system_s2][heating (auto)]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S2',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_basic[Model.F1155-s2-climate.climate_system_s2][heating (only)]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S2',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'target_temp_step': 0.5,
+      'temperature': 21.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_basic[Model.F1155-s2-climate.climate_system_s2][heating]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S2',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': 30.0,
+      'target_temp_low': 21.0,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_basic[Model.F1155-s2-climate.climate_system_s2][idle (mixing valve)]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S2',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': 30.0,
+      'target_temp_low': 21.0,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_basic[Model.F1155-s2-climate.climate_system_s2][initial]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S2',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': 30.0,
+      'target_temp_low': 21.0,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_basic[Model.F1155-s2-climate.climate_system_s2][off (auto)]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S2',
+      'hvac_action': <HVACAction.OFF: 'off'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_basic[Model.F1155-s2-climate.climate_system_s2][unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S2',
+      'hvac_action': <HVACAction.OFF: 'off'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_basic[Model.S320-s1-climate.climate_system_s1][cooling]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S1',
+      'hvac_action': <HVACAction.COOLING: 'cooling'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': 30.0,
+      'target_temp_low': 21.0,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_basic[Model.S320-s1-climate.climate_system_s1][heating (auto)]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S1',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_basic[Model.S320-s1-climate.climate_system_s1][heating (only)]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S1',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'target_temp_step': 0.5,
+      'temperature': 21.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_basic[Model.S320-s1-climate.climate_system_s1][heating]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S1',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': 30.0,
+      'target_temp_low': 21.0,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_basic[Model.S320-s1-climate.climate_system_s1][idle (mixing valve)]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S1',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': 30.0,
+      'target_temp_low': 21.0,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_basic[Model.S320-s1-climate.climate_system_s1][initial]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S1',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': 30.0,
+      'target_temp_low': 21.0,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_basic[Model.S320-s1-climate.climate_system_s1][off (auto)]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S1',
+      'hvac_action': <HVACAction.OFF: 'off'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_basic[Model.S320-s1-climate.climate_system_s1][unavailable]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.5,
+      'friendly_name': 'Climate System S1',
+      'hvac_action': <HVACAction.OFF: 'off'>,
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 3>,
+      'target_temp_high': None,
+      'target_temp_low': None,
+      'target_temp_step': 0.5,
+      'temperature': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.climate_system_s1',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
