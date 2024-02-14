@@ -40,8 +40,9 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_CONFIG_LIST, DOMAIN
+from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
+from .types import ViCareDevice
 from .utils import get_burners, get_circuits, get_compressors
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,18 +100,18 @@ HA_TO_VICARE_PRESET_HEATING = {
 
 
 def _build_entities(
-    device_tuples: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+    device_list: list[ViCareDevice],
 ) -> list[ViCareClimate]:
     """Create ViCare climate entities for a device."""
     return [
         ViCareClimate(
-            device,
+            device.api,
             circuit,
-            device_config,
+            device.config,
             "heating",
         )
-        for device_config, device in device_tuples
-        for circuit in get_circuits(device)
+        for device in device_list
+        for circuit in get_circuits(device.api)
     ]
 
 
@@ -129,12 +130,12 @@ async def async_setup_entry(
         "set_vicare_mode",
     )
 
-    device_tuples = hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]
+    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_tuples,
+            device_list,
         )
     )
 
