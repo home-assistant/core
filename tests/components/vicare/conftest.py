@@ -64,9 +64,9 @@ class MockViCareService:
         """Read a property from json dump."""
         return readFeature(self._test_data["data"], property_name)
 
-    def hasRoles(self, requested_roles) -> bool:
-        """Check if the device has a given role."""
-        return False
+#    def hasRoles(self, requested_roles) -> bool:
+#        """Check if the device has a given role."""
+#        return False
 
 
 @pytest.fixture
