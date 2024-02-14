@@ -139,7 +139,7 @@ class StarlineSensor(StarlineEntity, SensorEntity):
         if self._key == "mileage" and self._device.mileage:
             return self._device.mileage.get("val")
         if self._key == "gps_count" and self._device.position:
-            return self._device.position["sat_qty"]
+            return self._device.position.get("sat_qty")
         return None
 
     @property

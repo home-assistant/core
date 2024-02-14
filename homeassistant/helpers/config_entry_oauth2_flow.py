@@ -209,7 +209,10 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             error_code = error_response.get("error", "unknown")
             error_description = error_response.get("error_description", "unknown error")
             _LOGGER.error(
-                "Token request failed (%s): %s", error_code, error_description
+                "Token request for %s failed (%s): %s",
+                self.domain,
+                error_code,
+                error_description,
             )
         resp.raise_for_status()
         return cast(dict, await resp.json())
@@ -324,6 +327,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             _LOGGER.error("Timeout resolving OAuth token: %s", err)
             return self.async_abort(reason="oauth_timeout")
         except (ClientResponseError, ClientError) as err:
+            _LOGGER.error("Error resolving OAuth token: %s", err)
             if (
                 isinstance(err, ClientResponseError)
                 and err.status == HTTPStatus.UNAUTHORIZED

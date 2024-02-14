@@ -484,6 +484,7 @@ omit =
     homeassistant/components/gpsd/sensor.py
     homeassistant/components/greenwave/light.py
     homeassistant/components/growatt_server/__init__.py
+    homeassistant/components/growatt_server/const.py
     homeassistant/components/growatt_server/sensor.py
     homeassistant/components/growatt_server/sensor_types/*
     homeassistant/components/gstreamer/media_player.py
@@ -872,6 +873,7 @@ omit =
     homeassistant/components/notion/__init__.py
     homeassistant/components/notion/binary_sensor.py
     homeassistant/components/notion/sensor.py
+    homeassistant/components/notion/util.py
     homeassistant/components/nsw_fuel_station/sensor.py
     homeassistant/components/nuki/__init__.py
     homeassistant/components/nuki/binary_sensor.py
@@ -1691,8 +1693,10 @@ omit =
     homeassistant/components/myuplink/__init__.py
     homeassistant/components/myuplink/api.py
     homeassistant/components/myuplink/application_credentials.py
+    homeassistant/components/myuplink/binary_sensor.py
     homeassistant/components/myuplink/coordinator.py
     homeassistant/components/myuplink/entity.py
+    homeassistant/components/myuplink/helpers.py
     homeassistant/components/myuplink/sensor.py
 
 
