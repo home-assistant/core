@@ -1,5 +1,9 @@
 """Creates a the sensor entities for the mower."""
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
+
+from aioautomower.model import MowerAttributes
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -19,25 +23,34 @@ from .entity import AutomowerBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-COMMON_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+@dataclass(frozen=True, kw_only=True)
+class AutomowerSensorEntityDescription(SensorEntityDescription):
+    """Describes WLED sensor entity."""
+
+    exists_fn: Callable[[MowerAttributes], bool]
+    value_fn: Callable[[MowerAttributes], str]
+
+
+SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
+    AutomowerSensorEntityDescription(
         key="battery_percent",
         translation_key="battery_percent",
         entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        exists_fn=lambda data: data.battery.battery_percent is not None,
+        value_fn=lambda data: data.battery.battery_percent,
     ),
-    SensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="mode",
         translation_key="mode",
         device_class=SensorDeviceClass.ENUM,
         options=["main_area", "secondary_area", "home", "demo", "unknown"],
+        exists_fn=lambda data: data.mower.mode is not None,
+        value_fn=lambda data: data.mower.mode.lower(),
     ),
-)
-
-SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="cutting_blade_usage_time",
         translation_key="cutting_blade_usage_time",
         icon="mdi:clock-outline",
@@ -46,8 +59,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.cutting_blade_usage_time is not None,
+        value_fn=lambda data: data.statistics.cutting_blade_usage_time,
     ),
-    SensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="total_charging_time",
         translation_key="total_charging_time",
         icon="mdi:clock-outline",
@@ -56,8 +72,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.total_charging_time is not None,
+        value_fn=lambda data: data.statistics.total_charging_time,
     ),
-    SensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="total_cutting_time",
         translation_key="total_cutting_time",
         icon="mdi:clock-outline",
@@ -66,8 +85,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.total_cutting_time is not None,
+        value_fn=lambda data: data.statistics.total_cutting_time,
     ),
-    SensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="total_running_time",
         translation_key="total_running_time",
         icon="mdi:clock-outline",
@@ -76,8 +98,11 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.total_running_time is not None,
+        value_fn=lambda data: data.statistics.total_running_time,
     ),
-    SensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="total_searching_time",
         translation_key="total_searching_time",
         icon="mdi:clock-outline",
@@ -86,24 +111,31 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        exists_fn=lambda data: data.statistics.total_searching_time is not None,
+        value_fn=lambda data: data.statistics.total_searching_time,
     ),
-    SensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="number_of_charging_cycles",
         translation_key="number_of_charging_cycles",
         icon="mdi:battery-sync-outline",
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        exists_fn=lambda data: data.statistics.number_of_charging_cycles is not None,
+        value_fn=lambda data: data.statistics.number_of_charging_cycles,
     ),
-    SensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="number_of_collisions",
         translation_key="number_of_collisions",
         icon="mdi:counter",
         entity_registry_enabled_default=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        exists_fn=lambda data: data.statistics.number_of_collisions is not None,
+        value_fn=lambda data: data.statistics.number_of_collisions,
     ),
-    SensorEntityDescription(
+    AutomowerSensorEntityDescription(
         key="total_drive_distance",
         translation_key="total_drive_distance",
         entity_registry_enabled_default=True,
@@ -111,6 +143,9 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
+        suggested_unit_of_measurement=UnitOfLength.KILOMETERS,
+        exists_fn=lambda data: data.statistics.total_drive_distance is not None,
+        value_fn=lambda data: data.statistics.total_drive_distance,
     ),
 )
 
@@ -120,31 +155,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensor platform."""
     coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    _LOGGER.debug("coordinator: %s", coordinator.data)
 
-    sensors = [
-        AutomowerSensorEntity(mower_id, coordinator, description)
-        for mower_id in coordinator.data
-        for description in COMMON_SENSOR_TYPES
-    ]
-    statistic_sensors = [
+    async_add_entities(
         AutomowerSensorEntity(mower_id, coordinator, description)
         for mower_id in coordinator.data
         for description in SENSOR_TYPES
-        if getattr(coordinator.data[mower_id].statistics, description.key) is not None
-    ]
-    sensors.extend(statistic_sensors)
-    async_add_entities(sensors)
+        if description.exists_fn(coordinator.data[mower_id])
+    )
 
 
-class AutomowerSensorEntity(SensorEntity, AutomowerBaseEntity):
-    """Defining the Automower Sensors with SensorEntityDescription."""
+class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
+    """Defining the Automower Sensors with AutomowerSensorEntityDescription."""
+
+    entity_description: AutomowerSensorEntityDescription
 
     def __init__(
         self,
         mower_id: str,
         coordinator: AutomowerDataUpdateCoordinator,
-        description: SensorEntityDescription,
+        description: AutomowerSensorEntityDescription,
     ) -> None:
         """Set up AutomowerSensors."""
         super().__init__(mower_id, coordinator)
@@ -155,8 +184,4 @@ class AutomowerSensorEntity(SensorEntity, AutomowerBaseEntity):
     def native_value(self) -> str:
         """Return the state of the sensor."""
         attributes = self.mower_attributes
-        if self.entity_description.key == "battery_percent":
-            return getattr(self.mower_attributes.battery, self.entity_description.key)
-        if self.entity_description.key == "mode":
-            return getattr(attributes.mower, self.entity_description.key).lower()
-        return getattr(self.mower_attributes.statistics, self.entity_description.key)
+        return self.entity_description.value_fn(attributes)
