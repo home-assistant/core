@@ -45,7 +45,7 @@ async def async_setup_entry(
     new_switches = [
         Switch(device, data.parent_coordinator, id_, feat)
         for id_, feat in device.features.items()
-        if feat.show_in_hass and feat.type == FeatureType.Switch
+        if feat.type == FeatureType.Switch
     ]
 
     async_add_entities(entities + new_switches)

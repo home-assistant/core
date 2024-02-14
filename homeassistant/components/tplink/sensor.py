@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import cast
 
-from kasa import Feature, FeatureCategory, FeatureType, SmartDevice
+from kasa import Feature, FeatureType, SmartDevice
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
-    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -123,7 +122,7 @@ def _async_sensors_for_device(
     new_sensors = [
         Sensor(device, coordinator, id_, desc)
         for id_, desc in device.features.items()
-        if desc.show_in_hass and desc.type == FeatureType.Sensor
+        if desc.type == FeatureType.Sensor
     ]
     return sensors + new_sensors
 
@@ -171,13 +170,8 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
         self._device = device
         self._feature = feature
         self._attr_unique_id = f"{legacy_device_id(device)}_new_{id_}"
-        cat = (
-            EntityCategory.DIAGNOSTIC
-            if feature.category == FeatureCategory.Diagnostic
-            else EntityCategory.CONFIG
-        )
         self.entity_description = SensorEntityDescription(
-            key=id_, name=feature.name, icon=feature.icon, entity_category=cat
+            key=id_, name=feature.name, icon=feature.icon
         )
 
     @property
