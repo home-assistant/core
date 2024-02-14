@@ -42,7 +42,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         )
 
         assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"]["base"] == "invalid_id"
+        assert result2["errors"][CONF_STATION_ID] == "invalid_id"
 
         # check with valid data
         result3 = await hass.config_entries.flow.async_configure(
@@ -71,8 +71,8 @@ async def test_user_flow_cant_connect_failure(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "can_not_connect"
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"]["base"] == "cannot_connect"
 
 
 async def test_already_exists_flow(
@@ -165,3 +165,16 @@ async def test_importing_already_exists_flow(
         await hass.async_block_till_done()
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_import_flow_cant_connect(
+    hass: HomeAssistant,
+) -> None:
+    """Test the import flow."""
+    with patch_setup_entry(), patch_opensensemap_connection_failed():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data={}
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "cannot_connect"

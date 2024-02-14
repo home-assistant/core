@@ -16,6 +16,11 @@ async def test_load_unload_entry(
     """Test load and unload entry."""
     await setup_integration(valid_config_entry)
     entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
+    assert len(coordinator.sensors) == 6
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(entry.entry_id)
     assert await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()

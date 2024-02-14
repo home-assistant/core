@@ -26,6 +26,19 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
+@pytest.fixture(name="invalid_config_entry")
+def mock_config_entry_invalid_id() -> MockConfigEntry:
+    """Create OpenSky entry in Home Assistant."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="INVALID STATION",
+        data={
+            CONF_STATION_ID: "INVALID_ID",
+        },
+        unique_id="INVALID_ID",
+    )
+
+
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant,

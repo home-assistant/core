@@ -1,15 +1,25 @@
 """Constants for opensensemap."""
-from datetime import timedelta
+from enum import StrEnum
 import logging
 
 from homeassistant.const import Platform
 
+LOGGER = logging.getLogger(__package__)
+
 CONF_STATION_ID = "station_id"
 
 DOMAIN = "opensensemap"
+MANUFACTURER = "opensensemap.org"
 
-LOGGER = logging.getLogger(__package__)
-MANUFACTURER = "openSenseMap.org"
-PLATFORMS = [Platform.AIR_QUALITY]
+PLATFORMS = [Platform.SENSOR]
 
-SCAN_INTERVAL = timedelta(minutes=10)
+
+class SensorTypeId(StrEnum):
+    """Sensors as defined in opensensemap-api."""
+
+    PM25 = "PM2.5"
+    PM10 = "PM10"
+    TEMPERATURE = "Temperature"
+    HUMIDITY = "Humidity"
+    PRESSURE = "Air pressure"
+    ILLUMINANCE = "Illuminance"

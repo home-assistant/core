@@ -1,18 +1,19 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This station is already included.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_id": "The provided id is not a valid station id."
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_id": "The provided id is not a valid station id."
     },
     "step": {
       "user": {
-        "description": "Enter a opensensemap station id.",
+        "description": "Enter an opensensemap station id.",
         "data": {
           "station_id": "Station id",
-          "name": "Name"
+          "name": "[%key:common::config_flow::data::name%]"
         },
         "data_description": {
           "name": "Take the opensensemap station name if emtpy."
@@ -20,5 +21,15 @@
       }
     },
     "flow_title": "{name}"
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The opensensemap YAML configuration import failed",
+      "description": "Configuring opensensemap using YAML is being removed but there was a connection error when trying to import the YAML configuration.\n\n Please verify that you have a stable internet connection and restart Home Assistant to try again or remove the opensensemap YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_invalid_station_id": {
+      "title": "The opensensemap YAML configuration import failed",
+      "description": "Configuring opensensemap using YAML is being removed but there was an error when trying to import the YAML configuration.\n\nCorrect the YAML configuration and restart Home Assistant to try again or remove the opensensemap YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    }
   }
 }
