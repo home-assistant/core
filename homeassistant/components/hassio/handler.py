@@ -86,7 +86,7 @@ async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
 
 
 @bind_hass
-async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> dict:
+async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bool:
     """Update Supervisor diagnostics toggle.
 
     The caller of the function should handle HassioAPIError.
@@ -261,7 +261,7 @@ async def async_update_core(
 
 @bind_hass
 @_api_bool
-async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> bool:
+async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> dict:
     """Apply a suggestion from supervisor's resolution center.
 
     The caller of the function should handle HassioAPIError.
