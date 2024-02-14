@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def terminate_client() -> None:
         _LOGGER.debug(
-            "Remootio client will be now terminated. entry [%s]", entry.as_dict()
+            "Remootio client will now be terminated. entry [%s]", entry.as_dict()
         )
 
         terminated: bool = await remootio_client.terminate()
