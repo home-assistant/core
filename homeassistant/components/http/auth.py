@@ -11,6 +11,7 @@ from typing import Any, Final
 
 from aiohttp import hdrs
 from aiohttp.web import Application, Request, StreamResponse, middleware
+from aiohttp.web_exceptions import HTTPBadRequest
 import jwt
 from jwt import api_jws
 from yarl import URL
@@ -113,7 +114,9 @@ def async_user_not_allowed_do_auth(
     return "User cannot authenticate remotely"
 
 
-async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
+async def async_setup_auth(
+    hass: HomeAssistant, app: Application, strict_connection: bool | None = None
+) -> None:
     """Create auth middleware for the app."""
     store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:
@@ -222,6 +225,20 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         ):
             authenticated = True
             auth_type = "signed request"
+
+        ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
+        if (
+            not authenticated
+            and strict_connection
+            and (is_cloud_connection(hass) or not is_local(ip_address_))
+        ):
+            if not (transport := request.transport):
+                # If we don't have a transport, we can't close the connection.
+                # This should never happen.
+                raise HTTPBadRequest()
+
+            transport.close()
+            # What should happen after closing the connection?
 
         if authenticated and _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(

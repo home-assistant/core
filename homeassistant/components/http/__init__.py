@@ -72,6 +72,7 @@ CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
+CONF_STRICT_CONNECTION: Final = "strict_connection"
 
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
@@ -118,6 +119,7 @@ HTTP_SCHEMA: Final = vol.All(
                 [SSL_INTERMEDIATE, SSL_MODERN]
             ),
             vol.Optional(CONF_USE_X_FRAME_OPTIONS, default=True): cv.boolean,
+            vol.Optional(CONF_STRICT_CONNECTION, default=False): cv.boolean,
         }
     ),
 )
@@ -141,6 +143,7 @@ class ConfData(TypedDict, total=False):
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
+    strict_connection: bool
 
 
 @bind_hass
@@ -205,6 +208,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
         use_x_frame_options=use_x_frame_options,
+        strict_connection=conf[CONF_STRICT_CONNECTION],
     )
 
     async def stop_server(event: Event) -> None:
@@ -318,6 +322,7 @@ class HomeAssistantHTTP:
         login_threshold: int,
         is_ban_enabled: bool,
         use_x_frame_options: bool,
+        strict_connection: bool,
     ) -> None:
         """Initialize the server."""
         self.app[KEY_HASS] = self.hass
@@ -333,7 +338,7 @@ class HomeAssistantHTTP:
         if is_ban_enabled:
             setup_bans(self.hass, self.app, login_threshold)
 
-        await async_setup_auth(self.hass, self.app)
+        await async_setup_auth(self.hass, self.app, strict_connection)
 
         setup_headers(self.app, use_x_frame_options)
         setup_cors(self.app, cors_origins)
