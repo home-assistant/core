@@ -18,6 +18,7 @@ from tests.common import MockConfigEntry
 HOST = "1.2.3.4"
 PASSWORD = "123456"
 MAC = format_mac("AA:BB:CC:DD:EE:FF")
+DHCP_FORMATTED_MAC = MAC.replace(":", "")
 USERNAME = "admin"
 
 CONF_DHCP_DATA = {
@@ -30,13 +31,13 @@ CONF_DATA = CONF_DHCP_DATA | {CONF_HOST: HOST}
 
 CONF_DHCP_FLOW = dhcp.DhcpServiceInfo(
     ip=HOST,
-    macaddress=MAC,
+    macaddress=DHCP_FORMATTED_MAC,
     hostname="dsp-w215",
 )
 
 CONF_DHCP_FLOW_NEW_IP = dhcp.DhcpServiceInfo(
     ip="5.6.7.8",
-    macaddress=MAC,
+    macaddress=DHCP_FORMATTED_MAC,
     hostname="dsp-w215",
 )
 
