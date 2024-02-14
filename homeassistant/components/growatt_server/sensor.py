@@ -11,6 +11,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
@@ -45,8 +46,7 @@ def get_device_list(api, config):
         not login_response["success"]
         and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
     ):
-        _LOGGER.error("Username, Password or URL may be incorrect!")
-        return
+        raise ConfigEntryAuthFailed("Username, Password or URL may be incorrect!")
     user_id = login_response["user"]["id"]
     if plant_id == DEFAULT_PLANT_ID:
         plant_info = api.plant_list(user_id)
