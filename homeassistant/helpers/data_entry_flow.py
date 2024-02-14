@@ -47,6 +47,10 @@ class _BaseFlowManagerView(HomeAssistantView):
 
         return data
 
+    def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Return context."""
+        return {}
+
 
 class FlowManagerIndexView(_BaseFlowManagerView):
     """View to create config flows."""
