@@ -23,7 +23,7 @@ from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads_object
 
-from .const import DOMAIN, EXCLUDE_FROM_BACKUP, LOGGER
+from .const import DOMAIN, EVENT_BACKUP_CREATED, EXCLUDE_FROM_BACKUP, LOGGER
 
 BUF_SIZE = 2**20 * 4  # 4MB
 
@@ -226,6 +226,7 @@ class BackupManager:
             if self.loaded_backups:
                 self.backups[slug] = backup
             LOGGER.debug("Generated new backup with slug %s", slug)
+            self.hass.bus.async_fire(EVENT_BACKUP_CREATED, backup.as_dict())
             return backup
         finally:
             self.backing_up = False
