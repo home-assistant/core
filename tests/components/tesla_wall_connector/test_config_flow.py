@@ -115,7 +115,7 @@ async def test_dhcp_can_finish(
         data=dhcp.DhcpServiceInfo(
             hostname="teslawallconnector_abc",
             ip="1.2.3.4",
-            macaddress="dc44271212",
+            macaddress="aadc44271212",
         ),
     )
     await hass.async_block_till_done()
