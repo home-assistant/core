@@ -20,6 +20,11 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
 )
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    SERVICE_CLOSE_VALVE,
+    SERVICE_OPEN_VALVE,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TOGGLE,
@@ -121,6 +126,27 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                 hass.async_create_task(
                     hass.services.async_call(
                         LOCK_DOMAIN,
+                        service_name,
+                        {ATTR_ENTITY_ID: state.entity_id},
+                        context=intent_obj.context,
+                        blocking=True,
+                    )
+                )
+            )
+            return
+
+        if state.domain == VALVE_DOMAIN:
+            # on = opened
+            # off = closed
+            if self.service == SERVICE_TURN_ON:
+                service_name = SERVICE_OPEN_VALVE
+            else:
+                service_name = SERVICE_CLOSE_VALVE
+
+            await self._run_then_background(
+                hass.async_create_task(
+                    hass.services.async_call(
+                        VALVE_DOMAIN,
                         service_name,
                         {ATTR_ENTITY_ID: state.entity_id},
                         context=intent_obj.context,
