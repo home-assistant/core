@@ -268,10 +268,6 @@ class DeviceWithSwitches(HomeConnectDevice):
     def get_switches(self):
         """Get a dictionary of binary settings for switch entities."""
 
-        # Device settings with boolean values that affect other
-        # settings should be setup as a SelectEntity.
-        # Ex: Refrigeration.Common.Setting.VacationMode
-
         settings = self.appliance.get_settings()
 
         return [

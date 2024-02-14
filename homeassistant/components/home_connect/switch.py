@@ -39,9 +39,11 @@ async def async_setup_entry(
             entity_dicts = device_dict.get(CONF_ENTITIES, {}).get("switch", [])
             _LOGGER.debug("Switch Entities: %s", entity_dicts)
             entity_list = [
-                HomeConnectProgramSwitch(**d)
-                if d.get("program_name")
-                else HomeConnectSwitch(**d)
+                (
+                    HomeConnectProgramSwitch(**d)
+                    if d.get("program_name")
+                    else HomeConnectSwitch(**d)
+                )
                 for d in entity_dicts
             ]
             entity_list += [HomeConnectPowerSwitch(device_dict[CONF_DEVICE])]
@@ -58,34 +60,47 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
         """Initialize the entity."""
         super().__init__(device, desc)
         self._key = key
+        self._attr_available = False
 
-    async def async_turn_on(self, **kwargs: Any) -> None:
+    def turn_on(self, **kwargs: Any) -> None:
         """Tuen on setting."""
-        _LOGGER.debug("Tried to turn on %s", self._key)
+
+        _LOGGER.debug("Turning on %s", self._key)
         try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, self._key, True
-            )
+            self.device.appliance.set_setting(self._key, True)
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn on: %s", err)
-        self.async_entity_update()
+            return
 
-    async def async_turn_off(self, **kwargs: Any) -> None:
+        self._attr_available = True
+
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off setting."""
-        _LOGGER.debug("Tried to turn off %s", self._key)
+
+        _LOGGER.debug("Turning off %s", self._key)
         try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting, self._key, False
-            )
+            self.device.appliance.set_setting(self._key, False)
         except HomeConnectError as err:
             _LOGGER.error("Error while trying to turn off: %s", err)
-        self.async_entity_update()
+            self._attr_available = False
+            return
 
-    async def async_update(self) -> None:
+        self._attr_available = True
+
+    def update(self) -> None:
         """Update the switch's status."""
+
+        _LOGGER.debug("Updating setting status %s", self._key)
+        try:
+            self.device.appliance.get_settings()
+        except HomeConnectError as err:
+            _LOGGER.error("Error retrieving status: %s", err)
+            self._attr_available = False
+            return
 
         state = self.device.appliance.status.get(self._key, {})
         self._attr_is_on = state.get(ATTR_VALUE)
+        self._attr_available = True
         _LOGGER.debug("Updated %s, new state: %s", self._key, self._attr_is_on)
 
 
