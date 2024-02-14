@@ -400,6 +400,7 @@ class MotionTDBUDevice(MotionPositionDevice):
     def __init__(self, coordinator, blind, device_class, motor):
         """Initialize the blind."""
         super().__init__(coordinator, blind, device_class)
+        delattr(self, "_attr_name")
         self._motor = motor
         self._motor_key = motor[0]
         self._attr_translation_key = motor.lower()

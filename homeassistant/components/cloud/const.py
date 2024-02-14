@@ -30,6 +30,7 @@ PREF_GOOGLE_DEFAULT_EXPOSE = "google_default_expose"
 PREF_ALEXA_SETTINGS_VERSION = "alexa_settings_version"
 PREF_GOOGLE_SETTINGS_VERSION = "google_settings_version"
 PREF_TTS_DEFAULT_VOICE = "tts_default_voice"
+PREF_GOOGLE_CONNECTED = "google_connected"
 DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "female")
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = True
