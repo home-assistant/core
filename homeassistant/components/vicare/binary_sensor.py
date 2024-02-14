@@ -27,9 +27,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_CONFIG_LIST, DOMAIN
+from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import ViCareRequiredKeysMixin
+from .types import ViCareDevice, ViCareRequiredKeysMixin
 from .utils import get_burners, get_circuits, get_compressors, is_supported
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,26 +111,26 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 
 
 def _build_entities(
-    device_tuples: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+    device_list: list[ViCareDevice],
 ) -> list[ViCareBinarySensor]:
     """Create ViCare binary sensor entities for a device."""
 
     entities: list[ViCareBinarySensor] = []
-    for device_config, device in device_tuples:
-        entities.extend(_build_entities_for_device(device, device_config))
+    for device in device_list:
+        entities.extend(_build_entities_for_device(device.api, device.config))
         entities.extend(
             _build_entities_for_component(
-                get_circuits(device), device_config, CIRCUIT_SENSORS
+                get_circuits(device.api), device.config, CIRCUIT_SENSORS
             )
         )
         entities.extend(
             _build_entities_for_component(
-                get_burners(device), device_config, BURNER_SENSORS
+                get_burners(device.api), device.config, BURNER_SENSORS
             )
         )
         entities.extend(
             _build_entities_for_component(
-                get_compressors(device), device_config, COMPRESSOR_SENSORS
+                get_compressors(device.api), device.config, COMPRESSOR_SENSORS
             )
         )
     return entities
@@ -178,12 +178,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare binary sensor devices."""
-    device_tuples = hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]
+    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_tuples,
+            device_list,
         )
     )
 
