@@ -1,52 +1,4 @@
 # serializer version: 1
-# name: test_sensors[sensor.test_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'drive_state_active_route_energy_at_arrival',
-    'unique_id': 'VINVINVIN-drive_state_active_route_energy_at_arrival',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[sensor.test_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Test Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_battery',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '65',
-  })
-# ---
 # name: test_sensors[sensor.test_battery_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -395,6 +347,68 @@
     'state': '224',
   })
 # ---
+# name: test_sensors[sensor.test_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'starting',
+        'charging',
+        'stopped',
+        'complete',
+        'disconnected',
+        'no_power',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': 'mdi:ev-station',
+    'original_name': 'Charging',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charging_state',
+    'unique_id': 'VINVINVIN-charge_state_charging_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Charging',
+      'icon': 'mdi:ev-station',
+      'options': list([
+        'starting',
+        'charging',
+        'stopped',
+        'complete',
+        'disconnected',
+        'no_power',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charging',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'charging',
+  })
+# ---
 # name: test_sensors[sensor.test_destination-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -416,7 +430,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:map-marker',
+    'original_icon': None,
     'original_name': 'Destination',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -430,64 +444,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Destination',
-      'icon': 'mdi:map-marker',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_destination',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'Giga Texas',
-  })
-# ---
-# name: test_sensors[sensor.test_distance-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_distance',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-    'original_icon': None,
-    'original_name': 'Distance',
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'drive_state_active_route_miles_to_arrival',
-    'unique_id': 'VINVINVIN-drive_state_active_route_miles_to_arrival',
-    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-  })
-# ---
-# name: test_sensors[sensor.test_distance-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'Test Distance',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_distance',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '75.168198',
   })
 # ---
 # name: test_sensors[sensor.test_distance_to_arrival-entry]
@@ -590,102 +552,6 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '22.5',
-  })
-# ---
-# name: test_sensors[sensor.test_duration-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_duration',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Duration',
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'drive_state_active_route_minutes_to_arrival',
-    'unique_id': 'VINVINVIN-drive_state_active_route_minutes_to_arrival',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-  })
-# ---
-# name: test_sensors[sensor.test_duration-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Duration',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_duration',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '59.2',
-  })
-# ---
-# name: test_sensors[sensor.test_duration_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_duration_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Duration',
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'drive_state_active_route_minutes_to_arrival',
-    'unique_id': 'VINVINVIN-drive_state_active_route_minutes_to_arrival',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-  })
-# ---
-# name: test_sensors[sensor.test_duration_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Test Duration',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_duration_2',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '59.2',
   })
 # ---
 # name: test_sensors[sensor.test_inside_temperature-entry]
@@ -971,7 +837,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:car-shift-pattern',
+    'original_icon': None,
     'original_name': 'Shift state',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -986,7 +852,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Test Shift state',
-      'icon': 'mdi:car-shift-pattern',
       'options': list([
         'p',
         'd',
@@ -1100,6 +965,50 @@
     'state': '65',
   })
 # ---
+# name: test_sensors[sensor.test_time_to_arrival-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_time_to_arrival',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Time to arrival',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'drive_state_active_route_minutes_to_arrival',
+    'unique_id': 'VINVINVIN-drive_state_active_route_minutes_to_arrival',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_time_to_arrival-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test Time to arrival',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_time_to_arrival',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-01-01T00:59:12+00:00',
+  })
+# ---
 # name: test_sensors[sensor.test_time_to_full_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1139,50 +1048,6 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_time_to_full_charge',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensors[sensor.test_timestamp-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_timestamp',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': None,
-    'original_name': 'Timestamp',
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'charge_state_minutes_to_full_charge',
-    'unique_id': 'VINVINVIN-charge_state_minutes_to_full_charge',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensors[sensor.test_timestamp-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Test Timestamp',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_timestamp',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',

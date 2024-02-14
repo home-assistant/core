@@ -72,7 +72,7 @@ async def test_lights(
     assert light_4.attributes["friendly_name"] == "Hue on/off light"
     assert light_4.state == "off"
     assert light_4.attributes["mode"] == "normal"
-    assert light_4.attributes["supported_color_modes"] == []
+    assert light_4.attributes["supported_color_modes"] == [ColorMode.ONOFF]
 
 
 async def test_light_turn_on_service(

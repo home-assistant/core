@@ -1,7 +1,6 @@
 """Switcher integration Button platform."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -147,7 +146,7 @@ class SwitcherThermostatButtonEntity(
                 self.coordinator.data.device_key,
             ) as swapi:
                 response = await self.entity_description.press_fn(swapi, self._remote)
-        except (asyncio.TimeoutError, OSError, RuntimeError) as err:
+        except (TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 
         if error or not response or not response.successful:

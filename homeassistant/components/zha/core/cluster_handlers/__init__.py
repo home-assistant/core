@@ -1,7 +1,6 @@
 """Cluster handlers module for Zigbee Home Automation."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterator
 import contextlib
 from enum import Enum
@@ -62,7 +61,7 @@ def wrap_zigpy_exceptions() -> Iterator[None]:
     """Wrap zigpy exceptions in `HomeAssistantError` exceptions."""
     try:
         yield
-    except asyncio.TimeoutError as exc:
+    except TimeoutError as exc:
         raise HomeAssistantError(
             "Failed to send request: device did not respond"
         ) from exc
@@ -214,7 +213,7 @@ class ClusterHandler(LogMixin):
                     },
                 },
             )
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 "Failed to bind '%s' cluster: %s",
                 self.cluster.ep_attribute,
@@ -275,7 +274,7 @@ class ClusterHandler(LogMixin):
             try:
                 res = await self.cluster.configure_reporting_multiple(reports, **kwargs)
                 self._configure_reporting_status(reports, res[0], event_data)
-            except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+            except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
                 self.debug(
                     "failed to set reporting on '%s' cluster for: %s",
                     self.cluster.ep_attribute,
@@ -424,10 +423,18 @@ class ClusterHandler(LogMixin):
     @callback
     def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
         """Handle attribute updates on this cluster."""
+        attr_name = self._get_attribute_name(attrid)
+        self.debug(
+            "cluster_handler[%s] attribute_updated - cluster[%s] attr[%s] value[%s]",
+            self.name,
+            self.cluster.name,
+            attr_name,
+            value,
+        )
         self.async_send_signal(
             f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}",
             attrid,
-            self._get_attribute_name(attrid),
+            attr_name,
             value,
         )
 
@@ -510,7 +517,7 @@ class ClusterHandler(LogMixin):
                     manufacturer=manufacturer,
                 )
                 result.update(read)
-            except (asyncio.TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
+            except (TimeoutError, zigpy.exceptions.ZigbeeException) as ex:
                 self.debug(
                     "failed to get attributes '%s' on '%s' cluster: %s",
                     chunk,

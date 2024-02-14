@@ -8,7 +8,13 @@ from homeassistant.components import otbr, thread
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import BASE_URL, DATASET_CH15, DATASET_CH16, TEST_BORDER_AGENT_ID
+from . import (
+    BASE_URL,
+    DATASET_CH15,
+    DATASET_CH16,
+    TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    TEST_BORDER_AGENT_ID,
+)
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
@@ -37,7 +43,7 @@ async def test_get_info(
         "python_otbr_api.OTBR.get_border_agent_id", return_value=TEST_BORDER_AGENT_ID
     ), patch(
         "python_otbr_api.OTBR.get_extended_address",
-        return_value=bytes.fromhex("4EF6C4F3FF750626"),
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
     ):
         await websocket_client.send_json_auto_id({"type": "otbr/info"})
         msg = await websocket_client.receive_json()
@@ -48,7 +54,7 @@ async def test_get_info(
         "active_dataset_tlvs": DATASET_CH16.hex().lower(),
         "channel": 16,
         "border_agent_id": TEST_BORDER_AGENT_ID.hex(),
-        "extended_address": "4EF6C4F3FF750626".lower(),
+        "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     }
 
 
@@ -125,7 +131,7 @@ async def test_create_network(
     assert set_enabled_mock.mock_calls[0][1][0] is False
     assert set_enabled_mock.mock_calls[1][1][0] is True
     get_active_dataset_tlvs_mock.assert_called_once()
-    mock_add.assert_called_once_with(otbr.DOMAIN, DATASET_CH16.hex(), None)
+    mock_add.assert_called_once_with(otbr.DOMAIN, DATASET_CH16.hex(), None, None)
 
 
 async def test_create_network_no_entry(

@@ -581,6 +581,7 @@ async def test_http_api_no_match(
 
     assert data == snapshot
     assert data["response"]["response_type"] == "error"
+    assert data["response"]["data"]["code"] == "no_intent_match"
 
 
 async def test_http_api_handle_failure(
@@ -732,12 +733,13 @@ async def test_ws_api(
     assert await async_setup_component(hass, "conversation", {})
     client = await hass_ws_client(hass)
 
-    await client.send_json({"id": 5, "type": "conversation/process", **payload})
+    await client.send_json_auto_id({"type": "conversation/process", **payload})
 
     msg = await client.receive_json()
 
     assert msg["success"]
     assert msg["result"] == snapshot
+    assert msg["result"]["response"]["data"]["code"] == "no_intent_match"
 
 
 @pytest.mark.parametrize("agent_id", AGENT_ID_OPTIONS)
@@ -755,18 +757,14 @@ async def test_ws_prepare(
 
     client = await hass_ws_client(hass)
 
-    msg = {
-        "id": 5,
-        "type": "conversation/prepare",
-    }
+    msg = {"type": "conversation/prepare"}
     if agent_id is not None:
         msg["agent_id"] = agent_id
-    await client.send_json(msg)
+    await client.send_json_auto_id(msg)
 
     msg = await client.receive_json()
 
     assert msg["success"]
-    assert msg["id"] == 5
 
     # Intents should now be load
     assert agent._lang_intents.get(hass.config.language)
@@ -1180,7 +1178,7 @@ async def test_ws_hass_agent_debug(
                 "turn my cool light off",
                 "turn on all lights in the kitchen",
                 "how many lights are on in the kitchen?",
-                "this will not match anything",  # unmatched in results
+                "this will not match anything",  # None in results
             ],
         }
     )
@@ -1189,6 +1187,9 @@ async def test_ws_hass_agent_debug(
 
     assert msg["success"]
     assert msg["result"] == snapshot
+
+    # Last sentence should be a failed match
+    assert msg["result"]["results"][-1] is None
 
     # Light state should not have been changed
     assert len(on_calls) == 0

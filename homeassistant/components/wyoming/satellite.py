@@ -25,7 +25,7 @@ from .const import DOMAIN
 from .data import WyomingService
 from .devices import SatelliteDevice
 
-_LOGGER = logging.getLogger()
+_LOGGER = logging.getLogger(__name__)
 
 _SAMPLES_PER_CHUNK: Final = 1024
 _RECONNECT_SECONDS: Final = 10

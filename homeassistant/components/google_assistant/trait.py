@@ -484,6 +484,11 @@ class OnOffTrait(_Trait):
         if domain == water_heater.DOMAIN and features & WaterHeaterEntityFeature.ON_OFF:
             return True
 
+        if domain == climate.DOMAIN and features & (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        ):
+            return True
+
         return domain in (
             group.DOMAIN,
             input_boolean.DOMAIN,
