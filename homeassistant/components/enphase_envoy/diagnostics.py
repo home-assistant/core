@@ -95,18 +95,16 @@ async def async_get_config_entry_diagnostics(
     }
 
     envoy_properties: dict[str, Any] = {
-        "envoy_firmware": str(envoy.firmware),
-        "part_number": str(envoy.part_number),
-        "envoy_model": str(envoy.envoy_model),
-        "supported_features": [
-            str(feature.name) for feature in envoy.supported_features
-        ],
-        "phase_mode": str(envoy.phase_mode),
-        "phase_count": str(envoy.phase_count),
-        "active_phasecount": str(envoy.active_phase_count),
-        "ct_count": str(envoy.ct_meter_count),
-        "ct_consumption_meter": str(envoy.consumption_meter_type),
-        "ct_production_meter": str(envoy.production_meter_type),
+        "envoy_firmware": envoy.firmware,
+        "part_number": envoy.part_number,
+        "envoy_model": envoy.envoy_model,
+        "supported_features": [feature.name for feature in envoy.supported_features],
+        "phase_mode": envoy.phase_mode,
+        "phase_count": envoy.phase_count,
+        "active_phasecount": envoy.active_phase_count,
+        "ct_count": envoy.ct_meter_count,
+        "ct_consumption_meter": envoy.consumption_meter_type,
+        "ct_production_meter": envoy.production_meter_type,
     }
 
     diagnostic_data: dict[str, Any] = {

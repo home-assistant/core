@@ -82,14 +82,14 @@
       'tariff': None,
     }),
     'envoy_properties': dict({
-      'active_phasecount': '3',
+      'active_phasecount': 3,
       'ct_consumption_meter': 'net-consumption',
-      'ct_count': '2',
+      'ct_count': 2,
       'ct_production_meter': 'production',
       'envoy_firmware': '7.1.2',
       'envoy_model': 'Envoy, phases: 3, phase mode: three, net-consumption CT, production CT',
       'part_number': '123456789',
-      'phase_count': '3',
+      'phase_count': 3,
       'phase_mode': 'three',
       'supported_features': list([
         'INVERTERS',
