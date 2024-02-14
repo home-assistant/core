@@ -30,9 +30,6 @@
       "sector_timer": {
         "name": "Sector timer"
       },
-      "toothbrush_state": {
-        "name": "Toothbrush state"
-      },
       "pressure": {
         "name": "Pressure"
       },
