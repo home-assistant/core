@@ -24,8 +24,9 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemper
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_CONFIG_LIST, DOMAIN
+from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
+from .types import ViCareDevice
 from .utils import get_circuits
 
 _LOGGER = logging.getLogger(__name__)
@@ -61,19 +62,19 @@ HA_TO_VICARE_HVAC_DHW = {
 
 
 def _build_entities(
-    device_tuples: list[tuple[PyViCareDeviceConfig, PyViCareDevice]],
+    device_list: list[ViCareDevice],
 ) -> list[ViCareWater]:
     """Create ViCare domestic hot water entities for a device."""
 
     return [
         ViCareWater(
-            device,
+            device.api,
             circuit,
-            device_config,
+            device.config,
             "domestic_hot_water",
         )
-        for device_config, device in device_tuples
-        for circuit in get_circuits(device)
+        for device in device_list
+        for circuit in get_circuits(device.api)
     ]
 
 
@@ -83,12 +84,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare water heater platform."""
-    device_tuples = hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONFIG_LIST]
+    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_tuples,
+            device_list,
         )
     )
 
