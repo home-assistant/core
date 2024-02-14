@@ -63,42 +63,81 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.fixture(scope="session")
-def device_fixture():
-    """Fixture for device."""
-    return Device(load_json_value_fixture("device.json", DOMAIN))
+# Fixture group for device API endpoint.
 
 
 @pytest.fixture(scope="session")
-def device_json_fixture():
-    """Fixture for device in json format."""
+def load_device_file():
+    """Load fixture file for device endpoint."""
     return load_json_value_fixture("device.json", DOMAIN)
 
 
-@pytest.fixture(scope="session")
-def system_fixture():
-    """Fixture for system."""
-    array = json.loads(load_fixture("systems.json", DOMAIN))
-    return [System(system_data) for system_data in array["systems"]]
+@pytest.fixture
+def device_fixture(load_device_file):
+    """Fixture for device."""
+    return Device(load_device_file)
+
+
+@pytest.fixture
+def device_json_fixture(load_device_file):
+    """Fixture for device in json format."""
+    return load_device_file
+
+
+# Fixture group for systems API endpoint.
 
 
 @pytest.fixture(scope="session")
-def system_json_fixture():
-    """Fixture for system in json format."""
+def load_systems_jv_file():
+    """Load fixture file for systems endpoint."""
     return load_json_value_fixture("systems.json", DOMAIN)
 
 
 @pytest.fixture(scope="session")
-def device_points_fixture():
-    """Fixture for devce_points."""
-    array = json.loads(load_fixture("device_points_nibe_f730.json", DOMAIN))
-    return [DevicePoint(point_data) for point_data in array]
+def load_systems_file():
+    """Load fixture file for systems."""
+    return load_fixture("systems.json", DOMAIN)
+
+
+@pytest.fixture
+def system_fixture(load_systems_file):
+    """Fixture for systems."""
+    array = json.loads(load_systems_file)
+    return [System(system_data) for system_data in array["systems"]]
+
+
+@pytest.fixture
+def system_json_fixture(load_systems_jv_file):
+    """Fixture for system in json format."""
+    return load_systems_jv_file
+
+
+# Fixture group for device points API endpoint.
 
 
 @pytest.fixture(scope="session")
-def device_points_json_fixture():
-    """Fixture for device_points in json format."""
+def load_device_points_file():
+    """Load fixture file for device-points endpoint."""
+    return load_fixture("device_points_nibe_f730.json", DOMAIN)
+
+
+@pytest.fixture(scope="session")
+def load_device_points_jv_file():
+    """Load fixture file for device_points."""
     return load_json_value_fixture("device_points_nibe_f730.json", DOMAIN)
+
+
+@pytest.fixture
+def device_points_fixture(load_device_points_file):
+    """Fixture for devce_points."""
+    array = json.loads(load_device_points_file)
+    return [DevicePoint(point_data) for point_data in array]
+
+
+@pytest.fixture
+def device_points_json_fixture(load_device_points_file):
+    """Fixture for device_points in json format."""
+    return load_device_points_file
 
 
 @pytest.fixture
