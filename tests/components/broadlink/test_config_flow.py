@@ -10,7 +10,6 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.broadlink.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
 from . import get_device
 
@@ -838,7 +837,7 @@ async def test_dhcp_can_finish(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="broadlink",
                 ip="1.2.3.4",
-                macaddress=dr.format_mac(device.mac).replace(":", ""),
+                macaddress=device.mac,
             ),
         )
         await hass.async_block_till_done()
@@ -932,7 +931,7 @@ async def test_dhcp_device_not_supported(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="broadlink",
                 ip=device.host,
-                macaddress=dr.format_mac(device.mac).replace(":", ""),
+                macaddress=device.mac,
             ),
         )
 
