@@ -61,8 +61,20 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
 
     _attr_supported_features = LightEntityFeature.TRANSITION
 
+    SUPPORTED_COLOR_MODE_DICT = {
+        DEVICE_TYPE_SPECTRUM_TUNE: {
+            ColorMode.HS,
+            ColorMode.COLOR_TEMP,
+            ColorMode.WHITE,
+        },
+        DEVICE_TYPE_WHITE_TUNE: {ColorMode.COLOR_TEMP},
+    }
+
     def get_min_color_temp_kelvin(self, light) -> int:
-        """Return minimum supported color temperature."""
+        """Return minimum supported color temperature.
+
+        :param light: The light to get the minimum color temperature for.
+        """
         white_tune_range = light.get("white_tuning_range")
         # Default to 1.4k if not found
         if white_tune_range is None or "Min" not in white_tune_range:
@@ -71,7 +83,10 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
         return white_tune_range.get("Min")
 
     def get_max_color_temp_kelvin(self, light) -> int:
-        """Return maximum supported color temperature."""
+        """Return maximum supported color temperature.
+
+        :param light: The light to get the maximum color temperature for.
+        """
         white_tune_range = light.get("white_tuning_range")
         # Default to 10k if not found
         if white_tune_range is None or "Max" not in white_tune_range:
@@ -80,22 +95,31 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
         return white_tune_range.get("Max")
 
     def __init__(self, light, data) -> None:
-        """Initialize the light and set the supported color modes."""
+        """Initialize the light and set the supported color modes.
+
+        :param light: The lutron light device to initialize.
+        :param data: The integration data
+        """
         super().__init__(light, data)
 
         self._attr_min_color_temp_kelvin = self.get_min_color_temp_kelvin(light)
         self._attr_max_color_temp_kelvin = self.get_max_color_temp_kelvin(light)
 
-        if light["type"] == DEVICE_TYPE_SPECTRUM_TUNE:
-            self._attr_supported_color_modes = {
-                ColorMode.HS,
-                ColorMode.COLOR_TEMP,
-                ColorMode.WHITE,
-            }
-        elif light["type"] == DEVICE_TYPE_WHITE_TUNE:
-            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+        light_type = light["type"]
+        if light_type in self.SUPPORTED_COLOR_MODE_DICT:
+            self._attr_supported_color_modes = self.SUPPORTED_COLOR_MODE_DICT[
+                light_type
+            ]
         else:
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+        self.supports_warm_cool = light_type in [
+            DEVICE_TYPE_WHITE_TUNE,
+            DEVICE_TYPE_SPECTRUM_TUNE,
+        ]
+
+        self.supports_warm_dim = light_type in [DEVICE_TYPE_SPECTRUM_TUNE]
+        self.supports_spectrum_tune = light_type in [DEVICE_TYPE_SPECTRUM_TUNE]
 
     @property
     def brightness(self) -> int:
@@ -155,24 +179,15 @@ class LutronCasetaLight(LutronCasetaDeviceUpdatableEntity, LightEntity):
     def color_mode(self) -> ColorMode:
         """Return the current color mode of the light."""
 
-        device_type = self._device.get("type")
         currently_warm_dim = self._device.get("warm_dim", False)
-        supports_warm_dim = device_type in [DEVICE_TYPE_SPECTRUM_TUNE]
-
-        if supports_warm_dim and currently_warm_dim:
+        if self.supports_warm_dim and currently_warm_dim:
             return ColorMode.WHITE
 
         current_color = self._device.get("color")
-
-        supports_warm_cool = device_type in [
-            DEVICE_TYPE_WHITE_TUNE,
-            DEVICE_TYPE_SPECTRUM_TUNE,
-        ]
-        if supports_warm_cool and isinstance(current_color, WarmCoolColorValue):
+        if self.supports_warm_cool and isinstance(current_color, WarmCoolColorValue):
             return ColorMode.COLOR_TEMP
 
-        supports_spectrum_tune = device_type in [DEVICE_TYPE_SPECTRUM_TUNE]
-        if supports_spectrum_tune and isinstance(current_color, FullColorValue):
+        if self.supports_spectrum_tune and isinstance(current_color, FullColorValue):
             return ColorMode.HS
 
         return ColorMode.BRIGHTNESS
