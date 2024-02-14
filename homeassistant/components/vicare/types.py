@@ -4,6 +4,15 @@ from dataclasses import dataclass
 from typing import Any
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+
+
+@dataclass(frozen=True)
+class ViCareDevice:
+    """Dataclass combinig device api and config."""
+
+    config: PyViCareDeviceConfig
+    api: PyViCareDevice
 
 
 @dataclass(frozen=True)
