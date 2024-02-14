@@ -428,11 +428,6 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     return cast(str, con_types[channel]).lower().startswith("light")
 
 
-def is_rpc_thermostat_internal_actuator(status: dict[str, Any]) -> bool:
-    """Return true if the thermostat uses an internal relay."""
-    return cast(bool, status.get("relay_in_thermostat", False))
-
-
 def is_rpc_exclude_from_relay(
     settings: dict[str, Any], status: dict[str, Any], channel: str
 ) -> bool:

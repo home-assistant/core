@@ -36,7 +36,6 @@ from .utils import (
     get_device_entry_gen,
     is_block_exclude_from_relay,
     is_rpc_exclude_from_relay,
-    is_rpc_thermostat_internal_actuator,
 )
 
 
