@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 import logging
 import os
-from typing import Any
+from typing import Any, ParamSpec
 
 import aiohttp
 from yarl import URL
@@ -23,6 +23,8 @@ from homeassistant.loader import bind_hass
 
 from .const import ATTR_DISCOVERY, DOMAIN, X_HASS_SOURCE
 
+_P = ParamSpec("_P")
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -30,10 +32,12 @@ class HassioAPIError(RuntimeError):
     """Return if a API trow a error."""
 
 
-def _api_bool(funct):
+def _api_bool(
+    funct: Callable[_P, Coroutine[Any, Any, dict[str, Any]]],
+) -> Callable[_P, Coroutine[Any, Any, bool]]:
     """Return a boolean."""
 
-    async def _wrapper(*argv, **kwargs):
+    async def _wrapper(*argv: _P.args, **kwargs: _P.kwargs) -> bool:
         """Wrap function."""
         try:
             data = await funct(*argv, **kwargs)
@@ -44,10 +48,12 @@ def _api_bool(funct):
     return _wrapper
 
 
-def api_data(funct):
+def api_data(
+    funct: Callable[_P, Coroutine[Any, Any, dict[str, Any]]],
+) -> Callable[_P, Coroutine[Any, Any, Any]]:
     """Return data of an api."""
 
-    async def _wrapper(*argv, **kwargs):
+    async def _wrapper(*argv: _P.args, **kwargs: _P.kwargs) -> Any:
         """Wrap function."""
         data = await funct(*argv, **kwargs)
         if data["result"] == "ok":
