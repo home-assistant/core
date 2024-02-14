@@ -269,6 +269,16 @@ async def test_preset_mode_validation(
         },
         blocking=True,
     )
+    # test case insensitivity
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {
+            "entity_id": "climate.test",
+            "preset_mode": "Away",
+        },
+        blocking=True,
+    )
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_SWING_MODE,

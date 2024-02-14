@@ -626,10 +626,16 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         mode_type: Literal["preset", "swing", "fan"],
         mode: str,
         modes: list[str] | None,
-    ) -> None:
+    ) -> str:
         """Raise ServiceValidationError on invalid modes."""
         if modes and mode in modes:
-            return
+            return mode
+        # check if there is a case insenitive match
+        if mode and modes:
+            mode_in = mode.casefold()
+            for mode_out in modes:
+                if mode_in == mode_out.casefold():
+                    return mode_out
         modes_str: str = ", ".join(modes) if modes else ""
         if mode_type == "preset":
             translation_key = "not_valid_preset_mode"
@@ -669,7 +675,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     async def async_handle_set_fan_mode_service(self, fan_mode: str) -> None:
         """Validate and set new preset mode."""
-        self._valid_mode_or_raise("fan", fan_mode, self.fan_modes)
+        fan_mode = self._valid_mode_or_raise("fan", fan_mode, self.fan_modes)
         await self.async_set_fan_mode(fan_mode)
 
     def set_fan_mode(self, fan_mode: str) -> None:
@@ -691,7 +697,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     async def async_handle_set_swing_mode_service(self, swing_mode: str) -> None:
         """Validate and set new preset mode."""
-        self._valid_mode_or_raise("swing", swing_mode, self.swing_modes)
+        swing_mode = self._valid_mode_or_raise("swing", swing_mode, self.swing_modes)
         await self.async_set_swing_mode(swing_mode)
 
     def set_swing_mode(self, swing_mode: str) -> None:
@@ -705,7 +711,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @final
     async def async_handle_set_preset_mode_service(self, preset_mode: str) -> None:
         """Validate and set new preset mode."""
-        self._valid_mode_or_raise("preset", preset_mode, self.preset_modes)
+        preset_mode = self._valid_mode_or_raise(
+            "preset", preset_mode, self.preset_modes
+        )
         await self.async_set_preset_mode(preset_mode)
 
     def set_preset_mode(self, preset_mode: str) -> None:
