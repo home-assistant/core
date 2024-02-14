@@ -268,6 +268,15 @@ class TwinklyLight(LightEntity):
                     },
                 )
 
+                device_registry = dr.async_get(self.hass)
+                device_entry = device_registry.async_get_device(
+                    {(DOMAIN, self._attr_unique_id)}
+                )
+                if device_entry:
+                    device_registry.async_update_device(
+                        device_entry.id, name=self._name, model=self._model
+                    )
+
             if LightEntityFeature.EFFECT & self.supported_features:
                 await self.async_update_movies()
                 await self.async_update_current_movie()
