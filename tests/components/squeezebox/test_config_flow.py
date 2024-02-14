@@ -216,7 +216,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="any",
             ),
         )
@@ -235,7 +235,7 @@ async def test_dhcp_discovery_no_server_found(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="any",
             ),
         )
@@ -254,7 +254,7 @@ async def test_dhcp_discovery_existing_player(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="any",
             ),
         )
