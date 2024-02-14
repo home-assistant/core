@@ -126,7 +126,12 @@ class RepairsFlowIndexView(FlowManagerIndexView):
             extra=vol.ALLOW_EXTRA,
         )
     )
-    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+    async def post(
+        self,
+        request: web.Request,
+        data: dict[str, Any],
+        context: dict[str, Any] | None = None,
+    ) -> web.Response:
         """Handle a POST request."""
         try:
             result = await self._flow_mgr.async_init(

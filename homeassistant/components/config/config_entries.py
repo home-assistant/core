@@ -147,10 +147,14 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
     @require_admin(
         error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
     )
-    async def post(self, request: web.Request) -> web.Response:
+    async def post(
+        self,
+        request: web.Request,
+        context: dict[str, Any] | None = None,
+    ) -> web.Response:
         """Handle a POST request."""
         try:
-            return await super().post(request)
+            return await super().post(request, context)
         except DependencyError as exc:
             return web.Response(
                 text=f"Failed dependencies {', '.join(exc.failed_dependencies)}",
@@ -215,12 +219,16 @@ class OptionManagerFlowIndexView(FlowManagerIndexView):
     @require_admin(
         error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
     )
-    async def post(self, request: web.Request) -> web.Response:
+    async def post(
+        self,
+        request: web.Request,
+        context: dict[str, Any] | None = None,
+    ) -> web.Response:
         """Handle a POST request.
 
         handler in request is entry_id.
         """
-        return await super().post(request)
+        return await super().post(request, context)
 
 
 class OptionManagerFlowResourceView(FlowManagerResourceView):
