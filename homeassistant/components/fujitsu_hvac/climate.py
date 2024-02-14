@@ -51,6 +51,8 @@ class FujitsuHVACDevice(CoordinatorEntity, ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
+    _enable_turn_on_off_backwards_compatibility: bool = False
+
     def __init__(self, coordinator: FujitsuHVACCoordinator, dev: FujitsuHVAC) -> None:
         """Set up static attributes."""
         super().__init__(coordinator, context=dev.device_serial_number)
