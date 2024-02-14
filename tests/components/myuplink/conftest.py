@@ -14,6 +14,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.myuplink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import json_loads
 
 from .const import CLIENT_ID, CLIENT_SECRET
 
@@ -67,15 +68,15 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(scope="session")
-def load_device_file():
+def load_device_file() -> str:
     """Load fixture file for device endpoint."""
     return load_json_value_fixture("device.json", DOMAIN)
 
 
 @pytest.fixture
-def device_fixture(load_device_file):
+def device_fixture(load_device_file) -> Device:
     """Fixture for device."""
-    return Device(load_device_file)
+    return Device(json_loads(load_device_file))
 
 
 @pytest.fixture
