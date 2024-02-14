@@ -4,10 +4,14 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
+from pyatv.const import InputAction
+
 from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
+    ATTR_HOLD_SECS,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
+    DEFAULT_HOLD_SECS,
     RemoteEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -28,7 +32,6 @@ COMMAND_TO_ATTRIBUTE = {
     "turn_off": ("power", "turn_off"),
     "volume_up": ("audio", "volume_up"),
     "volume_down": ("audio", "volume_down"),
-    "home_hold": ("remote_control", "home"),
 }
 
 
@@ -63,6 +66,7 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
         """Send a command to one device."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
         delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+        hold_secs = kwargs.get(ATTR_HOLD_SECS, DEFAULT_HOLD_SECS)
 
         if not self.is_on:
             _LOGGER.error("Unable to send commands, not connected to %s", self.name)
@@ -81,5 +85,10 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
                     raise ValueError("Command not found. Exiting sequence")
 
                 _LOGGER.info("Sending command %s", single_command)
-                await attr_value()  # type: ignore[operator]
+
+                if hold_secs >= 1:
+                    await attr_value(action=InputAction.Hold)
+                else:
+                    await attr_value()  # type: ignore[operator]
+
                 await asyncio.sleep(delay)
