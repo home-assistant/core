@@ -1,5 +1,4 @@
 """Test the Opentherm Gateway config flow."""
-import asyncio
 from unittest.mock import patch
 
 from pyotgw.vars import OTGW, OTGW_ABOUT
@@ -155,7 +154,7 @@ async def test_form_connection_timeout(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "pyotgw.OpenThermGateway.connect", side_effect=(asyncio.TimeoutError)
+        "pyotgw.OpenThermGateway.connect", side_effect=(TimeoutError)
     ) as mock_connect, patch(
         "pyotgw.status.StatusManager._process_updates", return_value=None
     ):

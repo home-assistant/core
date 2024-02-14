@@ -5,12 +5,11 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from pyunifiprotect.data import NVR, Event, ProtectAdoptableDeviceModel
 
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.util import dt as dt_util
 
 from .utils import get_nested_attr
 
@@ -36,7 +35,7 @@ class PermRequired(int, Enum):
     DELETE = 3
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
     """Mixin for required keys."""
 
@@ -52,9 +51,11 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
 
     def __post_init__(self) -> None:
         """Pre-convert strings to tuples for faster get_nested_attr."""
-        self.ufp_required_field = split_tuple(self.ufp_required_field)
-        self.ufp_value = split_tuple(self.ufp_value)
-        self.ufp_enabled = split_tuple(self.ufp_enabled)
+        object.__setattr__(
+            self, "ufp_required_field", split_tuple(self.ufp_required_field)
+        )
+        object.__setattr__(self, "ufp_value", split_tuple(self.ufp_value))
+        object.__setattr__(self, "ufp_enabled", split_tuple(self.ufp_enabled))
 
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
@@ -99,7 +100,7 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
         return bool(get_nested_attr(obj, ufp_required_field))
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
     """Mixin for events."""
 
@@ -109,23 +110,17 @@ class ProtectEventMixin(ProtectRequiredKeysMixin[T]):
         """Return value from UniFi Protect device."""
 
         if self.ufp_event_obj is not None:
-            return cast(Event, getattr(obj, self.ufp_event_obj, None))
+            event: Event | None = getattr(obj, self.ufp_event_obj, None)
+            return event
         return None
 
-    def get_is_on(self, event: Event | None) -> bool:
+    def get_is_on(self, obj: T, event: Event | None) -> bool:
         """Return value if event is active."""
-        if event is None:
-            return False
 
-        now = dt_util.utcnow()
-        value = now > event.start
-        if value and event.end is not None and now > event.end:
-            value = False
-
-        return value
+        return event is not None and self.get_ufp_value(obj)
 
 
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class ProtectSetableKeysMixin(ProtectRequiredKeysMixin[T]):
     """Mixin for settable values."""
 

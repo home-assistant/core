@@ -11,7 +11,7 @@ from homeassistant import core
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_USERNAME
+from homeassistant.const import CONF_API_KEY, CONF_API_VERSION, CONF_HOST, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import (
     async_entries_for_config_entry as devices_for_config_entries,
@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_registry import (
     async_get as async_get_entity_registry,
 )
 
-from .const import CONF_API_VERSION, DOMAIN
+from .const import DOMAIN
 
 LOGGER = logging.getLogger(__name__)
 

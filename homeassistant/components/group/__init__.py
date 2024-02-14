@@ -3,10 +3,10 @@ from __future__ import annotations
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Callable, Collection, Iterable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from contextvars import ContextVar
 import logging
-from typing import Any, Protocol, cast
+from typing import Any, Protocol
 
 import voluptuous as vol
 
@@ -19,8 +19,6 @@ from homeassistant.const import (
     CONF_ENTITIES,
     CONF_ICON,
     CONF_NAME,
-    ENTITY_MATCH_ALL,
-    ENTITY_MATCH_NONE,
     SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
@@ -40,6 +38,10 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     EventStateChangedData,
     async_track_state_change_event,
+)
+from homeassistant.helpers.group import (
+    expand_entity_ids as _expand_entity_ids,
+    get_entity_ids as _get_entity_ids,
 )
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -167,58 +169,9 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     return False
 
 
-@bind_hass
-def expand_entity_ids(hass: HomeAssistant, entity_ids: Iterable[Any]) -> list[str]:
-    """Return entity_ids with group entity ids replaced by their members.
-
-    Async friendly.
-    """
-    found_ids: list[str] = []
-    for entity_id in entity_ids:
-        if not isinstance(entity_id, str) or entity_id in (
-            ENTITY_MATCH_NONE,
-            ENTITY_MATCH_ALL,
-        ):
-            continue
-
-        entity_id = entity_id.lower()
-        # If entity_id points at a group, expand it
-        if entity_id.startswith(ENTITY_PREFIX):
-            child_entities = get_entity_ids(hass, entity_id)
-            if entity_id in child_entities:
-                child_entities = list(child_entities)
-                child_entities.remove(entity_id)
-            found_ids.extend(
-                ent_id
-                for ent_id in expand_entity_ids(hass, child_entities)
-                if ent_id not in found_ids
-            )
-        elif entity_id not in found_ids:
-            found_ids.append(entity_id)
-
-    return found_ids
-
-
-@bind_hass
-def get_entity_ids(
-    hass: HomeAssistant, entity_id: str, domain_filter: str | None = None
-) -> list[str]:
-    """Get members of this group.
-
-    Async friendly.
-    """
-    group = hass.states.get(entity_id)
-
-    if not group or ATTR_ENTITY_ID not in group.attributes:
-        return []
-
-    entity_ids = group.attributes[ATTR_ENTITY_ID]
-    if not domain_filter:
-        return cast(list[str], entity_ids)
-
-    domain_filter = f"{domain_filter.lower()}."
-
-    return [ent_id for ent_id in entity_ids if ent_id.startswith(domain_filter)]
+# expand_entity_ids and get_entity_ids are for backwards compatibility only
+expand_entity_ids = bind_hass(_expand_entity_ids)
+get_entity_ids = bind_hass(_get_entity_ids)
 
 
 @bind_hass
@@ -509,7 +462,8 @@ class GroupEntity(Entity):
                 self.async_update_supported_features(
                     event.data["entity_id"], event.data["new_state"]
                 )
-            preview_callback(*self._async_generate_attributes())
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
 
         async_state_changed_listener(None)
         return async_track_state_change_event(

@@ -65,7 +65,7 @@ T = TypeVar(
 )
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class DeconzBinarySensorDescription(Generic[T], BinarySensorEntityDescription):
     """Class describing deCONZ binary sensor entities."""
 

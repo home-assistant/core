@@ -1,0 +1,77 @@
+# serializer version: 1
+# name: test_number_entities
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'identify',
+      'friendly_name': 'Tailwind iQ3 Identify',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.tailwind_iq3_identify',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_number_entities.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'button.tailwind_iq3_identify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
+    'original_name': 'Identify',
+    'platform': 'tailwind',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '_3c_e9_e_6d_21_84_-identify',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities.2
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '3c:e9:0e:6d:21:84',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tailwind',
+        '_3c_e9_e_6d_21_84_',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Tailwind',
+    'model': 'iQ3',
+    'name': 'Tailwind iQ3',
+    'name_by_user': None,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '10.10',
+    'via_device_id': None,
+  })
+# ---

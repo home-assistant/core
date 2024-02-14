@@ -199,17 +199,21 @@ async def test_migration_baudrate_and_flow_control(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test baudrate and flow control migration."""
-    config_entry.data = {
-        **config_entry.data,
-        CONF_RADIO_TYPE: radio_type,
-        CONF_DEVICE: {
-            CONF_BAUDRATE: old_baudrate,
-            CONF_FLOW_CONTROL: old_flow_control,
-            CONF_DEVICE_PATH: "/dev/null",
-        },
-    }
-    config_entry.version = 3
+
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={
+            **config_entry.data,
+            CONF_RADIO_TYPE: radio_type,
+            CONF_DEVICE: {
+                CONF_BAUDRATE: old_baudrate,
+                CONF_FLOW_CONTROL: old_flow_control,
+                CONF_DEVICE_PATH: "/dev/null",
+            },
+        },
+        version=3,
+    )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -279,7 +283,7 @@ async def test_shutdown_on_ha_stop(
         zha_data.gateway, "shutdown", wraps=zha_data.gateway.shutdown
     ) as mock_shutdown:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        hass.state = CoreState.stopping
+        hass.set_state(CoreState.stopping)
         await hass.async_block_till_done()
 
     assert len(mock_shutdown.mock_calls) == 1

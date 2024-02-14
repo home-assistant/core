@@ -5,8 +5,6 @@ from typing import Final
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "livisi"
 
-CONF_HOST = "host"
-CONF_PASSWORD: Final = "password"
 AVATAR = "Avatar"
 AVATAR_PORT: Final = 9090
 CLASSIC_PORT: Final = 8080

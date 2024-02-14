@@ -28,7 +28,7 @@ BRIGHTNESS_LEVEL_ICON_MAP: dict[BrightnessLevel | None, str] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
     """A class that describes robot select entity required keys."""
 
@@ -37,7 +37,7 @@ class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
     select_fn: Callable[[_RobotT, str], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotSelectEntityDescription(
     SelectEntityDescription, RequiredKeysMixin[_RobotT, _CastTypeT]
 ):

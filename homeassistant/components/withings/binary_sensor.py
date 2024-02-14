@@ -47,7 +47,6 @@ async def async_setup_entry(
 class WithingsBinarySensor(WithingsEntity, BinarySensorEntity):
     """Implementation of a Withings sensor."""
 
-    _attr_icon = "mdi:bed"
     _attr_translation_key = "in_bed"
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
     coordinator: WithingsBedPresenceDataUpdateCoordinator

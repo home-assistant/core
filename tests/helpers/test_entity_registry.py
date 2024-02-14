@@ -870,7 +870,7 @@ async def test_restore_states(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test restoring states."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entity_registry.async_get_or_create(
         "light",
@@ -936,7 +936,7 @@ async def test_async_get_device_class_lookup(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test registry device class lookup."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entity_registry.async_get_or_create(
         "binary_sensor",
@@ -1369,6 +1369,13 @@ async def test_disabled_entities_excluded_from_entity_list(
         entity_registry, device_entry.id, include_disabled_entities=True
     )
     assert entries == [entry1, entry2]
+
+    ent_reg = er.async_get(hass)
+    assert ent_reg.entities.get_entries_for_device_id(device_entry.id) == [entry1]
+
+    assert ent_reg.entities.get_entries_for_device_id(
+        device_entry.id, include_disabled_entities=True
+    ) == [entry1, entry2]
 
 
 async def test_entity_max_length_exceeded(entity_registry: er.EntityRegistry) -> None:

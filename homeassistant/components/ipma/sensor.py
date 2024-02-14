@@ -23,16 +23,11 @@ from .entity import IPMADevice
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class IPMARequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class IPMASensorEntityDescription(SensorEntityDescription):
+    """Describes a IPMA sensor entity."""
 
     value_fn: Callable[[Location, IPMA_API], Coroutine[Location, IPMA_API, int | None]]
-
-
-@dataclass
-class IPMASensorEntityDescription(SensorEntityDescription, IPMARequiredKeysMixin):
-    """Describes IPMA sensor entity."""
 
 
 async def async_retrieve_rcm(location: Location, api: IPMA_API) -> int | None:

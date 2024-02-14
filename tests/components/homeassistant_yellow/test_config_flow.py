@@ -4,10 +4,12 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
 from homeassistant.components.homeassistant_yellow.const import DOMAIN
 from homeassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
@@ -52,6 +54,7 @@ def mock_reboot_host():
 async def test_config_flow(hass: HomeAssistant) -> None:
     """Test the config flow."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     with patch(
         "homeassistant.components.homeassistant_yellow.async_setup_entry",
@@ -76,6 +79,7 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
     """Test only a single entry is allowed."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -109,6 +113,7 @@ async def test_option_flow_install_multi_pan_addon(
 ) -> None:
     """Test installing the multi pan addon."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -143,9 +148,7 @@ async def test_option_flow_install_multi_pan_addon(
     assert result["step_id"] == "install_addon"
     assert result["progress_action"] == "install_addon"
 
-    result = await hass.config_entries.options.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "configure_addon"
+    await hass.async_block_till_done()
     install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
@@ -164,9 +167,7 @@ async def test_option_flow_install_multi_pan_addon(
         },
     )
 
-    result = await hass.config_entries.options.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "finish_addon_setup"
+    await hass.async_block_till_done()
     start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
@@ -183,6 +184,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
 ) -> None:
     """Test installing the multi pan addon when a zha config entry exists."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -225,9 +227,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
     assert result["step_id"] == "install_addon"
     assert result["progress_action"] == "install_addon"
 
-    result = await hass.config_entries.options.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "configure_addon"
+    await hass.async_block_till_done()
     install_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
@@ -255,9 +255,7 @@ async def test_option_flow_install_multi_pan_addon_zha(
         "radio_type": "ezsp",
     }
 
-    result = await hass.config_entries.options.async_configure(result["flow_id"])
-    assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-    assert result["step_id"] == "finish_addon_setup"
+    await hass.async_block_till_done()
     start_addon.assert_called_once_with(hass, "core_silabs_multiprotocol")
 
     result = await hass.config_entries.options.async_configure(result["flow_id"])
@@ -278,6 +276,7 @@ async def test_option_flow_led_settings(
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -323,6 +322,7 @@ async def test_option_flow_led_settings_unchanged(
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -354,6 +354,7 @@ async def test_option_flow_led_settings_unchanged(
 async def test_option_flow_led_settings_fail_1(hass: HomeAssistant) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
@@ -385,6 +386,7 @@ async def test_option_flow_led_settings_fail_2(
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
 
     # Setup the config entry
     config_entry = MockConfigEntry(
