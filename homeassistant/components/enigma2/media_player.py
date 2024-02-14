@@ -125,6 +125,7 @@ class Enigma2Device(MediaPlayerEntity):
     """Representation of an Enigma2 box."""
 
     _attr_has_entity_name = True
+    _attr_translation_key = "player"
 
     _attr_media_content_type = MediaType.TVSHOW
     _attr_supported_features = (
@@ -147,7 +148,6 @@ class Enigma2Device(MediaPlayerEntity):
         self._device: OpenWebIfDevice = device
         self._entry = entry
 
-        self._attr_translation_key = "player"
         self._attr_unique_id = device.mac_address
 
         self._attr_device_info = DeviceInfo(
