@@ -510,14 +510,14 @@ def async_setup(hass: HomeAssistant) -> None:
             await _async_load_state_translations_to_cache(hass, language, None)
 
     async def load_translations_for_component(event: Event) -> None:
-        component = event.data.get("component")
+        component: str | None = event.data.get("component")
         # Platforms don't have their own translations, skip them
-        if component is None or "." in str(component):
+        if component is None or "." in component:
             return
         language = hass.config.language
         _LOGGER.debug(
             "Loading translations for language: %s and component: %s",
-            hass.config.language,
+            language,
             component,
         )
         await _async_load_state_translations_to_cache(hass, language, component)
