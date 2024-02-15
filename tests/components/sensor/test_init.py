@@ -1618,6 +1618,43 @@ async def test_suggested_precision_option_update(
     }
 
 
+async def test_suggested_precision_option_removal(
+    hass: HomeAssistant,
+) -> None:
+    """Test suggested precision stored in the registry is removed."""
+
+    entity_registry = er.async_get(hass)
+    platform = getattr(hass.components, "test.sensor")
+    platform.init(empty=True)
+
+    # Pre-register entities
+    entry = entity_registry.async_get_or_create("sensor", "test", "very_unique")
+    entity_registry.async_update_entity_options(
+        entry.entity_id,
+        "sensor",
+        {
+            "suggested_display_precision": 1,
+        },
+    )
+
+    platform.ENTITIES["0"] = platform.MockSensor(
+        name="Test",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        native_value="1.5",
+        suggested_display_precision=None,
+        unique_id="very_unique",
+    )
+    entity0 = platform.ENTITIES["0"]
+
+    assert await async_setup_component(hass, "sensor", {"sensor": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Assert the suggested precision is no longer stored in the registry
+    entry = entity_registry.async_get(entity0.entity_id)
+    assert entry.options.get("sensor", {}).get("suggested_display_precision") is None
+
+
 @pytest.mark.parametrize(
     (
         "unit_system",
