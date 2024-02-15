@@ -4,6 +4,7 @@
 from aiohttp.client_exceptions import ServerDisconnectedError
 from aiopvapi.helpers.aiorequest import (
     PvApiConnectionError,
+    PvApiEmptyData,
     PvApiMaintenance,
     PvApiResponseStatusError,
 )
@@ -23,4 +24,5 @@ HUB_EXCEPTIONS = (
     PvApiConnectionError,
     PvApiResponseStatusError,
     PvApiMaintenance,
+    PvApiEmptyData,
 )
