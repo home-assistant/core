@@ -31,7 +31,7 @@ from homeassistant.const import (
     CONF_ZONE,
     DOMAIN_RASCALSCHEDULER,
     EVENT_HOMEASSISTANT_STARTED,
-    FCFS,
+    SCHEDULING_POLICY,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -595,7 +595,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 name=self.raw_config["alias"],
                 routine_id=self.unique_id,
                 action_script=self.raw_config["action"],
-                scheduling_policy=FCFS,
+                scheduling_policy=SCHEDULING_POLICY,
             )
             self._routine.output()
 

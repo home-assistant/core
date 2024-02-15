@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components import notify
 from homeassistant.const import (
+    ATTR_ACTION_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
     ATTR_GROUP_ID,
@@ -212,18 +213,25 @@ class RASC(ABC):
     def _fire_by_state(self, rasc_type: str, state: RASCState | None = None):
         if state is None:
             entity_id = None
+            action_id = None
             action = None
             group_id = None
         else:
             entity_id = state.entity.entity_id
+            action_id = (
+                state.service_call.data[ATTR_ACTION_ID]
+                if ATTR_ACTION_ID in state.service_call.data
+                else None
+            )
             action = state.service_call.service
             group_id = state.service_call.data.get(ATTR_GROUP_ID)
-        self._fire(rasc_type, entity_id, action, group_id)
+        self._fire(rasc_type, entity_id, action_id, action, group_id)
 
     def _fire(
         self,
         rasc_type: str,
         entity_id: str | None,
+        action_id: str | None,
         action: str | None,
         group_id: str | None = None,
     ):
@@ -234,6 +242,7 @@ class RASC(ABC):
                 "type": rasc_type,
                 ATTR_SERVICE: action,
                 ATTR_ENTITY_ID: entity_id,
+                ATTR_ACTION_ID: action_id,
                 ATTR_GROUP_ID: group_id,
             },
         )
@@ -289,6 +298,7 @@ class RASC(ABC):
             context: Context, handler: Service, service_call: ServiceCall
         ) -> ServiceResponse:
             entity_ids = self._get_entity_ids(service_call)
+            action_id = service_call.data.get(ATTR_ACTION_ID)
 
             response: ServiceResponse = None
             job = handler.job
@@ -309,7 +319,7 @@ class RASC(ABC):
             # TODO: track entities independently (service._handle_entity_call) # pylint: disable=fixme
             # start tracking after receiving ack
             for entity_id in entity_ids:
-                self._fire(RASC_ACK, entity_id, service_call.service)
+                self._fire(RASC_ACK, entity_id, action_id, service_call.service)
             self._track_service(context, service_call)
             return response
 
