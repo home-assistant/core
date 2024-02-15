@@ -100,13 +100,11 @@ async def validate_input(
     hass: HomeAssistant, data: dict[str, Any]
 ) -> tuple[str, str, str] | None:
     """Validate the user input allows us to connect."""
-    _LOGGER.debug("Validating Overseerr configuration")
     host_configuration = Configuration(
         api_key=data.get(CONF_API_KEY, ""),
         ssl_ca_cert=data[CONF_VERIFY_SSL],
         host=data[CONF_URL],
     )
-    _LOGGER.debug("Host configuration: %s", host_configuration)
 
     async with ApiClient(configuration=host_configuration) as overseerr_api_client:
         request_api = RequestApi(overseerr_api_client)
