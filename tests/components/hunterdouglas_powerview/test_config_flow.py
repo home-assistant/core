@@ -15,7 +15,7 @@ from .const import DHCP_DATA, DISCOVERY_DATA, HOMEKIT_DATA
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 
-@pytest.mark.usefixtures("mock_hunterdouglas_full")
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize("api_version", [1, 2, 3])
 async def test_user_form(
     hass: HomeAssistant,
@@ -57,7 +57,7 @@ async def test_user_form(
     assert result4["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_hunterdouglas_full")
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize(("source", "discovery_info", "api_version"), DISCOVERY_DATA)
 async def test_form_homekit_and_dhcp_cannot_connect(
     hass: HomeAssistant,
@@ -104,7 +104,7 @@ async def test_form_homekit_and_dhcp_cannot_connect(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_hunterdouglas_full")
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize(("source", "discovery_info", "api_version"), DISCOVERY_DATA)
 async def test_form_homekit_and_dhcp(
     hass: HomeAssistant,
@@ -153,7 +153,7 @@ async def test_form_homekit_and_dhcp(
     assert result3["type"] == FlowResultType.ABORT
 
 
-@pytest.mark.usefixtures("mock_hunterdouglas_full")
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize(
     ("homekit_source", "homekit_discovery", "api_version"), HOMEKIT_DATA
 )
@@ -190,7 +190,7 @@ async def test_discovered_by_homekit_and_dhcp(
     assert result2["reason"] == "already_in_progress"
 
 
-@pytest.mark.usefixtures("mock_hunterdouglas_full")
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize("api_version", [1, 2, 3])
 async def test_form_cannot_connect(
     hass: HomeAssistant,
@@ -229,7 +229,7 @@ async def test_form_cannot_connect(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_hunterdouglas_full")
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize("api_version", [1, 2, 3])
 async def test_form_no_data(
     hass: HomeAssistant,
@@ -270,7 +270,7 @@ async def test_form_no_data(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_hunterdouglas_full")
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize("api_version", [1, 2, 3])
 async def test_form_unknown_exception(
     hass: HomeAssistant,
@@ -309,7 +309,7 @@ async def test_form_unknown_exception(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_hunterdouglas_full")
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize("api_version", [3])  # only gen 3 present secondary hubs
 async def test_form_unsupported_device(
     hass: HomeAssistant,

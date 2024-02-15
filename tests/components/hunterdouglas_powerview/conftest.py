@@ -22,48 +22,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_hunterdouglas_base() -> Generator[MagicMock, None, None]:
-    """Return a mocked Powerview Hub with no data."""
-    with patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub",
-        return_value=MagicMock(),
-    ) as hub_mock:
-        yield hub_mock
-
-
-@pytest.fixture
-@pytest.mark.usefixtures("mock_hunterdouglas_base")
-def mock_hunterdouglas_user(
-    device_json: str,
-) -> Generator[MagicMock, None, None]:
-    """Return a mocked Powerview Hub with only base raw data."""
-    with patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
-        return_value=load_json_object_fixture(device_json, DOMAIN),
-    ):
-        yield
-
-
-@pytest.fixture
-@pytest.mark.usefixtures("mock_hunterdouglas_base")
-def mock_hunterdouglas_secondary() -> Generator[MagicMock, None, None]:
-    """Return a mocked Powerview Hub with only base raw data."""
-    with patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
-        return_value=load_json_object_fixture("gen3/gateway/secondary.json", DOMAIN),
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_home_data",
-        return_value=load_json_object_fixture("gen3/home/home.json", DOMAIN),
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_firmware",
-        return_value=load_json_object_fixture("gen3/gateway/info.json", DOMAIN),
-    ):
-        yield
-
-
-@pytest.fixture
-@pytest.mark.usefixtures("mock_hunterdouglas_base")
-def mock_hunterdouglas_full(
+def mock_hunterdouglas_hub(
     device_json: str,
     home_json: str,
     firmware_json: str,
@@ -96,27 +55,6 @@ def mock_hunterdouglas_full(
         "homeassistant.components.hunterdouglas_powerview.cover.BaseShade.current_position",
         new_callable=PropertyMock,
         return_value=ShadePosition(primary=0, secondary=0, tilt=0, velocity=0),
-    ):
-        yield
-
-
-@pytest.fixture
-@pytest.mark.usefixtures("mock_hunterdouglas_base")
-def mock_hub2(
-    device_json: str,
-    home_json: str,
-    firmware_json: str,
-) -> Generator[MagicMock, None, None]:
-    """Return a mocked Powerview Hub with all data populated."""
-    with patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_data",
-        return_value=load_json_object_fixture(device_json, DOMAIN),
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_home_data",
-        return_value=load_json_object_fixture(home_json, DOMAIN),
-    ), patch(
-        "homeassistant.components.hunterdouglas_powerview.Hub.request_raw_firmware",
-        return_value=load_json_object_fixture(firmware_json, DOMAIN),
     ):
         yield
 
