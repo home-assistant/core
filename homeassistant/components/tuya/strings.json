@@ -617,6 +617,32 @@
           "good": "Good",
           "severe": "Severe"
         }
+      },
+      "liquid_state": {
+        "name": "Liquid state",
+        "state": {
+          "normal": "Normal",
+          "lower_alarm": "Lower Alarm",
+          "upper_alarm": "Upper Alarm"
+        }
+      },
+      "liquid_depth": {
+        "name": "Liquid depth"
+      },
+      "max_set": {
+        "name": "Max set"
+      },
+      "mini_set": {
+        "name": "Mini set"
+      },
+      "installation_height": {
+        "name": "Installation height"
+      },
+      "liquid_depth_max": {
+        "name": "Liquid depth max"
+      },
+      "liquid_level_percent": {
+        "name": "Liquid level percent"
       }
     },
     "switch": {

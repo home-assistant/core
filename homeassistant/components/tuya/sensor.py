@@ -19,6 +19,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfLength,
     UnitOfPower,
     UnitOfTime,
 )
@@ -652,6 +653,56 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
+    ),
+    # Tank Level Sensor
+    # Note: Undocumented
+    "ywcgq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.LIQUID_STATE,
+            translation_key="liquid_state",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LIQUID_DEPTH,
+            translation_key="depth",
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.MAX_SET,
+            translation_key="max_set",
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.MINI_SET,
+            translation_key="mini_set",
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.INSTALLATION_HEIGHT,
+            translation_key="installation_height",
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LIQUID_DEPTH_MAX,
+            translation_key="liquid_depth_max",
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfLength.CENTIMETERS,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LIQUID_LEVEL_PERCENT,
+            translation_key="liquid_level_percent",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
     ),
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
