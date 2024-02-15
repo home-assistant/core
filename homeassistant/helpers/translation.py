@@ -404,7 +404,7 @@ def async_get_cached_translations(
     Otherwise, default to all loaded integrations.
     """
     components = _async_get_components(
-        hass, category, [integration] if integration is not None else None
+        hass, category, {integration} if integration is not None else None
     )
     return async_get_translations_cache(hass).get_cached(language, category, components)
 
@@ -427,15 +427,11 @@ def _async_get_components(
 ) -> set[str]:
     """Return a set of components for which translations should be loaded."""
     if integrations is not None:
-        components = set(integrations)
-    elif category in _DIRECT_MAPPED_CATEGORIES:
-        components = hass.config.components
-    else:
-        # Only 'state' supports merging, so remove platforms from selection
-        components = {
-            component for component in hass.config.components if "." not in component
-        }
-    return components
+        return integrations if type(integrations) is set else set(integrations)  # noqa: E721
+    if category in _DIRECT_MAPPED_CATEGORIES:
+        return hass.config.components
+    # Only 'state' supports merging, so remove platforms from selection
+    return {component for component in hass.config.components if "." not in component}
 
 
 @callback
