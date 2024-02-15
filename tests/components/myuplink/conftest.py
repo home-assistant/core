@@ -49,6 +49,28 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
     )
 
 
+@pytest.fixture
+def mock_config_entry2(expires_at: int) -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="myUplink test",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "Fake_token",
+                "scope": "READSYSTEM offline_access",
+                "expires_in": 86399,
+                "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
+                "token_type": "Bearer",
+                "expires_at": expires_at,
+            },
+        },
+        entry_id="myuplink_test",
+    )
+
+
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup credentials."""
@@ -165,3 +187,18 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+async def init_integration2(
+    hass: HomeAssistant,
+    mock_config_entry2: MockConfigEntry,
+    mock_myuplink_client: MagicMock,
+) -> MockConfigEntry:
+    """Set up the myuplink integration for testing."""
+    mock_config_entry2.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry2.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_config_entry2

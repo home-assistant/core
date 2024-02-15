@@ -85,27 +85,28 @@ async def test_full_flow(
 
 async def test_flow_reauth(
     hass: HomeAssistant,
-    init_integration,
+    init_integration2,
 ) -> None:
     """Test reauth step."""
     # entry = mock_config_entry(hass)
-    entry = init_integration
+    entry = init_integration2
+    entry_count = len(hass.config_entries.async_entries(DOMAIN))
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": entry.entry_id,
-            # "unique_id": entry.unique_id,
         },
         data=entry.data,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=None,
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
     )
-    assert result2 == result2
-    # assert result2["step_id"] == "reauth_successful"
-    # assert result2["type"] == data_entry_flow.FlowResultType.ABORT
+
+    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["step_id"] == "pick_implementation"
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == entry_count
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1

@@ -44,16 +44,14 @@ class OAuth2FlowHandler(
             return self.async_show_form(
                 step_id="reauth_confirm",
             )
+
         return await self.async_step_user()
 
     async def async_oauth_create_entry(self, data: dict) -> FlowResult:
         """Create or update the config entry."""
         if self.config_entry_reauth:
-            self.hass.config_entries.async_update_entry(
-                self.config_entry_reauth, data=data
+            return self.async_update_reload_and_abort(
+                self.config_entry_reauth,
+                data=data,
             )
-            await self.hass.config_entries.async_reload(
-                self.config_entry_reauth.entry_id
-            )
-            return self.async_abort(reason="reauth_successful")
         return await super().async_oauth_create_entry(data)
