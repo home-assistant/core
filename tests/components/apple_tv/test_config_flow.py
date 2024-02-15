@@ -1,6 +1,6 @@
 """Test config flow."""
 from ipaddress import IPv4Address, ip_address
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 
 from pyatv import exceptions
 from pyatv.const import PairingRequirement, Protocol
