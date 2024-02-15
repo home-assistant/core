@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Iterable, Mapping
 import logging
 import string
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
@@ -492,17 +492,29 @@ def async_setup(hass: HomeAssistant) -> None:
 
     hass.data[TRANSLATION_FLATTEN_CACHE] = cache
 
-    async def load_translations(event: Event) -> None:
-        if "language" in event.data:
-            language = hass.config.language
-            _LOGGER.debug("Loading translations for language: %s", language)
-            await cache.async_load(language, hass.config.components)
+    @callback
+    def _async_load_translations_filter(event: Event) -> bool:
+        """Filter out unwanted events."""
+        return "language" in event.data
 
-    async def load_translations_for_component(event: Event) -> None:
+    async def _async_load_translations(event: Event) -> None:
+        """Load translations for the current language."""
+        language = hass.config.language
+        _LOGGER.debug("Loading translations for language: %s", language)
+        await cache.async_load(language, hass.config.components)
+
+    @callback
+    def _async_load_translations_for_component_filter(event: Event) -> bool:
+        """Filter out unwanted events."""
         component: str | None = event.data.get("component")
         # Platforms don't have their own translations, skip them
-        if component is None or "." in component:
-            return
+        return bool(component and "." not in component)
+
+    async def _async_load_translations_for_component(event: Event) -> None:
+        """Load translations for a component."""
+        component: str | None = event.data.get("component")
+        if TYPE_CHECKING:
+            assert component is not None
         language = hass.config.language
         _LOGGER.debug(
             "Loading translations for language: %s and component: %s",
@@ -511,8 +523,16 @@ def async_setup(hass: HomeAssistant) -> None:
         )
         await cache.async_load(language, {component})
 
-    hass.bus.async_listen(EVENT_COMPONENT_LOADED, load_translations_for_component)
-    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, load_translations)
+    hass.bus.async_listen(
+        EVENT_COMPONENT_LOADED,
+        _async_load_translations_for_component,
+        event_filter=_async_load_translations_for_component_filter,
+    )
+    hass.bus.async_listen(
+        EVENT_CORE_CONFIG_UPDATE,
+        _async_load_translations,
+        event_filter=_async_load_translations_filter,
+    )
 
 
 @callback
