@@ -1211,7 +1211,7 @@ leaone-ble==0.1.0
 led-ble==1.0.1
 
 # homeassistant.components.foscam
-libpyfoscam==1.0
+libpyfoscam==1.2.2
 
 # homeassistant.components.vivotek
 libpyvivotek==0.4.0
