@@ -57,7 +57,7 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
                 self.coordinator.data["state"] = state
                 if state != TeslemetryState.ONLINE:
                     wait += 5
-                    if wait >= 15:  # Give up after 30 seconds total
+                    if wait >= 20:  # Give up after 45 seconds total
                         raise HomeAssistantError("Could not wake up vehicle")
                     await asyncio.sleep(wait)
 
