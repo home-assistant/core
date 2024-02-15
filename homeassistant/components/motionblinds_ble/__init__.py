@@ -20,7 +20,6 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
@@ -31,7 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.COVER,
 ]
-
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -62,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register Home Assistant functions to use in the library
     device.set_ha_create_task(
         partial(
-            entry.async_create_task,
+            entry.async_create_background_task,
             hass=hass,
             name=device.ble_device.address,
         )
