@@ -102,7 +102,7 @@ _LOGGER = logging.getLogger(__name__)
 def valid_mode_configuration(config: ConfigType) -> ConfigType:
     """Validate that the mode reset payload is not one of the available modes."""
     if config[CONF_PAYLOAD_RESET_MODE] in config[CONF_AVAILABLE_MODES_LIST]:
-        raise ValueError("modes must not contain payload_reset_mode")
+        raise vol.Invalid("modes must not contain payload_reset_mode")
     return config
 
 
@@ -113,9 +113,9 @@ def valid_humidity_range_configuration(config: ConfigType) -> ConfigType:
     throws if it isn't.
     """
     if config[CONF_TARGET_HUMIDITY_MIN] >= config[CONF_TARGET_HUMIDITY_MAX]:
-        raise ValueError("target_humidity_max must be > target_humidity_min")
+        raise vol.Invalid("target_humidity_max must be > target_humidity_min")
     if config[CONF_TARGET_HUMIDITY_MAX] > 100:
-        raise ValueError("max_humidity must be <= 100")
+        raise vol.Invalid("max_humidity must be <= 100")
 
     return config
 

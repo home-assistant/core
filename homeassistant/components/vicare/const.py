@@ -6,22 +6,21 @@ from homeassistant.const import Platform, UnitOfEnergy, UnitOfVolume
 DOMAIN = "vicare"
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.NUMBER,
     Platform.SENSOR,
-    Platform.BINARY_SENSOR,
     Platform.WATER_HEATER,
 ]
 
-VICARE_DEVICE_CONFIG = "device_conf"
-VICARE_DEVICE_CONFIG_LIST = "device_config_list"
-VICARE_API = "api"
+DEVICE_LIST = "device_list"
 VICARE_NAME = "ViCare"
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"
 
-DEFAULT_SCAN_INTERVAL = 60
+DEFAULT_CACHE_DURATION = 60
 
 VICARE_CUBIC_METER = "cubicMeter"
 VICARE_KWH = "kilowattHour"

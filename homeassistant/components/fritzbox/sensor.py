@@ -25,24 +25,24 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import FritzBoxDeviceEntity
-from .const import CONF_COORDINATOR, DOMAIN as FRITZBOX_DOMAIN
+from .common import get_coordinator
 from .model import FritzEntityDescriptionMixinBase
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
     """Sensor description mixin for Fritz!Smarthome entities."""
 
     native_value: Callable[[FritzhomeDevice], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzSensorEntityDescription(
     SensorEntityDescription, FritzEntityDescriptionMixinSensor
 ):
@@ -212,16 +212,25 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome sensor from ConfigEntry."""
-    coordinator = hass.data[FRITZBOX_DOMAIN][entry.entry_id][CONF_COORDINATOR]
+    coordinator = get_coordinator(hass, entry.entry_id)
 
-    async_add_entities(
-        [
+    @callback
+    def _add_entities(devices: set[str] | None = None) -> None:
+        """Add devices."""
+        if devices is None:
+            devices = coordinator.new_devices
+        if not devices:
+            return
+        async_add_entities(
             FritzBoxSensor(coordinator, ain, description)
-            for ain, device in coordinator.data.devices.items()
+            for ain in devices
             for description in SENSOR_TYPES
-            if description.suitable(device)
-        ]
-    )
+            if description.suitable(coordinator.data.devices[ain])
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities(set(coordinator.data.devices))
 
 
 class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):

@@ -1,5 +1,4 @@
 """Test UniFi Network."""
-import asyncio
 from copy import deepcopy
 from datetime import timedelta
 from http import HTTPStatus
@@ -165,6 +164,11 @@ def mock_default_unifi_requests(
     aioclient_mock.get(
         f"https://{host}:1234/api/s/{site_id}/rest/wlanconf",
         json={"data": wlans_response or [], "meta": {"rc": "ok"}},
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.get(
+        f"https://{host}:1234/v2/api/site/{site_id}/trafficroutes",
+        json=[{}],
         headers={"content-type": CONTENT_TYPE_JSON},
     )
     aioclient_mock.get(
@@ -416,7 +420,7 @@ async def test_reconnect_mechanism(
 @pytest.mark.parametrize(
     "exception",
     [
-        asyncio.TimeoutError,
+        TimeoutError,
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         aiounifi.AiounifiException,
@@ -454,8 +458,9 @@ async def test_get_unifi_controller_verify_ssl_false(hass: HomeAssistant) -> Non
 @pytest.mark.parametrize(
     ("side_effect", "raised_exception"),
     [
-        (asyncio.TimeoutError, CannotConnect),
+        (TimeoutError, CannotConnect),
         (aiounifi.BadGateway, CannotConnect),
+        (aiounifi.Forbidden, CannotConnect),
         (aiounifi.ServiceUnavailable, CannotConnect),
         (aiounifi.RequestError, CannotConnect),
         (aiounifi.ResponseError, CannotConnect),

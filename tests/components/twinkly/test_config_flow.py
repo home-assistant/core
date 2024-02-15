@@ -3,13 +3,8 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.components.twinkly.const import (
-    CONF_HOST,
-    CONF_ID,
-    CONF_NAME,
-    DOMAIN as TWINKLY_DOMAIN,
-)
-from homeassistant.const import CONF_MODEL
+from homeassistant.components.twinkly.const import DOMAIN as TWINKLY_DOMAIN
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from . import TEST_MODEL, TEST_NAME, ClientMock
@@ -81,7 +76,7 @@ async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="Twinkly_XYZ",
                 ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
+                macaddress="aabbccddeeff",
             ),
         )
         await hass.async_block_till_done()
@@ -102,7 +97,7 @@ async def test_dhcp_success(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="Twinkly_XYZ",
                 ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
+                macaddress="aabbccddeeff",
             ),
         )
         await hass.async_block_till_done()
@@ -147,7 +142,7 @@ async def test_dhcp_already_exists(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="Twinkly_XYZ",
                 ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
+                macaddress="aabbccddeeff",
             ),
         )
         await hass.async_block_till_done()

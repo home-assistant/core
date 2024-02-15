@@ -38,13 +38,9 @@ async def test_get_system_info_supervisor_not_available(
         "homeassistant.helpers.system_info.is_docker_env", return_value=True
     ), patch(
         "homeassistant.helpers.system_info.is_official_image", return_value=True
-    ), patch(
-        "homeassistant.components.hassio.is_hassio", return_value=True
-    ), patch(
+    ), patch("homeassistant.components.hassio.is_hassio", return_value=True), patch(
         "homeassistant.components.hassio.get_info", return_value=None
-    ), patch(
-        "homeassistant.helpers.system_info.cached_get_user", return_value="root"
-    ):
+    ), patch("homeassistant.helpers.system_info.cached_get_user", return_value="root"):
         info = await async_get_system_info(hass)
         assert isinstance(info, dict)
         assert info["version"] == current_version
@@ -60,9 +56,7 @@ async def test_get_system_info_supervisor_not_loaded(hass: HomeAssistant) -> Non
         "homeassistant.helpers.system_info.is_docker_env", return_value=True
     ), patch(
         "homeassistant.helpers.system_info.is_official_image", return_value=True
-    ), patch(
-        "homeassistant.components.hassio.get_info", return_value=None
-    ), patch.dict(
+    ), patch("homeassistant.components.hassio.get_info", return_value=None), patch.dict(
         os.environ, {"SUPERVISOR": "127.0.0.1"}
     ):
         info = await async_get_system_info(hass)
@@ -79,9 +73,7 @@ async def test_container_installationtype(hass: HomeAssistant) -> None:
         "homeassistant.helpers.system_info.is_docker_env", return_value=True
     ), patch(
         "homeassistant.helpers.system_info.is_official_image", return_value=True
-    ), patch(
-        "homeassistant.helpers.system_info.cached_get_user", return_value="root"
-    ):
+    ), patch("homeassistant.helpers.system_info.cached_get_user", return_value="root"):
         info = await async_get_system_info(hass)
         assert info["installation_type"] == "Home Assistant Container"
 
@@ -89,9 +81,7 @@ async def test_container_installationtype(hass: HomeAssistant) -> None:
         "homeassistant.helpers.system_info.is_docker_env", return_value=True
     ), patch(
         "homeassistant.helpers.system_info.is_official_image", return_value=False
-    ), patch(
-        "homeassistant.helpers.system_info.cached_get_user", return_value="user"
-    ):
+    ), patch("homeassistant.helpers.system_info.cached_get_user", return_value="user"):
         info = await async_get_system_info(hass)
         assert info["installation_type"] == "Unsupported Third Party Container"
 

@@ -31,7 +31,9 @@ from homeassistant.setup import async_setup_component
 from tests.common import get_fixture_path
 
 
-async def test_default_state(hass: HomeAssistant) -> None:
+async def test_default_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test lock group default state."""
     hass.states.async_set("lock.front", "locked")
     await async_setup_component(
@@ -55,7 +57,6 @@ async def test_default_state(hass: HomeAssistant) -> None:
     assert state.state == STATE_LOCKED
     assert state.attributes.get(ATTR_ENTITY_ID) == ["lock.front", "lock.back"]
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("lock.door_group")
     assert entry
     assert entry.unique_id == "unique_identifier"

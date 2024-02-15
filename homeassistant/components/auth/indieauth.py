@@ -1,7 +1,6 @@
 """Helpers to resolve client ID/secret."""
 from __future__ import annotations
 
-import asyncio
 from html.parser import HTMLParser
 from ipaddress import ip_address
 import logging
@@ -102,7 +101,7 @@ async def fetch_redirect_uris(hass: HomeAssistant, url: str) -> list[str]:
                 if chunks == 10:
                     break
 
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.error("Timeout while looking up redirect_uri %s", url)
     except aiohttp.client_exceptions.ClientSSLError:
         _LOGGER.error("SSL error while looking up redirect_uri %s", url)

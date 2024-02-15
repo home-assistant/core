@@ -26,7 +26,7 @@ async def test_camera(
     get_camera: CameraInfo,
 ) -> None:
     """Test the Trafikverket Camera sensor."""
-    state1 = hass.states.get("camera.test_location")
+    state1 = hass.states.get("camera.test_camera")
     assert state1.state == "idle"
     assert state1.attributes["description"] == "Test Camera for testing"
     assert state1.attributes["location"] == "Test location"
@@ -44,11 +44,11 @@ async def test_camera(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
-    state1 = hass.states.get("camera.test_location")
+    state1 = hass.states.get("camera.test_camera")
     assert state1.state == "idle"
     assert state1.attributes != {}
 
-    assert await async_get_image(hass, "camera.test_location")
+    assert await async_get_image(hass, "camera.test_camera")
 
     monkeypatch.setattr(
         get_camera,
@@ -69,4 +69,4 @@ async def test_camera(
         await hass.async_block_till_done()
 
     with pytest.raises(HomeAssistantError):
-        await async_get_image(hass, "camera.test_location")
+        await async_get_image(hass, "camera.test_camera")

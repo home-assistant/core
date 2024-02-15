@@ -11,6 +11,7 @@ from homeassistant.components.elkm1.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from . import (
     ELK_DISCOVERY,
@@ -25,7 +26,9 @@ from . import (
 
 from tests.common import MockConfigEntry
 
-DHCP_DISCOVERY = dhcp.DhcpServiceInfo(MOCK_IP_ADDRESS, "", MOCK_MAC)
+DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+    MOCK_IP_ADDRESS, "", dr.format_mac(MOCK_MAC).replace(":", "")
+)
 ELK_DISCOVERY_INFO = asdict(ELK_DISCOVERY)
 ELK_DISCOVERY_INFO_NON_STANDARD_PORT = asdict(ELK_DISCOVERY_NON_STANDARD_PORT)
 
@@ -229,9 +232,7 @@ async def test_form_user_with_insecure_elk_times_out(hass: HomeAssistant) -> Non
         0,
     ), patch(
         "homeassistant.components.elkm1.config_flow.LOGIN_TIMEOUT", 0
-    ), _patch_discovery(), _patch_elk(
-        elk=mocked_elk
-    ):
+    ), _patch_discovery(), _patch_elk(elk=mocked_elk):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

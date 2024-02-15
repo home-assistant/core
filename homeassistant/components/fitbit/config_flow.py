@@ -53,6 +53,21 @@ class OAuth2FlowHandler(
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
+    async def async_step_creation(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Create config entry from external data with Fitbit specific error handling."""
+        try:
+            return await super().async_step_creation()
+        except FitbitAuthException as err:
+            _LOGGER.error(
+                "Failed to authenticate when creating Fitbit credentials: %s", err
+            )
+            return self.async_abort(reason="invalid_auth")
+        except FitbitApiException as err:
+            _LOGGER.error("Failed to create Fitbit credentials: %s", err)
+            return self.async_abort(reason="cannot_connect")
+
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
 
@@ -75,7 +90,7 @@ class OAuth2FlowHandler(
 
         await self.async_set_unique_id(profile.encoded_id)
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=profile.full_name, data=data)
+        return self.async_create_entry(title=profile.display_name, data=data)
 
     async def async_step_import(self, data: dict[str, Any]) -> FlowResult:
         """Handle import from YAML."""

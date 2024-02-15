@@ -19,5 +19,12 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "No unconfigured devices found. Make sure that the desk is in Bluetooth pairing mode. Enter pairing mode by pressing the small button with the Bluetooth logo on the controller for about 3 seconds, until it starts blinking."
     }
+  },
+  "entity": {
+    "sensor": {
+      "height": {
+        "name": "Height"
+      }
+    }
   }
 }

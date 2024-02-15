@@ -73,7 +73,7 @@ async def test_factory_reset_error_1(
     ) as factory_reset_mock, patch(
         "python_otbr_api.OTBR.delete_active_dataset"
     ) as delete_active_dataset_mock, pytest.raises(
-        HomeAssistantError
+        HomeAssistantError,
     ):
         await data.factory_reset()
 
@@ -94,7 +94,7 @@ async def test_factory_reset_error_2(
         "python_otbr_api.OTBR.delete_active_dataset",
         side_effect=python_otbr_api.OTBRError,
     ) as delete_active_dataset_mock, pytest.raises(
-        HomeAssistantError
+        HomeAssistantError,
     ):
         await data.factory_reset()
 

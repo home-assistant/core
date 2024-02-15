@@ -62,6 +62,12 @@
       },
       "neighboring_wifi_networks": {
         "name": "Neighboring Wifi networks"
+      },
+      "plc_rx_rate": {
+        "name": "PLC downlink PHY rate"
+      },
+      "plc_tx_rate": {
+        "name": "PLC uplink PHY rate"
       }
     },
     "switch": {

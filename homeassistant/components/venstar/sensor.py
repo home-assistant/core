@@ -65,7 +65,7 @@ SCHEDULE_PARTS: dict[int, str] = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class VenstarSensorTypeMixin:
     """Mixin for sensor required keys."""
 
@@ -74,7 +74,7 @@ class VenstarSensorTypeMixin:
     uom_fn: Callable[[Any], str | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class VenstarSensorEntityDescription(SensorEntityDescription, VenstarSensorTypeMixin):
     """Base description of a Sensor entity."""
 

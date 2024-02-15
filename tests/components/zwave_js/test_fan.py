@@ -536,13 +536,14 @@ async def test_inovelli_lzw36(
     assert args["value"] == 1
 
     client.async_send_command.reset_mock()
-    with pytest.raises(NotValidPresetModeError):
+    with pytest.raises(NotValidPresetModeError) as exc:
         await hass.services.async_call(
             "fan",
             "turn_on",
             {"entity_id": entity_id, "preset_mode": "wheeze"},
             blocking=True,
         )
+    assert exc.value.translation_key == "not_valid_preset_mode"
     assert len(client.async_send_command.call_args_list) == 0
 
 
@@ -675,13 +676,14 @@ async def test_thermostat_fan(
     client.async_send_command.reset_mock()
 
     # Test setting unknown preset mode
-    with pytest.raises(ValueError):
+    with pytest.raises(NotValidPresetModeError) as exc:
         await hass.services.async_call(
             FAN_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: entity_id, ATTR_PRESET_MODE: "Turbo"},
             blocking=True,
         )
+    assert exc.value.translation_key == "not_valid_preset_mode"
 
     client.async_send_command.reset_mock()
 

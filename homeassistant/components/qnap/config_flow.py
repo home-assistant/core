@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -22,9 +21,6 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
-    CONF_DRIVES,
-    CONF_NICS,
-    CONF_VOLUMES,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_TIMEOUT,
@@ -50,14 +46,6 @@ class QnapConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Qnap configuration flow."""
 
     VERSION = 1
-
-    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
-        """Set the config entry up from yaml."""
-        import_info.pop(CONF_MONITORED_CONDITIONS, None)
-        import_info.pop(CONF_NICS, None)
-        import_info.pop(CONF_DRIVES, None)
-        import_info.pop(CONF_VOLUMES, None)
-        return await self.async_step_user(import_info)
 
     async def async_step_user(
         self,

@@ -14,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import SwitchbotCloudData
 from .const import DOMAIN
@@ -44,7 +43,6 @@ async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
@@ -55,7 +53,10 @@ async def async_setup_entry(
 
 
 class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
-    """Representation of a SwitchBot air conditionner, as it is an IR device, we don't know the actual state."""
+    """Representation of a SwitchBot air conditionner.
+
+    As it is an IR device, we don't know the actual state.
+    """
 
     _attr_assumed_state = True
     _attr_supported_features = (
@@ -79,6 +80,7 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature = 21
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     async def _do_send_command(
         self,
@@ -116,3 +118,4 @@ class SwitchBotCloudAirConditionner(SwitchBotCloudEntity, ClimateEntity):
             return
         await self._do_send_command(temperature=temperature)
         self._attr_target_temperature = temperature
+        self.async_write_ha_state()

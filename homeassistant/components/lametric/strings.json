@@ -41,7 +41,11 @@
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "reauth_device_not_found": "The device you are trying to re-authenticate is not found in this LaMetric account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     }
   },
   "entity": {

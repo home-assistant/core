@@ -153,8 +153,7 @@ class SynologyPhotosMediaSource(MediaSource):
         ret = []
         for album_item in album_items:
             mime_type, _ = mimetypes.guess_type(album_item.file_name)
-            assert isinstance(mime_type, str)
-            if mime_type.startswith("image/"):
+            if isinstance(mime_type, str) and mime_type.startswith("image/"):
                 # Force small small thumbnails
                 album_item.thumbnail_size = "sm"
                 ret.append(

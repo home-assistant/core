@@ -37,11 +37,15 @@ class WithingsDataUpdateCoordinator(DataUpdateCoordinator[_T]):
     _default_update_interval: timedelta | None = UPDATE_INTERVAL
     _last_valid_update: datetime | None = None
     webhooks_connected: bool = False
+    coordinator_name: str = ""
 
     def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
         super().__init__(
-            hass, LOGGER, name="Withings", update_interval=self._default_update_interval
+            hass,
+            LOGGER,
+            name=f"Withings {self.coordinator_name}",
+            update_interval=self._default_update_interval,
         )
         self._client = client
         self.notification_categories: set[NotificationCategory] = set()
@@ -77,6 +81,8 @@ class WithingsMeasurementDataUpdateCoordinator(
 ):
     """Withings measurement coordinator."""
 
+    coordinator_name: str = "measurements"
+
     def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
         super().__init__(hass, client)
@@ -108,6 +114,8 @@ class WithingsSleepDataUpdateCoordinator(
     WithingsDataUpdateCoordinator[SleepSummary | None]
 ):
     """Withings sleep coordinator."""
+
+    coordinator_name: str = "sleep"
 
     def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
         """Initialize the Withings data coordinator."""
@@ -147,12 +155,16 @@ class WithingsSleepDataUpdateCoordinator(
         )
         if not response:
             return None
-        return response[0]
+
+        return sorted(
+            response, key=lambda sleep_summary: sleep_summary.end_date, reverse=True
+        )[0]
 
 
 class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[None]):
     """Withings bed presence coordinator."""
 
+    coordinator_name: str = "bed presence"
     in_bed: bool | None = None
     _default_update_interval = None
 
@@ -178,6 +190,7 @@ class WithingsBedPresenceDataUpdateCoordinator(WithingsDataUpdateCoordinator[Non
 class WithingsGoalsDataUpdateCoordinator(WithingsDataUpdateCoordinator[Goals]):
     """Withings goals coordinator."""
 
+    coordinator_name: str = "goals"
     _default_update_interval = timedelta(hours=1)
 
     def webhook_subscription_listener(self, connected: bool) -> None:
@@ -194,6 +207,7 @@ class WithingsActivityDataUpdateCoordinator(
 ):
     """Withings activity coordinator."""
 
+    coordinator_name: str = "activity"
     _previous_data: Activity | None = None
 
     def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
@@ -232,6 +246,7 @@ class WithingsWorkoutDataUpdateCoordinator(
 ):
     """Withings workout coordinator."""
 
+    coordinator_name: str = "workout"
     _previous_data: Workout | None = None
 
     def __init__(self, hass: HomeAssistant, client: WithingsClient) -> None:
