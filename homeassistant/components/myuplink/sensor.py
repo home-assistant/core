@@ -10,6 +10,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    Platform,
     UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfFrequency,
@@ -26,6 +27,7 @@ from homeassistant.helpers.typing import StateType
 from . import MyUplinkDataCoordinator
 from .const import DOMAIN
 from .entity import MyUplinkEntity
+from .helpers import find_matching_platform
 
 DEVICE_POINT_UNIT_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "°C": SensorEntityDescription(
@@ -153,32 +155,33 @@ async def async_setup_entry(
     # Setup device point sensors
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
-            description = get_description(device_point)
-            entity_class = MyUplinkDevicePointSensor
-            if (
-                description is not None
-                and description.device_class == SensorDeviceClass.ENUM
-            ):
+            if find_matching_platform(device_point) == Platform.SENSOR:
+                description = get_description(device_point)
+                entity_class = MyUplinkDevicePointSensor
+                if (
+                    description is not None
+                    and description.device_class == SensorDeviceClass.ENUM
+                ):
+                    entities.append(
+                        MyUplinkEnumRawSensor(
+                            coordinator=coordinator,
+                            device_id=device_id,
+                            device_point=device_point,
+                            entity_description=description,
+                            unique_id_suffix=f"{point_id}-raw",
+                        )
+                    )
+                    entity_class = MyUplinkEnumSensor
+
                 entities.append(
-                    MyUplinkEnumRawSensor(
+                    entity_class(
                         coordinator=coordinator,
                         device_id=device_id,
                         device_point=device_point,
                         entity_description=description,
-                        unique_id_suffix=f"{point_id}-raw",
+                        unique_id_suffix=point_id,
                     )
                 )
-                entity_class = MyUplinkEnumSensor
-
-            entities.append(
-                entity_class(
-                    coordinator=coordinator,
-                    device_id=device_id,
-                    device_point=device_point,
-                    entity_description=description,
-                    unique_id_suffix=point_id,
-                )
-            )
 
     async_add_entities(entities)
 

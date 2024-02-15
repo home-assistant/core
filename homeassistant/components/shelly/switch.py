@@ -41,6 +41,7 @@ from .utils import (
     get_rpc_key_ids,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
+    is_rpc_thermostat_internal_actuator,
 )
 
 
@@ -134,7 +135,7 @@ def async_setup_rpc_entry(
             continue
 
         if coordinator.model == MODEL_WALL_DISPLAY:
-            if not coordinator.device.shelly.get("relay_in_thermostat", False):
+            if not is_rpc_thermostat_internal_actuator(coordinator.device.status):
                 # Wall Display relay is not used as the thermostat actuator,
                 # we need to remove a climate entity
                 unique_id = f"{coordinator.mac}-thermostat:{id_}"
