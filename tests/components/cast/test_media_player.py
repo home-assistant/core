@@ -14,6 +14,10 @@ import yarl
 
 from homeassistant.components import media_player, tts
 from homeassistant.components.cast import media_player as cast
+from homeassistant.components.cast.const import (
+    SIGNAL_HASS_CAST_SHOW_VIEW,
+    HomeAssistantControllerData,
+)
 from homeassistant.components.cast.media_player import ChromecastInfo
 from homeassistant.components.media_player import (
     BrowseMedia,
@@ -29,7 +33,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, network
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -2267,3 +2274,70 @@ async def test_cast_platform_play_media_local_media(
         app_data["media_id"]
         == f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla"
     )
+
+
+async def test_ha_cast(hass: HomeAssistant, ha_controller_mock) -> None:
+    """Test Home Assistant cast."""
+    entity_id = "media_player.speaker"
+
+    info = get_fake_chromecast_info()
+
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+    chromecast.cast_type = pychromecast.const.CAST_TYPE_CHROMECAST
+    ha_controller = MagicMock()
+    ha_controller_mock.return_value = ha_controller
+
+    # Test show view signal for other entity is ignored
+    controller_data = HomeAssistantControllerData(
+        hass_url="url",
+        hass_uuid="12341234",
+        client_id="client_id_1234",
+        refresh_token="refresh_token_1234",
+    )
+    async_dispatcher_send(
+        hass,
+        SIGNAL_HASS_CAST_SHOW_VIEW,
+        controller_data,
+        "media_player.other",
+        "view_path",
+        "url_path",
+    )
+    await hass.async_block_till_done()
+    ha_controller_mock.assert_not_called()
+
+    # Test show view signal is handled
+    controller_data = HomeAssistantControllerData(
+        hass_url="url",
+        hass_uuid="12341234",
+        client_id="client_id_1234",
+        refresh_token="refresh_token_1234",
+    )
+    async_dispatcher_send(
+        hass,
+        SIGNAL_HASS_CAST_SHOW_VIEW,
+        controller_data,
+        entity_id,
+        "view_path",
+        "url_path",
+    )
+    await hass.async_block_till_done()
+
+    ha_controller_mock.assert_called_once_with(
+        client_id="client_id_1234",
+        hass_url="url",
+        hass_uuid="12341234",
+        refresh_token="refresh_token_1234",
+        unregister=ANY,
+    )
+    ha_controller.show_lovelace_view.assert_called_once_with("view_path", "url_path")
+    chromecast.unregister_handler.assert_not_called()
+
+    # Call unregister callback
+    unregister_cb = ha_controller_mock.mock_calls[0][2]["unregister"]
+    unregister_cb()
+    chromecast.unregister_handler.assert_called_once_with(ha_controller)
+
+    # Test unregister callback called again
+    chromecast.unregister_handler.reset_mock()
+    unregister_cb()
+    chromecast.unregister_handler.assert_not_called()
