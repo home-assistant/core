@@ -12,7 +12,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import CONF_HEATING_TYPE, DOMAIN, HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
+from .const import (
+    CONF_HEATING_TYPE,
+    DOMAIN,
+    HEATING_TYPE_TO_CREATOR_METHOD,
+    HeatingType,
+)
 from .types import ViCareRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
