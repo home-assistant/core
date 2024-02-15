@@ -20,15 +20,19 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_config_entry(mock_lamarzocco: MagicMock) -> MockConfigEntry:
+def mock_config_entry(
+    hass: HomeAssistant, mock_lamarzocco: MagicMock
+) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    return MockConfigEntry(
+    entry = MockConfigEntry(
         title="My LaMarzocco",
         domain=DOMAIN,
         data=USER_INPUT
         | {CONF_MACHINE: mock_lamarzocco.serial_number, CONF_HOST: "host"},
         unique_id=mock_lamarzocco.serial_number,
     )
+    entry.add_to_hass(hass)
+    return entry
 
 
 @pytest.fixture
@@ -123,6 +127,5 @@ def remove_local_connection(
     """Remove the local connection."""
     data = mock_config_entry.data.copy()
     del data[CONF_HOST]
-    mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(mock_config_entry, data=data)
     return mock_config_entry
