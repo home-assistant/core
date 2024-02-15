@@ -4417,7 +4417,7 @@ async def test_async_call_later_cancel(hass: HomeAssistant) -> None:
     # fast forward time beyond scheduled
     async_fire_time_changed_exact(hass, dt_util.utcnow() + timedelta(seconds=delay))
 
-    with contextlib.suppress(asyncio.TimeoutError):
+    with contextlib.suppress(TimeoutError):
         async with asyncio.timeout(delay + delay_tolerance):
             assert await future, "callback not canceled"
 

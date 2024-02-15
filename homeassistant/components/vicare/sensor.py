@@ -38,12 +38,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixin
 from .const import (
+    DEVICE_LIST,
     DOMAIN,
-    VICARE_API,
     VICARE_CUBIC_METER,
-    VICARE_DEVICE_CONFIG,
     VICARE_KW,
     VICARE_KWH,
     VICARE_PERCENT,
@@ -51,6 +49,7 @@ from .const import (
     VICARE_WH,
 )
 from .entity import ViCareEntity
+from .types import ViCareDevice, ViCareRequiredKeysMixin
 from .utils import get_burners, get_circuits, get_compressors, is_supported
 
 _LOGGER = logging.getLogger(__name__)
@@ -692,6 +691,7 @@ BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="burner_starts",
         icon="mdi:counter",
         value_getter=lambda api: api.getStarts(),
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
@@ -700,6 +700,7 @@ BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_getter=lambda api: api.getHours(),
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
@@ -718,6 +719,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="compressor_starts",
         icon="mdi:counter",
         value_getter=lambda api: api.getStarts(),
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
@@ -726,6 +728,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_getter=lambda api: api.getHours(),
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     ViCareSensorEntityDescription(
@@ -734,6 +737,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_getter=lambda api: api.getHoursLoadClass1(),
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
@@ -743,6 +747,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_getter=lambda api: api.getHoursLoadClass2(),
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
@@ -752,6 +757,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_getter=lambda api: api.getHoursLoadClass3(),
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
@@ -761,6 +767,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_getter=lambda api: api.getHoursLoadClass4(),
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
@@ -770,6 +777,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         icon="mdi:counter",
         native_unit_of_measurement=UnitOfTime.HOURS,
         value_getter=lambda api: api.getHoursLoadClass5(),
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
@@ -788,27 +796,28 @@ def _filter_pv_states(state: str):
 
   
 def _build_entities(
-    device: PyViCareDevice,
-    device_config: PyViCareDeviceConfig,
+    device_list: list[ViCareDevice],
 ) -> list[ViCareSensor]:
     """Create ViCare sensor entities for a device."""
 
-    entities: list[ViCareSensor] = _build_entities_for_device(device, device_config)
-    entities.extend(
-        _build_entities_for_component(
-            get_circuits(device), device_config, CIRCUIT_SENSORS
+    entities: list[ViCareSensor] = []
+    for device in device_list:
+        entities.extend(_build_entities_for_device(device.api, device.config))
+        entities.extend(
+            _build_entities_for_component(
+                get_circuits(device.api), device.config, CIRCUIT_SENSORS
+            )
         )
-    )
-    entities.extend(
-        _build_entities_for_component(
-            get_burners(device), device_config, BURNER_SENSORS
+        entities.extend(
+            _build_entities_for_component(
+                get_burners(device.api), device.config, BURNER_SENSORS
+            )
         )
-    )
-    entities.extend(
-        _build_entities_for_component(
-            get_compressors(device), device_config, COMPRESSOR_SENSORS
+        entities.extend(
+            _build_entities_for_component(
+                get_compressors(device.api), device.config, COMPRESSOR_SENSORS
+            )
         )
-    )
     return entities
 
 
@@ -854,16 +863,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare sensor devices."""
-    api: PyViCareDevice = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
-    device_config: PyViCareDeviceConfig = hass.data[DOMAIN][config_entry.entry_id][
-        VICARE_DEVICE_CONFIG
-    ]
+    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            api,
-            device_config,
+            device_list,
         )
     )
 

@@ -1,0 +1,134 @@
+{
+  "roomIds": [
+    9910, 3304, 24002, 57323, 64218, 2030, 58286, 23884, 61856, 9996, 46225,
+    36919, 34870, 34274
+  ],
+  "roomData": [
+    {
+      "order": 8,
+      "name": "S2l0Y2hlbg==",
+      "colorId": 9,
+      "iconId": 38,
+      "type": 0,
+      "id": 9910,
+      "name_unicode": "Kitchen"
+    },
+    {
+      "order": 6,
+      "name": "U3R1ZHk=",
+      "colorId": 10,
+      "iconId": 73,
+      "type": 0,
+      "id": 3304,
+      "name_unicode": "Study"
+    },
+    {
+      "order": 4,
+      "name": "QmVkbW9vciAtIDQ=",
+      "colorId": 9,
+      "iconId": 91,
+      "type": 0,
+      "id": 24002,
+      "name_unicode": "Bedroom - 4"
+    },
+    {
+      "type": 1,
+      "name": "UmVwZWF0ZXJz",
+      "colorId": 15,
+      "iconId": 0,
+      "order": 9,
+      "id": 57323,
+      "name_unicode": "Repeaters"
+    },
+    {
+      "order": 12,
+      "name": "TGF1bmRyeQ==",
+      "colorId": 3,
+      "iconId": 50,
+      "type": 0,
+      "id": 64218,
+      "name_unicode": "Laundry"
+    },
+    {
+      "order": 1,
+      "name": "QmVkcm9vbSAtIE1hc3Rlcg==",
+      "colorId": 14,
+      "iconId": 12,
+      "type": 0,
+      "id": 2030,
+      "name_unicode": "Bedroom - Master"
+    },
+    {
+      "order": 5,
+      "name": "TG91bmdlIFJvb20=",
+      "colorId": 14,
+      "iconId": 59,
+      "type": 0,
+      "id": 58286,
+      "name_unicode": "Lounge Room"
+    },
+    {
+      "type": 2,
+      "name": "RGVmYXVsdCBSb29t",
+      "colorId": 15,
+      "iconId": 168,
+      "order": 0,
+      "id": 23884,
+      "name_unicode": "Default Room"
+    },
+    {
+      "order": 2,
+      "name": "QmVkbW9vciAtIDI=",
+      "colorId": 11,
+      "iconId": 91,
+      "type": 0,
+      "id": 61856,
+      "name_unicode": "Bedroom - 2"
+    },
+    {
+      "order": 10,
+      "name": "R2FyYWdl",
+      "colorId": 4,
+      "iconId": 0,
+      "type": 0,
+      "id": 9996,
+      "name_unicode": "Garage"
+    },
+    {
+      "order": 3,
+      "name": "QmVkbW9vciAtIDM=",
+      "colorId": 7,
+      "iconId": 91,
+      "type": 0,
+      "id": 46225,
+      "name_unicode": "Bedroom - 3"
+    },
+    {
+      "order": 13,
+      "name": "Q29tbW9u",
+      "colorId": 3,
+      "iconId": 50,
+      "type": 0,
+      "id": 36919,
+      "name_unicode": "Common"
+    },
+    {
+      "order": 11,
+      "name": "UnVtcHVz",
+      "colorId": 3,
+      "iconId": 50,
+      "type": 0,
+      "id": 34870,
+      "name_unicode": "Rumpus"
+    },
+    {
+      "order": 7,
+      "name": "RmFtaWx5IFJvb20=",
+      "colorId": 8,
+      "iconId": 17,
+      "type": 0,
+      "id": 34274,
+      "name_unicode": "Family Room"
+    }
+  ]
+}
