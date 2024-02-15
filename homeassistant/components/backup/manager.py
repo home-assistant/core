@@ -82,6 +82,38 @@ class BackupManager:
             return
         self.platforms[integration_domain] = platform
 
+    async def pre_backup_actions(self) -> None:
+        """Perform pre backup actions."""
+        if not self.loaded_platforms:
+            await self.load_platforms()
+
+        pre_backup_results = await asyncio.gather(
+            *(
+                platform.async_pre_backup(self.hass)
+                for platform in self.platforms.values()
+            ),
+            return_exceptions=True,
+        )
+        for result in pre_backup_results:
+            if isinstance(result, Exception):
+                raise result
+
+    async def post_backup_actions(self) -> None:
+        """Perform post backup actions."""
+        if not self.loaded_platforms:
+            await self.load_platforms()
+
+        post_backup_results = await asyncio.gather(
+            *(
+                platform.async_post_backup(self.hass)
+                for platform in self.platforms.values()
+            ),
+            return_exceptions=True,
+        )
+        for result in post_backup_results:
+            if isinstance(result, Exception):
+                raise result
+
     async def load_backups(self) -> None:
         """Load data of stored backup files."""
         backups = await self.hass.async_add_executor_job(self._read_backups)
@@ -160,22 +192,9 @@ class BackupManager:
         if self.backing_up:
             raise HomeAssistantError("Backup already in progress")
 
-        if not self.loaded_platforms:
-            await self.load_platforms()
-
         try:
             self.backing_up = True
-            pre_backup_results = await asyncio.gather(
-                *(
-                    platform.async_pre_backup(self.hass)
-                    for platform in self.platforms.values()
-                ),
-                return_exceptions=True,
-            )
-            for result in pre_backup_results:
-                if isinstance(result, Exception):
-                    raise result
-
+            await self.pre_backup_actions()
             backup_name = f"Core {HAVERSION}"
             date_str = dt_util.now().isoformat()
             slug = _generate_slug(date_str, backup_name)
@@ -208,16 +227,7 @@ class BackupManager:
             return backup
         finally:
             self.backing_up = False
-            post_backup_results = await asyncio.gather(
-                *(
-                    platform.async_post_backup(self.hass)
-                    for platform in self.platforms.values()
-                ),
-                return_exceptions=True,
-            )
-            for result in post_backup_results:
-                if isinstance(result, Exception):
-                    raise result
+            await self.post_backup_actions()
 
     def _mkdir_and_generate_backup_contents(
         self,
