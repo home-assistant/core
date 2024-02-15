@@ -84,6 +84,7 @@ async def test_async_handle_message(hass: HomeAssistant) -> None:
         hass,
         config,
         "test-agent",
+        "test-agent",
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -103,6 +104,7 @@ async def test_async_handle_message(hass: HomeAssistant) -> None:
     result = await sh.async_handle_message(
         hass,
         config,
+        "test-agent",
         "test-agent",
         {
             "requestId": REQ_ID,
@@ -168,6 +170,7 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
     result = await sh.async_handle_message(
         hass,
         config,
+        "test-agent",
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
@@ -299,6 +302,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
         hass,
         config,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -407,6 +411,7 @@ async def test_query_message(hass: HomeAssistant) -> None:
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -493,6 +498,7 @@ async def test_execute(
     result = await sh.async_handle_message(
         hass,
         MockConfig(should_report_state=report_state),
+        None,
         None,
         {
             "requestId": REQ_ID,
@@ -654,6 +660,7 @@ async def test_execute_times_out(
             hass,
             MockConfig(should_report_state=report_state),
             None,
+            None,
             {
                 "requestId": REQ_ID,
                 "inputs": [
@@ -800,6 +807,7 @@ async def test_raising_error_trait(hass: HomeAssistant) -> None:
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -890,6 +898,7 @@ async def test_unavailable_state_does_sync(hass: HomeAssistant) -> None:
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        "test-agent",
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
@@ -984,6 +993,7 @@ async def test_device_class_switch(
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -1032,6 +1042,7 @@ async def test_device_class_binary_sensor(
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        "test-agent",
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
@@ -1086,6 +1097,7 @@ async def test_device_class_cover(
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -1133,6 +1145,7 @@ async def test_device_media_player(
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -1171,6 +1184,7 @@ async def test_query_disconnect(hass: HomeAssistant) -> None:
             hass,
             config,
             "test-agent",
+            "test-agent",
             {"inputs": [{"intent": "action.devices.DISCONNECT"}], "requestId": REQ_ID},
             const.SOURCE_CLOUD,
         )
@@ -1197,6 +1211,7 @@ async def test_trait_execute_adding_query_data(hass: HomeAssistant) -> None:
         result = await sh.async_handle_message(
             hass,
             BASIC_CONFIG,
+            None,
             None,
             {
                 "requestId": REQ_ID,
@@ -1255,6 +1270,7 @@ async def test_identify(hass: HomeAssistant) -> None:
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        user_agent_id,
         user_agent_id,
         {
             "requestId": REQ_ID,
@@ -1344,6 +1360,7 @@ async def test_reachable_devices(hass: HomeAssistant) -> None:
         hass,
         config,
         user_agent_id,
+        user_agent_id,
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -1430,6 +1447,7 @@ async def test_sync_message_recovery(
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
         const.SOURCE_CLOUD,
     )
@@ -1490,6 +1508,7 @@ async def test_query_recover(
         hass,
         BASIC_CONFIG,
         "test-agent",
+        "test-agent",
         {
             "requestId": REQ_ID,
             "inputs": [
@@ -1530,6 +1549,7 @@ async def test_proxy_selected(
     result = await sh.async_handle_message(
         hass,
         BASIC_CONFIG,
+        "test-agent",
         "test-agent",
         {
             "requestId": REQ_ID,

@@ -46,7 +46,7 @@ from .const import (
     NOT_EXPOSE_LOCAL,
     SOURCE_LOCAL,
 )
-from .data_redaction import async_redact_request_msg, async_redact_response_msg
+from .data_redaction import async_redact_msg
 from .error import SmartHomeError
 
 SYNC_DELAY = 15
@@ -175,8 +175,15 @@ class AbstractConfig(ABC):
         """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
 
     @abstractmethod
-    def get_agent_user_id(self, context):
+    def get_agent_user_id_from_context(self, context):
         """Get agent user ID from context."""
+
+    @abstractmethod
+    def get_agent_user_id_from_webhook(self, webhook_id):
+        """Map webhook ID to a Google agent user ID.
+
+        Return None if no agent user id is found for the webhook_id.
+        """
 
     @abstractmethod
     def should_expose(self, state) -> bool:
@@ -409,14 +416,17 @@ class AbstractConfig(ABC):
         payload = await request.json()
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
+            msgid = "<UNKNOWN>"
+            if isinstance(payload, dict):
+                msgid = payload.get("requestId")
             _LOGGER.debug(
-                "Received local message from %s (JS %s):\n%s\n",
+                "Received local message %s from %s (JS %s)",
+                msgid,
                 request.remote,
                 request.headers.get("HA-Cloud-Version", "unknown"),
-                pprint.pformat(async_redact_request_msg(payload)),
             )
 
-        if (agent_user_id := self.get_local_user_id(webhook_id)) is None:
+        if (agent_user_id := self.get_agent_user_id_from_webhook(webhook_id)) is None:
             # No agent user linked to this webhook, means that the user has somehow unregistered
             # removing webhook and stopping processing of this request.
             _LOGGER.error(
@@ -425,7 +435,7 @@ class AbstractConfig(ABC):
                     " found:\n%s\n"
                 ),
                 partial_redact(webhook_id),
-                pprint.pformat(async_redact_request_msg(payload)),
+                pprint.pformat(async_redact_msg(payload, agent_user_id)),
             )
             webhook.async_unregister(self.hass, webhook_id)
             return None
@@ -439,15 +449,16 @@ class AbstractConfig(ABC):
             self.hass,
             self,
             agent_user_id,
+            self.get_local_user_id(webhook_id),
             payload,
             SOURCE_LOCAL,
         )
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug(
-                "Responding to local message:\n%s\n",
-                pprint.pformat(async_redact_response_msg(result)),
-            )
+            if isinstance(payload, dict):
+                _LOGGER.debug("Responding to local message %s", msgid)
+            else:
+                _LOGGER.debug("Empty response to local message %s", msgid)
 
         return json_response(result)
 

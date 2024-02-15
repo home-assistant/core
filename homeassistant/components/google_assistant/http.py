@@ -144,9 +144,20 @@ class GoogleConfig(AbstractConfig):
             return data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
         return None
 
-    def get_agent_user_id(self, context):
+    def get_agent_user_id_from_context(self, context):
         """Get agent user ID making request."""
         return context.user_id
+
+    def get_agent_user_id_from_webhook(self, webhook_id):
+        """Map webhook ID to a Google agent user ID.
+
+        Return None if no agent user id is found for the webhook_id.
+        """
+        for agent_user_id, agent_user_data in self._store.agent_user_ids.items():
+            if agent_user_data[STORE_GOOGLE_LOCAL_WEBHOOK_ID] == webhook_id:
+                return agent_user_id
+
+        return None
 
     def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
@@ -371,6 +382,7 @@ class GoogleAssistantView(HomeAssistantView):
         result = await async_handle_message(
             request.app["hass"],
             self.config,
+            request["hass_user"].id,
             request["hass_user"].id,
             message,
             SOURCE_CLOUD,
