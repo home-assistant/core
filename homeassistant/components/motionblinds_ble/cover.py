@@ -84,6 +84,7 @@ async def async_setup_entry(
 class GenericBlind(CoverEntity):
     """Representation of a blind."""
 
+    _attr_is_closed: bool | None = None
     _attr_should_poll: bool = False
 
     _device: MotionDevice
