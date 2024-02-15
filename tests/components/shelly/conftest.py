@@ -165,12 +165,8 @@ MOCK_BLOCKS = [
 
 MOCK_CONFIG = {
     "input:0": {"id": 0, "name": "Test name input 0", "type": "button"},
-    "input:2": {
-        "id": 2,
-        "name": "Gas",
-        "type": "count",
-        "enable": True,
-    },
+    "input:1": {"id": 1, "type": "analog", "enable": True},
+    "input:2": {"id": 2, "name": "Gas", "type": "count", "enable": True},
     "light:0": {"name": "test light_0"},
     "switch:0": {"name": "test switch_0"},
     "cover:0": {"name": "test cover_0"},
@@ -205,7 +201,6 @@ MOCK_SHELLY_RPC = {
     "auth_en": False,
     "auth_domain": None,
     "profile": "cover",
-    "relay_in_thermostat": True,
 }
 
 MOCK_STATUS_COAP = {
@@ -223,7 +218,8 @@ MOCK_STATUS_COAP = {
 
 MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
-    "input:0": {"id": 0, "state": None, "xpercent": 8.9},
+    "input:0": {"id": 0, "state": None},
+    "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
     "input:2": {"id": 2, "counts": {"total": 56174, "xtotal": 561.74}},
     "light:0": {"output": True, "brightness": 53.0},
     "cloud": {"connected": False},
@@ -251,7 +247,8 @@ MOCK_STATUS_RPC = {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
             "stable": {"version": "some_beta_version"},
-        }
+        },
+        "relay_in_thermostat": True,
     },
     "voltmeter": {"voltage": 4.321},
     "wifi": {"rssi": -63},
