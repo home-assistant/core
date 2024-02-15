@@ -383,8 +383,10 @@ async def async_get_translations(
     """
     if integrations is None and config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
+    elif integrations is not None:
+        components = set(integrations)
     else:
-        components = _async_get_components(hass, category, integrations)
+        components = _async_get_components(hass, category)
 
     return await async_get_translations_cache(hass).async_fetch(
         language, category, components
@@ -403,9 +405,11 @@ def async_get_cached_translations(
     If integration is specified, return translations for it.
     Otherwise, default to all loaded integrations.
     """
-    components = _async_get_components(
-        hass, category, {integration} if integration is not None else None
-    )
+    if integration is not None:
+        components = {integration}
+    else:
+        components = _async_get_components(hass, category)
+
     return async_get_translations_cache(hass).get_cached(language, category, components)
 
 
@@ -423,11 +427,8 @@ _DIRECT_MAPPED_CATEGORIES = {"state", "entity_component", "services"}
 def _async_get_components(
     hass: HomeAssistant,
     category: str,
-    integrations: Iterable[str] | None = None,
 ) -> set[str]:
     """Return a set of components for which translations should be loaded."""
-    if integrations is not None:
-        return integrations if type(integrations) is set else set(integrations)  # noqa: E721
     if category in _DIRECT_MAPPED_CATEGORIES:
         return hass.config.components
     # Only 'state' supports merging, so remove platforms from selection
