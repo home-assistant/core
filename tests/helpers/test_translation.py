@@ -519,28 +519,28 @@ async def test_load_state_translations_to_cache(
     """Test the load state translations to cache helper."""
 
     with patch(
-        "homeassistant.helpers.translation._async_load_translations",
+        "homeassistant.helpers.translation._async_get_components_for_categories",
+        return_value=({}, set()),
     ) as mock:
         await translation._async_load_state_translations_to_cache(hass, "en", None)
         mock.assert_has_calls(
             [
-                call(hass, "en", "entity", None),
-                call(hass, "en", "state", None),
-                call(hass, "en", "entity_component", None),
+                call(hass, ("entity", "state", "entity_component"), None),
             ]
         )
 
     with patch(
-        "homeassistant.helpers.translation._async_load_translations",
+        "homeassistant.helpers.translation._async_get_components_for_categories",
+        return_value=({}, set()),
     ) as mock:
         await translation._async_load_state_translations_to_cache(
             hass, "en", "some_integration"
         )
         mock.assert_has_calls(
             [
-                call(hass, "en", "entity", "some_integration"),
-                call(hass, "en", "state", "some_integration"),
-                call(hass, "en", "entity_component", "some_integration"),
+                call(
+                    hass, ("entity", "state", "entity_component"), {"some_integration"}
+                ),
             ]
         )
 
@@ -725,3 +725,32 @@ async def test_translate_state(hass: HomeAssistant):
             ]
         )
         assert result == "on"
+
+
+async def test_translation_merging_loaded_together_multiple_categories(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we merge translations of two integrations when they are loaded at the same time."""
+    hass.config.components.add("hue")
+    hass.config.components.add("homekit")
+    hue_translations = await translation.async_get_translations_for_categories(
+        hass, "en", {"title", "config"}, integrations={"hue"}
+    )
+    assert hue_translations["config"]
+    assert hue_translations["title"]
+    homekit_translations = await translation.async_get_translations_for_categories(
+        hass, "en", {"title", "config"}, integrations={"homekit"}
+    )
+    assert homekit_translations["config"]
+    assert homekit_translations["title"]
+    translations = await translation.async_get_translations_for_categories(
+        hass, "en", {"title", "config"}, integrations={"hue", "homekit"}
+    )
+    assert (
+        translations["config"]
+        == hue_translations["config"] | homekit_translations["config"]
+    )
+    assert (
+        translations["title"]
+        == hue_translations["title"] | homekit_translations["title"]
+    )

@@ -226,39 +226,43 @@ class _TranslationCache:
     async def async_fetch(
         self,
         language: str,
-        category: str,
-        components: set[str],
-    ) -> dict[str, str]:
+        components_for_categories: dict[str, set[str]],
+        all_components: set[str],
+    ) -> dict[str, dict[str, str]]:
         """Load resources into the cache and return them."""
-        await self.async_load(language, components)
-
-        return self.get_cached(language, category, components)
+        await self.async_load(language, all_components)
+        return self.get_cached(language, components_for_categories)
 
     def get_cached(
         self,
         language: str,
-        category: str,
-        components: set[str],
-    ) -> dict[str, str]:
+        components_for_categories: dict[str, set[str]],
+    ) -> dict[str, dict[str, str]]:
         """Read resources from the cache."""
-        category_cache = self.cache.get(language, {}).get(category, {})
-        # If only one component was requested, return it directly
-        # to avoid merging the dictionaries and keeping additional
-        # copies of the same data in memory.
-        if len(components) == 1 and (component := next(iter(components))):
-            return category_cache.get(component, {})
+        results_for_categories: dict[str, dict[str, str]] = {}
+        language_cache = self.cache.get(language, {})
+        for category, components in components_for_categories.items():
+            category_cache = language_cache.get(category, {})
 
-        result: dict[str, str] = {}
-        for component in components.intersection(category_cache):
-            result.update(category_cache[component])
-        return result
+            # If only one component was requested, return it directly
+            # to avoid merging the dictionaries and keeping additional
+            # copies of the same data in memory.
+            if len(components) == 1 and (component := next(iter(components))):
+                results_for_categories[category] = category_cache.get(component, {})
+                continue
+
+            result = results_for_categories[category] = {}
+            for component in components.intersection(category_cache):
+                result.update(category_cache[component])
+
+        return results_for_categories
 
     async def _async_load(self, language: str, components: set[str]) -> None:
         """Populate the cache for a given set of components."""
         _LOGGER.debug(
             "Cache miss for %s: %s",
             language,
-            ", ".join(components),
+            components,
         )
         # Fetch the English resources, as a fallback for missing keys
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
@@ -375,38 +379,82 @@ async def async_get_translations(
     integrations: Iterable[str] | None = None,
     config_flow: bool | None = None,
 ) -> dict[str, str]:
-    """Return all backend translations.
+    """Return all backend translations for a single category.
 
-    If integration is specified, load it for that one.
-    Otherwise, default to loaded integrations combined with config flow
+    It is preferred to use async_get_translations_for_categories
+    to group multiple categories together as its more efficient.
+
+    If integration specified, load it for that one.
+    Otherwise default to loaded integrations combined with config flow
     integrations if config_flow is true.
     """
-    if integrations is None and config_flow:
-        components = (await async_get_config_flows(hass)) - hass.config.components
-    else:
-        components = _async_get_components(hass, category, integrations)
-
-    cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
-
-    return await cache.async_fetch(language, category, components)
+    return (
+        await async_get_translations_for_categories(
+            hass, language, (category,), integrations, config_flow
+        )
+    )[category]
 
 
-async def _async_load_translations(
+async def async_get_translations_for_categories(
     hass: HomeAssistant,
     language: str,
-    category: str,
-    integration: str | None,
-) -> None:
-    """Prime backend translation cache.
+    categories: Iterable[str],
+    integrations: Iterable[str] | None = None,
+    config_flow: bool | None = None,
+) -> dict[str, dict[str, str]]:
+    """Return all backend translations for multiple categories.
 
-    If integration is not specified, translation cache is primed for all loaded integrations.
+    If integration specified, load it for that one.
+    Otherwise default to loaded integrations combined with config flow
+    integrations if config_flow is true.
     """
-    components = _async_get_components(
-        hass, category, [integration] if integration is not None else None
-    )
+    components: set[str] | None = None
+    if integrations is None and config_flow:
+        components = (await async_get_config_flows(hass)) - hass.config.components
+    elif integrations is not None:
+        components = integrations if type(integrations) is set else set(integrations)  # noqa: E721
 
-    cache = hass.data[TRANSLATION_FLATTEN_CACHE]
-    await cache.async_load(language, components)
+    components_for_categories, all_components = _async_get_components_for_categories(
+        hass, categories, components
+    )
+    cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
+    return await cache.async_fetch(language, components_for_categories, all_components)
+
+
+_DIRECT_MAPPED_CATEGORIES = {"state", "entity_component", "services"}
+
+
+@callback
+def _async_get_components_for_categories(
+    hass: HomeAssistant,
+    categories: Iterable[str],
+    components: set[str] | None,
+) -> tuple[dict[str, set[str]], set[str]]:
+    """Return a set of components for which translations should be loaded."""
+    all_components: set[str] = set()
+    components_without_platforms: set[str] | None = None
+    components_for_categories: dict[str, set[str]] = {}
+    for category in categories:
+        if components is not None:
+            # If components specified, we can skip the
+            # figuring out the which components to load step.
+            components_for_category = components
+        elif category in _DIRECT_MAPPED_CATEGORIES:
+            components_for_category = hass.config.components
+        else:
+            # Only 'state' supports merging, so remove platforms from selection
+            if components_without_platforms is None:
+                components_without_platforms = {
+                    component
+                    for component in hass.config.components
+                    if "." not in component
+                }
+            components_for_category = components_without_platforms
+
+        components_for_categories[category] = components_for_category
+        all_components.update(components_for_category)
+
+    return components_for_categories, all_components
 
 
 @callback
@@ -421,31 +469,14 @@ def async_get_cached_translations(
     If integration is specified, return translations for it.
     Otherwise, default to all loaded integrations.
     """
-    components = _async_get_components(
-        hass, category, [integration] if integration is not None else None
+    components_for_categories, _ = _async_get_components_for_categories(
+        hass, (category,), {integration} if integration else None
     )
-
     cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
-    return cache.get_cached(language, category, components)
+    return cache.get_cached(language, components_for_categories)[category]
 
 
-@callback
-def _async_get_components(
-    hass: HomeAssistant,
-    category: str,
-    integrations: Iterable[str] | None = None,
-) -> set[str]:
-    """Return a set of components for which translations should be loaded."""
-    if integrations is not None:
-        components = set(integrations)
-    elif category in ("state", "entity_component", "services"):
-        components = hass.config.components
-    else:
-        # Only 'state' supports merging, so remove platforms from selection
-        components = {
-            component for component in hass.config.components if "." not in component
-        }
-    return components
+_STATE_TRANSLATION_CATEGORIES = ("entity", "state", "entity_component")
 
 
 async def _async_load_state_translations_to_cache(
@@ -454,9 +485,13 @@ async def _async_load_state_translations_to_cache(
     integration: str | None,
 ) -> None:
     """Load state translations to cache."""
-    await _async_load_translations(hass, language, "entity", integration)
-    await _async_load_translations(hass, language, "state", integration)
-    await _async_load_translations(hass, language, "entity_component", integration)
+    _, components = _async_get_components_for_categories(
+        hass,
+        _STATE_TRANSLATION_CATEGORIES,
+        {integration} if integration else None,
+    )
+    cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
+    await cache.async_load(language, components)
 
 
 @callback
