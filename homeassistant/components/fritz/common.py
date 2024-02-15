@@ -305,6 +305,10 @@ class FritzBoxTools(
         if key not in self._entity_update_functions:
             _LOGGER.debug("register entity %s for updates", key)
             self._entity_update_functions[key] = update_fn
+            if self.fritz_status:
+                self.data["entity_states"][key] = update_fn(
+                    self.fritz_status, self.data["entity_states"].get(key)
+                )
         return unregister_entity_updates
 
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
@@ -317,10 +321,7 @@ class FritzBoxTools(
             await self.async_scan_devices()
             for key in list(self._entity_update_functions):
                 _LOGGER.debug("update entity %s", key)
-                entity_data["entity_states"][
-                    key
-                ] = await self.hass.async_add_executor_job(
-                    self._entity_update_functions[key],
+                entity_data["entity_states"][key] = self._entity_update_functions[key](
                     self.fritz_status,
                     self.data["entity_states"].get(key),
                 )
