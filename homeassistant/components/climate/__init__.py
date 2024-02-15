@@ -796,9 +796,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             await self.hass.async_add_executor_job(self.toggle)
             return
 
-        if not (self._is_turn_on_supported and self._is_turn_off_supported):
-            raise NotImplementedError
-
         # We assume that since turn_off is supported, HVACMode.OFF is as well.
         if self.hvac_mode == HVACMode.OFF:
             await self.async_turn_on()
