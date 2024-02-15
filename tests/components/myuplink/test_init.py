@@ -1,7 +1,7 @@
 """Tests for init module."""
 import http
 import time
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -17,7 +17,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_load_unload_entry(
     hass: HomeAssistant,
-    mock_myuplink_client: AsyncMock,
+    mock_myuplink_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test load and unload entry."""
