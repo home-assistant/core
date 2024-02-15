@@ -46,12 +46,8 @@ FakeUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e2")
 FakeUUID2 = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e4")
 FakeGroupUUID = UUID("57355bce-9364-4aa6-ac1e-eb849dccf9e3")
 
-FAKE_HOST_SERVICE = pychromecast.discovery.ServiceInfo(
-    pychromecast.const.SERVICE_TYPE_HOST, ("127.0.0.1", 8009)
-)
-FAKE_MDNS_SERVICE = pychromecast.discovery.ServiceInfo(
-    pychromecast.const.SERVICE_TYPE_MDNS, "the-service"
-)
+FAKE_HOST_SERVICE = pychromecast.discovery.HostServiceInfo("127.0.0.1", 8009)
+FAKE_MDNS_SERVICE = pychromecast.discovery.MDNSServiceInfo("the-service")
 
 UNDEFINED = object()
 
@@ -77,9 +73,7 @@ def get_fake_chromecast_info(
     """Generate a Fake ChromecastInfo with the specified arguments."""
 
     if service is None:
-        service = pychromecast.discovery.ServiceInfo(
-            pychromecast.const.SERVICE_TYPE_HOST, (host, port)
-        )
+        service = pychromecast.discovery.HostServiceInfo(host, port)
     if cast_type is UNDEFINED:
         cast_type = CAST_TYPE_GROUP if port != 8009 else CAST_TYPE_CHROMECAST
     if manufacturer is UNDEFINED:
@@ -144,7 +138,11 @@ async def async_setup_cast_internal_discovery(hass, config=None):
         remove_callback = cast_browser.call_args[0][0].remove_cast
 
     def discover_chromecast(
-        service: pychromecast.discovery.ServiceInfo, info: ChromecastInfo
+        service: (
+            pychromecast.discovery.HostServiceInfo
+            | pychromecast.discovery.MDNSServiceInfo
+        ),
+        info: ChromecastInfo,
     ) -> None:
         """Discover a chromecast device."""
         browser.devices[info.uuid] = pychromecast.discovery.CastInfo(
@@ -214,7 +212,7 @@ async def async_setup_media_player_cast(hass: HomeAssistant, info: ChromecastInf
             info.cast_info.cast_type,
             info.cast_info.manufacturer,
         )
-        discovery_callback(info.uuid, FAKE_MDNS_SERVICE[1])
+        discovery_callback(info.uuid, FAKE_MDNS_SERVICE.name)
 
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -488,9 +486,7 @@ async def test_manual_cast_chromecasts_uuid(hass: HomeAssistant) -> None:
         return_value=zconf_2,
     ):
         discover_cast(
-            pychromecast.discovery.ServiceInfo(
-                pychromecast.const.SERVICE_TYPE_MDNS, "service2"
-            ),
+            pychromecast.discovery.MDNSServiceInfo("service2"),
             cast_2,
         )
     await hass.async_block_till_done()
@@ -502,9 +498,7 @@ async def test_manual_cast_chromecasts_uuid(hass: HomeAssistant) -> None:
         return_value=zconf_1,
     ):
         discover_cast(
-            pychromecast.discovery.ServiceInfo(
-                pychromecast.const.SERVICE_TYPE_MDNS, "service1"
-            ),
+            pychromecast.discovery.MDNSServiceInfo("service1"),
             cast_1,
         )
     await hass.async_block_till_done()
@@ -526,9 +520,7 @@ async def test_auto_cast_chromecasts(hass: HomeAssistant) -> None:
         return_value=zconf_1,
     ):
         discover_cast(
-            pychromecast.discovery.ServiceInfo(
-                pychromecast.const.SERVICE_TYPE_MDNS, "service2"
-            ),
+            pychromecast.discovery.MDNSServiceInfo("service2"),
             cast_2,
         )
     await hass.async_block_till_done()
@@ -540,9 +532,7 @@ async def test_auto_cast_chromecasts(hass: HomeAssistant) -> None:
         return_value=zconf_2,
     ):
         discover_cast(
-            pychromecast.discovery.ServiceInfo(
-                pychromecast.const.SERVICE_TYPE_MDNS, "service1"
-            ),
+            pychromecast.discovery.MDNSServiceInfo("service1"),
             cast_1,
         )
     await hass.async_block_till_done()
@@ -591,9 +581,7 @@ async def test_discover_dynamic_group(
         wraps=create_task,
     ):
         discover_cast(
-            pychromecast.discovery.ServiceInfo(
-                pychromecast.const.SERVICE_TYPE_MDNS, "service"
-            ),
+            pychromecast.discovery.MDNSServiceInfo("service"),
             cast_1,
         )
         await hass.async_block_till_done()
@@ -619,9 +607,7 @@ async def test_discover_dynamic_group(
         wraps=create_task,
     ):
         discover_cast(
-            pychromecast.discovery.ServiceInfo(
-                pychromecast.const.SERVICE_TYPE_MDNS, "service"
-            ),
+            pychromecast.discovery.MDNSServiceInfo("service"),
             cast_2,
         )
         await hass.async_block_till_done()
@@ -647,9 +633,7 @@ async def test_discover_dynamic_group(
         wraps=create_task,
     ):
         discover_cast(
-            pychromecast.discovery.ServiceInfo(
-                pychromecast.const.SERVICE_TYPE_MDNS, "service"
-            ),
+            pychromecast.discovery.MDNSServiceInfo("service"),
             cast_1,
         )
         await hass.async_block_till_done()
@@ -670,9 +654,7 @@ async def test_discover_dynamic_group(
         return_value=zconf_1,
     ):
         remove_cast(
-            pychromecast.discovery.ServiceInfo(
-                pychromecast.const.SERVICE_TYPE_MDNS, "service"
-            ),
+            pychromecast.discovery.MDNSServiceInfo("service"),
             cast_1,
         )
         await hass.async_block_till_done()
@@ -696,9 +678,7 @@ async def test_update_cast_chromecasts(hass: HomeAssistant) -> None:
         return_value=zconf_1,
     ):
         discover_cast(
-            pychromecast.discovery.ServiceInfo(
-                pychromecast.const.SERVICE_TYPE_MDNS, "service1"
-            ),
+            pychromecast.discovery.MDNSServiceInfo("service1"),
             cast_1,
         )
     await hass.async_block_till_done()
@@ -710,9 +690,7 @@ async def test_update_cast_chromecasts(hass: HomeAssistant) -> None:
         return_value=zconf_2,
     ):
         discover_cast(
-            pychromecast.discovery.ServiceInfo(
-                pychromecast.const.SERVICE_TYPE_MDNS, "service2"
-            ),
+            pychromecast.discovery.MDNSServiceInfo("service2"),
             cast_2,
         )
     await hass.async_block_till_done()

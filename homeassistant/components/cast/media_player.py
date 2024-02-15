@@ -390,15 +390,15 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         self.media_status_received = dt_util.utcnow()
         self.schedule_update_ha_state()
 
-    def load_media_failed(self, item, error_code):
+    def load_media_failed(self, queue_item_id, error_code):
         """Handle load media failed."""
         _LOGGER.debug(
-            "[%s %s] Load media failed with code %s(%s) for item %s",
+            "[%s %s] Load media failed with code %s(%s) for queue_item_id %s",
             self.entity_id,
             self._cast_info.friendly_name,
             error_code,
             MEDIA_PLAYER_ERROR_CODES.get(error_code, "unknown code"),
-            item,
+            queue_item_id,
         )
 
     def new_connection_status(self, connection_status):
