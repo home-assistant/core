@@ -193,9 +193,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         model_number = data.get(Attribute.MODEL_NUMBER)
         if model_number is not None:
-            device_info["model"] = (
-                MODELS.get(model_number, f"Unknown ({model_number})")
-            )
+            device_info["model"] = MODELS.get(model_number, f"Unknown ({model_number})")
 
         device_info["hw_version"] = self.get_hw_version(data)
 
