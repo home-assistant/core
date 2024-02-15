@@ -205,6 +205,11 @@ class _TranslationCache:
         self.cache: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
         self.lock = asyncio.Lock()
 
+    @callback
+    def async_is_loaded(self, language: str, components: set[str]) -> bool:
+        """Return if the given components are loaded for the language."""
+        return components.issubset(self.loaded.get(language, set()))
+
     async def async_load(
         self,
         language: str,
@@ -388,7 +393,7 @@ async def async_get_translations(
     else:
         components = _async_get_components(hass, category)
 
-    return await async_get_translations_cache(hass).async_fetch(
+    return await _async_get_translations_cache(hass).async_fetch(
         language, category, components
     )
 
@@ -410,11 +415,13 @@ def async_get_cached_translations(
     else:
         components = _async_get_components(hass, category)
 
-    return async_get_translations_cache(hass).get_cached(language, category, components)
+    return _async_get_translations_cache(hass).get_cached(
+        language, category, components
+    )
 
 
 @callback
-def async_get_translations_cache(hass: HomeAssistant) -> _TranslationCache:
+def _async_get_translations_cache(hass: HomeAssistant) -> _TranslationCache:
     """Return the translation cache."""
     cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
     return cache
@@ -461,7 +468,11 @@ def async_setup(hass: HomeAssistant) -> None:
         """Filter out unwanted events."""
         component: str | None = event.data.get("component")
         # Platforms don't have their own translations, skip them
-        return bool(component and "." not in component)
+        return bool(
+            component
+            and "." not in component
+            and not cache.async_is_loaded(hass.config.language, {component})
+        )
 
     async def _async_load_translations_for_component(event: Event) -> None:
         """Load translations for a component."""

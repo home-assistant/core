@@ -523,7 +523,7 @@ async def test_get_cached_translations(
     assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    await translation.async_get_translations_cache(hass).async_load(
+    await translation._async_get_translations_cache(hass).async_load(
         "en", hass.config.components
     )
     translations = translation.async_get_cached_translations(hass, "en", "state")
@@ -531,7 +531,7 @@ async def test_get_cached_translations(
     assert translations["component.switch.state.string1"] == "Value 1"
     assert translations["component.switch.state.string2"] == "Value 2"
 
-    await translation.async_get_translations_cache(hass).async_load(
+    await translation._async_get_translations_cache(hass).async_load(
         "de", hass.config.components
     )
     translations = translation.async_get_cached_translations(hass, "de", "state")
@@ -540,7 +540,7 @@ async def test_get_cached_translations(
     assert translations["component.switch.state.string2"] == "German Value 2"
 
     # Test a partial translation
-    await translation.async_get_translations_cache(hass).async_load(
+    await translation._async_get_translations_cache(hass).async_load(
         "es", hass.config.components
     )
     translations = translation.async_get_cached_translations(hass, "es", "state")
@@ -548,7 +548,7 @@ async def test_get_cached_translations(
     assert translations["component.switch.state.string2"] == "Value 2"
 
     # Test that an untranslated language falls back to English.
-    await translation.async_get_translations_cache(hass).async_load(
+    await translation._async_get_translations_cache(hass).async_load(
         "invalid-language", hass.config.components
     )
     translations = translation.async_get_cached_translations(
