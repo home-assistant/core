@@ -393,7 +393,7 @@ async def test_setup_get_xml(hass: HomeAssistant) -> None:
 
 
 @respx.mock
-async def test_update_with_xml_convert_bad_xml(
+async def test_setup_get_bad_xml(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test attributes get extracted from a XML result with bad xml."""
@@ -401,7 +401,7 @@ async def test_update_with_xml_convert_bad_xml(
     respx.get("http://localhost").respond(
         status_code=HTTPStatus.OK,
         headers={"content-type": "text/xml"},
-        content="",
+        content="<open></close>",
     )
     assert await async_setup_component(
         hass,
