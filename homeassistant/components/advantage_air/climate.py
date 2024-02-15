@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -49,6 +49,24 @@ ADVANTAGE_AIR_MYTEMP_ENABLED = "climateControlModeEnabled"
 ADVANTAGE_AIR_HEAT_TARGET = "myAutoHeatTargetTemp"
 ADVANTAGE_AIR_COOL_TARGET = "myAutoCoolTargetTemp"
 ADVANTAGE_AIR_MYFAN = "autoAA"
+
+HVAC_MODES = [
+    HVACMode.OFF,
+    HVACMode.COOL,
+    HVACMode.HEAT,
+    HVACMode.FAN_ONLY,
+    HVACMode.DRY,
+]
+HVAC_MODES_MYAUTO = HVAC_MODES + [HVACMode.HEAT_COOL]
+SUPPORTED_FEATURES = (
+    ClimateEntityFeature.FAN_MODE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
+)
+SUPPORTED_FEATURES_MYZONE = SUPPORTED_FEATURES | ClimateEntityFeature.TARGET_TEMPERATURE
+SUPPORTED_FEATURES_MYAUTO = (
+    SUPPORTED_FEATURES | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+)
 
 PARALLEL_UPDATES = 0
 
@@ -85,60 +103,56 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_min_temp = 16
     _attr_name = None
     _enable_turn_on_off_backwards_compatibility = False
+    _support_preset = ClimateEntityFeature(0)
 
     def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
 
         self._attr_preset_modes = [ADVANTAGE_AIR_MYZONE]
-        self._attr_supported_features = (
-            ClimateEntityFeature.FAN_MODE
-            | ClimateEntityFeature.TURN_OFF
-            | ClimateEntityFeature.TURN_ON
-        )
-        self._attr_hvac_modes = [
-            HVACMode.OFF,
-            HVACMode.COOL,
-            HVACMode.HEAT,
-            HVACMode.FAN_ONLY,
-            HVACMode.DRY,
-        ]
 
         # Add "MyTemp" preset if available
         if ADVANTAGE_AIR_MYTEMP_ENABLED in self._ac:
             self._attr_preset_modes += [ADVANTAGE_AIR_MYTEMP]
-            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+            self._support_preset = ClimateEntityFeature.PRESET_MODE
 
         # Add "MyAuto" preset if available
         if ADVANTAGE_AIR_MYAUTO_ENABLED in self._ac:
             self._attr_preset_modes += [ADVANTAGE_AIR_MYAUTO]
-            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+            self._support_preset = ClimateEntityFeature.PRESET_MODE
 
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available HVAC modes."""
-        # Dynamically adjust the supported HVAC modes based on the preset mode
-        if self.preset_mode == ADVANTAGE_AIR_MYAUTO:
-            return self._attr_hvac_modes + [HVACMode.HEAT_COOL]
-        return self._attr_hvac_modes
+        # Setup attributes based on current preset
+        self.configure_preset()
 
-    @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return the supported features."""
-        # Dynamically adjust the supported features based on the preset mode
-        if self.preset_mode == ADVANTAGE_AIR_MYZONE:
-            # MyZone supports a single target temp
-            return (
-                self._attr_supported_features | ClimateEntityFeature.TARGET_TEMPERATURE
+    def configure_preset(self) -> None:
+        """Configure attributes based on preset."""
+
+        # Preset Changes
+        if self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED):
+            # MyAuto
+            self._attr_preset_mode = ADVANTAGE_AIR_MYAUTO
+            self._attr_hvac_modes = HVAC_MODES_MYAUTO
+            self._attr_supported_features = (
+                SUPPORTED_FEATURES_MYAUTO | self._support_preset
             )
-        if self.preset_mode == ADVANTAGE_AIR_MYAUTO:
-            # MyAuto supports a target temp range
-            return (
-                self._attr_supported_features
-                | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        elif self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
+            # MyTemp
+            self._attr_preset_mode = ADVANTAGE_AIR_MYTEMP
+            self._attr_hvac_modes = HVAC_MODES
+            self._attr_supported_features = SUPPORTED_FEATURES | self._support_preset
+        else:
+            # MyZone
+            self._attr_preset_mode = ADVANTAGE_AIR_MYZONE
+            self._attr_hvac_modes = HVAC_MODES
+            self._attr_supported_features = (
+                SUPPORTED_FEATURES_MYZONE | self._support_preset
             )
-        # MyTemp does not support any master temperature control
-        return self._attr_supported_features
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.configure_preset()
+        super()._handle_coordinator_update()
 
     @property
     def current_temperature(self) -> float | None:
