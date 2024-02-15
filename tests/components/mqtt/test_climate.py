@@ -1,5 +1,4 @@
 """The tests for the mqtt climate component."""
-import contextlib
 import copy
 import json
 from typing import Any
@@ -505,11 +504,10 @@ async def test_turn_on_and_off_without_power_command(
     assert state.state == "cool"
     mqtt_mock.async_publish.reset_mock()
 
-    with contextlib.suppress(NotImplementedError):
-        await common.async_turn_off(hass, ENTITY_CLIMATE)
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert climate_off is None or state.state == climate_off
     if climate_off:
+        await common.async_turn_off(hass, ENTITY_CLIMATE)
+        state = hass.states.get(ENTITY_CLIMATE)
+        assert climate_off is None or state.state == climate_off
         assert state.state == "off"
         mqtt_mock.async_publish.assert_has_calls([call("mode-topic", "off", 0, False)])
     else:
