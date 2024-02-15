@@ -16,6 +16,7 @@ import voluptuous as vol
 from homeassistant import exceptions
 from homeassistant.components.device_automation import action as device_action
 from homeassistant.const import (
+    ATTR_ACTION_ID,
     CONF_CONTINUE_ON_ERROR,
     CONF_ENTITY_ID,
     CONF_RESPONSE_VARIABLE,
@@ -311,6 +312,12 @@ class ActionEntity:
         self.action[CONF_ENTITY_ID] = async_get_entity_id_from_number(
             self.hass, self.action[CONF_ENTITY_ID]
         )
+
+        if self._action_id:
+            if not self.variables:
+                self.variables = {}
+            self.variables[ATTR_ACTION_ID] = self._action_id
+
         if self.variables and self.context is not None:
             await device_action.async_call_action_from_config(
                 self.hass, self.action, self.variables, self.context
@@ -340,6 +347,7 @@ class ActionEntity:
                 self.hass, self.action, self.variables
             )
 
+            params["service_data"]["action_id"] = self._action_id
             # Validate response data parameters. This check ignores services that do
             # not exist which will raise an appropriate error in the service call below.
             response_variable = self.action.get(CONF_RESPONSE_VARIABLE)

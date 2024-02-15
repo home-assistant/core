@@ -9,6 +9,7 @@ from homeassistant.components.device_automation import (
     toggle_entity,
 )
 from homeassistant.const import (
+    ATTR_ACTION_ID,
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -78,7 +79,10 @@ async def async_call_action_from_config(
         )
         return
 
-    data = {ATTR_ENTITY_ID: config[ATTR_ENTITY_ID]}
+    data = {
+        ATTR_ACTION_ID: variables[ATTR_ACTION_ID] if variables else None,
+        ATTR_ENTITY_ID: config[ATTR_ENTITY_ID],
+    }
 
     if config[CONF_TYPE] == TYPE_BRIGHTNESS_INCREASE:
         data[ATTR_BRIGHTNESS_STEP_PCT] = 10

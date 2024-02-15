@@ -1231,5 +1231,7 @@ LOCK_STATE_ACQUIRED: Final = "acquired"
 LOCK_STATE_RELEASED: Final = "released"
 LOCK_STATE_LEASED: Final = "leased"
 
+
 FCFS: Final = "fcfs"
 FCFS_POST_LEASE: Final = "fcfs_post_lease"
+SCHEDULING_POLICY: Final = "fcfs_post_lease"
