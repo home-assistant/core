@@ -82,7 +82,7 @@ def device_fixture(load_device_file: str) -> Device:
 # Fixture group for systems API endpoint.
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def load_systems_jv_file(load_systems_file: str) -> dict[str, Any]:
     """Load fixture file for systems endpoint."""
     return json_loads(load_systems_file)
