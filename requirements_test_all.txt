@@ -113,7 +113,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.25
+SQLAlchemy==2.0.27
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==2.1
@@ -185,7 +185,7 @@ aioaseko==0.0.2
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2024.2.4
+aioautomower==2024.2.6
 
 # homeassistant.components.azure_devops
 aioazuredevops==1.3.5
@@ -288,7 +288,7 @@ aiomusiccast==0.14.8
 aionanoleaf==0.2.1
 
 # homeassistant.components.notion
-aionotion==2024.02.0
+aionotion==2024.02.1
 
 # homeassistant.components.oncue
 aiooncue==0.3.5
@@ -356,7 +356,7 @@ aioswitcher==3.4.1
 aiosyncthing==0.5.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.3.0
+aiotankerkoenig==0.4.0
 
 # homeassistant.components.tractive
 aiotractive==0.5.6
@@ -377,7 +377,7 @@ aiowaqi==3.0.1
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.3.3
+aiowebostv==0.4.0
 
 # homeassistant.components.withings
 aiowithings==2.1.0
@@ -436,7 +436,7 @@ arcam-fmj==1.4.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.38.1
+async-upnp-client==0.38.2
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.5.2
@@ -507,6 +507,9 @@ bond-async==0.2.1
 # homeassistant.components.bosch_shc
 boschshcpy==0.2.75
 
+# homeassistant.components.bring
+bring-api==0.1.1
+
 # homeassistant.components.broadlink
 broadlink==0.18.3
 
@@ -557,6 +560,9 @@ crownstone-uart==2.1.0
 
 # homeassistant.components.datadog
 datadog==0.15.0
+
+# homeassistant.components.metoffice
+datapoint==0.9.9
 
 # homeassistant.components.bluetooth
 dbus-fast==2.21.1
@@ -968,7 +974,7 @@ leaone-ble==0.1.0
 led-ble==1.0.1
 
 # homeassistant.components.foscam
-libpyfoscam==1.0
+libpyfoscam==1.2.2
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
@@ -1073,7 +1079,7 @@ mutesync==0.0.1
 mypermobil==0.1.8
 
 # homeassistant.components.myuplink
-myuplink==0.1.1
+myuplink==0.2.1
 
 # homeassistant.components.keenetic_ndms2
 ndms2-client==0.1.2
@@ -1265,7 +1271,7 @@ py-nextbusnext==1.0.2
 py-nightscout==1.2.2
 
 # homeassistant.components.ecovacs
-py-sucks==0.9.8
+py-sucks==0.9.9
 
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.1.4
@@ -1491,7 +1497,7 @@ pylitterbot==2023.4.9
 pylutron-caseta==0.19.0
 
 # homeassistant.components.lutron
-pylutron==0.2.11
+pylutron==0.2.12
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1689,9 +1695,6 @@ python-MotionMount==0.3.1
 # homeassistant.components.awair
 python-awair==0.2.4
 
-# homeassistant.components.bring
-python-bring-api==3.0.0
-
 # homeassistant.components.bsblan
 python-bsblan==0.5.18
 
@@ -1802,6 +1805,9 @@ pyvesync==2.1.10
 # homeassistant.components.vizio
 pyvizio==0.1.61
 
+# homeassistant.components.velux
+pyvlx==0.2.21
+
 # homeassistant.components.volumio
 pyvolumio==0.1.5
 
@@ -1902,7 +1908,7 @@ samsungtvws[async,encrypted]==2.6.0
 screenlogicpy==0.10.0
 
 # homeassistant.components.backup
-securetar==2023.3.0
+securetar==2024.2.0
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense

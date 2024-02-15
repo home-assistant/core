@@ -20,18 +20,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import (
-    CONF_HEATING_TYPE,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
-    HEATING_TYPE_TO_CREATOR_METHOD,
-    PLATFORMS,
-    VICARE_API,
-    VICARE_DEVICE_CONFIG,
-    VICARE_DEVICE_CONFIG_LIST,
-    HeatingType,
-)
-from .utils import get_token_path
+from .const import DEFAULT_CACHE_DURATION, DEVICE_LIST, DOMAIN, PLATFORMS
+from .types import ViCareDevice
+from .utils import get_device, get_token_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,10 +61,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def vicare_login(entry_data: Mapping[str, Any], token_file: str) -> PyViCare:
+def vicare_login(
+    entry_data: Mapping[str, Any],
+    token_file: str,
+    cache_duration=DEFAULT_CACHE_DURATION,
+) -> PyViCare:
     """Login via PyVicare API."""
     vicare_api = PyViCare()
-    vicare_api.setCacheDuration(DEFAULT_SCAN_INTERVAL)
+    vicare_api.setCacheDuration(cache_duration)
     vicare_api.initWithCredentials(
         entry_data[CONF_USERNAME],
         entry_data[CONF_PASSWORD],
@@ -85,23 +80,29 @@ def vicare_login(entry_data: Mapping[str, Any], token_file: str) -> PyViCare:
 
 def setup_vicare_api(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up PyVicare API."""
-    vicare_api = vicare_login(entry.data, get_token_path(hass, entry))
+    token_path = get_token_path(hass, entry)
+    vicare_api = vicare_login(entry.data, token_path)
 
     device_config_list = get_supported_devices(vicare_api.devices)
+    if (number_of_devices := len(device_config_list)) > 1:
+        cache_duration = DEFAULT_CACHE_DURATION * number_of_devices
+        _LOGGER.debug(
+            "Found %s devices, adjusting cache duration to %s",
+            number_of_devices,
+            cache_duration,
+        )
+        vicare_api = vicare_login(entry.data, token_path, cache_duration)
+        device_config_list = get_supported_devices(vicare_api.devices)
 
     for device in device_config_list:
         _LOGGER.debug(
             "Found device: %s (online: %s)", device.getModel(), str(device.isOnline())
         )
 
-    # Currently we only support a single device
-    device = device_config_list[0]
-    hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG_LIST] = device_config_list
-    hass.data[DOMAIN][entry.entry_id][VICARE_DEVICE_CONFIG] = device
-    hass.data[DOMAIN][entry.entry_id][VICARE_API] = getattr(
-        device,
-        HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(entry.data[CONF_HEATING_TYPE])],
-    )()
+    hass.data[DOMAIN][entry.entry_id][DEVICE_LIST] = [
+        ViCareDevice(config=device_config, api=get_device(entry, device_config))
+        for device_config in device_config_list
+    ]
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

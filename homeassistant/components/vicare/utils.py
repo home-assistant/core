@@ -2,6 +2,7 @@
 import logging
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
+from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
@@ -11,10 +12,20 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import DOMAIN
+from .const import CONF_HEATING_TYPE, DOMAIN, HEATING_TYPE_TO_CREATOR_METHOD, HeatingType
 from .types import ViCareRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def get_device(
+    entry: ConfigEntry, device_config: PyViCareDeviceConfig
+) -> PyViCareDevice:
+    """Get device for device config."""
+    return getattr(
+        device_config,
+        HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(entry.data[CONF_HEATING_TYPE])],
+    )()
 
 
 def is_supported(
