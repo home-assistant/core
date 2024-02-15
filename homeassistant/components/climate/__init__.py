@@ -767,23 +767,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         raise NotImplementedError
 
-    @property
-    def _is_turn_on_supported(self) -> bool:
-        if (
-            type(self).async_turn_on is not ClimateEntity.async_turn_on
-            or type(self).turn_on is not ClimateEntity.turn_on
-        ):
-            return True
-
-        if len(self.hvac_modes) == 2 and HVACMode.OFF in self.hvac_modes:
-            return True
-
-        for mode in (HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.COOL):
-            if mode in self.hvac_modes:
-                return True
-
-        return False
-
     def turn_off(self) -> None:
         """Turn the entity off."""
         raise NotImplementedError
@@ -801,19 +784,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
 
         raise NotImplementedError
-
-    @property
-    def _is_turn_off_supported(self) -> bool:
-        if (
-            type(self).async_turn_off is not ClimateEntity.async_turn_off
-            or type(self).turn_off is not ClimateEntity.turn_off
-        ):
-            return True
-
-        if HVACMode.OFF in self.hvac_modes:
-            return True
-
-        return False
 
     def toggle(self) -> None:
         """Toggle the entity."""
