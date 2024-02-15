@@ -1,6 +1,5 @@
 """Test the Fully Kiosk Browser config flow."""
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -10,7 +9,13 @@ import pytest
 from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.fully_kiosk.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_MQTT, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
@@ -35,6 +40,8 @@ async def test_user_flow(
         {
             CONF_HOST: "1.1.1.1",
             CONF_PASSWORD: "test-password",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
         },
     )
 
@@ -44,6 +51,8 @@ async def test_user_flow(
         CONF_HOST: "1.1.1.1",
         CONF_PASSWORD: "test-password",
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: False,
     }
     assert "result" in result2
     assert result2["result"].unique_id == "12345"
@@ -57,7 +66,7 @@ async def test_user_flow(
     [
         (FullyKioskError("error", "status"), "cannot_connect"),
         (ClientConnectorError(None, Mock()), "cannot_connect"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (RuntimeError, "unknown"),
     ],
 )
@@ -76,7 +85,13 @@ async def test_errors(
 
     mock_fully_kiosk_config_flow.getDeviceInfo.side_effect = side_effect
     result2 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_HOST: "1.1.1.1", CONF_PASSWORD: "test-password"}
+        flow_id,
+        user_input={
+            CONF_HOST: "1.1.1.1",
+            CONF_PASSWORD: "test-password",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
+        },
     )
 
     assert result2.get("type") == FlowResultType.FORM
@@ -88,7 +103,13 @@ async def test_errors(
 
     mock_fully_kiosk_config_flow.getDeviceInfo.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
-        flow_id, user_input={CONF_HOST: "1.1.1.1", CONF_PASSWORD: "test-password"}
+        flow_id,
+        user_input={
+            CONF_HOST: "1.1.1.1",
+            CONF_PASSWORD: "test-password",
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: False,
+        },
     )
 
     assert result3.get("type") == FlowResultType.CREATE_ENTRY
@@ -97,6 +118,8 @@ async def test_errors(
         CONF_HOST: "1.1.1.1",
         CONF_PASSWORD: "test-password",
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: False,
     }
     assert "result" in result3
     assert result3["result"].unique_id == "12345"
@@ -124,6 +147,8 @@ async def test_duplicate_updates_existing_entry(
         {
             CONF_HOST: "1.1.1.1",
             CONF_PASSWORD: "test-password",
+            CONF_SSL: True,
+            CONF_VERIFY_SSL: True,
         },
     )
 
@@ -133,6 +158,8 @@ async def test_duplicate_updates_existing_entry(
         CONF_HOST: "1.1.1.1",
         CONF_PASSWORD: "test-password",
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: True,
     }
 
     assert len(mock_fully_kiosk_config_flow.getDeviceInfo.mock_calls) == 1
@@ -151,7 +178,7 @@ async def test_dhcp_discovery_updates_entry(
         data=DhcpServiceInfo(
             hostname="tablet",
             ip="127.0.0.2",
-            macaddress="aa:bb:cc:dd:ee:ff",
+            macaddress="aabbccddeeff",
         ),
     )
 
@@ -161,6 +188,8 @@ async def test_dhcp_discovery_updates_entry(
         CONF_HOST: "127.0.0.2",
         CONF_PASSWORD: "mocked-password",
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: False,
     }
 
 
@@ -177,7 +206,7 @@ async def test_dhcp_unknown_device(
         data=DhcpServiceInfo(
             hostname="tablet",
             ip="127.0.0.2",
-            macaddress="aa:bb:cc:dd:ee:00",
+            macaddress="aabbccddee00",
         ),
     )
 
@@ -212,6 +241,8 @@ async def test_mqtt_discovery_flow(
         result["flow_id"],
         {
             CONF_PASSWORD: "test-password",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
         },
     )
 
@@ -222,6 +253,8 @@ async def test_mqtt_discovery_flow(
         CONF_HOST: "192.168.1.234",
         CONF_PASSWORD: "test-password",
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
+        CONF_SSL: False,
+        CONF_VERIFY_SSL: False,
     }
     assert "result" in confirmResult
     assert confirmResult["result"].unique_id == "12345"

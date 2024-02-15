@@ -118,7 +118,7 @@ async def test_room_update(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> 
 
 
 async def test_unique_id_is_set(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mqtt_mock: MqttMockHAClient
 ) -> None:
     """Test the updating between rooms."""
     unique_name = "my_unique_name_0123456789"
@@ -141,6 +141,5 @@ async def test_unique_id_is_set(
     state = hass.states.get(SENSOR_STATE)
     assert state.state is not None
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(SENSOR_STATE)
     assert entry.unique_id == unique_name

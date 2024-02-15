@@ -104,6 +104,7 @@ class GarageDoorOpener(HomeAccessory):
         """Initialize a GarageDoorOpener accessory object."""
         super().__init__(*args, category=CATEGORY_GARAGE_DOOR_OPENER)
         state = self.hass.states.get(self.entity_id)
+        assert state
 
         serv_garage_door = self.add_preload_service(SERV_GARAGE_DOOR_OPENER)
         self.char_current_state = serv_garage_door.configure_char(
@@ -124,7 +125,7 @@ class GarageDoorOpener(HomeAccessory):
 
         self.async_update_state(state)
 
-    async def run(self):
+    async def run(self) -> None:
         """Handle accessory driver started event.
 
         Run inside the Home Assistant event loop.
@@ -165,7 +166,7 @@ class GarageDoorOpener(HomeAccessory):
             detected,
         )
 
-    def set_state(self, value):
+    def set_state(self, value: int) -> None:
         """Change garage state if call came from HomeKit."""
         _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
 
@@ -180,7 +181,7 @@ class GarageDoorOpener(HomeAccessory):
             self.async_call_service(DOMAIN, SERVICE_CLOSE_COVER, params)
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update cover state after state changed."""
         hass_state = new_state.state
         target_door_state = DOOR_TARGET_HASS_TO_HK.get(hass_state)
@@ -235,7 +236,7 @@ class OpeningDeviceBase(HomeAccessory):
                 CHAR_CURRENT_TILT_ANGLE, value=0
             )
 
-    def set_stop(self, value):
+    def set_stop(self, value: int) -> None:
         """Stop the cover motion from HomeKit."""
         if value != 1:
             return
@@ -243,7 +244,7 @@ class OpeningDeviceBase(HomeAccessory):
             DOMAIN, SERVICE_STOP_COVER, {ATTR_ENTITY_ID: self.entity_id}
         )
 
-    def set_tilt(self, value):
+    def set_tilt(self, value: float) -> None:
         """Set tilt to value if call came from HomeKit."""
         _LOGGER.info("%s: Set tilt to %d", self.entity_id, value)
 
@@ -256,7 +257,7 @@ class OpeningDeviceBase(HomeAccessory):
         self.async_call_service(DOMAIN, SERVICE_SET_COVER_TILT_POSITION, params, value)
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update cover position and tilt after state changed."""
         # update tilt
         if not self._supports_tilt:

@@ -16,7 +16,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 
-async def test_default_state(hass: HomeAssistant) -> None:
+async def test_default_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test event group default state."""
     await async_setup_component(
         hass,
@@ -132,7 +134,6 @@ async def test_default_state(hass: HomeAssistant) -> None:
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("event.remote_control")
     assert entry
     assert entry.unique_id == "unique_identifier"

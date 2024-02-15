@@ -183,8 +183,8 @@ async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> 
     assert "Detected blocking call inside the event loop" not in caplog.text
 
 
-async def test_gather_with_concurrency() -> None:
-    """Test gather_with_concurrency limits the number of running tasks."""
+async def test_gather_with_limited_concurrency() -> None:
+    """Test gather_with_limited_concurrency limits the number of running tasks."""
 
     runs = 0
     now_time = time.time()
@@ -198,7 +198,7 @@ async def test_gather_with_concurrency() -> None:
         await asyncio.sleep(0.1)
         return runs
 
-    results = await hasync.gather_with_concurrency(
+    results = await hasync.gather_with_limited_concurrency(
         2, *(_increment_runs_if_in_time() for i in range(4))
     )
 

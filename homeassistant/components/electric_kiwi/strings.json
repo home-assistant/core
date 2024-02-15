@@ -17,7 +17,10 @@
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -25,17 +28,25 @@
   },
   "entity": {
     "sensor": {
-      "hopfreepowerstart": {
+      "hop_free_power_start": {
         "name": "Hour of free power start"
       },
-      "hopfreepowerend": {
+      "hop_free_power_end": {
         "name": "Hour of free power end"
+      },
+      "total_running_balance": {
+        "name": "Total running balance"
+      },
+      "total_current_balance": {
+        "name": "Total current balance"
+      },
+      "next_billing_date": {
+        "name": "Next billing date"
+      },
+      "hop_power_savings": {
+        "name": "Hour of power savings"
       }
     },
-    "select": {
-      "hopselector": {
-        "name": "Hour of free power"
-      }
-    }
+    "select": { "hop_selector": { "name": "Hour of free power" } }
   }
 }

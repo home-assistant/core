@@ -222,10 +222,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             energy_today.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
         )
         assert energy_today.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
-        assert (
-            energy_today.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.TOTAL_INCREASING
-        )
+        assert energy_today.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         assert (
             energy_today.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             == UnitOfEnergy.KILO_WATT_HOUR
@@ -239,8 +236,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
         assert energy_this_week.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
-            energy_this_week.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.TOTAL_INCREASING
+            energy_this_week.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         )
         assert (
             energy_this_week.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -255,8 +251,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
         assert energy_this_month.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
-            energy_this_month.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.TOTAL_INCREASING
+            energy_this_month.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         )
         assert (
             energy_this_month.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -271,8 +266,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         )
         assert energy_this_year.attributes.get(ATTR_ICON) == "mdi:lightning-bolt"
         assert (
-            energy_this_year.attributes.get(ATTR_STATE_CLASS)
-            is SensorStateClass.TOTAL_INCREASING
+            energy_this_year.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
         )
         assert (
             energy_this_year.attributes.get(ATTR_UNIT_OF_MEASUREMENT)

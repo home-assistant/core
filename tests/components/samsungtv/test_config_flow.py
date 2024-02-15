@@ -1,4 +1,5 @@
 """Tests for Samsung TV config flow."""
+from copy import deepcopy
 from ipaddress import ip_address
 from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
@@ -127,7 +128,7 @@ MOCK_SSDP_DATA_WRONGMODEL = ssdp.SsdpServiceInfo(
     },
 )
 MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
-    ip="fake_host", macaddress="aa:bb:dd:hh:cc:pp", hostname="fake_hostname"
+    ip="fake_host", macaddress="aabbccddeeff", hostname="fake_hostname"
 )
 EXISTING_IP = "192.168.40.221"
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
@@ -164,14 +165,6 @@ MOCK_DEVICE_INFO = {
         "modelName": "fake_model",
     },
     "id": "123",
-}
-MOCK_DEVICE_INFO_2 = {
-    "device": {
-        "type": "Samsung SmartTV",
-        "name": "fake2_name",
-        "modelName": "fake2_model",
-    },
-    "id": "345",
 }
 
 AUTODETECT_LEGACY = {
@@ -344,7 +337,7 @@ async def test_user_encrypted_websocket(
     assert result4["title"] == "TV-UE48JU6470 (UE48JU6400)"
     assert result4["data"][CONF_HOST] == "fake_host"
     assert result4["data"][CONF_NAME] == "TV-UE48JU6470"
-    assert result4["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung"
     assert result4["data"][CONF_MODEL] == "UE48JU6400"
     assert result4["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION] is None
@@ -648,7 +641,7 @@ async def test_ssdp_websocket_success_populates_mac_address_and_ssdp_location(
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert (
@@ -678,7 +671,7 @@ async def test_ssdp_websocket_success_populates_mac_address_and_main_tv_ssdp_loc
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert (
@@ -730,7 +723,7 @@ async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_l
     assert result4["title"] == "TV-UE48JU6470 (UE48JU6400)"
     assert result4["data"][CONF_HOST] == "fake_host"
     assert result4["data"][CONF_NAME] == "TV-UE48JU6470"
-    assert result4["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung fake_manufacturer"
     assert result4["data"][CONF_MODEL] == "UE48JU6400"
     assert (
@@ -923,7 +916,7 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
     assert result["title"] == "TV-UE48JU6470 (UE48JU6400)"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "TV-UE48JU6470"
-    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "UE48JU6400"
     assert result["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
@@ -978,7 +971,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["title"] == "Living Room (82GXARRS)"
     assert result["data"][CONF_HOST] == "127.0.0.1"
     assert result["data"][CONF_NAME] == "Living Room"
-    assert result["data"][CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -1265,7 +1258,31 @@ async def test_update_missing_mac_unique_id_added_from_dhcp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:dd:hh:cc:pp"
+    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
+@pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
+async def test_update_incorrectly_formatted_mac_unique_id_added_from_dhcp(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test incorrectly formatted mac is updated and unique id added."""
+    entry_data = MOCK_OLD_ENTRY.copy()
+    entry_data[CONF_MAC] = "aabbccddeeff"
+    entry = MockConfigEntry(domain=DOMAIN, data=entry_data, unique_id=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=MOCK_DHCP_DATA,
+    )
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1336,7 +1353,7 @@ async def test_update_missing_mac_unique_id_ssdp_location_added_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Wrong st
     assert CONF_SSDP_RENDERING_CONTROL_LOCATION not in entry.data
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -1392,7 +1409,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_updated_from_ssd
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Wrong ST, ssdp location should not change
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION] == "https://1.2.3.4:555/test"
@@ -1425,7 +1442,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_rendering_st_upd
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Correct ST, ssdp location should change
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
@@ -1460,7 +1477,7 @@ async def test_update_missing_mac_unique_id_added_ssdp_location_main_tv_agent_st
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Main TV Agent ST, ssdp location should change
     assert (
         entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
@@ -1480,7 +1497,7 @@ async def test_update_ssdp_location_rendering_st_updated_from_ssdp(
     """Test with outdated ssdp_location with the correct st added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
@@ -1495,7 +1512,7 @@ async def test_update_ssdp_location_rendering_st_updated_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Correct ST, ssdp location should be added
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
@@ -1511,7 +1528,7 @@ async def test_update_main_tv_ssdp_location_rendering_st_updated_from_ssdp(
     """Test with outdated ssdp_location with the correct st added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id="be9554b9-c9fb-41f4-8920-22da015376a4",
     )
     entry.add_to_hass(hass)
@@ -1526,7 +1543,7 @@ async def test_update_main_tv_ssdp_location_rendering_st_updated_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Correct ST for MainTV, ssdp location should be added
     assert (
         entry.data[CONF_SSDP_MAIN_TV_AGENT_LOCATION]
@@ -1577,7 +1594,7 @@ async def test_update_legacy_missing_mac_from_dhcp(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
-            ip=EXISTING_IP, macaddress="aa:bb:cc:dd:ee:ff", hostname="fake_hostname"
+            ip=EXISTING_IP, macaddress="aabbccddeeff", hostname="fake_hostname"
         ),
     )
     await hass.async_block_till_done()
@@ -1611,7 +1628,7 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
-                ip=EXISTING_IP, macaddress="aa:bb:cc:dd:ee:ff", hostname="fake_hostname"
+                ip=EXISTING_IP, macaddress="aabbccddeeff", hostname="fake_hostname"
             ),
         )
         await hass.async_block_till_done()
@@ -1630,7 +1647,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp(
     """Test missing ssdp_location, and unique id added via ssdp."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1645,7 +1662,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Wrong st
     assert CONF_SSDP_RENDERING_CONTROL_LOCATION not in entry.data
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
@@ -1658,7 +1675,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_con
     """Test missing ssdp_location, and unique id added via ssdp with rendering control st."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1673,7 +1690,7 @@ async def test_update_ssdp_location_unique_id_added_from_ssdp_with_rendering_con
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     # Correct st
     assert (
         entry.data[CONF_SSDP_RENDERING_CONTROL_LOCATION]
@@ -1886,7 +1903,7 @@ async def test_update_incorrect_udn_matching_upnp_udn_unique_id_added_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1897,7 +1914,7 @@ async def test_update_incorrect_udn_matching_mac_unique_id_added_from_ssdp(
     """Test updating the wrong udn from ssdp via mac match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_OLD_ENTRY, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         unique_id=None,
     )
     entry.add_to_hass(hass)
@@ -1912,7 +1929,7 @@ async def test_update_incorrect_udn_matching_mac_unique_id_added_from_ssdp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1923,7 +1940,7 @@ async def test_update_incorrect_udn_matching_mac_from_dhcp(
     """Test that DHCP updates the wrong udn from ssdp via mac match."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={**MOCK_ENTRYDATA_WS, CONF_MAC: "aa:bb:ww:ii:ff:ii"},
+        data={**MOCK_ENTRYDATA_WS, CONF_MAC: "aa:bb:aa:aa:aa:aa"},
         source=config_entries.SOURCE_SSDP,
         unique_id="0d1cef00-00dc-1000-9c80-4844f7b172de",
     )
@@ -1939,7 +1956,7 @@ async def test_update_incorrect_udn_matching_mac_from_dhcp(
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[CONF_MAC] == "aa:bb:ww:ii:ff:ii"
+    assert entry.data[CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert entry.unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1968,3 +1985,56 @@ async def test_no_update_incorrect_udn_not_matching_mac_from_dhcp(
     assert result["step_id"] == "confirm"
     assert entry.data[CONF_MAC] == "aa:bb:ss:ss:dd:pp"
     assert entry.unique_id == "0d1cef00-00dc-1000-9c80-4844f7b172de"
+
+
+@pytest.mark.usefixtures("remotews", "remoteencws_failing")
+async def test_ssdp_update_mac(hass: HomeAssistant) -> None:
+    """Ensure that MAC address is correctly updated from SSDP."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+        return_value=MOCK_DEVICE_INFO,
+    ):
+        # entry was added
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        entry = result["result"]
+        assert entry.data[CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
+        assert entry.data[CONF_MODEL] == "fake_model"
+        assert entry.data[CONF_MAC] is None
+        assert entry.unique_id == "123"
+
+    device_info = deepcopy(MOCK_DEVICE_INFO)
+    device_info["device"]["wifiMac"] = "none"
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+        return_value=device_info,
+    ):
+        # Updated
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == RESULT_ALREADY_CONFIGURED
+
+        # ensure mac wasn't updated with "none"
+        assert entry.data[CONF_MAC] is None
+        assert entry.unique_id == "123"
+
+    device_info = deepcopy(MOCK_DEVICE_INFO)
+    device_info["device"]["wifiMac"] = "aa:bb:cc:dd:ee:ff"
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWSBridge.async_device_info",
+        return_value=device_info,
+    ):
+        # Updated
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_SSDP}, data=MOCK_SSDP_DATA
+        )
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == RESULT_ALREADY_CONFIGURED
+
+        # ensure mac was updated with new wifiMac value
+        assert entry.data[CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+        assert entry.unique_id == "123"

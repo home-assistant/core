@@ -1,5 +1,6 @@
 """Class to hold all alarm control panel accessories."""
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_ALARM_SYSTEM
 
@@ -23,7 +24,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 
 from .accessories import TYPES, HomeAccessory
 from .const import (
@@ -78,10 +79,11 @@ HK_TO_SERVICE = {
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a SecuritySystem accessory object."""
         super().__init__(*args, category=CATEGORY_ALARM_SYSTEM)
         state = self.hass.states.get(self.entity_id)
+        assert state
         self._alarm_code = self.config.get(ATTR_CODE)
 
         supported_states = state.attributes.get(
@@ -143,7 +145,7 @@ class SecuritySystem(HomeAccessory):
         # GET to avoid an event storm after homekit startup
         self.async_update_state(state)
 
-    def set_security_state(self, value):
+    def set_security_state(self, value: int) -> None:
         """Move security state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set security state to %d", self.entity_id, value)
         service = HK_TO_SERVICE[value]
@@ -153,7 +155,7 @@ class SecuritySystem(HomeAccessory):
         self.async_call_service(DOMAIN, service, params)
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update security state after state changed."""
         hass_state = new_state.state
         if (current_state := HASS_TO_HOMEKIT_CURRENT.get(hass_state)) is not None:

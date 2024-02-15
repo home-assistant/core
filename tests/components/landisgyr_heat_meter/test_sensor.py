@@ -150,7 +150,7 @@ async def test_exception_on_polling(
     assert state.state == "123.0"
 
     # Now 'disable' the connection and wait for polling and see if it fails
-    mock_heat_meter().read.side_effect = serial.serialutil.SerialException
+    mock_heat_meter().read.side_effect = serial.SerialException
     freezer.tick(POLLING_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

@@ -4,7 +4,7 @@ from typing import Any
 
 import yaml
 
-from .objects import Input, NodeDictClass, NodeListClass
+from .objects import Input, NodeDictClass, NodeListClass, NodeStrClass
 
 # mypy: allow-untyped-calls, no-warn-return-any
 
@@ -17,7 +17,7 @@ except ImportError:
     )
 
 
-def dump(_dict: dict) -> str:
+def dump(_dict: dict | list) -> str:
     """Dump YAML to a string and remove null."""
     return yaml.dump(
         _dict,
@@ -82,6 +82,11 @@ add_representer(
 add_representer(
     NodeListClass,
     lambda dumper, value: dumper.represent_sequence("tag:yaml.org,2002:seq", value),
+)
+
+add_representer(
+    NodeStrClass,
+    lambda dumper, value: dumper.represent_scalar("tag:yaml.org,2002:str", str(value)),
 )
 
 add_representer(

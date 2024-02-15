@@ -22,6 +22,11 @@
             'recurrence': list([
             ]),
             'recurring_event_id': None,
+            'reminders': dict({
+              'overrides': list([
+              ]),
+              'use_default': True,
+            }),
             'start': dict({
               'date': None,
               'date_time': '2023-03-13T12:00:00-07:00',
@@ -50,6 +55,11 @@
               'RRULE:FREQ=WEEKLY',
             ]),
             'recurring_event_id': None,
+            'reminders': dict({
+              'overrides': list([
+              ]),
+              'use_default': True,
+            }),
             'start': dict({
               'date': '2022-10-08',
               'date_time': None,

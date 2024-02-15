@@ -11,6 +11,8 @@ from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING, Any, TypedDict
 
+import voluptuous as vol
+
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import template
@@ -26,6 +28,8 @@ if TYPE_CHECKING:
     from .device_trigger import Trigger
     from .discovery import MQTTDiscoveryPayload
     from .tag import MQTTTagScanner
+
+from .const import TEMPLATE_ERRORS
 
 
 class PayloadSentinel(StrEnum):
@@ -245,15 +249,15 @@ class MqttValueTemplate:
                         payload, variables=values
                     )
                 )
-            except Exception as ex:
+            except TEMPLATE_ERRORS as exc:
                 _LOGGER.error(
                     "%s: %s rendering template for entity '%s', template: '%s'",
-                    type(ex).__name__,
-                    ex,
+                    type(exc).__name__,
+                    exc,
                     self._entity.entity_id if self._entity else "n/a",
                     self._value_template.template,
                 )
-                raise ex
+                raise
             return rendered_payload
 
         _LOGGER.debug(
@@ -272,18 +276,18 @@ class MqttValueTemplate:
                     payload, default, variables=values
                 )
             )
-        except Exception as ex:
+        except TEMPLATE_ERRORS as exc:
             _LOGGER.error(
                 "%s: %s rendering template for entity '%s', template: "
                 "'%s', default value: %s and payload: %s",
-                type(ex).__name__,
-                ex,
+                type(exc).__name__,
+                exc,
                 self._entity.entity_id if self._entity else "n/a",
                 self._value_template.template,
                 default,
                 payload,
             )
-            raise ex
+            raise
         return rendered_payload
 
 
@@ -337,12 +341,10 @@ class MqttData:
     )
     discovery_unsubscribe: list[CALLBACK_TYPE] = field(default_factory=list)
     integration_unsubscribe: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
-    issues: dict[str, set[str]] = field(default_factory=dict)
     last_discovery: float = 0.0
     reload_dispatchers: list[CALLBACK_TYPE] = field(default_factory=list)
-    reload_handlers: dict[str, Callable[[], Coroutine[Any, Any, None]]] = field(
-        default_factory=dict
-    )
+    reload_handlers: dict[str, CALLBACK_TYPE] = field(default_factory=dict)
+    reload_schema: dict[str, vol.Schema] = field(default_factory=dict)
     state_write_requests: EntityTopicState = field(default_factory=EntityTopicState)
     subscriptions_to_restore: list[Subscription] = field(default_factory=list)
     tags: dict[str, dict[str, MQTTTagScanner]] = field(default_factory=dict)

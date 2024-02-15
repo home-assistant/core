@@ -18,10 +18,10 @@
           "name": "[%key:component::text::entity_component::_::state_attributes::min::name%]"
         },
         "mode": {
-          "name": "[%key:component::text::entity_component::_::state_attributes::mode::name%]",
+          "name": "[%key:common::config_flow::data::mode%]",
           "state": {
             "text": "[%key:component::text::entity_component::_::state_attributes::mode::state::text%]",
-            "password": "[%key:component::text::entity_component::_::state_attributes::mode::state::password%]"
+            "password": "[%key:common::config_flow::data::password%]"
           }
         },
         "pattern": {

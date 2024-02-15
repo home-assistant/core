@@ -1,0 +1,9 @@
+{
+  "domain": "holiday",
+  "name": "Holiday",
+  "codeowners": ["@jrieger", "@gjohansson-ST"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/holiday",
+  "iot_class": "local_polling",
+  "requirements": ["holidays==0.42", "babel==2.13.1"]
+}

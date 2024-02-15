@@ -25,7 +25,7 @@
       }
     },
     "switch": {
-      "name": "[%key:component::switch::entity_component::_::name%]"
+      "name": "[%key:component::switch::title%]"
     },
     "outlet": {
       "name": "Outlet"

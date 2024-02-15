@@ -95,6 +95,38 @@ async def test_intent_script_wait_response(hass: HomeAssistant) -> None:
     assert response.card["simple"]["content"] == "Content for Paulus"
 
 
+async def test_intent_script_service_response(hass: HomeAssistant) -> None:
+    """Test intent scripts work."""
+    calls = async_mock_service(
+        hass, "test", "service", response={"some_key": "some value"}
+    )
+
+    await async_setup_component(
+        hass,
+        "intent_script",
+        {
+            "intent_script": {
+                "HelloWorldServiceResponse": {
+                    "action": [
+                        {"service": "test.service", "response_variable": "result"},
+                        {"stop": "", "response_variable": "result"},
+                    ],
+                    "speech": {
+                        "text": "The service returned {{ action_response.some_key }}"
+                    },
+                }
+            }
+        },
+    )
+
+    response = await intent.async_handle(hass, "test", "HelloWorldServiceResponse")
+
+    assert len(calls) == 1
+    assert calls[0].return_response
+
+    assert response.speech["plain"]["speech"] == "The service returned some value"
+
+
 async def test_intent_script_falsy_reprompt(hass: HomeAssistant) -> None:
     """Test intent scripts work."""
     calls = async_mock_service(hass, "test", "service")

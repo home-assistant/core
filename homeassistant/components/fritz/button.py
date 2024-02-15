@@ -23,14 +23,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzButtonDescriptionMixin:
     """Mixin to describe a Button entity."""
 
     press_action: Callable
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzButtonDescription(ButtonEntityDescription, FritzButtonDescriptionMixin):
     """Class to describe a Button entity."""
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 from io import BytesIO
 import logging
 
+from requests.exceptions import RequestException
+
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -78,7 +80,13 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
     async def async_update(self) -> None:
         """Update the image entity data."""
-        qr_bytes = await self._fetch_image()
+        try:
+            qr_bytes = await self._fetch_image()
+        except RequestException:
+            self._current_qr_bytes = None
+            self._attr_image_last_updated = None
+            self.async_write_ha_state()
+            return
 
         if self._current_qr_bytes != qr_bytes:
             dt_now = dt_util.utcnow()

@@ -175,7 +175,7 @@ async def test_multipan_firmware_no_repair_on_probe_failure(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entry.state == ConfigEntryState.SETUP_ERROR
+        assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
     await hass.config_entries.async_unload(config_entry.entry_id)
 
@@ -312,6 +312,8 @@ async def test_inconsistent_settings_keep_new(
     data = await resp.json()
     assert data["type"] == "create_entry"
 
+    await hass.config_entries.async_unload(config_entry.entry_id)
+
     assert (
         issue_registry.async_get_issue(
             domain=DOMAIN,
@@ -387,6 +389,8 @@ async def test_inconsistent_settings_restore_old(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
     assert data["type"] == "create_entry"
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert (
         issue_registry.async_get_issue(

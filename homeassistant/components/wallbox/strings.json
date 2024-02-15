@@ -35,6 +35,9 @@
     "number": {
       "maximum_charging_current": {
         "name": "Maximum charging current"
+      },
+      "energy_price": {
+        "name": "Energy price"
       }
     },
     "sensor": {

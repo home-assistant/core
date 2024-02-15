@@ -1,5 +1,4 @@
 """Tests for Philips Hue config flow."""
-import asyncio
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
@@ -254,7 +253,7 @@ async def test_flow_timeout_discovery(hass: HomeAssistant) -> None:
     """Test config flow ."""
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -527,7 +526,10 @@ def _get_schema_default(schema, key_name):
     raise KeyError(f"{key_name} not found in schema")
 
 
-async def test_options_flow_v2(hass: HomeAssistant) -> None:
+async def test_options_flow_v2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
     """Test options config flow for a V2 bridge."""
     entry = MockConfigEntry(
         domain="hue",
@@ -536,9 +538,8 @@ async def test_options_flow_v2(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    dev_reg = dr.async_get(hass)
     mock_dev_id = "aabbccddee"
-    dev_reg.async_get_or_create(
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, identifiers={(const.DOMAIN, mock_dev_id)}
     )
 

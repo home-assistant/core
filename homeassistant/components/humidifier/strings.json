@@ -72,7 +72,7 @@
       "name": "Dehumidifier"
     },
     "humidifier": {
-      "name": "[%key:component::humidifier::entity_component::_::name%]"
+      "name": "[%key:component::humidifier::title%]"
     }
   },
   "services": {

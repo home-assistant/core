@@ -1,5 +1,4 @@
 """The Bond integration."""
-from asyncio import TimeoutError as AsyncIOTimeoutError
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -56,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.error("Bond token no longer valid: %s", ex)
             return False
         raise ConfigEntryNotReady from ex
-    except (ClientError, AsyncIOTimeoutError, OSError) as error:
+    except (ClientError, TimeoutError, OSError) as error:
         raise ConfigEntryNotReady from error
 
     bpup_subs = BPUPSubscriptions()
@@ -126,10 +125,10 @@ async def async_remove_config_entry_device(
     for identifier in device_entry.identifiers:
         if identifier[0] != DOMAIN or len(identifier) != 3:
             continue
-        bond_id: str = identifier[1]
+        bond_id: str = identifier[1]  # type: ignore[unreachable]
         # Bond still uses the 3 arg tuple before
         # the identifiers were typed
-        device_id: str = identifier[2]  # type: ignore[misc]
+        device_id: str = identifier[2]
         # If device_id is no longer present on
         # the hub, we allow removal.
         if hub.bond_id != bond_id or not any(

@@ -58,10 +58,18 @@ backup_full:
       example: my_backup_mount
       selector:
         backup_location:
+    homeassistant_exclude_database:
+      default: false
+      selector:
+        boolean:
 
 backup_partial:
   fields:
     homeassistant:
+      selector:
+        boolean:
+    homeassistant_exclude_database:
+      default: false
       selector:
         boolean:
     addons:

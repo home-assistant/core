@@ -8,6 +8,9 @@
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Enphase Envoy gateway."
         }
       }
     },
@@ -39,6 +42,9 @@
       },
       "restore_battery_level": {
         "name": "Restore battery level"
+      },
+      "reserve_soc": {
+        "name": "Reserve battery level"
       }
     },
     "select": {
@@ -75,6 +81,14 @@
           "schedule": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::schedule%]",
           "none": "[%key:component::enphase_envoy::entity::select::relay_grid_action::state::none%]"
         }
+      },
+      "storage_mode": {
+        "name": "Storage mode",
+        "state": {
+          "self_consumption": "Self consumption",
+          "backup": "Full backup",
+          "savings": "Savings mode"
+        }
       }
     },
     "sensor": {
@@ -105,6 +119,30 @@
       "lifetime_consumption": {
         "name": "Lifetime energy consumption"
       },
+      "current_power_production_phase": {
+        "name": "Current power production {phase_name}"
+      },
+      "daily_production_phase": {
+        "name": "Energy production today {phase_name}"
+      },
+      "seven_days_production_phase": {
+        "name": "Energy production last seven days {phase_name}"
+      },
+      "lifetime_production_phase": {
+        "name": "Lifetime energy production {phase_name}"
+      },
+      "current_power_consumption_phase": {
+        "name": "Current power consumption {phase_name}"
+      },
+      "daily_consumption_phase": {
+        "name": "Energy consumption today {phase_name}"
+      },
+      "seven_days_consumption_phase": {
+        "name": "Energy consumption last seven days {phase_name}"
+      },
+      "lifetime_consumption_phase": {
+        "name": "Lifetime energy consumption {phase_name}"
+      },
       "reserve_soc": {
         "name": "Reserve battery level"
       },
@@ -122,6 +160,9 @@
       }
     },
     "switch": {
+      "charge_from_grid": {
+        "name": "Charge from grid"
+      },
       "grid_enabled": {
         "name": "Grid enabled"
       }

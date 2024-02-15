@@ -61,5 +61,17 @@
         "name": "30 days"
       }
     }
+  },
+  "services": {
+    "list_notifications": {
+      "name": "List notifications",
+      "description": "Return user notifications.",
+      "fields": {
+        "config_entry": {
+          "name": "Flume",
+          "description": "The flume config entry for which to return notifications."
+        }
+      }
+    }
   }
 }

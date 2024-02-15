@@ -31,20 +31,12 @@ from .coordinator import WLEDDataUpdateCoordinator
 from .models import WLEDEntity
 
 
-@dataclass
-class WLEDSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[WLEDDevice], datetime | StateType]
-
-
-@dataclass
-class WLEDSensorEntityDescription(
-    SensorEntityDescription, WLEDSensorEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class WLEDSensorEntityDescription(SensorEntityDescription):
     """Describes WLED sensor entity."""
 
     exists_fn: Callable[[WLEDDevice], bool] = lambda _: True
+    value_fn: Callable[[WLEDDevice], datetime | StateType]
 
 
 SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
@@ -84,7 +76,6 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="free_heap",
         translation_key="free_heap",
-        icon="mdi:memory",
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DATA_SIZE,
@@ -95,7 +86,6 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_signal",
         translation_key="wifi_signal",
-        icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -115,7 +105,6 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_channel",
         translation_key="wifi_channel",
-        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.channel if device.info.wifi else None,
@@ -123,7 +112,6 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_bssid",
         translation_key="wifi_bssid",
-        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.bssid if device.info.wifi else None,
@@ -131,7 +119,6 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="ip",
         translation_key="ip",
-        icon="mdi:ip-network",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.ip,
     ),
