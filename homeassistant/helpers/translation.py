@@ -414,11 +414,8 @@ async def async_get_translations_for_categories(
     elif integrations is not None:
         components = integrations if type(integrations) is set else set(integrations)  # noqa: E721
 
-    components_for_categories, all_components = _async_get_components_for_categories(
-        hass, categories, components
-    )
     return await async_get_translations_cache(hass).async_fetch(
-        language, components_for_categories, all_components
+        language, *_async_get_components_for_categories(hass, categories, components)
     )
 
 
