@@ -111,6 +111,7 @@ DEFAULT_INTEGRATIONS = {
     #
     # Integrations providing core functionality:
     "application_credentials",
+    "backup",
     "frontend",
     "hardware",
     "logger",
@@ -143,10 +144,6 @@ DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
 DEFAULT_INTEGRATIONS_SUPERVISOR = {
     # These integrations are set up if using the Supervisor
     "hassio",
-}
-DEFAULT_INTEGRATIONS_NON_SUPERVISOR = {
-    # These integrations are set up if not using the Supervisor
-    "backup",
 }
 CRITICAL_INTEGRATIONS = {
     # Recovery mode is activated if these integrations fail to set up
@@ -535,8 +532,6 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     # Add domains depending on if the Supervisor is used or not
     if "SUPERVISOR" in os.environ:
         domains.update(DEFAULT_INTEGRATIONS_SUPERVISOR)
-    else:
-        domains.update(DEFAULT_INTEGRATIONS_NON_SUPERVISOR)
 
     return domains
 
