@@ -114,7 +114,7 @@ def _merge_resources(
         # We are going to merge the translations for the custom device classes into
         # the translations of sensor.
 
-        new_value = translation_strings[component].get(category)
+        new_value = translation_strings.get(component, {}).get(category)
 
         if new_value is None:
             continue
