@@ -149,22 +149,25 @@ class GenericBlind(CoverEntity):
     @callback
     def async_update_position(
         self,
-        position: int,
-        tilt: int,
+        position: int | None,
+        tilt: int | None,
     ) -> None:
         """Update the position of the motor."""
-        self._attr_current_cover_position = 100 - position
-        self._attr_current_cover_tilt_position = 100 - round(100 * tilt / 180)
-        self._attr_is_closed = self._attr_current_cover_position == 0
+        self._attr_current_cover_position = (
+            100 - position if position is not None else None
+        )
+        self._attr_current_cover_tilt_position = (
+            100 - round(100 * tilt / 180) if tilt is not None else None
+        )
+        self._attr_is_closed = (
+            self._attr_current_cover_position == 0 if position is not None else None
+        )
         self.async_write_ha_state()
 
     @callback
     def async_update_connection(self, connection_type: MotionConnectionType) -> None:
         """Update the connection status."""
-        if connection_type is MotionConnectionType.DISCONNECTED:
-            self._attr_current_cover_position = None
-            self._attr_current_cover_tilt_position = None
-
+        # Write state to update connection state attribute
         self.async_write_ha_state()
 
     @property
