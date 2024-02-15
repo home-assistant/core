@@ -639,7 +639,8 @@ async def _async_resolve_domains_to_setup(
             manifest_deps.update(itg.dependencies)
             manifest_deps.update(itg.after_dependencies)
             needed_requirements.update(itg.requirements)
-            resolve_dependencies_tasks.append(itg.resolve_dependencies())
+            if not itg.all_dependencies_resolved:
+                resolve_dependencies_tasks.append(itg.resolve_dependencies())
 
         if unseen_deps := manifest_deps - integration_cache.keys():
             # If there are dependencies, try to preload all
