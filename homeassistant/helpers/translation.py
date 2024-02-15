@@ -417,8 +417,9 @@ async def async_get_translations_for_categories(
     components_for_categories, all_components = _async_get_components_for_categories(
         hass, categories, components
     )
-    cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
-    return await cache.async_fetch(language, components_for_categories, all_components)
+    return await async_get_translations_cache(hass).async_fetch(
+        language, components_for_categories, all_components
+    )
 
 
 _DIRECT_MAPPED_CATEGORIES = {"state", "entity_component", "services"}
@@ -472,20 +473,16 @@ def async_get_cached_translations(
     components_for_categories, _ = _async_get_components_for_categories(
         hass, (category,), {integration} if integration else None
     )
-    cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
-    return cache.get_cached(language, components_for_categories)[category]
+    return async_get_translations_cache(hass).get_cached(
+        language, components_for_categories
+    )[category]
 
 
-async def _async_load_translations_to_cache(
-    hass: HomeAssistant,
-    language: str,
-    integration: str | None,
-) -> None:
-    """Load translations to cache."""
+@callback
+def async_get_translations_cache(hass: HomeAssistant) -> _TranslationCache:
+    """Return the translation cache."""
     cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
-    await cache.async_load(
-        language, {integration} if integration else hass.config.components
-    )
+    return cache
 
 
 @callback
@@ -494,14 +491,15 @@ def async_setup(hass: HomeAssistant) -> None:
 
     Listeners load translations for every loaded component and after config change.
     """
+    cache = _TranslationCache(hass)
 
-    hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
+    hass.data[TRANSLATION_FLATTEN_CACHE] = cache
 
     async def load_translations(event: Event) -> None:
         if "language" in event.data:
             language = hass.config.language
             _LOGGER.debug("Loading translations for language: %s", language)
-            await _async_load_translations_to_cache(hass, language, None)
+            await cache.async_load(language, hass.config.components)
 
     async def load_translations_for_component(event: Event) -> None:
         component: str | None = event.data.get("component")
@@ -514,7 +512,7 @@ def async_setup(hass: HomeAssistant) -> None:
             language,
             component,
         )
-        await _async_load_translations_to_cache(hass, language, component)
+        await cache.async_load(language, {component})
 
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, load_translations_for_component)
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, load_translations)
