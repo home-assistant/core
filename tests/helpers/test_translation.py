@@ -699,32 +699,3 @@ async def test_translate_state(hass: HomeAssistant):
             ]
         )
         assert result == "on"
-
-
-async def test_translation_merging_loaded_together_multiple_categories(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test we merge translations of two integrations when they are loaded at the same time."""
-    hass.config.components.add("hue")
-    hass.config.components.add("homekit")
-    hue_translations = await translation.async_get_translations_for_categories(
-        hass, "en", {"title", "config"}, integrations={"hue"}
-    )
-    assert hue_translations["config"]
-    assert hue_translations["title"]
-    homekit_translations = await translation.async_get_translations_for_categories(
-        hass, "en", {"title", "config"}, integrations={"homekit"}
-    )
-    assert homekit_translations["config"]
-    assert homekit_translations["title"]
-    translations = await translation.async_get_translations_for_categories(
-        hass, "en", {"title", "config"}, integrations={"hue", "homekit"}
-    )
-    assert (
-        translations["config"]
-        == hue_translations["config"] | homekit_translations["config"]
-    )
-    assert (
-        translations["title"]
-        == hue_translations["title"] | homekit_translations["title"]
-    )
