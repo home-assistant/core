@@ -1130,6 +1130,43 @@ async def test_zeroconf_pair_additionally_found_protocols(
     assert result5["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
+async def test_zeroconf_mismatch(
+    hass: HomeAssistant, mock_scan, pairing, mock_zeroconf: None
+) -> None:
+    """Test the technically possible case where a protocol has no service.
+
+    This could happen in case of mDNS issues.
+    """
+    mock_scan.result = [
+        create_conf(IPv4Address("127.0.0.1"), "Device", airplay_service())
+    ]
+    mock_scan.result[0].get_service = Mock(return_value=None)
+
+    # Find device with AirPlay service and set up flow for it
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            port=None,
+            type="_airplay._tcp.local.",
+            name="Kitchen",
+            properties={"deviceid": "airplayid"},
+        ),
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "setup_failed"
+
+
 # Re-configuration
 
 
