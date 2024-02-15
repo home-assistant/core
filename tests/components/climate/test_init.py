@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from enum import Enum
 from types import ModuleType
-from unittest.mock import MagicMock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -701,7 +701,41 @@ class MockSyncClimateEntity(ClimateEntity):
 
 async def test_sync_toggle(hass: HomeAssistant) -> None:
     """Test if async toggle calls sync toggle."""
-    climate = MockSyncClimateEntity()
+
+    class MockClimateEntityTest(MockClimateEntity):
+        """Mock Climate device."""
+
+        _enable_turn_on_off_backwards_compatibility = False
+        _attr_supported_features = (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
+
+        @property
+        def hvac_mode(self) -> HVACMode:
+            """Return hvac operation ie. heat, cool mode.
+
+            Need to be one of HVACMode.*.
+            """
+            return HVACMode.HEAT
+
+        @property
+        def hvac_modes(self) -> list[HVACMode]:
+            """Return the list of available hvac operation modes.
+
+            Need to be a subset of HVAC_MODES.
+            """
+            return [HVACMode.OFF, HVACMode.HEAT]
+
+        def turn_on(self) -> None:
+            """Turn on."""
+
+        def turn_off(self) -> None:
+            """Turn off."""
+
+        def toggle(self) -> None:
+            """Toggle."""
+
+    climate = MockClimateEntityTest()
     climate.hass = hass
 
     climate.toggle = Mock()
