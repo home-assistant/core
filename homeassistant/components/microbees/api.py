@@ -15,15 +15,18 @@ class ConfigEntryAuth:
     def __init__(
         self,
         hass: HomeAssistant,
-        oauth_session: config_entry_oauth2_flow.OAuth2Session,
+        oauth2_session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
         """Initialize microBees Auth."""
+        self.oauth_session = oauth2_session
         self.hass = hass
-        self.session = oauth_session
-        super().__init__(token=self.session.token[CONF_ACCESS_TOKEN])
 
-    async def async_get_access_token(self) -> str:
-        """Return a valid access token."""
-        await self._oauth_session.async_ensure_token_valid()
+    @property
+    def access_token(self) -> str:
+        """Return the access token."""
+        return self.oauth_session.token[CONF_ACCESS_TOKEN]  # type: ignore[no-any-return]
 
-        return self._oauth_session.token[CONF_ACCESS_TOKEN]
+    async def check_and_refresh_token(self) -> str:
+        """Check the token."""
+        await self.oauth_session.async_ensure_token_valid()
+        return self.access_token

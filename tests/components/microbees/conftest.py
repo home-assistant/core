@@ -1,4 +1,6 @@
 """Conftest for microBees tests."""
+import logging
+import time
 from unittest.mock import AsyncMock, patch
 
 from microBeesPy.microbees import Bee, MicroBees, Profile
@@ -12,10 +14,28 @@ from homeassistant.components.microbees.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_json_array_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+TITLE = "MicroBees"
+MICROBEES_AUTH_URI = "https://dev.microbees.com/oauth/authorize"
+MICROBEES_TOKEN_URI = "https://dev.microbees.com/oauth/token"
+
+_LOGGER = logging.getLogger(__name__)
+
+
+SCOPES = ["read", "write"]
+
+
+@pytest.fixture(name="scopes")
+def mock_scopes() -> list[str]:
+    """Fixture to set the scopes present in the OAuth token."""
+    return SCOPES
 
 
 @pytest.fixture(autouse=True)
@@ -30,13 +50,38 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.fixture(name="expires_at")
+def mock_expires_at() -> int:
+    """Fixture to set the oauth token expiration time."""
+    return time.time() + 3600
+
+
+@pytest.fixture(name="config_entry")
+def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
+    """Create YouTube entry in Home Assistant."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=TITLE,
+        unique_id="UC_x5XG1OV2P6uZZ5FSM9Ttw",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(scopes),
+            },
+        },
+    )
+
+
 @pytest.fixture(name="microbees")
 def mock_microbees():
     """Mock microbees."""
 
     devices_json = load_json_array_fixture("microbees/bees.json")
     devices = [Bee.from_dict(device) for device in devices_json]
-    profile_json = load_json_array_fixture("microbees/profile.json")
+    profile_json = load_json_object_fixture("microbees/profile.json")
     profile = Profile.from_dict(profile_json)
 
     mock = AsyncMock(spec=MicroBees)
