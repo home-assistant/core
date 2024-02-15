@@ -291,7 +291,7 @@ class FritzBoxTools(
 
         self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
 
-    def register_entity_updates(
+    async def async_register_entity_updates(
         self, key: str, update_fn: Callable[[FritzStatus, StateType], Any]
     ) -> Callable[[], None]:
         """Register an entity to be updated by coordinator."""
@@ -306,8 +306,10 @@ class FritzBoxTools(
             _LOGGER.debug("register entity %s for updates", key)
             self._entity_update_functions[key] = update_fn
             if self.fritz_status:
-                self.data["entity_states"][key] = update_fn(
-                    self.fritz_status, self.data["entity_states"].get(key)
+                self.data["entity_states"][
+                    key
+                ] = await self.hass.async_add_executor_job(
+                    update_fn, self.fritz_status, self.data["entity_states"].get(key)
                 )
         return unregister_entity_updates
 
@@ -321,7 +323,10 @@ class FritzBoxTools(
             await self.async_scan_devices()
             for key in list(self._entity_update_functions):
                 _LOGGER.debug("update entity %s", key)
-                entity_data["entity_states"][key] = self._entity_update_functions[key](
+                entity_data["entity_states"][
+                    key
+                ] = await self.hass.async_add_executor_job(
+                    self._entity_update_functions[key],
                     self.fritz_status,
                     self.data["entity_states"].get(key),
                 )
@@ -1122,15 +1127,19 @@ class FritzBoxBaseCoordinatorEntity(update_coordinator.CoordinatorEntity[AvmWrap
     ) -> None:
         """Init device info class."""
         super().__init__(avm_wrapper)
-        if description.value_fn is not None:
-            self.async_on_remove(
-                avm_wrapper.register_entity_updates(
-                    description.key, description.value_fn
-                )
-            )
         self.entity_description = description
         self._device_name = device_name
         self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        if self.entity_description.value_fn is not None:
+            self.async_on_remove(
+                await self.coordinator.async_register_entity_updates(
+                    self.entity_description.key, self.entity_description.value_fn
+                )
+            )
 
     @property
     def device_info(self) -> DeviceInfo:
