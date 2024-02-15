@@ -25,7 +25,7 @@ from homeassistant.components.wallbox.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import ERROR, STATUS, TTL, USER_ID, REFRESH_TOKEN_TTL
+from .const import ERROR, REFRESH_TOKEN_TTL, STATUS, TTL, USER_ID
 
 from tests.common import MockConfigEntry
 
