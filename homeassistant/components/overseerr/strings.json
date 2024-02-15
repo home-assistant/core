@@ -2,20 +2,34 @@
   "config": {
     "step": {
       "user": {
+        "description": "Enter the details of your Overseerr instance to set up the integration. API key can be optionally provided for enhanced access.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "url": "[%key:common::config_flow::data::url%]",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Your Overseerr integration needs reauthorization. Please confirm to re-authenticate."
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "overseerr_error": "Failed to connect to Overseerr. Please check your settings.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
-  }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {}
+      }
+    }
+  },
+  "entity": {}
 }
