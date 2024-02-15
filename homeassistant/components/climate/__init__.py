@@ -187,13 +187,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_AUX_HEAT,
         {vol.Required(ATTR_AUX_HEAT): cv.boolean},
-        "async_service_aux_heat",
+        async_service_aux_heat,
         [ClimateEntityFeature.AUX_HEAT],
     )
     component.async_register_entity_service(
         SERVICE_SET_TEMPERATURE,
         SET_TEMPERATURE_SCHEMA,
-        "async_service_temperature_set",
+        async_service_temperature_set,
         [
             ClimateEntityFeature.TARGET_TEMPERATURE,
             ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
