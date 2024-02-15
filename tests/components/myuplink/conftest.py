@@ -1,7 +1,7 @@
 """Test helpers for myuplink."""
 from collections.abc import Generator
-import json
 import time
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from myuplink import Device, DevicePoint, System
@@ -14,10 +14,11 @@ from homeassistant.components.application_credentials import (
 from homeassistant.components.myuplink.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import json_loads
 
 from .const import CLIENT_ID, CLIENT_SECRET
 
-from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="expires_at")
@@ -67,87 +68,69 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(scope="session")
-def load_device_file():
-    """Load fixture file for device endpoint."""
-    return load_json_value_fixture("device.json", DOMAIN)
+def load_device_file() -> str:
+    """Fixture for loading device file."""
+    return load_fixture("device.json", DOMAIN)
 
 
 @pytest.fixture
-def device_fixture(load_device_file):
+def device_fixture(load_device_file: str) -> Device:
     """Fixture for device."""
-    return Device(load_device_file)
-
-
-@pytest.fixture
-def device_json_fixture(load_device_file):
-    """Fixture for device in json format."""
-    return load_device_file
+    return Device(json_loads(load_device_file))
 
 
 # Fixture group for systems API endpoint.
 
 
-@pytest.fixture(scope="session")
-def load_systems_jv_file():
+@pytest.fixture
+def load_systems_jv_file(load_systems_file: str) -> dict[str, Any]:
     """Load fixture file for systems endpoint."""
-    return load_json_value_fixture("systems.json", DOMAIN)
+    return json_loads(load_systems_file)
 
 
 @pytest.fixture(scope="session")
-def load_systems_file():
+def load_systems_file() -> str:
     """Load fixture file for systems."""
     return load_fixture("systems.json", DOMAIN)
 
 
 @pytest.fixture
-def system_fixture(load_systems_file):
+def system_fixture(load_systems_file: str) -> list[System]:
     """Fixture for systems."""
-    array = json.loads(load_systems_file)
-    return [System(system_data) for system_data in array["systems"]]
-
-
-@pytest.fixture
-def system_json_fixture(load_systems_jv_file):
-    """Fixture for system in json format."""
-    return load_systems_jv_file
+    data = json_loads(load_systems_file)
+    return [System(system_data) for system_data in data["systems"]]
 
 
 # Fixture group for device points API endpoint.
 
 
 @pytest.fixture(scope="session")
-def load_device_points_file():
+def load_device_points_file() -> str:
     """Load fixture file for device-points endpoint."""
     return load_fixture("device_points_nibe_f730.json", DOMAIN)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def load_device_points_jv_file():
     """Load fixture file for device_points."""
-    return load_json_value_fixture("device_points_nibe_f730.json", DOMAIN)
+    return json_loads(load_device_points_file)
 
 
 @pytest.fixture
-def device_points_fixture(load_device_points_file):
+def device_points_fixture(load_device_points_file: str) -> list[DevicePoint]:
     """Fixture for devce_points."""
-    array = json.loads(load_device_points_file)
-    return [DevicePoint(point_data) for point_data in array]
-
-
-@pytest.fixture
-def device_points_json_fixture(load_device_points_file):
-    """Fixture for device_points in json format."""
-    return load_device_points_file
+    data = json_loads(load_device_points_file)
+    return [DevicePoint(point_data) for point_data in data]
 
 
 @pytest.fixture
 def mock_myuplink_client(
-    device_json_fixture,
+    load_device_file,
     device_fixture,
-    device_points_json_fixture,
+    load_device_points_file,
     device_points_fixture,
     system_fixture,
-    system_json_fixture,
+    load_systems_jv_file,
 ) -> Generator[MagicMock, None, None]:
     """Mock a myuplink client."""
 
@@ -158,13 +141,13 @@ def mock_myuplink_client(
         client = mock_client.return_value
 
         client.async_get_systems.return_value = system_fixture
-        client.async_get_systems_json.return_value = system_json_fixture
+        client.async_get_systems_json.return_value = load_systems_jv_file
 
         client.async_get_device.return_value = device_fixture
-        client.async_get_device_json.return_value = device_json_fixture
+        client.async_get_device_json.return_value = load_device_file
 
         client.async_get_device_points.return_value = device_points_fixture
-        client.async_get_device_points_json.return_value = device_points_json_fixture
+        client.async_get_device_points_json.return_value = load_device_points_file
 
         yield client
 
