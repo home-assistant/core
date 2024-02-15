@@ -8,7 +8,7 @@ from aiohttp import web
 import voluptuous as vol
 import voluptuous_serialize
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
@@ -46,10 +46,6 @@ class _BaseFlowManagerView(HomeAssistantView):
             )
 
         return data
-
-    def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
-        """Return context."""
-        return {}
 
 
 class FlowManagerIndexView(_BaseFlowManagerView):
@@ -89,10 +85,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
-        return {
-            "source": config_entries.SOURCE_USER,
-            "show_advanced_options": data["show_advanced_options"],
-        }
+        return {"show_advanced_options": data["show_advanced_options"]}
 
 
 class FlowManagerResourceView(_BaseFlowManagerView):
