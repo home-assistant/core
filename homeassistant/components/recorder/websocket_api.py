@@ -499,16 +499,18 @@ def ws_info(
         # We avoid calling is_alive() as it can block waiting
         # for the thread state lock which will block the event loop.
         is_running = instance.is_running
+        max_backlog = instance.max_backlog
     else:
         backlog = None
         migration_in_progress = False
         migration_is_live = False
         recording = False
         is_running = False
+        max_backlog = None
 
     recorder_info = {
         "backlog": backlog,
-        "max_backlog": instance.max_backlog,
+        "max_backlog": max_backlog,
         "migration_in_progress": migration_in_progress,
         "migration_is_live": migration_is_live,
         "recording": recording,
