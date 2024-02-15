@@ -173,9 +173,9 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_ENABLE_CLIMATE_REACT,
         {
-            vol.Required(ATTR_HIGH_TEMPERATURE_THRESHOLD): float,
+            vol.Required(ATTR_HIGH_TEMPERATURE_THRESHOLD): vol.Coerce(float),
             vol.Required(ATTR_HIGH_TEMPERATURE_STATE): dict,
-            vol.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): float,
+            vol.Required(ATTR_LOW_TEMPERATURE_THRESHOLD): vol.Coerce(float),
             vol.Required(ATTR_LOW_TEMPERATURE_STATE): dict,
             vol.Required(ATTR_SMART_TYPE): vol.In(
                 ["temperature", "feelsLike", "humidity"]
