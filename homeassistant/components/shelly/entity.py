@@ -273,7 +273,6 @@ class BlockEntityDescription(EntityDescription):
     # restrict the type to str.
     name: str = ""
 
-    icon_fn: Callable[[dict], str] | None = None
     unit_fn: Callable[[dict], str] | None = None
     value: Callable[[Any], Any] = lambda val: val
     available: Callable[[Block], bool] | None = None

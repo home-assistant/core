@@ -665,52 +665,52 @@ class Integration:
         """Return reason integration is disabled."""
         return self.manifest.get("disabled")
 
-    @property
+    @cached_property
     def domain(self) -> str:
         """Return domain."""
         return self.manifest["domain"]
 
-    @property
+    @cached_property
     def dependencies(self) -> list[str]:
         """Return dependencies."""
         return self.manifest.get("dependencies", [])
 
-    @property
+    @cached_property
     def after_dependencies(self) -> list[str]:
         """Return after_dependencies."""
         return self.manifest.get("after_dependencies", [])
 
-    @property
+    @cached_property
     def requirements(self) -> list[str]:
         """Return requirements."""
         return self.manifest.get("requirements", [])
 
-    @property
+    @cached_property
     def config_flow(self) -> bool:
         """Return config_flow."""
         return self.manifest.get("config_flow") or False
 
-    @property
+    @cached_property
     def documentation(self) -> str | None:
         """Return documentation."""
         return self.manifest.get("documentation")
 
-    @property
+    @cached_property
     def issue_tracker(self) -> str | None:
         """Return issue tracker link."""
         return self.manifest.get("issue_tracker")
 
-    @property
+    @cached_property
     def loggers(self) -> list[str] | None:
         """Return list of loggers used by the integration."""
         return self.manifest.get("loggers")
 
-    @property
+    @cached_property
     def quality_scale(self) -> str | None:
         """Return Integration Quality Scale."""
         return self.manifest.get("quality_scale")
 
-    @property
+    @cached_property
     def iot_class(self) -> str | None:
         """Return the integration IoT Class."""
         return self.manifest.get("iot_class")

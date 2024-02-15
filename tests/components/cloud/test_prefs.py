@@ -2,6 +2,8 @@
 from typing import Any
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.cloud.prefs import STORAGE_KEY, CloudPreferences
 from homeassistant.core import HomeAssistant
@@ -98,3 +100,25 @@ async def test_setup_remove_cloud_user(
     assert cloud_user2
     assert cloud_user2.groups[0].id == GROUP_ID_ADMIN
     assert cloud_user2.id != cloud_user.id
+
+
+@pytest.mark.parametrize(
+    ("google_assistant_users", "google_connected"),
+    [([], False), (["cloud-user"], True), (["other-user"], False)],
+)
+async def test_import_google_assistant_settings(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    google_assistant_users: list[str],
+    google_connected: bool,
+) -> None:
+    """Test importing from the google assistant store."""
+    hass_storage[STORAGE_KEY] = {"version": 1, "data": {"username": "cloud-user"}}
+
+    with patch(
+        "homeassistant.components.cloud.prefs.async_get_google_assistant_users"
+    ) as mock_get_users:
+        mock_get_users.return_value = google_assistant_users
+        prefs = CloudPreferences(hass)
+        await prefs.async_initialize()
+        assert prefs.google_connected == google_connected
