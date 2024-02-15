@@ -129,10 +129,10 @@ class DiscordNotificationService(BaseNotificationService):
         embeds: list[nextcord.Embed] = []
         if ATTR_EMBED in data:
             embedding = data[ATTR_EMBED]
-            title = embedding.get(ATTR_EMBED_TITLE, None)
-            description = embedding.get(ATTR_EMBED_DESCRIPTION, None)
-            color = embedding.get(ATTR_EMBED_COLOR, None)
-            url = embedding.get(ATTR_EMBED_URL, None)
+            title = embedding.get(ATTR_EMBED_TITLE)
+            description = embedding.get(ATTR_EMBED_DESCRIPTION)
+            color = embedding.get(ATTR_EMBED_COLOR)
+            url = embedding.get(ATTR_EMBED_URL)
             fields = embedding.get(ATTR_EMBED_FIELDS) or []
 
             if embedding:
