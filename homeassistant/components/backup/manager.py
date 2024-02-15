@@ -102,6 +102,7 @@ class BackupManager:
         """Perform post backup actions."""
         if not self.loaded_platforms:
             await self.load_platforms()
+
         post_backup_results = await asyncio.gather(
             *(
                 platform.async_post_backup(self.hass)
