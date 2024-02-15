@@ -1,4 +1,5 @@
 """Tests for the Backup integration."""
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -53,9 +54,18 @@ async def test_remove(
         assert msg["success"]
 
 
+@pytest.mark.parametrize(
+    "data",
+    (
+        None,
+        {},
+        {"password": "abc123"},
+    ),
+)
 async def test_generate(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    data: dict[str, Any] | None,
 ) -> None:
     """Test removing a backup file."""
     await setup_backup_integration(hass)
@@ -67,7 +77,7 @@ async def test_generate(
         "homeassistant.components.backup.websocket.BackupManager.generate_backup",
         return_value=TEST_BACKUP,
     ):
-        await client.send_json({"id": 1, "type": "backup/generate"})
+        await client.send_json({"id": 1, "type": "backup/generate", **(data or {})})
         msg = await client.receive_json()
 
         assert msg["id"] == 1

@@ -2,7 +2,13 @@
   "services": {
     "create": {
       "name": "Create backup",
-      "description": "Creates a new backup."
+      "description": "Creates a new backup.",
+      "fields": {
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "Password protect the backup"
+        }
+      }
     }
   }
 }

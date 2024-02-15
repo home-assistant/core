@@ -58,7 +58,12 @@ async def handle_remove(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "backup/generate"})
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/generate",
+        vol.Optional("password"): str,
+    }
+)
 @websocket_api.async_response
 async def handle_create(
     hass: HomeAssistant,
@@ -67,5 +72,5 @@ async def handle_create(
 ) -> None:
     """Generate a backup."""
     manager: BackupManager = hass.data[DOMAIN]
-    backup = await manager.generate_backup()
+    backup = await manager.generate_backup(password=msg.get("password"))
     connection.send_result(msg["id"], backup)

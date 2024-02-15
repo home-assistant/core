@@ -17,7 +17,10 @@ from .common import TEST_BACKUP
 from tests.common import MockPlatform, mock_platform
 
 
-async def _mock_backup_generation(manager: BackupManager):
+async def _mock_backup_generation(
+    manager: BackupManager,
+    password: str | None = None,
+) -> None:
     """Mock backup generator."""
 
     def _mock_iterdir(path: Path) -> list[Path]:
@@ -52,12 +55,13 @@ async def _mock_backup_generation(manager: BackupManager):
         "homeassistant.components.backup.manager.HAVERSION",
         "2025.1.0",
     ):
-        await manager.generate_backup()
+        await manager.generate_backup(password=password)
 
         assert mocked_json_bytes.call_count == 1
         backup_json_dict = mocked_json_bytes.call_args[0][0]
         assert isinstance(backup_json_dict, dict)
         assert backup_json_dict["homeassistant"] == {"version": "2025.1.0"}
+        assert backup_json_dict.get("protected", False) is bool(password)
         assert manager.backup_dir.as_posix() in str(
             mocked_tarfile.call_args_list[0][0][0]
         )
@@ -94,8 +98,7 @@ async def test_load_backups(hass: HomeAssistant) -> None:
         "pathlib.Path.stat",
         return_value=MagicMock(st_size=TEST_BACKUP.size),
     ):
-        await manager.load_backups()
-    backups = await manager.get_backups()
+        backups = await manager.get_backups()
     assert backups == {TEST_BACKUP.slug: TEST_BACKUP}
 
 
@@ -166,19 +169,33 @@ async def test_generate_backup_when_backing_up(hass: HomeAssistant) -> None:
         await manager.generate_backup()
 
 
+@pytest.mark.parametrize(
+    "password",
+    (
+        None,
+        "abc123",
+    ),
+)
 async def test_generate_backup(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
+    password: str | None,
 ) -> None:
     """Test generate backup."""
     manager = BackupManager(hass)
     manager.loaded_backups = True
 
-    await _mock_backup_generation(manager)
+    assert len(manager.backups) == 0
+
+    await _mock_backup_generation(manager, password=password)
 
     assert "Generated new backup with slug " in caplog.text
     assert "Creating backup directory" in caplog.text
     assert "Loaded 0 platforms" in caplog.text
+
+    assert len(manager.backups) == 1
+    backup = list(manager.backups.values())[0]
+    assert backup.protected is bool(password)
 
 
 async def test_loading_platforms(

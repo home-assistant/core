@@ -16,6 +16,7 @@ TEST_BACKUP = Backup(
     date="1970-01-01T00:00:00.000Z",
     path=Path("abc123.tar"),
     size=0.0,
+    protected=False,
 )
 
 
