@@ -203,15 +203,6 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             }
         )
 
-    @property
-    def preset_mode(self) -> str:
-        """Return the current preset mode."""
-        if self._ac.get(ADVANTAGE_AIR_MYAUTO_ENABLED):
-            return ADVANTAGE_AIR_MYAUTO
-        if self._ac.get(ADVANTAGE_AIR_MYTEMP_ENABLED):
-            return ADVANTAGE_AIR_MYTEMP
-        return ADVANTAGE_AIR_MYZONE
-
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC Mode and State."""
         if hvac_mode == HVACMode.OFF:
