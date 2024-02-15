@@ -122,9 +122,9 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
             self._support_preset = ClimateEntityFeature.PRESET_MODE
 
         # Setup attributes based on current preset
-        self.configure_preset()
+        self._async_configure_preset()
 
-    def configure_preset(self) -> None:
+    def _async_configure_preset(self) -> None:
         """Configure attributes based on preset."""
 
         # Preset Changes
@@ -151,7 +151,7 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self.configure_preset()
+        self._async_configure_preset()
         super()._handle_coordinator_update()
 
     @property
