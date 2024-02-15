@@ -1,7 +1,7 @@
 """Test helpers for myuplink."""
 from collections.abc import Generator
-import json
 import time
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from myuplink import Device, DevicePoint, System
@@ -18,7 +18,7 @@ from homeassistant.util.json import json_loads
 
 from .const import CLIENT_ID, CLIENT_SECRET
 
-from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture(name="expires_at")
@@ -83,9 +83,9 @@ def device_fixture(load_device_file: str) -> Device:
 
 
 @pytest.fixture(scope="session")
-def load_systems_jv_file():
+def load_systems_jv_file(load_systems_file: str) -> dict[str, Any]:
     """Load fixture file for systems endpoint."""
-    return load_json_value_fixture("systems.json", DOMAIN)
+    return json_loads(load_systems_file)
 
 
 @pytest.fixture(scope="session")
@@ -97,8 +97,8 @@ def load_systems_file() -> str:
 @pytest.fixture
 def system_fixture(load_systems_file: str) -> list[System]:
     """Fixture for systems."""
-    array = json.loads(load_systems_file)
-    return [System(system_data) for system_data in array["systems"]]
+    data = json_loads(load_systems_file)
+    return [System(system_data) for system_data in data["systems"]]
 
 
 # Fixture group for device points API endpoint.
@@ -110,17 +110,17 @@ def load_device_points_file() -> str:
     return load_fixture("device_points_nibe_f730.json", DOMAIN)
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def load_device_points_jv_file():
     """Load fixture file for device_points."""
-    return load_json_value_fixture("device_points_nibe_f730.json", DOMAIN)
+    return json_loads(load_device_points_file)
 
 
 @pytest.fixture
 def device_points_fixture(load_device_points_file: str) -> list[DevicePoint]:
     """Fixture for devce_points."""
-    array = json.loads(load_device_points_file)
-    return [DevicePoint(point_data) for point_data in array]
+    data = json_loads(load_device_points_file)
+    return [DevicePoint(point_data) for point_data in data]
 
 
 @pytest.fixture
