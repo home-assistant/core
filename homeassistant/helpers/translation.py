@@ -135,17 +135,17 @@ def _merge_resources(
 
 
 def build_resources(
-    translation_strings: dict[str, dict[str, Any]],
+    translation_strings: dict[str, dict[str, str | dict[str, Any]]],
     components: set[str],
     category: str,
-) -> dict[str, dict[str, Any] | str]:
+) -> dict[str, str | dict[str, Any]]:
     """Build the resources response for the given components."""
     # Build response
     return {
-        component: translation_strings[component][category]
+        component: category_strings
         for component in components
-        if category in translation_strings[component]
-        and translation_strings[component][category] is not None
+        if (component_strings := translation_strings.get(component))
+        and (category_strings := component_strings.get(category))
     }
 
 
@@ -158,10 +158,11 @@ async def _async_get_component_strings(
     """Load translations."""
     translations: dict[str, Any] = {}
     # Determine paths of missing components/platforms
-    files_to_load = {}
+    files_to_load: dict[str, str] = {}
     for loaded in components:
         domain = loaded.partition(".")[0]
-        integration = integrations[domain]
+        if not (integration := integrations.get(domain)):
+            continue
 
         path = component_translation_path(loaded, language, integration)
         # No translation available
@@ -269,11 +270,14 @@ class _TranslationCache:
         languages = [LOCALE_EN] if language == LOCALE_EN else [LOCALE_EN, language]
 
         integrations: dict[str, Integration] = {}
-        domains = list({loaded.partition(".")[0] for loaded in components})
+        domains = {loaded.partition(".")[0] for loaded in components}
         ints_or_excs = await async_get_integrations(self.hass, domains)
         for domain, int_or_exc in ints_or_excs.items():
             if isinstance(int_or_exc, Exception):
-                raise int_or_exc
+                _LOGGER.warning(
+                    "Failed to load integration for translation: %s", int_or_exc
+                )
+                continue
             integrations[domain] = int_or_exc
 
         for translation_strings in await asyncio.gather(
