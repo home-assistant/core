@@ -44,13 +44,7 @@ from .statistics import (
     statistics_during_period,
     validate_statistics,
 )
-from .util import (
-    PERIOD_SCHEMA,
-    async_migration_in_progress,
-    async_migration_is_live,
-    get_instance,
-    resolve_period,
-)
+from .util import PERIOD_SCHEMA, get_instance, resolve_period
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -497,13 +491,20 @@ def ws_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return status of the recorder."""
-    instance = get_instance(hass)
-
-    backlog = instance.backlog if instance else None
-    migration_in_progress = async_migration_in_progress(hass)
-    migration_is_live = async_migration_is_live(hass)
-    recording = instance.recording if instance else False
-    thread_alive = instance.is_alive() if instance else False
+    if instance := get_instance(hass):
+        backlog = instance.backlog
+        migration_in_progress = instance.migration_in_progress
+        migration_is_live = instance.migration_is_live
+        recording = instance.recording
+        # We avoid calling is_alive() as it can block waiting
+        # for the thread state lock which will block the event loop.
+        is_running = instance.is_running
+    else:
+        backlog = None
+        migration_in_progress = False
+        migration_is_live = False
+        recording = False
+        is_running = False
 
     recorder_info = {
         "backlog": backlog,
@@ -511,7 +512,7 @@ def ws_info(
         "migration_in_progress": migration_in_progress,
         "migration_is_live": migration_is_live,
         "recording": recording,
-        "thread_running": thread_alive,
+        "thread_running": is_running,
     }
     connection.send_result(msg["id"], recorder_info)
 
