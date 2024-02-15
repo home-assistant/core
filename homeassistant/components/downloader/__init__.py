@@ -1,12 +1,12 @@
 """Support for functionality to download files."""
 from __future__ import annotations
 
-from http import HTTPStatus
 import enum
+from http import HTTPStatus
 import logging
 import os
 import re
-import threading
+import typing
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
@@ -38,6 +38,8 @@ SERVICE_DOWNLOAD_FILE = "download_file"
 
 
 class AuthType(enum.Enum):
+    """Enum for the type of HTTP authentication."""
+
     none = "none"
     basic = "basic"
     digest = "digest"
@@ -93,16 +95,15 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
                 auth_type = service.data.get(ATTR_AUTH_TYPE)
 
-                username = service.data.get(ATTR_USERNAME)
+                username = str(service.data.get(ATTR_USERNAME))
 
-                password = service.data.get(ATTR_PASSWORD)
+                password = str(service.data.get(ATTR_PASSWORD))
 
+                auth_scheme: typing.Union[HTTPBasicAuth, HTTPDigestAuth, None] = None
                 if auth_type == AuthType.basic:
                     auth_scheme = HTTPBasicAuth(username, password)
                 elif auth_type == AuthType.digest:
                     auth_scheme = HTTPDigestAuth(username, password)
-                else:
-                    auth_scheme = None
 
                 if subdir:
                     # Check the path
