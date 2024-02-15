@@ -1033,6 +1033,9 @@ mficlient==0.3.0
 # homeassistant.components.xiaomi_miio
 micloud==0.5
 
+# homeassistant.components.microbees
+microBeesPy==0.2.5
+
 # homeassistant.components.mill
 mill-local==0.3.0
 
