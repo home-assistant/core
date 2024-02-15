@@ -135,10 +135,10 @@ def _merge_resources(
 
 
 def build_resources(
-    translation_strings: dict[str, dict[str, str | dict[str, Any]]],
+    translation_strings: dict[str, dict[str, dict[str, Any] | str]],
     components: set[str],
     category: str,
-) -> dict[str, str | dict[str, Any]]:
+) -> dict[str, dict[str, Any] | str]:
     """Build the resources response for the given components."""
     # Build response
     return {
