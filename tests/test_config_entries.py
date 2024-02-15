@@ -2048,7 +2048,7 @@ async def test_unique_id_from_discovery_in_setup_retry(
 ) -> None:
     """Test that we reload when in a setup retry state from discovery."""
     hass.config.components.add("comp")
-    unique_id = "34:ea:34:b4:3b:5a"
+    unique_id = "34ea34b43b5a"
     host = "0.0.0.0"
     entry = MockConfigEntry(
         domain="comp",
