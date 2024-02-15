@@ -257,7 +257,7 @@ class AppleTVManager(DeviceListener):
         if conf := await self._scan():
             await self._connect(conf, raise_missing_credentials)
 
-    async def async_first_connect(self):
+    async def async_first_connect(self) -> None:
         """Connect to device for the first time."""
         connect_ok = False
         try:
