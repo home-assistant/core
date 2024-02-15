@@ -13,8 +13,8 @@
         "default": "mdi:power-plug-off",
         "state": {
           "on": "mdi:power-plug",
-          "warming": "mdi:power-plug-outline",
-          "cooling": "mdi:power-plug-off-outline",
+          "warming": "mdi:heat-wave",
+          "cooling": "mdi:snowflake",
           "error": "mdi:alert-circle"
         }
       },
