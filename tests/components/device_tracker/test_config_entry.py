@@ -506,13 +506,10 @@ def test_tracker_entity() -> None:
     entity = TrackerEntity()
     with pytest.raises(NotImplementedError):
         assert entity.source_type is None
-    with pytest.raises(NotImplementedError):
-        assert entity.latitude is None
-    with pytest.raises(NotImplementedError):
-        assert entity.longitude is None
+    assert entity.latitude is None
+    assert entity.longitude is None
     assert entity.location_name is None
-    with pytest.raises(NotImplementedError):
-        assert entity.state is None
+    assert entity.state is None
     assert entity.battery_level is None
     assert entity.should_poll is False
     assert entity.force_update is True

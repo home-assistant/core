@@ -172,6 +172,7 @@ def async_setup_rpc_attribute_entities(
     coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
     assert coordinator
 
+    polling_coordinator = None
     if not (sleep_period := config_entry.data[CONF_SLEEP_PERIOD]):
         polling_coordinator = get_entry_data(hass)[config_entry.entry_id].rpc_poll
         assert polling_coordinator
@@ -272,7 +273,6 @@ class BlockEntityDescription(EntityDescription):
     # restrict the type to str.
     name: str = ""
 
-    icon_fn: Callable[[dict], str] | None = None
     unit_fn: Callable[[dict], str] | None = None
     value: Callable[[Any], Any] = lambda val: val
     available: Callable[[Block], bool] | None = None

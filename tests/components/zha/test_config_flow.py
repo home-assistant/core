@@ -1587,7 +1587,7 @@ async def test_options_flow_defaults(
     mock_async_unload.assert_called_once_with(entry.entry_id)
 
     # Unload it ourselves
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
 
     # Reconfigure ZHA
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
@@ -1770,7 +1770,7 @@ async def test_options_flow_restarts_running_zha_if_cancelled(
             flow["flow_id"], user_input={}
         )
 
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
 
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
@@ -1825,7 +1825,7 @@ async def test_options_flow_migration_reset_old_adapter(
             flow["flow_id"], user_input={}
         )
 
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
 
     assert result1["step_id"] == "prompt_migrate_or_reconfigure"
     result2 = await hass.config_entries.options.async_configure(
@@ -1953,9 +1953,10 @@ async def test_migration_ti_cc_to_znp(
     old_type: str, new_type: str, hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test zigpy-cc to zigpy-znp config migration."""
-    config_entry.data = {**config_entry.data, CONF_RADIO_TYPE: old_type}
-    config_entry.version = 2
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, CONF_RADIO_TYPE: old_type}, version=2
+    )
 
     with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
         await hass.config_entries.async_setup(config_entry.entry_id)

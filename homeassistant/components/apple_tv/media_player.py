@@ -166,11 +166,9 @@ class AppleTvMediaPlayer(
             _LOGGER.exception("Failed to update app list")
         else:
             self._app_list = {
-                app.name: app.identifier
-                for app in sorted(
-                    apps, key=lambda app: app.name.lower() if app.name else ""
-                )
-                if app.name
+                app_name: app.identifier
+                for app in sorted(apps, key=lambda app: (app.name or "").lower())
+                if (app_name := app.name) is not None
             }
             self.async_write_ha_state()
 

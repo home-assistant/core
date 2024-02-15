@@ -1,7 +1,6 @@
 """Harmony data object which contains the Harmony Client."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
 import logging
 
@@ -121,7 +120,7 @@ class HarmonyData(HarmonySubscriberMixin):
         connected = False
         try:
             connected = await self._client.connect()
-        except (asyncio.TimeoutError, aioexc.TimeOut) as err:
+        except (TimeoutError, aioexc.TimeOut) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
                 f"{self._name}: Connection timed-out to {self._address}:8088"

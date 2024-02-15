@@ -132,7 +132,7 @@ class Endpoint:
             if not cluster_handler_class.matches(cluster, self):
                 cluster_handler_class = ClusterHandler
 
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Creating cluster handler for cluster id: %s class: %s",
                 cluster_id,
                 cluster_handler_class,
