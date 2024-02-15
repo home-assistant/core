@@ -40,6 +40,7 @@ from .helpers import (
 from .helpers.dispatcher import async_dispatcher_send
 from .helpers.typing import ConfigType
 from .setup import (
+    BASE_PLATFORMS,
     DATA_SETUP_STARTED,
     DATA_SETUP_TIME,
     async_notify_setup_error,
@@ -672,6 +673,10 @@ async def _async_set_up_integrations(
     hass.async_create_background_task(
         requirements.async_load_installed_versions(hass, needed_requirements),
         "check installed requirements",
+    )
+    hass.async_create_background_task(
+        translation.async_load_integrations(hass, {*BASE_PLATFORMS, *domains_to_setup}),
+        "load translations",
     )
 
     # Initialize recorder

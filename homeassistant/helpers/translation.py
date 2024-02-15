@@ -480,7 +480,7 @@ def async_setup(hass: HomeAssistant) -> None:
         if TYPE_CHECKING:
             assert component is not None
         language = hass.config.language
-        _LOGGER.debug(
+        _LOGGER.error(
             "Loading translations for language: %s and component: %s",
             language,
             component,
@@ -496,6 +496,13 @@ def async_setup(hass: HomeAssistant) -> None:
         EVENT_CORE_CONFIG_UPDATE,
         _async_load_translations,
         event_filter=_async_load_translations_filter,
+    )
+
+
+async def async_load_integrations(hass: HomeAssistant, integrations: set[str]) -> None:
+    """Load translations for integrations."""
+    await _async_get_translations_cache(hass).async_load(
+        hass.config.language, integrations
     )
 
 
