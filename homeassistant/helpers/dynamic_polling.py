@@ -160,7 +160,7 @@ def get_polls(
     dist: Any,
     upper_bound: float | None = None,
     worst_case_delta: float = 2.0,
-    quality: float = 0.99,
+    SLO: float = 0.95,
     name: str = "_",
 ) -> list[float]:
     """Get polls based on distribution."""
@@ -172,7 +172,7 @@ def get_polls(
         valid = _examinate_2nd_derivate(dist, L)
         if not valid:
             LOGGER.warning("The result for %s is probably not minimized", name)
-        valid = _examinate_delta(dist, L, worst_case_delta, quality)
+        valid = _examinate_delta(dist, L, worst_case_delta, SLO)
         if valid:
             break
         N += 1
@@ -237,18 +237,10 @@ def _examinate_2nd_derivate(dist: Any, L: list[float]) -> bool:
     return True
 
 
-def _examinate_delta(
-    dist: Any, L: list[float], worst_delta: float, quality: float
-) -> bool:
-    qouta = 1 - quality
-    _max = 0.0
+def _examinate_delta(dist: Any, L: list[float], delta: float, SLO: float = 0.5) -> bool:
     L = [0.0] + L
+    prob: float = 0.0
     for i in range(1, len(L)):
-        d = L[i] - L[i - 1]
-        if d > _max:
-            undetected = dist.cdf(L[i] - worst_delta) - dist.cdf(L[i - 1])
-            if undetected > 0:
-                qouta -= undetected
-            if qouta < 0:
-                _max = d
-    return _max <= worst_delta
+        prob += dist.cdf(L[i]) - dist.cdf(max(L[i - 1], L[i] - delta))
+
+    return prob >= SLO

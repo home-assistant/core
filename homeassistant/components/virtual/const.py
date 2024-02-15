@@ -2,6 +2,7 @@
 
 COMPONENT_DOMAIN = "virtual"
 COMPONENT_SERVICES = "virtual-services"
+COMPONENT_NETWORK = "virtual-network"
 COMPONENT_MANUFACTURER = "twrecked"
 COMPONENT_MODEL = "virtual"
 
@@ -24,12 +25,14 @@ CONF_NAME = "name"
 CONF_PERSISTENT = "persistent"
 CONF_COORDINATED = "coordinated"
 CONF_PUSH = "push"
+CONF_SIMULATE_NETWORK = "simulate_network"
 
 
 DEFAULT_AVAILABILITY = True
 DEFAULT_PERSISTENT = True
 DEFAULT_COORDINATED = False
 DEFAULT_PUSH = False
+DEFAULT_SIMULATE_NETWORK = False
 
 IMPORTED_GROUP_NAME = "imported"
 IMPORTED_YAML_FILE = "/workspaces/home-assistant-core/config/virtual.yaml"

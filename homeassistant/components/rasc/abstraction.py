@@ -443,6 +443,7 @@ class RASCState:
         matched = True
         if not target_state:
             raise ValueError("no entry in rules.")
+
         for attr, match in target_state.items():
             entity_attr = getattr(self._entity, attr)
             if entity_attr is None:
