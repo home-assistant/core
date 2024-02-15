@@ -480,7 +480,7 @@ def async_setup(hass: HomeAssistant) -> None:
         if TYPE_CHECKING:
             assert component is not None
         language = hass.config.language
-        _LOGGER.error(
+        _LOGGER.debug(
             "Loading translations for language: %s and component: %s",
             language,
             component,
