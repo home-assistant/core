@@ -317,12 +317,15 @@ def _async_check_entity_unique_id(
 ) -> None:
     """If uuid becomes available update to use it."""
 
+    if not uuid:
+        return
+
     unique_id = f"{controller_guid}_{legacy_uuid}"
     entity_id = entity_registry.async_get_entity_id(
         domain=platform, platform=DOMAIN, unique_id=unique_id
     )
 
-    if entity_id and uuid:
+    if entity_id:
         new_unique_id = f"{controller_guid}_{uuid}"
         _LOGGER.debug("Updating entity id from %s to %s", unique_id, new_unique_id)
         entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
@@ -337,9 +340,12 @@ def _async_check_device_identifiers(
 ) -> None:
     """If uuid becomes available update to use it."""
 
+    if not uuid:
+        return
+
     unique_id = f"{controller_guid}_{legacy_uuid}"
     device = device_registry.async_get_device(identifiers={(DOMAIN, unique_id)})
-    if device and uuid:
+    if device:
         new_unique_id = f"{controller_guid}_{uuid}"
         _LOGGER.debug("Updating device id from %s to %s", unique_id, new_unique_id)
         device_registry.async_update_device(
