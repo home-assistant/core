@@ -110,7 +110,7 @@ class _IconsCache:
         )
 
         integrations: dict[str, Integration] = {}
-        domains = list({loaded.rpartition(".")[-1] for loaded in components})
+        domains = {loaded.rpartition(".")[-1] for loaded in components}
         ints_or_excs = await async_get_integrations(self._hass, domains)
         for domain, int_or_exc in ints_or_excs.items():
             if isinstance(int_or_exc, Exception):
