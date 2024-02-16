@@ -27,10 +27,8 @@ async def request_station_data(
 
     try:
         await station_api.get_data()
-
     except OpenSenseMapError:
         errors["base"] = "cannot_connect"
-
     else:
         if (received_name := station_api.data.get("name")) is None:
             errors[CONF_STATION_ID] = "invalid_id"
@@ -85,7 +83,7 @@ class OpenSenseMapConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass,
                     DOMAIN,
                     f"deprecated_yaml_import_issue_{error}",
-                    breaks_in_ha_version="2024.8.0",
+                    breaks_in_ha_version="2024.9.0",
                     is_fixable=False,
                     issue_domain=DOMAIN,
                     severity=IssueSeverity.WARNING,
@@ -99,7 +97,7 @@ class OpenSenseMapConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     self.hass,
                     HOMEASSISTANT_DOMAIN,
                     f"deprecated_yaml_{DOMAIN}",
-                    breaks_in_ha_version="2024.8.0",
+                    breaks_in_ha_version="2024.9.0",
                     is_fixable=False,
                     issue_domain=DOMAIN,
                     severity=IssueSeverity.WARNING,
@@ -114,13 +112,10 @@ class OpenSenseMapConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         name_in_config = import_config.get(CONF_NAME)
 
         errors, received_name = await request_station_data(self.hass, station_id)
-        if error := errors.get("base"):
-            create_repair(error)
-            return self.async_abort(reason=error)
-
-        if error := errors.get(CONF_STATION_ID):
-            create_repair(error)
-            return self.async_abort(reason=error)
+        for error_key in ("base", CONF_STATION_ID):
+            if error := errors.get(error_key):
+                create_repair(error)
+                return self.async_abort(reason=error)
 
         create_repair()
 
