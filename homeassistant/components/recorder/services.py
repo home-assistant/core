@@ -6,6 +6,7 @@ from typing import cast
 
 import voluptuous as vol
 
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
@@ -37,13 +38,14 @@ ATTR_ENTITY_GLOBS = "entity_globs"
 
 SERVICE_PURGE_ENTITIES_SCHEMA = vol.Schema(
     {
+        vol.Optional(ATTR_ENTITY_ID, default=[]): cv.entity_ids,
         vol.Optional(ATTR_DOMAINS, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_ENTITY_GLOBS, default=[]): vol.All(
             cv.ensure_list, [cv.string]
         ),
         vol.Optional(ATTR_KEEP_DAYS, default=0): cv.positive_int,
     }
-).extend(cv.ENTITY_SERVICE_FIELDS)
+)
 
 SERVICE_ENABLE_SCHEMA = vol.Schema({})
 SERVICE_DISABLE_SCHEMA = vol.Schema({})
