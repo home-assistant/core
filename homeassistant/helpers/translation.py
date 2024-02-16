@@ -468,8 +468,9 @@ def async_setup(hass: HomeAssistant) -> None:
         return False
 
     async def _async_load_translations(event: Event) -> None:
-        _LOGGER.debug("Loading translations for language: %s", current_language)
-        await cache.async_load(current_language, hass.config.components)
+        new_language = event.data["language"]
+        _LOGGER.debug("Loading translations for language: %s", new_language)
+        await cache.async_load(new_language, hass.config.components)
 
     @callback
     def _async_load_translations_for_component_filter(event: Event) -> bool:
