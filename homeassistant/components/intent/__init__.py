@@ -20,11 +20,6 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_UNLOCK,
 )
-from homeassistant.components.vacuum import (
-    DOMAIN as VACUUM_DOMAIN,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_START,
-)
 from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
     SERVICE_CLOSE_VALVE,
@@ -152,27 +147,6 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
                 hass.async_create_task(
                     hass.services.async_call(
                         VALVE_DOMAIN,
-                        service_name,
-                        {ATTR_ENTITY_ID: state.entity_id},
-                        context=intent_obj.context,
-                        blocking=True,
-                    )
-                )
-            )
-            return
-
-        if state.domain == VACUUM_DOMAIN:
-            # on = start
-            # off = return to base
-            if self.service == SERVICE_TURN_ON:
-                service_name = SERVICE_START
-            else:
-                service_name = SERVICE_RETURN_TO_BASE
-
-            await self._run_then_background(
-                hass.async_create_task(
-                    hass.services.async_call(
-                        VACUUM_DOMAIN,
                         service_name,
                         {ATTR_ENTITY_ID: state.entity_id},
                         context=intent_obj.context,

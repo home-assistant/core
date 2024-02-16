@@ -4,25 +4,28 @@ from homeassistant.components.vacuum import (
     DOMAIN,
     SERVICE_RETURN_TO_BASE,
     SERVICE_START,
+    intent as vacuum_intent,
 )
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
 
 
 async def test_start_vacuum_intent(hass: HomeAssistant) -> None:
     """Test HassTurnOn intent for vacuums."""
-    assert await async_setup_component(hass, "intent", {})
+    await vacuum_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_vacuum"
     hass.states.async_set(entity_id, STATE_IDLE)
     calls = async_mock_service(hass, DOMAIN, SERVICE_START)
 
     response = await intent.async_handle(
-        hass, "test", intent.INTENT_TURN_ON, {"name": {"value": "test vacuum"}}
+        hass,
+        "test",
+        vacuum_intent.INTENT_VACUUM_START,
+        {"name": {"value": "test vacuum"}},
     )
     await hass.async_block_till_done()
 
@@ -36,14 +39,17 @@ async def test_start_vacuum_intent(hass: HomeAssistant) -> None:
 
 async def test_stop_vacuum_intent(hass: HomeAssistant) -> None:
     """Test HassTurnOff intent for vacuums."""
-    assert await async_setup_component(hass, "intent", {})
+    await vacuum_intent.async_setup_intents(hass)
 
     entity_id = f"{DOMAIN}.test_vacuum"
     hass.states.async_set(entity_id, STATE_IDLE)
     calls = async_mock_service(hass, DOMAIN, SERVICE_RETURN_TO_BASE)
 
     response = await intent.async_handle(
-        hass, "test", intent.INTENT_TURN_OFF, {"name": {"value": "test vacuum"}}
+        hass,
+        "test",
+        vacuum_intent.INTENT_VACUUM_RETURN_TO_BASE,
+        {"name": {"value": "test vacuum"}},
     )
     await hass.async_block_till_done()
 
