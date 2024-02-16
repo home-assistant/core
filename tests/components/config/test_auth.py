@@ -10,7 +10,7 @@ from tests.typing import WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def setup_config(hass, aiohttp_client):
+async def setup_config(hass, aiohttp_client):
     """Fixture that sets up the auth provider homeassistant module."""
     auth_config.async_setup(hass)
 
