@@ -19,6 +19,22 @@
         "overwrite": {
           "name": "Overwrite",
           "description": "Whether to overwrite the file or not."
+        },
+        "async": {
+          "description": "Whether to download in background without waiting or not.",
+          "name": "Asynchronous"
+        },
+        "auth_type": {
+          "description": "Authentication type.",
+          "name": "Auth Type"
+        },
+        "username": {
+          "description": "Username for authentication (Optional).",
+          "name": "Username"
+        },
+        "password": {
+          "description": "Password for authentication (Optional).",
+          "name": "Password"
         }
       }
     }
