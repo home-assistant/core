@@ -41,7 +41,6 @@ async def async_setup_platform(hass, bot, config):
     if not webhook_registered:
         return False
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pushbot.deregister_webhook)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, pushbot.stop_application)
     hass.http.register_view(
         PushBotView(
@@ -121,10 +120,11 @@ class PushBot(BaseTelegramBotEntity):
 
     async def stop_application(self, event=None):
         """Handle gracefully stopping the Application object."""
+        await self.deregister_webhook()
         await self.application.stop()
         await self.application.shutdown()
 
-    async def deregister_webhook(self, event=None):
+    async def deregister_webhook(self):
         """Query telegram and deregister the URL for our webhook."""
         _LOGGER.debug("Deregistering webhook URL")
         await self.bot.delete_webhook()
