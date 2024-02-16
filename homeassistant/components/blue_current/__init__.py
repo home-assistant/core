@@ -29,8 +29,6 @@ from .const import DOMAIN, EVSE_ID, LOGGER, MODEL_TYPE
 
 PLATFORMS = [Platform.SENSOR]
 CHARGE_POINTS = "CHARGE_POINTS"
-CHARGE_CARDS = "CHARGE_CARDS"
-CARDS = "cards"
 DATA = "data"
 DELAY = 5
 
@@ -92,9 +90,7 @@ class Connector:
         self.hass = hass
         self.client = client
         self.charge_points: dict[str, dict] = {}
-        self.cards: list[dict[str, Any]] = []
         self.grid: dict[str, Any] = {}
-        self.available = False
 
     async def on_data(self, message: dict) -> None:
         """Handle received data."""
@@ -105,10 +101,6 @@ class Connector:
         if object_name == CHARGE_POINTS:
             charge_points_data: list = message[DATA]
             await self.handle_charge_point_data(charge_points_data)
-
-        elif object_name == CHARGE_CARDS:
-            cards: list[dict[str, Any]] = message[CARDS]
-            self.cards = cards
 
         # gets charge point key / values
         elif object_name in VALUE_TYPES:
