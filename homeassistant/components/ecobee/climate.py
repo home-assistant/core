@@ -790,7 +790,8 @@ class Thermostat(ClimateEntity):
         current_sensors_in_climate = self._sensors_in_preset_mode(preset_mode)
         if set(sensor_names) == set(current_sensors_in_climate):
             msg = f"This action would not be an update, current sensors on climate ({preset_mode}) are: {', '.join(current_sensors_in_climate)}"
-            raise ServiceValidationError(msg)
+            _LOGGER.debug(msg)
+            return
 
         _LOGGER.debug(
             "Setting sensors %s to be used on thermostat %s for program %s",
@@ -808,10 +809,9 @@ class Thermostat(ClimateEntity):
         climates = self.thermostat["program"]["climates"]
         for climate in climates:
             if climate.get("name") == preset_mode:
-                sensors = [d["name"] for d in climate["sensors"]]
-                break
+                return [sensor["name"] for sensor in climate["sensors"]]
 
-        return sensors
+        return []
 
     def hold_preference(self):
         """Return user preference setting for hold time."""
