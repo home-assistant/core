@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from vallox_websocket_api import PROFILE as VALLOX_PROFILE
+from vallox_websocket_api import Profile as VALLOX_PROFILE
 
 DOMAIN = "vallox"
 DEFAULT_NAME = "Vallox"
@@ -30,8 +30,11 @@ VALLOX_PROFILE_TO_PRESET_MODE_SETTABLE = {
 }
 
 VALLOX_PROFILE_TO_PRESET_MODE_REPORTABLE = {
+    VALLOX_PROFILE.HOME: "Home",
+    VALLOX_PROFILE.AWAY: "Away",
+    VALLOX_PROFILE.BOOST: "Boost",
+    VALLOX_PROFILE.FIREPLACE: "Fireplace",
     VALLOX_PROFILE.EXTRA: "Extra",
-    **VALLOX_PROFILE_TO_PRESET_MODE_SETTABLE,
 }
 
 PRESET_MODE_TO_VALLOX_PROFILE_SETTABLE = {

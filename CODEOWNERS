@@ -1454,8 +1454,8 @@ build.json @home-assistant/supervisor
 /tests/components/v2c/ @dgomes
 /homeassistant/components/vacuum/ @home-assistant/core
 /tests/components/vacuum/ @home-assistant/core
-/homeassistant/components/vallox/ @andre-richter @slovdahl @viiru-
-/tests/components/vallox/ @andre-richter @slovdahl @viiru-
+/homeassistant/components/vallox/ @andre-richter @slovdahl @viiru- @yozik04
+/tests/components/vallox/ @andre-richter @slovdahl @viiru- @yozik04
 /homeassistant/components/valve/ @home-assistant/core
 /tests/components/valve/ @home-assistant/core
 /homeassistant/components/velbus/ @Cereal2nd @brefra
