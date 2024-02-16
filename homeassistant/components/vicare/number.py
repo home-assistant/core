@@ -29,7 +29,7 @@ from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_LIST, DOMAIN, Program
+from .const import DEVICE_LIST, DOMAIN, HeatingProgram
 from .entity import ViCareEntity
 from .types import ViCareDevice, ViCareRequiredKeysMixin
 from .utils import get_circuits, is_supported
@@ -89,13 +89,19 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram(Program.NORMAL),
-        value_setter=lambda api, value: api.setProgramTemperature(
-            Program.NORMAL, value
+        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+            HeatingProgram.NORMAL
         ),
-        min_value_getter=lambda api: api.getProgramMinTemperature(Program.NORMAL),
-        max_value_getter=lambda api: api.getProgramMaxTemperature(Program.NORMAL),
-        stepping_getter=lambda api: api.getProgramStepping(Program.NORMAL),
+        value_setter=lambda api, value: api.setProgramTemperature(
+            HeatingProgram.NORMAL, value
+        ),
+        min_value_getter=lambda api: api.getProgramMinTemperature(
+            HeatingProgram.NORMAL
+        ),
+        max_value_getter=lambda api: api.getProgramMaxTemperature(
+            HeatingProgram.NORMAL
+        ),
+        stepping_getter=lambda api: api.getProgramStepping(HeatingProgram.NORMAL),
     ),
     ViCareNumberEntityDescription(
         key="reduced_temperature",
@@ -103,13 +109,19 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram(Program.REDUCED),
-        value_setter=lambda api, value: api.setProgramTemperature(
-            Program.REDUCED, value
+        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+            HeatingProgram.REDUCED
         ),
-        min_value_getter=lambda api: api.getProgramMinTemperature(Program.REDUCED),
-        max_value_getter=lambda api: api.getProgramMaxTemperature(Program.REDUCED),
-        stepping_getter=lambda api: api.getProgramStepping(Program.REDUCED),
+        value_setter=lambda api, value: api.setProgramTemperature(
+            HeatingProgram.REDUCED, value
+        ),
+        min_value_getter=lambda api: api.getProgramMinTemperature(
+            HeatingProgram.REDUCED
+        ),
+        max_value_getter=lambda api: api.getProgramMaxTemperature(
+            HeatingProgram.REDUCED
+        ),
+        stepping_getter=lambda api: api.getProgramStepping(HeatingProgram.REDUCED),
     ),
     ViCareNumberEntityDescription(
         key="comfort_temperature",
@@ -117,13 +129,19 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getDesiredTemperatureForProgram(Program.COMFORT),
-        value_setter=lambda api, value: api.setProgramTemperature(
-            Program.COMFORT, value
+        value_getter=lambda api: api.getDesiredTemperatureForProgram(
+            HeatingProgram.COMFORT
         ),
-        min_value_getter=lambda api: api.getProgramMinTemperature(Program.COMFORT),
-        max_value_getter=lambda api: api.getProgramMaxTemperature(Program.COMFORT),
-        stepping_getter=lambda api: api.getProgramStepping(Program.COMFORT),
+        value_setter=lambda api, value: api.setProgramTemperature(
+            HeatingProgram.COMFORT, value
+        ),
+        min_value_getter=lambda api: api.getProgramMinTemperature(
+            HeatingProgram.COMFORT
+        ),
+        max_value_getter=lambda api: api.getProgramMaxTemperature(
+            HeatingProgram.COMFORT
+        ),
+        stepping_getter=lambda api: api.getProgramStepping(HeatingProgram.COMFORT),
     ),
     ViCareNumberEntityDescription(
         key="normal_heating_temperature",
@@ -132,18 +150,20 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getDesiredTemperatureForProgram(
-            Program.NORMAL_HEATING
+            HeatingProgram.NORMAL_HEATING
         ),
         value_setter=lambda api, value: api.setProgramTemperature(
-            Program.NORMAL_HEATING, value
+            HeatingProgram.NORMAL_HEATING, value
         ),
         min_value_getter=lambda api: api.getProgramMinTemperature(
-            Program.NORMAL_HEATING
+            HeatingProgram.NORMAL_HEATING
         ),
         max_value_getter=lambda api: api.getProgramMaxTemperature(
-            Program.NORMAL_HEATING
+            HeatingProgram.NORMAL_HEATING
         ),
-        stepping_getter=lambda api: api.getProgramStepping(Program.NORMAL_HEATING),
+        stepping_getter=lambda api: api.getProgramStepping(
+            HeatingProgram.NORMAL_HEATING
+        ),
     ),
     ViCareNumberEntityDescription(
         key="reduced_heating_temperature",
@@ -152,18 +172,20 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getDesiredTemperatureForProgram(
-            Program.REDUCED_HEATING
+            HeatingProgram.REDUCED_HEATING
         ),
         value_setter=lambda api, value: api.setProgramTemperature(
-            Program.NORMAL_HEATING, value
+            HeatingProgram.NORMAL_HEATING, value
         ),
         min_value_getter=lambda api: api.getProgramMinTemperature(
-            Program.REDUCED_HEATING
+            HeatingProgram.REDUCED_HEATING
         ),
         max_value_getter=lambda api: api.getProgramMaxTemperature(
-            Program.REDUCED_HEATING
+            HeatingProgram.REDUCED_HEATING
         ),
-        stepping_getter=lambda api: api.getProgramStepping(Program.REDUCED_HEATING),
+        stepping_getter=lambda api: api.getProgramStepping(
+            HeatingProgram.REDUCED_HEATING
+        ),
     ),
     ViCareNumberEntityDescription(
         key="comfort_heating_temperature",
@@ -172,18 +194,20 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getDesiredTemperatureForProgram(
-            Program.COMFORT_HEATING
+            HeatingProgram.COMFORT_HEATING
         ),
         value_setter=lambda api, value: api.setProgramTemperature(
-            Program.COMFORT_HEATING, value
+            HeatingProgram.COMFORT_HEATING, value
         ),
         min_value_getter=lambda api: api.getProgramMinTemperature(
-            Program.COMFORT_HEATING
+            HeatingProgram.COMFORT_HEATING
         ),
         max_value_getter=lambda api: api.getProgramMaxTemperature(
-            Program.COMFORT_HEATING
+            HeatingProgram.COMFORT_HEATING
         ),
-        stepping_getter=lambda api: api.getProgramStepping(Program.COMFORT_HEATING),
+        stepping_getter=lambda api: api.getProgramStepping(
+            HeatingProgram.COMFORT_HEATING
+        ),
     ),
 )
 
