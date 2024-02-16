@@ -23,7 +23,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .const import MOCK_USER_DATA
@@ -120,7 +119,7 @@ async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
 
@@ -144,7 +143,7 @@ async def test_sensor_update_fail(
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     fc_class_mock().call_action_side_effect(FritzConnectionException)

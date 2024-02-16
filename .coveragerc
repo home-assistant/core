@@ -73,6 +73,10 @@ omit =
     homeassistant/components/apple_tv/browse_media.py
     homeassistant/components/apple_tv/media_player.py
     homeassistant/components/apple_tv/remote.py
+    homeassistant/components/aprilaire/__init__.py
+    homeassistant/components/aprilaire/climate.py
+    homeassistant/components/aprilaire/coordinator.py
+    homeassistant/components/aprilaire/entity.py
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
     homeassistant/components/arcam_fmj/__init__.py
