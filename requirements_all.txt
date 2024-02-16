@@ -696,7 +696,7 @@ debugpy==1.8.1
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==5.1.1
+deebot-client==5.2.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1232,7 +1232,7 @@ lightwave==0.24
 limitlessled==1.1.3
 
 # homeassistant.components.linear_garage_door
-linear-garage-door==0.2.7
+linear-garage-door==0.2.9
 
 # homeassistant.components.linode
 linode-api==4.1.9b1
@@ -1468,7 +1468,7 @@ openhomedevice==2.2.0
 opensensemap-api==0.2.0
 
 # homeassistant.components.enigma2
-openwebifpy==4.2.1
+openwebifpy==4.2.4
 
 # homeassistant.components.luci
 openwrt-luci-rpc==1.1.16
@@ -1683,6 +1683,9 @@ pyairnow==1.2.1
 # homeassistant.components.airvisual
 # homeassistant.components.airvisual_pro
 pyairvisual==2023.08.1
+
+# homeassistant.components.aprilaire
+pyaprilaire==0.7.0
 
 # homeassistant.components.asuswrt
 pyasuswrt==0.1.21
