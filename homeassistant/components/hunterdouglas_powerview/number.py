@@ -26,20 +26,12 @@ from .model import PowerviewDeviceInfo, PowerviewEntryData
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class PowerviewNumberDescriptionMixin:
-    """Mixin to describe a Number entity."""
+@dataclass(frozen=True, kw_only=True)
+class PowerviewNumberDescription(NumberEntityDescription):
+    """Class to describe a Number entity."""
 
     create_entity_fn: Callable[[BaseShade], bool]
     store_value_fn: Callable[[PowerviewShadeUpdateCoordinator, int, float | None], None]
-
-
-@dataclass(frozen=True)
-class PowerviewNumberDescription(
-    NumberEntityDescription, PowerviewNumberDescriptionMixin
-):
-    """Class to describe a Number entity."""
-
     entity_category: EntityCategory = EntityCategory.CONFIG
 
 
