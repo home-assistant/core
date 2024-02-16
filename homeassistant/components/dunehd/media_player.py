@@ -6,10 +6,10 @@ from typing import Any, Final
 from pdunehd import DuneHDPlayer
 
 from homeassistant.components.media_player import (
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
-    BrowseMedia,
     MediaType,
     async_process_play_media_url,
 )
@@ -17,7 +17,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.components import media_source
 
 from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
 
@@ -132,7 +131,9 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         """Pause media player."""
         self._state = self._player.pause()
 
-    async def async_play_media(self,  media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Play media from a URL or file."""
         # Handle media_source
         if media_source.is_media_source_id(media_id):
@@ -142,11 +143,11 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
             media_id = sourced_media.url
 
         # If media ID is a relative URL, we serve it from HA.
-        media_id = async_process_play_media_url(
-            self.hass, media_id
-        )
+        media_id = async_process_play_media_url(self.hass, media_id)
 
-        self._state = await self.hass.async_add_executor_job(self._player.launch_media_url,media_id)
+        self._state = await self.hass.async_add_executor_job(
+            self._player.launch_media_url,media_id
+        )
 
     async def async_browse_media(
         self,
