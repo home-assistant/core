@@ -1140,16 +1140,21 @@ async def _async_component_dependencies(
     integration: Integration,
 ) -> set[str]:
     """Get component dependencies."""
-    loading = set()
-    loaded = set()
+    loading: set[str] = set()
+    loaded: set[str] = set()
 
     async def component_dependencies_impl(integration: Integration) -> None:
         """Recursively get component dependencies."""
         domain = integration.domain
-        loading.add(domain)
+        if not (dependencies := integration.dependencies):
+            loaded.add(domain)
+            return
 
-        for dependency_domain in integration.dependencies:
-            dep_integration = await async_get_integration(hass, dependency_domain)
+        loading.add(domain)
+        dep_integrations = await async_get_integrations(hass, dependencies)
+        for dependency_domain, dep_integration in dep_integrations.items():
+            if isinstance(dep_integration, Exception):
+                raise dep_integration
 
             # If we are already loading it, we have a circular dependency.
             # We have to check it here to make sure that every integration that
@@ -1166,7 +1171,6 @@ async def _async_component_dependencies(
                 raise CircularDependency(dependency_domain, domain)
 
             await component_dependencies_impl(dep_integration)
-
         loading.remove(domain)
         loaded.add(domain)
 
