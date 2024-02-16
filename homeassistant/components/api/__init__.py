@@ -175,7 +175,7 @@ class APIEventStream(HomeAssistantView):
                     msg = f"data: {payload}\n\n"
                     _LOGGER.debug("STREAM %s WRITING %s", id(stop_obj), msg.strip())
                     await response.write(msg.encode("UTF-8"))
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     await to_write.put(STREAM_PING_PAYLOAD)
 
         except asyncio.CancelledError:
@@ -222,7 +222,7 @@ class APIStatesView(HomeAssistantView):
                 if entity_perm(state.entity_id, "read")
             )
         response = web.Response(
-            body=b"[" + b",".join(states) + b"]",
+            body=b"".join((b"[", b",".join(states), b"]")),
             content_type=CONTENT_TYPE_JSON,
             zlib_executor_size=32768,
         )

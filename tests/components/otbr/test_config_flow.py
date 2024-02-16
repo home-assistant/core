@@ -175,7 +175,7 @@ async def test_user_flow_404(
 @pytest.mark.parametrize(
     "error",
     [
-        asyncio.TimeoutError,
+        TimeoutError,
         python_otbr_api.OTBRError,
         aiohttp.ClientError,
     ],

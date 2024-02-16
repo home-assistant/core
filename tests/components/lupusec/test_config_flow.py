@@ -1,5 +1,6 @@
 """"Unit tests for the Lupusec config flow."""
 
+from json import JSONDecodeError
 from unittest.mock import patch
 
 from lupupy import LupusecException
@@ -51,8 +52,7 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
         "homeassistant.components.lupusec.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec.__init__",
-        return_value=None,
+        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
     ) as mock_initialize_lupusec:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -71,6 +71,7 @@ async def test_form_valid_input(hass: HomeAssistant) -> None:
     ("raise_error", "text_error"),
     [
         (LupusecException("Test lupusec exception"), "cannot_connect"),
+        (JSONDecodeError("Test JSONDecodeError", "test", 1), "cannot_connect"),
         (Exception("Test unknown exception"), "unknown"),
     ],
 )
@@ -85,7 +86,7 @@ async def test_flow_user_init_data_error_and_recover(
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec.__init__",
+        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
         side_effect=raise_error,
     ) as mock_initialize_lupusec:
         result2 = await hass.config_entries.flow.async_configure(
@@ -104,8 +105,7 @@ async def test_flow_user_init_data_error_and_recover(
         "homeassistant.components.lupusec.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec.__init__",
-        return_value=None,
+        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
     ) as mock_initialize_lupusec:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -164,8 +164,7 @@ async def test_flow_source_import(
         "homeassistant.components.lupusec.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry, patch(
-        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec.__init__",
-        return_value=None,
+        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
     ) as mock_initialize_lupusec:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -186,6 +185,7 @@ async def test_flow_source_import(
     ("raise_error", "text_error"),
     [
         (LupusecException("Test lupusec exception"), "cannot_connect"),
+        (JSONDecodeError("Test JSONDecodeError", "test", 1), "cannot_connect"),
         (Exception("Test unknown exception"), "unknown"),
     ],
 )
@@ -195,7 +195,7 @@ async def test_flow_source_import_error_and_recover(
     """Test exceptions and recovery."""
 
     with patch(
-        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec.__init__",
+        "homeassistant.components.lupusec.config_flow.lupupy.Lupusec",
         side_effect=raise_error,
     ) as mock_initialize_lupusec:
         result = await hass.config_entries.flow.async_init(
