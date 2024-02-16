@@ -679,7 +679,7 @@ async def _async_set_up_integrations(
     # lot of waiting for the lock and a thundering herd of tasks trying to
     # load the same translations at the same time as each integration is loaded.
     # We do not wait for this since as soon as the task runs it will
-    # hold the lock and if anything is fast enough to wait the lock
+    # hold the lock and if anything is fast enough to wait for the lock,
     # loading will be done by the time it gets to it.
     hass.async_create_background_task(
         translation.async_load_integrations(hass, {*BASE_PLATFORMS, *domains_to_setup}),
