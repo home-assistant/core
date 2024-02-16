@@ -91,10 +91,11 @@ async def _async_process_integration_platform_for_component(
         )
         for integration_platform in integration_platforms
         if component_name not in integration_platform.seen_components
-        and (integration := integrations.get(component_name))
         and (
             platform := _get_platform_from_integration(
-                integration, component_name, integration_platform.platform_name
+                integrations[component_name],
+                component_name,
+                integration_platform.platform_name,
             )
         )
     ]
@@ -148,10 +149,9 @@ async def async_process_integration_platforms(
             )
             for comp in top_level_components
             if comp not in integration_platform.seen_components
-            and (integration := integrations.get(comp))
             and (
                 platform := _get_platform_from_integration(
-                    integration, comp, platform_name
+                    integrations[comp], comp, platform_name
                 )
             )
         ]
