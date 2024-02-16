@@ -106,6 +106,10 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         self._latest_firmware = image
         self._attr_latest_version = f"0x{image.version:08x}"
         self._attr_installed_version = f"0x{current_file_version:08x}"
+
+        if image.metadata.changelog:
+            self._attr_release_summary = image.metadata.changelog
+
         self.async_write_ha_state()
 
     @callback
