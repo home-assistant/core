@@ -684,7 +684,6 @@ async def test_tts_not_wav(hass: HomeAssistant) -> None:
         _stream_tts,
     ):
         entry = await setup_config_entry(hass)
-        await hass.async_block_till_done()
 
         async with asyncio.timeout(1):
             await client_created_event.wait()
