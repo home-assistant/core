@@ -704,7 +704,7 @@ deebot-client==5.1.1
 defusedxml==0.7.1
 
 # homeassistant.components.deluge
-deluge-client==1.7.1
+deluge-client==1.10.0
 
 # homeassistant.components.lametric
 demetriek==0.4.0
