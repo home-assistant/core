@@ -145,14 +145,14 @@ async def async_setup_entry(
     #  bailed out here after checking has_emeter
     # TODO: this also currently does not create any sensors for strip devices.
 
-    if parent.is_strip:
+    if parent.children:
         # Historically we only add the children if the device is a strip
         for idx, child in enumerate(parent.children):
             entities.extend(
                 _async_sensors_for_device(child, children_coordinators[idx], True)
             )
-    else:
-        entities.extend(_async_sensors_for_device(parent, parent_coordinator))
+
+    entities.extend(_async_sensors_for_device(parent, parent_coordinator))
 
     async_add_entities(entities)
 
