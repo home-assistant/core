@@ -291,7 +291,7 @@ def _async_dispatch_entity_id_event(
     """Dispatch to listeners."""
     if not (callbacks_list := callbacks.get(event.data["entity_id"])):
         return
-    for job in callbacks_list[:]:
+    for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -428,7 +428,7 @@ def _async_dispatch_old_entity_id_or_entity_id_event(
         )
     ):
         return
-    for job in callbacks_list[:]:
+    for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -499,7 +499,7 @@ def _async_dispatch_device_id_event(
     """Dispatch to listeners."""
     if not (callbacks_list := callbacks.get(event.data["device_id"])):
         return
-    for job in callbacks_list[:]:
+    for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -1442,7 +1442,7 @@ def async_track_point_in_utc_time(
     """
     # Ensure point_in_time is UTC
     utc_point_in_time = dt_util.as_utc(point_in_time)
-    expected_fire_timestamp = dt_util.utc_to_timestamp(utc_point_in_time)
+    expected_fire_timestamp = utc_point_in_time.timestamp()
     job = (
         action
         if isinstance(action, HassJob)

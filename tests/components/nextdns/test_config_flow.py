@@ -1,5 +1,4 @@
 """Define tests for the NextDNS config flow."""
-import asyncio
 from unittest.mock import patch
 
 from nextdns import ApiError, InvalidApiKeyError
@@ -53,7 +52,7 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     [
         (ApiError("API Error"), "cannot_connect"),
         (InvalidApiKeyError, "invalid_api_key"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
 )

@@ -1,5 +1,4 @@
 """Test the Qingping config flow."""
-import asyncio
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -68,7 +67,7 @@ async def test_async_step_bluetooth_not_qingping(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth not qingping."""
     with patch(
         "homeassistant.components.qingping.config_flow.async_process_advertisements",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

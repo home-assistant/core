@@ -1,5 +1,4 @@
 """Alpha2 config flow."""
-import asyncio
 import logging
 from typing import Any
 
@@ -27,7 +26,7 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     base = Alpha2Base(data[CONF_HOST])
     try:
         await base.update_data()
-    except (aiohttp.client_exceptions.ClientConnectorError, asyncio.TimeoutError):
+    except (aiohttp.client_exceptions.ClientConnectorError, TimeoutError):
         return {"error": "cannot_connect"}
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Unexpected exception")

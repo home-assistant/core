@@ -1,5 +1,5 @@
 """Unit tests for the bring integration."""
-from unittest.mock import Mock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -27,7 +27,7 @@ async def setup_integration(
 
 async def test_load_unload(
     hass: HomeAssistant,
-    mock_bring_client: Mock,
+    mock_bring_client: AsyncMock,
     bring_config_entry: MockConfigEntry,
 ) -> None:
     """Test loading and unloading of the config entry."""
@@ -52,7 +52,7 @@ async def test_load_unload(
 )
 async def test_init_failure(
     hass: HomeAssistant,
-    mock_bring_client: Mock,
+    mock_bring_client: AsyncMock,
     status: ConfigEntryState,
     exception: Exception,
     bring_config_entry: MockConfigEntry | None,

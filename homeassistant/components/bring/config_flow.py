@@ -4,13 +4,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from python_bring_api.bring import Bring
-from python_bring_api.exceptions import BringAuthException, BringRequestException
+from bring_api.bring import Bring
+from bring_api.exceptions import BringAuthException, BringRequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -48,14 +49,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            bring = Bring(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
-
-            def login_and_load_lists() -> None:
-                bring.login()
-                bring.loadLists()
+            session = async_get_clientsession(self.hass)
+            bring = Bring(session, user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
 
             try:
-                await self.hass.async_add_executor_job(login_and_load_lists)
+                await bring.login()
+                await bring.loadLists()
             except BringRequestException:
                 errors["base"] = "cannot_connect"
             except BringAuthException:

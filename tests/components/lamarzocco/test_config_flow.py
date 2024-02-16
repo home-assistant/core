@@ -74,8 +74,6 @@ async def test_form_abort_already_configured(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort if already configured."""
-    mock_config_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -211,9 +209,6 @@ async def test_reauth_flow(
     hass: HomeAssistant, mock_lamarzocco: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that the reauth flow."""
-
-    mock_config_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
