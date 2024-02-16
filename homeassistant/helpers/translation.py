@@ -471,18 +471,23 @@ def async_setup(hass: HomeAssistant) -> None:
     Listeners load translations for every loaded component and after config change.
     """
     cache = _TranslationCache(hass)
-
+    current_language = hass.config.language
     hass.data[TRANSLATION_FLATTEN_CACHE] = cache
 
     @callback
     def _async_load_translations_filter(event: Event) -> bool:
         """Filter out unwanted events."""
-        return "language" in event.data
+        nonlocal current_language
+        if (
+            new_language := event.data.get("language")
+        ) and new_language != current_language:
+            current_language = new_language
+            return True
+        return False
 
     async def _async_load_translations(event: Event) -> None:
-        language = hass.config.language
-        _LOGGER.debug("Loading translations for language: %s", language)
-        await _async_load_state_translations_to_cache(hass, language, None)
+        _LOGGER.debug("Loading translations for language: %s", current_language)
+        await _async_load_state_translations_to_cache(hass, current_language, None)
 
     @callback
     def _async_load_translations_for_component_filter(event: Event) -> bool:
