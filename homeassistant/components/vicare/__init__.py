@@ -31,12 +31,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     if entry.version == 1:
         _LOGGER.debug("Migrating from version %s", entry.version)
-
-        old_token_file = hass.config.path(STORAGE_DIR, "vicare_token.save")
-        if os.path.isfile(old_token_file):
-            _LOGGER.debug("Removing old token file %s", old_token_file)
-            await hass.async_add_executor_job(os.remove, old_token_file)
-
+        with suppress(FileNotFoundError):
+            await hass.async_add_executor_job(
+                os.remove, hass.config.path(STORAGE_DIR, "vicare_token.save")
+            )
         entry.version = 2
         _LOGGER.debug("Migration to version %s successful", entry.version)
     return True
