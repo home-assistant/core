@@ -28,9 +28,9 @@ def mock_expires_at() -> float:
 
 
 @pytest.fixture
-def mock_config_entry(expires_at: int) -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant, expires_at: float = 0) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    return MockConfigEntry(
+    config_entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
         title="myUplink test",
@@ -47,6 +47,8 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
         },
         entry_id="myuplink_test",
     )
+    config_entry.add_to_hass(hass)
+    return config_entry
 
 
 @pytest.fixture(autouse=True)

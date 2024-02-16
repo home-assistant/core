@@ -19,6 +19,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 REDIRECT_URL = "https://example.com/auth/external/callback"
+CURRENT_SCOPE = "WRITESYSTEM READSYSTEM offline_access"
 
 
 async def test_full_flow(
@@ -44,7 +45,7 @@ async def test_full_flow(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
-        "&scope=WRITESYSTEM+READSYSTEM+offline_access"
+        f"&scope={CURRENT_SCOPE.replace(' ', '+')}"
     )
 
     client = await hass_client_no_auth()
@@ -63,7 +64,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "homeassistant.components.myuplink.async_setup_entry", return_value=True
+        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
     ) as mock_setup:
         await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -82,7 +83,6 @@ async def test_flow_reauth(
 ) -> None:
     """Test reauth step."""
 
-    NEW_SCOPE = "WRITESYSTEM READSYSTEM offline_access"
     OLD_SCOPE = "READSYSTEM offline_access"
     OLD_SCOPE_TOKEN = {
         "auth_implementation": DOMAIN,
@@ -95,14 +95,11 @@ async def test_flow_reauth(
             "expires_at": expires_at,
         },
     }
-    assert mock_config_entry.data["token"]["scope"] == NEW_SCOPE
+    assert mock_config_entry.data["token"]["scope"] == CURRENT_SCOPE
     assert hass.config_entries.async_update_entry(
         mock_config_entry, data=OLD_SCOPE_TOKEN
     )
     assert mock_config_entry.data["token"]["scope"] == OLD_SCOPE
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
@@ -133,7 +130,7 @@ async def test_flow_reauth(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
-        f"&scope={NEW_SCOPE.replace(' ', '+')}"
+        f"&scope={CURRENT_SCOPE.replace(' ', '+')}"
     )
 
     client = await hass_client_no_auth()
@@ -148,12 +145,12 @@ async def test_flow_reauth(
             "access_token": "updated-access-token",
             "type": "Bearer",
             "expires_in": "60",
-            "scope": NEW_SCOPE,
+            "scope": CURRENT_SCOPE,
         },
     )
 
     with patch(
-        "homeassistant.components.myuplink.async_setup_entry", return_value=True
+        f"homeassistant.components.{DOMAIN}.async_setup_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
@@ -163,4 +160,4 @@ async def test_flow_reauth(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
-    assert mock_config_entry.data["token"]["scope"] == NEW_SCOPE
+    assert mock_config_entry.data["token"]["scope"] == CURRENT_SCOPE
