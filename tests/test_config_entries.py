@@ -151,10 +151,11 @@ async def test_call_async_migrate_entry(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test we call <component>.async_migrate_entry when version mismatch."""
-    entry = MockConfigEntry(domain="comp")
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     assert not entry.supports_unload
-    entry.version = major_version
-    entry.minor_version = minor_version
+
     entry.add_to_hass(hass)
 
     mock_migrate_entry = AsyncMock(return_value=True)
@@ -185,9 +186,9 @@ async def test_call_async_migrate_entry_failure_false(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if returns false."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -217,9 +218,9 @@ async def test_call_async_migrate_entry_failure_exception(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if exception raised."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -249,9 +250,9 @@ async def test_call_async_migrate_entry_failure_not_bool(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if boolean not returned."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -281,9 +282,9 @@ async def test_call_async_migrate_entry_failure_not_supported(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if async_migrate_entry not implemented."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -304,9 +305,9 @@ async def test_call_async_migrate_entry_not_supported_minor_version(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration without async_migrate_entry and minor version changed."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -2026,7 +2027,7 @@ async def test_unique_id_update_existing_entry_with_reload(
 
     # Test we don't reload if entry not started
     updates["host"] = "2.2.2.2"
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
         "homeassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
@@ -3380,8 +3381,7 @@ async def test_setup_raise_auth_failed(
     assert flows[0]["context"]["title_placeholders"] == {"name": "test_title"}
 
     caplog.clear()
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
-    entry.reason = None
+    entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
 
     await entry.async_setup(hass)
     await hass.async_block_till_done()
@@ -3430,7 +3430,7 @@ async def test_setup_raise_auth_failed_from_first_coordinator_update(
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
 
     caplog.clear()
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
 
     await entry.async_setup(hass)
     await hass.async_block_till_done()
@@ -3480,7 +3480,7 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
 
     caplog.clear()
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
 
     await entry.async_setup(hass)
     await hass.async_block_till_done()
@@ -4323,3 +4323,65 @@ async def test_hashable_non_string_unique_id(
     del entries[entry.entry_id]
     assert not entries
     assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
+
+
+async def test_directly_mutating_blocked(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test directly mutating a ConfigEntry is blocked."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    with pytest.raises(AttributeError, match="entry_id cannot be changed"):
+        entry.entry_id = "new_entry_id"
+
+    with pytest.raises(AttributeError, match="domain cannot be changed"):
+        entry.domain = "new_domain"
+
+    with pytest.raises(AttributeError, match="state cannot be changed"):
+        entry.state = config_entries.ConfigEntryState.FAILED_UNLOAD
+
+    with pytest.raises(AttributeError, match="reason cannot be changed"):
+        entry.reason = "new_reason"
+
+    with pytest.raises(
+        AttributeError,
+        match="unique_id cannot be changed directly, use async_update_entry instead",
+    ):
+        entry.unique_id = "new_id"
+
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        "data",
+        "options",
+        "title",
+        "pref_disable_new_entities",
+        "pref_disable_polling",
+        "minor_version",
+        "version",
+    ),
+)
+async def test_report_direct_mutation_of_config_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, field: str
+) -> None:
+    """Test directly mutating a ConfigEntry is reported."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    setattr(entry, field, "new_value")
+
+    assert (
+        f'Detected code that sets "{field}" directly to update a config entry. '
+        "This is deprecated and will stop working in Home Assistant 2024.9, "
+        "it should be updated to use async_update_entry instead. Please report this issue."
+    ) in caplog.text
+
+
+async def test_updating_non_added_entry_raises(hass: HomeAssistant) -> None:
+    """Test updating a non added entry raises UnknownEntry."""
+    entry = MockConfigEntry(domain="test")
+
+    with pytest.raises(config_entries.UnknownEntry, match=entry.entry_id):
+        hass.config_entries.async_update_entry(entry, unique_id="new_id")
