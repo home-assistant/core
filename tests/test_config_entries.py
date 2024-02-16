@@ -1784,12 +1784,9 @@ async def test_init_custom_integration(hass: HomeAssistant) -> None:
         None,
         {"name": "Hue", "dependencies": [], "requirements": [], "domain": "hue"},
     )
-    with (
-        pytest.raises(data_entry_flow.UnknownHandler),
-        patch(
-            "homeassistant.loader.async_get_integration",
-            return_value=integration,
-        ),
+    with pytest.raises(data_entry_flow.UnknownHandler), patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
     ):
         await hass.config_entries.flow.async_init("bla", context={"source": "user"})
 
@@ -1809,12 +1806,9 @@ async def test_init_custom_integration_with_missing_handler(
         MockModule("hue"),
     )
     mock_platform(hass, "hue.config_flow", None)
-    with (
-        pytest.raises(data_entry_flow.UnknownHandler),
-        patch(
-            "homeassistant.loader.async_get_integration",
-            return_value=integration,
-        ),
+    with pytest.raises(data_entry_flow.UnknownHandler), patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
     ):
         await hass.config_entries.flow.async_init("bla", context={"source": "user"})
 
@@ -2012,13 +2006,11 @@ async def test_entry_id_existing_entry(
             """Test user step."""
             return self.async_create_entry(title="mock-title", data={"via": "flow"})
 
-    with (
-        pytest.raises(HomeAssistantError),
-        patch.dict(config_entries.HANDLERS, {"comp": TestFlow}),
-        patch(
-            "homeassistant.config_entries.uuid_util.random_uuid_hex",
-            return_value=collide_entry_id,
-        ),
+    with pytest.raises(HomeAssistantError), patch.dict(
+        config_entries.HANDLERS, {"comp": TestFlow}
+    ), patch(
+        "homeassistant.config_entries.uuid_util.random_uuid_hex",
+        return_value=collide_entry_id,
     ):
         await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
@@ -2056,12 +2048,9 @@ async def test_unique_id_update_existing_entry_without_reload(
                 updates={"host": "1.1.1.1"}, reload_on_update=False
             )
 
-    with (
-        patch.dict(config_entries.HANDLERS, {"comp": TestFlow}),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_reload"
-        ) as async_reload,
-    ):
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
@@ -2106,12 +2095,9 @@ async def test_unique_id_update_existing_entry_with_reload(
                 updates=updates, reload_on_update=True
             )
 
-    with (
-        patch.dict(config_entries.HANDLERS, {"comp": TestFlow}),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_reload"
-        ) as async_reload,
-    ):
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
@@ -2180,12 +2166,9 @@ async def test_unique_id_from_discovery_in_setup_retry(
             self._abort_if_unique_id_configured()
 
     # Verify we do not reload from a user source
-    with (
-        patch.dict(config_entries.HANDLERS, {"comp": TestFlow}),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_reload"
-        ) as async_reload,
-    ):
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
@@ -2196,12 +2179,9 @@ async def test_unique_id_from_discovery_in_setup_retry(
     assert len(async_reload.mock_calls) == 0
 
     # Verify do reload from a discovery source
-    with (
-        patch.dict(config_entries.HANDLERS, {"comp": TestFlow}),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_reload"
-        ) as async_reload,
-    ):
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
         discovery_result = await manager.flow.async_init(
             "comp",
             context={"source": config_entries.SOURCE_DHCP},
@@ -2248,12 +2228,9 @@ async def test_unique_id_not_update_existing_entry(
                 updates={"host": "0.0.0.0"}, reload_on_update=True
             )
 
-    with (
-        patch.dict(config_entries.HANDLERS, {"comp": TestFlow}),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_reload"
-        ) as async_reload,
-    ):
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
@@ -2421,12 +2398,9 @@ async def test_manual_add_overrides_ignored_entry(
         async def async_step_step2(self, user_input=None):
             raise NotImplementedError
 
-    with (
-        patch.dict(config_entries.HANDLERS, {"comp": TestFlow}),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_reload"
-        ) as async_reload,
-    ):
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
@@ -3992,12 +3966,9 @@ async def test_unique_id_update_while_setup_in_progress(
                 updates=updates, reload_on_update=True
             )
 
-    with (
-        patch.dict(config_entries.HANDLERS, {"comp": TestFlow}),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_reload"
-        ) as async_reload,
-    ):
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload"
+    ) as async_reload:
         result = await manager.flow.async_init(
             "comp", context={"source": config_entries.SOURCE_USER}
         )
