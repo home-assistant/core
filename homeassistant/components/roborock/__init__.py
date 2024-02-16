@@ -115,6 +115,7 @@ async def setup_device(
             device.name,
         )
         _LOGGER.debug(err)
+        await mqtt_client.async_release()
         raise err
     coordinator = RoborockDataUpdateCoordinator(
         hass, device, networking, product_info, mqtt_client
@@ -125,6 +126,7 @@ async def setup_device(
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:
+        await coordinator.release()
         if isinstance(coordinator.api, RoborockMqttClient):
             _LOGGER.warning(
                 "Not setting up %s because the we failed to get data for the first time using the online client. "
@@ -153,14 +155,10 @@ async def setup_device(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await asyncio.gather(
-            *(
-                coordinator.release()
-                for coordinator in hass.data[DOMAIN][entry.entry_id].values()
-            )
-        )
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        release_tasks = set()
+        for coordinator in hass.data[DOMAIN][entry.entry_id].values():
+            release_tasks.add(coordinator.release())
         hass.data[DOMAIN].pop(entry.entry_id)
-
+        await asyncio.gather(*release_tasks)
     return unload_ok

@@ -344,7 +344,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription[Any]] = {
         native_unit_of_measurement=PERCENTAGE,
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: round(entity.coordinator.data),
+        value_fn=lambda entity: (
+            round(entity.coordinator.data) if entity.coordinator.data else None
+        ),
     ),
     "processor_temperature": SysMonitorSensorEntityDescription[
         dict[str, list[shwtemp]]
