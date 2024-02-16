@@ -3,6 +3,7 @@ from collections import OrderedDict
 from http import HTTPStatus
 from unittest.mock import ANY, AsyncMock, patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 import voluptuous as vol
 
@@ -39,7 +40,7 @@ def mock_test_component(hass):
 
 
 @pytest.fixture
-async def client(hass, hass_client):
+async def client(hass, hass_client) -> TestClient:
     """Fixture that can interact with the config manager API."""
     await async_setup_component(hass, "http", {})
     config_entries.async_setup(hass)
@@ -2152,7 +2153,7 @@ async def test_flow_with_multiple_schema_errors_base(
 async def test_supports_reconfigure(
     hass: HomeAssistant, client, enable_custom_integrations: None
 ) -> None:
-    """Test a flow that creates an account."""
+    """Test a flow that support reconfigure step."""
     mock_platform(hass, "test.config_flow", None)
 
     mock_integration(
@@ -2168,15 +2169,41 @@ async def test_supports_reconfigure(
             )
 
         async def async_step_reconfigure(self, user_input=None):
+            if user_input is None:
+                return self.async_show_form(
+                    step_id="reconfigure", data_schema=vol.Schema({})
+                )
             return self.async_create_entry(
                 title="Test Entry", data={"secret": "account_token"}
             )
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
         resp = await client.post(
-            "/api/config/config_entries/flow", json={"handler": "test"}
+            "/api/config/config_entries/flow",
+            json={"handler": "test", "source": "reconfigure", "entry_id": "1"},
         )
 
+    assert resp.status == HTTPStatus.OK
+
+    data = await resp.json()
+    flow_id = data.pop("flow_id")
+
+    assert data == {
+        "type": "form",
+        "handler": "test",
+        "step_id": "reconfigure",
+        "data_schema": [],
+        "last_step": None,
+        "preview": None,
+        "description_placeholders": None,
+        "errors": None,
+    }
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            f"/api/config/config_entries/flow/{flow_id}",
+            json={},
+        )
     assert resp.status == HTTPStatus.OK
 
     entries = hass.config_entries.async_entries("test")
@@ -2193,7 +2220,7 @@ async def test_supports_reconfigure(
             "disabled_by": None,
             "domain": "test",
             "entry_id": entries[0].entry_id,
-            "source": core_ce.SOURCE_USER,
+            "source": core_ce.SOURCE_RECONFIGURE,
             "state": core_ce.ConfigEntryState.LOADED.value,
             "supports_reconfigure": True,
             "supports_options": False,
@@ -2209,3 +2236,70 @@ async def test_supports_reconfigure(
         "options": {},
         "minor_version": 1,
     }
+
+
+async def test_does_not_support_reconfigure(
+    hass: HomeAssistant, client: TestClient, enable_custom_integrations: None
+) -> None:
+    """Test a flow that does not support reconfigure step."""
+    mock_platform(hass, "test.config_flow", None)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            return self.async_create_entry(
+                title="Test Entry", data={"secret": "account_token"}
+            )
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test", "source": "reconfigure", "entry_id": "1"},
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    response = await resp.text()
+    assert response == '{"message":"Handler does not support step"}'
+
+
+async def test_support_reconfigure_no_entry_id(
+    hass: HomeAssistant, client: TestClient, enable_custom_integrations: None
+) -> None:
+    """Test a flow that does not support reconfigure step."""
+    mock_platform(hass, "test.config_flow", None)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            return self.async_create_entry(
+                title="Test Entry", data={"secret": "account_token"}
+            )
+
+        async def async_step_reconfigure(self, user_input=None):
+            if user_input is None:
+                return self.async_show_form(
+                    step_id="reconfigure", data_schema=vol.Schema({})
+                )
+            return self.async_create_entry(
+                title="Test Entry", data={"secret": "account_token"}
+            )
+
+    with patch.dict(HANDLERS, {"test": TestFlow}):
+        resp = await client.post(
+            "/api/config/config_entries/flow",
+            json={"handler": "test", "source": "reconfigure"},
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    response = await resp.text()
+    assert response == "Can not run reconfigure step without an entry_id"
