@@ -983,7 +983,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.linear_garage_door
-linear-garage-door==0.2.7
+linear-garage-door==0.2.9
 
 # homeassistant.components.lamarzocco
 lmcloud==0.4.35
