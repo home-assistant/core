@@ -421,7 +421,24 @@ class ServiceIntentHandler(IntentHandler):
                     "extra_slot_schema is required when extra_slot_names is set"
                 )
 
-            self.slot_schema.update(self.extra_slot_schema)
+    @callback
+    def async_validate_slots(self, slots: _SlotsType) -> _SlotsType:
+        """Validate slot information."""
+        if self._slot_schema is None:
+            if self.extra_slot_schema:
+                slot_schema = {**self.slot_schema, **self.extra_slot_schema}
+            else:
+                slot_schema = self.slot_schema
+
+            self._slot_schema = vol.Schema(
+                {
+                    key: SLOT_SCHEMA.extend({"value": validator})
+                    for key, validator in slot_schema.items()
+                },
+                extra=vol.ALLOW_EXTRA,
+            )
+
+        return self._slot_schema(slots)  # type: ignore[no-any-return]
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the hass intent."""
