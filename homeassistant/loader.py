@@ -868,7 +868,7 @@ class Integration:
 
 
 def _resolve_integrations_from_root(
-    hass: HomeAssistant, root_module: ModuleType, domains: list[str]
+    hass: HomeAssistant, root_module: ModuleType, domains: Iterable[str]
 ) -> dict[str, Integration]:
     """Resolve multiple integrations from root."""
     integrations: dict[str, Integration] = {}
@@ -962,7 +962,7 @@ async def async_get_integrations(
         from . import components  # pylint: disable=import-outside-toplevel
 
         integrations = await hass.async_add_executor_job(
-            _resolve_integrations_from_root, hass, components, list(needed)
+            _resolve_integrations_from_root, hass, components, needed
         )
         for domain, future in needed.items():
             int_or_exc = integrations.get(domain)
