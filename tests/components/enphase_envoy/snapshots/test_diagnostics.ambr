@@ -35,7 +35,6 @@
           'disabled_by': None,
           'entry_type': None,
           'hw_version': '<<envoyserial>>56789',
-          'id': '**REDACTED**',
           'identifiers': list([
             list([
               'enphase_envoy',
@@ -50,7 +49,6 @@
           'serial_number': '<<envoyserial>>',
           'suggested_area': None,
           'sw_version': '7.1.2',
-          'via_device_id': None,
         }),
         'entities': list([
           dict({
@@ -63,7 +61,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -71,7 +68,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -100,8 +96,6 @@
                 'unit_of_measurement': 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1.234',
             }),
           }),
@@ -115,7 +109,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -123,7 +116,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -152,8 +144,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1.234',
             }),
           }),
@@ -165,7 +155,6 @@
               'capabilities': None,
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -173,7 +162,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -201,8 +189,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1.234',
             }),
           }),
@@ -216,7 +202,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -224,7 +209,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -253,8 +237,6 @@
                 'unit_of_measurement': 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '0.00<<envoyserial>>',
             }),
           }),
@@ -268,7 +250,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -276,7 +257,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -305,8 +285,6 @@
                 'unit_of_measurement': 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_consumption',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1.234',
             }),
           }),
@@ -320,7 +298,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -328,7 +305,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -357,8 +333,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_today',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1.234',
             }),
           }),
@@ -370,7 +344,6 @@
               'capabilities': None,
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -378,7 +351,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -406,8 +378,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_last_seven_days',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1.234',
             }),
           }),
@@ -421,7 +391,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -429,7 +398,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -458,8 +426,6 @@
                 'unit_of_measurement': 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_consumption',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '0.00<<envoyserial>>',
             }),
           }),
@@ -473,7 +439,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -481,7 +446,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -510,8 +474,6 @@
                 'unit_of_measurement': 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production_l1',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1.234',
             }),
           }),
@@ -525,7 +487,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -533,7 +494,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -562,8 +522,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today_l1',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1.233',
             }),
           }),
@@ -575,7 +533,6 @@
               'capabilities': None,
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -583,7 +540,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -611,8 +567,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days_l1',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1.231',
             }),
           }),
@@ -626,7 +580,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -634,7 +587,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -663,8 +615,6 @@
                 'unit_of_measurement': 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production_l1',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '0.001232',
             }),
           }),
@@ -678,7 +628,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -686,7 +635,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -715,8 +663,6 @@
                 'unit_of_measurement': 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production_l2',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '2.234',
             }),
           }),
@@ -730,7 +676,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -738,7 +683,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -767,8 +711,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today_l2',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '2.233',
             }),
           }),
@@ -780,7 +722,6 @@
               'capabilities': None,
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -788,7 +729,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -816,8 +756,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days_l2',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '2.231',
             }),
           }),
@@ -831,7 +769,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -839,7 +776,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -868,8 +804,6 @@
                 'unit_of_measurement': 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production_l2',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '0.002232',
             }),
           }),
@@ -883,7 +817,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -891,7 +824,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -920,8 +852,6 @@
                 'unit_of_measurement': 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_production_l3',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '3.234',
             }),
           }),
@@ -935,7 +865,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -943,7 +872,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -972,8 +900,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_today_l3',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '3.233',
             }),
           }),
@@ -985,7 +911,6 @@
               'capabilities': None,
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -993,7 +918,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1021,8 +945,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_production_last_seven_days_l3',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '3.231',
             }),
           }),
@@ -1036,7 +958,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1044,7 +965,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1073,8 +993,6 @@
                 'unit_of_measurement': 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_production_l3',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '0.003232',
             }),
           }),
@@ -1088,7 +1006,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1096,7 +1013,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1125,8 +1041,6 @@
                 'unit_of_measurement': 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_consumption_l1',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1.324',
             }),
           }),
@@ -1140,7 +1054,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1148,7 +1061,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1177,8 +1089,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_today_l1',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1.323',
             }),
           }),
@@ -1190,7 +1100,6 @@
               'capabilities': None,
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1198,7 +1107,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1226,8 +1134,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_last_seven_days_l1',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1.321',
             }),
           }),
@@ -1241,7 +1147,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1249,7 +1154,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1278,8 +1182,6 @@
                 'unit_of_measurement': 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_consumption_l1',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '0.001322',
             }),
           }),
@@ -1293,7 +1195,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1301,7 +1202,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1330,8 +1230,6 @@
                 'unit_of_measurement': 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_consumption_l2',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '2.324',
             }),
           }),
@@ -1345,7 +1243,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1353,7 +1250,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1382,8 +1278,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_today_l2',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '2.323',
             }),
           }),
@@ -1395,7 +1289,6 @@
               'capabilities': None,
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1403,7 +1296,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1431,8 +1323,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_last_seven_days_l2',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '2.321',
             }),
           }),
@@ -1446,7 +1336,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1454,7 +1343,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1483,8 +1371,6 @@
                 'unit_of_measurement': 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_consumption_l2',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '0.002322',
             }),
           }),
@@ -1498,7 +1384,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1506,7 +1391,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1535,8 +1419,6 @@
                 'unit_of_measurement': 'kW',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_current_power_consumption_l3',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '3.324',
             }),
           }),
@@ -1550,7 +1432,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1558,7 +1439,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1587,8 +1467,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_today_l3',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '3.323',
             }),
           }),
@@ -1600,7 +1478,6 @@
               'capabilities': None,
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1608,7 +1485,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1636,8 +1512,6 @@
                 'unit_of_measurement': 'kWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_energy_consumption_last_seven_days_l3',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '3.321',
             }),
           }),
@@ -1651,7 +1525,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1659,7 +1532,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1688,8 +1560,6 @@
                 'unit_of_measurement': 'MWh',
               }),
               'entity_id': 'sensor.envoy_<<envoyserial>>_lifetime_energy_consumption_l3',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '0.003322',
             }),
           }),
@@ -1707,7 +1577,6 @@
           'disabled_by': None,
           'entry_type': None,
           'hw_version': None,
-          'id': '**REDACTED**',
           'identifiers': list([
             list([
               'enphase_envoy',
@@ -1722,7 +1591,6 @@
           'serial_number': None,
           'suggested_area': None,
           'sw_version': None,
-          'via_device_id': '**REDACTED**',
         }),
         'entities': list([
           dict({
@@ -1735,7 +1603,6 @@
               }),
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': None,
               'domain': 'sensor',
               'entity_category': None,
@@ -1743,7 +1610,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
               }),
@@ -1766,8 +1632,6 @@
                 'unit_of_measurement': 'W',
               }),
               'entity_id': 'sensor.inverter_1',
-              'last_changed': '**REDACTED**',
-              'last_updated': '**REDACTED**',
               'state': '1',
             }),
           }),
@@ -1779,7 +1643,6 @@
               'capabilities': None,
               'config_entry_id': '45a36e55aaddb2007c5f6602e0c38e72',
               'device_class': None,
-              'device_id': '**REDACTED**',
               'disabled_by': 'integration',
               'domain': 'sensor',
               'entity_category': None,
@@ -1787,7 +1650,6 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
-              'id': '**REDACTED**',
               'name': None,
               'options': dict({
               }),

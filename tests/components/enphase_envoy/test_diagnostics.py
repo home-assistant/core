@@ -1,21 +1,26 @@
 """Test Enphase Envoy diagnostics."""
+
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-# Fields to patch so they are the same between repeated runs
-TO_REDACT = {
+# Fields to exclude from snapshot as they change each run
+TO_EXCLUDE = {
     "id",
     "device_id",
     "via_device_id",
     "last_updated",
     "last_changed",
 }
+
+
+def limit_diagnostic_attrs(prop, path) -> bool:
+    """Mark attributes to exclude from diagnostic snapshot."""
+    return prop in TO_EXCLUDE
 
 
 async def test_entry_diagnostics(
@@ -26,6 +31,6 @@ async def test_entry_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-    result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-    # patch fields that change each run to fixed value and test
-    assert async_redact_data(result, TO_REDACT) == snapshot
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    ) == snapshot(exclude=limit_diagnostic_attrs)
