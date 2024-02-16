@@ -76,7 +76,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
             return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
         except data_entry_flow.UnknownStep:
             return self.json_message(
-                "Handler does not support user", HTTPStatus.BAD_REQUEST
+                "Handler does not support step", HTTPStatus.BAD_REQUEST
             )
 
         result = self._prepare_result_json(result)
