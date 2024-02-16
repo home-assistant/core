@@ -322,7 +322,8 @@ async def async_get_still_stream(
         img_bytes = await image_entity.async_image()
         if img_bytes is None:
             event.set()
-        assert img_bytes
+            return
+
         # Chrome shows the n-1 frame so send the boundary twice
         # https://issues.chromium.org/issues/41199053
         # https://issues.chromium.org/issues/40791855
