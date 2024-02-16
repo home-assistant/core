@@ -45,14 +45,18 @@ def websocket_list_entities(
         '"success":true,"result": ['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
-    msg_json = (
-        msg_json_prefix
-        + b",".join(
-            entry.partial_json_repr
-            for entry in registry.entities.values()
-            if entry.partial_json_repr is not None
+    msg_json = b"".join(
+        (
+            msg_json_prefix,
+            b",".join(
+                [
+                    entry.partial_json_repr
+                    for entry in registry.entities.values()
+                    if entry.partial_json_repr is not None
+                ]
+            ),
+            b"]}",
         )
-        + b"]}"
     )
     connection.send_message(msg_json)
 
@@ -77,14 +81,18 @@ def websocket_list_entities_for_display(
         f'"result":{{"entity_categories":{_ENTITY_CATEGORIES_JSON},"entities":['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
-    msg_json = (
-        msg_json_prefix
-        + b",".join(
-            entry.display_json_repr
-            for entry in registry.entities.values()
-            if entry.disabled_by is None and entry.display_json_repr is not None
+    msg_json = b"".join(
+        (
+            msg_json_prefix,
+            b",".join(
+                [
+                    entry.display_json_repr
+                    for entry in registry.entities.values()
+                    if entry.disabled_by is None and entry.display_json_repr is not None
+                ]
+            ),
+            b"]}}",
         )
-        + b"]}}"
     )
     connection.send_message(msg_json)
 
