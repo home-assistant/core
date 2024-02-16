@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bleak.backends.device import BLEDevice
 from motionblindsble.const import DISPLAY_NAME, MotionBlindType
@@ -104,7 +104,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._blind_type = user_input[CONF_BLIND_TYPE]
 
-            assert self._discovery_info is not None
+            if TYPE_CHECKING:
+                assert self._discovery_info is not None
 
             return self.async_create_entry(
                 title=str(self._display_name),
