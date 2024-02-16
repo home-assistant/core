@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import aiohttp
-from hass_nabucasa.client import CloudClient as Interface
+from hass_nabucasa.client import CloudClient as Interface, RemoteActivationNotAllowed
 
 from homeassistant.components import google_assistant, persistent_notification, webhook
 from homeassistant.components.alexa import (
@@ -234,6 +234,8 @@ class CloudClient(Interface):
 
     async def async_cloud_connect_update(self, connect: bool) -> None:
         """Process cloud remote message to client."""
+        if not self._prefs.remote_allow_remote_enable:
+            raise RemoteActivationNotAllowed
         await self._prefs.async_update(remote_enabled=connect)
 
     async def async_cloud_connection_info(
@@ -242,6 +244,7 @@ class CloudClient(Interface):
         """Process cloud connection info message to client."""
         return {
             "remote": {
+                "can_enable": self._prefs.remote_allow_remote_enable,
                 "connected": self.cloud.remote.is_connected,
                 "enabled": self._prefs.remote_enabled,
                 "instance_domain": self.cloud.remote.instance_domain,

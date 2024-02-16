@@ -157,6 +157,12 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+    def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Return context."""
+        context = super().get_context(data)
+        context["source"] = config_entries.SOURCE_USER
+        return context
+
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:

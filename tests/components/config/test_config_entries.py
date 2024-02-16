@@ -6,12 +6,11 @@ from unittest.mock import ANY, AsyncMock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries as core_ce, data_entry_flow
+from homeassistant import config_entries as core_ce, data_entry_flow, loader
 from homeassistant.components.config import config_entries
 from homeassistant.config_entries import HANDLERS, ConfigFlow
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.generated import config_flows
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
@@ -334,7 +333,7 @@ async def test_available_flows(
 ) -> None:
     """Test querying the available flows."""
     with patch.object(
-        config_flows,
+        loader,
         "FLOWS",
         {"integration": ["hello", "another"], "helper": ["world"]},
     ):
