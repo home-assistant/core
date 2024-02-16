@@ -452,6 +452,8 @@ async def test_remove_entry_handles_callback_error(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test that exceptions in the remove callback are handled."""
+    mock_platform(hass, "test.config_flow", None)
+    config_entries.HANDLERS["comp1"] = config_entries.ConfigFlow
     mock_setup_entry = AsyncMock(return_value=True)
     mock_unload_entry = AsyncMock(return_value=True)
     mock_remove_entry = AsyncMock(return_value=None)
@@ -853,6 +855,8 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
 
 async def test_forward_entry_sets_up_component(hass: HomeAssistant) -> None:
     """Test we setup the component entry is forwarded to."""
+    mock_platform(hass, "original.config_flow", None)
+    config_entries.HANDLERS["original"] = config_entries.ConfigFlow
     entry = MockConfigEntry(domain="original")
 
     mock_original_setup_entry = AsyncMock(return_value=True)

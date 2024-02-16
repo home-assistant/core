@@ -11,7 +11,7 @@ from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, H
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
 from homeassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import HANDLERS, ConfigEntry, ConfigFlow
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
@@ -23,7 +23,6 @@ from tests.common import (
     MockPlatform,
     flush_store,
     mock_component,
-    mock_config_flow,
     mock_platform,
 )
 
@@ -98,8 +97,7 @@ def config_flow_handler(
 ) -> Generator[FakeConfigFlow, None, None]:
     """Fixture for a test config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
-    with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
-        yield
+    HANDLERS[TEST_DOMAIN] = FakeConfigFlow
 
 
 @pytest.fixture
@@ -1424,7 +1422,6 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_2(
         title="Test HW",
     )
     config_entry.add_to_hass(hass)
-
     zha_config_entry = MockConfigEntry(
         data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
         domain=ZHA_DOMAIN,

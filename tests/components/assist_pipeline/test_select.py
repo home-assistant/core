@@ -15,7 +15,7 @@ from homeassistant.components.assist_pipeline.select import (
     VadSensitivitySelect,
 )
 from homeassistant.components.assist_pipeline.vad import VadSensitivity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import HANDLERS, ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -48,6 +48,8 @@ class SelectPlatform(MockPlatform):
 @pytest.fixture
 async def init_select(hass: HomeAssistant, init_components) -> ConfigEntry:
     """Initialize select entity."""
+    mock_platform(hass, "assist_pipeline.config_flow", None)
+    HANDLERS["assist_pipeline"] = ConfigFlow
     mock_platform(hass, "assist_pipeline.select", SelectPlatform())
     config_entry = MockConfigEntry(domain="assist_pipeline")
     config_entry.add_to_hass(hass)
