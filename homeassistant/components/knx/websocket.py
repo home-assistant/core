@@ -24,6 +24,7 @@ from .storage.entity_store_schema import (
     UPDATE_ENTITY_BASE_SCHEMA,
 )
 from .storage.entity_store_validation import (
+    EntityStoreValidationException,
     EntityStoreValidationSuccess,
     validate_entity_data,
 )
@@ -250,12 +251,18 @@ async def ws_create_entity(
     msg: dict,
 ) -> None:
     """Create entity in entity store and load it."""
-    if (validation_error := validate_entity_data(msg)) is not None:
-        connection.send_result(msg["id"], validation_error)
+    try:
+        validated_data = validate_entity_data(msg)
+    except EntityStoreValidationException as exc:
+        connection.send_result(msg["id"], exc.validation_error)
         return
     knx: KNXModule = hass.data[DOMAIN]
     try:
-        entity_id = await knx.config_store.create_entitiy(msg["platform"], msg["data"])
+        entity_id = await knx.config_store.create_entitiy(
+            # use validation result so defaults are applied
+            validated_data["platform"],
+            validated_data["data"],
+        )
     except ConfigStoreException as err:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)

@@ -36,20 +36,33 @@ def parse_invalid(exc: vol.Invalid) -> _ErrorDescription:
     )
 
 
-def validate_entity_data(entity_data: dict) -> EntityStoreValidationError | None:
-    """Validate entity data. Return `None` if valid."""
+def validate_entity_data(entity_data: dict) -> dict:
+    """Validate entity data. Return validated data or raise EntityStoreValidationException."""
     try:
-        ENTITY_STORE_DATA_SCHEMA(entity_data)
+        # return so defaults are applied
+        return ENTITY_STORE_DATA_SCHEMA(entity_data)  # type: ignore[no-any-return]
     except vol.MultipleInvalid as exc:
-        return {
-            "success": False,
-            "error_base": str(exc),
-            "errors": [parse_invalid(invalid) for invalid in exc.errors],
-        }
+        raise EntityStoreValidationException(
+            validation_error={
+                "success": False,
+                "error_base": str(exc),
+                "errors": [parse_invalid(invalid) for invalid in exc.errors],
+            }
+        ) from exc
     except vol.Invalid as exc:
-        return {
-            "success": False,
-            "error_base": str(exc),
-            "errors": [parse_invalid(exc)],
-        }
-    return None
+        raise EntityStoreValidationException(
+            validation_error={
+                "success": False,
+                "error_base": str(exc),
+                "errors": [parse_invalid(exc)],
+            }
+        ) from exc
+
+
+class EntityStoreValidationException(Exception):
+    """Entity store validation exception."""
+
+    def __init__(self, validation_error: EntityStoreValidationError) -> None:
+        """Initialize."""
+        super().__init__(validation_error)
+        self.validation_error = validation_error
