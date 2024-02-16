@@ -168,7 +168,7 @@ async def test_backup_start_as_supervisor(
     with patch(
         "homeassistant.components.backup.websocket.BackupManager.pre_backup_actions",
     ):
-        await client.send_json_auto_id({"type": "backup/end"})
+        await client.send_json_auto_id({"type": "backup/start"})
         assert snapshot == await client.receive_json()
 
 
