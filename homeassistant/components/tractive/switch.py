@@ -28,14 +28,14 @@ from .entity import TractiveEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class TractiveRequiredKeysMixin:
     """Mixin for required keys."""
 
     method: Literal["async_set_buzzer", "async_set_led", "async_set_live_tracking"]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TractiveSwitchEntityDescription(
     SwitchEntityDescription, TractiveRequiredKeysMixin
 ):
@@ -46,21 +46,18 @@ SWITCH_TYPES: tuple[TractiveSwitchEntityDescription, ...] = (
     TractiveSwitchEntityDescription(
         key=ATTR_BUZZER,
         translation_key="tracker_buzzer",
-        icon="mdi:volume-high",
         method="async_set_buzzer",
         entity_category=EntityCategory.CONFIG,
     ),
     TractiveSwitchEntityDescription(
         key=ATTR_LED,
         translation_key="tracker_led",
-        icon="mdi:led-on",
         method="async_set_led",
         entity_category=EntityCategory.CONFIG,
     ),
     TractiveSwitchEntityDescription(
         key=ATTR_LIVE_TRACKING,
         translation_key="live_tracking",
-        icon="mdi:map-marker-path",
         method="async_set_live_tracking",
         entity_category=EntityCategory.CONFIG,
     ),

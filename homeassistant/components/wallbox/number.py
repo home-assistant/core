@@ -38,7 +38,7 @@ def min_charging_current_value(coordinator: WallboxCoordinator) -> float:
     return 6
 
 
-@dataclass
+@dataclass(frozen=True)
 class WallboxNumberEntityDescriptionMixin:
     """Load entities from different handlers."""
 
@@ -47,7 +47,7 @@ class WallboxNumberEntityDescriptionMixin:
     set_value_fn: Callable[[WallboxCoordinator], Callable[[float], Awaitable[None]]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class WallboxNumberEntityDescription(
     NumberEntityDescription, WallboxNumberEntityDescriptionMixin
 ):

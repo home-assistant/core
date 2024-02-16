@@ -51,6 +51,7 @@ class PassiveBluetoothEntityKey:
     Example:
     key: temperature
     device_id: outdoor_sensor_1
+
     """
 
     key: str
@@ -93,7 +94,10 @@ def deserialize_entity_description(
     descriptions_class: type[EntityDescription], data: dict[str, Any]
 ) -> EntityDescription:
     """Deserialize an entity description."""
+    # pylint: disable=protected-access
     result: dict[str, Any] = {}
+    if hasattr(descriptions_class, "_dataclass"):
+        descriptions_class = descriptions_class._dataclass
     for field in cached_fields(descriptions_class):
         field_name = field.name
         # It would be nice if field.type returned the actual
@@ -645,7 +649,8 @@ class PassiveBluetoothProcessorEntity(Entity, Generic[_PassiveBluetoothDataProce
             self._attr_device_info[ATTR_NAME] = self.processor.coordinator.name
         if device_id is None:
             self._attr_device_info[ATTR_CONNECTIONS] = {(CONNECTION_BLUETOOTH, address)}
-        self._attr_name = processor.entity_names.get(entity_key)
+        if (name := processor.entity_names.get(entity_key)) is not None:
+            self._attr_name = name
 
     @property
     def available(self) -> bool:

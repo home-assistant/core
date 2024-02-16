@@ -18,7 +18,7 @@ from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockSelectDescriptionMixin:
     """Define an entity description mixin for select entities."""
 
@@ -32,7 +32,7 @@ class RoborockSelectDescriptionMixin:
     parameter_lambda: Callable[[str, Status], list[int]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockSelectDescription(
     SelectEntityDescription, RoborockSelectDescriptionMixin
 ):
@@ -107,10 +107,8 @@ class RoborockSelectEntity(RoborockCoordinatedEntity, SelectEntity):
     ) -> None:
         """Create a select entity."""
         self.entity_description = entity_description
-        super().__init__(unique_id, coordinator)
+        super().__init__(unique_id, coordinator, entity_description.protocol_listener)
         self._attr_options = options
-        if (protocol := self.entity_description.protocol_listener) is not None:
-            self.api.add_listener(protocol, self._update_from_listener, self.api.cache)
 
     async def async_select_option(self, option: str) -> None:
         """Set the option."""

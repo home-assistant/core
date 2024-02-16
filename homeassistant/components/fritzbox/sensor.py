@@ -35,14 +35,14 @@ from .common import get_coordinator
 from .model import FritzEntityDescriptionMixinBase
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
     """Sensor description mixin for Fritz!Smarthome entities."""
 
     native_value: Callable[[FritzhomeDevice], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzSensorEntityDescription(
     SensorEntityDescription, FritzEntityDescriptionMixinSensor
 ):
@@ -230,7 +230,7 @@ async def async_setup_entry(
 
     entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
-    _add_entities(set(coordinator.data.devices.keys()))
+    _add_entities(set(coordinator.data.devices))
 
 
 class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):

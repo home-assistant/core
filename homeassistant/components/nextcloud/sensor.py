@@ -30,7 +30,7 @@ from .entity import NextcloudEntity
 UNIT_OF_LOAD: Final[str] = "load"
 
 
-@dataclass
+@dataclass(frozen=True)
 class NextcloudSensorEntityDescription(SensorEntityDescription):
     """Describes Nextcloud sensor entity."""
 

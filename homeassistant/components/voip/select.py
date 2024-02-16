@@ -51,7 +51,7 @@ class VoipPipelineSelect(VoIPEntity, AssistPipelineSelect):
     def __init__(self, hass: HomeAssistant, device: VoIPDevice) -> None:
         """Initialize a pipeline selector."""
         VoIPEntity.__init__(self, device)
-        AssistPipelineSelect.__init__(self, hass, device.voip_id)
+        AssistPipelineSelect.__init__(self, hass, DOMAIN, device.voip_id)
 
 
 class VoipVadSensitivitySelect(VoIPEntity, VadSensitivitySelect):

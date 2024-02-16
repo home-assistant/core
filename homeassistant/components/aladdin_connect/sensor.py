@@ -23,14 +23,14 @@ from .const import DOMAIN
 from .model import DoorDevice
 
 
-@dataclass
+@dataclass(frozen=True)
 class AccSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable
 
 
-@dataclass
+@dataclass(frozen=True)
 class AccSensorEntityDescription(
     SensorEntityDescription, AccSensorEntityDescriptionMixin
 ):

@@ -1,7 +1,7 @@
 """Support for a ScreenLogic Sensor."""
 from collections.abc import Callable
 from copy import copy
-from dataclasses import dataclass
+import dataclasses
 import logging
 
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import (
-    ScreenlogicEntity,
+    ScreenLogicEntity,
     ScreenLogicEntityDescription,
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
@@ -35,21 +35,21 @@ from .util import cleanup_excluded_entity, get_ha_unit
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class ScreenLogicSensorMixin:
     """Mixin for SecreenLogic sensor entity."""
 
     value_mod: Callable[[int | str], int | str] | None = None
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class ScreenLogicSensorDescription(
     ScreenLogicSensorMixin, SensorEntityDescription, ScreenLogicEntityDescription
 ):
     """Describes a ScreenLogic sensor."""
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class ScreenLogicPushSensorDescription(
     ScreenLogicSensorDescription, ScreenLogicPushEntityDescription
 ):
@@ -272,7 +272,9 @@ async def async_setup_entry(
             cleanup_excluded_entity(coordinator, DOMAIN, chem_sensor_data_path)
             continue
         if gateway.get_data(*chem_sensor_data_path):
-            chem_sensor_description.entity_category = EntityCategory.DIAGNOSTIC
+            chem_sensor_description = dataclasses.replace(
+                chem_sensor_description, entity_category=EntityCategory.DIAGNOSTIC
+            )
             entities.append(ScreenLogicPushSensor(coordinator, chem_sensor_description))
 
     scg_sensor_description: ScreenLogicSensorDescription
@@ -285,13 +287,15 @@ async def async_setup_entry(
             cleanup_excluded_entity(coordinator, DOMAIN, scg_sensor_data_path)
             continue
         if gateway.get_data(*scg_sensor_data_path):
-            scg_sensor_description.entity_category = EntityCategory.DIAGNOSTIC
+            scg_sensor_description = dataclasses.replace(
+                scg_sensor_description, entity_category=EntityCategory.DIAGNOSTIC
+            )
             entities.append(ScreenLogicSensor(coordinator, scg_sensor_description))
 
     async_add_entities(entities)
 
 
-class ScreenLogicSensor(ScreenlogicEntity, SensorEntity):
+class ScreenLogicSensor(ScreenLogicEntity, SensorEntity):
     """Representation of a ScreenLogic sensor entity."""
 
     entity_description: ScreenLogicSensorDescription
@@ -336,7 +340,9 @@ class ScreenLogicPumpSensor(ScreenLogicSensor):
         pump_type: int,
     ) -> None:
         """Initialize of the entity."""
-        entity_description.data_root = (DEVICE.PUMP, pump_index)
+        entity_description = dataclasses.replace(
+            entity_description, data_root=(DEVICE.PUMP, pump_index)
+        )
         super().__init__(coordinator, entity_description)
         if entity_description.enabled_lambda:
             self._attr_entity_registry_enabled_default = (

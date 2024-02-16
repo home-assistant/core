@@ -1,5 +1,4 @@
 """The tests for the KMtronic component."""
-import asyncio
 
 from homeassistant.components.kmtronic.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -46,7 +45,7 @@ async def test_config_entry_not_ready(
 
     aioclient_mock.get(
         "http://1.1.1.1/status.xml",
-        exc=asyncio.TimeoutError(),
+        exc=TimeoutError(),
     )
 
     config_entry = MockConfigEntry(
