@@ -43,17 +43,7 @@ async def _load_elmax_panel_client(
 ) -> tuple[GenericElmax, PanelEntry]:
     # Connection mode was not present in initial version, default to cloud if not set
     mode = entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD)
-    if mode == CONF_ELMAX_MODE_CLOUD:
-        client = Elmax(
-            username=entry.data[CONF_ELMAX_USERNAME],
-            password=entry.data[CONF_ELMAX_PASSWORD],
-        )
-        client.set_current_panel(
-            entry.data[CONF_ELMAX_PANEL_ID], entry.data[CONF_ELMAX_PANEL_PIN]
-        )
-        # Make sure the panel is online and assigned to the current user
-        panel = await _check_cloud_panel_status(client, entry.data[CONF_ELMAX_PANEL_ID])
-    elif mode == CONF_ELMAX_MODE_DIRECT:
+    if mode == CONF_ELMAX_MODE_DIRECT:
         client_api_url = get_direct_api_url(
             host=entry.data[CONF_ELMAX_MODE_DIRECT_HOST],
             port=entry.data[CONF_ELMAX_MODE_DIRECT_PORT],
@@ -71,9 +61,15 @@ async def _load_elmax_panel_client(
         )
         panel = DirectPanel(panel_uri=client_api_url)
     else:
-        raise ConfigEntryAuthFailed(
-            f"Invalid configuration detected. Unsupported mode={mode}"
+        client = Elmax(
+            username=entry.data[CONF_ELMAX_USERNAME],
+            password=entry.data[CONF_ELMAX_PASSWORD],
         )
+        client.set_current_panel(
+            entry.data[CONF_ELMAX_PANEL_ID], entry.data[CONF_ELMAX_PANEL_PIN]
+        )
+        # Make sure the panel is online and assigned to the current user
+        panel = await _check_cloud_panel_status(client, entry.data[CONF_ELMAX_PANEL_ID])
 
     return client, panel
 
