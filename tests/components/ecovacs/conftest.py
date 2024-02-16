@@ -3,7 +3,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from deebot_client.const import PATH_API_APPSVR_APP
+from deebot_client import const
 from deebot_client.device import Device
 from deebot_client.exceptions import ApiError
 from deebot_client.models import Credentials
@@ -75,9 +75,13 @@ def mock_authenticator(device_fixture: str) -> Generator[Mock, None, None]:
             query_params: dict[str, Any] | None = None,
             headers: dict[str, Any] | None = None,
         ) -> dict[str, Any]:
-            if path == PATH_API_APPSVR_APP:
-                return {"code": 0, "devices": devices, "errno": "0"}
-            raise ApiError("Path not mocked: {path}")
+            match path:
+                case const.PATH_API_APPSVR_APP:
+                    return {"code": 0, "devices": devices, "errno": "0"}
+                case const.PATH_API_USERS_USER:
+                    return {"todo": "result", "result": "ok", "devices": devices}
+                case _:
+                    raise ApiError("Path not mocked: {path}")
 
         authenticator.post_authenticated.side_effect = post_authenticated
         yield authenticator
