@@ -323,24 +323,24 @@ async def async_get_still_stream(
         if img_bytes is None:
             event.set()
         assert img_bytes
-        # Chrome shows the n-1 frame so send every frame twice
+        # Chrome shows the n-1 frame so send the boundary twice
         # https://issues.chromium.org/issues/41199053
         # https://issues.chromium.org/issues/40791855
-        for _i in range(2):
-            try:
-                await response.write(
-                    bytes(
-                        f"Content-Type: {image_entity.content_type}\r\n"
-                        f"Content-Length: {len(img_bytes)}\r\n\r\n",
-                        "utf-8",
-                    )
-                    + img_bytes
-                    + boundary
+        try:
+            await response.write(
+                bytes(
+                    f"Content-Type: {image_entity.content_type}\r\n"
+                    f"Content-Length: {len(img_bytes)}\r\n\r\n",
+                    "utf-8",
                 )
-                await response.drain()
-            except:
-                event.set()
-                raise
+                + img_bytes
+                + boundary
+                + boundary
+            )
+            await response.drain()
+        except:
+            event.set()
+            raise
 
     async def image_state_update(_event: EventType[EventStateChangedData]) -> None:
         """Write image to stream."""
