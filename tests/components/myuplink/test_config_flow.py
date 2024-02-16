@@ -85,12 +85,30 @@ async def test_full_flow(
 
 async def test_flow_reauth(
     hass: HomeAssistant,
-    init_integration2,
+    hass_client_no_auth,
+    aioclient_mock,
+    current_request_with_host,
+    setup_credentials,
+    init_integration,
+    expires_at,
 ) -> None:
     """Test reauth step."""
-    # entry = mock_config_entry(hass)
-    entry = init_integration2
-    entry_count = len(hass.config_entries.async_entries(DOMAIN))
+
+    OLD_SCOPE = {
+        "auth_implementation": DOMAIN,
+        "token": {
+            "access_token": "Fake_token",
+            "scope": "READSYSTEM offline_access",
+            "expires_in": 86399,
+            "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
+            "token_type": "Bearer",
+            "expires_at": expires_at,
+        },
+    }
+
+    entry = init_integration
+    hass.config_entries.async_update_entry(entry, data=OLD_SCOPE)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -100,13 +118,23 @@ async def test_flow_reauth(
         data=entry.data,
     )
 
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert "flow_id" in flows[0]
+    assert result["flow_id"] == flows[0]["flow_id"]
+
     result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
+        flows[0]["flow_id"], user_input={}
     )
+    assert result3["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
+    assert result3["step_id"] == "auth"
 
-    assert result3["type"] == data_entry_flow.FlowResultType.FORM
-    assert result3["step_id"] == "pick_implementation"
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == entry_count
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], user_input={}
+    )
+    assert result4["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP_DONE
+    assert result4["step_id"] == "creation"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+    # assert entry.data["token"]["scope"] == "WRITESYSTEM READSYSTEM offline_access"
