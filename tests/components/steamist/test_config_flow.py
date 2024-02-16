@@ -1,5 +1,4 @@
 """Test the Steamist config flow."""
-import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -33,7 +32,7 @@ MODULE = "homeassistant.components.steamist"
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
     hostname=DEVICE_HOSTNAME,
     ip=DEVICE_IP_ADDRESS,
-    macaddress=DEVICE_MAC_ADDRESS,
+    macaddress=DEVICE_MAC_ADDRESS.lower().replace(":", ""),
 )
 
 
@@ -103,7 +102,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.steamist.config_flow.Steamist.async_get_status",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -231,7 +230,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="any",
                 ip=DEVICE_IP_ADDRESS,
-                macaddress="00:00:00:00:00:00",
+                macaddress="000000000000",
             ),
         )
         await hass.async_block_till_done()

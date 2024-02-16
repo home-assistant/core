@@ -76,12 +76,12 @@ def _bytearray_string(data: Any) -> bytearray:
 SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 
 PLATFORMS = [
-    Platform.SWITCH,
-    Platform.SENSOR,
-    Platform.LIGHT,
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.LIGHT,
+    Platform.SENSOR,
     Platform.SIREN,
+    Platform.SWITCH,
 ]
 
 
@@ -91,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await async_setup_internal(hass, entry)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         # Library currently doesn't support reload
         _LOGGER.error(
             "Connection timeout: failed to receive response from RFXtrx device"
@@ -147,7 +147,7 @@ def _create_rfx(config: Mapping[str, Any]) -> rfxtrxmod.Connect:
 
 
 def _get_device_lookup(
-    devices: dict[str, dict[str, Any]]
+    devices: dict[str, dict[str, Any]],
 ) -> dict[DeviceTuple, dict[str, Any]]:
     """Get a lookup structure for devices."""
     lookup = {}
@@ -440,7 +440,7 @@ def get_device_id(
 
 
 def get_device_tuple_from_identifiers(
-    identifiers: set[tuple[str, str]]
+    identifiers: set[tuple[str, str]],
 ) -> DeviceTuple | None:
     """Calculate the device tuple from a device entry."""
     identifier = next((x for x in identifiers if x[0] == DOMAIN and len(x) == 4), None)

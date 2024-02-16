@@ -175,7 +175,12 @@ async def setup_mikrotik_entry(hass: HomeAssistant, **kwargs: Any) -> None:
     wireless_data: list[dict[str, Any]] = kwargs.get("wireless_data", WIRELESS_DATA)
     wifiwave2_data: list[dict[str, Any]] = kwargs.get("wifiwave2_data", WIFIWAVE2_DATA)
 
-    def mock_command(self, cmd: str, params: dict[str, Any] | None = None) -> Any:
+    def mock_command(
+        self,
+        cmd: str,
+        params: dict[str, Any] | None = None,
+        suppress_errors: bool = False,
+    ) -> Any:
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIRELESS]:
             return support_wireless
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.IS_WIFIWAVE2]:

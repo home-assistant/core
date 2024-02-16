@@ -35,14 +35,14 @@ from .common import get_coordinator
 from .model import FritzEntityDescriptionMixinBase
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzEntityDescriptionMixinSensor(FritzEntityDescriptionMixinBase):
     """Sensor description mixin for Fritz!Smarthome entities."""
 
     native_value: Callable[[FritzhomeDevice], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzSensorEntityDescription(
     SensorEntityDescription, FritzEntityDescriptionMixinSensor
 ):

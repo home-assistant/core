@@ -219,7 +219,7 @@ MODEL_TO_FEATURES_MAP = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioSwitchRequiredKeyMixin:
     """A class that describes switch entities."""
 
@@ -228,7 +228,7 @@ class XiaomiMiioSwitchRequiredKeyMixin:
     method_off: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioSwitchDescription(
     SwitchEntityDescription, XiaomiMiioSwitchRequiredKeyMixin
 ):

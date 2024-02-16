@@ -102,6 +102,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
     from homeassistant.components.todo import TodoListEntityFeature
     from homeassistant.components.update import UpdateEntityFeature
     from homeassistant.components.vacuum import VacuumEntityFeature
+    from homeassistant.components.valve import ValveEntityFeature
     from homeassistant.components.water_heater import WaterHeaterEntityFeature
     from homeassistant.components.weather import WeatherEntityFeature
 
@@ -122,6 +123,7 @@ def _entity_features() -> dict[str, type[IntFlag]]:
         "TodoListEntityFeature": TodoListEntityFeature,
         "UpdateEntityFeature": UpdateEntityFeature,
         "VacuumEntityFeature": VacuumEntityFeature,
+        "ValveEntityFeature": ValveEntityFeature,
         "WaterHeaterEntityFeature": WaterHeaterEntityFeature,
         "WeatherEntityFeature": WeatherEntityFeature,
     }
@@ -563,6 +565,49 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
         return self.config["value"]
 
 
+class QrErrorCorrectionLevel(StrEnum):
+    """Possible error correction levels for QR code selector."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    QUARTILE = "quartile"
+    HIGH = "high"
+
+
+class QrCodeSelectorConfig(TypedDict, total=False):
+    """Class to represent a QR code selector config."""
+
+    data: str
+    scale: int
+    error_correction_level: QrErrorCorrectionLevel
+
+
+@SELECTORS.register("qr_code")
+class QrCodeSelector(Selector[QrCodeSelectorConfig]):
+    """QR code selector."""
+
+    selector_type = "qr_code"
+
+    CONFIG_SCHEMA = vol.Schema(
+        {
+            vol.Required("data"): str,
+            vol.Optional("scale"): int,
+            vol.Optional("error_correction_level"): vol.All(
+                vol.Coerce(QrErrorCorrectionLevel), lambda val: val.value
+            ),
+        }
+    )
+
+    def __init__(self, config: QrCodeSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        vol.Schema(vol.Any(str, None))(data)
+        return self.config["data"]
+
+
 class ConversationAgentSelectorConfig(TypedDict, total=False):
     """Class to represent a conversation agent selector config."""
 
@@ -877,9 +922,9 @@ class LocationSelector(Selector[LocationSelectorConfig]):
     )
     DATA_SCHEMA = vol.Schema(
         {
-            vol.Required("latitude"): float,
-            vol.Required("longitude"): float,
-            vol.Optional("radius"): float,
+            vol.Required("latitude"): vol.Coerce(float),
+            vol.Required("longitude"): vol.Coerce(float),
+            vol.Optional("radius"): vol.Coerce(float),
         }
     )
 

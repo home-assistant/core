@@ -104,7 +104,8 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
     with _patch_glucose_readings(), _patch_server_status():
         unique_id = hash_from_url(CONFIG[CONF_URL])
         entry = MockConfigEntry(domain=DOMAIN, unique_id=unique_id)
-        await hass.config_entries.async_add(entry)
+        entry.add_to_hass(hass)
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},

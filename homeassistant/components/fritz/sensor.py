@@ -142,7 +142,7 @@ def _retrieve_link_attenuation_received_state(
     return status.attenuation[1] / 10  # type: ignore[no-any-return]
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzSensorEntityDescription(SensorEntityDescription, FritzEntityDescription):
     """Describes Fritz sensor entity."""
 
@@ -298,7 +298,7 @@ async def async_setup_entry(
         if description.is_suitable(connection_info)
     ]
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class FritzBoxSensor(FritzBoxBaseCoordinatorEntity, SensorEntity):

@@ -277,7 +277,7 @@ async def test_climate_change_thermostat_temperature_range(hass: HomeAssistant) 
 
 
 async def test_climate_change_thermostat_temperature_range_iphone(
-    hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
     """Test that we can set all three set points at once (iPhone heat_cool mode support)."""
     helper = await setup_test_component(hass, create_thermostat_service)
@@ -312,7 +312,7 @@ async def test_climate_change_thermostat_temperature_range_iphone(
 
 
 async def test_climate_cannot_set_thermostat_temp_range_in_wrong_mode(
-    hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
     """Test that we cannot set range values when not in heat_cool mode."""
     helper = await setup_test_component(hass, create_thermostat_service)
@@ -371,7 +371,7 @@ def create_thermostat_single_set_point_auto(accessory):
 
 
 async def test_climate_check_min_max_values_per_mode_sspa_device(
-    hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
     """Test appropriate min/max values for each mode on sspa devices."""
     helper = await setup_test_component(hass, create_thermostat_single_set_point_auto)

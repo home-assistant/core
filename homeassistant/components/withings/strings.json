@@ -92,6 +92,18 @@
       "vascular_age": {
         "name": "Vascular age"
       },
+      "visceral_fat_index": {
+        "name": "Visceral fat index"
+      },
+      "electrodermal_activity_feet": {
+        "name": "Electrodermal activity feet"
+      },
+      "electrodermal_activity_left_foot": {
+        "name": "Electrodermal activity left foot"
+      },
+      "electrodermal_activity_right_foot": {
+        "name": "Electrodermal activity right foot"
+      },
       "breathing_disturbances_intensity": {
         "name": "Breathing disturbances intensity"
       },

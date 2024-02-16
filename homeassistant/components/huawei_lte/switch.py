@@ -1,7 +1,6 @@
 """Support for Huawei LTE switches."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import logging
 from typing import Any
 
@@ -43,17 +42,14 @@ async def async_setup_entry(
     async_add_entities(switches, True)
 
 
-@dataclass
 class HuaweiLteBaseSwitch(HuaweiLteBaseEntityWithDevice, SwitchEntity):
     """Huawei LTE switch device base class."""
 
-    key: str = field(init=False)
-    item: str = field(init=False)
+    key: str
+    item: str
 
-    _attr_device_class: SwitchDeviceClass = field(
-        default=SwitchDeviceClass.SWITCH, init=False
-    )
-    _raw_state: str | None = field(default=None, init=False)
+    _attr_device_class: SwitchDeviceClass = SwitchDeviceClass.SWITCH
+    _raw_state: str | None = None
 
     def _turn(self, state: bool) -> None:
         raise NotImplementedError
@@ -88,16 +84,13 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseEntityWithDevice, SwitchEntity):
         self._raw_state = str(value)
 
 
-@dataclass
 class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
     """Huawei LTE mobile data switch device."""
 
-    _attr_translation_key: str = field(default="mobile_data", init=False)
+    _attr_translation_key: str = "mobile_data"
 
-    def __post_init__(self) -> None:
-        """Initialize identifiers."""
-        self.key = KEY_DIALUP_MOBILE_DATASWITCH
-        self.item = "dataswitch"
+    key = KEY_DIALUP_MOBILE_DATASWITCH
+    item = "dataswitch"
 
     @property
     def _device_unique_id(self) -> str:
@@ -120,16 +113,13 @@ class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
         return "mdi:signal" if self.is_on else "mdi:signal-off"
 
 
-@dataclass
 class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
     """Huawei LTE WiFi guest network switch device."""
 
-    _attr_translation_key: str = field(default="wifi_guest_network", init=False)
+    _attr_translation_key: str = "wifi_guest_network"
 
-    def __post_init__(self) -> None:
-        """Initialize identifiers."""
-        self.key = KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH
-        self.item = "WifiEnable"
+    key = KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH
+    item = "WifiEnable"
 
     @property
     def _device_unique_id(self) -> str:

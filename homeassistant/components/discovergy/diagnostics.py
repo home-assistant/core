@@ -8,12 +8,11 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import DiscovergyData
 from .const import DOMAIN
+from .coordinator import DiscovergyUpdateCoordinator
 
 TO_REDACT_METER = {
     "serial_number",
-    "full_serial_number",
     "location",
     "full_serial_number",
     "printed_full_serial_number",
@@ -27,15 +26,16 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     flattened_meter: list[dict] = []
     last_readings: dict[str, dict] = {}
-    data: DiscovergyData = hass.data[DOMAIN][entry.entry_id]
+    coordinators: list[DiscovergyUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id]
 
-    for meter in data.meters:
+    for coordinator in coordinators:
         # make a dict of meter data and redact some data
-        flattened_meter.append(async_redact_data(asdict(meter), TO_REDACT_METER))
+        flattened_meter.append(
+            async_redact_data(asdict(coordinator.meter), TO_REDACT_METER)
+        )
 
         # get last reading for meter and make a dict of it
-        coordinator = data.coordinators[meter.meter_id]
-        last_readings[meter.meter_id] = asdict(coordinator.data)
+        last_readings[coordinator.meter.meter_id] = asdict(coordinator.data)
 
     return {
         "meters": flattened_meter,

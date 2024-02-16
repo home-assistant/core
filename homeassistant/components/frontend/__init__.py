@@ -26,6 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import service
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
@@ -344,6 +345,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the serving of the frontend."""
     await async_setup_frontend_storage(hass)
+    websocket_api.async_register_command(hass, websocket_get_icons)
     websocket_api.async_register_command(hass, websocket_get_panels)
     websocket_api.async_register_command(hass, websocket_get_themes)
     websocket_api.async_register_command(hass, websocket_get_translations)
@@ -610,7 +612,8 @@ class IndexView(web_urldispatcher.AbstractResource):
         else:
             extra_modules = hass.data[DATA_EXTRA_MODULE_URL].urls
             extra_js_es5 = hass.data[DATA_EXTRA_JS_URL_ES5].urls
-        return web.Response(
+
+        response = web.Response(
             text=_async_render_index_cached(
                 template,
                 theme_color=MANIFEST_JSON["theme_color"],
@@ -619,6 +622,8 @@ class IndexView(web_urldispatcher.AbstractResource):
             ),
             content_type="text/html",
         )
+        response.enable_compression()
+        return response
 
     def __len__(self) -> int:
         """Return length of resource."""
@@ -639,9 +644,33 @@ class ManifestJSONView(HomeAssistantView):
     @callback
     def get(self, request: web.Request) -> web.Response:
         """Return the manifest.json."""
-        return web.Response(
+        response = web.Response(
             text=MANIFEST_JSON.json, content_type="application/manifest+json"
         )
+        response.enable_compression()
+        return response
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "frontend/get_icons",
+        vol.Required("category"): vol.In({"entity", "entity_component", "services"}),
+        vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
+    }
+)
+@websocket_api.async_response
+async def websocket_get_icons(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get icons command."""
+    resources = await async_get_icons(
+        hass,
+        msg["category"],
+        msg.get("integration"),
+    )
+    connection.send_message(
+        websocket_api.result_message(msg["id"], {"resources": resources})
+    )
 
 
 @callback

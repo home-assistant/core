@@ -27,6 +27,7 @@ from .const import (
     CONF_METER_OFFSET,
     CONF_METER_PERIODICALLY_RESETTING,
     CONF_METER_TYPE,
+    CONF_SENSOR_ALWAYS_AVAILABLE,
     CONF_SOURCE_SENSOR,
     CONF_TARIFF,
     CONF_TARIFF_ENTITY,
@@ -93,6 +94,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
                 cv.ensure_list, vol.Unique(), [cv.string]
             ),
             vol.Optional(CONF_CRON_PATTERN): validate_cron_pattern,
+            vol.Optional(CONF_SENSOR_ALWAYS_AVAILABLE, default=False): cv.boolean,
         },
         period_or_cron,
     )
@@ -264,8 +266,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if config_entry.version == 1:
         new = {**config_entry.options}
         new[CONF_METER_PERIODICALLY_RESETTING] = True
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, options=new)
+        hass.config_entries.async_update_entry(config_entry, options=new, version=2)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 

@@ -25,7 +25,7 @@ from .const import DOMAIN
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 
 
-@dataclass(kw_only=True)
+@dataclass(frozen=True, kw_only=True)
 class ReolinkLightEntityDescription(
     LightEntityDescription,
     ReolinkChannelEntityDescription,
