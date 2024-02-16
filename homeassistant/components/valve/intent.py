@@ -6,7 +6,7 @@ from homeassistant.const import SERVICE_SET_VALVE_POSITION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from . import DOMAIN
+from . import ATTR_POSITION, DOMAIN
 
 
 async def async_setup_intents(hass: HomeAssistant) -> None:
@@ -17,9 +17,9 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             intent.INTENT_SET_POSITION,
             DOMAIN,
             SERVICE_SET_VALVE_POSITION,
-            extra_slot_names={"position"},
+            extra_slot_names={ATTR_POSITION},
             extra_slot_schema={
-                vol.Required("position"): vol.All(
+                vol.Required(ATTR_POSITION): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=100)
                 )
             },
