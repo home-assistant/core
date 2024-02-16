@@ -721,7 +721,7 @@ async def _async_set_up_integrations(
 
     watcher = _WatchPendingSetups(hass, setup_started)
     watcher.async_start()
-    
+
     domains_to_setup, integration_cache = await _async_resolve_domains_to_setup(
         hass, config
     )
