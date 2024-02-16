@@ -84,6 +84,13 @@ def mock_external_calls():
 
 
 @pytest.fixture
+def mock_stop_polling():
+    """Mock stop_polling as it makes an external call."""
+    with patch("homeassistant.components.telegram_bot.polling.PollBot.stop_polling"):
+        yield
+
+
+@pytest.fixture
 def mock_generate_secret_token():
     """Mock secret token generated for webhook."""
     mock_secret_token = "DEADBEEF12345678DEADBEEF87654321"
@@ -210,7 +217,7 @@ async def webhook_platform(
 
 
 @pytest.fixture
-async def polling_platform(hass, config_polling):
+async def polling_platform(hass, config_polling, mock_stop_polling):
     """Fixture for setting up the polling platform using appropriate config and mocks."""
     await async_setup_component(
         hass,
