@@ -52,11 +52,27 @@ class MatterAdapter:
 
     async def setup_nodes(self) -> None:
         """Set up all existing nodes and subscribe to new nodes."""
+        initialized_nodes: set[int] = set()
         for node in self.matter_client.get_nodes():
+            if not node.available:
+                # ignore un-initialized nodes at startup
+                # catch them later when they become available.
+                continue
+            initialized_nodes.add(node.node_id)
             self._setup_node(node)
 
         def node_added_callback(event: EventType, node: MatterNode) -> None:
             """Handle node added event."""
+            initialized_nodes.add(node.node_id)
+            self._setup_node(node)
+
+        def node_updated_callback(event: EventType, node: MatterNode) -> None:
+            """Handle node updated event."""
+            if node.node_id in initialized_nodes:
+                return
+            if not node.available:
+                return
+            initialized_nodes.add(node.node_id)
             self._setup_node(node)
 
         def endpoint_added_callback(event: EventType, data: dict[str, int]) -> None:
@@ -114,6 +130,11 @@ class MatterAdapter:
         self.config_entry.async_on_unload(
             self.matter_client.subscribe_events(
                 callback=node_added_callback, event_filter=EventType.NODE_ADDED
+            )
+        )
+        self.config_entry.async_on_unload(
+            self.matter_client.subscribe_events(
+                callback=node_updated_callback, event_filter=EventType.NODE_UPDATED
             )
         )
 

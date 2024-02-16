@@ -35,7 +35,6 @@ class RoborockButtonDescription(
 CONSUMABLE_BUTTON_DESCRIPTIONS = [
     RoborockButtonDescription(
         key="reset_sensor_consumable",
-        icon="mdi:eye-outline",
         translation_key="reset_sensor_consumable",
         command=RoborockCommand.RESET_CONSUMABLE,
         param=["sensor_dirty_time"],
@@ -44,7 +43,6 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
     ),
     RoborockButtonDescription(
         key="reset_air_filter_consumable",
-        icon="mdi:air-filter",
         translation_key="reset_air_filter_consumable",
         command=RoborockCommand.RESET_CONSUMABLE,
         param=["filter_work_time"],
@@ -53,7 +51,6 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
     ),
     RoborockButtonDescription(
         key="reset_side_brush_consumable",
-        icon="mdi:brush",
         translation_key="reset_side_brush_consumable",
         command=RoborockCommand.RESET_CONSUMABLE,
         param=["side_brush_work_time"],
@@ -62,7 +59,6 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
     ),
     RoborockButtonDescription(
         key="reset_main_brush_consumable",
-        icon="mdi:brush",
         translation_key="reset_main_brush_consumable",
         command=RoborockCommand.RESET_CONSUMABLE,
         param=["main_brush_work_time"],

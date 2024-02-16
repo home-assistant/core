@@ -125,7 +125,10 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         if self._coordinator:
             if result:
                 result_array = list(
-                    map(float if self._precision else int, result.split(","))
+                    map(
+                        float if not self._value_is_int else int,
+                        result.split(","),
+                    )
                 )
                 self._attr_native_value = result_array[0]
                 self._coordinator.async_set_updated_data(result_array)

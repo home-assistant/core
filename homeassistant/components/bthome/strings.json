@@ -44,5 +44,33 @@
       "button": "Button \"{subtype}\"",
       "dimmer": "Dimmer \"{subtype}\""
     }
+  },
+  "entity": {
+    "event": {
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "Press",
+              "double_press": "Double press",
+              "triple_press": "Triple press",
+              "long_press": "Long press",
+              "long_double_press": "Long double press",
+              "long_triple_press": "Long triple press"
+            }
+          }
+        }
+      },
+      "dimmer": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "rotate_left": "Rotate left",
+              "rotate_right": "Rotate right"
+            }
+          }
+        }
+      }
+    }
   }
 }

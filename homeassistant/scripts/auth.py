@@ -9,6 +9,7 @@ from homeassistant.auth import auth_manager_from_config
 from homeassistant.auth.providers import homeassistant as hass_auth
 from homeassistant.config import get_default_config_dir
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -51,6 +52,7 @@ def run(args):
 async def run_command(args):
     """Run the command."""
     hass = HomeAssistant(os.path.join(os.getcwd(), args.config))
+    await asyncio.gather(dr.async_load(hass), er.async_load(hass))
     hass.auth = await auth_manager_from_config(hass, [{"type": "homeassistant"}], [])
     provider = hass.auth.auth_providers[0]
     await provider.async_initialize()

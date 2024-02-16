@@ -16,7 +16,6 @@ async def test_load_unload_config_entry(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test loading and unloading the integration."""
-    mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -36,7 +35,6 @@ async def test_config_entry_not_ready(
     """Test the La Marzocco configuration entry not ready."""
     mock_lamarzocco.update_local_machine_status.side_effect = RequestNotSuccessful("")
 
-    mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -51,7 +49,6 @@ async def test_invalid_auth(
 ) -> None:
     """Test auth error during setup."""
     mock_lamarzocco.update_local_machine_status.side_effect = AuthFail("")
-    mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
