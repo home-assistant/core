@@ -39,7 +39,6 @@ class AxisSwitch(AxisEventEntity, SwitchEntity):
     def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
         """Initialize the Axis switch."""
         super().__init__(event, device)
-
         if event.id and device.api.vapix.ports[event.id].name:
             self._attr_name = device.api.vapix.ports[event.id].name
         self._attr_is_on = event.is_tripped
@@ -52,8 +51,8 @@ class AxisSwitch(AxisEventEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self.device.api.vapix.ports[self._event_id].close()
+        await self.device.api.vapix.ports.close(self._event_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self.device.api.vapix.ports[self._event_id].open()
+        await self.device.api.vapix.ports.open(self._event_id)

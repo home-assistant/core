@@ -5,6 +5,10 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 
 from axis.models.event import Event, EventGroup, EventOperation, EventTopic
+from axis.vapix.interfaces.applications.fence_guard import FenceGuardHandler
+from axis.vapix.interfaces.applications.loitering_guard import LoiteringGuardHandler
+from axis.vapix.interfaces.applications.motion_guard import MotionGuardHandler
+from axis.vapix.interfaces.applications.vmd4 import Vmd4Handler
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -111,17 +115,33 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
             self._attr_name = self.device.api.vapix.ports[event.id].name
 
         elif event.group == EventGroup.MOTION:
-            for event_topic, event_data in (
-                (EventTopic.FENCE_GUARD, self.device.api.vapix.fence_guard),
-                (EventTopic.LOITERING_GUARD, self.device.api.vapix.loitering_guard),
-                (EventTopic.MOTION_GUARD, self.device.api.vapix.motion_guard),
-                (EventTopic.OBJECT_ANALYTICS, self.device.api.vapix.object_analytics),
-                (EventTopic.MOTION_DETECTION_4, self.device.api.vapix.vmd4),
+            event_data: FenceGuardHandler | LoiteringGuardHandler | MotionGuardHandler | Vmd4Handler | None = None
+            if event.topic_base == EventTopic.FENCE_GUARD:
+                event_data = self.device.api.vapix.fence_guard
+            elif event.topic_base == EventTopic.LOITERING_GUARD:
+                event_data = self.device.api.vapix.loitering_guard
+            elif event.topic_base == EventTopic.MOTION_GUARD:
+                event_data = self.device.api.vapix.motion_guard
+            elif event.topic_base == EventTopic.MOTION_DETECTION_4:
+                event_data = self.device.api.vapix.vmd4
+            if (
+                event_data
+                and event_data.initialized
+                and (profiles := event_data["0"].profiles)
             ):
-                if (
-                    event.topic_base == event_topic
-                    and event_data
-                    and event.id in event_data
-                ):
-                    self._attr_name = f"{self._event_type} {event_data[event.id].name}"
-                    break
+                for profile_id, profile in profiles.items():
+                    camera_id = profile.camera
+                    if event.id == f"Camera{camera_id}Profile{profile_id}":
+                        self._attr_name = f"{self._event_type} {profile.name}"
+                        return
+
+            if (
+                event.topic_base == EventTopic.OBJECT_ANALYTICS
+                and self.device.api.vapix.object_analytics.initialized
+                and (scenarios := self.device.api.vapix.object_analytics["0"].scenarios)
+            ):
+                for scenario_id, scenario in scenarios.items():
+                    device_id = scenario.devices[0]["id"]
+                    if event.id == f"Device{device_id}Scenario{scenario_id}":
+                        self._attr_name = f"{self._event_type} {scenario.name}"
+                        break

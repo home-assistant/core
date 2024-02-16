@@ -69,12 +69,12 @@ class AxisLight(AxisEventEntity, LightEntity):
                 self._light_id
             )
         )
-        self.current_intensity = current_intensity["data"]["intensity"]
+        self.current_intensity = current_intensity
 
         max_intensity = await self.device.api.vapix.light_control.get_valid_intensity(
             self._light_id
         )
-        self.max_intensity = max_intensity["data"]["ranges"][0]["high"]
+        self.max_intensity = max_intensity.high
 
     @callback
     def async_event_callback(self, event: Event) -> None:
@@ -110,4 +110,4 @@ class AxisLight(AxisEventEntity, LightEntity):
                 self._light_id
             )
         )
-        self.current_intensity = current_intensity["data"]["intensity"]
+        self.current_intensity = current_intensity
