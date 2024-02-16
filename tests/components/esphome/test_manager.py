@@ -91,7 +91,9 @@ async def test_esphome_device_service_calls_allowed(
     entity_info = []
     states = []
     user_service = []
-    mock_config_entry.options = {CONF_ALLOW_SERVICE_CALLS: True}
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ALLOW_SERVICE_CALLS: True}
+    )
     device: MockESPHomeDevice = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,

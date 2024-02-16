@@ -51,6 +51,7 @@ POSITION_DEVICE_MAP = {
     BlindType.CurtainLeft: CoverDeviceClass.CURTAIN,
     BlindType.CurtainRight: CoverDeviceClass.CURTAIN,
     BlindType.SkylightBlind: CoverDeviceClass.SHADE,
+    BlindType.InsectScreen: CoverDeviceClass.SHADE,
 }
 
 TILT_DEVICE_MAP = {
@@ -69,6 +70,7 @@ TILT_ONLY_DEVICE_MAP = {
 
 TDBU_DEVICE_MAP = {
     BlindType.TopDownBottomUp: CoverDeviceClass.SHADE,
+    BlindType.TriangleBlind: CoverDeviceClass.BLIND,
 }
 
 
@@ -398,6 +400,7 @@ class MotionTDBUDevice(MotionPositionDevice):
     def __init__(self, coordinator, blind, device_class, motor):
         """Initialize the blind."""
         super().__init__(coordinator, blind, device_class)
+        delattr(self, "_attr_name")
         self._motor = motor
         self._motor_key = motor[0]
         self._attr_translation_key = motor.lower()

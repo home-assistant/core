@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from enum import Enum
 from types import ModuleType
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -110,12 +110,6 @@ class MockClimateEntity(MockEntity, ClimateEntity):
         """
         return [HVACMode.OFF, HVACMode.HEAT]
 
-    def turn_on(self) -> None:
-        """Turn on."""
-
-    def turn_off(self) -> None:
-        """Turn off."""
-
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         self._attr_preset_mode = preset_mode
@@ -129,9 +123,19 @@ class MockClimateEntity(MockEntity, ClimateEntity):
         self._attr_swing_mode = swing_mode
 
 
+class MockClimateEntityTestMethods(MockClimateEntity):
+    """Mock Climate device."""
+
+    def turn_on(self) -> None:
+        """Turn on."""
+
+    def turn_off(self) -> None:
+        """Turn off."""
+
+
 async def test_sync_turn_on(hass: HomeAssistant) -> None:
     """Test if async turn_on calls sync turn_on."""
-    climate = MockClimateEntity()
+    climate = MockClimateEntityTestMethods()
     climate.hass = hass
 
     climate.turn_on = MagicMock()
@@ -142,7 +146,7 @@ async def test_sync_turn_on(hass: HomeAssistant) -> None:
 
 async def test_sync_turn_off(hass: HomeAssistant) -> None:
     """Test if async turn_off calls sync turn_off."""
-    climate = MockClimateEntity()
+    climate = MockClimateEntityTestMethods()
     climate.hass = hass
 
     climate.turn_off = MagicMock()
@@ -686,13 +690,64 @@ async def test_no_warning_integration_has_migrated(
     )
 
 
-async def test_no_warning_on_core_integrations_for_on_off_feature_flags(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, config_flow_fixture: None
-) -> None:
-    """Test we don't warn on core integration on new turn_on/off feature flags."""
+async def test_turn_on_off_toggle(hass: HomeAssistant) -> None:
+    """Test turn_on/turn_off/toggle methods."""
 
     class MockClimateEntityTest(MockClimateEntity):
         """Mock Climate device."""
+
+        _attr_hvac_mode = HVACMode.OFF
+
+        @property
+        def hvac_mode(self) -> HVACMode:
+            """Return hvac mode."""
+            return self._attr_hvac_mode
+
+        async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+            """Set new target hvac mode."""
+            self._attr_hvac_mode = hvac_mode
+
+    climate = MockClimateEntityTest()
+    climate.hass = hass
+
+    await climate.async_turn_on()
+    assert climate.hvac_mode == HVACMode.HEAT
+
+    await climate.async_turn_off()
+    assert climate.hvac_mode == HVACMode.OFF
+
+    await climate.async_toggle()
+    assert climate.hvac_mode == HVACMode.HEAT
+    await climate.async_toggle()
+    assert climate.hvac_mode == HVACMode.OFF
+
+
+async def test_sync_toggle(hass: HomeAssistant) -> None:
+    """Test if async toggle calls sync toggle."""
+
+    class MockClimateEntityTest(MockClimateEntity):
+        """Mock Climate device."""
+
+        _enable_turn_on_off_backwards_compatibility = False
+        _attr_supported_features = (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
+
+        @property
+        def hvac_mode(self) -> HVACMode:
+            """Return hvac operation ie. heat, cool mode.
+
+            Need to be one of HVACMode.*.
+            """
+            return HVACMode.HEAT
+
+        @property
+        def hvac_modes(self) -> list[HVACMode]:
+            """Return the list of available hvac operation modes.
+
+            Need to be a subset of HVAC_MODES.
+            """
+            return [HVACMode.OFF, HVACMode.HEAT]
 
         def turn_on(self) -> None:
             """Turn on."""
@@ -700,49 +755,13 @@ async def test_no_warning_on_core_integrations_for_on_off_feature_flags(
         def turn_off(self) -> None:
             """Turn off."""
 
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
+        def toggle(self) -> None:
+            """Toggle."""
 
-    async def async_setup_entry_climate_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test climate platform via config entry."""
-        async_add_entities(
-            [MockClimateEntityTest(name="test", entity_id="climate.test")]
-        )
+    climate = MockClimateEntityTest()
+    climate.hass = hass
 
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.climate",
-        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
-    )
+    climate.toggle = Mock()
+    await climate.async_toggle()
 
-    with patch.object(
-        MockClimateEntityTest, "__module__", "homeassistant.components.test.climate"
-    ):
-        config_entry = MockConfigEntry(domain="test")
-        config_entry.add_to_hass(hass)
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    state = hass.states.get("climate.test")
-    assert state is not None
-
-    assert (
-        "does not set ClimateEntityFeature.TURN_OFF but implements the turn_off method."
-        not in caplog.text
-    )
+    assert climate.toggle.called

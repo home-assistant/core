@@ -890,18 +890,11 @@ def create_config_model(config: Config, request: web.Request) -> dict[str, Any]:
 def create_list_of_entities(config: Config, request: web.Request) -> dict[str, Any]:
     """Create a list of all entities."""
     hass: core.HomeAssistant = request.app["hass"]
-
-    json_response: dict[str, Any] = {}
-    for cached_state in config.get_exposed_states():
-        entity_id = cached_state.entity_id
-        state = hass.states.get(entity_id)
-        assert state is not None
-
-        json_response[config.entity_id_to_number(entity_id)] = state_to_json(
-            config, state
-        )
-
-    return json_response
+    return {
+        config.entity_id_to_number(entity_id): state_to_json(config, state)
+        for entity_id in config.get_exposed_entity_ids()
+        if (state := hass.states.get(entity_id))
+    }
 
 
 def hue_brightness_to_hass(value: int) -> int:
@@ -934,7 +927,7 @@ async def wait_for_state_change_or_timeout(
     try:
         async with asyncio.timeout(STATE_CHANGE_WAIT_TIMEOUT):
             await ev.wait()
-    except asyncio.TimeoutError:
+    except TimeoutError:
         pass
     finally:
         unsub()

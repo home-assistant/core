@@ -383,6 +383,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "aprilaire": {
+      "name": "Aprilaire",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "aprs": {
       "name": "APRS",
       "integration_type": "hub",
@@ -1341,6 +1347,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "duquesne_light": {
+      "name": "Duquesne Light",
+      "integration_type": "virtual",
+      "supported_by": "opower"
     },
     "dwd_weather_warnings": {
       "name": "Deutscher Wetterdienst (DWD) Weather Warnings",
@@ -2612,6 +2623,12 @@
       "name": "Hurrican Shutters Wholesale",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
+    },
+    "husqvarna_automower": {
+      "name": "Husqvarna Automower",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "huum": {
       "name": "Huum",
@@ -5075,6 +5092,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "samsam": {
+      "name": "SamSam",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
+    },
     "samsung": {
       "name": "Samsung",
       "integrations": {
@@ -6156,6 +6178,12 @@
           "config_flow": false,
           "iot_class": "local_polling",
           "name": "TP-Link LTE"
+        },
+        "tplink_tapo": {
+          "integration_type": "virtual",
+          "config_flow": false,
+          "supported_by": "tplink",
+          "name": "Tapo"
         }
       },
       "iot_standards": [
@@ -6168,7 +6196,7 @@
         "traccar": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "local_polling",
+          "iot_class": "cloud_push",
           "name": "Traccar Client"
         },
         "traccar_server": {
@@ -6429,7 +6457,7 @@
     "velux": {
       "name": "Velux",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "venstar": {
@@ -6946,6 +6974,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "calculated"
+    },
+    "zondergas": {
+      "name": "ZonderGas",
+      "integration_type": "virtual",
+      "supported_by": "energyzero"
     },
     "zoneminder": {
       "name": "ZoneMinder",
