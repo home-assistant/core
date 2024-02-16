@@ -29,8 +29,8 @@ class IntegrationPlatform:
 async def _async_process_single_integration_platform_component(
     hass: HomeAssistant,
     component_name: str,
-    integration_platform: IntegrationPlatform,
     platform: ModuleType,
+    integration_platform: IntegrationPlatform,
 ) -> None:
     """Process a single integration platform."""
     if component_name in integration_platform.seen_components:
@@ -84,8 +84,8 @@ async def _async_process_integration_platform_for_component(
             _async_process_single_integration_platform_component(
                 hass,
                 component_name,
-                integration_platform,
                 platform,
+                integration_platform,
             ),
             name=f"process integration platform {integration_platform.platform_name} for {component_name}",
         )
@@ -143,7 +143,7 @@ async def async_process_integration_platforms(
         tasks = [
             asyncio.create_task(
                 _async_process_single_integration_platform_component(
-                    hass, comp, integration_platform, platform
+                    hass, comp, platform, integration_platform
                 ),
                 name=f"process integration platform {platform_name} for {comp}",
             )
