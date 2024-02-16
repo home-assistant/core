@@ -44,15 +44,7 @@ from .statistics import (
     statistics_during_period,
     validate_statistics,
 )
-from .util import (
-    PERIOD_SCHEMA,
-    async_migration_in_progress,
-    async_migration_is_live,
-    get_instance,
-    resolve_period,
-    session_scope,
-)
-from .util import PERIOD_SCHEMA, get_instance, resolve_period
+from .util import PERIOD_SCHEMA, get_instance, resolve_period, session_scope
 
 if TYPE_CHECKING:
     from .core import Recorder
