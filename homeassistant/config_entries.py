@@ -513,7 +513,7 @@ class ConfigEntry:
             result = False
 
         #
-        # After calling async_setup_entry, it is important that this function
+        # After successfully calling async_setup_entry, it is important that this function
         # does not yield to the event loop by using `await` or `async with` or
         # similar until after the state has been set by calling self._async_set_state.
         #
