@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 import collections
-from collections.abc import Awaitable, Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -25,9 +24,13 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+    async_track_time_interval,
+)
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, EventType, UndefinedType
 
 from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
 
@@ -40,7 +43,6 @@ else:
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL: Final = timedelta(seconds=30)
-MIN_STREAM_INTERVAL: Final = 0.5  # seconds
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
@@ -302,54 +304,64 @@ class ImageView(HomeAssistantView):
 
 async def async_get_still_stream(
     request: web.Request,
-    image_cb: Callable[[], Awaitable[bytes | None]],
-    content_type: str,
-    interval: float,
+    image_entity: ImageEntity,
 ) -> web.StreamResponse:
-    """Generate an HTTP MJPEG stream from the Image.
+    """Generate an HTTP multipart stream from the Image.
 
     This method must be run in the event loop.
     """
     response = web.StreamResponse()
-    response.content_type = CONTENT_TYPE_MULTIPART.format("--frameboundary")
+    response.content_type = CONTENT_TYPE_MULTIPART.format("frameboundary")
     await response.prepare(request)
+    boundary = bytes("\r\n--frameboundary\r\n", "utf-8")
+    await response.write(boundary)
 
-    async def write_to_mjpeg_stream(img_bytes: bytes) -> None:
+    event = asyncio.Event()
+
+    async def _write_to_stream() -> None:
+        img_bytes = await image_entity.async_image()
+        if img_bytes is None:
+            event.set()
+        assert img_bytes
+        # Chrome shows the n-1 frame so send every frame twice
+        # https://issues.chromium.org/issues/41199053
+        # https://issues.chromium.org/issues/40791855
+        for _i in range(2):
+            try:
+                await response.write(
+                    bytes(
+                        f"Content-Type: {image_entity.content_type}\r\n"
+                        f"Content-Length: {len(img_bytes)}\r\n\r\n",
+                        "utf-8",
+                    )
+                    + img_bytes
+                    + boundary
+                )
+                await response.drain()
+            except:
+                event.set()
+                raise
+
+    async def image_state_update(_event: EventType[EventStateChangedData]) -> None:
         """Write image to stream."""
-        await response.write(
-            bytes(
-                "--frameboundary\r\n"
-                f"Content-Type: {content_type}\r\n"
-                f"Content-Length: {len(img_bytes)}\r\n\r\n",
-                "utf-8",
-            )
-            + img_bytes
-            + b"\r\n"
-        )
+        await _write_to_stream()
 
-    last_image = None
-
-    while True:
-        img_bytes = await image_cb()
-        if not img_bytes:
-            break
-
-        if img_bytes != last_image:
-            await write_to_mjpeg_stream(img_bytes)
-
-            # Chrome seems to always ignore first picture,
-            # print it twice.
-            if last_image is None:
-                await write_to_mjpeg_stream(img_bytes)
-            last_image = img_bytes
-
-        await asyncio.sleep(interval)
-
+    hass: HomeAssistant = request.app["hass"]
+    remove = async_track_state_change_event(
+        hass,
+        [image_entity.entity_id],
+        image_state_update,
+    )
+    try:
+        await _write_to_stream()
+        await event.wait()
+    finally:
+        remove()
     return response
 
 
 class ImageStreamView(ImageView):
-    """Image View to serve an MJPEG stream."""
+    """Image View to serve an multipart stream."""
 
     url = "/api/image_proxy_stream/{entity_id}"
     name = "api:image:stream"
@@ -357,16 +369,5 @@ class ImageStreamView(ImageView):
     async def handle(
         self, request: web.Request, image_entity: ImageEntity
     ) -> web.StreamResponse:
-        """Serve image stream, possibly with interval."""
-        interval = MIN_STREAM_INTERVAL
-        if interval_str := request.query.get("interval"):
-            try:
-                interval = float(interval_str)
-                if interval < MIN_STREAM_INTERVAL:
-                    raise ValueError(f"Stream interval must be > {MIN_STREAM_INTERVAL}")
-            except ValueError as err:
-                raise web.HTTPBadRequest() from err
-
-        return await async_get_still_stream(
-            request, image_entity.async_image, image_entity.content_type, interval
-        )
+        """Serve image stream."""
+        return await async_get_still_stream(request, image_entity)
