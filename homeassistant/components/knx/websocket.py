@@ -19,7 +19,6 @@ from .const import DOMAIN
 from .storage.config_store import ConfigStoreException
 from .storage.entity_store_schema import (
     CREATE_ENTITY_BASE_SCHEMA,
-    ENTITY_STORE_DATA_SCHEMA,
     SCHEMA_OPTIONS,
     UPDATE_ENTITY_BASE_SCHEMA,
 )
@@ -275,15 +274,10 @@ async def ws_create_entity(
 
 @websocket_api.require_admin
 @websocket_api.websocket_command(
-    vol.All(
-        websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-            {
-                vol.Required("type"): "knx/update_entity",
-                **UPDATE_ENTITY_BASE_SCHEMA,
-            }
-        ),
-        ENTITY_STORE_DATA_SCHEMA,
-    )
+    {
+        vol.Required("type"): "knx/update_entity",
+        **UPDATE_ENTITY_BASE_SCHEMA,
+    }
 )
 @websocket_api.async_response
 async def ws_update_entity(
@@ -292,17 +286,26 @@ async def ws_update_entity(
     msg: dict,
 ) -> None:
     """Update entity in entity store and reload it."""
+    try:
+        validated_data = validate_entity_data(msg)
+    except EntityStoreValidationException as exc:
+        connection.send_result(msg["id"], exc.validation_error)
+        return
     knx: KNXModule = hass.data[DOMAIN]
     try:
         await knx.config_store.update_entity(
-            msg["platform"], msg["unique_id"], msg["data"]
+            validated_data["platform"],
+            validated_data["unique_id"],
+            validated_data["data"],
         )
     except ConfigStoreException as err:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
         )
         return
-    connection.send_result(msg["id"])
+    connection.send_result(
+        msg["id"], EntityStoreValidationSuccess(success=True, entity_id=None)
+    )
 
 
 @websocket_api.require_admin

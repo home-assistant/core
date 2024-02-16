@@ -11,6 +11,7 @@ from ..validation import ga_validator, sync_state_validator
 
 BASE_ENTITY_SCHEMA = vol.Schema(
     {
+        # TODO: name shall be required when no device_info is given
         vol.Optional("name", default=None): vol.Maybe(str),
         vol.Optional("device_info", default=None): vol.Maybe(str),
         vol.Optional("entity_category", default=None): vol.Any(
