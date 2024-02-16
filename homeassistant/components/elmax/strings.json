@@ -20,6 +20,9 @@
         "data": {
           "panel_pin": "Panel PIN code",
           "use_ssl": "Use SSL"
+        },
+        "data_description": {
+          "use_ssl": "Whether or not using strict SSL checks. Disable if the panel does not expose a valid SSL certificate or if SSL communication is unsupported by the panel you are connecting to."
         }
       },
       "direct": {
@@ -30,6 +33,10 @@
           "use_ssl": "Use SSL",
           "follow_mdns": "Automatically update HOST/PORT via mdns",
           "panel_pin": "Panel PIN code"
+        },
+        "data_description": {
+          "use_ssl": "Whether or not using strict SSL checks. Disable if the panel does not expose a valid SSL certificate or if SSL communication is unsupported by the panel you are connecting to.",
+          "follow_mdns": "When enabled makes this integration to \"follow\" the dynamic IP that the Panel is assigned. Turn it off if relying on static DHCP leases or ARP-Binding on your home router."
         }
       },
       "panels": {
