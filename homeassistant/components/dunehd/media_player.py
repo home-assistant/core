@@ -5,6 +5,7 @@ from typing import Any, Final
 
 from pdunehd import DuneHDPlayer
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     BrowseMedia,
     MediaPlayerEntity,
