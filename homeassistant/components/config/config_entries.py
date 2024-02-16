@@ -176,13 +176,22 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
                 text=f"Failed dependencies {', '.join(exc.failed_dependencies)}",
                 status=HTTPStatus.BAD_REQUEST,
             )
+        except data_entry_flow.FlowError:
+            return web.Response(
+                text="Can not run reconfigure step without an entry_id",
+                status=HTTPStatus.BAD_REQUEST,
+            )
 
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
         context = super().get_context(data)
         data = self._data
         context["source"] = data["source"]
-        if entry_id := data.get("entry_id"):
+        if (entry_id := data.get("entry_id")) is None and data[
+            "source"
+        ] == config_entries.SOURCE_RECONFIGURE:
+            raise data_entry_flow.FlowError("Reconfigure step requires an entry_id")
+        if entry_id:
             context["entry_id"] = entry_id
         return context
 
