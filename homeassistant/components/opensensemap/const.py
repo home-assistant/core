@@ -11,7 +11,7 @@ CONF_STATION_ID = "station_id"
 DOMAIN = "opensensemap"
 MANUFACTURER = "opensensemap.org"
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.AIR_QUALITY]
 
 
 class SensorTypeId(StrEnum):
@@ -19,7 +19,3 @@ class SensorTypeId(StrEnum):
 
     PM25 = "PM2.5"
     PM10 = "PM10"
-    TEMPERATURE = "Temperature"
-    HUMIDITY = "Humidity"
-    PRESSURE = "Air pressure"
-    ILLUMINANCE = "Illuminance"
