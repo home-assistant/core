@@ -606,7 +606,7 @@ async def test_satellite_error_during_pipeline(hass: HomeAssistant) -> None:
     client_created_event = asyncio.Event()
     mock_client = SatelliteAsyncTcpClient(events)
 
-    def _make_async_tcp_client(*args: Any, **kwargs: Any) -> SatelliteAsyncTcpClient:
+    def _async_make_tcp_client(*args: Any, **kwargs: Any) -> SatelliteAsyncTcpClient:
         client_created_event.set()
         return mock_client
 
@@ -615,7 +615,7 @@ async def test_satellite_error_during_pipeline(hass: HomeAssistant) -> None:
         return_value=SATELLITE_INFO,
     ), patch(
         "homeassistant.components.wyoming.satellite.AsyncTcpClient",
-        _make_async_tcp_client,
+        _async_make_tcp_client,
     ), patch(
         "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
     ) as mock_run_pipeline:
@@ -662,7 +662,7 @@ async def test_tts_not_wav(hass: HomeAssistant) -> None:
     client_created_event = asyncio.Event()
     mock_client = SatelliteAsyncTcpClient(events)
 
-    def _make_async_tcp_client(*args: Any, **kwargs: Any) -> SatelliteAsyncTcpClient:
+    def _async_make_tcp_client(*args: Any, **kwargs: Any) -> SatelliteAsyncTcpClient:
         client_created_event.set()
         return mock_client
 
@@ -671,7 +671,7 @@ async def test_tts_not_wav(hass: HomeAssistant) -> None:
         return_value=SATELLITE_INFO,
     ), patch(
         "homeassistant.components.wyoming.satellite.AsyncTcpClient",
-        _make_async_tcp_client,
+        _async_make_tcp_client,
     ), patch(
         "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
     ) as mock_run_pipeline, patch(
