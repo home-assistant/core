@@ -82,12 +82,7 @@ VICARE_TO_HA_PRESET_HEATING = {
     HeatingProgram.REDUCED: PRESET_SLEEP,
 }
 
-HA_TO_VICARE_PRESET_HEATING = {
-    PRESET_COMFORT: HeatingProgram.COMFORT,
-    PRESET_ECO: HeatingProgram.ECO,
-    PRESET_HOME: HeatingProgram.NORMAL,
-    PRESET_SLEEP: HeatingProgram.REDUCED,
-}
+HA_TO_VICARE_PRESET_HEATING = {v: k for k, v in VICARE_TO_HA_PRESET_HEATING.items()}
 
 
 def _build_entities(
@@ -311,9 +306,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         _LOGGER.debug("Current preset %s", self._current_program)
         if self._current_program and self._current_program not in [
             HeatingProgram.NORMAL,
-            HeatingProgram.NORMAL_HEATING,
             HeatingProgram.REDUCED,
-            HeatingProgram.REDUCED_HEATING,
             HeatingProgram.STANDBY,
         ]:
             # We can't deactivate "normal", "reduced" or "standby"
@@ -332,9 +325,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, target_program)
         if target_program not in [
             HeatingProgram.NORMAL,
-            HeatingProgram.NORMAL_HEATING,
             HeatingProgram.REDUCED,
-            HeatingProgram.REDUCED_HEATING,
             HeatingProgram.STANDBY,
         ]:
             # And we can't explicitly activate "normal", "reduced" or "standby", either
