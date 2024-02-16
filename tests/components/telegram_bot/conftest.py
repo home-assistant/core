@@ -205,6 +205,8 @@ async def webhook_platform(
         config_webhooks,
     )
     await hass.async_block_till_done()
+    yield
+    await hass.async_stop()
 
 
 @pytest.fixture
