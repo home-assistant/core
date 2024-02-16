@@ -1541,7 +1541,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==0.36.3
+plugwise==0.37.1
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
