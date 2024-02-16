@@ -58,7 +58,6 @@ class PollBot(BaseTelegramBotEntity):
     async def stop_polling(self, event=None):
         """Stop the polling task."""
         _LOGGER.debug("Stopping polling")
-        if self.application.running:
-            await self.application.updater.stop()
-            await self.application.stop()
-            await self.application.shutdown()
+        await self.application.updater.stop()
+        await self.application.stop()
+        await self.application.shutdown()
