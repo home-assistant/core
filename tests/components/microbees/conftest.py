@@ -3,7 +3,7 @@ import logging
 import time
 from unittest.mock import AsyncMock, patch
 
-from microBeesPy.microbees import Bee, Profile
+from microBeesPy.microbees import Bee, MicroBees, Profile
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -62,7 +62,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=TITLE,
-        unique_id=985,
+        unique_id=54321,
         data={
             "auth_implementation": DOMAIN,
             "token": {
@@ -83,8 +83,10 @@ def mock_microbees():
     devices = [Bee.from_dict(device) for device in devices_json]
     profile_json = load_json_object_fixture("microbees/profile.json")
     profile = Profile.from_dict(profile_json)
+    mock = AsyncMock(spec=MicroBees)
+    mock.getBees.return_value = devices
+    mock.getMyProfile.return_value = profile
 
-    mock = AsyncMock()
     with patch(
         "homeassistant.components.microbees.config_flow.MicroBees",
         return_value=mock,
@@ -92,6 +94,4 @@ def mock_microbees():
         "homeassistant.components.microbees.MicroBees",
         return_value=mock,
     ):
-        mock.getBees.return_value = devices
-        mock.getMyProfile.return_value = profile
         yield mock

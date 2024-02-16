@@ -20,6 +20,7 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     current_request_with_host: None,
     aioclient_mock: AiohttpClientMocker,
+    microbees: AsyncMock,
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -69,7 +70,7 @@ async def test_full_flow(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@microbees.com"
     assert "result" in result
-    assert result["result"].unique_id == 985
+    assert result["result"].unique_id == 54321
     assert "token" in result["result"].data
     assert result["result"].data["token"]["access_token"] == "mock-access-token"
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
@@ -120,21 +121,6 @@ async def test_config_non_unique_profile(
             "expires_in": 99999,
             "scope": " ".join(SCOPES),
             "client_id": CLIENT_ID,
-        },
-    )
-    aioclient_mock.post(
-        "https://dev.microbees.com/v/1_0/getMyProfile",
-        json={
-            "status": 0,
-            "data": {
-                "id": 985,
-                "username": "test@microbees.com",
-                "firstName": "Test",
-                "lastName": "Microbees",
-                "email": "test@microbees.com",
-                "locale": "it",
-                "timeZone": "Europe/Rome",
-            },
         },
     )
 
@@ -197,21 +183,6 @@ async def test_config_reauth_profile(
             "client_id": CLIENT_ID,
         },
     )
-    aioclient_mock.post(
-        "https://dev.microbees.com/v/1_0/getMyProfile",
-        json={
-            "status": 0,
-            "data": {
-                "id": 985,
-                "username": "test@microbees.com",
-                "firstName": "Test",
-                "lastName": "Microbees",
-                "email": "test@microbees.com",
-                "locale": "it",
-                "timeZone": "Europe/Rome",
-            },
-        },
-    )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result
@@ -229,7 +200,7 @@ async def test_config_reauth_wrong_account(
 ) -> None:
     """Test reauth with wrong account."""
     await setup_integration(hass, config_entry)
-
+    microbees.return_value.getMyProfile.return_value.id = 12345
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
@@ -271,21 +242,6 @@ async def test_config_reauth_wrong_account(
             "expires_in": 99999,
             "scope": " ".join(SCOPES),
             "client_id": CLIENT_ID,
-        },
-    )
-    aioclient_mock.post(
-        "https://dev.microbees.com/v/1_0/getMyProfile",
-        json={
-            "status": 0,
-            "data": {
-                "id": 12345,
-                "username": "test@microbees.com",
-                "firstName": "Test",
-                "lastName": "Microbees",
-                "email": "test@microbees.com",
-                "locale": "it",
-                "timeZone": "Europe/Rome",
-            },
         },
     )
 
