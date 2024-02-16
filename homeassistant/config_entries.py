@@ -405,7 +405,7 @@ class ConfigEntry:
                 )
             report(
                 f'sets "{key}" directly to update a config entry. This is deprecated and will'
-                " stop working in Home Assistant 2024.10, it should be updated to use"
+                " stop working in Home Assistant 2024.9, it should be updated to use"
                 " async_update_entry instead",
                 error_if_core=False,
             )

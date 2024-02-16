@@ -127,6 +127,5 @@ def remove_local_connection(
     """Remove the local connection."""
     data = mock_config_entry.data.copy()
     del data[CONF_HOST]
-    mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(mock_config_entry, data=data)
     return mock_config_entry
