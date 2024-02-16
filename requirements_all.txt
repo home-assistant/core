@@ -662,14 +662,8 @@ concord232==0.15
 # homeassistant.components.upc_connect
 connect-box==0.2.8
 
-# homeassistant.components.eq3btsmart
-construct==2.10.56
-
 # homeassistant.components.xiaomi_miio
 construct==2.10.68
-
-# homeassistant.components.coronavirus
-coronavirus==1.1.1
 
 # homeassistant.components.utility_meter
 croniter==1.0.6
@@ -1362,9 +1356,6 @@ nessclient==1.0.0
 
 # homeassistant.components.netdata
 netdata==1.1.0
-
-# homeassistant.components.discovery
-netdisco==3.0.0
 
 # homeassistant.components.nmap_tracker
 netmap==0.7.0.2
@@ -2135,9 +2126,6 @@ pyserial==3.5
 # homeassistant.components.sesame
 pysesame2==1.0.1
 
-# homeassistant.components.goalfeed
-pysher==1.0.7
-
 # homeassistant.components.sia
 pysiaalarm==3.1.1
 
@@ -2219,17 +2207,11 @@ python-digitalocean==1.13.2
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.17
 
-# homeassistant.components.eq3btsmart
-python-eq3bt==0.2
-
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
 
 # homeassistant.components.familyhub
 python-family-hub-local==0.0.2
-
-# homeassistant.components.darksky
-python-forecastio==1.4.0
 
 # homeassistant.components.fully_kiosk
 python-fullykiosk==0.0.12
