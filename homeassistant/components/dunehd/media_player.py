@@ -147,7 +147,7 @@ class DuneHDPlayerEntity(MediaPlayerEntity):
         media_id = async_process_play_media_url(self.hass, media_id)
 
         self._state = await self.hass.async_add_executor_job(
-            self._player.launch_media_url,media_id
+            self._player.launch_media_url, media_id
         )
 
     async def async_browse_media(
