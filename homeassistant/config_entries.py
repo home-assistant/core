@@ -385,12 +385,12 @@ class ConfigEntry:
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
-        if integration is None:
+        if integration is None and not (integration := self._integration_for_domain):
             integration = await loader.async_get_integration(hass, self.domain)
             self._integration_for_domain = integration
 
         # Only store setup result as state if it was not forwarded.
-        if self.domain == integration.domain:
+        if domain_is_integration := self.domain == integration.domain:
             self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
         if self.supports_unload is None:
@@ -409,13 +409,13 @@ class ConfigEntry:
                 self.domain,
                 err,
             )
-            if self.domain == integration.domain:
+            if domain_is_integration:
                 self._async_set_state(
                     hass, ConfigEntryState.SETUP_ERROR, "Import error"
                 )
             return
 
-        if self.domain == integration.domain:
+        if domain_is_integration:
             try:
                 integration.get_platform("config_flow")
             except ImportError as err:
@@ -475,12 +475,12 @@ class ConfigEntry:
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as exc:
-            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(exc) or None)
+            message = str(exc)
+            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, message or None)
             wait_time = 2 ** min(self._tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
-            message = str(exc)
             ready_message = f"ready yet: {message}" if message else "ready yet"
             _LOGGER.debug(
                 (
@@ -513,7 +513,7 @@ class ConfigEntry:
             result = False
 
         # Only store setup result as state if it was not forwarded.
-        if self.domain != integration.domain:
+        if not domain_is_integration:
             return
 
         #
@@ -1146,6 +1146,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             _LOGGER.error("An entry with the id %s already exists", entry_id)
             self._unindex_entry(entry_id)
         data[entry_id] = entry
+        self._index_entry(entry)
+
+    def _index_entry(self, entry: ConfigEntry) -> None:
+        """Index an entry."""
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
             unique_id_hash = entry.unique_id
@@ -1190,6 +1194,16 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         """Remove an item."""
         self._unindex_entry(entry_id)
         super().__delitem__(entry_id)
+
+    def update_unique_id(self, entry: ConfigEntry, new_unique_id: str | None) -> None:
+        """Update unique id for an entry.
+
+        This method mutates the entry with the new unique id and updates the indexes.
+        """
+        entry_id = entry.entry_id
+        self._unindex_entry(entry_id)
+        entry.unique_id = new_unique_id
+        self._index_entry(entry)
 
     def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
         """Get entries for a domain."""
@@ -1517,10 +1531,7 @@ class ConfigEntries:
 
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Reindex the entry if the unique_id has changed
-            entry_id = entry.entry_id
-            del self._entries[entry_id]
-            entry.unique_id = unique_id
-            self._entries[entry_id] = entry
+            self._entries.update_unique_id(entry, unique_id)
             changed = True
 
         for attr, value in (
