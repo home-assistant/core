@@ -30,7 +30,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             INTENT_CLOSE_COVER, DOMAIN, SERVICE_CLOSE_COVER, "Closed {}"
         ),
     )
-
     intent.async_register(
         hass,
         intent.ServiceIntentHandler(
