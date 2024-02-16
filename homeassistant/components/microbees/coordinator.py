@@ -41,7 +41,7 @@ class MicroBeesUpdateCoordinator(DataUpdateCoordinator[MicroBeesCoordinatorData]
         """Fetch data from API endpoint."""
         async with asyncio.timeout(10):
             try:
-                bees = await self.microbees.getBees()
+                bees = await self.hass.async_add_executor_job(self.microbees.getBees)
             except aiohttp.ClientResponseError as err:
                 if err.status is HTTPStatus.UNAUTHORIZED:
                     raise ConfigEntryAuthFailed(

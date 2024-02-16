@@ -57,21 +57,7 @@ async def test_full_flow(
             "client_id": CLIENT_ID,
         },
     )
-    aioclient_mock.post(
-        "https://dev.microbees.com/v/1_0/getMyProfile",
-        json={
-            "status": 0,
-            "data": {
-                "id": 985,
-                "username": "test@microbees.com",
-                "firstName": "Test",
-                "lastName": "Microbees",
-                "email": "test@microbees.com",
-                "locale": "it",
-                "timeZone": "Europe/Rome",
-            },
-        },
-    )
+
     with patch(
         "homeassistant.components.microbees.async_setup_entry", return_value=True
     ) as mock_setup:
