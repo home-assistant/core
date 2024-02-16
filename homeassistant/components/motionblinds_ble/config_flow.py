@@ -7,7 +7,7 @@ import re
 from typing import Any
 
 from bleak.backends.device import BLEDevice
-from motionblindsble.const import MotionBlindType
+from motionblindsble.const import DISPLAY_NAME, MotionBlindType
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -60,7 +60,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._discovery_info = discovery_info
         self._mac_code = get_mac_from_local_name(discovery_info.name)
-        self._display_name = f"MotionBlind {self._mac_code}"
+        self._display_name = DISPLAY_NAME.format(mac_code=self._mac_code)
         self.context["local_name"] = discovery_info.name
         self.context["title_placeholders"] = {"name": self._display_name}
 
@@ -172,7 +172,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._discovery_info = motion_device
         self._mac_code = mac_code.upper()
-        self._display_name = f"MotionBlind {self._mac_code}"
+        self._display_name = DISPLAY_NAME.format(mac_code=self._mac_code)
 
 
 def is_valid_mac(data: str) -> bool:
