@@ -1,10 +1,9 @@
 """Common utilities for Vallox tests."""
 
-from contextlib import contextmanager
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from vallox_websocket_api import MetricData, Profile
+from vallox_websocket_api import MetricData
 
 from homeassistant.components.vallox.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -65,18 +64,6 @@ def default_metrics():
     }
 
 
-@pytest.fixture(autouse=True)
-def fetch_metric_data_mock(default_metrics):
-    """Patch the Vallox metrics response."""
-
-    with patch(
-        "homeassistant.components.vallox.Vallox.fetch_metric_data",
-        new_callable=AsyncMock,
-    ) as fetch_metric_data_mock:
-        fetch_metric_data_mock.return_value = MetricData(default_metrics)
-        yield fetch_metric_data_mock
-
-
 @pytest.fixture
 def setup_fetch_metric_data_mock(default_metrics):
     """Patch the Vallox metrics response."""
@@ -95,29 +82,9 @@ def setup_fetch_metric_data_mock(default_metrics):
         yield _setup
 
 
-@pytest.fixture
-def patch_profile():
-    """Patch the Vallox profile response."""
-
-    @contextmanager
-    def _patch_profile(profile: Profile = Profile.HOME):
-        with patch(
-            "homeassistant.components.vallox.MetricData.profile",
-            return_value=profile,
-        ):
-            yield
-
-    return _patch_profile
-
-
 def patch_set_profile():
     """Patch the Vallox metrics set values."""
     return patch("homeassistant.components.vallox.Vallox.set_profile")
-
-
-def patch_set_temperature():
-    """Patch the Vallox metrics set values."""
-    return patch("homeassistant.components.vallox.Vallox.set_temperature")
 
 
 def patch_set_fan_speed():

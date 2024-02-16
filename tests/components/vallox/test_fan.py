@@ -167,7 +167,7 @@ async def test_turn_on_with_parameters(
         ("Away", Profile.HOME, [call(Profile.AWAY)]),
         ("Boost", Profile.HOME, [call(Profile.BOOST)]),
         ("Fireplace", Profile.HOME, [call(Profile.FIREPLACE)]),
-        ("Home", Profile.HOME, []),
+        ("Home", Profile.HOME, []),  # No change
     ],
 )
 async def test_set_preset_mode(
