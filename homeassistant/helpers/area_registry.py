@@ -344,21 +344,22 @@ class AreaRegistry:
         from . import floor_registry as fr  # Circular dependency
 
         @callback
+        def _floor_removed_from_registry_filter(event: Event) -> bool:
+            """Filter alll except for the remove action from floor registry events."""
+            return bool(event.data["action"] == "remove")
+
+        @callback
         def _handle_floor_registry_update(event: Event) -> None:
-            """Handle floor registry update.
-
-            Update areas that are associated with a floor that has been removed.
-            """
-            if event.data["action"] != "remove":
-                return
-
+            """Update areas that are associated with a floor that has been removed."""
             floor_id = event.data["floor_id"]
             for area_id, area in self.areas.items():
                 if floor_id == area.floor_id:
                     self.async_update(area_id, floor_id=None)
 
         self.hass.bus.async_listen(
-            fr.EVENT_FLOOR_REGISTRY_UPDATED, _handle_floor_registry_update
+            event_type=fr.EVENT_FLOOR_REGISTRY_UPDATED,
+            event_filter=_floor_removed_from_registry_filter,
+            listener=_handle_floor_registry_update,
         )
 
 
