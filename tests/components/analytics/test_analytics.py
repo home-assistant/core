@@ -4,8 +4,10 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import aiohttp
+from awesomeversion import AwesomeVersion
 import pytest
 from syrupy import SnapshotAssertion
+from syrupy.matchers import path_type
 
 from homeassistant.components.analytics.analytics import Analytics
 from homeassistant.components.analytics.const import (
@@ -640,8 +642,12 @@ async def test_send_with_no_energy(
 
     with patch(
         "homeassistant.components.analytics.analytics.energy_is_configured", AsyncMock()
-    ) as energy_is_configured:
+    ) as energy_is_configured, patch(
+        "homeassistant.components.analytics.analytics.get_recorder_instance",
+        Mock(),
+    ) as get_recorder_instance:
         energy_is_configured.return_value = False
+        get_recorder_instance.return_value = Mock(database_engine=Mock())
         await analytics.send_analytics()
 
     logged_data = caplog.records[-1].args
@@ -679,7 +685,10 @@ async def test_send_with_no_energy_config(
 
     assert submitted_data["energy"]["configured"] is False
     assert submitted_data == logged_data
-    assert snapshot == submitted_data
+    assert (
+        snapshot(matcher=path_type({"recorder.version": (AwesomeVersion,)}))
+        == submitted_data
+    )
 
 
 async def test_send_with_energy_config(
@@ -709,7 +718,10 @@ async def test_send_with_energy_config(
 
     assert submitted_data["energy"]["configured"] is True
     assert submitted_data == logged_data
-    assert snapshot == submitted_data
+    assert (
+        snapshot(matcher=path_type({"recorder.version": (AwesomeVersion,)}))
+        == submitted_data
+    )
 
 
 async def test_send_usage_with_certificate(
@@ -765,7 +777,10 @@ async def test_send_with_recorder(
 
     assert submitted_data["recorder"]["engine"] == "sqlite"
     assert submitted_data == logged_data
-    assert snapshot == submitted_data
+    assert (
+        snapshot(matcher=path_type({"recorder.version": (AwesomeVersion,)}))
+        == submitted_data
+    )
 
 
 async def test_send_with_problems_loading_yaml(

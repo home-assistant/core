@@ -168,7 +168,7 @@
     ]),
     'recorder': dict({
       'engine': 'sqlite',
-      'version': <AwesomeVersion SimpleVer '3.34.1'>,
+      'version': AwesomeVersion,
     }),
     'uuid': 'abcdefg',
     'version': '1970.1.0',
@@ -199,7 +199,7 @@
     ]),
     'recorder': dict({
       'engine': 'sqlite',
-      'version': <AwesomeVersion SimpleVer '3.34.1'>,
+      'version': AwesomeVersion,
     }),
     'uuid': 'abcdefg',
     'version': '1970.1.0',
@@ -216,7 +216,7 @@
     ]),
     'recorder': dict({
       'engine': 'sqlite',
-      'version': <AwesomeVersion SimpleVer '3.34.1'>,
+      'version': AwesomeVersion,
     }),
     'uuid': 'abcdefg',
     'version': '1970.1.0',
