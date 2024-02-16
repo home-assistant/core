@@ -22,8 +22,8 @@ def client_fixture(
     return hass.loop.run_until_complete(hass_ws_client(hass))
 
 
+@pytest.mark.usefixtures("hass")
 async def test_list_floors(
-    hass: HomeAssistant,
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
 ) -> None:
@@ -37,7 +37,7 @@ async def test_list_floors(
 
     assert len(floor_registry.floors) == 2
 
-    await client.send_json({"id": 1, "type": "config/floor_registry/list"})
+    await client.send_json_auto_id({"type": "config/floor_registry/list"})
 
     msg = await client.receive_json()
 
@@ -56,14 +56,14 @@ async def test_list_floors(
     }
 
 
+@pytest.mark.usefixtures("hass")
 async def test_create_floor(
-    hass: HomeAssistant,
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test create entry."""
-    await client.send_json(
-        {"id": 1, "type": "config/floor_registry/create", "name": "First floor"}
+    await client.send_json_auto_id(
+        {"type": "config/floor_registry/create", "name": "First floor"}
     )
 
     msg = await client.receive_json()
@@ -76,9 +76,8 @@ async def test_create_floor(
         "level": 0,
     }
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 2,
             "name": "Second floor",
             "type": "config/floor_registry/create",
             "icon": "mdi:home-floor-2",
@@ -97,8 +96,8 @@ async def test_create_floor(
     }
 
 
+@pytest.mark.usefixtures("hass")
 async def test_create_floor_with_name_already_in_use(
-    hass: HomeAssistant,
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
 ) -> None:
@@ -106,8 +105,8 @@ async def test_create_floor_with_name_already_in_use(
     floor_registry.async_create("First floor")
     assert len(floor_registry.floors) == 1
 
-    await client.send_json(
-        {"id": 1, "name": "First floor", "type": "config/floor_registry/create"}
+    await client.send_json_auto_id(
+        {"name": "First floor", "type": "config/floor_registry/create"}
     )
 
     msg = await client.receive_json()
@@ -120,8 +119,8 @@ async def test_create_floor_with_name_already_in_use(
     assert len(floor_registry.floors) == 1
 
 
+@pytest.mark.usefixtures("hass")
 async def test_delete_floor(
-    hass: HomeAssistant,
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
 ) -> None:
@@ -129,8 +128,8 @@ async def test_delete_floor(
     floor = floor_registry.async_create("First floor")
     assert len(floor_registry.floors) == 1
 
-    await client.send_json(
-        {"id": 1, "floor_id": floor.floor_id, "type": "config/floor_registry/delete"}
+    await client.send_json_auto_id(
+        {"floor_id": floor.floor_id, "type": "config/floor_registry/delete"}
     )
 
     msg = await client.receive_json()
@@ -139,8 +138,8 @@ async def test_delete_floor(
     assert not floor_registry.floors
 
 
+@pytest.mark.usefixtures("hass")
 async def test_delete_non_existing_floor(
-    hass: HomeAssistant,
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
 ) -> None:
@@ -148,9 +147,8 @@ async def test_delete_non_existing_floor(
     floor_registry.async_create("First floor")
     assert len(floor_registry.floors) == 1
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "floor_id": "zaphotbeeblebrox",
             "type": "config/floor_registry/delete",
         }
@@ -164,8 +162,8 @@ async def test_delete_non_existing_floor(
     assert len(floor_registry.floors) == 1
 
 
+@pytest.mark.usefixtures("hass")
 async def test_update_floor(
-    hass: HomeAssistant,
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
 ) -> None:
@@ -173,9 +171,8 @@ async def test_update_floor(
     floor = floor_registry.async_create("First floor")
     assert len(floor_registry.floors) == 1
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "floor_id": floor.floor_id,
             "name": "Second floor",
             "icon": "mdi:home-floor-2",
@@ -194,9 +191,8 @@ async def test_update_floor(
         "level": 2,
     }
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 2,
             "floor_id": floor.floor_id,
             "name": "First floor",
             "icon": None,
@@ -216,8 +212,8 @@ async def test_update_floor(
     }
 
 
+@pytest.mark.usefixtures("hass")
 async def test_update_with_name_already_in_use(
-    hass: HomeAssistant,
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
 ) -> None:
@@ -226,9 +222,8 @@ async def test_update_with_name_already_in_use(
     floor_registry.async_create("Second floor")
     assert len(floor_registry.floors) == 2
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "floor_id": floor.floor_id,
             "name": "Second floor",
             "type": "config/floor_registry/update",
