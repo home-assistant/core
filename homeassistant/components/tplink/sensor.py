@@ -114,11 +114,13 @@ def _async_sensors_for_device(
     has_parent: bool = False,
 ) -> list[SmartPlugSensor]:
     """Generate the sensors for the device."""
-    sensors = [
-        SmartPlugSensor(device, coordinator, description, has_parent)
-        for description in ENERGY_SENSORS
-        if async_emeter_from_device(device, description) is not None
-    ]
+    sensors = []
+    if device.has_emeter:
+        sensors = [
+            SmartPlugSensor(device, coordinator, description, has_parent)
+            for description in ENERGY_SENSORS
+            if async_emeter_from_device(device, description) is not None
+        ]
     new_sensors = [
         Sensor(device, coordinator, id_, desc)
         for id_, desc in device.features.items()
