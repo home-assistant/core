@@ -686,9 +686,9 @@ async def _async_resolve_domains_to_setup(
     # time it gets to it.
     hass.async_create_background_task(
         translation.async_load_integrations(hass, {*BASE_PLATFORMS, *domains_to_setup}),
-        "load translations"
+        "load translations",
     )
-    
+
     return domains_to_setup, integration_cache
 
 
