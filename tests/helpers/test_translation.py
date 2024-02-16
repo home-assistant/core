@@ -445,7 +445,7 @@ async def test_ensure_translations_still_load_if_one_integration_fails(
     sensor_integration = await loader.async_get_integration(hass, "sensor")
 
     with patch(
-        "homeassistant.helpers.translation.async_load_integrations",
+        "homeassistant.helpers.translation.async_get_integrations",
         return_value={
             "sensor": sensor_integration,
             "broken": Exception("unhandled failure"),
