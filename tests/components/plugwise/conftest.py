@@ -87,10 +87,7 @@ def mock_smile_adam() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Adam"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -116,10 +113,7 @@ def mock_smile_adam_2() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Adam"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -145,10 +139,7 @@ def mock_smile_adam_3() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Adam"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -174,10 +165,7 @@ def mock_smile_adam_4() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Adam"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -202,10 +190,7 @@ def mock_smile_anna() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Smile Anna"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -230,10 +215,7 @@ def mock_smile_anna_2() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Smile Anna"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -258,10 +240,7 @@ def mock_smile_anna_3() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Smile Anna"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -286,9 +265,7 @@ def mock_smile_p1() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Smile P1"
-
         smile.connect.return_value = True
-
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -313,10 +290,7 @@ def mock_smile_p1_2() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Smile P1"
-
         smile.connect.return_value = True
-
-        smile.notifications = _read_json(chosen_env, "notifications")
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
             all_data["gateway"], all_data["devices"]
@@ -341,7 +315,6 @@ def mock_stretch() -> Generator[None, MagicMock, None]:
         smile.smile_hostname = "stretch98765"
         smile.smile_model = "Gateway"
         smile.smile_name = "Stretch"
-
         smile.connect.return_value = True
         all_data = _read_json(chosen_env, "all_data")
         smile.async_update.return_value = PlugwiseData(
