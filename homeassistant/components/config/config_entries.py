@@ -180,10 +180,10 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
         context = super().get_context(data)
-        if data := self._data:
-            context["source"] = data["source"]
-            if entry_id := data.get("entry_id"):
-                context["entry_id"] = entry_id
+        data = self._data
+        context["source"] = data["source"]
+        if entry_id := data.get("entry_id"):
+            context["entry_id"] = entry_id
         return context
 
     def _prepare_result_json(
