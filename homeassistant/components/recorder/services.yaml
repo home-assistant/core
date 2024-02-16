@@ -20,9 +20,12 @@ purge:
         boolean:
 
 purge_entities:
-  target:
-    entity: {}
   fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          multiple: true
     domains:
       example: "sun"
       required: false
