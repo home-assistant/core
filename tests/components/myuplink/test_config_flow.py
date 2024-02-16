@@ -2,35 +2,23 @@
 
 from unittest.mock import patch
 
-import pytest
-
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
+from homeassistant import config_entries
 from homeassistant.components.myuplink.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.setup import async_setup_component
 
-CLIENT_ID = "1234"
-CLIENT_SECRET = "5678"
+from .const import CLIENT_ID
 
+from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
-@pytest.fixture
-async def setup_credentials(hass: HomeAssistant) -> None:
-    """Fixture to setup credentials."""
-    assert await async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(CLIENT_ID, CLIENT_SECRET),
-    )
+REDIRECT_URL = "https://example.com/auth/external/callback"
 
 
 async def test_full_flow(
@@ -42,19 +30,19 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "myuplink", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
             "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
+            "redirect_uri": REDIRECT_URL,
         },
     )
 
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&redirect_uri={REDIRECT_URL}"
         f"&state={state}"
         "&scope=WRITESYSTEM+READSYSTEM+offline_access"
     )
@@ -85,56 +73,94 @@ async def test_full_flow(
 
 async def test_flow_reauth(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
-    setup_credentials,
-    init_integration,
-    expires_at,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+    setup_credentials: None,
+    mock_config_entry: MockConfigEntry,
+    expires_at: float,
 ) -> None:
     """Test reauth step."""
 
-    OLD_SCOPE = {
+    NEW_SCOPE = "WRITESYSTEM READSYSTEM offline_access"
+    OLD_SCOPE = "READSYSTEM offline_access"
+    OLD_SCOPE_TOKEN = {
         "auth_implementation": DOMAIN,
         "token": {
             "access_token": "Fake_token",
-            "scope": "READSYSTEM offline_access",
+            "scope": OLD_SCOPE,
             "expires_in": 86399,
             "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
             "token_type": "Bearer",
             "expires_at": expires_at,
         },
     }
+    assert mock_config_entry.data["token"]["scope"] == NEW_SCOPE
+    assert hass.config_entries.async_update_entry(
+        mock_config_entry, data=OLD_SCOPE_TOKEN
+    )
+    assert mock_config_entry.data["token"]["scope"] == OLD_SCOPE
 
-    entry = init_integration
-    hass.config_entries.async_update_entry(entry, data=OLD_SCOPE)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
+            "entry_id": mock_config_entry.entry_id,
         },
-        data=entry.data,
+        data=mock_config_entry.data,
     )
 
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert "flow_id" in flows[0]
-    assert result["flow_id"] == flows[0]["flow_id"]
+    assert result["step_id"] == "reauth_confirm"
 
-    result3 = await hass.config_entries.flow.async_configure(
-        flows[0]["flow_id"], user_input={}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
     )
-    assert result3["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
-    assert result3["step_id"] == "auth"
+    assert result["step_id"] == "auth"
 
-    result4 = await hass.config_entries.flow.async_configure(
-        result3["flow_id"], user_input={}
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT_URL,
+        },
     )
-    assert result4["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP_DONE
-    assert result4["step_id"] == "creation"
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URL}"
+        f"&state={state}"
+        f"&scope={NEW_SCOPE.replace(' ', '+')}"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "updated-refresh-token",
+            "access_token": "updated-access-token",
+            "type": "Bearer",
+            "expires_in": "60",
+            "scope": NEW_SCOPE,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.myuplink.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-
-    # assert entry.data["token"]["scope"] == "WRITESYSTEM READSYSTEM offline_access"
+    assert len(mock_setup.mock_calls) == 1
+    assert mock_config_entry.data["token"]["scope"] == NEW_SCOPE
