@@ -2922,7 +2922,7 @@ zeversolar==0.3.1
 zha-quirks==0.0.111
 
 # homeassistant.components.zhong_hong
-zhong-hong-hvac==1.0.9
+zhong-hong-hvac==1.0.12
 
 # homeassistant.components.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.1.0
