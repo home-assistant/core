@@ -85,7 +85,7 @@ class GenericBlind(CoverEntity):
     """Representation of a blind."""
 
     _attr_is_closed: bool | None = None
-    _attr_should_poll: bool = False
+    _attr_should_poll = False
 
     _device: MotionDevice
 
@@ -179,7 +179,7 @@ class GenericBlind(CoverEntity):
 class PositionBlind(GenericBlind):
     """Representation of a blind with position capability."""
 
-    _attr_supported_features: CoverEntityFeature | None = (
+    _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.STOP
@@ -217,7 +217,7 @@ class PositionBlind(GenericBlind):
 class TiltBlind(GenericBlind):
     """Representation of a blind with tilt capability."""
 
-    _attr_supported_features: CoverEntityFeature | None = (
+    _attr_supported_features = (
         CoverEntityFeature.OPEN_TILT
         | CoverEntityFeature.CLOSE_TILT
         | CoverEntityFeature.STOP_TILT
@@ -259,7 +259,7 @@ class TiltBlind(GenericBlind):
 class PositionTiltBlind(PositionBlind, TiltBlind):
     """Representation of a blind with position & tilt capabilities."""
 
-    _attr_supported_features: CoverEntityFeature | None = (
+    _attr_supported_features = (
         CoverEntityFeature.OPEN
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.STOP
