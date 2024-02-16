@@ -62,7 +62,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=TITLE,
-        unique_id="UC_x5XG1OV2P6uZZ5FSM9Ttw",
+        unique_id=985,
         data={
             "auth_implementation": DOMAIN,
             "token": {

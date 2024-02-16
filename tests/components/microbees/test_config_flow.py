@@ -83,6 +83,8 @@ async def test_full_flow(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@microbees.com"
     assert "result" in result
+    assert result["result"].unique_id == 985
+    assert "token" in result["result"].data
     assert result["result"].data["token"]["access_token"] == "mock-access-token"
     assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
 
@@ -290,7 +292,7 @@ async def test_config_reauth_wrong_account(
         json={
             "status": 0,
             "data": {
-                "id": 985,
+                "id": 12345,
                 "username": "test@microbees.com",
                 "firstName": "Test",
                 "lastName": "Microbees",
