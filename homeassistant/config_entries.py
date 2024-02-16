@@ -217,6 +217,18 @@ class OperationNotAllowed(ConfigError):
 
 UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Coroutine[Any, Any, None]]
 
+FROZEN_CONFIG_ENTRY_ATTRS = {"entry_id", "domain", "state", "reason"}
+UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
+    "unique_id",
+    "title",
+    "data",
+    "options",
+    "pref_disable_new_entities",
+    "pref_disable_polling",
+    "minor_version",
+    "version",
+}
+
 
 class ConfigEntry:
     """Hold a configuration entry."""
@@ -252,6 +264,19 @@ class ConfigEntry:
         "_supports_options",
     )
 
+    entry_id: str
+    domain: str
+    title: str
+    data: MappingProxyType[str, Any]
+    options: MappingProxyType[str, Any]
+    unique_id: str | None
+    state: ConfigEntryState
+    reason: str | None
+    pref_disable_new_entities: bool
+    pref_disable_polling: bool
+    version: int
+    minor_version: int
+
     def __init__(
         self,
         *,
@@ -270,44 +295,45 @@ class ConfigEntry:
         disabled_by: ConfigEntryDisabler | None = None,
     ) -> None:
         """Initialize a config entry."""
+        _setter = object.__setattr__
         # Unique id of the config entry
-        self.entry_id = entry_id or uuid_util.random_uuid_hex()
+        _setter(self, "entry_id", entry_id or uuid_util.random_uuid_hex())
 
         # Version of the configuration.
-        self.version = version
-        self.minor_version = minor_version
+        _setter(self, "version", version)
+        _setter(self, "minor_version", minor_version)
 
         # Domain the configuration belongs to
-        self.domain = domain
+        _setter(self, "domain", domain)
 
         # Title of the configuration
-        self.title = title
+        _setter(self, "title", title)
 
         # Config data
-        self.data = MappingProxyType(data)
+        _setter(self, "data", MappingProxyType(data))
 
         # Entry options
-        self.options = MappingProxyType(options or {})
+        _setter(self, "options", MappingProxyType(options or {}))
 
         # Entry system options
         if pref_disable_new_entities is None:
             pref_disable_new_entities = False
 
-        self.pref_disable_new_entities = pref_disable_new_entities
+        _setter(self, "pref_disable_new_entities", pref_disable_new_entities)
 
         if pref_disable_polling is None:
             pref_disable_polling = False
 
-        self.pref_disable_polling = pref_disable_polling
+        _setter(self, "pref_disable_polling", pref_disable_polling)
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
 
         # State of the entry (LOADED, NOT_LOADED)
-        self.state = state
+        _setter(self, "state", state)
 
         # Unique ID of this entry.
-        self.unique_id = unique_id
+        _setter(self, "unique_id", unique_id)
 
         # Config entry is disabled
         if isinstance(disabled_by, str) and not isinstance(
@@ -337,7 +363,7 @@ class ConfigEntry:
         self.update_listeners: list[UpdateListenerType] = []
 
         # Reason why config entry is in a failed state
-        self.reason: str | None = None
+        _setter(self, "reason", None)
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
@@ -365,6 +391,33 @@ class ConfigEntry:
             f"<ConfigEntry entry_id={self.entry_id} version={self.version} domain={self.domain} "
             f"title={self.title} state={self.state} unique_id={self.unique_id}>"
         )
+
+    def __setattr__(self, key: str, value: Any) -> None:
+        """Set an attribute."""
+        if key in UPDATE_ENTRY_CONFIG_ENTRY_ATTRS:
+            if key == "unique_id":
+                # Setting unique_id directly will corrupt internal state
+                # There is no deprecation period for this key
+                # as changing them will corrupt internal state
+                # so we raise an error here
+                raise AttributeError(
+                    "unique_id cannot be changed directly, use async_update_entry instead"
+                )
+            report(
+                f'sets "{key}" directly to update a config entry. This is deprecated and will'
+                " stop working in Home Assistant 2024.9, it should be updated to use"
+                " async_update_entry instead",
+                error_if_core=False,
+            )
+
+        elif key in FROZEN_CONFIG_ENTRY_ATTRS:
+            # These attributes are frozen and cannot be changed
+            # There is no deprecation period for these
+            # as changing them will corrupt internal state
+            # so we raise an error here
+            raise AttributeError(f"{key} cannot be changed")
+
+        super().__setattr__(key, value)
 
     @property
     def supports_options(self) -> bool:
@@ -512,16 +565,19 @@ class ConfigEntry:
             )
             result = False
 
+        #
+        # After successfully calling async_setup_entry, it is important that this function
+        # does not yield to the event loop by using `await` or `async with` or
+        # similar until after the state has been set by calling self._async_set_state.
+        #
+        # Otherwise we risk that any `call_soon`s
+        # created by an integration will be executed before the state is set.
+        #
+
         # Only store setup result as state if it was not forwarded.
         if not domain_is_integration:
             return
 
-        #
-        # It is important that this function does not yield to the
-        # event loop by using `await` or `async with` or similar until
-        # after the state has been set. Otherwise we risk that any `call_soon`s
-        # created by an integration will be executed before the state is set.
-        #
         if result:
             self._async_set_state(hass, ConfigEntryState.LOADED, None)
         else:
@@ -657,8 +713,9 @@ class ConfigEntry:
         """Set the state of the config entry."""
         if state not in NO_RESET_TRIES_STATES:
             self._tries = 0
-        self.state = state
-        self.reason = reason
+        _setter = object.__setattr__
+        _setter(self, "state", state)
+        _setter(self, "reason", reason)
         async_dispatcher_send(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
         )
@@ -1202,7 +1259,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         """
         entry_id = entry.entry_id
         self._unindex_entry(entry_id)
-        entry.unique_id = new_unique_id
+        object.__setattr__(entry, "unique_id", new_unique_id)
         self._index_entry(entry)
 
     def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
@@ -1527,7 +1584,11 @@ class ConfigEntries:
         If the entry was not changed, the update_listeners are
         not fired and this function returns False
         """
+        if entry.entry_id not in self._entries:
+            raise UnknownEntry(entry.entry_id)
+
         changed = False
+        _setter = object.__setattr__
 
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Reindex the entry if the unique_id has changed
@@ -1544,16 +1605,16 @@ class ConfigEntries:
             if value is UNDEFINED or getattr(entry, attr) == value:
                 continue
 
-            setattr(entry, attr, value)
+            _setter(entry, attr, value)
             changed = True
 
         if data is not UNDEFINED and entry.data != data:
             changed = True
-            entry.data = MappingProxyType(data)
+            _setter(entry, "data", MappingProxyType(data))
 
         if options is not UNDEFINED and entry.options != options:
             changed = True
-            entry.options = MappingProxyType(options)
+            _setter(entry, "options", MappingProxyType(options))
 
         if not changed:
             return False
