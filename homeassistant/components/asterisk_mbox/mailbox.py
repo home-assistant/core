@@ -7,9 +7,15 @@ from typing import Any
 
 from asterisk_mbox import ServerError
 
-from homeassistant.components.mailbox import CONTENT_TYPE_MPEG, Mailbox, StreamError
+from homeassistant.components.mailbox import (
+    CONTENT_TYPE_MPEG,
+    DOMAIN as MAILBOX_DOMAIN,
+    Mailbox,
+    StreamError,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as ASTERISK_DOMAIN, AsteriskData
@@ -26,6 +32,20 @@ async def async_get_handler(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> Mailbox:
     """Set up the Asterix VM platform."""
+    async_create_issue(
+        hass,
+        MAILBOX_DOMAIN,
+        f"deprecated_mailbox_integration_{ASTERISK_DOMAIN}",
+        breaks_in_ha_version="2024.9.0",
+        is_fixable=False,
+        issue_domain=ASTERISK_DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_mailbox_integration",
+        translation_placeholders={
+            "domain": ASTERISK_DOMAIN,
+            "integration_title": "Asterisk Call Detail Records",
+        },
+    )
     return AsteriskMailbox(hass, ASTERISK_DOMAIN)
 
 

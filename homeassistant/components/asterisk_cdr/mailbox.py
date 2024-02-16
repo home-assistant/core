@@ -9,9 +9,10 @@ from homeassistant.components.asterisk_mbox import (
     DOMAIN as ASTERISK_DOMAIN,
     SIGNAL_CDR_UPDATE,
 )
-from homeassistant.components.mailbox import Mailbox
+from homeassistant.components.mailbox import DOMAIN as MAILBOX_DOMAIN, Mailbox
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 MAILBOX_NAME = "asterisk_cdr"
@@ -23,6 +24,20 @@ async def async_get_handler(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> Mailbox:
     """Set up the Asterix CDR platform."""
+    async_create_issue(
+        hass,
+        MAILBOX_DOMAIN,
+        f"deprecated_mailbox_integration_{MAILBOX_NAME}",
+        breaks_in_ha_version="2024.9.0",
+        is_fixable=False,
+        issue_domain=MAILBOX_NAME,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_mailbox_integration",
+        translation_placeholders={
+            "domain": MAILBOX_NAME,
+            "integration_title": "Asterisk Call Detail Records",
+        },
+    )
     return AsteriskCDR(hass, MAILBOX_NAME)
 
 
