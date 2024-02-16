@@ -5,6 +5,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from types import ModuleType
 from typing import Any
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
@@ -28,26 +29,37 @@ class IntegrationPlatform:
 async def _async_process_single_integration_platform_component(
     hass: HomeAssistant,
     component_name: str,
-    integration: Integration | Exception,
     integration_platform: IntegrationPlatform,
+    platform: ModuleType,
 ) -> None:
     """Process a single integration platform."""
     if component_name in integration_platform.seen_components:
         return
     integration_platform.seen_components.add(component_name)
+    try:
+        await integration_platform.process_platform(hass, component_name, platform)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception(
+            "Error processing platform %s.%s",
+            component_name,
+            integration_platform.platform_name,
+        )
 
+
+def _get_platform_from_integration(
+    integration: Integration | Exception, component_name: str, platform_name: str
+) -> ModuleType | None:
+    """Get a platform from an integration."""
     if isinstance(integration, Exception):
         _LOGGER.exception(
             "Error importing integration %s for %s",
             component_name,
-            integration_platform.platform_name,
+            platform_name,
         )
-        return
-
-    platform_name = integration_platform.platform_name
+        return None
 
     try:
-        platform = integration.get_platform(platform_name)
+        return integration.get_platform(platform_name)
     except ImportError as err:
         if f"{component_name}.{platform_name}" not in str(err):
             _LOGGER.exception(
@@ -55,14 +67,8 @@ async def _async_process_single_integration_platform_component(
                 component_name,
                 platform_name,
             )
-        return
 
-    try:
-        await integration_platform.process_platform(hass, component_name, platform)
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception(
-            "Error processing platform %s.%s", component_name, platform_name
-        )
+    return None
 
 
 async def _async_process_integration_platform_for_component(
@@ -78,13 +84,19 @@ async def _async_process_integration_platform_for_component(
             _async_process_single_integration_platform_component(
                 hass,
                 component_name,
-                integrations[component_name],
                 integration_platform,
+                platform,
             ),
             name=f"process integration platform {integration_platform.platform_name} for {component_name}",
         )
         for integration_platform in integration_platforms
         if component_name not in integration_platform.seen_components
+        and (integration := integrations.get(component_name))
+        and (
+            platform := _get_platform_from_integration(
+                integration, component_name, integration_platform.platform_name
+            )
+        )
     ]
     if tasks:
         await asyncio.gather(*tasks)
@@ -130,12 +142,18 @@ async def async_process_integration_platforms(
         tasks = [
             asyncio.create_task(
                 _async_process_single_integration_platform_component(
-                    hass, comp, integrations[comp], integration_platform
+                    hass, comp, integration_platform, platform
                 ),
                 name=f"process integration platform {platform_name} for {comp}",
             )
             for comp in top_level_components
             if comp not in integration_platform.seen_components
+            and (integration := integrations.get(comp))
+            and (
+                platform := _get_platform_from_integration(
+                    integration, comp, platform_name
+                )
+            )
         ]
         if tasks:
             await asyncio.gather(*tasks)
