@@ -18,9 +18,8 @@ from homeassistant.helpers.floor_registry import (
 from tests.common import MockConfigEntry, async_capture_events, flush_store
 
 
-async def test_list_floors(
-    hass: HomeAssistant, floor_registry: fr.FloorRegistry
-) -> None:
+@pytest.mark.usefixtures("hass")
+async def test_list_floors(floor_registry: fr.FloorRegistry) -> None:
     """Make sure that we can read floors."""
     floors = floor_registry.async_list_floors()
     assert len(list(floors)) == len(floor_registry.floors)
@@ -113,9 +112,8 @@ async def test_delete_floor(
     }
 
 
-async def test_delete_non_existing_floor(
-    hass: HomeAssistant, floor_registry: fr.FloorRegistry
-) -> None:
+@pytest.mark.usefixtures("hass")
+async def test_delete_non_existing_floor(floor_registry: fr.FloorRegistry) -> None:
     """Make sure that we can't delete an floor that doesn't exist."""
     floor_registry.async_create("First floor")
 
