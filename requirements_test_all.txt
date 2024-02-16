@@ -84,7 +84,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-PySwitchbot==0.44.0
+PySwitchbot==0.45.0
 
 # homeassistant.components.syncthru
 PySyncThru==0.7.10
@@ -158,7 +158,7 @@ aio-geojson-geonetnz-volcano==0.9
 aio-geojson-nsw-rfs-incidents==0.7
 
 # homeassistant.components.usgs_earthquakes_feed
-aio-geojson-usgs-earthquakes==0.2
+aio-geojson-usgs-earthquakes==0.3
 
 # homeassistant.components.gdacs
 aio-georss-gdacs==0.9
@@ -291,7 +291,7 @@ aiooncue==0.3.5
 aioopenexchangerates==0.4.0
 
 # homeassistant.components.pegel_online
-aiopegelonline==0.0.6
+aiopegelonline==0.0.8
 
 # homeassistant.components.acmeda
 aiopulse==0.4.4
@@ -356,7 +356,7 @@ aiotankerkoenig==0.3.0
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==70
+aiounifi==71
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -430,7 +430,7 @@ arcam-fmj==1.4.0
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.38.1
+async-upnp-client==0.38.2
 
 # homeassistant.components.sleepiq
 asyncsleepiq==1.5.2
@@ -552,6 +552,9 @@ crownstone-uart==2.1.0
 # homeassistant.components.datadog
 datadog==0.15.0
 
+# homeassistant.components.metoffice
+datapoint==0.9.9
+
 # homeassistant.components.bluetooth
 dbus-fast==2.21.1
 
@@ -559,7 +562,7 @@ dbus-fast==2.21.1
 debugpy==1.8.0
 
 # homeassistant.components.ecovacs
-deebot-client==5.1.1
+deebot-client==5.2.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -971,7 +974,7 @@ librouteros==3.2.0
 libsoundtouch==0.8
 
 # homeassistant.components.linear_garage_door
-linear-garage-door==0.2.7
+linear-garage-door==0.2.9
 
 # homeassistant.components.lamarzocco
 lmcloud==0.4.35
@@ -1259,7 +1262,7 @@ py-nextbusnext==1.0.2
 py-nightscout==1.2.2
 
 # homeassistant.components.ecovacs
-py-sucks==0.9.8
+py-sucks==0.9.9
 
 # homeassistant.components.synology_dsm
 py-synologydsm-api==2.1.4
@@ -1485,7 +1488,7 @@ pylitterbot==2023.4.9
 pylutron-caseta==0.19.0
 
 # homeassistant.components.lutron
-pylutron==0.2.8
+pylutron==0.2.12
 
 # homeassistant.components.mailgun
 pymailgunner==1.4
@@ -1751,7 +1754,7 @@ python-songpal==0.16.1
 python-tado==0.17.4
 
 # homeassistant.components.technove
-python-technove==1.2.1
+python-technove==1.2.2
 
 # homeassistant.components.telegram_bot
 python-telegram-bot==13.1
@@ -2188,7 +2191,7 @@ xiaomi-ble==0.23.1
 xknx==2.12.0
 
 # homeassistant.components.knx
-xknxproject==3.5.0
+xknxproject==3.6.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -2206,7 +2209,7 @@ yalesmartalarmclient==0.3.9
 yalexs-ble==2.4.1
 
 # homeassistant.components.august
-yalexs==1.10.0
+yalexs==1.11.2
 
 # homeassistant.components.yeelight
 yeelight==0.7.14

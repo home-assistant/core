@@ -1,4 +1,5 @@
 """Test System Monitor sensor."""
+
 from datetime import timedelta
 import socket
 from unittest.mock import Mock, patch
@@ -429,3 +430,37 @@ async def test_exception_handling_disk_sensor(
     assert disk_sensor is not None
     assert disk_sensor.state == "70.0"
     assert disk_sensor.attributes["unit_of_measurement"] == "%"
+
+
+async def test_cpu_percentage_is_zero_returns_unknown(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    mock_psutil: Mock,
+    mock_added_config_entry: ConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the sensor."""
+    cpu_sensor = hass.states.get("sensor.system_monitor_processor_use")
+    assert cpu_sensor is not None
+    assert cpu_sensor.state == "10"
+
+    mock_psutil.cpu_percent.return_value = 0.0
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    cpu_sensor = hass.states.get("sensor.system_monitor_processor_use")
+    assert cpu_sensor is not None
+    assert cpu_sensor.state == STATE_UNKNOWN
+
+    mock_psutil.cpu_percent.return_value = 15.0
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    cpu_sensor = hass.states.get("sensor.system_monitor_processor_use")
+    assert cpu_sensor is not None
+    assert cpu_sensor.state == "15"
