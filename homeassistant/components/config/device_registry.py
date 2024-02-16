@@ -47,19 +47,14 @@ def websocket_list_devices(
         f'"success":true,"result": ['
     ).encode()
     # Concatenate cached entity registry item JSON serializations
-    msg_json = b"".join(
-        (
-            msg_json_prefix,
-            b",".join(
-                [
-                    entry.json_repr
-                    for entry in registry.devices.values()
-                    if entry.json_repr is not None
-                ]
-            ),
-            b"]}",
-        )
+    inner = b",".join(
+        [
+            entry.json_repr
+            for entry in registry.devices.values()
+            if entry.json_repr is not None
+        ]
     )
+    msg_json = b"".join((msg_json_prefix, inner, b"]}"))
     connection.send_message(msg_json)
 
 
