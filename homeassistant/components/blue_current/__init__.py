@@ -1,6 +1,7 @@
 """The Blue Current integration."""
 from __future__ import annotations
 
+import asyncio
 from contextlib import suppress
 from datetime import datetime
 from typing import Any
@@ -14,8 +15,13 @@ from bluecurrent_api.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_NAME, CONF_API_TOKEN, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_NAME,
+    CONF_API_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -47,7 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except BlueCurrentException as err:
         raise ConfigEntryNotReady from err
 
-    hass.async_create_task(connector.start_loop())
+    hass.async_create_background_task(connector.start_loop(), "blue_current-websocket")
     await client.get_charge_points()
 
     await client.wait_for_response()
@@ -55,6 +61,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     config_entry.async_on_unload(connector.disconnect)
+
+    async def _async_disconnect_websocket(_: Event) -> None:
+        await connector.disconnect()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect_websocket)
 
     return True
 
@@ -78,9 +89,9 @@ class Connector:
         self, hass: HomeAssistant, config: ConfigEntry, client: Client
     ) -> None:
         """Initialize."""
-        self.config: ConfigEntry = config
-        self.hass: HomeAssistant = hass
-        self.client: Client = client
+        self.config = config
+        self.hass = hass
+        self.client = client
         self.charge_points: dict[str, dict] = {}
         self.grid: dict[str, Any] = {}
         self.available = False
@@ -93,22 +104,12 @@ class Connector:
     async def on_data(self, message: dict) -> None:
         """Handle received data."""
 
-        async def handle_charge_points(data: list) -> None:
-            """Loop over the charge points and get their data."""
-            for entry in data:
-                evse_id = entry[EVSE_ID]
-                model = entry[MODEL_TYPE]
-                name = entry[ATTR_NAME]
-                self.add_charge_point(evse_id, model, name)
-                await self.get_charge_point_data(evse_id)
-            await self.client.get_grid_status(data[0][EVSE_ID])
-
         object_name: str = message[OBJECT]
 
         # gets charge point ids
         if object_name == CHARGE_POINTS:
             charge_points_data: list = message[DATA]
-            await handle_charge_points(charge_points_data)
+            await self.handle_charge_point_data(charge_points_data)
 
         # gets charge point key / values
         elif object_name in VALUE_TYPES:
@@ -122,8 +123,21 @@ class Connector:
             self.grid = data
             self.dispatch_grid_update_signal()
 
-    async def get_charge_point_data(self, evse_id: str) -> None:
-        """Get all the data of a charge point."""
+    async def handle_charge_point_data(self, charge_points_data: list) -> None:
+        """Handle incoming chargepoint data."""
+        await asyncio.gather(
+            *(
+                self.handle_charge_point(
+                    entry[EVSE_ID], entry[MODEL_TYPE], entry[ATTR_NAME]
+                )
+                for entry in charge_points_data
+            )
+        )
+        await self.client.get_grid_status(charge_points_data[0][EVSE_ID])
+
+    async def handle_charge_point(self, evse_id: str, model: str, name: str) -> None:
+        """Add the chargepoint and request their data."""
+        self.add_charge_point(evse_id, model, name)
         await self.client.get_status(evse_id)
 
     def add_charge_point(self, evse_id: str, model: str, name: str) -> None:
@@ -159,9 +173,8 @@ class Connector:
         """Keep trying to reconnect to the websocket."""
         try:
             await self.connect(self.config.data[CONF_API_TOKEN])
-            LOGGER.info("Reconnected to the Blue Current websocket")
+            LOGGER.debug("Reconnected to the Blue Current websocket")
             self.hass.async_create_task(self.start_loop())
-            await self.client.get_charge_points()
         except RequestLimitReached:
             self.available = False
             async_call_later(

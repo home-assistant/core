@@ -32,7 +32,7 @@ MODULE = "homeassistant.components.steamist"
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
     hostname=DEVICE_HOSTNAME,
     ip=DEVICE_IP_ADDRESS,
-    macaddress=DEVICE_MAC_ADDRESS,
+    macaddress=DEVICE_MAC_ADDRESS.lower().replace(":", ""),
 )
 
 
@@ -230,7 +230,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="any",
                 ip=DEVICE_IP_ADDRESS,
-                macaddress="00:00:00:00:00:00",
+                macaddress="000000000000",
             ),
         )
         await hass.async_block_till_done()

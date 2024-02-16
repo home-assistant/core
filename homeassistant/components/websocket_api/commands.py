@@ -355,7 +355,9 @@ def _send_handle_get_states_response(
 ) -> None:
     """Send handle get states response."""
     connection.send_message(
-        construct_result_message(msg_id, b"[" + b",".join(serialized_states) + b"]")
+        construct_result_message(
+            msg_id, b"".join((b"[", b",".join(serialized_states), b"]"))
+        )
     )
 
 
