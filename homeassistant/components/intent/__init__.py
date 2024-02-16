@@ -87,10 +87,10 @@ class IntentPlatformProtocol(Protocol):
 
 
 class OnOffIntentHandler(intent.ServiceIntentHandler):
-    """Intent handler for on/off that handles covers too."""
+    """Intent handler for on/off that also supports covers, valves, locks, etc."""
 
     async def async_call_service(self, intent_obj: intent.Intent, state: State) -> None:
-        """Call service on entity with special case for covers."""
+        """Call service on entity with handling for special cases."""
         hass = intent_obj.hass
 
         if state.domain == COVER_DOMAIN:

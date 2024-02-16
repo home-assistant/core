@@ -33,6 +33,7 @@ INTENT_TURN_ON = "HassTurnOn"
 INTENT_TOGGLE = "HassToggle"
 INTENT_GET_STATE = "HassGetState"
 INTENT_NEVERMIND = "HassNevermind"
+INTENT_SET_POSITION = "HassSetPosition"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -398,13 +399,29 @@ class ServiceIntentHandler(IntentHandler):
     service_timeout: float = 0.2
 
     def __init__(
-        self, intent_type: str, domain: str, service: str, speech: str | None = None
+        self,
+        intent_type: str,
+        domain: str,
+        service: str,
+        speech: str | None = None,
+        extra_slot_names: set[str] | None = None,
+        extra_slot_schema: vol.Schema | None = None,
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
         self.domain = domain
         self.service = service
         self.speech = speech
+        self.extra_slot_names = extra_slot_names
+        self.extra_slot_schema = extra_slot_schema
+
+        if self.extra_slot_names:
+            if self.extra_slot_schema is None:
+                raise ValueError(
+                    "extra_slot_schema is required when extra_slot_names is set"
+                )
+
+            self.slot_schema.update(self.extra_slot_schema)
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the hass intent."""
@@ -539,12 +556,19 @@ class ServiceIntentHandler(IntentHandler):
     async def async_call_service(self, intent_obj: Intent, state: State) -> None:
         """Call service on entity."""
         hass = intent_obj.hass
+
+        extra_attrs: dict[str, Any] = {}
+        if self.extra_slot_names:
+            extra_attrs = {
+                key: intent_obj.slots[key]["value"] for key in self.extra_slot_names
+            }
+
         await self._run_then_background(
             hass.async_create_task(
                 hass.services.async_call(
                     self.domain,
                     self.service,
-                    {ATTR_ENTITY_ID: state.entity_id},
+                    {ATTR_ENTITY_ID: state.entity_id, **extra_attrs},
                     context=intent_obj.context,
                     blocking=True,
                 ),
