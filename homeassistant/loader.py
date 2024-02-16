@@ -28,6 +28,7 @@ from . import generated
 from .core import HomeAssistant, callback
 from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
+from .generated.config_flows import FLOWS
 from .generated.dhcp import DHCP
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
@@ -260,9 +261,6 @@ async def async_get_config_flows(
     type_filter: Literal["device", "helper", "hub", "service"] | None = None,
 ) -> set[str]:
     """Return cached list of config flows."""
-    # pylint: disable-next=import-outside-toplevel
-    from .generated.config_flows import FLOWS
-
     integrations = await async_get_custom_components(hass)
     flows: set[str] = set()
 
