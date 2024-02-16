@@ -73,6 +73,10 @@ omit =
     homeassistant/components/apple_tv/browse_media.py
     homeassistant/components/apple_tv/media_player.py
     homeassistant/components/apple_tv/remote.py
+    homeassistant/components/aprilaire/__init__.py
+    homeassistant/components/aprilaire/climate.py
+    homeassistant/components/aprilaire/coordinator.py
+    homeassistant/components/aprilaire/entity.py
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
     homeassistant/components/arcam_fmj/__init__.py
@@ -1535,6 +1539,7 @@ omit =
     homeassistant/components/vicare/entity.py
     homeassistant/components/vicare/number.py
     homeassistant/components/vicare/sensor.py
+    homeassistant/components/vicare/types.py
     homeassistant/components/vicare/utils.py
     homeassistant/components/vicare/water_heater.py
     homeassistant/components/vilfo/__init__.py
@@ -1693,8 +1698,10 @@ omit =
     homeassistant/components/myuplink/__init__.py
     homeassistant/components/myuplink/api.py
     homeassistant/components/myuplink/application_credentials.py
+    homeassistant/components/myuplink/binary_sensor.py
     homeassistant/components/myuplink/coordinator.py
     homeassistant/components/myuplink/entity.py
+    homeassistant/components/myuplink/helpers.py
     homeassistant/components/myuplink/sensor.py
 
 
