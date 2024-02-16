@@ -82,7 +82,7 @@ def websocket_delete_floor(
     except KeyError:
         connection.send_error(msg["id"], "invalid_info", "Floor ID doesn't exist")
     else:
-        connection.send_message(websocket_api.result_message(msg["id"], "success"))
+        connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(
