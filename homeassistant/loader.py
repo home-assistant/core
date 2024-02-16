@@ -240,20 +240,23 @@ async def async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return cached list of custom integrations."""
-    if (reg_or_evt := hass.data.get(DATA_CUSTOM_COMPONENTS)) is None:
-        evt = hass.data[DATA_CUSTOM_COMPONENTS] = asyncio.Event()
+    comps_or_future: dict[str, Integration] | asyncio.Future[
+        dict[str, Integration]
+    ] | None = hass.data.get(DATA_CUSTOM_COMPONENTS)
 
-        reg = await _async_get_custom_components(hass)
+    if comps_or_future is None:
+        future = hass.data[DATA_CUSTOM_COMPONENTS] = hass.loop.create_future()
 
-        hass.data[DATA_CUSTOM_COMPONENTS] = reg
-        evt.set()
-        return reg
+        comps = await _async_get_custom_components(hass)
 
-    if isinstance(reg_or_evt, asyncio.Event):
-        await reg_or_evt.wait()
-        return cast(dict[str, "Integration"], hass.data.get(DATA_CUSTOM_COMPONENTS))
+        hass.data[DATA_CUSTOM_COMPONENTS] = comps
+        future.set_result(comps)
+        return comps
 
-    return cast(dict[str, "Integration"], reg_or_evt)
+    if isinstance(comps_or_future, asyncio.Future):
+        return await comps_or_future
+
+    return comps_or_future
 
 
 async def async_get_config_flows(
@@ -271,12 +274,10 @@ async def async_get_config_flows(
             flows.update(type_flows)
 
     flows.update(
-        [
-            integration.domain
-            for integration in integrations.values()
-            if integration.config_flow
-            and (type_filter is None or integration.integration_type == type_filter)
-        ]
+        integration.domain
+        for integration in integrations.values()
+        if integration.config_flow
+        and (type_filter is None or integration.integration_type == type_filter)
     )
 
     return flows
