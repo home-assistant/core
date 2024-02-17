@@ -9,7 +9,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.floor_registry import FloorEntry, async_get
 
 
-async def async_setup(hass: HomeAssistant) -> bool:
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Register the floor registry WS commands."""
     websocket_api.async_register_command(hass, websocket_list_floors)
     websocket_api.async_register_command(hass, websocket_create_floor)
