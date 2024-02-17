@@ -1909,16 +1909,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         If the flow is user initiated, filter out ignored entries,
         unless include_ignore is True.
         """
-        config_entries = self.hass.config_entries.async_entries(self.handler)
-
-        if (
-            include_ignore is True
-            or include_ignore is None
-            and self.source != SOURCE_USER
-        ):
-            return config_entries
-
-        return [entry for entry in config_entries if entry.source != SOURCE_IGNORE]
+        return self.hass.config_entries.async_entries(
+            self.handler,
+            include_ignore or (include_ignore is None and self.source != SOURCE_USER),
+        )
 
     @callback
     def _async_current_ids(self, include_ignore: bool = True) -> set[str | None]:
