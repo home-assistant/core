@@ -41,6 +41,7 @@ SUPPORT_ROMY_ROBOT = (
     | VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.FAN_SPEED
+    | VacuumEntityFeature.SEND_COMMAND
 )
 
 
@@ -98,3 +99,28 @@ class RomyVacuumEntity(RomyEntity, StateVacuumEntity):
         """Set fan speed."""
         LOGGER.debug("async_set_fan_speed to %s", fan_speed)
         await self.romy.async_set_fan_speed(FAN_SPEEDS.index(fan_speed))
+
+    async def async_send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Send a raw command to a vacuum cleaner."""
+        command = command.lstrip("/")
+        LOGGER.debug("sending raw command %s, params:", command)
+        LOGGER.debug(params)
+
+        if isinstance(params, dict):
+            params = [params]
+        elif params is None:
+            params = []
+
+        if not params:
+            await self.romy.romy_async_query(f"{command}")
+        else:
+            paramlist: list[Any] = params
+            paramstring = "&".join(
+                [f"{key}={value}" for key, value in paramlist[0].items()]
+            )
+            await self.romy.romy_async_query(f"{command}?{paramstring}")
