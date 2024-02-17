@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Final, cast
 
+from systembridgemodels.modules.cpu import PerCPU
 from systembridgemodels.modules.displays import Display
 from systembridgemodels.modules.gpus import GPU
 
@@ -59,26 +60,6 @@ def battery_time_remaining(data: SystemBridgeCoordinatorData) -> datetime | None
     return None
 
 
-def cpu_power_per_cpu(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> float | None:
-    """Return CPU power per CPU."""
-    if (per_cpu := data.cpu.per_cpu) is not None and (index < len(per_cpu)):
-        return per_cpu[index].power
-    return None
-
-
-def cpu_usage_per_cpu(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> float | None:
-    """Return CPU usage per CPU."""
-    if (per_cpu := data.cpu.per_cpu) is not None and (index < len(per_cpu)):
-        return per_cpu[index].usage
-    return None
-
-
 def cpu_speed(data: SystemBridgeCoordinatorData) -> float | None:
     """Return the CPU speed."""
     if (cpu_frequency := data.cpu.frequency) is not None and (
@@ -86,6 +67,30 @@ def cpu_speed(data: SystemBridgeCoordinatorData) -> float | None:
     ) is not None:
         return round(cpu_frequency.current / 1000, 2)
     return None
+
+
+def with_per_cpu(func):
+    """Wrap a function to ensure per CPU data is available."""
+
+    def wrapper(data: SystemBridgeCoordinatorData, index: int):
+        """Wrap a function to ensure per CPU data is available."""
+        if data.cpu.per_cpu is not None and index < len(data.cpu.per_cpu):
+            return func(data.cpu.per_cpu[index])
+        return None
+
+    return wrapper
+
+
+@with_per_cpu
+def cpu_power_per_cpu(per_cpu: PerCPU) -> float | None:
+    """Return CPU power per CPU."""
+    return per_cpu.power
+
+
+@with_per_cpu
+def cpu_usage_per_cpu(per_cpu: PerCPU) -> float | None:
+    """Return CPU usage per CPU."""
+    return per_cpu.usage
 
 
 def get_display(
