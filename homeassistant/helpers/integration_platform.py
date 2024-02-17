@@ -118,18 +118,23 @@ async def async_process_integration_platforms(
             partial(_async_process_integration_platform_for_component, hass),
         )
 
-    integration_platforms: list[IntegrationPlatform] = hass.data[
-        DATA_INTEGRATION_PLATFORMS
-    ]
-    integration_platform = IntegrationPlatform(platform_name, process_platform, set())
-    integration_platforms.append(integration_platform)
     if not (
         top_level_components := [
             comp for comp in hass.config.components if "." not in comp
         ]
     ):
         return
+
     integrations = await async_get_integrations(hass, top_level_components)
+    seen_components: set[str] = set(top_level_components)
+    integration_platforms: list[IntegrationPlatform] = hass.data[
+        DATA_INTEGRATION_PLATFORMS
+    ]
+    integration_platform = IntegrationPlatform(
+        platform_name, process_platform, seen_components
+    )
+    integration_platforms.append(integration_platform)
+
     if tasks := [
         asyncio.create_task(
             _async_process_single_integration_platform_component(
@@ -138,8 +143,7 @@ async def async_process_integration_platforms(
             name=f"process integration platform {platform_name} for {comp}",
         )
         for comp in top_level_components
-        if comp not in integration_platform.seen_components
-        and (
+        if (
             platform := _get_platform_from_integration(
                 integrations[comp], comp, platform_name
             )
