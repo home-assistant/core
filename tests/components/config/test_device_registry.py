@@ -243,7 +243,6 @@ async def test_remove_config_entry_from_device(
     # async_remove_config_entry_device returns False
     await ws_client.send_json_auto_id(
         {
-            "id": 5,
             "type": "config/device_registry/remove_config_entry",
             "config_entry_id": entry_1.entry_id,
             "device_id": device_entry.id,
