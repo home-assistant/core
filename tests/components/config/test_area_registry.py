@@ -1,8 +1,4 @@
 """Test area_registry API."""
-from collections.abc import Awaitable, Callable, Generator
-from typing import Any
-
-from aiohttp import ClientWebSocketResponse
 import pytest
 from pytest_unordered import unordered
 
@@ -11,22 +7,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar
 
 from tests.common import ANY
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(name="client")
 async def client_fixture(
-    hass: HomeAssistant,
-    hass_ws_client: Callable[
-        [HomeAssistant], Awaitable[Generator[ClientWebSocketResponse, Any, Any]]
-    ],
-) -> Generator[ClientWebSocketResponse, None, None]:
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
     area_registry.async_setup(hass)
     return await hass_ws_client(hass)
 
 
 async def test_list_areas(
-    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
+    client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
 ) -> None:
     """Test list entries."""
     area1 = area_registry.async_create("mock 1")
@@ -59,7 +53,7 @@ async def test_list_areas(
 
 
 async def test_create_area(
-    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
+    client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
 ) -> None:
     """Test create entry."""
     # Create area with only mandatory parameters
@@ -102,7 +96,7 @@ async def test_create_area(
 
 
 async def test_create_area_with_name_already_in_use(
-    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
+    client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
 ) -> None:
     """Test create entry that should fail."""
     area_registry.async_create("mock")
@@ -120,7 +114,7 @@ async def test_create_area_with_name_already_in_use(
 
 
 async def test_delete_area(
-    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
+    client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
 ) -> None:
     """Test delete entry."""
     area = area_registry.async_create("mock")
@@ -136,7 +130,7 @@ async def test_delete_area(
 
 
 async def test_delete_non_existing_area(
-    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
+    client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
 ) -> None:
     """Test delete entry that should fail."""
     area_registry.async_create("mock")
@@ -154,7 +148,7 @@ async def test_delete_non_existing_area(
 
 
 async def test_update_area(
-    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
+    client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
 ) -> None:
     """Test update entry."""
     area = area_registry.async_create("mock 1")
@@ -204,7 +198,7 @@ async def test_update_area(
 
 
 async def test_update_area_with_same_name(
-    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
+    client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
 ) -> None:
     """Test update entry."""
     area = area_registry.async_create("mock 1")
@@ -225,7 +219,7 @@ async def test_update_area_with_same_name(
 
 
 async def test_update_area_with_name_already_in_use(
-    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
+    client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
 ) -> None:
     """Test update entry."""
     area = area_registry.async_create("mock 1")
