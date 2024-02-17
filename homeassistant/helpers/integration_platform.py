@@ -29,11 +29,12 @@ class IntegrationPlatform:
     """An integration platform."""
 
     platform_name: str
-    process_platform: HassJob
+    process_job: HassJob
     seen_components: set[str]
 
 
-def _get_platform_from_integration(
+@callback
+def _get_platform(
     integration: Integration | Exception, component_name: str, platform_name: str
 ) -> ModuleType | None:
     """Get a platform from an integration."""
@@ -70,14 +71,14 @@ def _async_process_integration_platform_for_component(
     integration = async_get_loaded_integration(hass, component_name)
     for integration_platform in integration_platforms:
         if component_name in integration_platform.seen_components or not (
-            platform := _get_platform_from_integration(
+            platform := _get_platform(
                 integration, component_name, integration_platform.platform_name
             )
         ):
             continue
         integration_platform.seen_components.add(component_name)
         hass.async_run_hass_job(
-            integration_platform.process_platform, hass, component_name, platform
+            integration_platform.process_job, hass, component_name, platform
         )
 
 
@@ -109,16 +110,15 @@ async def async_process_integration_platforms(
         integration_platforms = hass.data[DATA_INTEGRATION_PLATFORMS]
 
     top_level_components = {comp for comp in hass.config.components if "." not in comp}
-    integration_platform = IntegrationPlatform(
-        platform_name,
-        HassJob(
-            catch_log_exception(
-                process_platform,
-                partial(_format_err, str(process_platform), platform_name),
-            ),
-            f"process_platform {platform_name}",
+    process_job = HassJob(
+        catch_log_exception(
+            process_platform,
+            partial(_format_err, str(process_platform), platform_name),
         ),
-        top_level_components,
+        f"process_platform {platform_name}",
+    )
+    integration_platform = IntegrationPlatform(
+        platform_name, process_job, top_level_components
     )
     integration_platforms.append(integration_platform)
 
@@ -129,15 +129,7 @@ async def async_process_integration_platforms(
     if futures := [
         future
         for comp in top_level_components
-        if (
-            platform := _get_platform_from_integration(
-                integrations[comp], comp, platform_name
-            )
-        )
-        and (
-            future := hass.async_run_hass_job(
-                integration_platform.process_platform, hass, comp, platform
-            )
-        )
+        if (platform := _get_platform(integrations[comp], comp, platform_name))
+        and (future := hass.async_run_hass_job(process_job, hass, comp, platform))
     ]:
         await asyncio.gather(*futures)
