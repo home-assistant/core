@@ -31,8 +31,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DwdWeatherWarningsAPI, region_identifier
         )
     elif device_tracker is not None:
+        registry = er.async_get(hass)
+
         try:
-            registry = er.async_get(hass)
             device_tracker = er.async_validate_entity_id(registry, device_tracker)
         except vol.Invalid:
             # The entity/UUID is invalid or not associated with an entity registry item.
