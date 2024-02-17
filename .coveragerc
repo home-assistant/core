@@ -948,6 +948,7 @@ omit =
     homeassistant/components/permobil/__init__.py
     homeassistant/components/permobil/coordinator.py
     homeassistant/components/permobil/sensor.py
+    homeassistant/components/permobil/binary_sensor.py
     homeassistant/components/philips_js/__init__.py
     homeassistant/components/philips_js/light.py
     homeassistant/components/philips_js/media_player.py
