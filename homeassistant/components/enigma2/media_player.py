@@ -5,7 +5,7 @@ from logging import getLogger
 
 from aiohttp.client_exceptions import ClientConnectorError, ServerDisconnectedError
 from openwebif.api import OpenWebIfDevice
-from openwebif.enums import RemoteControlCodes, SetVolumeOption
+from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
 import voluptuous as vol
 from yarl import URL
 
@@ -147,15 +147,17 @@ class Enigma2Device(MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
-        try:
-            await self._device.turn_off()
-        except ServerDisconnectedError as err:
-            _LOGGER.warning(
-                "%s went into deep standby. Error: %s",
-                self._device.base.host,
-                str(err),
-            )
-            self._attr_available = False
+        if self._device.turn_off_to_deep:
+            try:
+                await self._device.set_powerstate(PowerState.DEEP_STANDBY)
+            except ServerDisconnectedError:
+                _LOGGER.warning(
+                    "%s went into deep standby",
+                    self._device.base.host,
+                )
+                self._attr_available = False
+        else:
+            await self._device.set_powerstate(PowerState.STANDBY)
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
@@ -205,16 +207,17 @@ class Enigma2Device(MediaPlayerEntity):
         """Update state of the media_player."""
         try:
             await self._device.update()
-            if not self._attr_available:
-                _LOGGER.debug("%s is available", self._device.base.host)
-                self._attr_available = True
         except ClientConnectorError as err:
             if self._attr_available:
                 _LOGGER.warning(
-                    "%s is unavailable. Error: %s", self._device.base.host, str(err)
+                    "%s is unavailable. Error: %s", self._device.base.host, err
                 )
                 self._attr_available = False
             return
+
+        if not self._attr_available:
+            _LOGGER.debug("%s is available", self._device.base.host)
+            self._attr_available = True
 
         if not self._device.status.in_standby:
             self._attr_extra_state_attributes = {
