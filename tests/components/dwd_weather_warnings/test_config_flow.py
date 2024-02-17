@@ -6,21 +6,12 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.dwd_weather_warnings.const import (
-    ADVANCE_WARNING_SENSOR,
-    CONF_GPS_TRACKER,
+    CONF_REGION_DEVICE_TRACKER,
     CONF_REGION_IDENTIFIER,
-    CONF_REGION_NAME,
-    CURRENT_WARNING_SENSOR,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    STATE_HOME,
-)
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -31,13 +22,7 @@ DEMO_CONFIG_ENTRY_REGION: Final = {
 }
 
 DEMO_CONFIG_ENTRY_GPS: Final = {
-    CONF_GPS_TRACKER: "device_tracker.test_gps",
-}
-
-DEMO_YAML_CONFIGURATION: Final = {
-    CONF_NAME: "Unit Test",
-    CONF_REGION_NAME: "807111000",
-    CONF_MONITORED_CONDITIONS: [CURRENT_WARNING_SENSOR, ADVANCE_WARNING_SENSOR],
+    CONF_REGION_DEVICE_TRACKER: "device_tracker.test_gps",
 }
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -104,7 +89,7 @@ async def test_create_entry_gps(hass: HomeAssistant) -> None:
 
     # Add location data for unique ID.
     hass.states.async_set(
-        DEMO_CONFIG_ENTRY_GPS[CONF_GPS_TRACKER],
+        DEMO_CONFIG_ENTRY_GPS[CONF_REGION_DEVICE_TRACKER],
         STATE_HOME,
         {ATTR_LATITUDE: "50.180454", ATTR_LONGITUDE: "7.610263"},
     )
@@ -122,7 +107,7 @@ async def test_create_entry_gps(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test_gps"
     assert result["data"] == {
-        CONF_GPS_TRACKER: "device_tracker.test_gps",
+        CONF_REGION_DEVICE_TRACKER: "device_tracker.test_gps",
     }
 
 

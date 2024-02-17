@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from .const import CONF_GPS_TRACKER, CONF_REGION_IDENTIFIER, DOMAIN
+from .const import CONF_REGION_DEVICE_TRACKER, CONF_REGION_IDENTIFIER, DOMAIN
 from .util import get_position_data
 
 
@@ -27,7 +27,7 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict = {}
 
         if user_input is not None:
-            valid_options = (CONF_REGION_IDENTIFIER, CONF_GPS_TRACKER)
+            valid_options = (CONF_REGION_IDENTIFIER, CONF_REGION_DEVICE_TRACKER)
 
             # Check, if either CONF_REGION_IDENTIFIER or CONF_GPS_TRACKER has been set.
             if all(k not in user_input for k in valid_options):
@@ -49,9 +49,9 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
 
                     return self.async_create_entry(title=identifier, data=user_input)
-            elif CONF_GPS_TRACKER in user_input:
+            elif CONF_REGION_DEVICE_TRACKER in user_input:
                 # Validate position using the API
-                device_tracker = user_input[CONF_GPS_TRACKER]
+                device_tracker = user_input[CONF_REGION_DEVICE_TRACKER]
                 position = get_position_data(self.hass, device_tracker)
 
                 if not await self.hass.async_add_executor_job(
@@ -76,7 +76,7 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_REGION_IDENTIFIER): cv.string,
-                    vol.Optional(CONF_GPS_TRACKER): EntitySelector(
+                    vol.Optional(CONF_REGION_DEVICE_TRACKER): EntitySelector(
                         EntitySelectorConfig(domain="device_tracker")
                     ),
                 }
