@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, implementation)
 
     if set(config_entry.data["token"]["scope"].split(" ")) != set(OAUTH2_SCOPES):
-        raise ConfigEntryAuthFailed("Updating OAuth2 scope")
+        raise ConfigEntryAuthFailed("Incorrect OAuth2 scope")
 
     auth = AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
 
