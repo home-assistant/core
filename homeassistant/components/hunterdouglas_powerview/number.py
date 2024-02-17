@@ -44,7 +44,7 @@ def store_velocity(
     coordinator.data.update_shade_velocity(shade_id, ShadePosition(velocity=value))
 
 
-NUMBERS: Final = [
+NUMBERS: Final = (
     PowerviewNumberDescription(
         key="velocity",
         name="Velocity",
@@ -53,7 +53,7 @@ NUMBERS: Final = [
         create_entity_fn=lambda shade: shade.is_supported(MOTION_VELOCITY),
         store_value_fn=store_velocity,
     ),
-]
+)
 
 
 async def async_setup_entry(
