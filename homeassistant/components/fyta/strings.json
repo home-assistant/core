@@ -1,0 +1,119 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Credentials for FYTA API",
+        "description": "Provide username and password to connect to the FYTA-server",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "auth_error": "Invalid username and/or password",
+      "password_error": "Invalid password",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unknown": "Unknown error occurred",
+      "cannot_connect": "Unable to connect to the FYTA-server"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "fyta_plant_name": {
+        "name": "Plant name"
+      },
+      "fyta_scientific_name": {
+        "name": "Scientific name"
+      },
+      "fyta_plant_status": {
+        "name": "State",
+        "state": {
+          "1": "Too low",
+          "2": "Low",
+          "3": "Perfect",
+          "4": "High",
+          "5": "Too high"
+        }
+      },
+      "fyta_temperature_status": {
+        "name": "Temperature state",
+        "state": {
+          "1": "Too low",
+          "2": "Low",
+          "3": "Perfect",
+          "4": "High",
+          "5": "Too high"
+        }
+      },
+      "fyta_light_status": {
+        "name": "Light state",
+        "state": {
+          "1": "Too low",
+          "2": "Low",
+          "3": "Perfect",
+          "4": "High",
+          "5": "Too high"
+        }
+      },
+      "fyta_moisture_status": {
+        "name": "Moisture state",
+        "state": {
+          "1": "Too low",
+          "2": "Low",
+          "3": "Perfect",
+          "4": "High",
+          "5": "Too high"
+        }
+      },
+      "fyta_salinity_status": {
+        "name": "Salinity state",
+        "state": {
+          "1": "Too low",
+          "2": "Low",
+          "3": "Perfect",
+          "4": "High",
+          "5": "Too high"
+        }
+      },
+      "fyta_temperature": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
+      "fyta_light": {
+        "name": "Light"
+      },
+      "fyta_moisture": {
+        "name": "Moisture"
+      },
+      "fyta_salinity": {
+        "name": "Salinity"
+      },
+      "fyta_ph": {
+        "name": "pH"
+      },
+      "fyta_battery_level": {
+        "name": "Battery level"
+      },
+      "fyta_last_updated": {
+        "name": "Last updated"
+      },
+      "fyta_plant_number": {
+        "name": "Number of plants"
+      }
+    },
+    "binary_sensor": {
+      "fyta_battery_status": {
+        "name": "Battery status"
+      },
+      "fyta_online": {
+        "name": "Online"
+      }
+    }
+  }
+}
