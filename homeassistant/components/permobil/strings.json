@@ -68,6 +68,11 @@
       "record_distance": {
         "name": "Record distance"
       }
+    },
+    "binary_sensor": {
+      "is_charging": {
+        "name": "Is charging"
+      }
     }
   }
 }
