@@ -30,7 +30,8 @@ from homeassistant.loader import (
 )
 
 
-async def async_setup(hass: HomeAssistant) -> bool:
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Home Assistant views."""
     hass.http.register_view(ConfigManagerEntryIndexView)
     hass.http.register_view(ConfigManagerEntryResourceView)

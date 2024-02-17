@@ -18,7 +18,8 @@ from homeassistant.helpers import (
 from homeassistant.helpers.json import json_dumps
 
 
-async def async_setup(hass: HomeAssistant) -> bool:
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Entity Registry views."""
 
     websocket_api.async_register_command(hass, websocket_get_entities)
