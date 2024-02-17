@@ -1607,7 +1607,9 @@ def test_migrate_entity_to_new_platform(
 
 
 async def test_restore_entity(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ):
     """Make sure entity registry id is stable and entity_id is reused if possible."""
     update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
