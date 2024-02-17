@@ -1,6 +1,7 @@
 """Support for Enigma2 media players."""
 from __future__ import annotations
 
+import contextlib
 from logging import getLogger
 
 from aiohttp.client_exceptions import ClientConnectorError, ServerDisconnectedError
@@ -148,10 +149,9 @@ class Enigma2Device(MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         if self._device.turn_off_to_deep:
-            try:
+            with contextlib.suppress(ServerDisconnectedError):
                 await self._device.set_powerstate(PowerState.DEEP_STANDBY)
-            except ServerDisconnectedError:
-                self._attr_available = False
+            self._attr_available = False
         else:
             await self._device.set_powerstate(PowerState.STANDBY)
 
