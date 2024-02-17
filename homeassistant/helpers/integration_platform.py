@@ -40,8 +40,9 @@ def _async_process_single_integration_platform_component(
     integration_platform: IntegrationPlatform,
 ) -> asyncio.Future[None] | None:
     """Process a single integration platform."""
+    future: asyncio.Future[None] | None = None
     try:
-        return hass.async_run_hass_job(
+        future = hass.async_run_hass_job(
             integration_platform.process_platform, hass, component_name, platform
         )
     except Exception:  # pylint: disable=broad-except
@@ -50,7 +51,7 @@ def _async_process_single_integration_platform_component(
             component_name,
             integration_platform.platform_name,
         )
-    return None
+    return future
 
 
 def _get_platform_from_integration(
