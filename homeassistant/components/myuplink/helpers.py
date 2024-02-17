@@ -13,9 +13,7 @@ def find_matching_platform(device_point: DevicePoint) -> Platform:
         and device_point.enum_values[1]["value"] == "1"
     ):
         if device_point.writable:
-            # Change to Platform.SWITCH when platform is implemented
-            # return Platform.SWITCH
-            return Platform.SENSOR
+            return Platform.SWITCH
         return Platform.BINARY_SENSOR
 
     return Platform.SENSOR
