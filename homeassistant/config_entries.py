@@ -400,7 +400,9 @@ class ConfigEntry:
         """Return if entry supports config options."""
         if self._supports_options is None and (handler := HANDLERS.get(self.domain)):
             # work out if handler has support for options flow
-            self._supports_options = handler.async_supports_options_flow(self)
+            object.__setattr__(
+                self, "_supports_options", handler.async_supports_options_flow(self)
+            )
         return self._supports_options or False
 
     def clear_cache(self) -> None:
