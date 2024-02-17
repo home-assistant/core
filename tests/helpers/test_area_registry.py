@@ -3,24 +3,10 @@ from typing import Any
 
 import pytest
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar
 
-from tests.common import ANY, flush_store
-
-
-@pytest.fixture
-def update_events(hass):
-    """Capture update events."""
-    events = []
-
-    @callback
-    def async_capture(event):
-        events.append(event.data)
-
-    hass.bus.async_listen(ar.EVENT_AREA_REGISTRY_UPDATED, async_capture)
-
-    return events
+from tests.common import ANY, async_capture_events, flush_store
 
 
 async def test_list_areas(area_registry: ar.AreaRegistry) -> None:
@@ -32,10 +18,10 @@ async def test_list_areas(area_registry: ar.AreaRegistry) -> None:
     assert len(areas) == len(area_registry.areas)
 
 
-async def test_create_area(
-    hass: HomeAssistant, area_registry: ar.AreaRegistry, update_events
-) -> None:
+async def test_create_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
     """Make sure that we can create an area."""
+    update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
+
     # Create area with only mandatory parameters
     area = area_registry.async_create("mock")
 
@@ -52,8 +38,10 @@ async def test_create_area(
     await hass.async_block_till_done()
 
     assert len(update_events) == 1
-    assert update_events[-1]["action"] == "create"
-    assert update_events[-1]["area_id"] == area.id
+    assert update_events[-1].data == {
+        "action": "create",
+        "area_id": area.id,
+    }
 
     # Create area with all parameters
     area = area_registry.async_create(
@@ -73,14 +61,17 @@ async def test_create_area(
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
-    assert update_events[-1]["action"] == "create"
-    assert update_events[-1]["area_id"] == area.id
+    assert update_events[-1].data == {
+        "action": "create",
+        "area_id": area.id,
+    }
 
 
 async def test_create_area_with_name_already_in_use(
-    hass: HomeAssistant, area_registry: ar.AreaRegistry, update_events
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
 ) -> None:
     """Make sure that we can't create an area with a name already in use."""
+    update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
     area1 = area_registry.async_create("mock")
 
     with pytest.raises(ValueError) as e_info:
@@ -108,9 +99,11 @@ async def test_create_area_with_id_already_in_use(
 
 
 async def test_delete_area(
-    hass: HomeAssistant, area_registry: ar.AreaRegistry, update_events
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Make sure that we can delete an area."""
+    update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
     area = area_registry.async_create("mock")
 
     area_registry.async_delete(area.id)
@@ -120,10 +113,14 @@ async def test_delete_area(
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["area_id"] == area.id
-    assert update_events[1]["action"] == "remove"
-    assert update_events[1]["area_id"] == area.id
+    assert update_events[0].data == {
+        "action": "create",
+        "area_id": area.id,
+    }
+    assert update_events[1].data == {
+        "action": "remove",
+        "area_id": area.id,
+    }
 
 
 async def test_delete_non_existing_area(area_registry: ar.AreaRegistry) -> None:
@@ -136,10 +133,9 @@ async def test_delete_non_existing_area(area_registry: ar.AreaRegistry) -> None:
     assert len(area_registry.areas) == 1
 
 
-async def test_update_area(
-    hass: HomeAssistant, area_registry: ar.AreaRegistry, update_events
-) -> None:
+async def test_update_area(hass: HomeAssistant, area_registry: ar.AreaRegistry) -> None:
     """Make sure that we can read areas."""
+    update_events = async_capture_events(hass, ar.EVENT_AREA_REGISTRY_UPDATED)
     area = area_registry.async_create("mock")
 
     updated_area = area_registry.async_update(
@@ -164,10 +160,14 @@ async def test_update_area(
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["area_id"] == area.id
-    assert update_events[1]["action"] == "update"
-    assert update_events[1]["area_id"] == area.id
+    assert update_events[0].data == {
+        "action": "create",
+        "area_id": area.id,
+    }
+    assert update_events[1].data == {
+        "action": "update",
+        "area_id": area.id,
+    }
 
 
 async def test_update_area_with_same_name(area_registry: ar.AreaRegistry) -> None:
