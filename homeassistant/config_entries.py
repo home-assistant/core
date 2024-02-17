@@ -413,24 +413,21 @@ class ConfigEntry:
     @cached_property
     def as_json_fragment(self) -> json_fragment:
         """Return JSON fragment of a config entry."""
-        return json_fragment(
-            json_bytes(
-                {
-                    "entry_id": self.entry_id,
-                    "domain": self.domain,
-                    "title": self.title,
-                    "source": self.source,
-                    "state": self.state.value,
-                    "supports_options": self.supports_options,
-                    "supports_remove_device": self.supports_remove_device or False,
-                    "supports_unload": self.supports_unload or False,
-                    "pref_disable_new_entities": self.pref_disable_new_entities,
-                    "pref_disable_polling": self.pref_disable_polling,
-                    "disabled_by": self.disabled_by,
-                    "reason": self.reason,
-                }
-            )
-        )
+        json_repr = {
+            "entry_id": self.entry_id,
+            "domain": self.domain,
+            "title": self.title,
+            "source": self.source,
+            "state": self.state.value,
+            "supports_options": self.supports_options,
+            "supports_remove_device": self.supports_remove_device or False,
+            "supports_unload": self.supports_unload or False,
+            "pref_disable_new_entities": self.pref_disable_new_entities,
+            "pref_disable_polling": self.pref_disable_polling,
+            "disabled_by": self.disabled_by,
+            "reason": self.reason,
+        }
+        return json_fragment(json_bytes(json_repr))
 
     async def async_setup(
         self,
