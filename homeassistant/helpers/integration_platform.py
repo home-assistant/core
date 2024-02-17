@@ -39,9 +39,6 @@ async def _async_process_single_integration_platform_component(
     integration_platform: IntegrationPlatform,
 ) -> None:
     """Process a single integration platform."""
-    if component_name in integration_platform.seen_components:
-        return
-    integration_platform.seen_components.add(component_name)
     try:
         await integration_platform.process_platform(hass, component_name, platform)
     except Exception:  # pylint: disable=broad-except
@@ -97,6 +94,7 @@ def _async_process_integration_platform_for_component(
             )
         ):
             continue
+        integration_platform.seen_components.add(component_name)
         hass.async_create_task(
             _async_process_single_integration_platform_component(
                 hass, component_name, platform, integration_platform
