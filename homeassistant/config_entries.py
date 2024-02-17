@@ -1314,11 +1314,27 @@ class ConfigEntries:
         return self._entries.data.get(entry_id)
 
     @callback
-    def async_entries(self, domain: str | None = None) -> list[ConfigEntry]:
+    def async_entries(
+        self,
+        domain: str | None = None,
+        include_ignore: bool = True,
+        include_disabled: bool = True,
+    ) -> list[ConfigEntry]:
         """Return all entries or entries for a specific domain."""
         if domain is None:
-            return list(self._entries.values())
-        return list(self._entries.get_entries_for_domain(domain))
+            entries: Iterable[ConfigEntry] = self._entries.values()
+        else:
+            entries = self._entries.get_entries_for_domain(domain)
+
+        if include_ignore and include_disabled:
+            return list(entries)
+
+        return [
+            entry
+            for entry in entries
+            if (include_ignore or entry.source != SOURCE_IGNORE)
+            and (include_disabled or not entry.disabled_by)
+        ]
 
     @callback
     def async_entry_for_domain_unique_id(
