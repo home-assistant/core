@@ -33,11 +33,6 @@ class IntegrationPlatform:
     seen_components: set[str]
 
 
-def _format_err(name: str, platform_name: str, *args: Any) -> str:
-    """Format error message."""
-    return f"Exception in {name} when processing platform '{platform_name}': {args}"
-
-
 def _get_platform_from_integration(
     integration: Integration | Exception, component_name: str, platform_name: str
 ) -> ModuleType | None:
@@ -84,6 +79,11 @@ def _async_process_integration_platform_for_component(
         hass.async_run_hass_job(
             integration_platform.process_platform, hass, component_name, platform
         )
+
+
+def _format_err(name: str, platform_name: str, *args: Any) -> str:
+    """Format error message."""
+    return f"Exception in {name} when processing platform '{platform_name}': {args}"
 
 
 @bind_hass
