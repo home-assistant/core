@@ -28,7 +28,7 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
 from .template_entity import (
@@ -37,7 +37,7 @@ from .template_entity import (
     rewrite_common_legacy_to_modern_conf,
 )
 
-CONF_CODE_FORMAT = "code_format"
+CONF_CODE_FORMAT_TEMPLATE = "code_format_template"
 CONF_LOCK = "lock"
 CONF_UNLOCK = "unlock"
 
@@ -50,9 +50,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_CODE_FORMAT_TEMPLATE): cv.template,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_CODE_FORMAT): cv.is_regex,
     }
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
 
@@ -93,10 +93,8 @@ class TemplateLock(TemplateEntity, LockEntity):
         self._state_template = config.get(CONF_VALUE_TEMPLATE)
         self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
         self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
-        self._compiled_pattern = config.get(CONF_CODE_FORMAT)
-        self._attr_code_format = (
-            self._compiled_pattern.pattern if self._compiled_pattern else None
-        )
+        self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)
+        self._code_format = None
         self._optimistic = config.get(CONF_OPTIMISTIC)
         self._attr_assumed_state = bool(self._optimistic)
 
@@ -122,6 +120,7 @@ class TemplateLock(TemplateEntity, LockEntity):
 
     @callback
     def _update_state(self, result):
+        """Update the state from the template."""
         super()._update_state(result)
         if isinstance(result, TemplateError):
             self._state = None
@@ -137,13 +136,37 @@ class TemplateLock(TemplateEntity, LockEntity):
 
         self._state = None
 
+    @property
+    def code_format(self) -> str | None:
+        """Regex for code format or None if no code is required."""
+        if self._code_format is not None:
+            return self._code_format
+
+        return super().code_format
+
     @callback
     def _async_setup_templates(self) -> None:
         """Set up templates."""
         self.add_template_attribute(
             "_state", self._state_template, None, self._update_state
         )
+        if self._code_format_template:
+            self.add_template_attribute(
+                "_code_format_template",
+                self._code_format_template,
+                None,
+                self._update_code_format,
+                none_on_template_error=True,
+            )
         super()._async_setup_templates()
+
+    @callback
+    def _update_code_format(self, render):
+        """Update code format from the template."""
+        if render in (None, "None", ""):
+            self._code_format = None
+            return
+        self._code_format = render
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
@@ -151,9 +174,7 @@ class TemplateLock(TemplateEntity, LockEntity):
             self._state = True
             self.async_write_ha_state()
 
-        tpl_vars: TemplateVarsType = {
-            ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
-        }
+        tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
         await self.async_run_script(
             self._command_lock, run_variables=tpl_vars, context=self._context
@@ -165,9 +186,7 @@ class TemplateLock(TemplateEntity, LockEntity):
             self._state = False
             self.async_write_ha_state()
 
-        tpl_vars: TemplateVarsType = {
-            ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None
-        }
+        tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
         await self.async_run_script(
             self._command_unlock, run_variables=tpl_vars, context=self._context
