@@ -88,18 +88,16 @@ class CameraMediaSource(MediaSource):
 
         async def _filter_browsable_camera(camera: Camera) -> BrowseMediaSource | None:
             stream_type = camera.frontend_stream_type
-
             if stream_type is None:
-                content_type = camera.content_type
-
-            elif can_stream_hls:
-                content_type = FORMAT_CONTENT_TYPE[HLS_PROVIDER]
-                if stream_type != StreamType.HLS:
-                    source = await camera.stream_source()
-                    if not source:
-                        return None
-            else:
+                return _media_source_for_camera(camera, camera.content_type)
+            if not can_stream_hls:
                 return None
+
+            content_type = FORMAT_CONTENT_TYPE[HLS_PROVIDER]
+            if stream_type != StreamType.HLS:
+                source = await camera.stream_source()
+                if not source:
+                    return None
 
             return _media_source_for_camera(camera, content_type)
 
