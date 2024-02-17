@@ -247,9 +247,13 @@ class BringTodoListEntity(
         item_name: str | None = None,
     ) -> None:
         """Send a push notification to members of the To-Do list."""
+        if notification_type is BringNotificationType.URGENT_MESSAGE and not item_name:
+            raise HomeAssistantError(
+                "Item name is required for Breaking news notification"
+            )
         try:
-            await self.coordinator.bring.notifyAsync(
-                self.bring_list["listUuid"], notification_type, item_name or None
+            await self.coordinator.bring.notify(
+                self._list_uuid, notification_type, item_name or None
             )
         except BringRequestException as e:
             raise HomeAssistantError(
