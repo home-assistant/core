@@ -323,21 +323,17 @@ async def async_get_still_stream(
             event.set()
             return
 
-        # Chrome shows the n-1 frame so send the frame twice
-        # https://issues.chromium.org/issues/41199053
-        # https://issues.chromium.org/issues/40791855
+        header = bytes(
+            f"Content-Type: {image_entity.content_type}\r\n"
+            f"Content-Length: {len(img_bytes)}\r\n\r\n",
+            "utf-8",
+        )
+        frame = boundary + header + img_bytes
         try:
-            await response.write(
-                boundary
-                + bytes(
-                    f"Content-Type: {image_entity.content_type}\r\n"
-                    f"Content-Length: {len(img_bytes)}\r\n\r\n",
-                    "utf-8",
-                )
-                + img_bytes
-                + boundary
-                + img_bytes
-            )
+            # Chrome shows the n-1 frame so send the frame twice
+            # https://issues.chromium.org/issues/41199053
+            # https://issues.chromium.org/issues/40791855
+            await response.write(frame + frame)
             await response.drain()
         except:
             event.set()
