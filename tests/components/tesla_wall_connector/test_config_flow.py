@@ -115,7 +115,7 @@ async def test_dhcp_can_finish(
         data=dhcp.DhcpServiceInfo(
             hostname="teslawallconnector_abc",
             ip="1.2.3.4",
-            macaddress="DC:44:27:12:12",
+            macaddress="aadc44271212",
         ),
     )
     await hass.async_block_till_done()
@@ -148,7 +148,7 @@ async def test_dhcp_already_exists(
         data=dhcp.DhcpServiceInfo(
             hostname="teslawallconnector_aabbcc",
             ip="1.2.3.4",
-            macaddress="aa:bb:cc:dd:ee:ff",
+            macaddress="aabbccddeeff",
         ),
     )
     await hass.async_block_till_done()
@@ -172,7 +172,7 @@ async def test_dhcp_error_from_wall_connector(
             data=dhcp.DhcpServiceInfo(
                 hostname="teslawallconnector_aabbcc",
                 ip="1.2.3.4",
-                macaddress="aa:bb:cc:dd:ee:ff",
+                macaddress="aabbccddeeff",
             ),
         )
         await hass.async_block_till_done()

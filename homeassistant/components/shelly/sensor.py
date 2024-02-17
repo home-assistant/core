@@ -957,11 +957,15 @@ RPC_SENSORS: Final = {
         name="Analog input",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda config, _status, key: (config[key]["enable"] is False),
     ),
     "analoginput_xpercent": RpcSensorDescription(
         key="input",
         sub_key="xpercent",
         name="Analog value",
+        removal_condition=lambda config, status, key: (
+            config[key]["enable"] is False or status[key].get("xpercent") is None
+        ),
     ),
     "pulse_counter": RpcSensorDescription(
         key="input",

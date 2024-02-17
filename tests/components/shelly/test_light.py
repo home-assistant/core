@@ -1,5 +1,5 @@
 """Tests for Shelly light platform."""
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from aioshelly.const import (
     MODEL_BULB,
@@ -35,6 +35,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration, mutate_rpc_device_status
 from .conftest import mock_white_light_set_state
@@ -44,7 +45,7 @@ LIGHT_BLOCK_ID = 2
 
 
 async def test_block_device_rgbw_bulb(
-    hass: HomeAssistant, mock_block_device, entity_registry
+    hass: HomeAssistant, mock_block_device: Mock, entity_registry: EntityRegistry
 ) -> None:
     """Test block device RGBW bulb."""
     entity_id = "light.test_name_channel_1"
@@ -126,9 +127,9 @@ async def test_block_device_rgbw_bulb(
 
 async def test_block_device_rgb_bulb(
     hass: HomeAssistant,
-    mock_block_device,
-    monkeypatch,
-    entity_registry,
+    mock_block_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test block device RGB bulb."""
@@ -235,9 +236,9 @@ async def test_block_device_rgb_bulb(
 
 async def test_block_device_white_bulb(
     hass: HomeAssistant,
-    mock_block_device,
-    entity_registry,
-    monkeypatch,
+    mock_block_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device white bulb."""
     entity_id = "light.test_name_channel_1"
@@ -312,7 +313,11 @@ async def test_block_device_white_bulb(
     ],
 )
 async def test_block_device_support_transition(
-    hass: HomeAssistant, mock_block_device, entity_registry, model, monkeypatch
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    entity_registry: EntityRegistry,
+    model: str,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device supports transition."""
     entity_id = "light.test_name_channel_1"
@@ -363,7 +368,10 @@ async def test_block_device_support_transition(
 
 
 async def test_block_device_relay_app_type_light(
-    hass: HomeAssistant, mock_block_device, entity_registry, monkeypatch
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device relay in app type set to light mode."""
     entity_id = "light.test_name_channel_1"
@@ -425,7 +433,7 @@ async def test_block_device_relay_app_type_light(
 
 
 async def test_block_device_no_light_blocks(
-    hass: HomeAssistant, mock_block_device, monkeypatch
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device without light blocks."""
     monkeypatch.setattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "type", "roller")
@@ -434,7 +442,10 @@ async def test_block_device_no_light_blocks(
 
 
 async def test_rpc_device_switch_type_lights_mode(
-    hass: HomeAssistant, mock_rpc_device, entity_registry, monkeypatch
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC device with switch in consumption type lights mode."""
     entity_id = "light.test_switch_0"
@@ -467,7 +478,10 @@ async def test_rpc_device_switch_type_lights_mode(
 
 
 async def test_rpc_light(
-    hass: HomeAssistant, mock_rpc_device, entity_registry, monkeypatch
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC light."""
     entity_id = f"{LIGHT_DOMAIN}.test_light_0"

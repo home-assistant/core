@@ -19,8 +19,9 @@ TEST_HOST_HA = "9.10.11.12"
 TEST_HOST_ANY = "any"
 TEST_API_KEY = "12ab345c-d67e-8f"
 TEST_API_KEY2 = "f8e76dc5-43ba-21"
-TEST_MAC = "ab:cd:ef:gh"
-TEST_MAC2 = "ij:kl:mn:op"
+TEST_MAC = "ab:bb:cc:dd:ee:ff"
+TEST_MAC2 = "ff:ee:dd:cc:bb:aa"
+DHCP_FORMATTED_MAC = "aabbccddeeff"
 TEST_DEVICE_LIST = {TEST_MAC: Mock()}
 
 TEST_DISCOVERY_1 = {
@@ -332,7 +333,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="MOTION_abcdef",
-        macaddress=TEST_MAC,
+        macaddress=DHCP_FORMATTED_MAC,
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -366,7 +367,7 @@ async def test_dhcp_flow_abort(hass: HomeAssistant) -> None:
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="MOTION_abcdef",
-        macaddress=TEST_MAC,
+        macaddress=DHCP_FORMATTED_MAC,
     )
 
     with patch(
@@ -386,7 +387,7 @@ async def test_dhcp_flow_abort_invalid_response(hass: HomeAssistant) -> None:
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="MOTION_abcdef",
-        macaddress=TEST_MAC,
+        macaddress=DHCP_FORMATTED_MAC,
     )
 
     with patch(

@@ -34,7 +34,7 @@ DHCP_DATA = {**BASE_DATA, "host": DHCP_IP}
             dhcp.DhcpServiceInfo(
                 hostname="RuuviGateway1234",
                 ip=DHCP_IP,
-                macaddress="12:34:56:78:90:ab",
+                macaddress="1234567890ab",
             ),
             {"source": config_entries.SOURCE_DHCP},
             DHCP_DATA,

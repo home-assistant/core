@@ -8,6 +8,7 @@ from aioelectricitymaps import (
     ElectricityMaps,
     ElectricityMapsError,
     ElectricityMapsInvalidTokenError,
+    ElectricityMapsNoDataError,
 )
 import voluptuous as vol
 
@@ -151,6 +152,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await fetch_latest_carbon_intensity(self.hass, em, data)
             except ElectricityMapsInvalidTokenError:
                 errors["base"] = "invalid_auth"
+            except ElectricityMapsNoDataError:
+                errors["base"] = "no_data"
             except ElectricityMapsError:
                 errors["base"] = "unknown"
             else:

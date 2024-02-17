@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Iterable, Mapping
 import logging
 import string
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
@@ -204,6 +204,11 @@ class _TranslationCache:
         self.loaded: dict[str, set[str]] = {}
         self.cache: dict[str, dict[str, dict[str, dict[str, str]]]] = {}
         self.lock = asyncio.Lock()
+
+    @callback
+    def async_is_loaded(self, language: str, components: set[str]) -> bool:
+        """Return if the given components are loaded for the language."""
+        return components.issubset(self.loaded.get(language, set()))
 
     async def async_load(
         self,
@@ -465,20 +470,41 @@ def async_setup(hass: HomeAssistant) -> None:
 
     Listeners load translations for every loaded component and after config change.
     """
+    cache = _TranslationCache(hass)
+    current_language = hass.config.language
+    hass.data[TRANSLATION_FLATTEN_CACHE] = cache
 
-    hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
+    @callback
+    def _async_load_translations_filter(event: Event) -> bool:
+        """Filter out unwanted events."""
+        nonlocal current_language
+        if (
+            new_language := event.data.get("language")
+        ) and new_language != current_language:
+            current_language = new_language
+            return True
+        return False
 
-    async def load_translations(event: Event) -> None:
-        if "language" in event.data:
-            language = hass.config.language
-            _LOGGER.debug("Loading translations for language: %s", language)
-            await _async_load_state_translations_to_cache(hass, language, None)
+    async def _async_load_translations(event: Event) -> None:
+        new_language = event.data["language"]
+        _LOGGER.debug("Loading translations for language: %s", new_language)
+        await _async_load_state_translations_to_cache(hass, new_language, None)
 
-    async def load_translations_for_component(event: Event) -> None:
-        component = event.data.get("component")
+    @callback
+    def _async_load_translations_for_component_filter(event: Event) -> bool:
+        """Filter out unwanted events."""
+        component: str | None = event.data.get("component")
         # Platforms don't have their own translations, skip them
-        if component is None or "." in str(component):
-            return
+        return bool(
+            component
+            and "." not in component
+            and not cache.async_is_loaded(hass.config.language, {component})
+        )
+
+    async def _async_load_translations_for_component(event: Event) -> None:
+        component: str | None = event.data.get("component")
+        if TYPE_CHECKING:
+            assert component is not None
         language = hass.config.language
         _LOGGER.debug(
             "Loading translations for language: %s and component: %s",
@@ -487,8 +513,16 @@ def async_setup(hass: HomeAssistant) -> None:
         )
         await _async_load_state_translations_to_cache(hass, language, component)
 
-    hass.bus.async_listen(EVENT_COMPONENT_LOADED, load_translations_for_component)
-    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, load_translations)
+    hass.bus.async_listen(
+        EVENT_COMPONENT_LOADED,
+        _async_load_translations_for_component,
+        event_filter=_async_load_translations_for_component_filter,
+    )
+    hass.bus.async_listen(
+        EVENT_CORE_CONFIG_UPDATE,
+        _async_load_translations,
+        event_filter=_async_load_translations_filter,
+    )
 
 
 @callback

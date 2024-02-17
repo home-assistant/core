@@ -37,12 +37,12 @@ from .entity import FlexitEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Flexit Nordic unit."""
     coordinator: FlexitCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_devices([FlexitClimateEntity(coordinator)])
+    async_add_entities([FlexitClimateEntity(coordinator)])
 
 
 class FlexitClimateEntity(FlexitEntity, ClimateEntity):

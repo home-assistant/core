@@ -30,7 +30,8 @@ from homeassistant.loader import (
 )
 
 
-async def async_setup(hass: HomeAssistant) -> bool:
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Home Assistant views."""
     hass.http.register_view(ConfigManagerEntryIndexView)
     hass.http.register_view(ConfigManagerEntryResourceView)
@@ -156,6 +157,12 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
                 text=f"Failed dependencies {', '.join(exc.failed_dependencies)}",
                 status=HTTPStatus.BAD_REQUEST,
             )
+
+    def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Return context."""
+        context = super().get_context(data)
+        context["source"] = config_entries.SOURCE_USER
+        return context
 
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
@@ -508,10 +515,10 @@ async def async_matching_config_entries(
     hass: HomeAssistant, type_filter: list[str] | None, domain: str | None
 ) -> list[dict[str, Any]]:
     """Return matching config entries by type and/or domain."""
-    kwargs = {}
     if domain:
-        kwargs["domain"] = domain
-    entries = hass.config_entries.async_entries(**kwargs)
+        entries = hass.config_entries.async_entries(domain)
+    else:
+        entries = hass.config_entries.async_entries()
 
     if not type_filter:
         return [entry_json(entry) for entry in entries]

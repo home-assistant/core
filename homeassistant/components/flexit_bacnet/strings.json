@@ -22,6 +22,38 @@
         "name": "Air filter polluted"
       }
     },
+    "number": {
+      "away_extract_fan_setpoint": {
+        "name": "Away extract fan setpoint"
+      },
+      "away_supply_fan_setpoint": {
+        "name": "Away supply fan setpoint"
+      },
+      "cooker_hood_extract_fan_setpoint": {
+        "name": "Cooker hood extract fan setpoint"
+      },
+      "cooker_hood_supply_fan_setpoint": {
+        "name": "Cooker hood supply fan setpoint"
+      },
+      "fireplace_extract_fan_setpoint": {
+        "name": "Fireplace extract fan setpoint"
+      },
+      "fireplace_supply_fan_setpoint": {
+        "name": "Fireplace supply fan setpoint"
+      },
+      "high_extract_fan_setpoint": {
+        "name": "High extract fan setpoint"
+      },
+      "high_supply_fan_setpoint": {
+        "name": "High supply fan setpoint"
+      },
+      "home_extract_fan_setpoint": {
+        "name": "Home extract fan setpoint"
+      },
+      "home_supply_fan_setpoint": {
+        "name": "Home supply fan setpoint"
+      }
+    },
     "sensor": {
       "outside_air_temperature": {
         "name": "Outside air temperature"

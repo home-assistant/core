@@ -32,7 +32,7 @@ class GoalZeroFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle dhcp discovery."""
         self.ip_address = discovery_info.ip
 
-        await self.async_set_unique_id(discovery_info.macaddress)
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.ip_address})
         self._async_abort_entries_match({CONF_HOST: self.ip_address})
 
