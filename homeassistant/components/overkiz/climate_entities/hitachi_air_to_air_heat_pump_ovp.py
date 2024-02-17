@@ -90,6 +90,8 @@ FAN_MODES_TO_OVERKIZ: dict[str, str] = {
     FAN_SILENT: OverkizCommandParam.SILENT,
 }
 
+_attr_fan_modes = [*FAN_MODES_TO_OVERKIZ]
+
 
 class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     """Representation of Hitachi Air To Air HeatPump."""
@@ -131,7 +133,8 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         if (
             mode_change_state := self.device.states[MODE_CHANGE_STATE]
         ) and mode_change_state.value_as_str:
-            # The OVP protocol has 'auto cooling' and 'auto heating' values that are equivalent to the HLRRWIFI protocol without spaces
+            # The OVP protocol has 'auto cooling' and 'auto heating' values
+            # that are equivalent to the HLRRWIFI protocol without spaces
             sanitized_value = mode_change_state.value_as_str.replace(" ", "").lower()
             return OVERKIZ_TO_HVAC_MODES[sanitized_value]
 
@@ -154,11 +157,6 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             return OVERKIZ_TO_FAN_MODES[state.value_as_str]
 
         return None
-
-    @property
-    def fan_modes(self) -> list[str] | None:
-        """Return the list of available fan modes."""
-        return [*FAN_MODES_TO_OVERKIZ]
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -262,7 +260,12 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     def _control_backfill(
         self, value: str | None, state_name: str, fallback_value: str
     ) -> str:
-        """Overkiz doesn't accept commands with undefined parameters. This function is guaranteed to return a `str` which is the provided `value` if set, or the current device state if set, or the provided `fallback_value` otherwise."""
+        """Return a parameter value which will be accepted in a command by Overkiz.
+
+        Overkiz doesn't accept commands with undefined parameters. This function
+        is guaranteed to return a `str` which is the provided `value` if set, or
+        the current device state if set, or the provided `fallback_value` otherwise.
+        """
         if value:
             return value
         state = self.device.states[state_name]
@@ -279,7 +282,11 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         swing_mode: str | None = None,
         leave_home: str | None = None,
     ) -> None:
-        """Execute globalControl command with all parameters. There is no option to only set a single parameter, without passing all other values."""
+        """Execute globalControl command with all parameters.
+
+        There is no option to only set a single parameter, without passing
+        all other values.
+        """
 
         main_operation = self._control_backfill(
             main_operation, MAIN_OPERATION_STATE, OverkizCommandParam.ON
@@ -293,10 +300,10 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             hvac_mode,
             MODE_CHANGE_STATE,
             OverkizCommandParam.AUTO,
-        ).lower()  # Overkiz can return states that have uppercase characters which are not accepted back as commands
-        if hvac_mode.replace(
-            " ", ""
-        ) in [  # Overkiz can return states like 'auto cooling' or 'autoHeating' that are not valid commands and need to be converted to 'auto'
+        ).lower()  # Overkiz returns uppercase states that are not acceptable commands
+        if hvac_mode.replace(" ", "") in [
+            # Overkiz returns compound states like 'auto cooling' or 'autoHeating'
+            # that are not valid commands and need to be mapped to 'auto'
             OverkizCommandParam.AUTOCOOLING,
             OverkizCommandParam.AUTOHEATING,
         ]:
@@ -308,7 +315,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             OverkizCommandParam.STOP,
         )
 
-        # OVP protocol has an AUTO_MANU parameter that is not controlled by HA (except if we want to club it into the PRESET property) and which is getting turned "off" when the device is on Holiday mode
+        # AUTO_MANU parameter is not controlled by HA and is turned "off" when the device is on Holiday mode
         auto_manu_mode = self._control_backfill(
             None, AUTO_MANU_MODE_STATE, OverkizCommandParam.MANU
         )
@@ -319,7 +326,8 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         temperature_command = None
         target_temperature = target_temperature or self.target_temperature
         if hvac_mode == OverkizCommandParam.AUTO:
-            # In the hvac mode AUTO, the temperature command parameter is a temperature_change which is the delta between a pivot temperature (23) and the target temperature
+            # In hvac mode AUTO, the temperature command parameter is a temperature_change
+            # which is the delta between a pivot temperature (25) and the target temperature
             temperature_change = 0
 
             if target_temperature:
