@@ -20,7 +20,7 @@ from .entity import StarlinkEntity
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up all binary sensors for this entry."""
+    """Set up all time entities for this entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
@@ -28,7 +28,7 @@ async def async_setup_entry(
     )
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlinkTimeEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -37,11 +37,11 @@ class StarlinkTimeEntityDescriptionMixin:
     available_fn: Callable[[StarlinkData], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class StarlinkTimeEntityDescription(
     TimeEntityDescription, StarlinkTimeEntityDescriptionMixin
 ):
-    """Describes a Starlink switch entity."""
+    """Describes a Starlink time entity."""
 
 
 class StarlinkTimeEntity(StarlinkEntity, TimeEntity):
