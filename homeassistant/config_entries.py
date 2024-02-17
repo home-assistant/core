@@ -7,6 +7,7 @@ from collections.abc import (
     Callable,
     Coroutine,
     Generator,
+    Hashable,
     Iterable,
     Mapping,
     ValuesView,
@@ -49,6 +50,7 @@ from .helpers.event import (
 )
 from .helpers.frame import report
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
+from .loader import async_suggest_report_issue
 from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
 from .util import uuid as uuid_util
 from .util.decorator import Registry
@@ -215,6 +217,18 @@ class OperationNotAllowed(ConfigError):
 
 UpdateListenerType = Callable[[HomeAssistant, "ConfigEntry"], Coroutine[Any, Any, None]]
 
+FROZEN_CONFIG_ENTRY_ATTRS = {"entry_id", "domain", "state", "reason"}
+UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
+    "unique_id",
+    "title",
+    "data",
+    "options",
+    "pref_disable_new_entities",
+    "pref_disable_polling",
+    "minor_version",
+    "version",
+}
+
 
 class ConfigEntry:
     """Hold a configuration entry."""
@@ -250,6 +264,19 @@ class ConfigEntry:
         "_supports_options",
     )
 
+    entry_id: str
+    domain: str
+    title: str
+    data: MappingProxyType[str, Any]
+    options: MappingProxyType[str, Any]
+    unique_id: str | None
+    state: ConfigEntryState
+    reason: str | None
+    pref_disable_new_entities: bool
+    pref_disable_polling: bool
+    version: int
+    minor_version: int
+
     def __init__(
         self,
         *,
@@ -268,44 +295,45 @@ class ConfigEntry:
         disabled_by: ConfigEntryDisabler | None = None,
     ) -> None:
         """Initialize a config entry."""
+        _setter = object.__setattr__
         # Unique id of the config entry
-        self.entry_id = entry_id or uuid_util.random_uuid_hex()
+        _setter(self, "entry_id", entry_id or uuid_util.random_uuid_hex())
 
         # Version of the configuration.
-        self.version = version
-        self.minor_version = minor_version
+        _setter(self, "version", version)
+        _setter(self, "minor_version", minor_version)
 
         # Domain the configuration belongs to
-        self.domain = domain
+        _setter(self, "domain", domain)
 
         # Title of the configuration
-        self.title = title
+        _setter(self, "title", title)
 
         # Config data
-        self.data = MappingProxyType(data)
+        _setter(self, "data", MappingProxyType(data))
 
         # Entry options
-        self.options = MappingProxyType(options or {})
+        _setter(self, "options", MappingProxyType(options or {}))
 
         # Entry system options
         if pref_disable_new_entities is None:
             pref_disable_new_entities = False
 
-        self.pref_disable_new_entities = pref_disable_new_entities
+        _setter(self, "pref_disable_new_entities", pref_disable_new_entities)
 
         if pref_disable_polling is None:
             pref_disable_polling = False
 
-        self.pref_disable_polling = pref_disable_polling
+        _setter(self, "pref_disable_polling", pref_disable_polling)
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
 
         # State of the entry (LOADED, NOT_LOADED)
-        self.state = state
+        _setter(self, "state", state)
 
         # Unique ID of this entry.
-        self.unique_id = unique_id
+        _setter(self, "unique_id", unique_id)
 
         # Config entry is disabled
         if isinstance(disabled_by, str) and not isinstance(
@@ -335,7 +363,7 @@ class ConfigEntry:
         self.update_listeners: list[UpdateListenerType] = []
 
         # Reason why config entry is in a failed state
-        self.reason: str | None = None
+        _setter(self, "reason", None)
 
         # Function to cancel a scheduled retry
         self._async_cancel_retry_setup: Callable[[], Any] | None = None
@@ -364,6 +392,33 @@ class ConfigEntry:
             f"title={self.title} state={self.state} unique_id={self.unique_id}>"
         )
 
+    def __setattr__(self, key: str, value: Any) -> None:
+        """Set an attribute."""
+        if key in UPDATE_ENTRY_CONFIG_ENTRY_ATTRS:
+            if key == "unique_id":
+                # Setting unique_id directly will corrupt internal state
+                # There is no deprecation period for this key
+                # as changing them will corrupt internal state
+                # so we raise an error here
+                raise AttributeError(
+                    "unique_id cannot be changed directly, use async_update_entry instead"
+                )
+            report(
+                f'sets "{key}" directly to update a config entry. This is deprecated and will'
+                " stop working in Home Assistant 2024.9, it should be updated to use"
+                " async_update_entry instead",
+                error_if_core=False,
+            )
+
+        elif key in FROZEN_CONFIG_ENTRY_ATTRS:
+            # These attributes are frozen and cannot be changed
+            # There is no deprecation period for these
+            # as changing them will corrupt internal state
+            # so we raise an error here
+            raise AttributeError(f"{key} cannot be changed")
+
+        super().__setattr__(key, value)
+
     @property
     def supports_options(self) -> bool:
         """Return if entry supports config options."""
@@ -383,12 +438,12 @@ class ConfigEntry:
         if self.source == SOURCE_IGNORE or self.disabled_by:
             return
 
-        if integration is None:
+        if integration is None and not (integration := self._integration_for_domain):
             integration = await loader.async_get_integration(hass, self.domain)
             self._integration_for_domain = integration
 
         # Only store setup result as state if it was not forwarded.
-        if self.domain == integration.domain:
+        if domain_is_integration := self.domain == integration.domain:
             self._async_set_state(hass, ConfigEntryState.SETUP_IN_PROGRESS, None)
 
         if self.supports_unload is None:
@@ -407,13 +462,13 @@ class ConfigEntry:
                 self.domain,
                 err,
             )
-            if self.domain == integration.domain:
+            if domain_is_integration:
                 self._async_set_state(
                     hass, ConfigEntryState.SETUP_ERROR, "Import error"
                 )
             return
 
-        if self.domain == integration.domain:
+        if domain_is_integration:
             try:
                 integration.get_platform("config_flow")
             except ImportError as err:
@@ -473,12 +528,12 @@ class ConfigEntry:
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as exc:
-            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, str(exc) or None)
+            message = str(exc)
+            self._async_set_state(hass, ConfigEntryState.SETUP_RETRY, message or None)
             wait_time = 2 ** min(self._tries, 4) * 5 + (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
-            message = str(exc)
             ready_message = f"ready yet: {message}" if message else "ready yet"
             _LOGGER.debug(
                 (
@@ -510,16 +565,19 @@ class ConfigEntry:
             )
             result = False
 
-        # Only store setup result as state if it was not forwarded.
-        if self.domain != integration.domain:
-            return
-
         #
-        # It is important that this function does not yield to the
-        # event loop by using `await` or `async with` or similar until
-        # after the state has been set. Otherwise we risk that any `call_soon`s
+        # After successfully calling async_setup_entry, it is important that this function
+        # does not yield to the event loop by using `await` or `async with` or
+        # similar until after the state has been set by calling self._async_set_state.
+        #
+        # Otherwise we risk that any `call_soon`s
         # created by an integration will be executed before the state is set.
         #
+
+        # Only store setup result as state if it was not forwarded.
+        if not domain_is_integration:
+            return
+
         if result:
             self._async_set_state(hass, ConfigEntryState.LOADED, None)
         else:
@@ -655,8 +713,9 @@ class ConfigEntry:
         """Set the state of the config entry."""
         if state not in NO_RESET_TRIES_STATES:
             self._tries = 0
-        self.state = state
-        self.reason = reason
+        _setter = object.__setattr__
+        _setter(self, "state", state)
+        _setter(self, "reason", reason)
         async_dispatcher_send(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
         )
@@ -1124,9 +1183,10 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
     - domain -> unique_id -> ConfigEntry
     """
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the container."""
         super().__init__()
+        self._hass = hass
         self._domain_index: dict[str, list[ConfigEntry]] = {}
         self._domain_unique_id_index: dict[str, dict[str, ConfigEntry]] = {}
 
@@ -1143,10 +1203,33 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
             _LOGGER.error("An entry with the id %s already exists", entry_id)
             self._unindex_entry(entry_id)
         data[entry_id] = entry
+        self._index_entry(entry)
+
+    def _index_entry(self, entry: ConfigEntry) -> None:
+        """Index an entry."""
         self._domain_index.setdefault(entry.domain, []).append(entry)
         if entry.unique_id is not None:
+            unique_id_hash = entry.unique_id
+            # Guard against integrations using unhashable unique_id
+            # In HA Core 2024.9, we should remove the guard and instead fail
+            if not isinstance(entry.unique_id, Hashable):
+                unique_id_hash = str(entry.unique_id)  # type: ignore[unreachable]
+                report_issue = async_suggest_report_issue(
+                    self._hass, integration_domain=entry.domain
+                )
+                _LOGGER.error(
+                    (
+                        "Config entry '%s' from integration %s has an invalid unique_id"
+                        " '%s', please %s"
+                    ),
+                    entry.title,
+                    entry.domain,
+                    entry.unique_id,
+                    report_issue,
+                )
+
             self._domain_unique_id_index.setdefault(entry.domain, {})[
-                entry.unique_id
+                unique_id_hash
             ] = entry
 
     def _unindex_entry(self, entry_id: str) -> None:
@@ -1157,6 +1240,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         if not self._domain_index[domain]:
             del self._domain_index[domain]
         if (unique_id := entry.unique_id) is not None:
+            # Check type first to avoid expensive isinstance call
+            if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
+                unique_id = str(entry.unique_id)  # type: ignore[unreachable]
             del self._domain_unique_id_index[domain][unique_id]
             if not self._domain_unique_id_index[domain]:
                 del self._domain_unique_id_index[domain]
@@ -1166,6 +1252,16 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self._unindex_entry(entry_id)
         super().__delitem__(entry_id)
 
+    def update_unique_id(self, entry: ConfigEntry, new_unique_id: str | None) -> None:
+        """Update unique id for an entry.
+
+        This method mutates the entry with the new unique id and updates the indexes.
+        """
+        entry_id = entry.entry_id
+        self._unindex_entry(entry_id)
+        object.__setattr__(entry, "unique_id", new_unique_id)
+        self._index_entry(entry)
+
     def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
         """Get entries for a domain."""
         return self._domain_index.get(domain, [])
@@ -1174,6 +1270,9 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self, domain: str, unique_id: str
     ) -> ConfigEntry | None:
         """Get entry by domain and unique id."""
+        # Check type first to avoid expensive isinstance call
+        if type(unique_id) is not str and not isinstance(unique_id, Hashable):  # noqa: E721
+            unique_id = str(unique_id)  # type: ignore[unreachable]
         return self._domain_unique_id_index.get(domain, {}).get(unique_id)
 
 
@@ -1189,7 +1288,7 @@ class ConfigEntries:
         self.flow = ConfigEntriesFlowManager(hass, self, hass_config)
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
-        self._entries = ConfigEntryItems()
+        self._entries = ConfigEntryItems(hass)
         self._store = storage.Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
@@ -1215,11 +1314,27 @@ class ConfigEntries:
         return self._entries.data.get(entry_id)
 
     @callback
-    def async_entries(self, domain: str | None = None) -> list[ConfigEntry]:
+    def async_entries(
+        self,
+        domain: str | None = None,
+        include_ignore: bool = True,
+        include_disabled: bool = True,
+    ) -> list[ConfigEntry]:
         """Return all entries or entries for a specific domain."""
         if domain is None:
-            return list(self._entries.values())
-        return list(self._entries.get_entries_for_domain(domain))
+            entries: Iterable[ConfigEntry] = self._entries.values()
+        else:
+            entries = self._entries.get_entries_for_domain(domain)
+
+        if include_ignore and include_disabled:
+            return list(entries)
+
+        return [
+            entry
+            for entry in entries
+            if (include_ignore or entry.source != SOURCE_IGNORE)
+            and (include_disabled or not entry.disabled_by)
+        ]
 
     @callback
     def async_entry_for_domain_unique_id(
@@ -1314,10 +1429,10 @@ class ConfigEntries:
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_shutdown)
 
         if config is None:
-            self._entries = ConfigEntryItems()
+            self._entries = ConfigEntryItems(self.hass)
             return
 
-        entries: ConfigEntryItems = ConfigEntryItems()
+        entries: ConfigEntryItems = ConfigEntryItems(self.hass)
         for entry in config["entries"]:
             pref_disable_new_entities = entry.get("pref_disable_new_entities")
 
@@ -1468,12 +1583,14 @@ class ConfigEntries:
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
-        title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
+        minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
+        title: str | UndefinedType = UNDEFINED,
+        unique_id: str | None | UndefinedType = UNDEFINED,
+        version: int | UndefinedType = UNDEFINED,
     ) -> bool:
         """Update a config entry.
 
@@ -1483,34 +1600,37 @@ class ConfigEntries:
         If the entry was not changed, the update_listeners are
         not fired and this function returns False
         """
+        if entry.entry_id not in self._entries:
+            raise UnknownEntry(entry.entry_id)
+
         changed = False
+        _setter = object.__setattr__
 
         if unique_id is not UNDEFINED and entry.unique_id != unique_id:
             # Reindex the entry if the unique_id has changed
-            entry_id = entry.entry_id
-            del self._entries[entry_id]
-            entry.unique_id = unique_id
-            self._entries[entry_id] = entry
+            self._entries.update_unique_id(entry, unique_id)
             changed = True
 
         for attr, value in (
-            ("title", title),
+            ("minor_version", minor_version),
             ("pref_disable_new_entities", pref_disable_new_entities),
             ("pref_disable_polling", pref_disable_polling),
+            ("title", title),
+            ("version", version),
         ):
             if value is UNDEFINED or getattr(entry, attr) == value:
                 continue
 
-            setattr(entry, attr, value)
+            _setter(entry, attr, value)
             changed = True
 
         if data is not UNDEFINED and entry.data != data:
             changed = True
-            entry.data = MappingProxyType(data)
+            _setter(entry, "data", MappingProxyType(data))
 
         if options is not UNDEFINED and entry.options != options:
             changed = True
-            entry.options = MappingProxyType(options)
+            _setter(entry, "options", MappingProxyType(options))
 
         if not changed:
             return False
@@ -1789,16 +1909,10 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         If the flow is user initiated, filter out ignored entries,
         unless include_ignore is True.
         """
-        config_entries = self.hass.config_entries.async_entries(self.handler)
-
-        if (
-            include_ignore is True
-            or include_ignore is None
-            and self.source != SOURCE_USER
-        ):
-            return config_entries
-
-        return [entry for entry in config_entries if entry.source != SOURCE_IGNORE]
+        return self.hass.config_entries.async_entries(
+            self.handler,
+            include_ignore or (include_ignore is None and self.source != SOURCE_USER),
+        )
 
     @callback
     def _async_current_ids(self, include_ignore: bool = True) -> set[str | None]:
@@ -2249,7 +2363,7 @@ async def _load_integration(
             domain,
             err,
         )
-        raise data_entry_flow.UnknownHandler
+        raise data_entry_flow.UnknownHandler from err
 
 
 async def _async_get_flow_handler(

@@ -219,7 +219,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         try:
             async with asyncio.timeout(APP_LIST_DELAY):
                 await self._app_list_event.wait()
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             # No need to try again
             self._app_list_event.set()
             LOGGER.debug("Failed to load app list from %s: %r", self._host, err)

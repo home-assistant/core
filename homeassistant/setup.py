@@ -331,7 +331,7 @@ async def _async_setup_component(
             if task:
                 async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
                     result = await task
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error(
                 (
                     "Setup of '%s' is taking longer than %s seconds."
@@ -370,15 +370,18 @@ async def _async_setup_component(
         # call to avoid a deadlock when forwarding platforms
         hass.config.components.add(domain)
 
-        await asyncio.gather(
-            *(
-                asyncio.create_task(
-                    entry.async_setup(hass, integration=integration),
-                    name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
+        if entries := hass.config_entries.async_entries(
+            domain, include_ignore=False, include_disabled=False
+        ):
+            await asyncio.gather(
+                *(
+                    asyncio.create_task(
+                        entry.async_setup(hass, integration=integration),
+                        name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
+                    )
+                    for entry in entries
                 )
-                for entry in hass.config_entries.async_entries(domain)
             )
-        )
 
     # Cleanup
     if domain in hass.data[DATA_SETUP]:
@@ -519,12 +522,19 @@ def _async_when_setup(
             listener()
         await when_setup()
 
-    async def _loaded_event(event: core.Event) -> None:
-        """Call the callback if we loaded the expected component."""
-        if event.data[ATTR_COMPONENT] == component:
-            await _matched_event(event)
+    @callback
+    def _async_is_component_filter(event: core.Event) -> bool:
+        """Check if the event is for the component."""
+        event_comp: str = event.data[ATTR_COMPONENT]
+        return event_comp == component
 
-    listeners.append(hass.bus.async_listen(EVENT_COMPONENT_LOADED, _loaded_event))
+    listeners.append(
+        hass.bus.async_listen(
+            EVENT_COMPONENT_LOADED,
+            _matched_event,
+            event_filter=_async_is_component_filter,
+        )
+    )
     if start_event:
         listeners.append(
             hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
