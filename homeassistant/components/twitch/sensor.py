@@ -174,7 +174,7 @@ class TwitchSensor(SensorEntity):
             user.id, broadcaster_id=self._channel.id
         )
         self._attr_extra_state_attributes[ATTR_FOLLOW] = follows.total > 0
-        if follows.total:
+        if follows.total and len(follows.data) > 0:
             self._attr_extra_state_attributes[ATTR_FOLLOW_SINCE] = follows.data[
                 0
             ].followed_at
