@@ -346,6 +346,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         # Migrate to CONF_TOKEN, which was added in 1.2
         new_data = dict(config_entry.data)
         new_data.setdefault(CONF_TOKEN, config_entry.data.get(CONF_API_KEY))
+        new_data.pop(CONF_API_KEY, None)
 
         hass.config_entries.async_update_entry(
             config_entry,
