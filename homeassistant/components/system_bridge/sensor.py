@@ -69,10 +69,10 @@ def cpu_speed(data: SystemBridgeCoordinatorData) -> float | None:
     return None
 
 
-def with_per_cpu(func):
+def with_per_cpu(func) -> Callable:
     """Wrap a function to ensure per CPU data is available."""
 
-    def wrapper(data: SystemBridgeCoordinatorData, index: int):
+    def wrapper(data: SystemBridgeCoordinatorData, index: int) -> float | None:
         """Wrap a function to ensure per CPU data is available."""
         if data.cpu.per_cpu is not None and index < len(data.cpu.per_cpu):
             return func(data.cpu.per_cpu[index])
@@ -93,50 +93,40 @@ def cpu_usage_per_cpu(per_cpu: PerCPU) -> float | None:
     return per_cpu.usage
 
 
-def get_display(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> Display | None:
-    """Return the Display."""
-    if index < len(data.displays):
-        return data.displays[index]
-    return None
+def with_display(func) -> Callable:
+    """Wrap a function to ensure a Display is available."""
+
+    def wrapper(data: SystemBridgeCoordinatorData, index: int) -> Display | None:
+        """Wrap a function to ensure a Display is available."""
+        if index < len(data.displays):
+            return func(data.displays[index])
+        return None
+
+    return wrapper
 
 
-def display_resolution_horizontal(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> int | None:
+@with_display
+def display_resolution_horizontal(display: Display) -> int | None:
     """Return the Display resolution horizontal."""
-    if (display := get_display(data, index)) is not None:
-        return display.resolution_horizontal
-    return None
+    return display.resolution_horizontal
 
 
-def display_resolution_vertical(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> int | None:
+@with_display
+def display_resolution_vertical(display: Display) -> int | None:
     """Return the Display resolution vertical."""
-    if (display := get_display(data, index)) is not None:
-        return display.resolution_vertical
-    return None
+    return display.resolution_vertical
 
 
-def display_refresh_rate(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> float | None:
+@with_display
+def display_refresh_rate(display: Display) -> float | None:
     """Return the Display refresh rate."""
-    if (display := get_display(data, index)) is not None:
-        return display.refresh_rate
-    return None
+    return display.refresh_rate
 
 
-def with_gpu(func):
+def with_gpu(func) -> Callable:
     """Wrap a function to ensure a GPU is available."""
 
-    def wrapper(data: SystemBridgeCoordinatorData, index: int):
+    def wrapper(data: SystemBridgeCoordinatorData, index: int) -> GPU | None:
         """Wrap a function to ensure a GPU is available."""
         if index < len(data.gpus):
             return func(data.gpus[index])
