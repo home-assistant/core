@@ -30,7 +30,7 @@ async def client(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
-    await entity_registry.async_setup(hass)
+    entity_registry.async_setup(hass)
     return await hass_ws_client(hass)
 
 

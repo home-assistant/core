@@ -1,0 +1,224 @@
+# serializer version: 1
+# name: test_custom_integrations
+  dict({
+    'certificate': False,
+    'custom_integrations': list([
+      dict({
+        'domain': 'test_package',
+        'version': <AwesomeVersion SemVer '1.2.3'>,
+      }),
+    ]),
+    'installation_type': 'Home Assistant Tests',
+    'integrations': list([
+    ]),
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_not_check_config_entries_if_yaml
+  dict({
+    'automation_count': 0,
+    'certificate': True,
+    'custom_integrations': list([
+    ]),
+    'installation_type': 'Home Assistant Tests',
+    'integration_count': 1,
+    'integrations': list([
+      'default_config',
+    ]),
+    'state_count': 0,
+    'user_count': 0,
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_base
+  dict({
+    'installation_type': 'Home Assistant Tests',
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_base_with_supervisor
+  dict({
+    'installation_type': 'Home Assistant Supervised',
+    'operating_system': dict({
+      'board': 'blue',
+      'version': '123',
+    }),
+    'supervisor': dict({
+      'arch': 'amd64',
+      'healthy': True,
+      'supported': True,
+    }),
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_statistics
+  dict({
+    'automation_count': 0,
+    'installation_type': 'Home Assistant Tests',
+    'integration_count': 1,
+    'state_count': 0,
+    'user_count': 0,
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_statistics_disabled_integration
+  dict({
+    'automation_count': 0,
+    'installation_type': 'Home Assistant Tests',
+    'integration_count': 0,
+    'state_count': 0,
+    'user_count': 0,
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_statistics_ignored_integration
+  dict({
+    'automation_count': 0,
+    'installation_type': 'Home Assistant Tests',
+    'integration_count': 0,
+    'state_count': 0,
+    'user_count': 0,
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_statistics_with_supervisor
+  dict({
+    'addon_count': 1,
+    'automation_count': 0,
+    'installation_type': 'Home Assistant Supervised',
+    'integration_count': 0,
+    'state_count': 0,
+    'supervisor': dict({
+      'arch': 'amd64',
+      'healthy': True,
+      'supported': True,
+    }),
+    'user_count': 0,
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_usage
+  dict({
+    'certificate': False,
+    'custom_integrations': list([
+    ]),
+    'installation_type': 'Home Assistant Tests',
+    'integrations': list([
+      'default_config',
+    ]),
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_usage_with_certificate
+  dict({
+    'certificate': True,
+    'custom_integrations': list([
+    ]),
+    'installation_type': 'Home Assistant Tests',
+    'integrations': list([
+    ]),
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_usage_with_supervisor
+  dict({
+    'addons': list([
+      dict({
+        'auto_update': False,
+        'protected': True,
+        'slug': 'test_addon',
+        'version': '1',
+      }),
+    ]),
+    'certificate': False,
+    'custom_integrations': list([
+    ]),
+    'installation_type': 'Home Assistant Supervised',
+    'integrations': list([
+    ]),
+    'supervisor': dict({
+      'arch': 'amd64',
+      'healthy': True,
+      'supported': True,
+    }),
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_with_energy_config
+  dict({
+    'certificate': False,
+    'custom_integrations': list([
+    ]),
+    'energy': dict({
+      'configured': True,
+    }),
+    'installation_type': 'Home Assistant Tests',
+    'integrations': list([
+    ]),
+    'recorder': dict({
+      'engine': 'sqlite',
+      'version': AwesomeVersion,
+    }),
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_with_no_energy
+  dict({
+    'certificate': False,
+    'custom_integrations': list([
+    ]),
+    'installation_type': 'Home Assistant Tests',
+    'integrations': list([
+    ]),
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_with_no_energy_config
+  dict({
+    'certificate': False,
+    'custom_integrations': list([
+    ]),
+    'energy': dict({
+      'configured': False,
+    }),
+    'installation_type': 'Home Assistant Tests',
+    'integrations': list([
+    ]),
+    'recorder': dict({
+      'engine': 'sqlite',
+      'version': AwesomeVersion,
+    }),
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---
+# name: test_send_with_recorder
+  dict({
+    'certificate': True,
+    'custom_integrations': list([
+    ]),
+    'installation_type': 'Home Assistant Tests',
+    'integrations': list([
+      'recorder',
+    ]),
+    'recorder': dict({
+      'engine': 'sqlite',
+      'version': AwesomeVersion,
+    }),
+    'uuid': 'abcdefg',
+    'version': '1970.1.0',
+  })
+# ---

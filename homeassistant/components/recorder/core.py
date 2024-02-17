@@ -187,6 +187,7 @@ class Recorder(threading.Thread):
         self.auto_purge = auto_purge
         self.auto_repack = auto_repack
         self.keep_days = keep_days
+        self.is_running: bool = False
         self._hass_started: asyncio.Future[object] = hass.loop.create_future()
         self.commit_interval = commit_interval
         self._queue: queue.SimpleQueue[RecorderTask | Event] = queue.SimpleQueue()
@@ -694,6 +695,7 @@ class Recorder(threading.Thread):
 
     def run(self) -> None:
         """Run the recorder thread."""
+        self.is_running = True
         try:
             self._run()
         except Exception:  # pylint: disable=broad-exception-caught
@@ -703,6 +705,7 @@ class Recorder(threading.Thread):
         finally:
             # Ensure shutdown happens cleanly if
             # anything goes wrong in the run loop
+            self.is_running = False
             self._shutdown()
 
     def _add_to_session(self, session: Session, obj: object) -> None:

@@ -6,9 +6,9 @@ from unittest.mock import Mock, call, patch
 
 import pytest
 
+from homeassistant import loader
 from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import HomeAssistant
-from homeassistant.generated import config_flows
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
@@ -18,7 +18,7 @@ from homeassistant.setup import async_setup_component
 def mock_config_flows():
     """Mock the config flows."""
     flows = {"integration": [], "helper": {}}
-    with patch.object(config_flows, "FLOWS", flows):
+    with patch.object(loader, "FLOWS", flows):
         yield flows
 
 
@@ -602,12 +602,21 @@ async def test_setup(hass: HomeAssistant):
         await hass.async_block_till_done()
         mock.assert_not_called()
 
+    # Should not be called if the language is the current language
     with patch(
         "homeassistant.helpers.translation._async_load_state_translations_to_cache",
     ) as mock:
         hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, {"language": "en"})
         await hass.async_block_till_done()
-        mock.assert_called_once_with(hass, hass.config.language, None)
+        mock.assert_not_called()
+
+    # Should be called if the language is different
+    with patch(
+        "homeassistant.helpers.translation._async_load_state_translations_to_cache",
+    ) as mock:
+        hass.bus.async_fire(EVENT_CORE_CONFIG_UPDATE, {"language": "es"})
+        await hass.async_block_till_done()
+        mock.assert_called_once_with(hass, "es", None)
 
     with patch(
         "homeassistant.helpers.translation._async_load_state_translations_to_cache",
