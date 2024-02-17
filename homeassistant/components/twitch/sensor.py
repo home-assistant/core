@@ -52,6 +52,8 @@ ICON = "mdi:twitch"
 STATE_OFFLINE = "offline"
 STATE_STREAMING = "streaming"
 
+PARALLEL_UPDATES = 1
+
 
 def chunk_list(lst: list, chunk_size: int) -> list[list]:
     """Split a list into chunks of chunk_size."""
