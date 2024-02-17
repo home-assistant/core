@@ -199,7 +199,7 @@ class RequirementsManager:
             dep
             for dep in integration.dependencies + integration.after_dependencies
             if dep not in done
-            # If the dep is in the cache and its an Integration
+            # If the dep is in the cache and it's an Integration
             # it's already been checked for the requirements and we should
             # not check it again.
             and (
