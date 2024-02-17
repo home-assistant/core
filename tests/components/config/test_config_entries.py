@@ -42,7 +42,7 @@ def mock_test_component(hass):
 async def client(hass, hass_client):
     """Fixture that can interact with the config manager API."""
     await async_setup_component(hass, "http", {})
-    await config_entries.async_setup(hass)
+    config_entries.async_setup(hass)
     return await hass_client()
 
 
