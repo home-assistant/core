@@ -13,6 +13,7 @@ from homeassistant.setup import async_setup_component
 from ...common import MockConfigEntry
 from . import (
     TwitchAPIExceptionMock,
+    TwitchAPITokenRefreshErrorMock,
     TwitchInvalidTokenMock,
     TwitchInvalidUserMock,
     TwitchMissingScopeMock,
@@ -175,3 +176,14 @@ async def test_auth_with_api_exception(
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.attributes["subscribed"] is False
     assert "subscription_is_gifted" not in sensor_state.attributes
+
+
+@pytest.mark.parametrize("twitch_mock", [TwitchAPITokenRefreshErrorMock()])
+async def test_auth_with_api_token_refresh_error(
+    hass: HomeAssistant, twitch: TwitchMock, config_entry: MockConfigEntry
+) -> None:
+    """Test auth with bad token refresh."""
+    await setup_integration(hass, config_entry)
+
+    sensor_state = hass.states.get(ENTITY_ID)
+    assert sensor_state is None

@@ -192,7 +192,7 @@ class TwitchMock:
         for stream in streams:
             yield stream
 
-    async def get_refreshed_user_auth_token(self) -> str:
+    async def get_refreshed_user_auth_token(self) -> str | None:
         """Get refreshed user auth token."""
         return "abc123"
 
@@ -248,3 +248,11 @@ class TwitchAPIExceptionMock(TwitchMock):
     ) -> UserSubscriptionMock:
         """Check if the user is subscribed."""
         raise TwitchAPIException()
+
+
+class TwitchAPITokenRefreshErrorMock(TwitchMock):
+    """Twitch mock to test when twitch api does not return a refreshed token."""
+
+    async def get_refreshed_user_auth_token(self) -> str | None:
+        """Get refreshed user auth token."""
+        return None
