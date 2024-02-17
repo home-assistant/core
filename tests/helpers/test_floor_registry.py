@@ -18,7 +18,6 @@ from homeassistant.helpers.floor_registry import (
 from tests.common import async_capture_events, flush_store
 
 
-@pytest.mark.usefixtures("hass")
 async def test_list_floors(floor_registry: fr.FloorRegistry) -> None:
     """Make sure that we can read floors."""
     floors = floor_registry.async_list_floors()
@@ -112,7 +111,6 @@ async def test_delete_floor(
     }
 
 
-@pytest.mark.usefixtures("hass")
 async def test_delete_non_existing_floor(floor_registry: fr.FloorRegistry) -> None:
     """Make sure that we can't delete a floor that doesn't exist."""
     floor_registry.async_create("First floor")
@@ -194,7 +192,6 @@ async def test_update_floor_with_same_data(
     }
 
 
-@pytest.mark.usefixtures("hass")
 async def test_update_floor_with_same_name_change_case(
     floor_registry: fr.FloorRegistry,
 ) -> None:
@@ -209,7 +206,6 @@ async def test_update_floor_with_same_name_change_case(
     assert len(floor_registry.floors) == 1
 
 
-@pytest.mark.usefixtures("hass")
 async def test_update_floor_with_name_already_in_use(
     floor_registry: fr.FloorRegistry,
 ) -> None:
@@ -228,7 +224,6 @@ async def test_update_floor_with_name_already_in_use(
     assert len(floor_registry.floors) == 2
 
 
-@pytest.mark.usefixtures("hass")
 async def test_update_floor_with_normalized_name_already_in_use(
     floor_registry: fr.FloorRegistry,
 ) -> None:
@@ -315,7 +310,6 @@ async def test_loading_floors_from_storage(
     assert len(registry.floors) == 1
 
 
-@pytest.mark.usefixtures("hass")
 async def test_getting_floor(floor_registry: fr.FloorRegistry) -> None:
     """Make sure we can get the floors by name."""
     floor = floor_registry.async_create("First floor")
@@ -330,7 +324,6 @@ async def test_getting_floor(floor_registry: fr.FloorRegistry) -> None:
     assert get_floor == floor
 
 
-@pytest.mark.usefixtures("hass")
 async def test_async_get_floor_by_name_not_found(
     floor_registry: fr.FloorRegistry,
 ) -> None:

@@ -22,7 +22,6 @@ async def client_fixture(
     return await hass_ws_client(hass)
 
 
-@pytest.mark.usefixtures("hass")
 async def test_list_floors(
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
@@ -56,7 +55,6 @@ async def test_list_floors(
     }
 
 
-@pytest.mark.usefixtures("hass")
 async def test_create_floor(
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
@@ -96,7 +94,6 @@ async def test_create_floor(
     }
 
 
-@pytest.mark.usefixtures("hass")
 async def test_create_floor_with_name_already_in_use(
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
@@ -119,7 +116,6 @@ async def test_create_floor_with_name_already_in_use(
     assert len(floor_registry.floors) == 1
 
 
-@pytest.mark.usefixtures("hass")
 async def test_delete_floor(
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
@@ -138,7 +134,6 @@ async def test_delete_floor(
     assert not floor_registry.floors
 
 
-@pytest.mark.usefixtures("hass")
 async def test_delete_non_existing_floor(
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
@@ -162,7 +157,6 @@ async def test_delete_non_existing_floor(
     assert len(floor_registry.floors) == 1
 
 
-@pytest.mark.usefixtures("hass")
 async def test_update_floor(
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
@@ -212,7 +206,6 @@ async def test_update_floor(
     }
 
 
-@pytest.mark.usefixtures("hass")
 async def test_update_with_name_already_in_use(
     client: ClientWebSocketResponse,
     floor_registry: fr.FloorRegistry,
