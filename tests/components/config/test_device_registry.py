@@ -1,8 +1,4 @@
 """Test device_registry API."""
-from collections.abc import Awaitable, Callable, Generator
-from typing import Any
-
-from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant.components.config import device_registry
@@ -11,7 +7,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
-from tests.typing import WebSocketGenerator
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -21,11 +17,8 @@ def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
 
 @pytest.fixture(name="client")
 async def client_fixture(
-    hass: HomeAssistant,
-    hass_ws_client: Callable[
-        [HomeAssistant], Awaitable[Generator[ClientWebSocketResponse, Any, Any]]
-    ],
-) -> Generator[ClientWebSocketResponse, None, None]:
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
     device_registry.async_setup(hass)
     return await hass_ws_client(hass)
@@ -33,7 +26,7 @@ async def client_fixture(
 
 async def test_list_devices(
     hass: HomeAssistant,
-    client: ClientWebSocketResponse,
+    client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test list entries."""
@@ -145,7 +138,7 @@ async def test_list_devices(
 )
 async def test_update_device(
     hass: HomeAssistant,
-    client: ClientWebSocketResponse,
+    client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
     payload_key: str,
     payload_value: str | None | dr.DeviceEntryDisabler,
