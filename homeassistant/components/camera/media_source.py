@@ -25,6 +25,19 @@ async def async_get_media_source(hass: HomeAssistant) -> CameraMediaSource:
     return CameraMediaSource(hass)
 
 
+def _media_source_for_camera(camera: Camera, content_type: str) -> BrowseMediaSource:
+    return BrowseMediaSource(
+        domain=DOMAIN,
+        identifier=camera.entity_id,
+        media_class=MediaClass.VIDEO,
+        media_content_type=content_type,
+        title=camera.name,
+        thumbnail=f"/api/camera_proxy/{camera.entity_id}",
+        can_play=True,
+        can_expand=False,
+    )
+
+
 class CameraMediaSource(MediaSource):
     """Provide camera feeds as media sources."""
 
@@ -73,7 +86,7 @@ class CameraMediaSource(MediaSource):
 
         can_stream_hls = "stream" in self.hass.config.components
 
-        async def _media_source_for_camera(camera: Camera) -> BrowseMediaSource | None:
+        async def _filter_browsable_camera(camera: Camera) -> BrowseMediaSource | None:
             stream_type = camera.frontend_stream_type
 
             if stream_type is None:
@@ -88,21 +101,12 @@ class CameraMediaSource(MediaSource):
             else:
                 return None
 
-            return BrowseMediaSource(
-                domain=DOMAIN,
-                identifier=camera.entity_id,
-                media_class=MediaClass.VIDEO,
-                media_content_type=content_type,
-                title=camera.name,
-                thumbnail=f"/api/camera_proxy/{camera.entity_id}",
-                can_play=True,
-                can_expand=False,
-            )
+            return _media_source_for_camera(camera, content_type)
 
         # Root. List cameras.
         component: EntityComponent[Camera] = self.hass.data[DOMAIN]
         results = await asyncio.gather(
-            *(_media_source_for_camera(camera) for camera in component.entities),
+            *(_filter_browsable_camera(camera) for camera in component.entities),
             return_exceptions=True,
         )
         children = [
