@@ -41,9 +41,6 @@
     "sensor": {
       "jvc_power_status": {
         "name": "Power status"
-      },
-      "jvc_input": {
-        "name": "Input"
       }
     }
   }

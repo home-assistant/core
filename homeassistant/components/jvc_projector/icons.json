@@ -17,13 +17,6 @@
           "cooling": "mdi:snowflake",
           "error": "mdi:alert-circle"
         }
-      },
-      "jvc_input": {
-        "default": "mdi:video-input-hdmi",
-        "state": {
-          "hdmi1": "mdi:numeric-1-box-multiple",
-          "hdmi2": "mdi:numeric-2-box-multiple"
-        }
       }
     }
   }

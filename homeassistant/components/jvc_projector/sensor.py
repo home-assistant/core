@@ -32,17 +32,6 @@ JVC_SENSORS = (
             const.ERROR,
         ],
     ),
-    SensorEntityDescription(
-        key="input",
-        translation_key="jvc_input",
-        device_class=SensorDeviceClass.ENUM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        options=[
-            const.HDMI1,
-            const.HDMI2,
-            const.NOSIGNAL,
-        ],
-    ),
 )
 
 

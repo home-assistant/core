@@ -8,7 +8,6 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 POWER_ID = "sensor.jvc_projector_power_status"
-INPUT_ID = "sensor.jvc_projector_input"
 
 
 async def test_entity_state(
@@ -25,11 +24,3 @@ async def test_entity_state(
     entity = hass.states.get(entity.entity_id)
     assert entity is not None
     assert entity.state == "standby"
-
-    entity = hass.states.get(INPUT_ID)
-    assert entity
-    assert entity_registry.async_get(entity.entity_id)
-
-    entity = hass.states.get(entity.entity_id)
-    assert entity is not None
-    assert entity.state == "hdmi1"
