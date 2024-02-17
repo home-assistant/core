@@ -10,10 +10,10 @@ from tests.common import ANY
 
 
 @pytest.fixture
-def client(hass, hass_ws_client):
+async def client(hass, hass_ws_client):
     """Fixture that can interact with the config manager API."""
-    hass.loop.run_until_complete(area_registry.async_setup(hass))
-    return hass.loop.run_until_complete(hass_ws_client(hass))
+    area_registry.async_setup(hass)
+    return await hass_ws_client(hass)
 
 
 async def test_list_areas(
