@@ -522,12 +522,19 @@ def _async_when_setup(
             listener()
         await when_setup()
 
-    async def _loaded_event(event: core.Event) -> None:
-        """Call the callback if we loaded the expected component."""
-        if event.data[ATTR_COMPONENT] == component:
-            await _matched_event(event)
+    @callback
+    def _async_is_component_filter(event: core.Event) -> bool:
+        """Check if the event is for the component."""
+        event_comp: str = event.data[ATTR_COMPONENT]
+        return event_comp == component
 
-    listeners.append(hass.bus.async_listen(EVENT_COMPONENT_LOADED, _loaded_event))
+    listeners.append(
+        hass.bus.async_listen(
+            EVENT_COMPONENT_LOADED,
+            _matched_event,
+            event_filter=_async_is_component_filter,
+        )
+    )
     if start_event:
         listeners.append(
             hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
