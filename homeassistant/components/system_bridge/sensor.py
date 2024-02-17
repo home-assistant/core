@@ -128,108 +128,72 @@ def display_refresh_rate(
     return None
 
 
-def get_gpu(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> GPU | None:
-    """Return the GPU."""
-    if index < len(data.gpus):
-        return data.gpus[index]
-    return None
+def with_gpu(func):
+    """Wrap a function to ensure a GPU is available."""
+
+    def wrapper(data: SystemBridgeCoordinatorData, index: int):
+        """Wrap a function to ensure a GPU is available."""
+        if index < len(data.gpus):
+            return func(data.gpus[index])
+        return None
+
+    return wrapper
 
 
-def gpu_core_clock_speed(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> float | None:
+@with_gpu
+def gpu_core_clock_speed(gpu: GPU) -> float | None:
     """Return the GPU core clock speed."""
-    if (gpu := get_gpu(data, index)) is not None:
-        return gpu.core_clock
-    return None
+    return gpu.core_clock
 
 
-def gpu_fan_speed(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> float | None:
+@with_gpu
+def gpu_fan_speed(gpu: GPU) -> float | None:
     """Return the GPU fan speed."""
-    if (gpu := get_gpu(data, index)) is not None:
-        return gpu.fan_speed
-    return None
+    return gpu.fan_speed
 
 
-def gpu_memory_clock_speed(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> float | None:
+@with_gpu
+def gpu_memory_clock_speed(gpu: GPU) -> float | None:
     """Return the GPU memory clock speed."""
-    if (gpu := get_gpu(data, index)) is not None:
-        return gpu.memory_clock
-    return None
+    return gpu.memory_clock
 
 
-def gpu_memory_free(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> float | None:
+@with_gpu
+def gpu_memory_free(gpu: GPU) -> float | None:
     """Return the free GPU memory."""
-    if (gpu := get_gpu(data, index)) is not None:
-        return gpu.memory_free
-    return None
+    return gpu.memory_free
 
 
-def gpu_memory_used(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> float | None:
+@with_gpu
+def gpu_memory_used(gpu: GPU) -> float | None:
     """Return the used GPU memory."""
-    if (gpu := get_gpu(data, index)) is not None:
-        return gpu.memory_used
-    return None
+    return gpu.memory_used
 
 
-def gpu_memory_used_percentage(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> float | None:
+@with_gpu
+def gpu_memory_used_percentage(gpu: GPU) -> float | None:
     """Return the used GPU memory percentage."""
-    if (
-        (gpu := get_gpu(data, index)) is not None
-        and (gpu.memory_used) is not None
-        and (gpu.memory_total) is not None
-    ):
+    if (gpu.memory_used) is not None and (gpu.memory_total) is not None:
         return round(gpu.memory_used / gpu.memory_total * 100, 2)
     return None
 
 
-def gpu_power_usage(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> float | None:
+@with_gpu
+def gpu_power_usage(gpu: GPU) -> float | None:
     """Return the GPU power usage."""
-    if (gpu := get_gpu(data, index)) is not None:
-        return gpu.power_usage
-    return None
+    return gpu.power_usage
 
 
-def gpu_temperature(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> float | None:
+@with_gpu
+def gpu_temperature(gpu: GPU) -> float | None:
     """Return the GPU temperature."""
-    if (gpu := get_gpu(data, index)) is not None:
-        return gpu.temperature
-    return None
+    return gpu.temperature
 
 
-def gpu_usage_percentage(
-    data: SystemBridgeCoordinatorData,
-    index: int,
-) -> float | None:
+@with_gpu
+def gpu_usage_percentage(gpu: GPU) -> float | None:
     """Return the GPU usage percentage."""
-    if (gpu := get_gpu(data, index)) is not None:
-        return gpu.core_load
-    return None
+    return gpu.core_load
 
 
 def memory_free(data: SystemBridgeCoordinatorData) -> float | None:
