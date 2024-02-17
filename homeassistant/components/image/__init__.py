@@ -314,7 +314,6 @@ async def async_get_still_stream(
     response.content_type = CONTENT_TYPE_MULTIPART.format("frameboundary")
     await response.prepare(request)
     boundary = bytes("\r\n--frameboundary\r\n", "utf-8")
-    await response.write(boundary)
 
     event = asyncio.Event()
 
@@ -324,19 +323,20 @@ async def async_get_still_stream(
             event.set()
             return
 
-        # Chrome shows the n-1 frame so send the boundary twice
+        # Chrome shows the n-1 frame so send the frame twice
         # https://issues.chromium.org/issues/41199053
         # https://issues.chromium.org/issues/40791855
         try:
             await response.write(
-                bytes(
+                boundary
+                + bytes(
                     f"Content-Type: {image_entity.content_type}\r\n"
                     f"Content-Length: {len(img_bytes)}\r\n\r\n",
                     "utf-8",
                 )
                 + img_bytes
                 + boundary
-                + boundary
+                + img_bytes
             )
             await response.drain()
         except:
