@@ -1,4 +1,8 @@
 """Test area_registry API."""
+from collections.abc import Awaitable, Callable, Generator
+from typing import Any
+
+from aiohttp import ClientWebSocketResponse
 import pytest
 from pytest_unordered import unordered
 
@@ -9,15 +13,20 @@ from homeassistant.helpers import area_registry as ar
 from tests.common import ANY
 
 
-@pytest.fixture
-async def client(hass, hass_ws_client):
+@pytest.fixture(name="client")
+async def client_fixture(
+    hass: HomeAssistant,
+    hass_ws_client: Callable[
+        [HomeAssistant], Awaitable[Generator[ClientWebSocketResponse, Any, Any]]
+    ],
+) -> Generator[ClientWebSocketResponse, None, None]:
     """Fixture that can interact with the config manager API."""
     area_registry.async_setup(hass)
     return await hass_ws_client(hass)
 
 
 async def test_list_areas(
-    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
 ) -> None:
     """Test list entries."""
     area1 = area_registry.async_create("mock 1")
@@ -28,7 +37,7 @@ async def test_list_areas(
         picture="/image/example.png",
     )
 
-    await client.send_json({"id": 1, "type": "config/area_registry/list"})
+    await client.send_json_auto_id({"type": "config/area_registry/list"})
 
     msg = await client.receive_json()
     assert msg["result"] == [
@@ -50,12 +59,12 @@ async def test_list_areas(
 
 
 async def test_create_area(
-    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
 ) -> None:
     """Test create entry."""
     # Create area with only mandatory parameters
-    await client.send_json(
-        {"id": 1, "name": "mock", "type": "config/area_registry/create"}
+    await client.send_json_auto_id(
+        {"name": "mock", "type": "config/area_registry/create"}
     )
 
     msg = await client.receive_json()
@@ -70,9 +79,8 @@ async def test_create_area(
     assert len(area_registry.areas) == 1
 
     # Create area with all parameters
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 2,
             "aliases": ["alias_1", "alias_2"],
             "icon": "mdi:garage",
             "name": "mock 2",
@@ -94,13 +102,13 @@ async def test_create_area(
 
 
 async def test_create_area_with_name_already_in_use(
-    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
 ) -> None:
     """Test create entry that should fail."""
     area_registry.async_create("mock")
 
-    await client.send_json(
-        {"id": 1, "name": "mock", "type": "config/area_registry/create"}
+    await client.send_json_auto_id(
+        {"name": "mock", "type": "config/area_registry/create"}
     )
 
     msg = await client.receive_json()
@@ -112,7 +120,7 @@ async def test_create_area_with_name_already_in_use(
 
 
 async def test_delete_area(
-    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
 ) -> None:
     """Test delete entry."""
     area = area_registry.async_create("mock")
@@ -128,13 +136,13 @@ async def test_delete_area(
 
 
 async def test_delete_non_existing_area(
-    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
 ) -> None:
     """Test delete entry that should fail."""
     area_registry.async_create("mock")
 
-    await client.send_json(
-        {"id": 1, "area_id": "", "type": "config/area_registry/delete"}
+    await client.send_json_auto_id(
+        {"area_id": "", "type": "config/area_registry/delete"}
     )
 
     msg = await client.receive_json()
@@ -146,14 +154,13 @@ async def test_delete_non_existing_area(
 
 
 async def test_update_area(
-    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
 ) -> None:
     """Test update entry."""
     area = area_registry.async_create("mock 1")
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "aliases": ["alias_1", "alias_2"],
             "area_id": area.id,
             "icon": "mdi:garage",
@@ -174,9 +181,8 @@ async def test_update_area(
     }
     assert len(area_registry.areas) == 1
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 2,
             "aliases": ["alias_1", "alias_1"],
             "area_id": area.id,
             "icon": None,
@@ -198,14 +204,13 @@ async def test_update_area(
 
 
 async def test_update_area_with_same_name(
-    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
 ) -> None:
     """Test update entry."""
     area = area_registry.async_create("mock 1")
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "area_id": area.id,
             "name": "mock 1",
             "type": "config/area_registry/update",
@@ -220,15 +225,14 @@ async def test_update_area_with_same_name(
 
 
 async def test_update_area_with_name_already_in_use(
-    hass: HomeAssistant, client, area_registry: ar.AreaRegistry
+    client: ClientWebSocketResponse, area_registry: ar.AreaRegistry
 ) -> None:
     """Test update entry."""
     area = area_registry.async_create("mock 1")
     area_registry.async_create("mock 2")
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 1,
             "area_id": area.id,
             "name": "mock 2",
             "type": "config/area_registry/update",
