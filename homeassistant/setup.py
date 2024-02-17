@@ -522,7 +522,8 @@ def _async_when_setup(
     @callback
     def _async_is_component_filter(event: core.Event) -> bool:
         """Check if the event is for the component."""
-        return bool(event.data[ATTR_COMPONENT] == component)
+        event_comp: str = event.data[ATTR_COMPONENT]
+        return event_comp == component
 
     listeners.append(
         hass.bus.async_listen(
