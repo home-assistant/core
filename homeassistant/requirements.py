@@ -155,19 +155,19 @@ class RequirementsManager:
             return integration
 
         cache = self.integrations_with_reqs
-        int_or_evt = cache.get(domain, UNDEFINED)
+        int_or_fut = cache.get(domain, UNDEFINED)
 
-        if isinstance(int_or_evt, asyncio.Future):
-            await int_or_evt
+        if isinstance(int_or_fut, asyncio.Future):
+            await int_or_fut
 
             # When we have waited and it's UNDEFINED, it doesn't exist
             # We don't cache that it doesn't exist, or else people can't fix it
             # and then restart, because their config will never be valid.
-            if (int_or_evt := cache.get(domain, UNDEFINED)) is UNDEFINED:
+            if (int_or_fut := cache.get(domain, UNDEFINED)) is UNDEFINED:
                 raise IntegrationNotFound(domain)
 
-        if int_or_evt is not UNDEFINED:
-            return cast(Integration, int_or_evt)
+        if int_or_fut is not UNDEFINED:
+            return cast(Integration, int_or_fut)
 
         event = cache[domain] = self.hass.loop.create_future()
 
