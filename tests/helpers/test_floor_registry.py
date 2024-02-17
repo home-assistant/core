@@ -15,7 +15,7 @@ from homeassistant.helpers.floor_registry import (
     async_load,
 )
 
-from tests.common import MockConfigEntry, async_capture_events, flush_store
+from tests.common import async_capture_events, flush_store
 
 
 @pytest.mark.usefixtures("hass")
