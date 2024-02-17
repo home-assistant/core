@@ -34,7 +34,10 @@ async def test_create_entry(hass: HomeAssistant, mock_sanix: MagicMock) -> None:
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == MANUFACTURER
-    assert result["data"][CONF_TOKEN] == CONFIG[CONF_TOKEN]
+    assert result["data"] == {
+        CONF_SERIAL_NO: "1810088",
+        CONF_TOKEN: "75868dcf8ea4c64e2063f6c4e70132d2",
+    }
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -94,17 +97,11 @@ async def test_duplicate_error(hass: HomeAssistant, mock_sanix: MagicMock) -> No
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.sanix.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CONFIG,
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-    assert len(mock_setup_entry.mock_calls) == 0

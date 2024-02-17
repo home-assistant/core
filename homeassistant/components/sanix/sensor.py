@@ -10,7 +10,6 @@ from sanix.const import (
     ATTR_API_FILL_PERC,
     ATTR_API_SERVICE_DATE,
     ATTR_API_SSID,
-    ATTR_API_TIME,
 )
 from sanix.models import Measurement
 
@@ -35,7 +34,9 @@ from .coordinator import SanixCoordinator
 class SanixSensorEntityDescription(SensorEntityDescription):
     """Class describing Sanix Sensor entities."""
 
-    native_value_fn: Callable[[Measurement], int | datetime | date | str]
+    native_value_fn: Callable[[Measurement], int | datetime | date | str | None] = (
+        lambda data: None
+    )
 
 
 SENSOR_TYPES: tuple[SanixSensorEntityDescription, ...] = (
@@ -60,12 +61,6 @@ SENSOR_TYPES: tuple[SanixSensorEntityDescription, ...] = (
         translation_key=ATTR_API_SERVICE_DATE,
         device_class=SensorDeviceClass.DATE,
         native_value_fn=lambda data: data.service_date,
-    ),
-    SanixSensorEntityDescription(
-        key=ATTR_API_TIME,
-        translation_key=ATTR_API_TIME,
-        device_class=SensorDeviceClass.TIMESTAMP,
-        native_value_fn=lambda data: data.time,
     ),
     SanixSensorEntityDescription(
         key=ATTR_API_FILL_PERC,
@@ -126,6 +121,6 @@ class SanixSensorEntity(CoordinatorEntity[SanixCoordinator], SensorEntity):
         )
 
     @property
-    def native_value(self) -> int | datetime | date | str:
+    def native_value(self) -> int | datetime | date | str | None:
         """Return the state of the sensor."""
         return self.entity_description.native_value_fn(self.coordinator.data)

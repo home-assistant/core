@@ -32,5 +32,4 @@ class SanixCoordinator(DataUpdateCoordinator[Measurement]):
         try:
             return await self.hass.async_add_executor_job(self._sanix_api.fetch_data)
         except SanixException as err:
-            _LOGGER.error("Sanix API connection error")
             raise UpdateFailed("Error while communicating with the API") from err

@@ -3,16 +3,6 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
-from sanix.const import (
-    ATTR_API_BATTERY,
-    ATTR_API_DEVICE_NO,
-    ATTR_API_DISTANCE,
-    ATTR_API_FILL_PERC,
-    ATTR_API_SERVICE_DATE,
-    ATTR_API_SSID,
-    ATTR_API_STATUS,
-    ATTR_API_TIME,
-)
 from sanix.models import Measurement
 
 from homeassistant.components.sanix.const import CONF_SERIAL_NO, DOMAIN
@@ -33,16 +23,7 @@ def mock_sanix():
         "homeassistant.components.sanix.Sanix",
         return_value=mock_sanix_api,
     ):
-        mock_sanix_api.return_value.fetch_data.return_value = Measurement(
-            fixture[ATTR_API_BATTERY],
-            fixture[ATTR_API_DEVICE_NO],
-            fixture[ATTR_API_DISTANCE],
-            fixture[ATTR_API_FILL_PERC],
-            fixture[ATTR_API_SERVICE_DATE],
-            fixture[ATTR_API_SSID],
-            fixture[ATTR_API_STATUS],
-            fixture[ATTR_API_TIME],
-        )
+        mock_sanix_api.return_value.fetch_data.return_value = Measurement(**fixture)
         yield mock_sanix_api
 
 
