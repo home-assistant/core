@@ -10,13 +10,14 @@ from homeassistant.components.script.config import (
 )
 from homeassistant.config import SCRIPT_CONFIG_PATH
 from homeassistant.const import SERVICE_RELOAD
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
 from . import ACTION_DELETE, EditKeyBasedConfigView
 
 
-async def async_setup(hass: HomeAssistant) -> bool:
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Set up the script config API."""
 
     async def hook(action: str, config_key: str) -> None:
