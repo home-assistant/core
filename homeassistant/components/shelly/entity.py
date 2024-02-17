@@ -67,7 +67,7 @@ def async_setup_block_attribute_entities(
     sensor_class: Callable,
 ) -> None:
     """Set up entities for block attributes."""
-    blocks = []
+    entities = []
 
     assert coordinator.device.blocks
 
@@ -90,17 +90,14 @@ def async_setup_block_attribute_entities(
                 unique_id = f"{coordinator.mac}-{block.description}-{sensor_id}"
                 async_remove_shelly_entity(hass, domain, unique_id)
             else:
-                blocks.append((block, sensor_id, description))
+                entities.append(
+                    sensor_class(coordinator, block, sensor_id, description)
+                )
 
-    if not blocks:
+    if not entities:
         return
 
-    async_add_entities(
-        [
-            sensor_class(coordinator, block, sensor_id, description)
-            for block, sensor_id, description in blocks
-        ]
-    )
+    async_add_entities(entities)
 
 
 @callback
