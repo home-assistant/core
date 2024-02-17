@@ -272,6 +272,9 @@ async def test_loading_saving_data(
     entity_registry.async_update_entity_options(
         orig_entry2.entity_id, "light", {"minimum_brightness": 20}
     )
+    entity_registry.async_update_entity(
+        orig_entry2.entity_id, labels={"label1", "label2"}
+    )
     orig_entry2 = entity_registry.async_get(orig_entry2.entity_id)
     orig_entry3 = entity_registry.async_get_or_create("light", "hue", "ABCD")
     orig_entry4 = entity_registry.async_get_or_create("light", "hue", "EFGH")
@@ -309,6 +312,7 @@ async def test_loading_saving_data(
     assert new_entry2.icon == "hass:user-icon"
     assert new_entry2.hidden_by == er.RegistryEntryHider.INTEGRATION
     assert new_entry2.has_entity_name is True
+    assert new_entry2.labels == {"label1", "label2"}
     assert new_entry2.name == "User Name"
     assert new_entry2.options == {"light": {"minimum_brightness": 20}}
     assert new_entry2.original_device_class == "mock-device-class"
@@ -1769,3 +1773,70 @@ async def test_async_migrate_entry_delete_other(
     await er.async_migrate_entries(hass, config_entry1.entry_id, _async_migrator)
     assert entries == {entry1.entity_id}
     assert not entity_registry.async_is_registered(entry2.entity_id)
+
+
+async def test_removing_labels(entity_registry: er.EntityRegistry) -> None:
+    """Make sure we can clear labels."""
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="5678",
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, labels={"label1", "label2"}
+    )
+
+    entity_registry.async_clear_label_id("label1")
+    entry_cleared_label1 = entity_registry.async_get(entry.entity_id)
+
+    entity_registry.async_clear_label_id("label2")
+    entry_cleared_label2 = entity_registry.async_get(entry.entity_id)
+
+    assert entry_cleared_label1
+    assert entry_cleared_label2
+    assert entry != entry_cleared_label1
+    assert entry != entry_cleared_label2
+    assert entry_cleared_label1 != entry_cleared_label2
+    assert entry.labels == {"label1", "label2"}
+    assert entry_cleared_label1.labels == {"label2"}
+    assert not entry_cleared_label2.labels
+
+
+async def test_entries_for_label(entity_registry: er.EntityRegistry) -> None:
+    """Test getting entity entries by label."""
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="000",
+    )
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="123",
+    )
+    label_1 = entity_registry.async_update_entity(entry.entity_id, labels={"label1"})
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="456",
+    )
+    label_2 = entity_registry.async_update_entity(entry.entity_id, labels={"label2"})
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="789",
+    )
+    label_1_and_2 = entity_registry.async_update_entity(
+        entry.entity_id, labels={"label1", "label2"}
+    )
+
+    entries = er.async_entries_for_label(entity_registry, "label1")
+    assert len(entries) == 2
+    assert entries == [label_1, label_1_and_2]
+
+    entries = er.async_entries_for_label(entity_registry, "label2")
+    assert len(entries) == 2
+    assert entries == [label_2, label_1_and_2]
+
+    assert not er.async_entries_for_label(entity_registry, "unknown")
+    assert not er.async_entries_for_label(entity_registry, "")
