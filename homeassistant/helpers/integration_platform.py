@@ -33,10 +33,8 @@ class IntegrationPlatform:
     seen_components: set[str]
 
 
-def _format_err(target: Callable, platform_name: str, *args: Any) -> str:
+def _format_err(name: str, platform_name: str, *args: Any) -> str:
     """Format error message."""
-    # Functions wrapped in partial do not have a __name__
-    name = getattr(target, "__name__", None) or str(target)
     return f"Exception in {name} when processing platform '{platform_name}': {args}"
 
 
@@ -115,7 +113,8 @@ async def async_process_integration_platforms(
         platform_name,
         HassJob(
             catch_log_exception(
-                process_platform, partial(_format_err, process_platform, platform_name)
+                process_platform,
+                partial(_format_err, str(process_platform), platform_name),
             ),
             f"process_platform {platform_name}",
         ),
