@@ -1,6 +1,8 @@
 """Expose iamges as media sources."""
 from __future__ import annotations
 
+from typing import cast
+
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.error import Unresolvable
 from homeassistant.components.media_source.models import (
@@ -9,7 +11,8 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_component import EntityComponent
 
 from . import ImageEntity
@@ -58,7 +61,9 @@ class ImageMediaSource(MediaSource):
                 identifier=image.entity_id,
                 media_class=MediaClass.VIDEO,
                 media_content_type=image.content_type,
-                title=image.name,
+                title=cast(State, self.hass.states.get(image.entity_id)).attributes.get(
+                    ATTR_FRIENDLY_NAME, image.name
+                ),
                 thumbnail=f"/api/image_proxy/{image.entity_id}",
                 can_play=True,
                 can_expand=False,
