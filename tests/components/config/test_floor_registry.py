@@ -11,15 +11,15 @@ from homeassistant.helpers import floor_registry as fr
 
 
 @pytest.fixture(name="client")
-def client_fixture(
+async def client_fixture(
     hass: HomeAssistant,
     hass_ws_client: Callable[
         [HomeAssistant], Awaitable[Generator[ClientWebSocketResponse, Any, Any]]
     ],
 ) -> Generator[ClientWebSocketResponse, None, None]:
     """Fixture that can interact with the config manager API."""
-    hass.loop.run_until_complete(floor_registry.async_setup(hass))
-    return hass.loop.run_until_complete(hass_ws_client(hass))
+    floor_registry.async_setup(hass)
+    return await hass_ws_client(hass)
 
 
 @pytest.mark.usefixtures("hass")

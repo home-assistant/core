@@ -345,7 +345,7 @@ class AreaRegistry:
 
         @callback
         def _floor_removed_from_registry_filter(event: Event) -> bool:
-            """Filter alll except for the remove action from floor registry events."""
+            """Filter all except for the remove action from floor registry events."""
             return bool(event.data["action"] == "remove")
 
         @callback

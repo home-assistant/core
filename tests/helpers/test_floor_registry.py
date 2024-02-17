@@ -57,7 +57,7 @@ async def test_create_floor(
 async def test_create_floor_with_name_already_in_use(
     hass: HomeAssistant, floor_registry: fr.FloorRegistry
 ) -> None:
-    """Make sure that we can't create an floor with a name already in use."""
+    """Make sure that we can't create a floor with a name already in use."""
     update_events = async_capture_events(hass, EVENT_FLOOR_REGISTRY_UPDATED)
     floor_registry.async_create("First floor")
 
@@ -90,7 +90,7 @@ async def test_create_floor_with_id_already_in_use(
 async def test_delete_floor(
     hass: HomeAssistant, floor_registry: fr.FloorRegistry
 ) -> None:
-    """Make sure that we can delete an floor."""
+    """Make sure that we can delete a floor."""
     update_events = async_capture_events(hass, EVENT_FLOOR_REGISTRY_UPDATED)
     floor = floor_registry.async_create("First floor")
     assert len(floor_registry.floors) == 1
@@ -213,7 +213,7 @@ async def test_update_floor_with_same_name_change_case(
 async def test_update_floor_with_name_already_in_use(
     floor_registry: fr.FloorRegistry,
 ) -> None:
-    """Make sure that we can't update an floor with a name already in use."""
+    """Make sure that we can't update a floor with a name already in use."""
     floor1 = floor_registry.async_create("First floor")
     floor2 = floor_registry.async_create("Second floor")
 
@@ -232,7 +232,7 @@ async def test_update_floor_with_name_already_in_use(
 async def test_update_floor_with_normalized_name_already_in_use(
     floor_registry: fr.FloorRegistry,
 ) -> None:
-    """Make sure that we can't update an floor with a normalized name already in use."""
+    """Make sure that we can't update a floor with a normalized name already in use."""
     floor1 = floor_registry.async_create("first")
     floor2 = floor_registry.async_create("S E C O N D")
 
@@ -347,9 +347,7 @@ async def test_floor_removed_from_areas(
     area_registry: ar.AreaRegistry,
     floor_registry: fr.FloorRegistry,
 ) -> None:
-    """Tests if floor gets removed from areas when the floor is removed."""
-    config_entry = MockConfigEntry()
-    config_entry.add_to_hass(hass)
+    """Test if floor gets removed from areas when the floor is removed."""
 
     floor = floor_registry.async_create("First floor")
     assert len(floor_registry.floors) == 1
