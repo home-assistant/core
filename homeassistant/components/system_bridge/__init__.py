@@ -342,16 +342,22 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    if config_entry.version == 1:
-        new = {
-            **config_entry.data,
-            CONF_TOKEN: config_entry.data.get(CONF_API_KEY),
-        }
-        if CONF_API_KEY in new:
-            new.pop(CONF_API_KEY)
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=new)
+    if config_entry.version == 1 and config_entry.minor_version == 1:
+        # Migrate to CONF_TOKEN, which was added in 1.2
+        new_data = dict(config_entry.data)
+        new_data.setdefault(CONF_TOKEN, config_entry.data.get(CONF_API_KEY))
 
-    _LOGGER.debug("Migration to version %s successful", config_entry.version)
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=new_data,
+            minor_version=2,
+        )
 
-    return True
+        _LOGGER.debug(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+
+    # User is trying to downgrade from a future version
+    return False
