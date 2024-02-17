@@ -18,6 +18,7 @@ from homeassistant.loader import (
     bind_hass,
 )
 from homeassistant.setup import ATTR_COMPONENT
+from homeassistant.util.logging import catch_log_exception
 
 _LOGGER = logging.getLogger(__name__)
 DATA_INTEGRATION_PLATFORMS = "integration_platforms"
@@ -30,28 +31,6 @@ class IntegrationPlatform:
     platform_name: str
     process_platform: HassJob
     seen_components: set[str]
-
-
-@callback
-def _async_process_single_integration_platform_component(
-    hass: HomeAssistant,
-    component_name: str,
-    platform: ModuleType,
-    integration_platform: IntegrationPlatform,
-) -> asyncio.Future[None] | None:
-    """Process a single integration platform."""
-    future: asyncio.Future[None] | None = None
-    try:
-        future = hass.async_run_hass_job(
-            integration_platform.process_platform, hass, component_name, platform
-        )
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception(
-            "Error processing platform %s.%s",
-            component_name,
-            integration_platform.platform_name,
-        )
-    return future
 
 
 def _get_platform_from_integration(
@@ -97,9 +76,14 @@ def _async_process_integration_platform_for_component(
         ):
             continue
         integration_platform.seen_components.add(component_name)
-        _async_process_single_integration_platform_component(
-            hass, component_name, platform, integration_platform
+        hass.async_run_hass_job(
+            integration_platform.process_platform, hass, component_name, platform
         )
+
+
+def _format_err(name: str, platform_name: str, *args: Any) -> str:
+    """Format error message."""
+    return f"Exception in {name} when processing platform '{platform_name}': {args}"
 
 
 @bind_hass
@@ -126,7 +110,15 @@ async def async_process_integration_platforms(
 
     top_level_components = {comp for comp in hass.config.components if "." not in comp}
     integration_platform = IntegrationPlatform(
-        platform_name, HassJob(process_platform), top_level_components
+        platform_name,
+        HassJob(
+            catch_log_exception(
+                process_platform,
+                partial(_format_err, str(process_platform), platform_name),
+            ),
+            f"process_platform {platform_name}",
+        ),
+        top_level_components,
     )
     integration_platforms.append(integration_platform)
 
@@ -143,8 +135,8 @@ async def async_process_integration_platforms(
             )
         )
         and (
-            future := _async_process_single_integration_platform_component(
-                hass, comp, platform, integration_platform
+            future := hass.async_run_hass_job(
+                integration_platform.process_platform, hass, comp, platform
             )
         )
     ]:

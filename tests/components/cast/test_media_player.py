@@ -2015,6 +2015,7 @@ async def test_entry_setup_no_config(hass: HomeAssistant) -> None:
     assert not hass.config_entries.async_entries("cast")
 
 
+@pytest.mark.no_fail_on_log_exception
 async def test_invalid_cast_platform(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
