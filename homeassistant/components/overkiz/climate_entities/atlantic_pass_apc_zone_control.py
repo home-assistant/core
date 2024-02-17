@@ -10,6 +10,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 
+from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
 OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
@@ -32,9 +33,37 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
     )
     _enable_turn_on_off_backwards_compatibility = False
 
+    def __init__(
+        self, device_url: str, coordinator: OverkizDataUpdateCoordinator
+    ) -> None:
+        """Init method."""
+        super().__init__(device_url, coordinator)
+
+        # Cooling is supported by a separate command
+        if self.is_auto_hvac_mode_available:
+            self._attr_hvac_modes.append(HVACMode.AUTO)
+
+    @property
+    def is_auto_hvac_mode_available(self) -> bool:
+        """Check if auto mode is available on the ZoneControl."""
+
+        return self.executor.has_command(
+            "setHeatingCoolingAutoSwitch"
+        ) and self.executor.has_state("core:HeatingCoolingAutoSwitchState")
+
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
+
+        if (
+            self.is_auto_hvac_mode_available
+            and cast(
+                str, self.executor.select_state("core:HeatingCoolingAutoSwitchState")
+            )
+            == OverkizCommandParam.ON
+        ):
+            return HVACMode.AUTO
+
         return OVERKIZ_TO_HVAC_MODE[
             cast(
                 str, self.executor.select_state(OverkizState.IO_PASS_APC_OPERATING_MODE)
@@ -43,6 +72,17 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
+
+        if self.is_auto_hvac_mode_available:
+            await self.executor.async_execute_command(
+                "setHeatingCoolingAutoSwitch",
+                OverkizCommandParam.ON
+                if hvac_mode == HVACMode.AUTO
+                else OverkizCommandParam.OFF,
+            )
+
+        if hvac_mode == HVACMode.AUTO:
+            return
 
         await self.executor.async_execute_command(
             OverkizCommand.SET_PASS_APC_OPERATING_MODE, HVAC_MODE_TO_OVERKIZ[hvac_mode]
