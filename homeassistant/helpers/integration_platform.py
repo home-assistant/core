@@ -10,7 +10,7 @@ from types import ModuleType
 from typing import Any
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HassJob, HomeAssistant, callback
 from homeassistant.loader import (
     Integration,
     async_get_integrations,
@@ -28,25 +28,29 @@ class IntegrationPlatform:
     """An integration platform."""
 
     platform_name: str
-    process_platform: Callable[[HomeAssistant, str, Any], Awaitable[None]]
+    process_platform: HassJob
     seen_components: set[str]
 
 
-async def _async_process_single_integration_platform_component(
+@callback
+def _async_process_single_integration_platform_component(
     hass: HomeAssistant,
     component_name: str,
     platform: ModuleType,
     integration_platform: IntegrationPlatform,
-) -> None:
+) -> asyncio.Future[None] | None:
     """Process a single integration platform."""
     try:
-        await integration_platform.process_platform(hass, component_name, platform)
+        return hass.async_run_hass_job(
+            integration_platform.process_platform, hass, component_name, platform
+        )
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception(
             "Error processing platform %s.%s",
             component_name,
             integration_platform.platform_name,
         )
+    return None
 
 
 def _get_platform_from_integration(
@@ -95,11 +99,8 @@ def _async_process_integration_platform_for_component(
         ):
             continue
         integration_platform.seen_components.add(component_name)
-        hass.async_create_task(
-            _async_process_single_integration_platform_component(
-                hass, component_name, platform, integration_platform
-            ),
-            f"process integration platform {integration_platform.platform_name} for {component_name}",
+        _async_process_single_integration_platform_component(
+            hass, component_name, platform, integration_platform
         )
 
 
@@ -131,22 +132,21 @@ async def async_process_integration_platforms(
         DATA_INTEGRATION_PLATFORMS
     ]
     integration_platform = IntegrationPlatform(
-        platform_name, process_platform, seen_components
+        platform_name, HassJob(process_platform), seen_components
     )
     integration_platforms.append(integration_platform)
-
-    if tasks := [
-        asyncio.create_task(
-            _async_process_single_integration_platform_component(
-                hass, comp, platform, integration_platform
-            ),
-            name=f"process integration platform {platform_name} for {comp}",
-        )
+    if futures := [
+        future
         for comp in top_level_components
         if (
             platform := _get_platform_from_integration(
                 integrations[comp], comp, platform_name
             )
         )
+        and (
+            future := _async_process_single_integration_platform_component(
+                hass, comp, platform, integration_platform
+            )
+        )
     ]:
-        await asyncio.gather(*tasks)
+        await asyncio.gather(*futures)
