@@ -70,11 +70,10 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
         type_filter = None
         if "type" in request.query:
             type_filter = [request.query["type"]]
-        return self.json(
-            await _async_matching_config_entries_json_fragments(
-                hass, type_filter, domain
-            )
+        fragments = await _async_matching_config_entries_json_fragments(
+            hass, type_filter, domain
         )
+        return self.json(fragments)
 
 
 class ConfigManagerEntryResourceView(HomeAssistantView):
@@ -459,12 +458,10 @@ async def config_entries_get(
     msg: dict[str, Any],
 ) -> None:
     """Return matching config entries by type and/or domain."""
-    connection.send_result(
-        msg["id"],
-        await _async_matching_config_entries_json_fragments(
-            hass, msg.get("type_filter"), msg.get("domain")
-        ),
+    fragments = await _async_matching_config_entries_json_fragments(
+        hass, msg.get("type_filter"), msg.get("domain")
     )
+    connection.send_result(msg["id"], fragments)
 
 
 @websocket_api.websocket_command(
