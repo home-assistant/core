@@ -20,6 +20,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util.dt import as_utc
 
 from . import TileData
 from .const import DOMAIN
@@ -145,16 +146,23 @@ class TileDeviceTracker(CoordinatorEntity[DataUpdateCoordinator[None]], TrackerE
     @callback
     def _update_from_latest_data(self) -> None:
         """Update the entity from the latest data."""
-        self._attr_extra_state_attributes.update(
-            {
-                ATTR_ALTITUDE: self._tile.altitude,
-                ATTR_IS_LOST: self._tile.lost,
-                ATTR_LAST_LOST_TIMESTAMP: self._tile.lost_timestamp,
-                ATTR_LAST_TIMESTAMP: self._tile.last_timestamp,
-                ATTR_RING_STATE: self._tile.ring_state,
-                ATTR_VOIP_STATE: self._tile.voip_state,
-            }
-        )
+        self._attr_extra_state_attributes = {
+            ATTR_ALTITUDE: self._tile.altitude,
+            ATTR_IS_LOST: self._tile.lost,
+            ATTR_RING_STATE: self._tile.ring_state,
+            ATTR_VOIP_STATE: self._tile.voip_state,
+        }
+        for timestamp_attr in (
+            (ATTR_LAST_LOST_TIMESTAMP, self._tile.lost_timestamp),
+            (ATTR_LAST_TIMESTAMP, self._tile.last_timestamp),
+        ):
+            if not timestamp_attr[1]:
+                # If the API doesn't return a value for a particular timestamp
+                # attribute, skip it:
+                continue
+            self._attr_extra_state_attributes[timestamp_attr[0]] = as_utc(
+                timestamp_attr[1]
+            )
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
