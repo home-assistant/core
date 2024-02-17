@@ -60,7 +60,7 @@ def _get_platform(
 
 
 @callback
-def _async_process_integration_platform_for_component(
+def _async_process_integration_platforms_for_component(
     hass: HomeAssistant, integration_platforms: list[IntegrationPlatform], event: Event
 ) -> None:
     """Process integration platforms for a component."""
@@ -101,7 +101,7 @@ async def async_process_integration_platforms(
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
             partial(
-                _async_process_integration_platform_for_component,
+                _async_process_integration_platforms_for_component,
                 hass,
                 integration_platforms,
             ),
