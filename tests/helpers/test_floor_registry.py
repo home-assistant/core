@@ -76,7 +76,7 @@ async def test_create_floor_with_name_already_in_use(
 async def test_create_floor_with_id_already_in_use(
     hass: HomeAssistant, floor_registry: fr.FloorRegistry
 ) -> None:
-    """Make sure that we can't create an floor with a name already in use."""
+    """Make sure that we can't create an floor with an id already in use."""
     floor = floor_registry.async_create("First")
 
     updated_floor = floor_registry.async_update(floor.floor_id, name="Second")
@@ -114,7 +114,7 @@ async def test_delete_floor(
 
 @pytest.mark.usefixtures("hass")
 async def test_delete_non_existing_floor(floor_registry: fr.FloorRegistry) -> None:
-    """Make sure that we can't delete an floor that doesn't exist."""
+    """Make sure that we can't delete a floor that doesn't exist."""
     floor_registry.async_create("First floor")
 
     with pytest.raises(KeyError):

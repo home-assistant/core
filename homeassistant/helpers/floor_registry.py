@@ -146,11 +146,12 @@ class FloorRegistry:
             normalized_name=normalized_name,
             level=level,
         )
-        self.floors[floor.floor_id] = floor
+        floor_id = floor.floor_id
+        self.floors[floor_id] = floor
         self.async_schedule_save()
         self.hass.bus.async_fire(
             EVENT_FLOOR_REGISTRY_UPDATED,
-            {"action": "create", "floor_id": floor.floor_id},
+            {"action": "create", "floor_id": floor_id},
         )
         return floor
 
@@ -256,5 +257,5 @@ async def async_load(hass: HomeAssistant) -> None:
 
 
 def _normalize_floor_name(floor_name: str) -> str:
-    """Normalize an floor name by removing whitespace and case folding."""
+    """Normalize a floor name by removing whitespace and case folding."""
     return floor_name.casefold().replace(" ", "")
