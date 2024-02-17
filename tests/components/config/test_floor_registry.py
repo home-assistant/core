@@ -1,29 +1,24 @@
 """Test floor registry API."""
-from collections.abc import Awaitable, Callable, Generator
-from typing import Any
-
-from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant.components.config import floor_registry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import floor_registry as fr
 
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
+
 
 @pytest.fixture(name="client")
 async def client_fixture(
-    hass: HomeAssistant,
-    hass_ws_client: Callable[
-        [HomeAssistant], Awaitable[Generator[ClientWebSocketResponse, Any, Any]]
-    ],
-) -> Generator[ClientWebSocketResponse, None, None]:
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
     floor_registry.async_setup(hass)
     return await hass_ws_client(hass)
 
 
 async def test_list_floors(
-    client: ClientWebSocketResponse,
+    client: MockHAClientWebSocket,
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test list entries."""
@@ -56,7 +51,7 @@ async def test_list_floors(
 
 
 async def test_create_floor(
-    client: ClientWebSocketResponse,
+    client: MockHAClientWebSocket,
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test create entry."""
@@ -95,7 +90,7 @@ async def test_create_floor(
 
 
 async def test_create_floor_with_name_already_in_use(
-    client: ClientWebSocketResponse,
+    client: MockHAClientWebSocket,
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test create entry that should fail."""
@@ -117,7 +112,7 @@ async def test_create_floor_with_name_already_in_use(
 
 
 async def test_delete_floor(
-    client: ClientWebSocketResponse,
+    client: MockHAClientWebSocket,
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test delete entry."""
@@ -135,7 +130,7 @@ async def test_delete_floor(
 
 
 async def test_delete_non_existing_floor(
-    client: ClientWebSocketResponse,
+    client: MockHAClientWebSocket,
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test delete entry that should fail."""
@@ -158,7 +153,7 @@ async def test_delete_non_existing_floor(
 
 
 async def test_update_floor(
-    client: ClientWebSocketResponse,
+    client: MockHAClientWebSocket,
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test update entry."""
@@ -207,7 +202,7 @@ async def test_update_floor(
 
 
 async def test_update_with_name_already_in_use(
-    client: ClientWebSocketResponse,
+    client: MockHAClientWebSocket,
     floor_registry: fr.FloorRegistry,
 ) -> None:
     """Test update entry."""
