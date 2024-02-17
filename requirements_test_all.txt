@@ -724,6 +724,9 @@ freebox-api==1.1.0
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.13.2
 
+# homeassistant.components.fyta
+fyta_cli==0.2.0
+
 # homeassistant.components.google_translate
 gTTS==2.2.4
 
