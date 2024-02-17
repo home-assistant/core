@@ -151,10 +151,6 @@ class Enigma2Device(MediaPlayerEntity):
             try:
                 await self._device.set_powerstate(PowerState.DEEP_STANDBY)
             except ServerDisconnectedError:
-                _LOGGER.warning(
-                    "%s went into deep standby",
-                    self._device.base.host,
-                )
                 self._attr_available = False
         else:
             await self._device.set_powerstate(PowerState.STANDBY)
