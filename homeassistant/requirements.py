@@ -212,7 +212,7 @@ class RequirementsManager:
             if (
                 check_domain not in done
                 and check_domain not in deps_to_check
-                # If the integration is in the cache and its an Integration
+                # If the integration is in the cache and it's an Integration
                 # it's already been checked for the requirements and we should
                 # not check it again.
                 and (
