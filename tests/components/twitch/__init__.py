@@ -192,6 +192,10 @@ class TwitchMock:
         for stream in streams:
             yield stream
 
+    async def get_refreshed_user_auth_token(self) -> str:
+        """Get refreshed user auth token."""
+        return "abc123"
+
 
 class TwitchUnauthorizedMock(TwitchMock):
     """Twitch mock to test if the client is unauthorized."""
