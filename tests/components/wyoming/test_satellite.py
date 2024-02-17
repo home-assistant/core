@@ -603,25 +603,25 @@ async def test_satellite_error_during_pipeline(hass: HomeAssistant) -> None:
         ).event(),
     ]  # no audio chunks after RunPipeline
 
-    client_created_event = asyncio.Event()
-    mock_client = SatelliteAsyncTcpClient(events)
+    pipeline_event = asyncio.Event()
 
-    def _async_make_tcp_client(*args: Any, **kwargs: Any) -> SatelliteAsyncTcpClient:
-        client_created_event.set()
-        return mock_client
+    def _async_pipeline_from_audio_stream(*args: Any, **kwargs: Any) -> None:
+        pipeline_event.set()
 
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
         return_value=SATELLITE_INFO,
     ), patch(
         "homeassistant.components.wyoming.satellite.AsyncTcpClient",
-        _async_make_tcp_client,
-    ), patch(
+        SatelliteAsyncTcpClient(events),
+    ) as mock_client, patch(
         "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
+        wraps=_async_pipeline_from_audio_stream,
     ) as mock_run_pipeline:
         await setup_config_entry(hass)
+
         async with asyncio.timeout(1):
-            await client_created_event.wait()
+            await pipeline_event.wait()
             await mock_client.connect_event.wait()
             await mock_client.run_satellite_event.wait()
 
@@ -658,22 +658,20 @@ async def test_tts_not_wav(hass: HomeAssistant) -> None:
     events = [
         RunPipeline(start_stage=PipelineStage.TTS, end_stage=PipelineStage.TTS).event(),
     ]
+    pipeline_event = asyncio.Event()
 
-    client_created_event = asyncio.Event()
-    mock_client = SatelliteAsyncTcpClient(events)
-
-    def _async_make_tcp_client(*args: Any, **kwargs: Any) -> SatelliteAsyncTcpClient:
-        client_created_event.set()
-        return mock_client
+    def _async_pipeline_from_audio_stream(*args: Any, **kwargs: Any) -> None:
+        pipeline_event.set()
 
     with patch(
         "homeassistant.components.wyoming.data.load_wyoming_info",
         return_value=SATELLITE_INFO,
     ), patch(
         "homeassistant.components.wyoming.satellite.AsyncTcpClient",
-        _async_make_tcp_client,
-    ), patch(
+        SatelliteAsyncTcpClient(events),
+    ) as mock_client, patch(
         "homeassistant.components.wyoming.satellite.assist_pipeline.async_pipeline_from_audio_stream",
+        wraps=_async_pipeline_from_audio_stream,
     ) as mock_run_pipeline, patch(
         "homeassistant.components.wyoming.satellite.tts.async_get_media_source_audio",
         return_value=("mp3", bytes(1)),
@@ -682,8 +680,9 @@ async def test_tts_not_wav(hass: HomeAssistant) -> None:
         _stream_tts,
     ):
         entry = await setup_config_entry(hass)
+
         async with asyncio.timeout(1):
-            await client_created_event.wait()
+            await pipeline_event.wait()
             await mock_client.connect_event.wait()
             await mock_client.run_satellite_event.wait()
 
