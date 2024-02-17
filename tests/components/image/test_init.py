@@ -307,16 +307,20 @@ async def test_image_stream(
 
     with patch.object(mock_image, "async_image", return_value=b""):
         resp = await client.get("/api/image_proxy_stream/image.test")
-    assert not resp.closed
-    assert resp.status == HTTPStatus.OK
+        assert not resp.closed
+        assert resp.status == HTTPStatus.OK
 
-    mock_image.image_last_updated = datetime.datetime.now()
-    mock_image.async_write_ha_state()
-    await hass.async_block_till_done()
+        mock_image.image_last_updated = datetime.datetime.now()
+        mock_image.async_write_ha_state()
+        # Two blocks to ensure the frame is written
+        await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     with patch.object(mock_image, "async_image", return_value=None):
         mock_image.image_last_updated = datetime.datetime.now()
         mock_image.async_write_ha_state()
+        # Two blocks to ensure the frame is written
+        await hass.async_block_till_done()
         await hass.async_block_till_done()
 
     assert resp.closed

@@ -315,34 +315,29 @@ async def async_get_still_stream(
     await response.prepare(request)
     boundary = bytes("\r\n--frameboundary\r\n", "utf-8")
 
-    event = asyncio.Event()
-
-    async def _write_to_stream() -> None:
+    async def _write_frame() -> bool:
         img_bytes = await image_entity.async_image()
         if img_bytes is None:
             await response.write(bytes("\r\n--frameboundary--\r\n", "utf-8"))
-            event.set()
-            return
-
+            return False
         header = bytes(
             f"Content-Type: {image_entity.content_type}\r\n"
             f"Content-Length: {len(img_bytes)}\r\n\r\n",
             "utf-8",
         )
         frame = boundary + header + img_bytes
-        try:
-            # Chrome shows the n-1 frame so send the frame twice
-            # https://issues.chromium.org/issues/41199053
-            # https://issues.chromium.org/issues/40791855
-            await response.write(frame + frame)
-            await response.drain()
-        except:
-            event.set()
-            raise
+        # Chrome shows the n-1 frame so send the frame twice
+        # https://issues.chromium.org/issues/41199053
+        # https://issues.chromium.org/issues/40791855
+        await response.write(frame + frame)
+        await response.drain()
+        return True
+
+    event = asyncio.Event()
 
     async def image_state_update(_event: EventType[EventStateChangedData]) -> None:
         """Write image to stream."""
-        await _write_to_stream()
+        event.set()
 
     hass: HomeAssistant = request.app["hass"]
     remove = async_track_state_change_event(
@@ -351,11 +346,13 @@ async def async_get_still_stream(
         image_state_update,
     )
     try:
-        await _write_to_stream()
-        await event.wait()
+        while True:
+            if not await _write_frame():
+                return response
+            await event.wait()
+            event.clear()
     finally:
         remove()
-    return response
 
 
 class ImageStreamView(ImageView):
