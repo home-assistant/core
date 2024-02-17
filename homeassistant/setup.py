@@ -20,10 +20,8 @@ from .const import (
 from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from .exceptions import DependencyError, HomeAssistantError
 from .helpers.issue_registry import IssueSeverity, async_create_issue
-from .helpers.typing import ConfigType
-from .util import ensure_unique_string
 from .helpers.typing import ConfigType, EventType
-from .util import dt as dt_util, ensure_unique_string
+from .util import ensure_unique_string
 
 _LOGGER = logging.getLogger(__name__)
 
