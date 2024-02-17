@@ -1,4 +1,5 @@
 """Test requirements module."""
+import asyncio
 import logging
 import os
 from unittest.mock import call, patch
@@ -11,6 +12,7 @@ from homeassistant.loader import async_get_integration
 from homeassistant.requirements import (
     CONSTRAINT_FILE,
     RequirementsNotFound,
+    _async_get_manager,
     async_clear_install_history,
     async_get_integration_with_requirements,
     async_process_requirements,
@@ -257,6 +259,36 @@ async def test_get_integration_with_requirements_cache(hass: HomeAssistant) -> N
     ) == [
         "test_component2",
     ]
+
+
+async def test_get_integration_with_requirements_concurrency(
+    hass: HomeAssistant,
+) -> None:
+    """Test that we don't install the same requirement concurrently."""
+    hass.config.skip_pip = False
+    mock_integration(
+        hass, MockModule("test_component_dep", requirements=["test-comp-dep==1.0.0"])
+    )
+
+    process_integration_calls = 0
+
+    async def _async_process_integration_slowed(*args, **kwargs):
+        nonlocal process_integration_calls
+        process_integration_calls += 1
+        await asyncio.sleep(0)
+
+    manager = _async_get_manager(hass)
+    with patch.object(
+        manager, "_async_process_integration", _async_process_integration_slowed
+    ):
+        tasks = [
+            async_get_integration_with_requirements(hass, "test_component_dep")
+            for _ in range(10)
+        ]
+        results = await asyncio.gather(*tasks)
+        assert all(result.domain == "test_component_dep" for result in results)
+
+    assert process_integration_calls == 1
 
 
 async def test_get_integration_with_requirements_pip_install_fails_two_passes(
