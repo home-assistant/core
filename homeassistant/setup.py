@@ -8,7 +8,7 @@ from datetime import timedelta
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
-from typing import Any
+from typing import Any, Final, TypedDict
 
 from . import config as conf_util, core, loader, requirements
 from .const import (
@@ -20,12 +20,12 @@ from .const import (
 from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from .exceptions import DependencyError, HomeAssistantError
 from .helpers.issue_registry import IssueSeverity, async_create_issue
-from .helpers.typing import ConfigType
+from .helpers.typing import ConfigType, EventType
 from .util import dt as dt_util, ensure_unique_string
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_COMPONENT = "component"
+ATTR_COMPONENT: Final = "component"
 
 BASE_PLATFORMS = {platform.value for platform in Platform}
 
@@ -64,6 +64,12 @@ NOTIFY_FOR_TRANSLATION_KEYS = [
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 300
+
+
+class EventComponentLoaded(TypedDict):
+    """EventComponentLoaded data."""
+
+    component: str
 
 
 @callback
@@ -516,28 +522,27 @@ def _async_when_setup(
 
     listeners: list[CALLBACK_TYPE] = []
 
-    async def _matched_event(event: core.Event) -> None:
+    async def _matched_event(event: EventType[EventComponentLoaded]) -> None:
         """Call the callback when we matched an event."""
         for listener in listeners:
             listener()
         await when_setup()
 
     @callback
-    def _async_is_component_filter(event: core.Event) -> bool:
+    def _async_is_component_filter(event: EventType[EventComponentLoaded]) -> bool:
         """Check if the event is for the component."""
-        event_comp: str = event.data[ATTR_COMPONENT]
-        return event_comp == component
+        return event.data[ATTR_COMPONENT] == component
 
     listeners.append(
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
-            _matched_event,
-            event_filter=_async_is_component_filter,
+            _matched_event,  # type: ignore[arg-type]
+            event_filter=_async_is_component_filter,  # type: ignore[arg-type]
         )
     )
     if start_event:
         listeners.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)  # type: ignore[arg-type]
         )
 
 
