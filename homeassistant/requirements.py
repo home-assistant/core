@@ -213,7 +213,7 @@ class RequirementsManager:
                 check_domain not in done
                 and check_domain not in deps_to_check
                 # If the integration is in the cache and its an Integration
-                # its already been checked for the requirements and we should
+                # it's already been checked for the requirements and we should
                 # not check it again.
                 and (
                     not (cached_integration := cache.get(check_domain))
