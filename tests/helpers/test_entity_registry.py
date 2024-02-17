@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import attr
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
