@@ -55,6 +55,7 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     issue_registry as ir,
     recorder as recorder_helper,
 )
@@ -1599,6 +1600,12 @@ def device_registry(hass: HomeAssistant) -> dr.DeviceRegistry:
 def entity_registry(hass: HomeAssistant) -> er.EntityRegistry:
     """Return the entity registry from the current hass instance."""
     return er.async_get(hass)
+
+
+@pytest.fixture
+def floor_registry(hass: HomeAssistant) -> fr.FloorRegistry:
+    """Return the floor registry from the current hass instance."""
+    return fr.async_get(hass)
 
 
 @pytest.fixture

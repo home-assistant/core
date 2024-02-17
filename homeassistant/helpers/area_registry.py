@@ -6,7 +6,7 @@ from collections.abc import Iterable, ValuesView
 import dataclasses
 from typing import Any, Literal, TypedDict, cast
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util import slugify
 
 from . import device_registry as dr, entity_registry as er
@@ -17,7 +17,7 @@ DATA_REGISTRY = "area_registry"
 EVENT_AREA_REGISTRY_UPDATED = "area_registry_updated"
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 5
 SAVE_DELAY = 10
 
 
@@ -33,6 +33,7 @@ class AreaEntry:
     """Area Registry Entry."""
 
     aliases: set[str]
+    floor_id: str | None
     icon: str | None
     id: str
     name: str
@@ -113,6 +114,11 @@ class AreaRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
                 for area in old_data["areas"]:
                     area["icon"] = None
 
+            if old_minor_version < 5:
+                # Version 1.5 adds floor_id
+                for area in old_data["areas"]:
+                    area["floor_id"] = None
+
         if old_major_version > 1:
             raise NotImplementedError
         return old_data
@@ -167,6 +173,7 @@ class AreaRegistry:
         name: str,
         *,
         aliases: set[str] | None = None,
+        floor_id: str | None = None,
         icon: str | None = None,
         picture: str | None = None,
     ) -> AreaEntry:
@@ -179,6 +186,7 @@ class AreaRegistry:
         area_id = self._generate_area_id(name)
         area = AreaEntry(
             aliases=aliases or set(),
+            floor_id=floor_id,
             icon=icon,
             id=area_id,
             name=name,
@@ -215,6 +223,7 @@ class AreaRegistry:
         area_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
+        floor_id: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
@@ -223,6 +232,7 @@ class AreaRegistry:
         updated = self._async_update(
             area_id,
             aliases=aliases,
+            floor_id=floor_id,
             icon=icon,
             name=name,
             picture=picture,
@@ -238,6 +248,7 @@ class AreaRegistry:
         area_id: str,
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
+        floor_id: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
@@ -251,6 +262,7 @@ class AreaRegistry:
             ("aliases", aliases),
             ("icon", icon),
             ("picture", picture),
+            ("floor_id", floor_id),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 new_values[attr_name] = value
@@ -269,6 +281,8 @@ class AreaRegistry:
 
     async def async_load(self) -> None:
         """Load the area registry."""
+        self._async_setup_cleanup()
+
         data = await self._store.async_load()
 
         areas = AreaRegistryItems()
@@ -279,6 +293,7 @@ class AreaRegistry:
                 normalized_name = normalize_area_name(area["name"])
                 areas[area["id"]] = AreaEntry(
                     aliases=set(area["aliases"]),
+                    floor_id=area["floor_id"],
                     icon=area["icon"],
                     id=area["id"],
                     name=area["name"],
@@ -302,6 +317,7 @@ class AreaRegistry:
         data["areas"] = [
             {
                 "aliases": list(entry.aliases),
+                "floor_id": entry.floor_id,
                 "icon": entry.icon,
                 "id": entry.id,
                 "name": entry.name,
@@ -321,6 +337,31 @@ class AreaRegistry:
             suggestion = f"{suggestion_base}_{tries}"
         return suggestion
 
+    @callback
+    def _async_setup_cleanup(self) -> None:
+        """Set up the area registry cleanup."""
+        # pylint: disable-next=import-outside-toplevel
+        from . import floor_registry as fr  # Circular dependency
+
+        @callback
+        def _floor_removed_from_registry_filter(event: Event) -> bool:
+            """Filter all except for the remove action from floor registry events."""
+            return bool(event.data["action"] == "remove")
+
+        @callback
+        def _handle_floor_registry_update(event: Event) -> None:
+            """Update areas that are associated with a floor that has been removed."""
+            floor_id = event.data["floor_id"]
+            for area_id, area in self.areas.items():
+                if floor_id == area.floor_id:
+                    self.async_update(area_id, floor_id=None)
+
+        self.hass.bus.async_listen(
+            event_type=fr.EVENT_FLOOR_REGISTRY_UPDATED,
+            event_filter=_floor_removed_from_registry_filter,
+            listener=_handle_floor_registry_update,
+        )
+
 
 @callback
 def async_get(hass: HomeAssistant) -> AreaRegistry:
@@ -333,6 +374,12 @@ async def async_load(hass: HomeAssistant) -> None:
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = AreaRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
+
+
+@callback
+def async_entries_for_floor(registry: AreaRegistry, floor_id: str) -> list[AreaEntry]:
+    """Return entries that match an floor."""
+    return [area for area in registry.areas.values() if floor_id == area.floor_id]
 
 
 def normalize_area_name(area_name: str) -> str:
