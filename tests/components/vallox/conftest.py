@@ -46,6 +46,7 @@ def default_metrics():
         "A_CYC_BOOST_TIMER": 30,
         "A_CYC_FIREPLACE_TIMER": 30,
         "A_CYC_EXTRA_TIMER": 30,
+        "A_CYC_MODE": 0,
         "A_CYC_STATE": 0,
         "A_CYC_FILTER_CHANGED_YEAR": 24,
         "A_CYC_FILTER_CHANGED_MONTH": 2,
@@ -64,22 +65,30 @@ def default_metrics():
     }
 
 
-@pytest.fixture
-def setup_fetch_metric_data_mock(default_metrics):
-    """Patch the Vallox metrics response."""
-
+@pytest.fixture(autouse=True)
+def fetch_metric_data_mock(default_metrics):
+    """Stub the Vallox fetch_metric_data method."""
     with patch(
         "homeassistant.components.vallox.Vallox.fetch_metric_data",
         new_callable=AsyncMock,
-    ) as mock:  # replace with the actual path
+    ) as mock:
+        mock.return_value = MetricData(default_metrics)
+        yield mock
 
-        def _setup(metrics=None, metric_data_class=MetricData):
-            metrics = metrics or {}
-            mock.return_value = metric_data_class({**default_metrics, **metrics})
 
-            return mock
+@pytest.fixture
+def setup_fetch_metric_data_mock(fetch_metric_data_mock, default_metrics):
+    """Patch the Vallox metrics response."""
 
-        yield _setup
+    def _setup(metrics=None, metric_data_class=MetricData):
+        metrics = metrics or {}
+        fetch_metric_data_mock.return_value = metric_data_class(
+            {**default_metrics, **metrics}
+        )
+
+        return fetch_metric_data_mock
+
+    return _setup
 
 
 def patch_set_profile():
