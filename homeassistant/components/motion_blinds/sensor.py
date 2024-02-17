@@ -1,5 +1,6 @@
 """Support for Motion Blinds sensors."""
-from motionblinds import DEVICE_TYPES_WIFI, BlindType
+from motionblinds import DEVICE_TYPES_WIFI
+from motionblinds.motion_blinds import DEVICE_TYPE_TDBU
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -29,7 +30,7 @@ async def async_setup_entry(
 
     for blind in motion_gateway.device_list.values():
         entities.append(MotionSignalStrengthSensor(coordinator, blind))
-        if blind.type == BlindType.TopDownBottomUp:
+        if blind.device_type == DEVICE_TYPE_TDBU:
             entities.append(MotionTDBUBatterySensor(coordinator, blind, "Bottom"))
             entities.append(MotionTDBUBatterySensor(coordinator, blind, "Top"))
         elif blind.battery_voltage is not None and blind.battery_voltage > 0:

@@ -101,7 +101,7 @@ async def test_exposed_areas(
     device_registry.async_update_device(kitchen_device.id, area_id=area_kitchen.id)
 
     kitchen_light = entity_registry.async_get_or_create("light", "demo", "1234")
-    entity_registry.async_update_entity(
+    kitchen_light = entity_registry.async_update_entity(
         kitchen_light.entity_id, device_id=kitchen_device.id
     )
     hass.states.async_set(
@@ -109,7 +109,7 @@ async def test_exposed_areas(
     )
 
     bedroom_light = entity_registry.async_get_or_create("light", "demo", "5678")
-    entity_registry.async_update_entity(
+    bedroom_light = entity_registry.async_update_entity(
         bedroom_light.entity_id, area_id=area_bedroom.id
     )
     hass.states.async_set(
@@ -206,14 +206,14 @@ async def test_unexposed_entities_skipped(
 
     # Both lights are in the kitchen
     exposed_light = entity_registry.async_get_or_create("light", "demo", "1234")
-    entity_registry.async_update_entity(
+    exposed_light = entity_registry.async_update_entity(
         exposed_light.entity_id,
         area_id=area_kitchen.id,
     )
     hass.states.async_set(exposed_light.entity_id, "off")
 
     unexposed_light = entity_registry.async_get_or_create("light", "demo", "5678")
-    entity_registry.async_update_entity(
+    unexposed_light = entity_registry.async_update_entity(
         unexposed_light.entity_id,
         area_id=area_kitchen.id,
     )
@@ -336,7 +336,9 @@ async def test_device_area_context(
             light_entity = entity_registry.async_get_or_create(
                 "light", "demo", f"{area.name}-light-{i}"
             )
-            entity_registry.async_update_entity(light_entity.entity_id, area_id=area.id)
+            light_entity = entity_registry.async_update_entity(
+                light_entity.entity_id, area_id=area.id
+            )
             hass.states.async_set(
                 light_entity.entity_id,
                 "off",
@@ -612,6 +614,115 @@ async def test_error_no_intent(hass: HomeAssistant, init_components) -> None:
         )
 
 
+async def test_error_duplicate_names(
+    hass: HomeAssistant, init_components, entity_registry: er.EntityRegistry
+) -> None:
+    """Test error message when multiple devices have the same name (or alias)."""
+    kitchen_light_1 = entity_registry.async_get_or_create("light", "demo", "1234")
+    kitchen_light_2 = entity_registry.async_get_or_create("light", "demo", "5678")
+
+    # Same name and alias
+    for light in (kitchen_light_1, kitchen_light_2):
+        light = entity_registry.async_update_entity(
+            light.entity_id,
+            name="kitchen light",
+            aliases={"overhead light"},
+        )
+        hass.states.async_set(
+            light.entity_id,
+            "off",
+            attributes={ATTR_FRIENDLY_NAME: light.name},
+        )
+
+    # Check name and alias
+    for name in ("kitchen light", "overhead light"):
+        # command
+        result = await conversation.async_converse(
+            hass, f"turn on {name}", None, Context(), None
+        )
+        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert (
+            result.response.error_code
+            == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+        )
+        assert (
+            result.response.speech["plain"]["speech"]
+            == f"Sorry, there are multiple devices called {name}"
+        )
+
+        # question
+        result = await conversation.async_converse(
+            hass, f"is {name} on?", None, Context(), None
+        )
+        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert (
+            result.response.error_code
+            == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+        )
+        assert (
+            result.response.speech["plain"]["speech"]
+            == f"Sorry, there are multiple devices called {name}"
+        )
+
+
+async def test_error_duplicate_names_in_area(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test error message when multiple devices have the same name (or alias)."""
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
+
+    kitchen_light_1 = entity_registry.async_get_or_create("light", "demo", "1234")
+    kitchen_light_2 = entity_registry.async_get_or_create("light", "demo", "5678")
+
+    # Same name and alias
+    for light in (kitchen_light_1, kitchen_light_2):
+        light = entity_registry.async_update_entity(
+            light.entity_id,
+            name="kitchen light",
+            area_id=area_kitchen.id,
+            aliases={"overhead light"},
+        )
+        hass.states.async_set(
+            light.entity_id,
+            "off",
+            attributes={ATTR_FRIENDLY_NAME: light.name},
+        )
+
+    # Check name and alias
+    for name in ("kitchen light", "overhead light"):
+        # command
+        result = await conversation.async_converse(
+            hass, f"turn on {name} in {area_kitchen.name}", None, Context(), None
+        )
+        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert (
+            result.response.error_code
+            == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+        )
+        assert (
+            result.response.speech["plain"]["speech"]
+            == f"Sorry, there are multiple devices called {name} in the {area_kitchen.name} area"
+        )
+
+        # question
+        result = await conversation.async_converse(
+            hass, f"is {name} on in the {area_kitchen.name}?", None, Context(), None
+        )
+        assert result.response.response_type == intent.IntentResponseType.ERROR
+        assert (
+            result.response.error_code
+            == intent.IntentResponseErrorCode.NO_VALID_TARGETS
+        )
+        assert (
+            result.response.speech["plain"]["speech"]
+            == f"Sorry, there are multiple devices called {name} in the {area_kitchen.name} area"
+        )
+
+
 async def test_no_states_matched_default_error(
     hass: HomeAssistant, init_components, area_registry: ar.AreaRegistry
 ) -> None:
@@ -692,7 +803,7 @@ async def test_empty_aliases(
 
         names = slot_lists["name"]
         assert len(names.values) == 1
-        assert names.values[0].value_out == kitchen_light.entity_id
+        assert names.values[0].value_out == kitchen_light.name
         assert names.values[0].text_in.text == kitchen_light.name
 
 
@@ -713,3 +824,191 @@ async def test_all_domains_loaded(hass: HomeAssistant, init_components) -> None:
         result.response.speech["plain"]["speech"]
         == "Sorry, I am not aware of any device called test light"
     )
+
+
+async def test_same_named_entities_in_different_areas(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that entities with the same name in different areas can be targeted."""
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
+
+    area_bedroom = area_registry.async_get_or_create("bedroom_id")
+    area_bedroom = area_registry.async_update(area_bedroom.id, name="bedroom")
+
+    # Both lights have the same name, but are in different areas
+    kitchen_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    kitchen_light = entity_registry.async_update_entity(
+        kitchen_light.entity_id,
+        area_id=area_kitchen.id,
+        name="overhead light",
+    )
+    hass.states.async_set(
+        kitchen_light.entity_id,
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: kitchen_light.name},
+    )
+
+    bedroom_light = entity_registry.async_get_or_create("light", "demo", "5678")
+    bedroom_light = entity_registry.async_update_entity(
+        bedroom_light.entity_id,
+        area_id=area_bedroom.id,
+        name="overhead light",
+    )
+    hass.states.async_set(
+        bedroom_light.entity_id,
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: bedroom_light.name},
+    )
+
+    # Target kitchen light
+    calls = async_mock_service(hass, "light", "turn_on")
+    result = await conversation.async_converse(
+        hass, "turn on overhead light in the kitchen", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert (
+        result.response.intent.slots.get("name", {}).get("value") == kitchen_light.name
+    )
+    assert (
+        result.response.intent.slots.get("name", {}).get("text") == kitchen_light.name
+    )
+    assert len(result.response.matched_states) == 1
+    assert result.response.matched_states[0].entity_id == kitchen_light.entity_id
+    assert calls[0].data.get("entity_id") == [kitchen_light.entity_id]
+
+    # Target bedroom light
+    calls.clear()
+    result = await conversation.async_converse(
+        hass, "turn on overhead light in the bedroom", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert (
+        result.response.intent.slots.get("name", {}).get("value") == bedroom_light.name
+    )
+    assert (
+        result.response.intent.slots.get("name", {}).get("text") == bedroom_light.name
+    )
+    assert len(result.response.matched_states) == 1
+    assert result.response.matched_states[0].entity_id == bedroom_light.entity_id
+    assert calls[0].data.get("entity_id") == [bedroom_light.entity_id]
+
+    # Targeting a duplicate name should fail
+    result = await conversation.async_converse(
+        hass, "turn on overhead light", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+
+    # Querying a duplicate name should also fail
+    result = await conversation.async_converse(
+        hass, "is the overhead light on?", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+
+    # But we can still ask questions that don't rely on the name
+    result = await conversation.async_converse(
+        hass, "how many lights are on?", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+
+
+async def test_same_aliased_entities_in_different_areas(
+    hass: HomeAssistant,
+    init_components,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that entities with the same alias (but different names) in different areas can be targeted."""
+    area_kitchen = area_registry.async_get_or_create("kitchen_id")
+    area_kitchen = area_registry.async_update(area_kitchen.id, name="kitchen")
+
+    area_bedroom = area_registry.async_get_or_create("bedroom_id")
+    area_bedroom = area_registry.async_update(area_bedroom.id, name="bedroom")
+
+    # Both lights have the same alias, but are in different areas
+    kitchen_light = entity_registry.async_get_or_create("light", "demo", "1234")
+    kitchen_light = entity_registry.async_update_entity(
+        kitchen_light.entity_id,
+        area_id=area_kitchen.id,
+        name="kitchen overhead light",
+        aliases={"overhead light"},
+    )
+    hass.states.async_set(
+        kitchen_light.entity_id,
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: kitchen_light.name},
+    )
+
+    bedroom_light = entity_registry.async_get_or_create("light", "demo", "5678")
+    bedroom_light = entity_registry.async_update_entity(
+        bedroom_light.entity_id,
+        area_id=area_bedroom.id,
+        name="bedroom overhead light",
+        aliases={"overhead light"},
+    )
+    hass.states.async_set(
+        bedroom_light.entity_id,
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: bedroom_light.name},
+    )
+
+    # Target kitchen light
+    calls = async_mock_service(hass, "light", "turn_on")
+    result = await conversation.async_converse(
+        hass, "turn on overhead light in the kitchen", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert result.response.intent.slots.get("name", {}).get("value") == "overhead light"
+    assert result.response.intent.slots.get("name", {}).get("text") == "overhead light"
+    assert len(result.response.matched_states) == 1
+    assert result.response.matched_states[0].entity_id == kitchen_light.entity_id
+    assert calls[0].data.get("entity_id") == [kitchen_light.entity_id]
+
+    # Target bedroom light
+    calls.clear()
+    result = await conversation.async_converse(
+        hass, "turn on overhead light in the bedroom", None, Context(), None
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert result.response.intent.slots.get("name", {}).get("value") == "overhead light"
+    assert result.response.intent.slots.get("name", {}).get("text") == "overhead light"
+    assert len(result.response.matched_states) == 1
+    assert result.response.matched_states[0].entity_id == bedroom_light.entity_id
+    assert calls[0].data.get("entity_id") == [bedroom_light.entity_id]
+
+    # Targeting a duplicate alias should fail
+    result = await conversation.async_converse(
+        hass, "turn on overhead light", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+
+    # Querying a duplicate alias should also fail
+    result = await conversation.async_converse(
+        hass, "is the overhead light on?", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+
+    # But we can still ask questions that don't rely on the alias
+    result = await conversation.async_converse(
+        hass, "how many lights are on?", None, Context(), None
+    )
+    assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER

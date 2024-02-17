@@ -7,11 +7,12 @@ import voluptuous as vol
 
 from homeassistant.auth.providers import homeassistant as auth_ha
 from homeassistant.components import websocket_api
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 
 
-async def async_setup(hass: HomeAssistant) -> bool:
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Home Assistant views."""
     websocket_api.async_register_command(hass, websocket_create)
     websocket_api.async_register_command(hass, websocket_delete)
