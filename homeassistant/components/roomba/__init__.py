@@ -90,7 +90,7 @@ async def async_connect_or_timeout(
     except RoombaConnectionError as err:
         _LOGGER.debug("Error to connect to vacuum: %s", err)
         raise CannotConnect from err
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         # api looping if user or password incorrect and roomba exist
         await async_disconnect_or_timeout(hass, roomba)
         _LOGGER.debug("Timeout expired: %s", err)
@@ -102,7 +102,7 @@ async def async_connect_or_timeout(
 async def async_disconnect_or_timeout(hass: HomeAssistant, roomba: Roomba) -> None:
     """Disconnect to vacuum."""
     _LOGGER.debug("Disconnect vacuum")
-    with contextlib.suppress(asyncio.TimeoutError):
+    with contextlib.suppress(TimeoutError):
         async with asyncio.timeout(3):
             await hass.async_add_executor_job(roomba.disconnect)
 

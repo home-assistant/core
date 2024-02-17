@@ -8,6 +8,6 @@
     }
   },
   "services": {
-    "reload": "mdi:account-sync"
+    "reload": "mdi:reload"
   }
 }

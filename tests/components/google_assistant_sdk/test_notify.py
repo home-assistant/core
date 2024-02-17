@@ -33,7 +33,9 @@ async def test_broadcast_no_targets(
     await setup_integration()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    entry.options = {"language_code": language_code}
+    hass.config_entries.async_update_entry(
+        entry, options={"language_code": language_code}
+    )
 
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant"
@@ -87,7 +89,9 @@ async def test_broadcast_one_target(
     await setup_integration()
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    entry.options = {"language_code": language_code}
+    hass.config_entries.async_update_entry(
+        entry, options={"language_code": language_code}
+    )
 
     with patch(
         "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",

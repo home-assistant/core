@@ -4,9 +4,9 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from python_bring_api.bring import Bring
-from python_bring_api.exceptions import BringParseException, BringRequestException
-from python_bring_api.types import BringItemsResponse, BringList
+from bring_api.bring import Bring
+from bring_api.exceptions import BringParseException, BringRequestException
+from bring_api.types import BringItemsResponse, BringList
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -40,9 +40,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
 
     async def _async_update_data(self) -> dict[str, BringData]:
         try:
-            lists_response = await self.hass.async_add_executor_job(
-                self.bring.loadLists
-            )
+            lists_response = await self.bring.loadLists()
         except BringRequestException as e:
             raise UpdateFailed("Unable to connect and retrieve data from bring") from e
         except BringParseException as e:
@@ -51,9 +49,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
         list_dict = {}
         for lst in lists_response["lists"]:
             try:
-                items = await self.hass.async_add_executor_job(
-                    self.bring.getItems, lst["listUuid"]
-                )
+                items = await self.bring.getItems(lst["listUuid"])
             except BringRequestException as e:
                 raise UpdateFailed(
                     "Unable to connect and retrieve data from bring"

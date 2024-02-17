@@ -331,7 +331,7 @@ async def _async_setup_component(
             if task:
                 async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, domain):
                     result = await task
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error(
                 (
                     "Setup of '%s' is taking longer than %s seconds."
@@ -370,15 +370,18 @@ async def _async_setup_component(
         # call to avoid a deadlock when forwarding platforms
         hass.config.components.add(domain)
 
-        await asyncio.gather(
-            *(
-                asyncio.create_task(
-                    entry.async_setup(hass, integration=integration),
-                    name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
+        if entries := hass.config_entries.async_entries(
+            domain, include_ignore=False, include_disabled=False
+        ):
+            await asyncio.gather(
+                *(
+                    asyncio.create_task(
+                        entry.async_setup(hass, integration=integration),
+                        name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
+                    )
+                    for entry in entries
                 )
-                for entry in hass.config_entries.async_entries(domain)
             )
-        )
 
     # Cleanup
     if domain in hass.data[DATA_SETUP]:

@@ -188,7 +188,7 @@ async def test_todo_list_state(
     expected_state: str,
 ) -> None:
     """Test a calendar entity from a config entry."""
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -210,7 +210,7 @@ async def test_supported_components(
     has_entity: bool,
 ) -> None:
     """Test a calendar supported components matches VTODO."""
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert (state is not None) == has_entity
@@ -266,7 +266,7 @@ async def test_add_item(
 ) -> None:
     """Test adding an item to the list."""
     calendar.search.return_value = []
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -298,7 +298,7 @@ async def test_add_item_failure(
     calendar: Mock,
 ) -> None:
     """Test failure when adding an item to the list."""
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     calendar.save_todo.side_effect = DAVError()
 
@@ -488,7 +488,7 @@ async def test_update_item(
     item = Todo(dav_client, None, TODO_ALL_FIELDS, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -539,7 +539,7 @@ async def test_update_item_failure(
     item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     calendar.todo_by_uid = MagicMock(return_value=item)
     dav_client.put.side_effect = DAVError()
@@ -574,7 +574,7 @@ async def test_update_item_lookup_failure(
     item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     calendar.todo_by_uid.side_effect = side_effect
 
@@ -616,7 +616,7 @@ async def test_remove_item(
     item2 = Todo(dav_client, None, TODO_COMPLETED, calendar, "3")
     calendar.search = MagicMock(return_value=[item1, item2])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -660,7 +660,7 @@ async def test_remove_item_lookup_failure(
 ) -> None:
     """Test failure while removing an item from the list."""
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     calendar.todo_by_uid.side_effect = side_effect
 
@@ -685,7 +685,7 @@ async def test_remove_item_failure(
     item = Todo(dav_client, "2.ics", TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     def lookup(uid: str) -> Mock:
         return item
@@ -714,7 +714,7 @@ async def test_remove_item_not_found(
     item = Todo(dav_client, "2.ics", TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     def lookup(uid: str) -> Mock:
         return item
@@ -743,7 +743,7 @@ async def test_subscribe(
     item = Todo(dav_client, None, TODO_NEEDS_ACTION, calendar, "2")
     calendar.search = MagicMock(return_value=[item])
 
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     # Subscribe and get the initial list
     client = await hass_ws_client(hass)

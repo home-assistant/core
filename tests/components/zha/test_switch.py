@@ -684,3 +684,33 @@ async def test_cover_inversion_switch(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == STATE_OFF
+
+
+async def test_cover_inversion_switch_not_created(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_cover_device
+) -> None:
+    """Test ZHA cover platform."""
+
+    # load up cover domain
+    cluster = zigpy_cover_device.endpoints[1].window_covering
+    cluster.PLUGGED_ATTR_READS = {
+        WCAttrs.current_position_lift_percentage.name: 65,
+        WCAttrs.current_position_tilt_percentage.name: 42,
+        WCAttrs.config_status.name: WCCS(~WCCS.Open_up_commands_reversed),
+    }
+    update_attribute_cache(cluster)
+    zha_device = await zha_device_joined_restored(zigpy_cover_device)
+
+    assert cluster.read_attributes.call_count == 3
+    assert (
+        WCAttrs.current_position_lift_percentage.name
+        in cluster.read_attributes.call_args[0][0]
+    )
+    assert (
+        WCAttrs.current_position_tilt_percentage.name
+        in cluster.read_attributes.call_args[0][0]
+    )
+
+    # entity should not be created when mode or config status aren't present
+    entity_id = find_entity_id(Platform.SWITCH, zha_device, hass)
+    assert entity_id is None

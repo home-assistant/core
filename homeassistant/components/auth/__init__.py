@@ -578,6 +578,7 @@ def websocket_refresh_tokens(
     connection.send_result(msg["id"], tokens)
 
 
+@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "auth/delete_refresh_token",
@@ -585,8 +586,7 @@ def websocket_refresh_tokens(
     }
 )
 @websocket_api.ws_require_user()
-@websocket_api.async_response
-async def websocket_delete_refresh_token(
+def websocket_delete_refresh_token(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle a delete refresh token request."""
@@ -601,6 +601,7 @@ async def websocket_delete_refresh_token(
     connection.send_result(msg["id"], {})
 
 
+@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "auth/delete_all_refresh_tokens",
@@ -609,8 +610,7 @@ async def websocket_delete_refresh_token(
     }
 )
 @websocket_api.ws_require_user()
-@websocket_api.async_response
-async def websocket_delete_all_refresh_tokens(
+def websocket_delete_all_refresh_tokens(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle delete all refresh tokens request."""

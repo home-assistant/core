@@ -233,12 +233,14 @@ async def test_query_climate_request(
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": 20.0,
         "thermostatTemperatureAmbient": 25.0,
         "thermostatMode": "heat",
     }
     assert devices["climate.ecobee"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpointHigh": 24,
         "thermostatTemperatureAmbient": 23,
         "thermostatMode": "heatcool",
@@ -247,6 +249,7 @@ async def test_query_climate_request(
     }
     assert devices["climate.hvac"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": 21,
         "thermostatTemperatureAmbient": 22,
         "thermostatMode": "cool",
@@ -294,12 +297,14 @@ async def test_query_climate_request_f(
     assert len(devices) == 3
     assert devices["climate.heatpump"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": -6.7,
         "thermostatTemperatureAmbient": -3.9,
         "thermostatMode": "heat",
     }
     assert devices["climate.ecobee"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpointHigh": -4.4,
         "thermostatTemperatureAmbient": -5,
         "thermostatMode": "heatcool",
@@ -308,6 +313,7 @@ async def test_query_climate_request_f(
     }
     assert devices["climate.hvac"] == {
         "online": True,
+        "on": True,
         "thermostatTemperatureSetpoint": -6.1,
         "thermostatTemperatureAmbient": -5.6,
         "thermostatMode": "cool",
