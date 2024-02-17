@@ -320,6 +320,7 @@ async def async_get_still_stream(
     async def _write_to_stream() -> None:
         img_bytes = await image_entity.async_image()
         if img_bytes is None:
+            await response.write(bytes("\r\n--frameboundary--\r\n", "utf-8"))
             event.set()
             return
 

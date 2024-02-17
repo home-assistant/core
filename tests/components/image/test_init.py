@@ -1,4 +1,5 @@
 """The tests for the image component."""
+import datetime
 from http import HTTPStatus
 import ssl
 from unittest.mock import MagicMock, patch
@@ -295,7 +296,8 @@ async def test_image_stream(
     """Test image stream."""
 
     mock_integration(hass, MockModule(domain="test"))
-    mock_platform(hass, "test.image", MockImagePlatform([MockURLImageEntity(hass)]))
+    mock_image = MockURLImageEntity(hass)
+    mock_platform(hass, "test.image", MockImagePlatform([mock_image]))
     assert await async_setup_component(
         hass, image.DOMAIN, {"image": {"platform": "test"}}
     )
@@ -303,5 +305,18 @@ async def test_image_stream(
 
     client = await hass_client()
 
-    resp = await client.get("/api/image_proxy_stream/image.test")
+    with patch.object(mock_image, "async_image", return_value=b""):
+        resp = await client.get("/api/image_proxy_stream/image.test")
+    assert not resp.closed
     assert resp.status == HTTPStatus.OK
+
+    mock_image.image_last_updated = datetime.datetime.now()
+    mock_image.async_write_ha_state()
+    await hass.async_block_till_done()
+
+    with patch.object(mock_image, "async_image", return_value=None):
+        mock_image.image_last_updated = datetime.datetime.now()
+        mock_image.async_write_ha_state()
+        await hass.async_block_till_done()
+
+    assert resp.closed
