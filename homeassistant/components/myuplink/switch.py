@@ -17,9 +17,9 @@ from .helpers import find_matching_platform
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SwitchEntityDescription]] = {
     "NIBEF": {
-        "43161": SwitchEntityDescription(
-            key="elect_add",
-            icon="mdi:electric-switch",
+        "50004": SwitchEntityDescription(
+            key="temporary_lux",
+            icon="mdi:water-alert-outline",
         ),
     },
 }
