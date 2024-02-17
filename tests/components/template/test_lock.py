@@ -149,7 +149,14 @@ async def test_template_state_boolean_off(hass: HomeAssistant, start_ha) -> None
             lock.DOMAIN: {
                 **OPTIMISTIC_LOCK_CONFIG,
                 "value_template": "{{ 1 == 1 }}",
-                "code_format": "[invalid-regexp",
+                "code_format_template": "{{ rubbish }",
+            }
+        },
+        {
+            lock.DOMAIN: {
+                **OPTIMISTIC_LOCK_CONFIG,
+                "value_template": "{{ 1 == 1 }}",
+                "code_format_template": "{% if rubbish %}",
             }
         },
     ],
@@ -258,13 +265,13 @@ async def test_unlock_action(hass: HomeAssistant, start_ha, calls) -> None:
             lock.DOMAIN: {
                 **OPTIMISTIC_LOCK_CONFIG,
                 "value_template": "{{ states.switch.test_state.state }}",
-                "code_format": ".+",
+                "code_format_template": "{{ '.+' }}",
             }
         },
     ],
 )
 async def test_lock_action_with_code(hass: HomeAssistant, start_ha, calls) -> None:
-    """Test lock action with supplied an lock code."""
+    """Test lock action with supplied unlock code."""
     await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_OFF)
     await hass.async_block_till_done()
@@ -293,7 +300,7 @@ async def test_lock_action_with_code(hass: HomeAssistant, start_ha, calls) -> No
             lock.DOMAIN: {
                 **OPTIMISTIC_LOCK_CONFIG,
                 "value_template": "{{ states.switch.test_state.state }}",
-                "code_format": ".+",
+                "code_format_template": "{{ '.+' }}",
             }
         },
     ],
@@ -328,7 +335,7 @@ async def test_unlock_action_with_code(hass: HomeAssistant, start_ha, calls) -> 
             lock.DOMAIN: {
                 **OPTIMISTIC_LOCK_CONFIG,
                 "value_template": "{{ 1 == 1 }}",
-                "code_format": "\\d+",
+                "code_format_template": "{{ '\\\\d+' }}",
             }
         },
     ],
