@@ -4,11 +4,9 @@ from unittest.mock import PropertyMock, patch
 import pytest
 
 from homeassistant.components import media_source
-from homeassistant.components.camera import Camera
-from homeassistant.components.camera.const import DOMAIN, StreamType
+from homeassistant.components.camera.const import StreamType
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
 
@@ -19,7 +17,7 @@ async def setup_media_source(hass):
 
 
 async def test_browsing_hls(hass: HomeAssistant, mock_camera_hls) -> None:
-    """Test browsing camera media source."""
+    """Test browsing HLS camera media source."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item is not None
     assert item.title == "Camera"
@@ -36,7 +34,7 @@ async def test_browsing_hls(hass: HomeAssistant, mock_camera_hls) -> None:
 
 
 async def test_browsing_mjpeg(hass: HomeAssistant, mock_camera) -> None:
-    """Test browsing camera media source."""
+    """Test browsing MJPEG camera media source."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item is not None
     assert item.title == "Camera"
@@ -46,12 +44,15 @@ async def test_browsing_mjpeg(hass: HomeAssistant, mock_camera) -> None:
 
 
 async def test_browsing_web_rtc(hass: HomeAssistant, mock_camera_web_rtc) -> None:
-    """Test browsing camera media source."""
-    component: EntityComponent[Camera] = hass.data[DOMAIN]
-    cameras = list(component.entities)
-    with patch.object(cameras[0], "stream_source", return_value="test"), patch.object(
-        cameras[1], "stream_source", return_value=None
-    ), patch.object(cameras[2], "stream_source", side_effect=Exception):
+    """Test browsing WebRTC camera media source."""
+    # 3 cameras:
+    # one only supports WebRTC (no stream source)
+    # one raises when getting the source
+    # One has a stream source, and should be the only browsable one
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=["test", None, Exception],
+    ):
         item = await media_source.async_browse_media(hass, "media-source://camera")
         assert item is not None
         assert item.title == "Camera"
