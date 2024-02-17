@@ -8,6 +8,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
 from .climate_entities import (
+    WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY,
     WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY,
     WIDGET_TO_CLIMATE_ENTITY,
 )
@@ -26,6 +27,17 @@ async def async_setup_entry(
         WIDGET_TO_CLIMATE_ENTITY[device.widget](device.device_url, data.coordinator)
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_TO_CLIMATE_ENTITY
+    )
+
+    # Mainly Atlantic APC
+    async_add_entities(
+        WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY[device.widget][
+            device.controllable_name
+        ](device.device_url, data.coordinator)
+        for device in data.platforms[Platform.CLIMATE]
+        if device.widget in WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY
+        and device.controllable_name
+        in WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY[device.widget]
     )
 
     # Hitachi Air To Air Heat Pumps

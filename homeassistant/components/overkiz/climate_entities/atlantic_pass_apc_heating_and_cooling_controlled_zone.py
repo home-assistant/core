@@ -6,11 +6,10 @@ from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
-from homeassistant.components.climate import ClimateEntityFeature, HVACMode
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.climate.const import PRESET_NONE
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE
 
-from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from .atlantic_pass_apc_heating_zone import AtlanticPassAPCHeatingZone
 from .atlantic_pass_apc_zone_control import OVERKIZ_TO_HVAC_MODE
@@ -26,7 +25,7 @@ OVERKIZ_MODE_TO_PRESET_MODES: dict[str, str] = {
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_MODE_TO_PRESET_MODES.items()}
 
 # Those device depends on a main probe that choose the operating mode (heating, cooling, ...)
-class AtlanticPassAPCHeatingAndCoolingZone(AtlanticPassAPCHeatingZone):
+class AtlanticPassAPCHeatingAndCoolingControlledZone(AtlanticPassAPCHeatingZone):
     """Representation of Atlantic Pass APC Heating And Cooling Zone Control."""
 
     def __init__(
