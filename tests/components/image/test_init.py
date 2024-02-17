@@ -287,3 +287,21 @@ async def test_fetch_image_url_wrong_content_type(
 
     resp = await client.get("/api/image_proxy/image.test")
     assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+
+
+async def test_image_stream(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test image stream."""
+
+    mock_integration(hass, MockModule(domain="test"))
+    mock_platform(hass, "test.image", MockImagePlatform([MockURLImageEntity(hass)]))
+    assert await async_setup_component(
+        hass, image.DOMAIN, {"image": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.get("/api/image_proxy_stream/image.test")
+    assert resp.status == HTTPStatus.OK
