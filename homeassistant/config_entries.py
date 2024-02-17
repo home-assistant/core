@@ -1646,8 +1646,8 @@ class ConfigEntries:
             )
 
         self._async_schedule_save()
-        self._async_dispatch(ConfigEntryChange.UPDATED, entry)
         entry.clear_cache()
+        self._async_dispatch(ConfigEntryChange.UPDATED, entry)
         return True
 
     @callback
