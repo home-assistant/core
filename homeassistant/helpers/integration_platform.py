@@ -123,8 +123,6 @@ async def async_process_integration_platforms(
     top_level_components = {comp for comp in hass.config.components if "." not in comp}
     if not top_level_components:
         return
-
-    integrations = await async_get_integrations(hass, top_level_components)
     integration_platforms: list[IntegrationPlatform] = hass.data[
         DATA_INTEGRATION_PLATFORMS
     ]
@@ -132,6 +130,8 @@ async def async_process_integration_platforms(
         platform_name, HassJob(process_platform), top_level_components
     )
     integration_platforms.append(integration_platform)
+
+    integrations = await async_get_integrations(hass, top_level_components)
     if futures := [
         future
         for comp in top_level_components
