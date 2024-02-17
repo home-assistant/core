@@ -2453,7 +2453,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.19.0
+rokuecp==0.19.1
 
 # homeassistant.components.romy
 romy==0.0.7
