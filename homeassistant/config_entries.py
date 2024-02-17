@@ -12,6 +12,7 @@ from collections.abc import (
     Mapping,
     ValuesView,
 )
+import contextlib
 from contextvars import ContextVar
 from copy import deepcopy
 from enum import Enum, StrEnum
@@ -49,6 +50,7 @@ from .helpers.event import (
     async_call_later,
 )
 from .helpers.frame import report
+from .helpers.json import json_bytes, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
 from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
@@ -56,6 +58,8 @@ from .util import uuid as uuid_util
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
+    from functools import cached_property
+
     from .components.bluetooth import BluetoothServiceInfoBleak
     from .components.dhcp import DhcpServiceInfo
     from .components.hassio import HassioServiceInfo
@@ -63,6 +67,8 @@ if TYPE_CHECKING:
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
+else:
+    from .backports.functools import cached_property
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -233,37 +239,6 @@ UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
 class ConfigEntry:
     """Hold a configuration entry."""
 
-    __slots__ = (
-        "entry_id",
-        "version",
-        "minor_version",
-        "domain",
-        "title",
-        "data",
-        "options",
-        "unique_id",
-        "supports_unload",
-        "supports_remove_device",
-        "pref_disable_new_entities",
-        "pref_disable_polling",
-        "source",
-        "state",
-        "disabled_by",
-        "_setup_lock",
-        "update_listeners",
-        "reason",
-        "_async_cancel_retry_setup",
-        "_on_unload",
-        "reload_lock",
-        "_reauth_lock",
-        "_tasks",
-        "_background_tasks",
-        "_integration_for_domain",
-        "_tries",
-        "_setup_again_job",
-        "_supports_options",
-    )
-
     entry_id: str
     domain: str
     title: str
@@ -418,6 +393,7 @@ class ConfigEntry:
             raise AttributeError(f"{key} cannot be changed")
 
         super().__setattr__(key, value)
+        self.clear_cache()
 
     @property
     def supports_options(self) -> bool:
@@ -426,6 +402,33 @@ class ConfigEntry:
             # work out if handler has support for options flow
             self._supports_options = handler.async_supports_options_flow(self)
         return self._supports_options or False
+
+    def clear_cache(self) -> None:
+        """Clear cached properties."""
+        with contextlib.suppress(AttributeError):
+            delattr(self, "as_json_fragment")
+
+    @cached_property
+    def as_json_fragment(self) -> json_fragment:
+        """Return JSON fragment of a config entry."""
+        return json_fragment(
+            json_bytes(
+                {
+                    "entry_id": self.entry_id,
+                    "domain": self.domain,
+                    "title": self.title,
+                    "source": self.source,
+                    "state": self.state.value,
+                    "supports_options": self.supports_options,
+                    "supports_remove_device": self.supports_remove_device or False,
+                    "supports_unload": self.supports_unload or False,
+                    "pref_disable_new_entities": self.pref_disable_new_entities,
+                    "pref_disable_polling": self.pref_disable_polling,
+                    "disabled_by": self.disabled_by,
+                    "reason": self.reason,
+                }
+            )
+        )
 
     async def async_setup(
         self,
@@ -716,6 +719,7 @@ class ConfigEntry:
         _setter = object.__setattr__
         _setter(self, "state", state)
         _setter(self, "reason", reason)
+        self.clear_cache()
         async_dispatcher_send(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
         )
@@ -1261,6 +1265,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self._unindex_entry(entry_id)
         object.__setattr__(entry, "unique_id", new_unique_id)
         self._index_entry(entry)
+        entry.clear_cache()
 
     def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
         """Get entries for a domain."""
@@ -1643,6 +1648,7 @@ class ConfigEntries:
 
         self._async_schedule_save()
         self._async_dispatch(ConfigEntryChange.UPDATED, entry)
+        entry.clear_cache()
         return True
 
     @callback
