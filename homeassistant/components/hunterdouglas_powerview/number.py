@@ -40,7 +40,7 @@ def store_velocity(
     shade_id: int,
     value: float | None,
 ) -> None:
-    """Store the desired shade velocity in the co-ordinator."""
+    """Store the desired shade velocity in the coordinator."""
     coordinator.data.update_shade_velocity(shade_id, ShadePosition(velocity=value))
 
 
