@@ -23,6 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CONF_CHANNELS, DOMAIN, LOGGER, OAUTH_SCOPES
 
@@ -130,6 +131,10 @@ class TwitchSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update device state."""
+        # First, check if the token is still valid
+        if await self._client.get_refreshed_user_auth_token() is None:
+            raise UpdateFailed("Token refresh failed")
+
         followers = (await self._client.get_channel_followers(self._channel.id)).total
         self._attr_extra_state_attributes = {
             ATTR_FOLLOWING: followers,
