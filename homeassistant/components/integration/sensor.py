@@ -31,7 +31,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
-from homeassistant.exceptions import ConditionErrorMessage, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     condition,
     config_validation as cv,
@@ -115,6 +115,12 @@ class _IntegrationMethod(ABC):
         raise ServiceValidationError(f"Unable to parse method from name {method_name}")
 
     @abstractmethod
+    def validate_states(
+        self, hass: HomeAssistant, left: State | None, right: State | None
+    ) -> bool:
+        pass
+
+    @abstractmethod
     def calculate_area_with_two_states(
         self, elapsed_time: float, left: State, right: State
     ) -> Decimal:
@@ -132,6 +138,13 @@ class _Trapezoidal(_IntegrationMethod):
     ) -> Decimal:
         return Decimal(elapsed_time) * (Decimal(left.state) + Decimal(right.state)) / 2
 
+    def validate_states(
+        self, hass: HomeAssistant, left: State | None, right: State | None
+    ) -> bool:
+        return condition.async_numeric_state(
+            hass, left
+        ) and condition.async_numeric_state(hass, right)
+
 
 class _Left(_IntegrationMethod):
     def calculate_area_with_two_states(
@@ -139,12 +152,22 @@ class _Left(_IntegrationMethod):
     ) -> Decimal:
         return self.calculate_area_with_one_state(elapsed_time, left)
 
+    def validate_states(
+        self, hass: HomeAssistant, left: State | None, right: State | None
+    ) -> bool:
+        return condition.async_numeric_state(hass, left)
+
 
 class _Right(_IntegrationMethod):
     def calculate_area_with_two_states(
         self, elapsed_time: float, left: State, right: State
     ) -> Decimal:
         return self.calculate_area_with_one_state(elapsed_time, right)
+
+    def validate_states(
+        self, hass: HomeAssistant, left: State | None, right: State | None
+    ) -> bool:
+        return condition.async_numeric_state(hass, right)
 
 
 @dataclass
@@ -420,7 +443,7 @@ class IntegrationSensor(RestoreSensor):
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
 
-        if new_state is None:
+        if old_state is None or new_state is None:
             return
 
         if condition.state(self.hass, new_state, [STATE_UNAVAILABLE]):
@@ -428,20 +451,7 @@ class IntegrationSensor(RestoreSensor):
             self.async_write_ha_state()
             return
 
-        try:
-            if (
-                old_state is None
-                or not condition.async_numeric_state(self.hass, old_state)
-                or not condition.async_numeric_state(self.hass, new_state)
-            ):
-                return
-        except ConditionErrorMessage as e:
-            _LOGGER.debug(
-                "Either old state %s or new state %s is not numeric. Exception %s",
-                old_state,
-                new_state,
-                e,
-            )
+        if not self._method.validate_states(self.hass, old_state, new_state):
             return
 
         self._attr_available = True

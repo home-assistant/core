@@ -102,7 +102,7 @@ async def test_state(hass: HomeAssistant, method) -> None:
     state = hass.states.get("sensor.integration")
     assert state.state == STATE_UNAVAILABLE
 
-    # 1 hour after last update, power sensor is back to normal at 2 KiloWatts and stays for 1 hour
+    # 1 hour after last update, power sensor is back to normal at 2 KiloWatts and stays for 1 hour += 2kWh
     now += timedelta(seconds=3600)
     with freeze_time(now):
         hass.states.async_set(
@@ -116,8 +116,11 @@ async def test_state(hass: HomeAssistant, method) -> None:
         )
         await hass.async_block_till_done()
     state = hass.states.get("sensor.integration")
-
-    assert state.state == STATE_UNAVAILABLE
+    assert (
+        round(float(state.state), config["sensor"]["round"]) == 3.0
+        if method == "right"
+        else 1.0
+    )
 
     now += timedelta(seconds=3600)
     with freeze_time(now):
@@ -132,7 +135,11 @@ async def test_state(hass: HomeAssistant, method) -> None:
         )
         await hass.async_block_till_done()
     state = hass.states.get("sensor.integration")
-    assert round(float(state.state), config["sensor"]["round"]) == 3.0
+    assert (
+        round(float(state.state), config["sensor"]["round"]) == 5.0
+        if method == "right"
+        else 3.0
+    )
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:
@@ -560,7 +567,7 @@ async def test_units(hass: HomeAssistant) -> None:
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.WATT_HOUR
 
     # When source state goes to None / Unknown, expect an early exit without
-    # changes the unit_of_measurement
+    # changes to the state or unit_of_measurement
     hass.states.async_set(entity_id, None, None)
     await hass.async_block_till_done()
 
@@ -654,7 +661,7 @@ async def test_calc_errors(hass: HomeAssistant, method) -> None:
     assert state.state == STATE_UNKNOWN
 
     # Moving from an unknown state to a value is a calc error and should
-    # not change the value of the Riemann sensor.
+    # not change the value of the Reimann sensor, unless the method used is "right".
     now += timedelta(seconds=3600)
     with freeze_time(now):
         hass.states.async_set(entity_id, 0, {"device_class": None})
@@ -663,9 +670,9 @@ async def test_calc_errors(hass: HomeAssistant, method) -> None:
 
     state = hass.states.get("sensor.integration")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNKNOWN if method != "right" else "0.000"
 
-    # With the source sensor updated successfully, the Riemann sensor
+    # With the source sensor updated successfully, the Reimann sensor
     # should have a zero (known) value.
     now += timedelta(seconds=3600)
     with freeze_time(now):
@@ -725,25 +732,26 @@ async def test_device_id(
     assert integration_entity.device_id == source_entity.device_id
 
 
-integral_sensor_config = {
-    "sensor": {
-        "platform": "integration",
-        "name": "integration",
-        "source": "sensor.power",
-        "method": "right",
-        "max_dt": 60,
+def _integral_sensor_config(max_dt: int | None = 60):
+    return {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.power",
+            "method": "right",
+            "max_dt": max_dt,
+        }
     }
-}
 
 
-async def _setup_integral_sensor(hass: HomeAssistant) -> None:
-    await async_setup_component(hass, "sensor", integral_sensor_config)
+async def _setup_integral_sensor(hass: HomeAssistant, max_dt: int | None = 60) -> None:
+    await async_setup_component(hass, "sensor", _integral_sensor_config(max_dt=max_dt))
     await hass.async_block_till_done()
 
 
 async def _update_source_sensor(hass: HomeAssistant, value: int | str) -> None:
     hass.states.async_set(
-        integral_sensor_config["sensor"]["source"],
+        _integral_sensor_config()["sensor"]["source"],
         value,
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
         force_update=True,
@@ -834,3 +842,29 @@ async def test_on_statechanges_source_expect_no_update_on_time(
         state_after_105s = hass.states.get("sensor.integration")
         # Update based on time
         assert float(state_after_105s.state) > float(state_after_65s.state)
+
+
+async def test_on_no_max_dt_expect_no_timebased_updates(
+    hass: HomeAssistant,
+) -> None:
+    """Test whether integratal is not updated by time when max_dt is not configured."""
+
+    start_time = dt_util.utcnow()
+    with freeze_time(start_time) as freezer:
+        await _setup_integral_sensor(hass, max_dt=None)
+        await _update_source_sensor(hass, 100)
+        await hass.async_block_till_done()
+        await _update_source_sensor(hass, 101)
+        await hass.async_block_till_done()
+
+        state_after_last_state_change = hass.states.get("sensor.integration")
+
+        assert (
+            condition.async_numeric_state(hass, state_after_last_state_change) is True
+        )
+
+        freezer.tick(100)
+        async_fire_time_changed(hass, dt_util.now())
+        await hass.async_block_till_done()
+        state_after_100s = hass.states.get("sensor.integration")
+        assert state_after_100s == state_after_last_state_change
