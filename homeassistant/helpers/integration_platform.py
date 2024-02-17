@@ -81,16 +81,13 @@ def _get_platform_from_integration(
 
 @callback
 def _async_process_integration_platform_for_component(
-    hass: HomeAssistant, event: Event
+    hass: HomeAssistant, integration_platforms: list[IntegrationPlatform], event: Event
 ) -> None:
     """Process integration platforms for a component."""
     component_name: str = event.data[ATTR_COMPONENT]
     if "." in component_name:
         return
 
-    integration_platforms: list[IntegrationPlatform] = hass.data[
-        DATA_INTEGRATION_PLATFORMS
-    ]
     integration = async_get_loaded_integration(hass, component_name)
     for integration_platform in integration_platforms:
         if component_name in integration_platform.seen_components or not (
@@ -114,22 +111,27 @@ async def async_process_integration_platforms(
 ) -> None:
     """Process a specific platform for all current and future loaded integrations."""
     if DATA_INTEGRATION_PLATFORMS not in hass.data:
-        hass.data[DATA_INTEGRATION_PLATFORMS] = []
+        integration_platforms: list[IntegrationPlatform] = []
+        hass.data[DATA_INTEGRATION_PLATFORMS] = integration_platforms
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
-            partial(_async_process_integration_platform_for_component, hass),
+            partial(
+                _async_process_integration_platform_for_component,
+                hass,
+                integration_platforms,
+            ),
         )
+    else:
+        integration_platforms = hass.data[DATA_INTEGRATION_PLATFORMS]
 
     top_level_components = {comp for comp in hass.config.components if "." not in comp}
-    if not top_level_components:
-        return
-    integration_platforms: list[IntegrationPlatform] = hass.data[
-        DATA_INTEGRATION_PLATFORMS
-    ]
     integration_platform = IntegrationPlatform(
         platform_name, HassJob(process_platform), top_level_components
     )
     integration_platforms.append(integration_platform)
+
+    if not top_level_components:
+        return
 
     integrations = await async_get_integrations(hass, top_level_components)
     if futures := [
