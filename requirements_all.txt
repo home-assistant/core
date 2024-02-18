@@ -4,7 +4,7 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.7
+AEMET-OpenData==0.4.8
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -76,7 +76,7 @@ PyMetEireann==2021.8.0
 PyMetno==0.11.0
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.15
+PyMicroBot==0.0.16
 
 # homeassistant.components.nina
 PyNINA==0.3.3
@@ -245,7 +245,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==21.0.2
+aioesphomeapi==21.0.3
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -324,7 +324,7 @@ aiooncue==0.3.5
 aioopenexchangerates==0.4.0
 
 # homeassistant.components.pegel_online
-aiopegelonline==0.0.8
+aiopegelonline==0.0.9
 
 # homeassistant.components.acmeda
 aiopulse==0.4.4
@@ -383,7 +383,7 @@ aioswitcher==3.4.1
 aiosyncthing==0.5.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.4.0
+aiotankerkoenig==0.4.1
 
 # homeassistant.components.tractive
 aiotractive==0.5.6
@@ -920,7 +920,7 @@ geopy==2.3.0
 georss-generic-client==0.8
 
 # homeassistant.components.ign_sismologia
-georss-ign-sismologia-client==0.6
+georss-ign-sismologia-client==0.8
 
 # homeassistant.components.qld_bushfire
 georss-qld-bushfire-alert-client==0.5
@@ -976,7 +976,7 @@ gotailwind==0.2.2
 govee-ble==0.31.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.4.1
+govee-local-api==1.4.4
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1112,7 +1112,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==6.1.1
+ical==7.0.0
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -2077,7 +2077,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==4.0.1
+pyrainbird==4.0.2
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
@@ -2453,7 +2453,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.19.0
+rokuecp==0.19.1
 
 # homeassistant.components.romy
 romy==0.0.7

@@ -28,9 +28,9 @@ def mock_expires_at() -> float:
 
 
 @pytest.fixture
-def mock_config_entry(expires_at: int) -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant, expires_at: float) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    return MockConfigEntry(
+    config_entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
         title="myUplink test",
@@ -38,7 +38,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
             "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "Fake_token",
-                "scope": "READSYSTEM offline",
+                "scope": "WRITESYSTEM READSYSTEM offline_access",
                 "expires_in": 86399,
                 "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
                 "token_type": "Bearer",
@@ -47,6 +47,8 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
         },
         entry_id="myuplink_test",
     )
+    config_entry.add_to_hass(hass)
+    return config_entry
 
 
 @pytest.fixture(autouse=True)
