@@ -88,11 +88,11 @@ class ViCareButton(ViCareEntity, ButtonEntity):
     def __init__(
         self,
         device_config: PyViCareDeviceConfig,
-        api: PyViCareDevice,
+        device: PyViCareDevice,
         description: ViCareButtonEntityDescription,
     ) -> None:
         """Initialize the button."""
-        super().__init__(device_config, api, None, description.key)
+        super().__init__(device_config, device, None, description.key)
         self.entity_description = description
 
     def press(self) -> None:
