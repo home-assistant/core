@@ -87,7 +87,7 @@ async def async_get_service(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
         _LOGGER.warning(
-            "The notify platform setup the smtp integration via configuration.yaml "
+            "Setting up the smtp integration notify platform via configuration.yaml "
             "is deprecated. Your config has been migrated to a config entry and "
             "should be removed from your configuration.yaml. "
             "Canceling setup via configuration.yaml"
