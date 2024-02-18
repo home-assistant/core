@@ -131,17 +131,23 @@ async def async_setup_component(
     if domain in hass.config.components:
         return True
 
-    setup_tasks: dict[str, asyncio.Task[bool]] = hass.data.setdefault(DATA_SETUP, {})
-
-    if domain in setup_tasks:
-        return await setup_tasks[domain]
-
-    task = setup_tasks[domain] = hass.async_create_task(
-        _async_setup_component(hass, domain, config), f"setup component {domain}"
+    setup_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
+        DATA_SETUP, {}
     )
 
+    if existing_future := setup_futures.get(domain):
+        return await existing_future
+
+    future = hass.loop.create_future()
+    setup_futures[domain] = future
+
     try:
-        return await task
+        result = await _async_setup_component(hass, domain, config)
+        future.set_result(result)
+        return result
+    except BaseException as err:  # pylint: disable=broad-except
+        future.set_exception(err)
+        raise
     finally:
         if domain in hass.data.get(DATA_SETUP_DONE, {}):
             hass.data[DATA_SETUP_DONE].pop(domain).set()
