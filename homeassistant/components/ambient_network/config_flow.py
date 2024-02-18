@@ -25,40 +25,14 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util.unit_conversion import DistanceConverter
 
-from .const import (
-    API_LAST_DATA,
-    API_STATION_COORDS,
-    API_STATION_INDOOR,
-    API_STATION_INFO,
-    API_STATION_LOCATION,
-    API_STATION_MAC_ADDRESS,
-    API_STATION_NAME,
-    API_STATION_TYPE,
-    DOMAIN,
-)
+from .const import API_STATION_INDOOR, API_STATION_INFO, API_STATION_MAC_ADDRESS, DOMAIN
+from .helper import get_station_name
 
 CONF_USER = "user"
 CONF_STATION = "station"
 
 # One mile
 CONF_RADIUS_DEFAULT = 1609.34
-
-
-def get_station_name(station: dict[str, Any]) -> str:
-    """Pick a station name.
-
-    Station names can be empty, in which case we construct the name from
-    the location and device type.
-    """
-    if name := station.get(API_STATION_INFO, {}).get(API_STATION_NAME):
-        return str(name)
-    location = (
-        station.get(API_STATION_INFO, {})
-        .get(API_STATION_COORDS, {})
-        .get(API_STATION_LOCATION)
-    )
-    station_type = station.get(API_LAST_DATA, {}).get(API_STATION_TYPE)
-    return f"{location}{'' if location is None or station_type is None else ' '}{station_type}"
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -72,6 +46,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._longitude = 0.0
         self._latitude = 0.0
         self._radius = 0.0
+        self._stations: list[dict[str, Any]] = []
 
     async def async_step_user(
         self,
@@ -84,7 +59,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._latitude = user_input[CONF_LOCATION][CONF_LATITUDE]
             self._longitude = user_input[CONF_LOCATION][CONF_LONGITUDE]
             self._radius = user_input[CONF_LOCATION][CONF_RADIUS]
-            return await self.async_step_station()
+
+            client: OpenAPI = OpenAPI()
+            self._stations = await client.get_devices_by_location(
+                self._latitude,
+                self._longitude,
+                radius=DistanceConverter.convert(
+                    self._radius,
+                    UnitOfLength.METERS,
+                    UnitOfLength.MILES,
+                ),
+            )
+
+            # Filter out indoor stations
+            self._stations = list(
+                filter(
+                    lambda station: not station.get(API_STATION_INFO, {}).get(
+                        API_STATION_INDOOR, False
+                    ),
+                    self._stations,
+                )
+            )
+
+            if self._stations:
+                return await self.async_step_station()
+
+            errors = {"base": "no_stations_found"}
 
         schema: vol.Schema = self.add_suggested_values_to_schema(
             vol.Schema(
@@ -96,13 +96,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             {
                 CONF_LOCATION: {
-                    CONF_LATITUDE: self.hass.config.latitude
-                    if not errors
-                    else self._latitude,
-                    CONF_LONGITUDE: self.hass.config.longitude
-                    if not errors
-                    else self._longitude,
-                    CONF_RADIUS: CONF_RADIUS_DEFAULT if not errors else self._radius,
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                    CONF_RADIUS: CONF_RADIUS_DEFAULT,
+                }
+                if not errors
+                else {
+                    CONF_LATITUDE: self._latitude,
+                    CONF_LONGITUDE: self._longitude,
+                    CONF_RADIUS: self._radius,
                 }
             },
         )
@@ -127,38 +129,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        client: OpenAPI = OpenAPI()
-        stations: list[dict[str, Any]] = await client.get_devices_by_location(
-            self._latitude,
-            self._longitude,
-            radius=DistanceConverter.convert(
-                self._radius,
-                UnitOfLength.METERS,
-                UnitOfLength.MILES,
-            ),
-        )
-
-        # Filter out indoor stations
-        stations = list(
-            filter(
-                lambda station: not station.get(API_STATION_INFO, {}).get(
-                    API_STATION_INDOOR, False
-                ),
-                stations,
-            )
-        )
-
-        if not stations:
-            return await self.async_step_user(
-                errors={"base": "no_stations_found"},
-            )
-
         options: list[SelectOptionDict] = [
             SelectOptionDict(
                 label=get_station_name(station),
                 value=f"{station[API_STATION_MAC_ADDRESS]},{get_station_name(station)}",
             )
-            for station in sorted(stations, key=get_station_name)
+            for station in sorted(self._stations, key=get_station_name)
         ]
 
         schema: vol.Schema = vol.Schema(

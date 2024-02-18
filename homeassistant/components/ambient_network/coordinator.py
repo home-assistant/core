@@ -13,8 +13,8 @@ from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .config_flow import get_station_name
 from .const import API_LAST_DATA, DOMAIN, LOGGER, SCAN_INTERVAL
+from .helper import get_station_name
 
 
 class AmbientNetworkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
