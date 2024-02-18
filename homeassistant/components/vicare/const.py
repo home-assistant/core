@@ -32,22 +32,6 @@ VICARE_UNIT_TO_UNIT_OF_MEASUREMENT = {
 }
 
 
-class HeatingProgram(enum.StrEnum):
-    """ViCare preset heating programs.
-
-    As listed inhttps://github.com/somm15/PyViCare/blob/63f9f7fea505fdf9a26c77c6cd0bff889abcdb05/PyViCare/PyViCareHeatingDevice.py#L606
-    """
-
-    COMFORT = "comfort"
-    COMFORT_HEATING = "comfortHeating"
-    ECO = "eco"
-    NORMAL = "normal"
-    NORMAL_HEATING = "normalHeating"
-    REDUCED = "reduced"
-    REDUCED_HEATING = "reducedHeating"
-    STANDBY = "standby"
-
-
 class HeatingType(enum.Enum):
     """Possible options for heating type."""
 
