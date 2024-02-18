@@ -1,4 +1,5 @@
 """Support for Wyoming satellite services."""
+
 import asyncio
 from collections.abc import AsyncGenerator
 import io
@@ -198,6 +199,8 @@ class WyomingSatellite:
     async def _run_pipeline_loop(self) -> None:
         """Run a pipeline one or more times."""
         assert self._client is not None
+        client_info: Info | None = None
+        wake_word_phrase: str | None = None
         run_pipeline: RunPipeline | None = None
         send_ping = True
 
@@ -234,6 +237,9 @@ class WyomingSatellite:
                     )
                     pending.add(pipeline_ended_task)
 
+                    # Clear last wake word detection
+                    wake_word_phrase = None
+
                     if (run_pipeline is not None) and run_pipeline.restart_on_end:
                         # Automatically restart pipeline.
                         # Used with "always on" streaming satellites.
@@ -257,7 +263,7 @@ class WyomingSatellite:
                 elif RunPipeline.is_type(client_event.type):
                     # Satellite requested pipeline run
                     run_pipeline = RunPipeline.from_event(client_event)
-                    self._run_pipeline_once(run_pipeline)
+                    self._run_pipeline_once(run_pipeline, wake_word_phrase)
                 elif (
                     AudioChunk.is_type(client_event.type) and self._is_pipeline_running
                 ):
@@ -270,8 +276,31 @@ class WyomingSatellite:
                     _LOGGER.debug("Client requested pipeline to stop")
                     self._audio_queue.put_nowait(b"")
                 elif Info.is_type(client_event.type):
-                    info = Info.from_event(client_event)
-                    _LOGGER.debug("Updated client info: %s", info)
+                    client_info = Info.from_event(client_event)
+                    _LOGGER.debug("Updated client info: %s", client_info)
+                elif Detection.is_type(client_event.type):
+                    detection = Detection.from_event(client_event)
+                    wake_word_phrase = detection.name
+
+                    # Resolve wake word name/id to phrase if info is available.
+                    #
+                    # This allows us to deconflict multiple satellite wake-ups
+                    # with the same wake word.
+                    if (client_info is not None) and (client_info.wake is not None):
+                        found_phrase = False
+                        for wake_service in client_info.wake:
+                            for wake_model in wake_service.models:
+                                if wake_model.name == detection.name:
+                                    wake_word_phrase = (
+                                        wake_model.phrase or wake_model.name
+                                    )
+                                    found_phrase = True
+                                    break
+
+                            if found_phrase:
+                                break
+
+                    _LOGGER.debug("Client detected wake word: %s", wake_word_phrase)
                 else:
                     _LOGGER.debug("Unexpected event from satellite: %s", client_event)
 
@@ -281,7 +310,9 @@ class WyomingSatellite:
                 )
                 pending.add(client_event_task)
 
-    def _run_pipeline_once(self, run_pipeline: RunPipeline) -> None:
+    def _run_pipeline_once(
+        self, run_pipeline: RunPipeline, wake_word_phrase: str | None = None
+    ) -> None:
         """Run a pipeline once."""
         _LOGGER.debug("Received run information: %s", run_pipeline)
 
@@ -339,6 +370,7 @@ class WyomingSatellite:
                     volume_multiplier=self.device.volume_multiplier,
                 ),
                 device_id=self.device.device_id,
+                wake_word_phrase=wake_word_phrase,
             ),
             name="wyoming satellite pipeline",
         )
