@@ -864,14 +864,16 @@ async def test_on_statechanges_source_expect_no_update_on_time(
         assert float(state_after_105s.state) > float(state_after_65s.state)
 
 
+@pytest.mark.parametrize("max_dt", [None, 0])
 async def test_on_no_max_dt_expect_no_timebased_updates(
     hass: HomeAssistant,
+    max_dt: int | None,
 ) -> None:
     """Test whether integratal is not updated by time when max_dt is not configured."""
 
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
-        await _setup_integral_sensor(hass, max_dt=None)
+        await _setup_integral_sensor(hass, max_dt=max_dt)
         await _update_source_sensor(hass, 100)
         await hass.async_block_till_done()
         await _update_source_sensor(hass, 101)

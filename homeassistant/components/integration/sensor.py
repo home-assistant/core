@@ -352,7 +352,7 @@ class IntegrationSensor(RestoreSensor):
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
         self._max_dt: timedelta | None = (
-            timedelta(seconds=max_dt) if max_dt is not None else None
+            timedelta(seconds=max_dt) if max_dt is not None and max_dt != 0 else None
         )
         self._max_dt_exceeded_callback: CALLBACK_TYPE = lambda *args: None
         self._last_integration_time: datetime = datetime.now(tz=UTC)
