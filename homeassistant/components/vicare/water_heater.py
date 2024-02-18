@@ -112,7 +112,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         translation_key: str,
     ) -> None:
         """Initialize the DHW water_heater device."""
-        super().__init__(device_config, device, circuit, circuit.id)
+        super().__init__(device_config, device, None, circuit.id)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
         self._current_mode = None
