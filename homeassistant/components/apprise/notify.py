@@ -52,15 +52,11 @@ def get_service(
             return None
 
     # Ordered list of URLs
-    if config.get(CONF_URL):
-        has_error = False
-        for entry in config[CONF_URL]:
+    if urls := config.get(CONF_URL):
+        for entry in urls:
             if not a_obj.add(entry):
-                has_error = True
-
-        if has_error:
-            _LOGGER.error("One or more specified Apprise URL(s) are invalid")
-            return None
+                _LOGGER.error("One or more specified Apprise URL(s) are invalid")
+                return None
 
     return AppriseNotificationService(a_obj)
 
