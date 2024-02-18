@@ -67,7 +67,7 @@ async def test_aemet_weather(
     assert forecast[ATTR_FORECAST_TEMP_LOW] == -1
     assert (
         forecast[ATTR_FORECAST_TIME]
-        == dt_util.parse_datetime("2021-01-09 00:00:00+01:00").isoformat()
+        == dt_util.parse_datetime("2021-01-08 23:00:00+00:00").isoformat()
     )
     assert forecast[ATTR_FORECAST_WIND_BEARING] == 90.0
     assert forecast[ATTR_FORECAST_WIND_SPEED] == 0.0
@@ -111,7 +111,7 @@ async def test_aemet_weather_legacy(
     assert forecast[ATTR_FORECAST_TEMP_LOW] == -1
     assert (
         forecast[ATTR_FORECAST_TIME]
-        == dt_util.parse_datetime("2021-01-09 00:00:00+01:00").isoformat()
+        == dt_util.parse_datetime("2021-01-08 23:00:00+00:00").isoformat()
     )
     assert forecast[ATTR_FORECAST_WIND_BEARING] == 90.0
     assert forecast[ATTR_FORECAST_WIND_SPEED] == 0.0
