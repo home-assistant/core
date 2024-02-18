@@ -4,6 +4,16 @@ CALL_SERVICE = {
     "data": {"domain": "test", "service": "mobile_app", "service_data": {"foo": "bar"}},
 }
 
+CALL_SERVICE_RESPONSE = {
+    "type": "call_service",
+    "data": {
+        "domain": "test",
+        "service": "mobile_app",
+        "service_data": {"foo": "bar"},
+        "return_response": True,
+    },
+}
+
 FIRE_EVENT = {
     "type": "fire_event",
     "data": {"event_type": "test_event", "event_data": {"hello": "yo world"}},

@@ -491,6 +491,7 @@ ATTR_SECONDS: Final = "seconds"
 
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN: Final = "domain"
+ATTR_RETURN_RESPONSE: Final = "return_response"
 ATTR_SERVICE: Final = "service"
 ATTR_SERVICE_DATA: Final = "service_data"
 

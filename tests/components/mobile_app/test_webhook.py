@@ -15,12 +15,19 @@ from homeassistant.const import (
     STATE_NOT_HOME,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
+from .const import (
+    CALL_SERVICE,
+    CALL_SERVICE_RESPONSE,
+    FIRE_EVENT,
+    REGISTER_CLEARTEXT,
+    RENDER_TEMPLATE,
+    UPDATE,
+)
 
 from tests.common import async_capture_events, async_mock_service
 from tests.components.conversation.conftest import mock_agent
@@ -167,6 +174,30 @@ async def test_webhook_handle_call_services(
     )
 
     assert resp.status == HTTPStatus.OK
+
+    assert len(calls) == 1
+
+
+async def test_webhook_handle_call_services_with_response(
+    hass: HomeAssistant, create_registrations, webhook_client
+) -> None:
+    """Test that we call services properly."""
+    calls = async_mock_service(
+        hass,
+        "test",
+        "mobile_app",
+        response={"response": "service_response"},
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json=CALL_SERVICE_RESPONSE,
+    )
+
+    assert resp.status == HTTPStatus.OK
+    json = await resp.json()
+    assert json["response"] == "service_response"
 
     assert len(calls) == 1
 
