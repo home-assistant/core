@@ -19,7 +19,6 @@ from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
-    mock_device_registry,
     mock_registry,
 )
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
@@ -30,17 +29,13 @@ async def client(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> MockHAClientWebSocket:
     """Fixture that can interact with the config manager API."""
-    await entity_registry.async_setup(hass)
+    entity_registry.async_setup(hass)
     return await hass_ws_client(hass)
 
 
-@pytest.fixture
-def device_registry(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-async def test_list_entities(hass: HomeAssistant, client) -> None:
+async def test_list_entities(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test list entries."""
     mock_registry(
         hass,
@@ -59,7 +54,7 @@ async def test_list_entities(hass: HomeAssistant, client) -> None:
         },
     )
 
-    await client.send_json({"id": 5, "type": "config/entity_registry/list"})
+    await client.send_json_auto_id({"type": "config/entity_registry/list"})
     msg = await client.receive_json()
 
     assert msg["result"] == [
@@ -122,7 +117,7 @@ async def test_list_entities(hass: HomeAssistant, client) -> None:
         },
     )
 
-    await client.send_json({"id": 6, "type": "config/entity_registry/list"})
+    await client.send_json_auto_id({"type": "config/entity_registry/list"})
     msg = await client.receive_json()
 
     assert msg["result"] == [
@@ -314,7 +309,7 @@ async def test_list_entities_for_display(
     }
 
 
-async def test_get_entity(hass: HomeAssistant, client) -> None:
+async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) -> None:
     """Test get entry."""
     mock_registry(
         hass,
@@ -333,8 +328,8 @@ async def test_get_entity(hass: HomeAssistant, client) -> None:
         },
     )
 
-    await client.send_json(
-        {"id": 5, "type": "config/entity_registry/get", "entity_id": "test_domain.name"}
+    await client.send_json_auto_id(
+        {"type": "config/entity_registry/get", "entity_id": "test_domain.name"}
     )
     msg = await client.receive_json()
 
@@ -362,9 +357,8 @@ async def test_get_entity(hass: HomeAssistant, client) -> None:
         "unique_id": "1234",
     }
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/get",
             "entity_id": "test_domain.no_name",
         }
@@ -396,7 +390,7 @@ async def test_get_entity(hass: HomeAssistant, client) -> None:
     }
 
 
-async def test_get_entities(hass: HomeAssistant, client) -> None:
+async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) -> None:
     """Test get entry."""
     mock_registry(
         hass,
@@ -415,9 +409,8 @@ async def test_get_entities(hass: HomeAssistant, client) -> None:
         },
     )
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "config/entity_registry/get_entries",
             "entity_ids": [
                 "test_domain.name",
@@ -479,7 +472,9 @@ async def test_get_entities(hass: HomeAssistant, client) -> None:
     }
 
 
-async def test_update_entity(hass: HomeAssistant, client) -> None:
+async def test_update_entity(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test updating entity."""
     registry = mock_registry(
         hass,
@@ -504,9 +499,8 @@ async def test_update_entity(hass: HomeAssistant, client) -> None:
     assert state.attributes[ATTR_ICON] == "icon:before update"
 
     # UPDATE AREA, DEVICE_CLASS, HIDDEN_BY, ICON AND NAME
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "aliases": ["alias_1", "alias_2"],
@@ -551,9 +545,8 @@ async def test_update_entity(hass: HomeAssistant, client) -> None:
     assert state.attributes[ATTR_ICON] == "icon:after update"
 
     # UPDATE HIDDEN_BY TO ILLEGAL VALUE
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 7,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "hidden_by": "ivy",
@@ -566,9 +559,8 @@ async def test_update_entity(hass: HomeAssistant, client) -> None:
     assert registry.entities["test_domain.world"].hidden_by is RegistryEntryHider.USER
 
     # UPDATE DISABLED_BY TO USER
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 8,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "disabled_by": "user",  # We exchange strings over the WS API, not enums
@@ -584,9 +576,8 @@ async def test_update_entity(hass: HomeAssistant, client) -> None:
     )
 
     # UPDATE DISABLED_BY TO NONE
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 9,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "disabled_by": None,
@@ -623,9 +614,8 @@ async def test_update_entity(hass: HomeAssistant, client) -> None:
     }
 
     # UPDATE ENTITY OPTION
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 10,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "options_domain": "sensor",
@@ -662,7 +652,9 @@ async def test_update_entity(hass: HomeAssistant, client) -> None:
     }
 
 
-async def test_update_entity_require_restart(hass: HomeAssistant, client) -> None:
+async def test_update_entity_require_restart(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test updating entity."""
     entity_id = "test_domain.test_platform_1234"
     config_entry = MockConfigEntry(domain="test_platform")
@@ -676,9 +668,8 @@ async def test_update_entity_require_restart(hass: HomeAssistant, client) -> Non
     assert state is not None
 
     # UPDATE DISABLED_BY TO NONE
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 8,
             "type": "config/entity_registry/update",
             "entity_id": entity_id,
             "disabled_by": None,
@@ -716,7 +707,9 @@ async def test_update_entity_require_restart(hass: HomeAssistant, client) -> Non
 
 
 async def test_enable_entity_disabled_device(
-    hass: HomeAssistant, client, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test enabling entity of disabled device."""
     entity_id = "test_domain.test_platform_1234"
@@ -750,9 +743,8 @@ async def test_enable_entity_disabled_device(
     assert entity_entry.disabled_by == RegistryEntryDisabler.DEVICE
 
     # UPDATE DISABLED_BY TO NONE
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 8,
             "type": "config/entity_registry/update",
             "entity_id": entity_id,
             "disabled_by": None,
@@ -764,7 +756,9 @@ async def test_enable_entity_disabled_device(
     assert not msg["success"]
 
 
-async def test_update_entity_no_changes(hass: HomeAssistant, client) -> None:
+async def test_update_entity_no_changes(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test update entity with no changes."""
     mock_registry(
         hass,
@@ -786,9 +780,8 @@ async def test_update_entity_no_changes(hass: HomeAssistant, client) -> None:
     assert state is not None
     assert state.name == "name of entity"
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "name": "name of entity",
@@ -827,11 +820,10 @@ async def test_update_entity_no_changes(hass: HomeAssistant, client) -> None:
     assert state.name == "name of entity"
 
 
-async def test_get_nonexisting_entity(client) -> None:
+async def test_get_nonexisting_entity(client: MockHAClientWebSocket) -> None:
     """Test get entry with nonexisting entity."""
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/get",
             "entity_id": "test_domain.no_name",
         }
@@ -841,11 +833,10 @@ async def test_get_nonexisting_entity(client) -> None:
     assert not msg["success"]
 
 
-async def test_update_nonexisting_entity(client) -> None:
+async def test_update_nonexisting_entity(client: MockHAClientWebSocket) -> None:
     """Test update a nonexisting entity."""
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.no_name",
             "name": "new-name",
@@ -856,7 +847,9 @@ async def test_update_nonexisting_entity(client) -> None:
     assert not msg["success"]
 
 
-async def test_update_entity_id(hass: HomeAssistant, client) -> None:
+async def test_update_entity_id(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test update entity id."""
     mock_registry(
         hass,
@@ -875,9 +868,8 @@ async def test_update_entity_id(hass: HomeAssistant, client) -> None:
 
     assert hass.states.get("test_domain.world") is not None
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "new_entity_id": "test_domain.planet",
@@ -916,7 +908,9 @@ async def test_update_entity_id(hass: HomeAssistant, client) -> None:
     assert hass.states.get("test_domain.planet") is not None
 
 
-async def test_update_existing_entity_id(hass: HomeAssistant, client) -> None:
+async def test_update_existing_entity_id(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test update entity id to an already registered entity id."""
     mock_registry(
         hass,
@@ -939,9 +933,8 @@ async def test_update_existing_entity_id(hass: HomeAssistant, client) -> None:
     entities = [MockEntity(unique_id="1234"), MockEntity(unique_id="2345")]
     await platform.async_add_entities(entities)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "new_entity_id": "test_domain.planet",
@@ -953,7 +946,9 @@ async def test_update_existing_entity_id(hass: HomeAssistant, client) -> None:
     assert not msg["success"]
 
 
-async def test_update_invalid_entity_id(hass: HomeAssistant, client) -> None:
+async def test_update_invalid_entity_id(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test update entity id to an invalid entity id."""
     mock_registry(
         hass,
@@ -970,9 +965,8 @@ async def test_update_invalid_entity_id(hass: HomeAssistant, client) -> None:
     entities = [MockEntity(unique_id="1234"), MockEntity(unique_id="2345")]
     await platform.async_add_entities(entities)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "new_entity_id": "another_domain.planet",
@@ -984,7 +978,9 @@ async def test_update_invalid_entity_id(hass: HomeAssistant, client) -> None:
     assert not msg["success"]
 
 
-async def test_remove_entity(hass: HomeAssistant, client) -> None:
+async def test_remove_entity(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test removing entity."""
     registry = mock_registry(
         hass,
@@ -999,9 +995,8 @@ async def test_remove_entity(hass: HomeAssistant, client) -> None:
         },
     )
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/remove",
             "entity_id": "test_domain.world",
         }
@@ -1013,13 +1008,14 @@ async def test_remove_entity(hass: HomeAssistant, client) -> None:
     assert len(registry.entities) == 0
 
 
-async def test_remove_non_existing_entity(hass: HomeAssistant, client) -> None:
+async def test_remove_non_existing_entity(
+    hass: HomeAssistant, client: MockHAClientWebSocket
+) -> None:
     """Test removing non existing entity."""
     mock_registry(hass, {})
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 6,
             "type": "config/entity_registry/remove",
             "entity_id": "test_domain.world",
         }

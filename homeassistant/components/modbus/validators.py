@@ -8,6 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.climate import HVACMode
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
@@ -29,6 +30,7 @@ from .const import (
     CONF_FAN_MODE_REGISTER,
     CONF_FAN_MODE_VALUES,
     CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
@@ -172,6 +174,26 @@ def struct_validator(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def hvac_fixedsize_reglist_validator(value: Any) -> list:
+    """Check the number of registers for target temp. and coerce it to a list, if valid."""
+    if isinstance(value, int):
+        value = [value] * len(HVACMode)
+        return list(value)
+
+    if len(value) == len(HVACMode):
+        _rv = True
+        for svalue in value:
+            if isinstance(svalue, int) is False:
+                _rv = False
+                break
+        if _rv is True:
+            return list(value)
+
+    raise vol.Invalid(
+        f"Invalid target temp register. Required type: integer, allowed 1 or list of {len(HVACMode)} registers"
+    )
+
+
 def nan_validator(value: Any) -> int:
     """Convert nan string to number (can be hex string or int)."""
     if isinstance(value, int):
@@ -200,6 +222,34 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
 
     for key in reversed(errors):
         del config[CONF_FAN_MODE_VALUES][key]
+    return config
+
+
+def check_hvac_target_temp_registers(config: dict) -> dict:
+    """Check conflicts among HVAC target temperature registers and HVAC ON/OFF, HVAC register, Fan Modes."""
+
+    if (
+        CONF_HVAC_MODE_REGISTER in config
+        and config[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
+    ):
+        wrn = f"{CONF_HVAC_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_MODE_REGISTER} is not loaded!"
+        _LOGGER.warning(wrn)
+        del config[CONF_HVAC_MODE_REGISTER]
+    if (
+        CONF_HVAC_ONOFF_REGISTER in config
+        and config[CONF_HVAC_ONOFF_REGISTER] in config[CONF_TARGET_TEMP]
+    ):
+        wrn = f"{CONF_HVAC_ONOFF_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_HVAC_ONOFF_REGISTER} is not loaded!"
+        _LOGGER.warning(wrn)
+        del config[CONF_HVAC_ONOFF_REGISTER]
+    if (
+        CONF_FAN_MODE_REGISTER in config
+        and config[CONF_FAN_MODE_REGISTER][CONF_ADDRESS] in config[CONF_TARGET_TEMP]
+    ):
+        wrn = f"{CONF_FAN_MODE_REGISTER} overlaps CONF_TARGET_TEMP register(s). {CONF_FAN_MODE_REGISTER} is not loaded!"
+        _LOGGER.warning(wrn)
+        del config[CONF_FAN_MODE_REGISTER]
+
     return config
 
 

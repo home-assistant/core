@@ -1,7 +1,7 @@
 """Event parser and human readable log generator."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from homeassistant.components.sensor import ATTR_STATE_CLASS
@@ -96,7 +96,7 @@ def async_determine_event_types(
 
 
 @callback
-def extract_attr(source: dict[str, Any], attr: str) -> list[str]:
+def extract_attr(source: Mapping[str, Any], attr: str) -> list[str]:
     """Extract an attribute as a list or string."""
     if (value := source.get(attr)) is None:
         return []
