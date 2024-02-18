@@ -7,7 +7,6 @@ from typing import Any
 from sharkiq import OperatingModes, PowerModes, Properties, SharkIqVacuum
 import voluptuous as vol
 
-from homeassistant import exceptions
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
     STATE_DOCKED,
@@ -19,6 +18,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -95,6 +95,7 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.LOCATE
     )
+    _unrecorded_attributes = frozenset({ATTR_ROOMS})
 
     def __init__(
         self, sharkiq: SharkIqVacuum, coordinator: SharkIqUpdateCoordinator
@@ -200,18 +201,15 @@ class SharkVacuumEntity(CoordinatorEntity[SharkIqUpdateCoordinator], StateVacuum
     async def async_clean_room(self, rooms: list[str], **kwargs: Any) -> None:
         """Clean specific rooms."""
         rooms_to_clean = []
-        valid_rooms = []
-        if self.available_rooms is not None:
-            valid_rooms = self.available_rooms or []
+        valid_rooms = self.available_rooms or []
         for room in rooms:
             if room in valid_rooms:
                 rooms_to_clean.append(room)
             else:
-                raise exceptions.HomeAssistantError(
-                    "One or more of the rooms listed ("
-                    + room
-                    + ") are unavailable to your vacuum. "
-                    "Make sure all rooms match the Shark App, including capitalization."
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_room",
+                    translation_placeholders={"room": room},
                 )
 
         LOGGER.debug("Cleaning room(s): %s", rooms_to_clean)

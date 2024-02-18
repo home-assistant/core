@@ -235,8 +235,8 @@ async def test_device_properties(
 @pytest.mark.parametrize(
     ("room_list", "exception"),
     [
-        (["KITCHEN"], exceptions.HomeAssistantError),
-        (["Office"], exceptions.HomeAssistantError),
+        (["KITCHEN"], exceptions.ServiceValidationError),
+        (["Office"], exceptions.ServiceValidationError),
         ([], MultipleInvalid),
     ],
 )
