@@ -1741,8 +1741,8 @@ class ConfigEntries:
         Config entries which are created after Home Assistant is started can't be waited
         for, the function will just return if the config entry is loaded or not.
         """
-        if setup_event := self.hass.data.get(DATA_SETUP_DONE, {}).get(entry.domain):
-            await setup_event.wait()
+        if setup_future := self.hass.data.get(DATA_SETUP_DONE, {}).get(entry.domain):
+            await setup_future
         # The component was not loaded.
         if entry.domain not in self.hass.config.components:
             return False

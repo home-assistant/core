@@ -37,7 +37,7 @@ BASE_PLATFORMS = {platform.value for platform in Platform}
 #   the task returned True.
 DATA_SETUP = "setup_tasks"
 
-# DATA_SETUP_DONE is a dict [str, asyncio.Event], indicating components which
+# DATA_SETUP_DONE is a dict [str, asyncio.Future], indicating components which
 # will be setup:
 # - Events are added to DATA_SETUP_DONE during bootstrap by
 #   async_set_domains_to_be_loaded, the key is the domain which will be loaded.
@@ -111,7 +111,9 @@ def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) 
      - Keep track of domains which will load but have not yet finished loading
     """
     hass.data.setdefault(DATA_SETUP_DONE, {})
-    hass.data[DATA_SETUP_DONE].update({domain: asyncio.Event() for domain in domains})
+    hass.data[DATA_SETUP_DONE].update(
+        {domain: hass.loop.create_future() for domain in domains}
+    )
 
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
@@ -149,8 +151,8 @@ async def async_setup_component(
         future.set_exception(err)
         raise
     finally:
-        if domain in hass.data.get(DATA_SETUP_DONE, {}):
-            hass.data[DATA_SETUP_DONE].pop(domain).set()
+        if future := hass.data.get(DATA_SETUP_DONE, {}).pop(domain, None):
+            future.set_result(None)
 
 
 async def _async_process_dependencies(
@@ -166,17 +168,15 @@ async def _async_process_dependencies(
         if dep not in hass.config.components
     }
 
-    after_dependencies_tasks = {}
-    to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
+    after_dependencies_tasks: dict[str, asyncio.Future[None]] = {}
+    to_be_loaded: dict[str, asyncio.Future[None]] = hass.data.get(DATA_SETUP_DONE, {})
     for dep in integration.after_dependencies:
         if (
             dep not in dependencies_tasks
             and dep in to_be_loaded
             and dep not in hass.config.components
         ):
-            after_dependencies_tasks[dep] = hass.loop.create_task(
-                to_be_loaded[dep].wait()
-            )
+            after_dependencies_tasks[dep] = to_be_loaded[dep]
 
     if not dependencies_tasks and not after_dependencies_tasks:
         return []
