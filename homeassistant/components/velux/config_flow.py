@@ -6,6 +6,7 @@ from pyvlx import PyVLX, PyVLXException
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 import homeassistant.helpers.config_validation as cv
@@ -24,10 +25,16 @@ DATA_SCHEMA = vol.Schema(
 class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for velux."""
 
+    VERSION = 1
+    MINOR_VERSION = 2
+
+    host: str | None = None
+
     async def async_step_import(
         self, config: dict[str, Any]
     ) -> config_entries.ConfigFlowResult:
         """Import a config entry."""
+        LOGGER.debug("Handle Velux configuration.yaml entry: %s", config)
 
         def create_repair(error: str | None = None) -> None:
             if error:
@@ -106,9 +113,34 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-        data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
+        data_schema = self.add_suggested_values_to_schema(
+            DATA_SCHEMA, user_input or {CONF_HOST: self.context[CONF_HOST]}
+        )
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
             errors=errors,
         )
+
+    async def async_step_unignore(self, user_input: dict[str, Any]) -> FlowResult:
+        """Rediscover a previously ignored discover."""
+        unique_id = user_input["unique_id"]
+        await self.async_set_unique_id(unique_id)
+        return await self.async_step_user()
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle discovery by zeroconf."""
+        hostname = discovery_info.hostname.replace(".local.", "")
+        await self.async_set_unique_id(hostname)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
+
+        # Check if config_entry exists already without unigue_id configured.
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.data[CONF_HOST] == discovery_info.host and entry.unique_id is None:
+                entry.unique_id = hostname
+                return self.async_abort(reason="already_configured")
+
+        self.context[CONF_HOST] = discovery_info.host
+        return await self.async_step_user()
