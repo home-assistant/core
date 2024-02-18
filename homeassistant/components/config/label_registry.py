@@ -6,6 +6,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.label_registry import LabelEntry, async_get
 
 
@@ -40,9 +41,9 @@ def websocket_list_labels(
     {
         vol.Required("type"): "config/label_registry/create",
         vol.Required("name"): str,
-        vol.Optional("color"): vol.Any(str, None),
+        vol.Optional("color"): vol.Any(cv.color_hex, None),
         vol.Optional("description"): vol.Any(str, None),
-        vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("icon"): vol.Any(cv.icon, None),
     }
 )
 @websocket_api.require_admin
@@ -91,9 +92,9 @@ def websocket_delete_label(
     {
         vol.Required("type"): "config/label_registry/update",
         vol.Required("label_id"): str,
-        vol.Optional("color"): vol.Any(str, None),
+        vol.Optional("color"): vol.Any(cv.color_hex, None),
         vol.Optional("description"): vol.Any(str, None),
-        vol.Optional("icon"): vol.Any(str, None),
+        vol.Optional("icon"): vol.Any(cv.icon, None),
         vol.Optional("name"): str,
     }
 )
