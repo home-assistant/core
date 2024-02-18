@@ -22,7 +22,7 @@
   list([
   ])
 # ---
-# name: test_parse_existing_ics[legacy_due]
+# name: test_parse_existing_ics[migrate_legacy_due]
   list([
     dict({
       'due': '2023-10-23',
