@@ -49,7 +49,7 @@ async def async_setup_entry(
     entities: list[SwitchEntity] = []
     coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    # Setup device point sensors
+    # Setup device point switches
     for device_id, point_data in coordinator.data.points.items():
         for point_id, device_point in point_data.items():
             if find_matching_platform(device_point) == Platform.SWITCH:
@@ -69,7 +69,7 @@ async def async_setup_entry(
 
 
 class MyUplinkDevicePointSwitch(MyUplinkEntity, SwitchEntity):
-    """Representation of a myUplink device point sensor."""
+    """Representation of a myUplink device point switch."""
 
     def __init__(
         self,
