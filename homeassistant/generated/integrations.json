@@ -5461,7 +5461,7 @@
     "smtp": {
       "name": "SMTP",
       "integration_type": "hub",
-      "config_flow": true,
+      "config_flow": false,
       "iot_class": "cloud_push"
     },
     "snapcast": {
