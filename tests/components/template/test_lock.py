@@ -272,7 +272,7 @@ async def test_unlock_action(hass: HomeAssistant, start_ha, calls) -> None:
     ],
 )
 async def test_lock_action_with_code(hass: HomeAssistant, start_ha, calls) -> None:
-    """Test lock action with supplied unlock code."""
+    """Test lock action with defined code format and supplied lock code."""
     await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_OFF)
     await hass.async_block_till_done()
@@ -307,7 +307,7 @@ async def test_lock_action_with_code(hass: HomeAssistant, start_ha, calls) -> No
     ],
 )
 async def test_unlock_action_with_code(hass: HomeAssistant, start_ha, calls) -> None:
-    """Test lock action with supplied unlock code."""
+    """Test unlock action with code format and supplied unlock code."""
     await setup.async_setup_component(hass, "switch", {})
     hass.states.async_set("switch.test_state", STATE_ON)
     await hass.async_block_till_done()
@@ -358,6 +358,44 @@ async def test_lock_actions_fail_with_invalid_code(
     await hass.async_block_till_done()
 
     assert len(calls) == 0
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
+@pytest.mark.parametrize("action", [lock.SERVICE_LOCK, lock.SERVICE_UNLOCK])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            lock.DOMAIN: {
+                **OPTIMISTIC_LOCK_CONFIG,
+                "value_template": "{{ states.switch.test_state.state }}",
+                "code_format_template": "{{ None }}",
+            }
+        },
+    ],
+)
+async def test_actions_with_none_as_codeformat_ignores_code(
+    hass: HomeAssistant, action, start_ha, calls
+) -> None:
+    """Test lock actions with supplied lock code."""
+    await setup.async_setup_component(hass, "switch", {})
+    hass.states.async_set("switch.test_state", STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.template_lock")
+    assert state.state == lock.STATE_UNLOCKED
+
+    await hass.services.async_call(
+        lock.DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "lock.template_lock", ATTR_CODE: "any code"},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["action"] == action
+    assert calls[0].data["caller"] == "lock.template_lock"
+    assert calls[0].data["code"] == "any code"
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
