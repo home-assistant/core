@@ -8,9 +8,6 @@ import logging
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
-from PyViCare.PyViCareHeatingDevice import (
-    HeatingDeviceWithComponent as PyViCareHeatingDeviceWithComponent,
-)
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
@@ -117,59 +114,54 @@ def _build_entities(
 
     entities: list[ViCareBinarySensor] = []
     for device in device_list:
-        entities.extend(_build_entities_for_device(device.api, device.config))
         entities.extend(
-            _build_entities_for_component(
-                get_circuits(device.api), device.config, CIRCUIT_SENSORS
-            )
+            [
+                ViCareBinarySensor(
+                    device.api,
+                    device.config,
+                    description,
+                )
+                for description in GLOBAL_SENSORS
+                if is_supported(description.key, description, device.api)
+            ]
         )
         entities.extend(
-            _build_entities_for_component(
-                get_burners(device.api), device.config, BURNER_SENSORS
-            )
+            [
+                ViCareBinarySensor(
+                    component,
+                    device.config,
+                    description,
+                )
+                for component in get_circuits(device.api)
+                for description in CIRCUIT_SENSORS
+                if is_supported(description.key, description, component)
+            ]
         )
         entities.extend(
-            _build_entities_for_component(
-                get_compressors(device.api), device.config, COMPRESSOR_SENSORS
-            )
+            [
+                ViCareBinarySensor(
+                    component,
+                    device.config,
+                    description,
+                )
+                for component in get_burners(device.api)
+                for description in BURNER_SENSORS
+                if is_supported(description.key, description, component)
+            ]
+        )
+        entities.extend(
+            [
+                ViCareBinarySensor(
+                    component,
+                    device.config,
+                    description,
+                )
+                for component in get_compressors(device.api)
+                for description in COMPRESSOR_SENSORS
+                if is_supported(description.key, description, component)
+            ]
         )
     return entities
-
-
-def _build_entities_for_device(
-    device: PyViCareDevice,
-    device_config: PyViCareDeviceConfig,
-) -> list[ViCareBinarySensor]:
-    """Create device specific ViCare binary sensor entities."""
-
-    return [
-        ViCareBinarySensor(
-            device,
-            device_config,
-            description,
-        )
-        for description in GLOBAL_SENSORS
-        if is_supported(description.key, description, device)
-    ]
-
-
-def _build_entities_for_component(
-    components: list[PyViCareHeatingDeviceWithComponent],
-    device_config: PyViCareDeviceConfig,
-    entity_descriptions: tuple[ViCareBinarySensorEntityDescription, ...],
-) -> list[ViCareBinarySensor]:
-    """Create component specific ViCare binary sensor entities."""
-
-    return [
-        ViCareBinarySensor(
-            component,
-            device_config,
-            description,
-        )
-        for component in components
-        for description in entity_descriptions
-        if is_supported(description.key, description, component)
-    ]
 
 
 async def async_setup_entry(
