@@ -34,9 +34,7 @@ from .coordinator import SanixCoordinator
 class SanixSensorEntityDescription(SensorEntityDescription):
     """Class describing Sanix Sensor entities."""
 
-    native_value_fn: Callable[[Measurement], int | datetime | date | str | None] = (
-        lambda data: None
-    )
+    native_value_fn: Callable[[Measurement], int | datetime | date | str]
 
 
 SENSOR_TYPES: tuple[SanixSensorEntityDescription, ...] = (
@@ -121,6 +119,6 @@ class SanixSensorEntity(CoordinatorEntity[SanixCoordinator], SensorEntity):
         )
 
     @property
-    def native_value(self) -> int | datetime | date | str | None:
+    def native_value(self) -> int | datetime | date | str:
         """Return the state of the sensor."""
         return self.entity_description.native_value_fn(self.coordinator.data)

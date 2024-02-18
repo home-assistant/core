@@ -22,7 +22,7 @@ async def test_load_unload_entry(
 
     assert entry.state == ConfigEntryState.LOADED
 
-    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.NOT_LOADED
