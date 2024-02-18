@@ -94,14 +94,11 @@ class CameraMediaSource(MediaSource):
                 return None
 
             content_type = FORMAT_CONTENT_TYPE[HLS_PROVIDER]
-            if stream_type != StreamType.HLS:
-                source = await camera.stream_source()
-                if not source:
-                    return None
+            if stream_type != StreamType.HLS and not (await camera.stream_source()):
+                return None
 
             return _media_source_for_camera(camera, content_type)
 
-        # Root. List cameras.
         component: EntityComponent[Camera] = self.hass.data[DOMAIN]
         results = await asyncio.gather(
             *(_filter_browsable_camera(camera) for camera in component.entities),
