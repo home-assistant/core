@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import attr
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
@@ -17,26 +18,17 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, flush_store
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    flush_store,
+)
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
 
 
-@pytest.fixture
-def update_events(hass):
-    """Capture update events."""
-    events = []
-
-    @callback
-    def async_capture(event):
-        events.append(event.data)
-
-    hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, async_capture)
-
-    return events
-
-
-async def test_get(hass: HomeAssistant, entity_registry: er.EntityRegistry):
+async def test_get(entity_registry: er.EntityRegistry):
     """Test we can get an item."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
 
@@ -47,9 +39,10 @@ async def test_get(hass: HomeAssistant, entity_registry: er.EntityRegistry):
 
 
 async def test_get_or_create_returns_same_entry(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Make sure we do not duplicate entries."""
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     entry2 = entity_registry.async_get_or_create("light", "hue", "1234")
 
@@ -59,8 +52,10 @@ async def test_get_or_create_returns_same_entry(
     assert entry is entry2
     assert entry.entity_id == "light.hue_1234"
     assert len(update_events) == 1
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["entity_id"] == entry.entity_id
+    assert update_events[0].data == {
+        "action": "create",
+        "entity_id": entry.entity_id,
+    }
 
 
 def test_get_or_create_suggested_object_id(entity_registry: er.EntityRegistry) -> None:
@@ -449,9 +444,10 @@ def test_async_get_entity_id(entity_registry: er.EntityRegistry) -> None:
 
 
 async def test_updating_config_entry_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that we update config entry id in registry."""
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     mock_config_1 = MockConfigEntry(domain="light", entry_id="mock-id-1")
     entry = entity_registry.async_get_or_create(
         "light", "hue", "5678", config_entry=mock_config_1
@@ -467,17 +463,22 @@ async def test_updating_config_entry_id(
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["entity_id"] == entry.entity_id
-    assert update_events[1]["action"] == "update"
-    assert update_events[1]["entity_id"] == entry.entity_id
-    assert update_events[1]["changes"] == {"config_entry_id": "mock-id-1"}
+    assert update_events[0].data == {
+        "action": "create",
+        "entity_id": entry.entity_id,
+    }
+    assert update_events[1].data == {
+        "action": "update",
+        "entity_id": entry.entity_id,
+        "changes": {"config_entry_id": "mock-id-1"},
+    }
 
 
 async def test_removing_config_entry_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that we update config entry id in registry."""
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
 
     entry = entity_registry.async_get_or_create(
@@ -491,14 +492,18 @@ async def test_removing_config_entry_id(
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["entity_id"] == entry.entity_id
-    assert update_events[1]["action"] == "remove"
-    assert update_events[1]["entity_id"] == entry.entity_id
+    assert update_events[0].data == {
+        "action": "create",
+        "entity_id": entry.entity_id,
+    }
+    assert update_events[1].data == {
+        "action": "remove",
+        "entity_id": entry.entity_id,
+    }
 
 
 async def test_deleted_entity_removing_config_entry_id(
-    hass, entity_registry: er.EntityRegistry
+    entity_registry: er.EntityRegistry,
 ):
     """Test that we update config entry id in registry on deleted entity."""
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
@@ -1515,9 +1520,7 @@ async def test_entity_category_str_not_allowed(
         )
 
 
-async def test_hidden_by_str_not_allowed(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
+async def test_hidden_by_str_not_allowed(entity_registry: er.EntityRegistry) -> None:
     """Test we need to pass hidden by type."""
     with pytest.raises(ValueError):
         entity_registry.async_get_or_create(
@@ -1605,9 +1608,12 @@ def test_migrate_entity_to_new_platform(
 
 
 async def test_restore_entity(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events, freezer
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ):
     """Make sure entity registry id is stable and entity_id is reused if possible."""
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     config_entry = MockConfigEntry(domain="light")
     entry1 = entity_registry.async_get_or_create(
         "light", "hue", "1234", config_entry=config_entry
@@ -1679,22 +1685,22 @@ async def test_restore_entity(
     # Check the events
     await hass.async_block_till_done()
     assert len(update_events) == 13
-    assert update_events[0] == {"action": "create", "entity_id": "light.hue_1234"}
-    assert update_events[1] == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[2]["action"] == "update"
-    assert update_events[3] == {"action": "remove", "entity_id": "light.custom_1"}
-    assert update_events[4] == {"action": "remove", "entity_id": "light.hue_5678"}
+    assert update_events[0].data == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[1].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[2].data["action"] == "update"
+    assert update_events[3].data == {"action": "remove", "entity_id": "light.custom_1"}
+    assert update_events[4].data == {"action": "remove", "entity_id": "light.hue_5678"}
     # Restore entities the 1st time
-    assert update_events[5] == {"action": "create", "entity_id": "light.hue_1234"}
-    assert update_events[6] == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[7] == {"action": "remove", "entity_id": "light.hue_1234"}
-    assert update_events[8] == {"action": "remove", "entity_id": "light.hue_5678"}
+    assert update_events[5].data == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[6].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[7].data == {"action": "remove", "entity_id": "light.hue_1234"}
+    assert update_events[8].data == {"action": "remove", "entity_id": "light.hue_5678"}
     # Restore entities the 2nd time
-    assert update_events[9] == {"action": "create", "entity_id": "light.hue_1234"}
-    assert update_events[10] == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[11] == {"action": "remove", "entity_id": "light.hue_1234"}
+    assert update_events[9].data == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[10].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[11].data == {"action": "remove", "entity_id": "light.hue_1234"}
     # Restore entities the 3rd time
-    assert update_events[12] == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[12].data == {"action": "create", "entity_id": "light.hue_1234"}
 
 
 async def test_async_migrate_entry_delete_self(
