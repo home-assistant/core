@@ -43,7 +43,7 @@ ICS_TODO_STATUS_MAP_INV = {
 def _migrate_calendar(calendar: Calendar) -> bool:
     """Upgrade due dates to rfc5545 format.
 
-    If rfc5545 due dates are exclusive, however we previously set the due date
+    In rfc5545 due dates are exclusive, however we previously set the due date
     as inclusive based on what the user set in the UI. A task is considered
     overdue at midnight at the start of a date so we need to shift the due date
     to the next day for old calendar versions.
