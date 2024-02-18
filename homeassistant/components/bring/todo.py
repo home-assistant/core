@@ -130,12 +130,12 @@ class BringTodoListEntity(
         bring_list = self.bring_list
 
         bring_purchase_item = next(
-            (i for i in bring_list["purchase_items"] if i["name"] == item.uid),
+            (i for i in bring_list["purchase_items"] if i["itemId"] == item.uid),
             None,
         )
 
         bring_recently_item = next(
-            (i for i in bring_list["recently_items"] if i["name"] == item.uid),
+            (i for i in bring_list["recently_items"] if i["itemId"] == item.uid),
             None,
         )
 
