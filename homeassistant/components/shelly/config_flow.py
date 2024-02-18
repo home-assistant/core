@@ -12,6 +12,7 @@ from aioshelly.exceptions import (
     DeviceConnectionError,
     FirmwareUnsupported,
     InvalidAuthError,
+    WrongShellyGen,
 )
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
@@ -23,7 +24,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
@@ -114,6 +115,7 @@ async def validate_input(
         CONF_SLEEP_PERIOD: get_block_device_sleep_period(block_device.settings),
         "model": block_device.model,
         CONF_GEN: gen,
+        CONF_PORT: port,
     }
 
 
@@ -156,15 +158,19 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 except DeviceConnectionError:
                     errors["base"] = "cannot_connect"
+                except WrongShellyGen:
+                    errors["base"] = "wrong_shelly_gen"
                 except Exception:  # pylint: disable=broad-except
                     LOGGER.exception("Unexpected exception")
                     errors["base"] = "unknown"
                 else:
                     if device_info["model"]:
+                        host, port = await parse_host(user_input[CONF_HOST])
                         return self.async_create_entry(
                             title=device_info["title"],
                             data={
-                                **user_input,
+                                CONF_HOST: host,
+                                CONF_PORT: port,
                                 CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                                 "model": device_info["model"],
                                 CONF_GEN: device_info[CONF_GEN],
@@ -192,16 +198,19 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
+            except WrongShellyGen:
+                errors["base"] = "wrong_shelly_gen"
             except Exception:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 if device_info["model"]:
+                    host, port = await parse_host(user_input[CONF_HOST])
                     return self.async_create_entry(
                         title=device_info["title"],
                         data={
-                            **user_input,
-                            CONF_HOST: self.host,
+                            CONF_HOST: host,
+                            CONF_PORT: port,
                             CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                             "model": device_info["model"],
                             CONF_GEN: device_info[CONF_GEN],

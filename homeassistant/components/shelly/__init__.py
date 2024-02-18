@@ -18,7 +18,13 @@ from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
@@ -58,7 +64,6 @@ from .utils import (
     get_device_entry_gen,
     get_rpc_device_wakeup_period,
     get_ws_context,
-    parse_host,
 )
 
 BLOCK_PLATFORMS: Final = [
@@ -245,13 +250,12 @@ async def _async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
 async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Shelly RPC based device from a config entry."""
-    host, port = await parse_host(entry.data[CONF_HOST])
     options = ConnectionOptions(
-        host,
+        entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
         device_mac=entry.unique_id,
-        port=port,
+        port=entry.data.get(CONF_PORT, DEFAULT_HOST_PORT),
     )
 
     ws_context = await get_ws_context(hass)
