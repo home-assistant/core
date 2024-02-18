@@ -75,6 +75,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_BAROMABSIN,
@@ -83,6 +84,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_BAROMRELIN,
@@ -98,6 +100,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_DAILYRAININ,
@@ -142,18 +145,21 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_LASTRAIN,
         translation_key="last_rain",
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_PER_DAY,
         translation_key="lightning_strikes_per_day",
         native_unit_of_measurement="strikes",
         state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_PER_HOUR,
         translation_key="lightning_strikes_per_hour",
         native_unit_of_measurement="strikes/hour",
         state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_LIGHTNING_DISTANCE,
@@ -162,6 +168,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_MAXDAILYGUST,
@@ -178,6 +185,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_PM25_24H,
@@ -185,6 +193,7 @@ SENSOR_DESCRIPTIONS = (
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         suggested_display_precision=1,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_PM25,
@@ -192,6 +201,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_SOLARRADIATION,
@@ -199,6 +209,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.IRRADIANCE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_TEMPF,
@@ -221,12 +232,14 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR,
         translation_key="wind_direction",
         native_unit_of_measurement=DEGREE,
         suggested_display_precision=0,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=TYPE_WINDGUSTMPH,
@@ -250,6 +263,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.PRECIPITATION,
         state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
     ),
 )
 
