@@ -82,13 +82,13 @@
         "name": "Comfort temperature"
       },
       "normal_heating_temperature": {
-        "name": "Normal heating temperature"
+        "name": "Normal temperature"
       },
       "reduced_heating_temperature": {
-        "name": "Reduced heating temperature"
+        "name": "Reduced temperature"
       },
       "comfort_heating_temperature": {
-        "name": "Comfort heating temperature"
+        "name": "Comfort temperature"
       }
     },
     "sensor": {
