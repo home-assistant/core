@@ -10,13 +10,15 @@ import logging
 import os
 from pathlib import Path
 import smtplib
-import socket
+
+import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import (
@@ -27,9 +29,12 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.reload import setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.ssl import client_context
@@ -47,9 +52,30 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    ENCRYPTION_OPTIONS,
 )
 
+PLATFORMS = [Platform.NOTIFY]
+
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
+        vol.Required(CONF_SENDER): vol.Email(),
+        vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): vol.In(
+            ENCRYPTION_OPTIONS
+        ),
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_SENDER_NAME): cv.string,
+        vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    }
+)
 
 
 def get_service(
@@ -58,30 +84,21 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MailNotificationService | None:
     """Get the mail notification service."""
-    if discovery_info is None:
-        _LOGGER.warning(
-            "The notify platform setup the smtp integration via configuration.yaml "
-            "is deprecated. Your config has been migrated to a config entry and "
-            "should be removed from your configuration.yaml. "
-            "Canceling setup via configuration.yaml"
-        )
-        return None
-    entry_id = discovery_info["entry_id"]
+    setup_reload_service(hass, DOMAIN, PLATFORMS)
     mail_service = MailNotificationService(
-        discovery_info.get(CONF_SERVER, DEFAULT_HOST),
-        discovery_info.get(CONF_PORT, DEFAULT_PORT),
-        discovery_info.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-        discovery_info[CONF_SENDER],
-        discovery_info.get(CONF_ENCRYPTION, DEFAULT_ENCRYPTION),
-        discovery_info.get(CONF_USERNAME),
-        discovery_info.get(CONF_PASSWORD),
-        discovery_info[CONF_RECIPIENT],
-        discovery_info.get(CONF_SENDER_NAME),
-        discovery_info.get(CONF_DEBUG, DEFAULT_DEBUG),
-        discovery_info.get(CONF_VERIFY_SSL, True),
+        config[CONF_SERVER],
+        config[CONF_PORT],
+        config[CONF_TIMEOUT],
+        config[CONF_SENDER],
+        config[CONF_ENCRYPTION],
+        config.get(CONF_USERNAME),
+        config.get(CONF_PASSWORD),
+        config[CONF_RECIPIENT],
+        config.get(CONF_SENDER_NAME),
+        config[CONF_DEBUG],
+        config[CONF_VERIFY_SSL],
     )
 
-    hass.data[DOMAIN][entry_id] = mail_service
     if mail_service.connection_is_valid():
         return mail_service
 
@@ -104,7 +121,7 @@ class MailNotificationService(BaseNotificationService):
         sender_name,
         debug,
         verify_ssl,
-    ) -> None:
+    ):
         """Initialize the SMTP service."""
         self._server = server
         self._port = port
@@ -140,32 +157,25 @@ class MailNotificationService(BaseNotificationService):
             mail.login(self.username, self.password)
         return mail
 
-    def connection_is_valid(self, errors: dict[str, str] | None = None) -> bool:
+    def connection_is_valid(self):
         """Check for valid config, verify connectivity."""
         server = None
         try:
             server = self.connect()
-        except smtplib.SMTPAuthenticationError:
-            if errors is None:
-                _LOGGER.exception(
-                    "Login not possible. Please check your setting and/or your credentials"
-                )
-            else:
-                errors["base"] = "authentication_failed"
-            return False
+        except (smtplib.socket.gaierror, ConnectionRefusedError):
+            _LOGGER.exception(
+                (
+                    "SMTP server not found or refused connection (%s:%s). Please check"
+                    " the IP address, hostname, and availability of your SMTP server"
+                ),
+                self._server,
+                self._port,
+            )
 
-        except (socket.gaierror, ConnectionRefusedError, OSError):
-            if errors is None:
-                _LOGGER.exception(
-                    (
-                        "SMTP server not found or refused connection (%s:%s). Please check"
-                        " the IP address, hostname, and availability of your SMTP server"
-                    ),
-                    self._server,
-                    self._port,
-                )
-            else:
-                errors["base"] = "connection_refused"
+        except smtplib.SMTPAuthenticationError:
+            _LOGGER.exception(
+                "Login not possible. Please check your setting and/or your credentials"
+            )
             return False
 
         finally:
