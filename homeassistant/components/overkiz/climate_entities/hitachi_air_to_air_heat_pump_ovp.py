@@ -26,9 +26,7 @@ from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
 PRESET_HOLIDAY_MODE = "holiday_mode"
-FAN_SILENT = OverkizCommandParam.SILENT
-AUTO_MANU_MODE_STATE = OverkizState.CORE_AUTO_MANU_MODE
-TEMPERATURE_CHANGE_STATE = OverkizState.OVP_TEMPERATURE_CHANGE
+FAN_SILENT = "silent"
 TEMP_MIN = 16
 TEMP_MAX = 32
 TEMP_AUTO_MIN = 22
@@ -36,11 +34,6 @@ TEMP_AUTO_MAX = 28
 AUTO_PIVOT_TEMPERATURE = 25
 AUTO_TEMPERATURE_CHANGE_MIN = TEMP_AUTO_MIN - AUTO_PIVOT_TEMPERATURE
 AUTO_TEMPERATURE_CHANGE_MAX = TEMP_AUTO_MAX - AUTO_PIVOT_TEMPERATURE
-FAN_SPEED_STATE = OverkizState.OVP_FAN_SPEED
-MAIN_OPERATION_STATE = OverkizState.OVP_MAIN_OPERATION
-MODE_CHANGE_STATE = OverkizState.OVP_MODE_CHANGE
-ROOM_TEMPERATURE_STATE = OverkizState.OVP_ROOM_TEMPERATURE
-SWING_STATE = OverkizState.OVP_SWING
 
 OVERKIZ_TO_HVAC_MODES: dict[str, HVACMode] = {
     OverkizCommandParam.AUTOHEATING: HVACMode.AUTO,
@@ -79,7 +72,7 @@ OVERKIZ_TO_FAN_MODES: dict[str, str] = {
     OverkizCommandParam.LO: FAN_LOW,
     OverkizCommandParam.MEDIUM: FAN_MEDIUM,  # fallback, state can be exposed as MEDIUM, new state = med
     OverkizCommandParam.MED: FAN_MEDIUM,
-    OverkizCommandParam.SILENT: FAN_SILENT,
+    OverkizCommandParam.SILENT: OverkizCommandParam.SILENT,
 }
 
 FAN_MODES_TO_OVERKIZ: dict[str, str] = {
@@ -115,7 +108,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
             | ClimateEntityFeature.PRESET_MODE
         )
 
-        if self.device.states.get(SWING_STATE):
+        if self.device.states.get(OverkizState.OVP_SWING):
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
         if self._attr_device_info:
@@ -125,13 +118,13 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if (
-            main_op_state := self.device.states[MAIN_OPERATION_STATE]
+            main_op_state := self.device.states[OverkizState.OVP_MAIN_OPERATION]
         ) and main_op_state.value_as_str:
             if main_op_state.value_as_str.lower() == OverkizCommandParam.OFF:
                 return HVACMode.OFF
 
         if (
-            mode_change_state := self.device.states[MODE_CHANGE_STATE]
+            mode_change_state := self.device.states[OverkizState.OVP_MODE_CHANGE]
         ) and mode_change_state.value_as_str:
             # The OVP protocol has 'auto cooling' and 'auto heating' values
             # that are equivalent to the HLRRWIFI protocol without spaces
@@ -153,7 +146,9 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        if (state := self.device.states[FAN_SPEED_STATE]) and state.value_as_str:
+        if (
+            state := self.device.states[OverkizState.OVP_FAN_SPEED]
+        ) and state.value_as_str:
             return OVERKIZ_TO_FAN_MODES[state.value_as_str]
 
         return None
@@ -165,7 +160,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     @property
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
-        if (state := self.device.states[SWING_STATE]) and state.value_as_str:
+        if (state := self.device.states[OverkizState.OVP_SWING]) and state.value_as_str:
             return OVERKIZ_TO_SWING_MODES[state.value_as_str]
 
         return None
@@ -187,7 +182,9 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     @property
     def current_temperature(self) -> int | None:
         """Return current temperature."""
-        if (state := self.device.states[ROOM_TEMPERATURE_STATE]) and state.value_as_int:
+        if (
+            state := self.device.states[OverkizState.OVP_ROOM_TEMPERATURE]
+        ) and state.value_as_int:
             return state.value_as_int
 
         return None
@@ -228,7 +225,9 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     @property
     def auto_manu_mode(self) -> str | None:
         """Return auto/manu mode."""
-        if (state := self.device.states[AUTO_MANU_MODE_STATE]) and state.value_as_str:
+        if (
+            state := self.device.states[OverkizState.CORE_AUTO_MANU_MODE]
+        ) and state.value_as_str:
             return state.value_as_str
         return None
 
@@ -237,7 +236,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     def temperature_change(self) -> int | None:
         """Return temperature change state."""
         if (
-            state := self.device.states[TEMPERATURE_CHANGE_STATE]
+            state := self.device.states[OverkizState.OVP_TEMPERATURE_CHANGE]
         ) and state.value_as_int:
             return state.value_as_int
 
@@ -289,16 +288,16 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         """
 
         main_operation = self._control_backfill(
-            main_operation, MAIN_OPERATION_STATE, OverkizCommandParam.ON
+            main_operation, OverkizState.OVP_MAIN_OPERATION, OverkizCommandParam.ON
         )
         fan_mode = self._control_backfill(
             fan_mode,
-            FAN_SPEED_STATE,
+            OverkizState.OVP_FAN_SPEED,
             OverkizCommandParam.AUTO,
         )
         hvac_mode = self._control_backfill(
             hvac_mode,
-            MODE_CHANGE_STATE,
+            OverkizState.OVP_MODE_CHANGE,
             OverkizCommandParam.AUTO,
         ).lower()  # Overkiz returns uppercase states that are not acceptable commands
         if hvac_mode.replace(" ", "") in [
@@ -311,13 +310,13 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
 
         swing_mode = self._control_backfill(
             swing_mode,
-            SWING_STATE,
+            OverkizState.OVP_SWING,
             OverkizCommandParam.STOP,
         )
 
         # AUTO_MANU parameter is not controlled by HA and is turned "off" when the device is on Holiday mode
         auto_manu_mode = self._control_backfill(
-            None, AUTO_MANU_MODE_STATE, OverkizCommandParam.MANU
+            None, OverkizState.CORE_AUTO_MANU_MODE, OverkizCommandParam.MANU
         )
         if self.preset_mode == PRESET_HOLIDAY_MODE:
             auto_manu_mode = OverkizCommandParam.OFF
