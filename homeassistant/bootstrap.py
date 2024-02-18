@@ -710,6 +710,21 @@ async def _async_resolve_domains_to_setup(
         requirements.async_load_installed_versions(hass, needed_requirements),
         "check installed requirements",
     )
+    # Start loading translations for all integrations we are going to set up
+    # in the background so they are ready when we need them. This avoids a
+    # lot of waiting for the translation load lock and a thundering herd of
+    # tasks trying to load the same translations at the same time as each
+    # integration is loaded.
+    #
+    # We do not wait for this since as soon as the task runs it will
+    # hold the translation load lock and if anything is fast enough to
+    # wait for the translation load lock, loading will be done by the
+    # time it gets to it.
+    hass.async_create_background_task(
+        translation.async_load_integrations(hass, {*BASE_PLATFORMS, *domains_to_setup}),
+        "load translations",
+    )
+
     return domains_to_setup, integration_cache
 
 
