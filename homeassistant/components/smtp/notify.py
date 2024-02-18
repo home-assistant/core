@@ -82,7 +82,7 @@ def get_service(
         discovery_info.get(CONF_VERIFY_SSL, True),
     )
 
-    hass.data.setdefault(DOMAIN, {})[entry_id] = mail_service
+    hass.data[DOMAIN][entry_id] = mail_service
     if mail_service.connection_is_valid():
         return mail_service
 
