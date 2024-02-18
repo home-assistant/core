@@ -19,7 +19,7 @@
   },
   "services": {
     "push_notification": {
-      "name": "Notifications",
+      "name": "[%key:component::notify::services::notify::name%]",
       "description": "Send a mobile push notification to members of a shared Bring! list.",
       "fields": {
         "entity_id": {
