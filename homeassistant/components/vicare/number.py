@@ -175,7 +175,7 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
             HeatingProgram.REDUCED_HEATING
         ),
         value_setter=lambda api, value: api.setProgramTemperature(
-            HeatingProgram.NORMAL_HEATING, value
+            HeatingProgram.REDUCED_HEATING, value
         ),
         min_value_getter=lambda api: api.getProgramMinTemperature(
             HeatingProgram.REDUCED_HEATING
