@@ -4,17 +4,20 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.switch import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-pytestmark = pytest.mark.parametrize("platforms", [(PLATFORM_DOMAIN,)])
+from tests.common import MockConfigEntry
+
+TEST_PLATFORM = Platform.SWITCH
+pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
 
 ENTITY_ID = "switch.f730_cu_3x400v_temporary_lux"
 ENTITY_FRIENDLY_NAME = "F730 CU 3x400V Tempo­rary lux"
@@ -25,9 +28,9 @@ async def test_entity_registry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_myuplink_client: MagicMock,
-    setup_platform,
+    setup_platform: MockConfigEntry,
 ) -> None:
-    """Tests that the entities are registered in the entity registry."""
+    """Test that the entities are registered in the entity registry."""
 
     entry = entity_registry.async_get(ENTITY_ID)
     assert entry.unique_id == ENTITY_UID
@@ -56,7 +59,7 @@ async def test_switch_on(
     """Test the switch can be turned on."""
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        TEST_PLATFORM, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
     await hass.async_block_till_done()
     mock_myuplink_client.async_set_device_points.assert_called_once()
@@ -70,7 +73,7 @@ async def test_switch_off(
     """Test the switch can be turned on."""
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        TEST_PLATFORM, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
     await hass.async_block_till_done()
     mock_myuplink_client.async_set_device_points.assert_called_once()
