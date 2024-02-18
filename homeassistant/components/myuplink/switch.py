@@ -2,12 +2,14 @@
 
 from typing import Any
 
+import aiohttp
 from myuplink import DevicePoint
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MyUplinkDataCoordinator
@@ -109,7 +111,13 @@ class MyUplinkDevicePointSwitch(MyUplinkEntity, SwitchEntity):
 
     async def _async_turn_switch(self, mode: int) -> None:
         """Set switch mode."""
-        await self.coordinator.api.async_set_device_points(
-            self.device_id, data={self.point_id: mode}
-        )
+        try:
+            await self.coordinator.api.async_set_device_points(
+                self.device_id, data={self.point_id: mode}
+            )
+        except aiohttp.ClientError as err:
+            raise HomeAssistantError(
+                f"Failed to set state for {self.entity_id}"
+            ) from err
+
         await self.coordinator.async_request_refresh()
