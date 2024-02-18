@@ -19,6 +19,11 @@ pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
 
 ENTITY_ID = "switch.f730_cu_3x400v_temporary_lux"
 ENTITY_FRIENDLY_NAME = "F730 CU 3x400V Tempo­rary lux"
+ENTITY_STATE = STATE_OFF
+ENTITY_STATE_ATTRIBUTES = {
+    "friendly_name": ENTITY_FRIENDLY_NAME,
+    "icon": "mdi:water-alert-outline",
+}
 ENTITY_UID = "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-50004"
 
 
@@ -42,11 +47,8 @@ async def test_attributes(
     """Test the switch attributes are correct."""
 
     state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OFF
-    assert state.attributes == {
-        "friendly_name": ENTITY_FRIENDLY_NAME,
-        "icon": "mdi:water-alert-outline",
-    }
+    assert state.state == ENTITY_STATE
+    assert state.attributes == ENTITY_STATE_ATTRIBUTES
 
 
 async def test_switch_on(
