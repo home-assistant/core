@@ -54,8 +54,8 @@ def _build_entities(
 
     return [
         ViCareButton(
-            device.api,
             device.config,
+            device.api,
             description,
         )
         for device in device_list
