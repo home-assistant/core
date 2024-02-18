@@ -138,7 +138,7 @@ def validate_smtp_settings(settings: dict[str, Any], errors: dict[str, str]) -> 
 
 
 class SMTPConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for AfterShip."""
+    """Handle a config flow for SMTP."""
 
     VERSION = 1
 
