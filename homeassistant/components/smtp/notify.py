@@ -96,8 +96,8 @@ async def async_get_service(
     entry_id = discovery_info["entry_id"]
     mail_service = MailNotificationService(
         discovery_info.get(CONF_SERVER, DEFAULT_HOST),
-        discovery_info.get(CONF_PORT, DEFAULT_PORT),
-        discovery_info.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+        int(discovery_info.get(CONF_PORT, DEFAULT_PORT)),
+        int(discovery_info.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)),
         discovery_info[CONF_SENDER],
         discovery_info.get(CONF_ENCRYPTION, DEFAULT_ENCRYPTION),
         discovery_info.get(CONF_USERNAME),
