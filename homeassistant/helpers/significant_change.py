@@ -82,7 +82,8 @@ async def _initialize(hass: HomeAssistant) -> None:
 
     functions = hass.data[DATA_FUNCTIONS] = {}
 
-    async def process_platform(
+    @callback
+    def process_platform(
         hass: HomeAssistant, component_name: str, platform: Any
     ) -> None:
         """Process a significant change platform."""
