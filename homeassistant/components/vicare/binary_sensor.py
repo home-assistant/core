@@ -115,34 +115,38 @@ def _build_entities(
 ) -> list[ViCareBinarySensor]:
     """Create ViCare binary sensor entities for a device."""
 
-    entities: list[ViCareBinarySensor] = [
-        ViCareBinarySensor(
-            device.config,
-            device.api,
-            None,
-            description,
-        )
-        for description in GLOBAL_SENSORS
-        if is_supported(description.key, description, device.api)
-    ]
-    for component_list, entity_description_list in (
-        (get_circuits(device.api), CIRCUIT_SENSORS),
-        (get_burners(device.api), BURNER_SENSORS),
-        (get_compressors(device.api), COMPRESSOR_SENSORS),
-    ):
+    entities: list[ViCareBinarySensor] = []
+    for device in device_list:
         entities.extend(
             [
                 ViCareBinarySensor(
                     device.config,
                     device.api,
-                    component,
+                    None,
                     description,
                 )
-                for component in component_list
-                for description in entity_description_list
-                if is_supported(description.key, description, component)
+                for description in GLOBAL_SENSORS
+                if is_supported(description.key, description, device.api)
             ]
         )
+        for component_list, entity_description_list in (
+            (get_circuits(device.api), CIRCUIT_SENSORS),
+            (get_burners(device.api), BURNER_SENSORS),
+            (get_compressors(device.api), COMPRESSOR_SENSORS),
+        ):
+            entities.extend(
+                [
+                    ViCareBinarySensor(
+                        device.config,
+                        device.api,
+                        component,
+                        description,
+                    )
+                    for component in component_list
+                    for description in entity_description_list
+                    if is_supported(description.key, description, component)
+                ]
+            )
     return entities
 
 
