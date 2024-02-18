@@ -26,5 +26,8 @@
     "dateutc5": 1699474200000,
     "lastRain": 1698659100000,
     "tz": "America/Chicago"
+  },
+  "info": {
+    "name": "Station C"
   }
 }

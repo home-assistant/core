@@ -19,6 +19,7 @@ async def test_happy_path(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     open_api: OpenAPI,
+    aioambient: AsyncMock,
     devices_by_location: list[dict[str, Any]],
     config_entry: ConfigEntry,
 ) -> None:
@@ -58,7 +59,7 @@ async def test_happy_path(
 
 async def test_no_station_found(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
+    aioambient: AsyncMock,
     open_api: OpenAPI,
 ) -> None:
     """Test that we abort when we cannot find a station in the area."""
