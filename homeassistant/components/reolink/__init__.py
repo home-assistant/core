@@ -100,7 +100,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             try:
                 return await host.api.check_new_firmware()
-            except (ReolinkError, asyncio.CancelledError, asyncio.exceptions.CancelledError) as err:
+            except (
+                ReolinkError,
+                asyncio.CancelledError,
+                asyncio.exceptions.CancelledError,
+            ) as err:
                 task = asyncio.current_task()
                 if task is not None:
                     task.uncancel()
