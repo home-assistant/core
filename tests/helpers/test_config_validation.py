@@ -1651,10 +1651,10 @@ def test_domain() -> None:
 
 def test_color_hex() -> None:
     """Test color validation in hex format."""
-    assert cv.domain_key("#123456")
-    assert cv.domain_key("#FFaaFF")
-    assert cv.domain_key("#FFFFFF")
-    assert cv.domain_key("#000000")
+    assert cv.domain_key("#123456") == "#123456"
+    assert cv.domain_key("#FFaaFF") == "#FFaaFF"
+    assert cv.domain_key("#FFFFFF") == "#FFFFFF"
+    assert cv.domain_key("#000000") == "#000000"
 
     msg = r"Color should be in the format #RRGGBB"
     with pytest.raises(vol.Invalid, match=msg):
