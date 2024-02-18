@@ -16,4 +16,4 @@ API_STATION_TYPE = "stationtype"
 
 LOGGER = logging.getLogger(__package__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(minutes=5)
