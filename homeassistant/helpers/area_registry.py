@@ -6,7 +6,7 @@ from collections.abc import Iterable, ValuesView
 import dataclasses
 from typing import Any, Literal, TypedDict, cast
 
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
 from . import device_registry as dr, entity_registry as er
@@ -344,12 +344,14 @@ class AreaRegistry:
         from . import floor_registry as fr  # Circular dependency
 
         @callback
-        def _floor_removed_from_registry_filter(event: Event) -> bool:
+        def _floor_removed_from_registry_filter(
+            event: fr.EventFloorRegistryUpdated,
+        ) -> bool:
             """Filter all except for the remove action from floor registry events."""
-            return bool(event.data["action"] == "remove")
+            return event.data["action"] == "remove"
 
         @callback
-        def _handle_floor_registry_update(event: Event) -> None:
+        def _handle_floor_registry_update(event: fr.EventFloorRegistryUpdated) -> None:
             """Update areas that are associated with a floor that has been removed."""
             floor_id = event.data["floor_id"]
             for area_id, area in self.areas.items():
@@ -358,8 +360,8 @@ class AreaRegistry:
 
         self.hass.bus.async_listen(
             event_type=fr.EVENT_FLOOR_REGISTRY_UPDATED,
-            event_filter=_floor_removed_from_registry_filter,
-            listener=_handle_floor_registry_update,
+            event_filter=_floor_removed_from_registry_filter,  # type: ignore[arg-type]
+            listener=_handle_floor_registry_update,  # type: ignore[arg-type]
         )
 
 
