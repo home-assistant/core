@@ -74,6 +74,12 @@ async def test_switch_commands(
         service_data={"entity_id": "switch.test_mower_1_enable_schedule"},
         blocking=True,
     )
+
+    if aioautomower_command == "parked_until_further_notice":
+        mock_automower_client.parked_until_further_notice.assert_called_once()
+    if aioautomower_command == "resume_schedule":
+        mock_automower_client.resume_schedule.assert_called_once()
+
     getattr(mock_automower_client, aioautomower_command).side_effect = ApiException(
         "Test error"
     )
