@@ -2810,7 +2810,9 @@ async def test_async_setup_init_entry_completes_before_loaded_event_fires(
         nonlocal load_events
         load_events.append(event)
 
-    listener = hass.bus.async_listen(EVENT_COMPONENT_LOADED, _record_load)
+    listener = hass.bus.async_listen(
+        EVENT_COMPONENT_LOADED, _record_load, run_immediately=True
+    )
 
     async def mock_async_setup(hass, config):
         """Mock setup."""
