@@ -49,7 +49,6 @@ from .const import (
     DOMAIN,
 )
 
-# PLATFORMS = [Platform.NOTIFY]
 
 _LOGGER = logging.getLogger(__name__)
 
