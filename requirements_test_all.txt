@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.7
+AEMET-OpenData==0.4.8
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -64,7 +64,7 @@ PyMetEireann==2021.8.0
 PyMetno==0.11.0
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.15
+PyMicroBot==0.0.16
 
 # homeassistant.components.nina
 PyNINA==0.3.3
