@@ -90,7 +90,7 @@ CONFIG_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_MAX_DT, default=60): selector.NumberSelector(
             selector.NumberSelectorConfig(
-                min=1,
+                min=0,
                 max=1000000000,
                 mode=selector.NumberSelectorMode.BOX,
                 unit_of_measurement="seconds",
