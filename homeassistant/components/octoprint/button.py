@@ -37,7 +37,9 @@ async def async_setup_entry(
     )
 
 
-class OctoprintButton(CoordinatorEntity[OctoprintDataUpdateCoordinator], ButtonEntity):
+class OctoprintPrinterButton(
+    CoordinatorEntity[OctoprintDataUpdateCoordinator], ButtonEntity
+):
     """Represent an OctoPrint binary sensor."""
 
     client: OctoprintClient
@@ -63,7 +65,35 @@ class OctoprintButton(CoordinatorEntity[OctoprintDataUpdateCoordinator], ButtonE
         return self.coordinator.last_update_success and self.coordinator.data["printer"]
 
 
-class OctoprintPauseJobButton(OctoprintButton):
+class OctoprintSystemButton(
+    CoordinatorEntity[OctoprintDataUpdateCoordinator], ButtonEntity
+):
+    """Represent an OctoPrint binary sensor."""
+
+    client: OctoprintClient
+
+    def __init__(
+        self,
+        coordinator: OctoprintDataUpdateCoordinator,
+        button_type: str,
+        device_id: str,
+        client: OctoprintClient,
+    ) -> None:
+        """Initialize a new OctoPrint button."""
+        super().__init__(coordinator)
+        self.client = client
+        self._device_id = device_id
+        self._attr_name = f"OctoPrint {button_type}"
+        self._attr_unique_id = f"{button_type}-{device_id}"
+        self._attr_device_info = coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
+
+
+class OctoprintPauseJobButton(OctoprintPrinterButton):
     """Pause the active job."""
 
     def __init__(
@@ -85,7 +115,7 @@ class OctoprintPauseJobButton(OctoprintButton):
             raise InvalidPrinterState("Printer is not printing")
 
 
-class OctoprintResumeJobButton(OctoprintButton):
+class OctoprintResumeJobButton(OctoprintPrinterButton):
     """Resume the active job."""
 
     def __init__(
@@ -107,7 +137,7 @@ class OctoprintResumeJobButton(OctoprintButton):
             raise InvalidPrinterState("Printer is not currently paused")
 
 
-class OctoprintStopJobButton(OctoprintButton):
+class OctoprintStopJobButton(OctoprintPrinterButton):
     """Resume the active job."""
 
     def __init__(
@@ -127,7 +157,7 @@ class OctoprintStopJobButton(OctoprintButton):
             await self.client.cancel_job()
 
 
-class OctoprintShutdownSystemButton(OctoprintButton):
+class OctoprintShutdownSystemButton(OctoprintSystemButton):
     """Shutdown the system."""
 
     def __init__(
@@ -143,13 +173,8 @@ class OctoprintShutdownSystemButton(OctoprintButton):
         """Handle the button press."""
         await self.client.shutdown()
 
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
 
-
-class OctoprintRebootSystemButton(OctoprintButton):
+class OctoprintRebootSystemButton(OctoprintSystemButton):
     """Reboot the system."""
 
     _attr_device_class = ButtonDeviceClass.RESTART
@@ -167,13 +192,8 @@ class OctoprintRebootSystemButton(OctoprintButton):
         """Handle the button press."""
         await self.client.reboot_system()
 
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
 
-
-class OctoprintRestartOctoprintButton(OctoprintButton):
+class OctoprintRestartOctoprintButton(OctoprintSystemButton):
     """Restart Octoprint."""
 
     _attr_device_class = ButtonDeviceClass.RESTART
@@ -190,11 +210,6 @@ class OctoprintRestartOctoprintButton(OctoprintButton):
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.client.restart()
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
 
 
 class InvalidPrinterState(HomeAssistantError):
