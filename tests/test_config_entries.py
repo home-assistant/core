@@ -12,6 +12,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow, loader
+from homeassistant.backports.functools import cached_property
 from homeassistant.components import dhcp
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import (
@@ -662,6 +663,81 @@ async def test_domains_gets_domains_excludes_ignore_and_disabled(
     ]
 
 
+async def test_entries_excludes_ignore_and_disabled(
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test ignored and disabled entries are returned by default."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_manager(manager)
+    entry2a = MockConfigEntry(domain="test2")
+    entry2a.add_to_manager(manager)
+    entry2b = MockConfigEntry(domain="test2")
+    entry2b.add_to_manager(manager)
+    entry_ignored = MockConfigEntry(
+        domain="ignored", source=config_entries.SOURCE_IGNORE
+    )
+    entry_ignored.add_to_manager(manager)
+    entry3 = MockConfigEntry(domain="test3")
+    entry3.add_to_manager(manager)
+    disabled_entry = MockConfigEntry(
+        domain="disabled", disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_manager(manager)
+    assert manager.async_entries() == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+        disabled_entry,
+    ]
+    assert manager.async_entries(include_ignore=False) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry3,
+        disabled_entry,
+    ]
+    assert manager.async_entries(include_disabled=False) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+    ]
+    assert manager.async_entries(include_ignore=False, include_disabled=False) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry3,
+    ]
+
+    assert manager.async_entries(include_ignore=True) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+        disabled_entry,
+    ]
+    assert manager.async_entries(include_disabled=True) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+        disabled_entry,
+    ]
+    assert manager.async_entries(include_ignore=True, include_disabled=True) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+        disabled_entry,
+    ]
+
+
 async def test_saving_and_loading(hass: HomeAssistant) -> None:
     """Test that we're saving and loading correctly."""
     mock_integration(
@@ -759,7 +835,14 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
 
     # Make sure the expected keys are present
     dict_repr = entry.as_dict()
-    for key in config_entries.ConfigEntry.__slots__:
+    for key in config_entries.ConfigEntry.__dict__:
+        func = getattr(config_entries.ConfigEntry, key)
+        if (
+            key.startswith("__")
+            or callable(func)
+            or type(func) in (cached_property, property)
+        ):
+            continue
         assert key in dict_repr or key in excluded_from_dict
         assert not (key in dict_repr and key in excluded_from_dict)
 

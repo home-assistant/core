@@ -8,7 +8,7 @@ from datetime import timedelta
 import logging.handlers
 from timeit import default_timer as timer
 from types import ModuleType
-from typing import Any
+from typing import Any, Final, TypedDict
 
 from . import config as conf_util, core, loader, requirements
 from .const import (
@@ -20,12 +20,12 @@ from .const import (
 from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from .exceptions import DependencyError, HomeAssistantError
 from .helpers.issue_registry import IssueSeverity, async_create_issue
-from .helpers.typing import ConfigType
+from .helpers.typing import ConfigType, EventType
 from .util import dt as dt_util, ensure_unique_string
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_COMPONENT = "component"
+ATTR_COMPONENT: Final = "component"
 
 BASE_PLATFORMS = {platform.value for platform in Platform}
 
@@ -64,6 +64,12 @@ NOTIFY_FOR_TRANSLATION_KEYS = [
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 300
+
+
+class EventComponentLoaded(TypedDict):
+    """EventComponentLoaded data."""
+
+    component: str
 
 
 @callback
@@ -370,15 +376,18 @@ async def _async_setup_component(
         # call to avoid a deadlock when forwarding platforms
         hass.config.components.add(domain)
 
-        await asyncio.gather(
-            *(
-                asyncio.create_task(
-                    entry.async_setup(hass, integration=integration),
-                    name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
+        if entries := hass.config_entries.async_entries(
+            domain, include_ignore=False, include_disabled=False
+        ):
+            await asyncio.gather(
+                *(
+                    asyncio.create_task(
+                        entry.async_setup(hass, integration=integration),
+                        name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
+                    )
+                    for entry in entries
                 )
-                for entry in hass.config_entries.async_entries(domain)
             )
-        )
 
     # Cleanup
     if domain in hass.data[DATA_SETUP]:
@@ -513,21 +522,27 @@ def _async_when_setup(
 
     listeners: list[CALLBACK_TYPE] = []
 
-    async def _matched_event(event: core.Event) -> None:
+    async def _matched_event(event: EventType[EventComponentLoaded]) -> None:
         """Call the callback when we matched an event."""
         for listener in listeners:
             listener()
         await when_setup()
 
-    async def _loaded_event(event: core.Event) -> None:
-        """Call the callback if we loaded the expected component."""
-        if event.data[ATTR_COMPONENT] == component:
-            await _matched_event(event)
+    @callback
+    def _async_is_component_filter(event: EventType[EventComponentLoaded]) -> bool:
+        """Check if the event is for the component."""
+        return event.data[ATTR_COMPONENT] == component
 
-    listeners.append(hass.bus.async_listen(EVENT_COMPONENT_LOADED, _loaded_event))
+    listeners.append(
+        hass.bus.async_listen(
+            EVENT_COMPONENT_LOADED,
+            _matched_event,  # type: ignore[arg-type]
+            event_filter=_async_is_component_filter,  # type: ignore[arg-type]
+        )
+    )
     if start_event:
         listeners.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)  # type: ignore[arg-type]
         )
 
 

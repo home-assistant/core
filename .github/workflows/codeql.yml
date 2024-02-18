@@ -2,11 +2,6 @@ name: "CodeQL"
 
 # yamllint disable-line rule:truthy
 on:
-  push:
-    branches:
-      - dev
-      - rc
-      - master
   schedule:
     - cron: "30 18 * * 4"
 
