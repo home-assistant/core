@@ -45,7 +45,7 @@ def ga_validator(value: Any) -> str | int:
                 f"'{value}' is not a valid KNX group address: {exc.message}"
             ) from exc
     raise vol.Invalid(
-        f"'{value}' is not a valid KNX group address: Invalid type '{type(value)}'"
+        f"'{value}' is not a valid KNX group address: Invalid type '{type(value).__name__}'"
     )
 
 
