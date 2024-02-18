@@ -141,7 +141,7 @@ class MailNotificationService(BaseNotificationService):
             mail.login(self.username, self.password)
         return mail
 
-    def connection_is_valid(self, errors: dict[str, str] | None = None):
+    def connection_is_valid(self, errors: dict[str, str] | None = None) -> bool:
         """Check for valid config, verify connectivity."""
         server = None
         try:
