@@ -569,10 +569,7 @@ class _WatchPendingSetups:
             for domain, start_time in self._setup_started.items()
         }
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
-        if remaining_with_setup_started or not self._previous_was_empty:
-            self._async_dispatch(remaining_with_setup_started)
-        self._previous_was_empty = not remaining_with_setup_started
-
+        self._async_dispatch(remaining_with_setup_started)
         if (
             self._setup_started
             and self._duration_count % LOG_SLOW_STARTUP_INTERVAL == 0
@@ -589,9 +586,11 @@ class _WatchPendingSetups:
 
     def _async_dispatch(self, remaining_with_setup_started: dict[str, float]) -> None:
         """Dispatch the signal."""
-        async_dispatcher_send(
-            self._hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
-        )
+        if remaining_with_setup_started or not self._previous_was_empty:
+            async_dispatcher_send(
+                self._hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
+            )
+        self._previous_was_empty = not remaining_with_setup_started
 
     def _async_schedule_next(self) -> None:
         """Schedule the next call."""
