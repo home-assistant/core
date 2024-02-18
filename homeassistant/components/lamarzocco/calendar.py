@@ -1,4 +1,5 @@
 """Calendar platform for La Marzocco espresso machines."""
+
 from collections.abc import Iterator
 from datetime import datetime, timedelta
 
@@ -35,12 +36,10 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         """Return the next upcoming event."""
         # only need to check the next 6 days, because if we don't find anything there
         # then there is no event scheduled
-        for date in self._get_date_range(
-            dt_util.now(), dt_util.now() + timedelta(days=6)
-        ):
-            scheduled = self._async_get_calendar_event(date)
-            if scheduled:
-                if scheduled.start < dt_util.now() and scheduled.end < dt_util.now():
+        now = dt_util.now()
+        for date in self._get_date_range(now, now + timedelta(days=6)):
+            if scheduled := self._async_get_calendar_event(date):
+                if scheduled.end < now:
                     continue
                 return scheduled
         return None
@@ -56,8 +55,7 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         events: list[CalendarEvent] = []
 
         for date in self._get_date_range(start_date, end_date):
-            scheduled = self._async_get_calendar_event(date)
-            if scheduled:
+            if scheduled := self._async_get_calendar_event(date):
                 events.append(scheduled)
         return events
 
@@ -96,6 +94,6 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
                 second=0,
                 microsecond=0,
             ),
-            summary=f"Machine {self.coordinator.lm.true_model_name} ({self.coordinator.lm.serial_number}) on",
+            summary=f"Machine {self.coordinator.config_entry.title} on",
             description="Machine is scheduled to turn on at the start time and off at the end time",
         )
