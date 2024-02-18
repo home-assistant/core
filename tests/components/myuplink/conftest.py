@@ -180,7 +180,7 @@ async def setup_platform(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     platforms,
-) -> AsyncGenerator[Any, Any]:
+) -> AsyncGenerator[None, None]:
     """Set up one or all platforms."""
 
     with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):

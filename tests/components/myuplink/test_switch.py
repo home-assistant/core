@@ -14,8 +14,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
-
 TEST_PLATFORM = Platform.SWITCH
 pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
 
@@ -28,7 +26,7 @@ async def test_entity_registry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_myuplink_client: MagicMock,
-    setup_platform: MockConfigEntry,
+    setup_platform: None,
 ) -> None:
     """Test that the entities are registered in the entity registry."""
 
