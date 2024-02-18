@@ -382,7 +382,7 @@ class EntityComponent(Generic[_EntityT]):
         if scan_interval is None:
             scan_interval = self.scan_interval
 
-        return EntityPlatform(
+        entity_platform = EntityPlatform(
             hass=self.hass,
             logger=self.logger,
             domain=self.domain,
@@ -391,6 +391,8 @@ class EntityComponent(Generic[_EntityT]):
             scan_interval=scan_interval,
             entity_namespace=entity_namespace,
         )
+        entity_platform.async_prepare()
+        return entity_platform
 
     async def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""

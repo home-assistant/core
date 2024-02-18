@@ -5,6 +5,7 @@ import copy
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from kasa.exceptions import AuthenticationException
 import pytest
 
 from homeassistant import setup
@@ -17,6 +18,8 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STARTED,
+    STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -29,6 +32,7 @@ from . import (
     IP_ADDRESS,
     MAC_ADDRESS,
     _mocked_dimmer,
+    _mocked_plug,
     _patch_connect,
     _patch_discovery,
     _patch_single_discovery,
@@ -255,4 +259,33 @@ async def test_config_entry_errors(
     assert (
         any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
         == reauth_flows
+    )
+
+
+async def test_plug_auth_fails(hass: HomeAssistant) -> None:
+    """Test a smart plug auth failure."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=MAC_ADDRESS)
+    config_entry.add_to_hass(hass)
+    plug = _mocked_plug()
+    with _patch_discovery(device=plug), _patch_connect(device=plug):
+        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "switch.my_plug"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    plug.update = AsyncMock(side_effect=AuthenticationException)
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
+
+    assert (
+        len(
+            hass.config_entries.flow.async_progress_by_handler(
+                DOMAIN, match_context={"source": SOURCE_REAUTH}
+            )
+        )
+        == 1
     )

@@ -30,6 +30,8 @@ PREF_GOOGLE_DEFAULT_EXPOSE = "google_default_expose"
 PREF_ALEXA_SETTINGS_VERSION = "alexa_settings_version"
 PREF_GOOGLE_SETTINGS_VERSION = "google_settings_version"
 PREF_TTS_DEFAULT_VOICE = "tts_default_voice"
+PREF_GOOGLE_CONNECTED = "google_connected"
+PREF_REMOTE_ALLOW_REMOTE_ENABLE = "remote_allow_remote_enable"
 DEFAULT_TTS_DEFAULT_VOICE = ("en-US", "female")
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = True
@@ -73,3 +75,4 @@ MODE_PROD = "production"
 DISPATCHER_REMOTE_UPDATE: SignalType[Any] = SignalType("cloud_remote_update")
 
 STT_ENTITY_UNIQUE_ID = "cloud-speech-to-text"
+TTS_ENTITY_UNIQUE_ID = "cloud-text-to-speech"

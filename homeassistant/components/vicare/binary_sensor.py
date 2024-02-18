@@ -27,9 +27,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixin
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
+from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
+from .types import ViCareDevice, ViCareRequiredKeysMixin
 from .utils import get_burners, get_circuits, get_compressors, is_supported
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,31 +111,30 @@ GLOBAL_SENSORS: tuple[ViCareBinarySensorEntityDescription, ...] = (
 
 
 def _build_entities(
-    device: PyViCareDevice,
-    device_config: PyViCareDeviceConfig,
+    device_list: list[ViCareDevice],
 ) -> list[ViCareBinarySensor]:
     """Create ViCare binary sensor entities for a device."""
 
     entities: list[ViCareBinarySensor] = [
         ViCareBinarySensor(
-            device_config,
-            device,
+            device.config,
+            device.api,
             None,
             description,
         )
         for description in GLOBAL_SENSORS
-        if is_supported(description.key, description, device)
+        if is_supported(description.key, description, device.api)
     ]
     for component_list, entity_description_list in (
-        (get_circuits(device), CIRCUIT_SENSORS),
-        (get_burners(device), BURNER_SENSORS),
-        (get_compressors(device), COMPRESSOR_SENSORS),
+        (get_circuits(device.api), CIRCUIT_SENSORS),
+        (get_burners(device.api), BURNER_SENSORS),
+        (get_compressors(device.api), COMPRESSOR_SENSORS),
     ):
         entities.extend(
             [
                 ViCareBinarySensor(
-                    device_config,
-                    device,
+                    device.config,
+                    device.api,
                     component,
                     description,
                 )
@@ -153,14 +152,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare binary sensor devices."""
-    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
-    device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
+    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
 
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            api,
-            device_config,
+            device_list,
         )
     )
 

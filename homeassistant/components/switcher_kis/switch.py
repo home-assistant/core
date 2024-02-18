@@ -1,7 +1,6 @@
 """Switcher integration Switch platform."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
@@ -118,7 +117,7 @@ class SwitcherBaseSwitchEntity(
                 self.coordinator.data.device_key,
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
-        except (asyncio.TimeoutError, OSError, RuntimeError) as err:
+        except (TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 
         if error or not response or not response.successful:
