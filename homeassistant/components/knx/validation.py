@@ -50,6 +50,13 @@ def ga_validator(value: Any) -> str | int:
     return value
 
 
+def maybe_ga_validator(value: Any) -> str | int | None:
+    """Validate a group address or None."""
+    # this is a version of vol.Maybe(ga_validator) that delivers the
+    # error message of ga_validator if validation fails.
+    return ga_validator(value) if value is not None else None
+
+
 ga_list_validator = vol.All(
     cv.ensure_list,
     [ga_validator],
