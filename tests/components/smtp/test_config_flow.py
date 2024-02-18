@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry
 
 
 @patch(
-    "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid",
+    "homeassistant.components.smtp.notify.SMTPClient.connection_is_valid",
     lambda x: True,
 )
 async def test_import_entry(hass: HomeAssistant) -> None:
@@ -78,7 +78,7 @@ async def test_form(
         return True
 
     with patch(
-        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid",
+        "homeassistant.components.smtp.notify.SMTPClient.connection_is_valid",
         side_effect=_connection_is_valid,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -165,7 +165,7 @@ async def test_form_invalid_auth_or_connection_refused(
         return False
 
     with patch(
-        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid",
+        "homeassistant.components.smtp.notify.SMTPClient.connection_is_valid",
         side_effect=_connection_is_valid,
     ):
         result2 = await hass.config_entries.flow.async_configure(

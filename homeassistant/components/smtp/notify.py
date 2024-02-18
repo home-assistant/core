@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import smtplib
 import socket
+from typing import Any
 
 import voluptuous as vol
 
@@ -76,75 +77,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_service(
-    hass: HomeAssistant,
-    config: ConfigType,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> MailNotificationService | None:
-    """Get the mail notification service."""
-    if discovery_info is None:
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-        _LOGGER.warning(
-            "Setting up the smtp integration notify platform via configuration.yaml "
-            "is deprecated. Your config has been migrated to a config entry and "
-            "should be removed from your configuration.yaml. "
-            "Canceling setup via configuration.yaml"
-        )
-        return None
-    entry_id = discovery_info["entry_id"]
-    mail_service = MailNotificationService(
-        discovery_info.get(CONF_SERVER, DEFAULT_HOST),
-        int(discovery_info.get(CONF_PORT, DEFAULT_PORT)),
-        int(discovery_info.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)),
-        discovery_info[CONF_SENDER],
-        discovery_info.get(CONF_ENCRYPTION, DEFAULT_ENCRYPTION),
-        discovery_info.get(CONF_USERNAME),
-        discovery_info.get(CONF_PASSWORD),
-        discovery_info[CONF_RECIPIENT],
-        discovery_info.get(CONF_SENDER_NAME),
-        discovery_info.get(CONF_DEBUG, DEFAULT_DEBUG),
-        discovery_info.get(CONF_VERIFY_SSL, True),
-    )
-
-    hass.data[DOMAIN][entry_id] = mail_service
-    if await hass.async_add_executor_job(mail_service.connection_is_valid):
-        return mail_service
-
-    return None
-
-
-class MailNotificationService(BaseNotificationService):
-    """Implement the notification service for E-mail messages."""
+class SMTPClient:
+    """Set up the SMTP client."""
 
     def __init__(
         self,
-        server,
-        port,
-        timeout,
-        sender,
-        encryption,
-        username,
-        password,
-        recipients,
-        sender_name,
-        debug,
-        verify_ssl,
+        server: str,
+        port: int,
+        timeout: int,
+        encryption: str,
+        username: str | None,
+        password: str | None,
+        debug: bool,
+        verify_ssl: bool,
     ) -> None:
-        """Initialize the SMTP service."""
+        """Initialize the SMTP client."""
         self._server = server
         self._port = port
         self._timeout = timeout
-        self._sender = sender
         self.encryption = encryption
         self.username = username
         self.password = password
-        self.recipients = recipients
-        self._sender_name = sender_name
         self.debug = debug
         self._verify_ssl = verify_ssl
-        self.tries = 2
 
     def connect(self):
         """Connect/authenticate to SMTP Server."""
@@ -201,7 +156,89 @@ class MailNotificationService(BaseNotificationService):
 
         return True
 
-    def send_message(self, message="", **kwargs):
+
+async def async_get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> MailNotificationService | None:
+    """Get the mail notification service."""
+    if discovery_info is None:
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+        _LOGGER.warning(
+            "Setting up the smtp integration notify platform via configuration.yaml "
+            "is deprecated. Your config has been migrated to a config entry and "
+            "should be removed from your configuration.yaml. "
+            "Canceling setup via configuration.yaml"
+        )
+        return None
+    entry_id = discovery_info["entry_id"]
+    mail_service = MailNotificationService(
+        discovery_info.get(CONF_SERVER, DEFAULT_HOST),
+        int(discovery_info.get(CONF_PORT, DEFAULT_PORT)),
+        int(discovery_info.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)),
+        discovery_info[CONF_SENDER],
+        discovery_info.get(CONF_ENCRYPTION, DEFAULT_ENCRYPTION),
+        discovery_info.get(CONF_USERNAME),
+        discovery_info.get(CONF_PASSWORD),
+        discovery_info[CONF_RECIPIENT],
+        discovery_info.get(CONF_SENDER_NAME),
+        discovery_info.get(CONF_DEBUG, DEFAULT_DEBUG),
+        discovery_info.get(CONF_VERIFY_SSL, True),
+    )
+
+    hass.data[DOMAIN][entry_id] = mail_service
+    if await hass.async_add_executor_job(mail_service.connection_is_valid):
+        return mail_service
+
+    return None
+
+
+class MailNotificationService(SMTPClient, BaseNotificationService):
+    """Implement the notification service for E-mail messages."""
+
+    def __init__(
+        self,
+        server: str,
+        port: int,
+        timeout: int,
+        sender: str,
+        encryption: str,
+        username: str | None,
+        password: str | None,
+        recipients: list[str],
+        sender_name: str | None,
+        debug: bool,
+        verify_ssl: bool,
+    ) -> None:
+        """Initialize the SMTP service."""
+        self._server = server
+        self._port = port
+        self._timeout = timeout
+        self._sender = sender
+        self.encryption = encryption
+        self.username = username
+        self.password = password
+        self.recipients = recipients
+        self._sender_name = sender_name
+        self.debug = debug
+        self._verify_ssl = verify_ssl
+        self.tries = 2
+        SMTPClient.__init__(
+            self,
+            server,
+            port,
+            timeout,
+            encryption,
+            username,
+            password,
+            debug,
+            verify_ssl,
+        )
+
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Build and send a message to a user.
 
         Will send plain text normally, with pictures as attachments if images config is

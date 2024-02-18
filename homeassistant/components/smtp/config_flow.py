@@ -48,7 +48,7 @@ from .const import (
     DOMAIN,
     ENCRYPTION_OPTIONS,
 )
-from .notify import MailNotificationService
+from .notify import SMTPClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,16 +121,13 @@ def validate_smtp_settings(settings: dict[str, Any], errors: dict[str, str]) -> 
     settings[CONF_PORT] = cv.positive_int(settings[CONF_PORT])
     settings[CONF_TIMEOUT] = cv.positive_int(settings[CONF_TIMEOUT])
 
-    service_class = MailNotificationService(
+    service_class = SMTPClient(
         settings[CONF_SERVER],
         settings[CONF_PORT],
         settings.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-        settings[CONF_SENDER],
         settings[CONF_ENCRYPTION],
         settings.get(CONF_USERNAME),
         settings.get(CONF_PASSWORD),
-        settings[CONF_RECIPIENT],
-        settings.get(CONF_SENDER_NAME),
         settings.get(CONF_DEBUG, DEFAULT_DEBUG),
         settings.get(CONF_VERIFY_SSL, True),
     )

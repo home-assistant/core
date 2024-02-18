@@ -84,7 +84,7 @@ EMAIL_DATA = [
 
 
 @patch(
-    "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid",
+    "homeassistant.components.smtp.notify.SMTPClient.connection_is_valid",
     lambda x: True,
 )
 async def test_reload_smtp(hass: HomeAssistant) -> None:
