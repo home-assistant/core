@@ -361,7 +361,9 @@ class AreaRegistry:
         )
 
         @callback
-        def _removed_from_registry_filter(event: fr.EventFloorRegistryUpdated) -> bool:
+        def _removed_from_registry_filter(
+            event: fr.EventFloorRegistryUpdated | lr.EventLabelRegistryUpdated,
+        ) -> bool:
             """Filter all except for the item removed from registry events."""
             return event.data["action"] == "remove"
 
@@ -380,7 +382,7 @@ class AreaRegistry:
         )
 
         @callback
-        def _handle_label_registry_update(event: Event) -> None:
+        def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
             """Update areas that have a label that has been removed."""
             label_id = event.data["label_id"]
             for area_id, area in self.areas.items():
@@ -391,8 +393,8 @@ class AreaRegistry:
 
         self.hass.bus.async_listen(
             event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
-            event_filter=_removed_from_registry_filter,
-            listener=_handle_label_registry_update,
+            event_filter=_removed_from_registry_filter,  # type: ignore[arg-type]
+            listener=_handle_label_registry_update,  # type: ignore[arg-type]
         )
 
 

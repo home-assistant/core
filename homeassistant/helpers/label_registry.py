@@ -5,18 +5,28 @@ from collections import UserDict
 from collections.abc import Iterable, ValuesView
 import dataclasses
 from dataclasses import dataclass
-from typing import cast
+from typing import Literal, TypedDict, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
-from .typing import UNDEFINED, UndefinedType
+from .typing import UNDEFINED, EventType, UndefinedType
 
 DATA_REGISTRY = "label_registry"
 EVENT_LABEL_REGISTRY_UPDATED = "label_registry_updated"
 STORAGE_KEY = "core.label_registry"
 STORAGE_VERSION_MAJOR = 1
 SAVE_DELAY = 10
+
+
+class EventLabelRegistryUpdatedData(TypedDict):
+    """Event data for when the label registry is updated."""
+
+    action: Literal["create", "remove", "update"]
+    label_id: str
+
+
+EventLabelRegistryUpdated = EventType[EventLabelRegistryUpdatedData]
 
 
 @dataclass(slots=True, frozen=True)
@@ -151,7 +161,10 @@ class LabelRegistry:
         self.async_schedule_save()
         self.hass.bus.async_fire(
             EVENT_LABEL_REGISTRY_UPDATED,
-            {"action": "create", "label_id": label_id},
+            EventLabelRegistryUpdatedData(
+                action="create",
+                label_id=label_id,
+            ),
         )
         return label
 
@@ -160,7 +173,11 @@ class LabelRegistry:
         """Delete label."""
         del self.labels[label_id]
         self.hass.bus.async_fire(
-            EVENT_LABEL_REGISTRY_UPDATED, {"action": "remove", "label_id": label_id}
+            EVENT_LABEL_REGISTRY_UPDATED,
+            EventLabelRegistryUpdatedData(
+                action="remove",
+                label_id=label_id,
+            ),
         )
         self.async_schedule_save()
 
@@ -197,7 +214,11 @@ class LabelRegistry:
 
         self.async_schedule_save()
         self.hass.bus.async_fire(
-            EVENT_LABEL_REGISTRY_UPDATED, {"action": "update", "label_id": label_id}
+            EVENT_LABEL_REGISTRY_UPDATED,
+            EventLabelRegistryUpdatedData(
+                action="update",
+                label_id=label_id,
+            ),
         )
 
         return new

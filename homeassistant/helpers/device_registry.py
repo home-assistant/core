@@ -1081,19 +1081,21 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     from . import entity_registry, label_registry as lr
 
     @callback
-    def _label_removed_from_registry_filter(event: Event) -> bool:
+    def _label_removed_from_registry_filter(
+        event: lr.EventLabelRegistryUpdated,
+    ) -> bool:
         """Filter all except for the remove action from label registry events."""
-        return bool(event.data["action"] == "remove")
+        return event.data["action"] == "remove"
 
     @callback
-    def _handle_label_registry_update(event: Event) -> None:
+    def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
         """Update devices that have a label that has been removed."""
         dev_reg.async_clear_label_id(event.data["label_id"])
 
     hass.bus.async_listen(
         event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
-        event_filter=_label_removed_from_registry_filter,
-        listener=_handle_label_registry_update,
+        event_filter=_label_removed_from_registry_filter,  # type: ignore[arg-type]
+        listener=_handle_label_registry_update,  # type: ignore[arg-type]
     )
 
     async def cleanup() -> None:
