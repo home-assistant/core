@@ -20,6 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not entry.unique_id:
         entry.async_start_reauth(hass, context={"source": "reauth"})
+        return False
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(

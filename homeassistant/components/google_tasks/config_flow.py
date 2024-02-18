@@ -73,7 +73,7 @@ class OAuth2FlowHandler(
         if not self.reauth_entry:
             await self.async_set_unique_id(user_id)
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=self.flow_impl.name, data=data)
+            return self.async_create_entry(title=user_resource_info["name"], data=data)
 
         if self.reauth_entry.unique_id == user_id or not self.reauth_entry.unique_id:
             return self.async_update_reload_and_abort(

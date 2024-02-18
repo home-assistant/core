@@ -55,6 +55,7 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
     """Fixture for a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id="123",
         data={
             "auth_implementation": DOMAIN,
             "token": token_entry,
