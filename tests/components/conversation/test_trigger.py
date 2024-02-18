@@ -224,6 +224,7 @@ async def test_subscribe_trigger_does_not_interfere_with_responses(
             "trigger": {"platform": "conversation", "command": ["test sentence"]},
         }
     )
+    await websocket_client.receive_json()
 
     service_response = await hass.services.async_call(
         "conversation",
