@@ -73,6 +73,10 @@ omit =
     homeassistant/components/apple_tv/browse_media.py
     homeassistant/components/apple_tv/media_player.py
     homeassistant/components/apple_tv/remote.py
+    homeassistant/components/aprilaire/__init__.py
+    homeassistant/components/aprilaire/climate.py
+    homeassistant/components/aprilaire/coordinator.py
+    homeassistant/components/aprilaire/entity.py
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
     homeassistant/components/arcam_fmj/__init__.py
@@ -554,6 +558,7 @@ omit =
     homeassistant/components/hunterdouglas_powerview/coordinator.py
     homeassistant/components/hunterdouglas_powerview/cover.py
     homeassistant/components/hunterdouglas_powerview/entity.py
+    homeassistant/components/hunterdouglas_powerview/number.py
     homeassistant/components/hunterdouglas_powerview/select.py
     homeassistant/components/hunterdouglas_powerview/sensor.py
     homeassistant/components/hunterdouglas_powerview/shade_data.py
@@ -1067,6 +1072,7 @@ omit =
     homeassistant/components/renson/sensor.py
     homeassistant/components/renson/button.py
     homeassistant/components/renson/fan.py
+    homeassistant/components/renson/switch.py
     homeassistant/components/renson/binary_sensor.py
     homeassistant/components/renson/number.py
     homeassistant/components/renson/time.py
@@ -1535,6 +1541,7 @@ omit =
     homeassistant/components/vicare/entity.py
     homeassistant/components/vicare/number.py
     homeassistant/components/vicare/sensor.py
+    homeassistant/components/vicare/types.py
     homeassistant/components/vicare/utils.py
     homeassistant/components/vicare/water_heater.py
     homeassistant/components/vilfo/__init__.py

@@ -6,11 +6,12 @@ import logging
 from typing import Any
 
 from linear_garage_door import Linear
-from linear_garage_door.errors import InvalidLoginError, ResponseError
+from linear_garage_door.errors import InvalidLoginError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +56,7 @@ class LinearUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 email=self._email,
                 password=self._password,
                 device_id=self._device_id,
+                client_session=async_get_clientsession(self.hass),
             )
         except InvalidLoginError as err:
             if (
@@ -62,8 +64,6 @@ class LinearUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 == "Login error: Login provided is invalid, please check the email and password"
             ):
                 raise ConfigEntryAuthFailed from err
-            raise ConfigEntryNotReady from err
-        except ResponseError as err:
             raise ConfigEntryNotReady from err
 
         if not self._devices:

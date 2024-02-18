@@ -9,7 +9,7 @@ from yarl import URL
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -19,24 +19,11 @@ from homeassistant.helpers import (
 
 from tests.common import (
     MockConfigEntry,
+    async_capture_events,
     flush_store,
     help_test_all,
     import_and_test_deprecated_constant_enum,
 )
-
-
-@pytest.fixture
-def update_events(hass):
-    """Capture update events."""
-    events = []
-
-    @callback
-    def async_capture(event):
-        events.append(event.data)
-
-    hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, async_capture)
-
-    return events
 
 
 @pytest.fixture
@@ -52,9 +39,9 @@ async def test_get_or_create_returns_same_entry(
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     mock_config_entry: MockConfigEntry,
-    update_events,
 ) -> None:
     """Make sure we do not duplicate entries."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -101,13 +88,14 @@ async def test_get_or_create_returns_same_entry(
 
     # Only 2 update events. The third entry did not generate any changes.
     assert len(update_events) == 2
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["device_id"] == entry.id
-    assert "changes" not in update_events[0]
-    assert update_events[1]["action"] == "update"
-    assert update_events[1]["device_id"] == entry.id
-    assert update_events[1]["changes"] == {
-        "connections": {("mac", "12:34:56:ab:cd:ef")}
+    assert update_events[0].data == {
+        "action": "create",
+        "device_id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {"connections": {("mac", "12:34:56:ab:cd:ef")}},
     }
 
 
@@ -656,9 +644,10 @@ async def test_migration_1_3_to_1_4(
 
 
 async def test_removing_config_entries(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Make sure we do not get duplicate entries."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     config_entry_1 = MockConfigEntry()
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry()
@@ -703,29 +692,37 @@ async def test_removing_config_entries(
     await hass.async_block_till_done()
 
     assert len(update_events) == 5
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["device_id"] == entry.id
-    assert "changes" not in update_events[0]
-    assert update_events[1]["action"] == "update"
-    assert update_events[1]["device_id"] == entry2.id
-    assert update_events[1]["changes"] == {"config_entries": {config_entry_1.entry_id}}
-    assert update_events[2]["action"] == "create"
-    assert update_events[2]["device_id"] == entry3.id
-    assert "changes" not in update_events[2]
-    assert update_events[3]["action"] == "update"
-    assert update_events[3]["device_id"] == entry.id
-    assert update_events[3]["changes"] == {
-        "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id}
+    assert update_events[0].data == {
+        "action": "create",
+        "device_id": entry.id,
     }
-    assert update_events[4]["action"] == "remove"
-    assert update_events[4]["device_id"] == entry3.id
-    assert "changes" not in update_events[4]
+    assert update_events[1].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {"config_entries": {config_entry_1.entry_id}},
+    }
+    assert update_events[2].data == {
+        "action": "create",
+        "device_id": entry3.id,
+    }
+    assert update_events[3].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id}
+        },
+    }
+    assert update_events[4].data == {
+        "action": "remove",
+        "device_id": entry3.id,
+    }
 
 
 async def test_deleted_device_removing_config_entries(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Make sure we do not get duplicate entries."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     config_entry_1 = MockConfigEntry()
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry()
@@ -767,21 +764,27 @@ async def test_deleted_device_removing_config_entries(
 
     await hass.async_block_till_done()
     assert len(update_events) == 5
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["device_id"] == entry.id
-    assert "changes" not in update_events[0]
-    assert update_events[1]["action"] == "update"
-    assert update_events[1]["device_id"] == entry2.id
-    assert update_events[1]["changes"] == {"config_entries": {config_entry_1.entry_id}}
-    assert update_events[2]["action"] == "create"
-    assert update_events[2]["device_id"] == entry3.id
-    assert "changes" not in update_events[2]["device_id"]
-    assert update_events[3]["action"] == "remove"
-    assert update_events[3]["device_id"] == entry.id
-    assert "changes" not in update_events[3]
-    assert update_events[4]["action"] == "remove"
-    assert update_events[4]["device_id"] == entry3.id
-    assert "changes" not in update_events[4]
+    assert update_events[0].data == {
+        "action": "create",
+        "device_id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "update",
+        "device_id": entry2.id,
+        "changes": {"config_entries": {config_entry_1.entry_id}},
+    }
+    assert update_events[2].data == {
+        "action": "create",
+        "device_id": entry3.id,
+    }
+    assert update_events[3].data == {
+        "action": "remove",
+        "device_id": entry.id,
+    }
+    assert update_events[4].data == {
+        "action": "remove",
+        "device_id": entry3.id,
+    }
 
     device_registry.async_clear_config_entry(config_entry_1.entry_id)
     assert len(device_registry.devices) == 0
@@ -1105,9 +1108,9 @@ async def test_update(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-    update_events,
 ) -> None:
     """Verify that we can update some attributes of a device."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -1180,33 +1183,37 @@ async def test_update(
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["device_id"] == entry.id
-    assert "changes" not in update_events[0]
-    assert update_events[1]["action"] == "update"
-    assert update_events[1]["device_id"] == entry.id
-    assert update_events[1]["changes"] == {
-        "area_id": None,
-        "configuration_url": None,
-        "disabled_by": None,
-        "entry_type": None,
-        "hw_version": None,
-        "identifiers": {("bla", "123"), ("hue", "456")},
-        "manufacturer": None,
-        "model": None,
-        "name": None,
-        "name_by_user": None,
-        "serial_number": None,
-        "suggested_area": None,
-        "sw_version": None,
-        "via_device_id": None,
+    assert update_events[0].data == {
+        "action": "create",
+        "device_id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "area_id": None,
+            "configuration_url": None,
+            "disabled_by": None,
+            "entry_type": None,
+            "hw_version": None,
+            "identifiers": {("bla", "123"), ("hue", "456")},
+            "manufacturer": None,
+            "model": None,
+            "name": None,
+            "name_by_user": None,
+            "serial_number": None,
+            "suggested_area": None,
+            "sw_version": None,
+            "via_device_id": None,
+        },
     }
 
 
 async def test_update_remove_config_entries(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Make sure we do not get duplicate entries."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     config_entry_1 = MockConfigEntry()
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry()
@@ -1256,23 +1263,30 @@ async def test_update_remove_config_entries(
     await hass.async_block_till_done()
 
     assert len(update_events) == 5
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["device_id"] == entry.id
-    assert "changes" not in update_events[0]
-    assert update_events[1]["action"] == "update"
-    assert update_events[1]["device_id"] == entry2.id
-    assert update_events[1]["changes"] == {"config_entries": {config_entry_1.entry_id}}
-    assert update_events[2]["action"] == "create"
-    assert update_events[2]["device_id"] == entry3.id
-    assert "changes" not in update_events[2]
-    assert update_events[3]["action"] == "update"
-    assert update_events[3]["device_id"] == entry.id
-    assert update_events[3]["changes"] == {
-        "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id}
+    assert update_events[0].data == {
+        "action": "create",
+        "device_id": entry.id,
     }
-    assert update_events[4]["action"] == "remove"
-    assert update_events[4]["device_id"] == entry3.id
-    assert "changes" not in update_events[4]
+    assert update_events[1].data == {
+        "action": "update",
+        "device_id": entry2.id,
+        "changes": {"config_entries": {config_entry_1.entry_id}},
+    }
+    assert update_events[2].data == {
+        "action": "create",
+        "device_id": entry3.id,
+    }
+    assert update_events[3].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id}
+        },
+    }
+    assert update_events[4].data == {
+        "action": "remove",
+        "device_id": entry3.id,
+    }
 
 
 async def test_update_suggested_area(
@@ -1280,9 +1294,9 @@ async def test_update_suggested_area(
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     mock_config_entry: MockConfigEntry,
-    update_events,
 ) -> None:
     """Verify that we can update the suggested area version of a device."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -1310,12 +1324,15 @@ async def test_update_suggested_area(
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["device_id"] == entry.id
-    assert "changes" not in update_events[0]
-    assert update_events[1]["action"] == "update"
-    assert update_events[1]["device_id"] == entry.id
-    assert update_events[1]["changes"] == {"area_id": None, "suggested_area": None}
+    assert update_events[0].data == {
+        "action": "create",
+        "device_id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {"area_id": None, "suggested_area": None},
+    }
 
     # Do not save or fire the event if the suggested
     # area does not result in a change of area
@@ -1457,9 +1474,9 @@ async def test_restore_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-    update_events,
 ) -> None:
     """Make sure device id is stable."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -1503,27 +1520,31 @@ async def test_restore_device(
     await hass.async_block_till_done()
 
     assert len(update_events) == 4
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["device_id"] == entry.id
-    assert "changes" not in update_events[0]
-    assert update_events[1]["action"] == "remove"
-    assert update_events[1]["device_id"] == entry.id
-    assert "changes" not in update_events[1]
-    assert update_events[2]["action"] == "create"
-    assert update_events[2]["device_id"] == entry2.id
-    assert "changes" not in update_events[2]
-    assert update_events[3]["action"] == "create"
-    assert update_events[3]["device_id"] == entry3.id
-    assert "changes" not in update_events[3]
+    assert update_events[0].data == {
+        "action": "create",
+        "device_id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "remove",
+        "device_id": entry.id,
+    }
+    assert update_events[2].data == {
+        "action": "create",
+        "device_id": entry2.id,
+    }
+    assert update_events[3].data == {
+        "action": "create",
+        "device_id": entry3.id,
+    }
 
 
 async def test_restore_simple_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,
-    update_events,
 ) -> None:
     """Make sure device id is stable."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
@@ -1557,24 +1578,29 @@ async def test_restore_simple_device(
     await hass.async_block_till_done()
 
     assert len(update_events) == 4
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["device_id"] == entry.id
-    assert "changes" not in update_events[0]
-    assert update_events[1]["action"] == "remove"
-    assert update_events[1]["device_id"] == entry.id
-    assert "changes" not in update_events[1]
-    assert update_events[2]["action"] == "create"
-    assert update_events[2]["device_id"] == entry2.id
-    assert "changes" not in update_events[2]
-    assert update_events[3]["action"] == "create"
-    assert update_events[3]["device_id"] == entry3.id
-    assert "changes" not in update_events[3]
+    assert update_events[0].data == {
+        "action": "create",
+        "device_id": entry.id,
+    }
+    assert update_events[1].data == {
+        "action": "remove",
+        "device_id": entry.id,
+    }
+    assert update_events[2].data == {
+        "action": "create",
+        "device_id": entry2.id,
+    }
+    assert update_events[3].data == {
+        "action": "create",
+        "device_id": entry3.id,
+    }
 
 
 async def test_restore_shared_device(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry, update_events
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Make sure device id is stable for shared devices."""
+    update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     config_entry_1 = MockConfigEntry()
     config_entry_1.add_to_hass(hass)
     config_entry_2 = MockConfigEntry()
@@ -1660,32 +1686,41 @@ async def test_restore_shared_device(
     await hass.async_block_till_done()
 
     assert len(update_events) == 7
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["device_id"] == entry.id
-    assert "changes" not in update_events[0]
-    assert update_events[1]["action"] == "update"
-    assert update_events[1]["device_id"] == entry.id
-    assert update_events[1]["changes"] == {
-        "config_entries": {config_entry_1.entry_id},
-        "identifiers": {("entry_123", "0123")},
+    assert update_events[0].data == {
+        "action": "create",
+        "device_id": entry.id,
     }
-    assert update_events[2]["action"] == "remove"
-    assert update_events[2]["device_id"] == entry.id
-    assert "changes" not in update_events[2]
-    assert update_events[3]["action"] == "create"
-    assert update_events[3]["device_id"] == entry.id
-    assert "changes" not in update_events[3]
-    assert update_events[4]["action"] == "remove"
-    assert update_events[4]["device_id"] == entry.id
-    assert "changes" not in update_events[4]
-    assert update_events[5]["action"] == "create"
-    assert update_events[5]["device_id"] == entry.id
-    assert "changes" not in update_events[5]
-    assert update_events[6]["action"] == "update"
-    assert update_events[6]["device_id"] == entry.id
-    assert update_events[6]["changes"] == {
-        "config_entries": {config_entry_2.entry_id},
-        "identifiers": {("entry_234", "2345")},
+    assert update_events[1].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries": {config_entry_1.entry_id},
+            "identifiers": {("entry_123", "0123")},
+        },
+    }
+    assert update_events[2].data == {
+        "action": "remove",
+        "device_id": entry.id,
+    }
+    assert update_events[3].data == {
+        "action": "create",
+        "device_id": entry.id,
+    }
+    assert update_events[4].data == {
+        "action": "remove",
+        "device_id": entry.id,
+    }
+    assert update_events[5].data == {
+        "action": "create",
+        "device_id": entry.id,
+    }
+    assert update_events[6].data == {
+        "action": "update",
+        "device_id": entry.id,
+        "changes": {
+            "config_entries": {config_entry_2.entry_id},
+            "identifiers": {("entry_234", "2345")},
+        },
     }
 
 

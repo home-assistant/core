@@ -85,7 +85,8 @@ class DiagnosticsProtocol(Protocol):
         """Return diagnostics for a device."""
 
 
-async def _register_diagnostics_platform(
+@callback
+def _register_diagnostics_platform(
     hass: HomeAssistant, integration_domain: str, platform: DiagnosticsProtocol
 ) -> None:
     """Register a diagnostics platform."""
