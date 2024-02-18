@@ -1108,3 +1108,18 @@ jobs:
             token: ${{ env.CODECOV_TOKEN }}
           attempt_limit: 5
           attempt_delay: 30000
+
+  debug-combine-pytest-output:
+    name: "Debug: Combine pytest output"
+    runs-on: ubuntu-22.04
+    needs:
+      - info
+      - pytest
+    timeout-minutes: 5
+    steps:
+      - name: Merge all pytest coverage artifacts
+        uses: actions/upload-artifact/merge@v4.3.1
+        with:
+          name: pytest-${{ github.run_number }}
+          pattern: pytest-${{ github.run_number }}-*
+          delete-merged: true
