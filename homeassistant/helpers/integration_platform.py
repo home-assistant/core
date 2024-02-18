@@ -31,7 +31,7 @@ class IntegrationPlatform:
     """An integration platform."""
 
     platform_name: str
-    process_job: HassJob
+    process_job: HassJob[[HomeAssistant, str, Any], Awaitable[None] | None]
     seen_components: set[str]
 
 
