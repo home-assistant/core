@@ -167,3 +167,24 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture for platforms."""
+    return []
+
+
+@pytest.fixture
+async def setup_platform(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    platforms,
+) -> MockConfigEntry:
+    """Set up one or all platforms."""
+
+    if platforms != []:
+        with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
+            assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    return mock_config_entry
