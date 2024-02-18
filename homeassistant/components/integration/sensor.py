@@ -357,8 +357,6 @@ class IntegrationSensor(RestoreSensor):
             self._attr_device_class = SensorDeviceClass.ENERGY
             self._attr_icon = None
 
-        self.async_write_ha_state()
-
     def _update_integral(self, area: Decimal) -> None:
         area_scaled = area / (self._unit_prefix * self._unit_time)
         if isinstance(self._state, Decimal):
