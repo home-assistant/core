@@ -435,6 +435,37 @@ async def test_translation_merging_loaded_together(
     assert translations == hue_translations | homekit_translations
 
 
+async def test_ensure_translations_still_load_if_one_integration_fails(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that if one integration fails to load we can still get translations."""
+    hass.config.components.add("sensor")
+    hass.config.components.add("broken")
+
+    sensor_integration = await loader.async_get_integration(hass, "sensor")
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_integrations",
+        return_value={
+            "sensor": sensor_integration,
+            "broken": Exception("unhandled failure"),
+        },
+    ):
+        translations = await translation.async_get_translations(
+            hass, "en", "entity_component", integrations={"sensor", "broken"}
+        )
+        assert "Failed to load integration for translation" in caplog.text
+        assert "broken" in caplog.text
+
+    assert translations
+
+    sensor_translations = await translation.async_get_translations(
+        hass, "en", "entity_component", integrations={"sensor"}
+    )
+
+    assert translations == sensor_translations
+
+
 async def test_caching(hass: HomeAssistant) -> None:
     """Test we cache data."""
     hass.config.components.add("sensor")
