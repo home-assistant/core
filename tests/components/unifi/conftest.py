@@ -108,9 +108,8 @@ def mock_discovery():
 
 
 @pytest.fixture
-def mock_device_registry(hass):
+def mock_device_registry(hass, device_registry: dr.DeviceRegistry):
     """Mock device registry."""
-    dev_reg = dr.async_get(hass)
     config_entry = MockConfigEntry(domain="something_else")
     config_entry.add_to_hass(hass)
 
@@ -126,7 +125,7 @@ def mock_device_registry(hass):
             "00:00:00:00:02:02",
         )
     ):
-        dev_reg.async_get_or_create(
+        device_registry.async_get_or_create(
             name=f"Device {idx}",
             config_entry_id=config_entry.entry_id,
             connections={(dr.CONNECTION_NETWORK_MAC, device)},

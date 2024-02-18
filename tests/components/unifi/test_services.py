@@ -52,7 +52,9 @@ async def test_service_setup_and_unload_not_called_if_multiple_integrations_dete
 
 
 async def test_reconnect_client(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Verify call to reconnect client is performed as expected."""
     clients = [
@@ -71,7 +73,6 @@ async def test_reconnect_client(
         f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
     )
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, clients[0]["mac"])},
@@ -104,14 +105,15 @@ async def test_reconnect_non_existant_device(
 
 
 async def test_reconnect_device_without_mac(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Verify no call is made if device does not have a known mac."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
 
     aioclient_mock.clear_requests()
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={("other connection", "not mac")},
@@ -127,7 +129,9 @@ async def test_reconnect_device_without_mac(
 
 
 async def test_reconnect_client_controller_unavailable(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Verify no call is made if controller is unavailable."""
     clients = [
@@ -147,7 +151,6 @@ async def test_reconnect_client_controller_unavailable(
         f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
     )
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, clients[0]["mac"])},
@@ -163,14 +166,15 @@ async def test_reconnect_client_controller_unavailable(
 
 
 async def test_reconnect_client_unknown_mac(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Verify no call is made if trying to reconnect a mac unknown to controller."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
 
     aioclient_mock.clear_requests()
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "mac unknown to controller")},
@@ -186,7 +190,9 @@ async def test_reconnect_client_unknown_mac(
 
 
 async def test_reconnect_wired_client(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Verify no call is made if client is wired."""
     clients = [
@@ -201,7 +207,6 @@ async def test_reconnect_wired_client(
 
     aioclient_mock.clear_requests()
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, clients[0]["mac"])},
