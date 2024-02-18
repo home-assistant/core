@@ -179,7 +179,7 @@ class UpdateCoordinatorDataType(TypedDict):
 
 class FritzBoxTools(
     update_coordinator.DataUpdateCoordinator[UpdateCoordinatorDataType]
-):
+):  # pylint: disable=hass-enforce-coordinator-module
     """FritzBoxTools class."""
 
     def __init__(
@@ -291,7 +291,7 @@ class FritzBoxTools(
 
         self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
 
-    def register_entity_updates(
+    async def async_register_entity_updates(
         self, key: str, update_fn: Callable[[FritzStatus, StateType], Any]
     ) -> Callable[[], None]:
         """Register an entity to be updated by coordinator."""
@@ -305,6 +305,12 @@ class FritzBoxTools(
         if key not in self._entity_update_functions:
             _LOGGER.debug("register entity %s for updates", key)
             self._entity_update_functions[key] = update_fn
+            if self.fritz_status:
+                self.data["entity_states"][
+                    key
+                ] = await self.hass.async_add_executor_job(
+                    update_fn, self.fritz_status, self.data["entity_states"].get(key)
+                )
         return unregister_entity_updates
 
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
@@ -315,12 +321,14 @@ class FritzBoxTools(
         }
         try:
             await self.async_scan_devices()
-            for key, update_fn in self._entity_update_functions.items():
+            for key in list(self._entity_update_functions):
                 _LOGGER.debug("update entity %s", key)
                 entity_data["entity_states"][
                     key
                 ] = await self.hass.async_add_executor_job(
-                    update_fn, self.fritz_status, self.data["entity_states"].get(key)
+                    self._entity_update_functions[key],
+                    self.fritz_status,
+                    self.data["entity_states"].get(key),
                 )
             if self.has_call_deflections:
                 entity_data[
@@ -755,7 +763,7 @@ class FritzBoxTools(
             raise HomeAssistantError("Service not supported") from ex
 
 
-class AvmWrapper(FritzBoxTools):
+class AvmWrapper(FritzBoxTools):  # pylint: disable=hass-enforce-coordinator-module
     """Setup AVM wrapper for API calls."""
 
     async def _async_service_call(
@@ -1119,15 +1127,19 @@ class FritzBoxBaseCoordinatorEntity(update_coordinator.CoordinatorEntity[AvmWrap
     ) -> None:
         """Init device info class."""
         super().__init__(avm_wrapper)
-        if description.value_fn is not None:
-            self.async_on_remove(
-                avm_wrapper.register_entity_updates(
-                    description.key, description.value_fn
-                )
-            )
         self.entity_description = description
         self._device_name = device_name
         self._attr_unique_id = f"{avm_wrapper.unique_id}-{description.key}"
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        if self.entity_description.value_fn is not None:
+            self.async_on_remove(
+                await self.coordinator.async_register_entity_updates(
+                    self.entity_description.key, self.entity_description.value_fn
+                )
+            )
 
     @property
     def device_info(self) -> DeviceInfo:

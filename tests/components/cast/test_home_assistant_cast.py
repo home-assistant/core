@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.cast import home_assistant_cast
+from homeassistant.components.cast import DOMAIN, home_assistant_cast
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -13,7 +13,9 @@ from tests.common import MockConfigEntry, async_mock_signal
 
 async def test_service_show_view(hass: HomeAssistant, mock_zeroconf: None) -> None:
     """Test showing a view."""
-    await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    await home_assistant_cast.async_setup_ha_cast(hass, entry)
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
     # No valid URL
@@ -38,11 +40,11 @@ async def test_service_show_view(hass: HomeAssistant, mock_zeroconf: None) -> No
     )
 
     assert len(calls) == 1
-    controller, entity_id, view_path, url_path = calls[0]
-    assert controller.hass_url == "https://example.com"
-    assert controller.client_id is None
+    controller_data, entity_id, view_path, url_path = calls[0]
+    assert controller_data["hass_url"] == "https://example.com"
+    assert controller_data["client_id"] is None
     # Verify user did not accidentally submit their dev app id
-    assert controller.supporting_app_id == "A078F6B0"
+    assert "supporting_app_id" not in controller_data
     assert entity_id == "media_player.kitchen"
     assert view_path == "mock_path"
     assert url_path is None
@@ -56,7 +58,9 @@ async def test_service_show_view_dashboard(
         hass,
         {"external_url": "https://example.com"},
     )
-    await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    await home_assistant_cast.async_setup_ha_cast(hass, entry)
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
     await hass.services.async_call(
@@ -71,7 +75,7 @@ async def test_service_show_view_dashboard(
     )
 
     assert len(calls) == 1
-    _controller, entity_id, view_path, url_path = calls[0]
+    _controller_data, entity_id, view_path, url_path = calls[0]
     assert entity_id == "media_player.kitchen"
     assert view_path == "mock_path"
     assert url_path == "mock-dashboard"
@@ -85,7 +89,9 @@ async def test_use_cloud_url(hass: HomeAssistant, mock_zeroconf: None) -> None:
     )
     hass.config.components.add("cloud")
 
-    await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    await home_assistant_cast.async_setup_ha_cast(hass, entry)
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
     with patch(
@@ -100,8 +106,8 @@ async def test_use_cloud_url(hass: HomeAssistant, mock_zeroconf: None) -> None:
         )
 
     assert len(calls) == 1
-    controller = calls[0][0]
-    assert controller.hass_url == "https://something.nabu.casa"
+    controller_data = calls[0][0]
+    assert controller_data["hass_url"] == "https://something.nabu.casa"
 
 
 async def test_remove_entry(hass: HomeAssistant, mock_zeroconf: None) -> None:

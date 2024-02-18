@@ -46,6 +46,16 @@ def get_chromecast_mock():
     return MagicMock()
 
 
+@pytest.fixture
+def ha_controller_mock():
+    """Mock HomeAssistantController."""
+    with patch(
+        "homeassistant.components.cast.media_player.HomeAssistantController",
+        MagicMock(),
+    ) as ha_controller_mock:
+        yield ha_controller_mock
+
+
 @pytest.fixture(autouse=True)
 def cast_mock(
     mz_mock,

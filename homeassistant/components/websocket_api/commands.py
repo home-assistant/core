@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import datetime as dt
 from functools import lru_cache, partial
 import json
 import logging
@@ -45,7 +44,7 @@ from homeassistant.helpers.json import (
     JSON_DUMP,
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
-    json_dumps,
+    json_bytes,
 )
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import EventType
@@ -356,7 +355,9 @@ def _send_handle_get_states_response(
 ) -> None:
     """Send handle get states response."""
     connection.send_message(
-        construct_result_message(msg_id, b"[" + b",".join(serialized_states) + b"]")
+        construct_result_message(
+            msg_id, b"".join((b"[", b",".join(serialized_states), b"]"))
+        )
     )
 
 
@@ -460,7 +461,7 @@ def _send_handle_entities_init_response(
     )
 
 
-async def _async_get_all_descriptions_json(hass: HomeAssistant) -> str:
+async def _async_get_all_descriptions_json(hass: HomeAssistant) -> bytes:
     """Return JSON of descriptions (i.e. user documentation) for all service calls."""
     descriptions = await async_get_all_descriptions(hass)
     if ALL_SERVICE_DESCRIPTIONS_JSON_CACHE in hass.data:
@@ -469,8 +470,8 @@ async def _async_get_all_descriptions_json(hass: HomeAssistant) -> str:
         ]
         # If the descriptions are the same, return the cached JSON payload
         if cached_descriptions is descriptions:
-            return cast(str, cached_json_payload)
-    json_payload = json_dumps(descriptions)
+            return cast(bytes, cached_json_payload)
+    json_payload = json_bytes(descriptions)
     hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
     return json_payload
 
@@ -482,7 +483,7 @@ async def handle_get_services(
 ) -> None:
     """Handle get services command."""
     payload = await _async_get_all_descriptions_json(hass)
-    connection.send_message(construct_result_message(msg["id"], payload.encode()))
+    connection.send_message(construct_result_message(msg["id"], payload))
 
 
 @callback
@@ -538,13 +539,12 @@ def handle_integration_setup_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
+    setup_time: dict[str, float] = hass.data[DATA_SETUP_TIME]
     connection.send_result(
         msg["id"],
         [
-            {"domain": integration, "seconds": timedelta.total_seconds()}
-            for integration, timedelta in cast(
-                dict[str, dt.timedelta], hass.data[DATA_SETUP_TIME]
-            ).items()
+            {"domain": integration, "seconds": seconds}
+            for integration, seconds in setup_time.items()
         ],
     )
 

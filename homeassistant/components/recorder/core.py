@@ -119,6 +119,7 @@ from .tasks import (
     WaitTask,
 )
 from .util import (
+    async_create_backup_failure_issue,
     build_mysqldb_conv,
     dburl_to_path,
     end_incomplete_runs,
@@ -186,6 +187,7 @@ class Recorder(threading.Thread):
         self.auto_purge = auto_purge
         self.auto_repack = auto_repack
         self.keep_days = keep_days
+        self.is_running: bool = False
         self._hass_started: asyncio.Future[object] = hass.loop.create_future()
         self.commit_interval = commit_interval
         self._queue: queue.SimpleQueue[RecorderTask | Event] = queue.SimpleQueue()
@@ -693,6 +695,7 @@ class Recorder(threading.Thread):
 
     def run(self) -> None:
         """Run the recorder thread."""
+        self.is_running = True
         try:
             self._run()
         except Exception:  # pylint: disable=broad-exception-caught
@@ -702,6 +705,7 @@ class Recorder(threading.Thread):
         finally:
             # Ensure shutdown happens cleanly if
             # anything goes wrong in the run loop
+            self.is_running = False
             self._shutdown()
 
     def _add_to_session(self, session: Session, obj: object) -> None:
@@ -1006,9 +1010,11 @@ class Recorder(threading.Thread):
         def _async_set_database_locked(task: DatabaseLockTask) -> None:
             task.database_locked.set()
 
+        local_start_time = dt_util.now()
+        hass = self.hass
         with write_lock_db_sqlite(self):
             # Notify that lock is being held, wait until database can be used again.
-            self.hass.add_job(_async_set_database_locked, task)
+            hass.add_job(_async_set_database_locked, task)
             while not task.database_unlock.wait(timeout=DB_LOCK_QUEUE_CHECK_TIMEOUT):
                 if self._reached_max_backlog_percentage(90):
                     _LOGGER.warning(
@@ -1020,6 +1026,9 @@ class Recorder(threading.Thread):
                         self.backlog,
                     )
                     task.queue_overflow = True
+                    hass.add_job(
+                        async_create_backup_failure_issue, self.hass, local_start_time
+                    )
                     break
         _LOGGER.info(
             "Database queue backlog reached %d entries during backup",
@@ -1329,7 +1338,7 @@ class Recorder(threading.Thread):
         try:
             async with asyncio.timeout(DB_LOCK_TIMEOUT):
                 await database_locked.wait()
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             task.database_unlock.set()
             raise TimeoutError(
                 f"Could not lock database within {DB_LOCK_TIMEOUT} seconds."
