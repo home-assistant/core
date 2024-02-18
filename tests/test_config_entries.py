@@ -20,13 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
-    CoreState,
-    Event,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import DOMAIN as HA_DOMAIN, CoreState, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResult, FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -46,6 +40,7 @@ from .common import (
     MockEntity,
     MockModule,
     MockPlatform,
+    async_capture_events,
     async_fire_time_changed,
     mock_config_flow,
     mock_integration,
@@ -2811,16 +2806,7 @@ async def test_async_setup_init_entry_completes_before_loaded_event_fires(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test a config entry being initialized during integration setup before the loaded event fires."""
-    load_events: list[Event] = []
-
-    @callback
-    def _record_load(event: Event) -> None:
-        nonlocal load_events
-        load_events.append(event)
-
-    listener = hass.bus.async_listen(
-        EVENT_COMPONENT_LOADED, _record_load, run_immediately=True
-    )
+    load_events = async_capture_events(hass, EVENT_COMPONENT_LOADED)
 
     async def mock_async_setup(hass, config):
         """Mock setup."""
@@ -2873,8 +2859,6 @@ async def test_async_setup_init_entry_completes_before_loaded_event_fires(
         entries = hass.config_entries.async_entries("comp")
         assert len(entries) == 1
         assert entries[0].state is config_entries.ConfigEntryState.LOADED
-
-    listener()
 
 
 async def test_async_setup_update_entry(hass: HomeAssistant) -> None:
