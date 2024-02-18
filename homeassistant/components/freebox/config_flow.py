@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-from .router import get_api
+from .router import get_api, get_hosts_list_if_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Check permissions
             await fbx.system.get_config()
-            await fbx.lan.get_hosts_list()
+            await get_hosts_list_if_supported(fbx)
 
             # Close connection
             await fbx.close()
@@ -97,12 +97,6 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
 
         return self.async_show_form(step_id="link", errors=errors)
-
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo

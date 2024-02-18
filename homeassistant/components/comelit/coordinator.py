@@ -81,14 +81,10 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             await self.api.login()
             return await self._async_update_system_data()
-        except exceptions.CannotConnect as err:
-            _LOGGER.warning("Connection error for %s", self._host)
-            await self.api.close()
-            raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
-        except exceptions.CannotAuthenticate:
-            raise ConfigEntryAuthFailed
-
-        return {}
+        except (exceptions.CannotConnect, exceptions.CannotRetrieveData) as err:
+            raise UpdateFailed(repr(err)) from err
+        except exceptions.CannotAuthenticate as err:
+            raise ConfigEntryAuthFailed from err
 
     @abstractmethod
     async def _async_update_system_data(self) -> dict[str, Any]:

@@ -20,7 +20,7 @@ from homeassistant.components.todo import (
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -347,12 +347,12 @@ async def test_add_item_service_raises(
         ({"item": ""}, vol.Invalid, "length of value must be at least 1"),
         (
             {"item": "Submit forms", "description": "Submit tax forms"},
-            ValueError,
+            ServiceValidationError,
             "does not support setting field 'description'",
         ),
         (
             {"item": "Submit forms", "due_date": "2023-11-17"},
-            ValueError,
+            ServiceValidationError,
             "does not support setting field 'due_date'",
         ),
         (
@@ -360,7 +360,7 @@ async def test_add_item_service_raises(
                 "item": "Submit forms",
                 "due_datetime": f"2023-11-17T17:00:00{TEST_OFFSET}",
             },
-            ValueError,
+            ServiceValidationError,
             "does not support setting field 'due_datetime'",
         ),
     ],
@@ -622,7 +622,7 @@ async def test_update_todo_item_service_by_summary_not_found(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(ValueError, match="Unable to find"):
+    with pytest.raises(ServiceValidationError, match="Unable to find"):
         await hass.services.async_call(
             DOMAIN,
             "update_item",
@@ -681,7 +681,7 @@ async def test_update_todo_item_field_unsupported(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(ValueError, match="does not support"):
+    with pytest.raises(ServiceValidationError, match="does not support"):
         await hass.services.async_call(
             DOMAIN,
             "update_item",
@@ -931,7 +931,7 @@ async def test_remove_todo_item_service_by_summary_not_found(
 
     await create_mock_platform(hass, [test_entity])
 
-    with pytest.raises(ValueError, match="Unable to find"):
+    with pytest.raises(ServiceValidationError, match="Unable to find"):
         await hass.services.async_call(
             DOMAIN,
             "remove_item",

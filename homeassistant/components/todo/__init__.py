@@ -19,7 +19,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -106,8 +106,11 @@ def _validate_supported_features(
         if desc.service_field not in call_data:
             continue
         if not supported_features or not supported_features & desc.required_feature:
-            raise ValueError(
-                f"Entity does not support setting field '{desc.service_field}'"
+            raise ServiceValidationError(
+                f"Entity does not support setting field '{desc.service_field}'",
+                translation_domain=DOMAIN,
+                translation_key="update_field_not_supported",
+                translation_placeholders={"service_field": desc.service_field},
             )
 
 
@@ -481,7 +484,12 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
     item = call.data["item"]
     found = _find_by_uid_or_summary(item, entity.todo_items)
     if not found:
-        raise ValueError(f"Unable to find To-do item '{item}'")
+        raise ServiceValidationError(
+            f"Unable to find To-do item '{item}'",
+            translation_domain=DOMAIN,
+            translation_key="item_not_found",
+            translation_placeholders={"item": item},
+        )
 
     _validate_supported_features(entity.supported_features, call.data)
 
@@ -509,7 +517,12 @@ async def _async_remove_todo_items(entity: TodoListEntity, call: ServiceCall) ->
     for item in call.data.get("item", []):
         found = _find_by_uid_or_summary(item, entity.todo_items)
         if not found or not found.uid:
-            raise ValueError(f"Unable to find To-do item '{item}")
+            raise ServiceValidationError(
+                f"Unable to find To-do item '{item}'",
+                translation_domain=DOMAIN,
+                translation_key="item_not_found",
+                translation_placeholders={"item": item},
+            )
         uids.append(found.uid)
     await entity.async_delete_todo_items(uids=uids)
 

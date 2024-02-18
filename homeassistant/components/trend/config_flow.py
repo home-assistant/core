@@ -67,7 +67,6 @@ async def get_extended_options_schema(handler: SchemaCommonFlowHandler) -> vol.S
                 CONF_MIN_GRADIENT, default=DEFAULT_MIN_GRADIENT
             ): selector.NumberSelector(
                 selector.NumberSelectorConfig(
-                    min=0,
                     step="any",
                     mode=selector.NumberSelectorMode.BOX,
                 ),

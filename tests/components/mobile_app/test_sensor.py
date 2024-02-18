@@ -53,7 +53,7 @@ async def test_sensor(
                 "type": "sensor",
                 "entity_category": "diagnostic",
                 "unique_id": "battery_temp",
-                "state_class": "total",
+                "state_class": "measurement",
                 "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
         },
@@ -73,7 +73,7 @@ async def test_sensor(
     # unit of temperature sensor is automatically converted to the system UoM
     assert entity.attributes["unit_of_measurement"] == state_unit
     assert entity.attributes["foo"] == "bar"
-    assert entity.attributes["state_class"] == "total"
+    assert entity.attributes["state_class"] == "measurement"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery Temperature"
     assert entity.state == state1
@@ -175,7 +175,7 @@ async def test_sensor_migration(
                 "type": "sensor",
                 "entity_category": "diagnostic",
                 "unique_id": unique_id,
-                "state_class": "total",
+                "state_class": "measurement",
                 "unit_of_measurement": UnitOfTemperature.CELSIUS,
             },
         },
@@ -195,7 +195,7 @@ async def test_sensor_migration(
     # unit of temperature sensor is automatically converted to the system UoM
     assert entity.attributes["unit_of_measurement"] == state_unit
     assert entity.attributes["foo"] == "bar"
-    assert entity.attributes["state_class"] == "total"
+    assert entity.attributes["state_class"] == "measurement"
     assert entity.domain == "sensor"
     assert entity.name == "Test 1 Battery Temperature"
     assert entity.state == state1

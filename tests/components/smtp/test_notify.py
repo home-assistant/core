@@ -1,20 +1,20 @@
 """The tests for the notify smtp platform."""
+from copy import deepcopy
 from pathlib import Path
 import re
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config as hass_config
 import homeassistant.components.notify as notify
 from homeassistant.components.smtp.const import DOMAIN
 from homeassistant.components.smtp.notify import MailNotificationService
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.setup import async_setup_component
 
-from tests.common import get_fixture_path
+from .const import MOCKED_CONFIG_ENTRY_DATA
+
+from tests.common import MockConfigEntry
 
 
 class MockSMTP(MailNotificationService):
@@ -23,46 +23,6 @@ class MockSMTP(MailNotificationService):
     def _send_email(self, msg, recipients):
         """Just return msg string and recipients for testing."""
         return msg.as_string(), recipients
-
-
-async def test_reload_notify(hass: HomeAssistant) -> None:
-    """Verify we can reload the notify service."""
-
-    with patch(
-        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
-    ):
-        assert await async_setup_component(
-            hass,
-            notify.DOMAIN,
-            {
-                notify.DOMAIN: [
-                    {
-                        "name": DOMAIN,
-                        "platform": DOMAIN,
-                        "recipient": "test@example.com",
-                        "sender": "test@example.com",
-                    },
-                ]
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
-
-    yaml_path = get_fixture_path("configuration.yaml", "smtp")
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
-        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
-    assert hass.services.has_service(notify.DOMAIN, "smtp_reloaded")
 
 
 @pytest.fixture
@@ -121,6 +81,35 @@ EMAIL_DATA = [
         "Content-Type: multipart/related",
     ),
 ]
+
+
+@patch(
+    "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid",
+    lambda x: True,
+)
+async def test_reload_smtp(hass: HomeAssistant) -> None:
+    """Verify we can reload a smtp config entry."""
+    data = deepcopy(MOCKED_CONFIG_ENTRY_DATA)
+    entry = MockConfigEntry(domain=DOMAIN, data=data)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    # Wait for discovery to finish
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
+    await hass.config_entries.async_reload(entry.entry_id)
+    assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
+    await hass.async_block_till_done()
+    # Wait for discovery to finish
+    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
+
+    # Unloading the entry should remove the service
+    await hass.config_entries.async_unload(entry.entry_id)
+    assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
+    await hass.config_entries.async_setup(entry.entry_id)
+    # Wait for discovery to finish
+    await hass.async_block_till_done()
+    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
 
 
 @pytest.mark.parametrize(

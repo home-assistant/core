@@ -1,8 +1,52 @@
 {
-  "services": {
-    "reload": {
-      "name": "[%key:common::action::reload%]",
-      "description": "Reloads smtp notify services."
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "Name",
+          "recipient": "Recipients",
+          "sender": "Sender",
+          "sender_name": "Sender name",
+          "server": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "timeout": "Request Timeout (seconds)",
+          "encryption": "Encryption",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "debug": "Enable SMTP debug",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "name": "When set it will create a specific notify service with this name, defaults to `notify.notify`",
+          "recipient": "The email addres(ses) of the receipient(s) that should receive an email notification",
+          "sender": "The email address of the sender",
+          "sender_name": "The name of the sender",
+          "server": "The SMTP server hostname or IP-adress",
+          "port": "The port of the SMTP server",
+          "encryption": "The encryption type of the email server.",
+          "username": "The username for authentication to the SMTP server",
+          "password": "The password for authentication to the SMTP server"
+        }
+      }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "authentication_failed": "Login not possible. Please check your setting and/or your credentials",
+      "connection_refused": "SMTP server not found or refused connection. Please check the IP address, hostname, and availability of your SMTP server",
+      "invalid_email_address": "Invalid email address specified",
+      "username_and_password": "Username and password should be configured together"
+    }
+  },
+  "selector": {
+    "encryption": {
+      "options": {
+        "tls": "TLS (usually over port 465)",
+        "starttls": "STARTTLS (usually over port 587 or 25)",
+        "none": "No encryption (usually over port 25)"
+      }
     }
   },
   "exceptions": {

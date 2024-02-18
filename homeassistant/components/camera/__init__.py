@@ -54,6 +54,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -123,10 +124,6 @@ _DEPRECATED_SUPPORT_STREAM: Final = DeprecatedConstantEnum(
     CameraEntityFeature.STREAM, "2025.1"
 )
 
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
-
 RTSP_PREFIXES = {"rtsp://", "rtsps://", "rtmp://"}
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"
@@ -184,7 +181,7 @@ async def _async_get_image(
     that we can scale, however the majority of cases
     are handled.
     """
-    with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+    with suppress(asyncio.CancelledError, TimeoutError):
         async with asyncio.timeout(timeout):
             image_bytes = (
                 await _async_get_stream_image(
@@ -530,6 +527,19 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Flag supported features."""
         return self._attr_supported_features
 
+    @property
+    def supported_features_compat(self) -> CameraEntityFeature:
+        """Return the supported features as CameraEntityFeature.
+
+        Remove this compatibility shim in 2025.1 or later.
+        """
+        features = self.supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = CameraEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
+
     @cached_property
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
@@ -570,7 +580,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         if hasattr(self, "_attr_frontend_stream_type"):
             return self._attr_frontend_stream_type
-        if CameraEntityFeature.STREAM not in self.supported_features:
+        if CameraEntityFeature.STREAM not in self.supported_features_compat:
             return None
         if self._rtsp_to_webrtc:
             return StreamType.WEB_RTC
@@ -716,17 +726,17 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the camera state attributes."""
         attrs = {"access_token": self.access_tokens[-1]}
 
-        if self.model:
-            attrs["model_name"] = self.model
+        if model := self.model:
+            attrs["model_name"] = model
 
-        if self.brand:
-            attrs["brand"] = self.brand
+        if brand := self.brand:
+            attrs["brand"] = brand
 
-        if self.motion_detection_enabled:
-            attrs["motion_detection"] = self.motion_detection_enabled
+        if motion_detection_enabled := self.motion_detection_enabled:
+            attrs["motion_detection"] = motion_detection_enabled
 
-        if self.frontend_stream_type:
-            attrs["frontend_stream_type"] = self.frontend_stream_type
+        if frontend_stream_type := self.frontend_stream_type:
+            attrs["frontend_stream_type"] = frontend_stream_type
 
         return attrs
 
@@ -758,7 +768,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def _async_use_rtsp_to_webrtc(self) -> bool:
         """Determine if a WebRTC provider can be used for the camera."""
-        if CameraEntityFeature.STREAM not in self.supported_features:
+        if CameraEntityFeature.STREAM not in self.supported_features_compat:
             return False
         if DATA_RTSP_TO_WEB_RTC not in self.hass.data:
             return False
@@ -881,7 +891,7 @@ async def ws_camera_stream(
     except HomeAssistantError as ex:
         _LOGGER.error("Error requesting stream: %s", ex)
         connection.send_error(msg["id"], "start_stream_failed", str(ex))
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.error("Timeout getting stream source")
         connection.send_error(
             msg["id"], "start_stream_failed", "Timeout getting stream source"
@@ -926,7 +936,7 @@ async def ws_camera_web_rtc_offer(
     except (HomeAssistantError, ValueError) as ex:
         _LOGGER.error("Error handling WebRTC offer: %s", ex)
         connection.send_error(msg["id"], "web_rtc_offer_failed", str(ex))
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.error("Timeout handling WebRTC offer")
         connection.send_error(
             msg["id"], "web_rtc_offer_failed", "Timeout handling WebRTC offer"
@@ -1069,3 +1079,11 @@ async def async_handle_record_service(
         duration=service_call.data[CONF_DURATION],
         lookback=service_call.data[CONF_LOOKBACK],
     )
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
