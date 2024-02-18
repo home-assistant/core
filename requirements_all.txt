@@ -383,7 +383,7 @@ aioswitcher==3.4.1
 aiosyncthing==0.5.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.4.0
+aiotankerkoenig==0.4.1
 
 # homeassistant.components.tractive
 aiotractive==0.5.6
@@ -1112,7 +1112,7 @@ ibmiotf==0.3.4
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
-ical==6.1.1
+ical==7.0.0
 
 # homeassistant.components.ping
 icmplib==3.0
@@ -2077,7 +2077,7 @@ pyqwikswitch==0.93
 pyrail==0.0.3
 
 # homeassistant.components.rainbird
-pyrainbird==4.0.1
+pyrainbird==4.0.2
 
 # homeassistant.components.recswitch
 pyrecswitch==1.0.2
