@@ -685,6 +685,7 @@ ARG_TYPE_METADATA = {
 }
 
 
+@callback
 def execute_service(
     entry_data: RuntimeEntryData, service: UserService, call: ServiceCall
 ) -> None:
