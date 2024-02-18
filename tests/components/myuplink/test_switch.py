@@ -37,7 +37,7 @@ async def test_entity_registry(
 async def test_attributes(
     hass: HomeAssistant,
     mock_myuplink_client: MagicMock,
-    setup_platform,
+    setup_platform: None,
 ) -> None:
     """Test the switch attributes are correct."""
 
@@ -52,7 +52,7 @@ async def test_attributes(
 async def test_switch_on(
     hass: HomeAssistant,
     mock_myuplink_client: MagicMock,
-    setup_platform,
+    setup_platform: None,
 ) -> None:
     """Test the switch can be turned on."""
 
@@ -66,7 +66,7 @@ async def test_switch_on(
 async def test_switch_off(
     hass: HomeAssistant,
     mock_myuplink_client: MagicMock,
-    setup_platform,
+    setup_platform: None,
 ) -> None:
     """Test the switch can be turned on."""
 
