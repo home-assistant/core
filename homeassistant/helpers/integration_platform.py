@@ -10,15 +10,17 @@ from types import ModuleType
 from typing import Any
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.core import Event, HassJob, HomeAssistant, callback
+from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.loader import (
     Integration,
     async_get_integrations,
     async_get_loaded_integration,
     bind_hass,
 )
-from homeassistant.setup import ATTR_COMPONENT
+from homeassistant.setup import ATTR_COMPONENT, EventComponentLoaded
 from homeassistant.util.logging import catch_log_exception
+
+from .typing import EventType
 
 _LOGGER = logging.getLogger(__name__)
 DATA_INTEGRATION_PLATFORMS = "integration_platforms"
@@ -61,10 +63,12 @@ def _get_platform(
 
 @callback
 def _async_process_integration_platforms_for_component(
-    hass: HomeAssistant, integration_platforms: list[IntegrationPlatform], event: Event
+    hass: HomeAssistant,
+    integration_platforms: list[IntegrationPlatform],
+    event: EventType[EventComponentLoaded],
 ) -> None:
     """Process integration platforms for a component."""
-    component_name: str = event.data[ATTR_COMPONENT]
+    component_name = event.data[ATTR_COMPONENT]
     if "." in component_name:
         return
 
