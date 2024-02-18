@@ -112,10 +112,6 @@ class _IntegrationMethod(ABC):
         """Check state requirements for integration."""
 
     @abstractmethod
-    def validate_states(self, left: State, right: State) -> bool:
-        pass
-
-    @abstractmethod
     def calculate_area_with_two_states(
         self, elapsed_time: Decimal, left: Decimal, right: Decimal
     ) -> Decimal:
