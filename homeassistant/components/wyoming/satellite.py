@@ -10,6 +10,7 @@ from wyoming.asr import Transcribe, Transcript
 from wyoming.audio import AudioChunk, AudioChunkConverter, AudioStart, AudioStop
 from wyoming.client import AsyncTcpClient
 from wyoming.error import Error
+from wyoming.info import Describe, Info
 from wyoming.ping import Ping, Pong
 from wyoming.pipeline import PipelineStage, RunPipeline
 from wyoming.satellite import PauseSatellite, RunSatellite
@@ -209,6 +210,9 @@ class WyomingSatellite:
         )
         pending = {pipeline_ended_task, client_event_task}
 
+        # Update info from satellite
+        await self._client.write_event(Describe().event())
+
         while self.is_running and (not self.device.is_muted):
             if send_ping:
                 # Ensure satellite is still connected
@@ -265,6 +269,9 @@ class WyomingSatellite:
                     # Stop pipeline
                     _LOGGER.debug("Client requested pipeline to stop")
                     self._audio_queue.put_nowait(b"")
+                elif Info.is_type(client_event.type):
+                    info = Info.from_event(client_event)
+                    _LOGGER.debug("Updated client info: %s", info)
                 else:
                     _LOGGER.debug("Unexpected event from satellite: %s", client_event)
 
