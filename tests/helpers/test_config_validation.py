@@ -1647,3 +1647,27 @@ def test_domain() -> None:
     assert cv.domain_key("hue1") == "hue1"
     assert cv.domain_key("hue 1") == "hue"
     assert cv.domain_key("hue  1") == "hue"
+
+
+def test_color_hex() -> None:
+    """Test color validation in hex format."""
+    assert cv.domain_key("#123456")
+    assert cv.domain_key("#FFaaFF")
+    assert cv.domain_key("#FFFFFF")
+    assert cv.domain_key("#000000")
+
+    msg = r"Color should be in the format #RRGGBB"
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex("#777")
+
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex("FFFFF")
+
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex("FFFFFF")
+
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex("#FFFFFFF")
+
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex(123456)
