@@ -1377,7 +1377,7 @@ def mock_integration(
         f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
         if built_in
         else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
-        None,
+        pathlib.Path(""),
         module.mock_manifest(),
     )
 

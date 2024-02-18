@@ -12,6 +12,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow, loader
+from homeassistant.backports.functools import cached_property
 from homeassistant.components import dhcp
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import (
@@ -834,7 +835,14 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
 
     # Make sure the expected keys are present
     dict_repr = entry.as_dict()
-    for key in config_entries.ConfigEntry.__slots__:
+    for key in config_entries.ConfigEntry.__dict__:
+        func = getattr(config_entries.ConfigEntry, key)
+        if (
+            key.startswith("__")
+            or callable(func)
+            or type(func) in (cached_property, property)
+        ):
+            continue
         assert key in dict_repr or key in excluded_from_dict
         assert not (key in dict_repr and key in excluded_from_dict)
 
