@@ -620,9 +620,7 @@ class HomeKit:
         self._async_shutdown_accessory(acc)
         if new_acc := self._async_create_single_accessory([state]):
             self.driver.accessory = new_acc
-            # Run must be awaited here since it may change
-            # the accessories hash
-            await new_acc.run()
+            new_acc.run()
             self._async_update_accessories_hash()
 
     def _async_remove_accessories_by_entity_id(
@@ -675,9 +673,7 @@ class HomeKit:
                 )
                 continue
             if acc := self.add_bridge_accessory(state):
-                # Run must be awaited here since it may change
-                # the accessories hash
-                await acc.run()
+                acc.run()
         self._async_update_accessories_hash()
 
     @callback
@@ -752,7 +748,7 @@ class HomeKit:
             return True
         return False
 
-    def add_bridge_triggers_accessory(
+    async def add_bridge_triggers_accessory(
         self, device: dr.DeviceEntry, device_triggers: list[dict[str, Any]]
     ) -> None:
         """Add device automation triggers to the bridge."""
@@ -767,18 +763,18 @@ class HomeKit:
         # the rest of the accessories from being created
         config: dict[str, Any] = {}
         self._fill_config_from_device_registry_entry(device, config)
-        self.bridge.add_accessory(
-            DeviceTriggerAccessory(
-                self.hass,
-                self.driver,
-                device.name,
-                None,
-                aid,
-                config,
-                device_id=device.id,
-                device_triggers=device_triggers,
-            )
+        trigger_accessory = DeviceTriggerAccessory(
+            self.hass,
+            self.driver,
+            device.name,
+            None,
+            aid,
+            config,
+            device_id=device.id,
+            device_triggers=device_triggers,
         )
+        await trigger_accessory.async_attach()
+        self.bridge.add_accessory(trigger_accessory)
 
     @callback
     def async_remove_bridge_accessory(self, aid: int) -> HomeAccessory | None:
@@ -1019,7 +1015,7 @@ class HomeKit:
                     )
                     continue
                 valid_device_triggers.append(trigger)
-            self.add_bridge_triggers_accessory(device, valid_device_triggers)
+            await self.add_bridge_triggers_accessory(device, valid_device_triggers)
 
     async def _async_create_accessories(self) -> bool:
         """Create the accessories."""
