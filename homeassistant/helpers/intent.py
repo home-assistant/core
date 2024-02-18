@@ -367,9 +367,7 @@ class IntentHandler:
     @cached_property
     def _slot_schema(self) -> vol.Schema:
         """Create validation schema for slots."""
-        if self.slot_schema is None:
-            raise ValueError("Slot schema is not defined")
-
+        assert self.slot_schema is not None
         return vol.Schema(
             {
                 key: SLOT_SCHEMA.extend({"value": validator})
