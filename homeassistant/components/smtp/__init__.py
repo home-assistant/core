@@ -6,8 +6,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN, PLATFORM_SCHEMA
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.notify import PLATFORM_SCHEMA
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
@@ -68,14 +68,6 @@ PLATFORMS = [Platform.NOTIFY]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the SMTP notify component from configuration.yaml."""
     hass.data.setdefault(DOMAIN, {})["hass_config"] = config
-    if NOTIFY_DOMAIN in config:
-        for platform_config in config[NOTIFY_DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=platform_config
-                )
-            )
-
     return True
 
 
@@ -84,7 +76,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass_config: ConfigType = hass.data[DOMAIN]["hass_config"]
     hass.data[DOMAIN][config_entry.entry_id] = None
     config = dict(config_entry.data) | {"entry_id": config_entry.entry_id}
-    discovery.load_platform(hass, Platform.NOTIFY.value, DOMAIN, config, hass_config)
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass, Platform.NOTIFY.value, DOMAIN, config, hass_config
+        )
+    )
     return True
 
 

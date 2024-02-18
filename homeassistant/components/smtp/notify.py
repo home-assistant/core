@@ -12,13 +12,17 @@ from pathlib import Path
 import smtplib
 import socket
 
+import voluptuous as vol
+
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
+    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
@@ -30,6 +34,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 from homeassistant.util.ssl import client_context
@@ -47,18 +52,40 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
     DOMAIN,
+    ENCRYPTION_OPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
+        vol.Required(CONF_SENDER): vol.Email(),
+        vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+        vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): vol.In(
+            ENCRYPTION_OPTIONS
+        ),
+        vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_SENDER_NAME): cv.string,
+        vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+    }
+)
 
-def get_service(
+
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MailNotificationService | None:
     """Get the mail notification service."""
     if discovery_info is None:
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
         _LOGGER.warning(
             "The notify platform setup the smtp integration via configuration.yaml "
             "is deprecated. Your config has been migrated to a config entry and "
@@ -82,7 +109,7 @@ def get_service(
     )
 
     hass.data[DOMAIN][entry_id] = mail_service
-    if mail_service.connection_is_valid():
+    if await hass.async_add_executor_job(mail_service.connection_is_valid):
         return mail_service
 
     return None
