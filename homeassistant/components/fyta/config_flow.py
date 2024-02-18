@@ -55,10 +55,11 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _entry: config_entries.ConfigEntry | None = None
+
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._errors: dict = {}
-        self._entry: config_entries.ConfigEntry | None
 
     async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the initial step."""
