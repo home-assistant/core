@@ -29,9 +29,9 @@ from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_LIST, DOMAIN, HeatingProgram
+from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import ViCareDevice, ViCareRequiredKeysMixin
+from .types import HeatingProgram, ViCareDevice, ViCareRequiredKeysMixin
 from .utils import get_circuits, is_supported
 
 _LOGGER = logging.getLogger(__name__)

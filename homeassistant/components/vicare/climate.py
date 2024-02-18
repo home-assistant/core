@@ -40,9 +40,9 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_LIST, DOMAIN, HeatingProgram
+from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import ViCareDevice
+from .types import HeatingProgram, ViCareDevice
 from .utils import get_burners, get_circuits, get_compressors
 
 _LOGGER = logging.getLogger(__name__)
