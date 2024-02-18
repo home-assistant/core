@@ -10,7 +10,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-import homeassistant.helpers.config_validation as cv
 
 from . import ATTR_MEDIA_VOLUME_LEVEL, DOMAIN
 
@@ -42,7 +41,10 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             INTENT_SET_VOLUME,
             DOMAIN,
             SERVICE_VOLUME_SET,
-            extra_slot_names={ATTR_MEDIA_VOLUME_LEVEL},
-            extra_slot_schema={vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float},
+            extra_slots={
+                ATTR_MEDIA_VOLUME_LEVEL: vol.All(
+                    vol.Range(min=0, max=100), lambda val: val / 100
+                )
+            },
         ),
     )

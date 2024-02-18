@@ -7,6 +7,7 @@ from collections.abc import Collection, Coroutine, Iterable
 import dataclasses
 from dataclasses import dataclass
 from enum import Enum
+from functools import cached_property
 import logging
 from typing import Any, TypeVar
 
@@ -348,7 +349,6 @@ class IntentHandler:
 
     intent_type: str | None = None
     slot_schema: vol.Schema | None = None
-    _slot_schema: vol.Schema | None = None
     platforms: Iterable[str] | None = []
 
     @callback
@@ -362,16 +362,21 @@ class IntentHandler:
         if self.slot_schema is None:
             return slots
 
-        if self._slot_schema is None:
-            self._slot_schema = vol.Schema(
-                {
-                    key: SLOT_SCHEMA.extend({"value": validator})
-                    for key, validator in self.slot_schema.items()
-                },
-                extra=vol.ALLOW_EXTRA,
-            )
-
         return self._slot_schema(slots)  # type: ignore[no-any-return]
+
+    @cached_property
+    def _slot_schema(self) -> vol.Schema:
+        """Create validation schema for slots."""
+        if self.slot_schema is None:
+            raise ValueError("Slot schema is not defined")
+
+        return vol.Schema(
+            {
+                key: SLOT_SCHEMA.extend({"value": validator})
+                for key, validator in self.slot_schema.items()
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the intent."""
@@ -404,41 +409,39 @@ class ServiceIntentHandler(IntentHandler):
         domain: str,
         service: str,
         speech: str | None = None,
-        extra_slot_names: set[str] | None = None,
-        extra_slot_schema: vol.Schema | None = None,
+        extra_slots: dict[str, vol.Schema] | None = None,
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
         self.domain = domain
         self.service = service
         self.speech = speech
-        self.extra_slot_names = extra_slot_names
-        self.extra_slot_schema = extra_slot_schema
+        self.extra_slots = extra_slots
 
-        if self.extra_slot_names:
-            if self.extra_slot_schema is None:
-                raise ValueError(
-                    "extra_slot_schema is required when extra_slot_names is set"
-                )
+    @cached_property
+    def _slot_schema(self) -> vol.Schema:
+        """Create validation schema for slots (with extra required slots)."""
+        if self.slot_schema is None:
+            raise ValueError("Slot schema is not defined")
 
-    @callback
-    def async_validate_slots(self, slots: _SlotsType) -> _SlotsType:
-        """Validate slot information."""
-        if self._slot_schema is None:
-            if self.extra_slot_schema:
-                slot_schema = {**self.slot_schema, **self.extra_slot_schema}
-            else:
-                slot_schema = self.slot_schema
-
-            self._slot_schema = vol.Schema(
-                {
-                    key: SLOT_SCHEMA.extend({"value": validator})
-                    for key, validator in slot_schema.items()
+        if self.extra_slots:
+            slot_schema = {
+                **self.slot_schema,
+                **{
+                    vol.Required(key): schema
+                    for key, schema in self.extra_slots.items()
                 },
-                extra=vol.ALLOW_EXTRA,
-            )
+            }
+        else:
+            slot_schema = self.slot_schema
 
-        return self._slot_schema(slots)  # type: ignore[no-any-return]
+        return vol.Schema(
+            {
+                key: SLOT_SCHEMA.extend({"value": validator})
+                for key, validator in slot_schema.items()
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the hass intent."""
@@ -500,6 +503,9 @@ class ServiceIntentHandler(IntentHandler):
                 name=entity_text or entity_name,
                 area=area_name or area_id,
             )
+
+        # Update intent slots to include any transformations done by the schemas
+        intent_obj.slots = slots
 
         response = await self.async_handle_states(intent_obj, states, area)
 
@@ -574,18 +580,18 @@ class ServiceIntentHandler(IntentHandler):
         """Call service on entity."""
         hass = intent_obj.hass
 
-        extra_attrs: dict[str, Any] = {}
-        if self.extra_slot_names:
-            extra_attrs = {
-                key: intent_obj.slots[key]["value"] for key in self.extra_slot_names
-            }
+        service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
+        if self.extra_slots:
+            service_data.update(
+                {key: intent_obj.slots[key]["value"] for key in self.extra_slots}
+            )
 
         await self._run_then_background(
             hass.async_create_task(
                 hass.services.async_call(
                     self.domain,
                     self.service,
-                    {ATTR_ENTITY_ID: state.entity_id, **extra_attrs},
+                    service_data,
                     context=intent_obj.context,
                     blocking=True,
                 ),

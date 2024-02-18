@@ -99,7 +99,7 @@ async def test_volume_media_player_intent(hass: HomeAssistant) -> None:
         hass,
         "test",
         media_player_intent.INTENT_SET_VOLUME,
-        {"name": {"value": "test media player"}, "volume_level": {"value": 0.5}},
+        {"name": {"value": "test media player"}, "volume_level": {"value": 50}},
     )
     await hass.async_block_till_done()
 

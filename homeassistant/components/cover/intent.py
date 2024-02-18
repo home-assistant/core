@@ -36,11 +36,6 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             intent.INTENT_SET_POSITION,
             DOMAIN,
             SERVICE_SET_COVER_POSITION,
-            extra_slot_names={ATTR_POSITION},
-            extra_slot_schema={
-                vol.Required(ATTR_POSITION): vol.All(
-                    vol.Coerce(int), vol.Range(min=0, max=100)
-                )
-            },
+            extra_slots={ATTR_POSITION: vol.All(vol.Range(min=0, max=100))},
         ),
     )
