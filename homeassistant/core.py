@@ -1067,7 +1067,7 @@ class Event:
     def __init__(
         self,
         event_type: str,
-        data: dict[str, Any] | None = None,
+        data: Mapping[str, Any] | None = None,
         origin: EventOrigin = EventOrigin.local,
         time_fired: datetime.datetime | None = None,
         context: Context | None = None,
@@ -1204,7 +1204,7 @@ class EventBus:
     def fire(
         self,
         event_type: str,
-        event_data: dict[str, Any] | None = None,
+        event_data: Mapping[str, Any] | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
     ) -> None:
@@ -1217,7 +1217,7 @@ class EventBus:
     def async_fire(
         self,
         event_type: str,
-        event_data: dict[str, Any] | None = None,
+        event_data: Mapping[str, Any] | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
         time_fired: datetime.datetime | None = None,
