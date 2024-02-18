@@ -77,7 +77,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
                     ORDERED_NAMED_FAN_SPEEDS, percentage
                 )
                 data["speed"] = named_speed
-        await self._client.fan_command(**data)
+        self._client.fan_command(**data)
 
     async def async_turn_on(
         self,
@@ -90,21 +90,21 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        await self._client.fan_command(key=self._key, state=False)
+        self._client.fan_command(key=self._key, state=False)
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
-        await self._client.fan_command(key=self._key, oscillating=oscillating)
+        self._client.fan_command(key=self._key, oscillating=oscillating)
 
     async def async_set_direction(self, direction: str) -> None:
         """Set direction of the fan."""
-        await self._client.fan_command(
+        self._client.fan_command(
             key=self._key, direction=_FAN_DIRECTIONS.from_hass(direction)
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        await self._client.fan_command(key=self._key, preset_mode=preset_mode)
+        self._client.fan_command(key=self._key, preset_mode=preset_mode)
 
     @property
     @esphome_state_property

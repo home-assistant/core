@@ -357,7 +357,7 @@ async def test_unique_id_updated_to_mac(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    async def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_states(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
     mock_client.subscribe_states = async_subscribe_states
@@ -392,7 +392,7 @@ async def test_unique_id_not_updated_if_name_same_and_already_mac(
     entry.add_to_hass(hass)
     disconnect_done = hass.loop.create_future()
 
-    async def async_disconnect(*args, **kwargs) -> None:
+    def async_disconnect(*args, **kwargs) -> None:
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
@@ -421,7 +421,7 @@ async def test_unique_id_updated_if_name_unset_and_already_mac(
     entry.add_to_hass(hass)
     disconnect_done = hass.loop.create_future()
 
-    async def async_disconnect(*args, **kwargs) -> None:
+    def async_disconnect(*args, **kwargs) -> None:
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
@@ -455,7 +455,7 @@ async def test_unique_id_not_updated_if_name_different_and_already_mac(
     entry.add_to_hass(hass)
     disconnect_done = hass.loop.create_future()
 
-    async def async_disconnect(*args, **kwargs) -> None:
+    def async_disconnect(*args, **kwargs) -> None:
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
@@ -491,7 +491,7 @@ async def test_name_updated_only_if_mac_matches(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    async def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_states(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
     mock_client.subscribe_states = async_subscribe_states
@@ -525,7 +525,7 @@ async def test_name_updated_only_if_mac_was_unset(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    async def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_states(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
     mock_client.subscribe_states = async_subscribe_states
@@ -562,7 +562,7 @@ async def test_connection_aborted_wrong_device(
     entry.add_to_hass(hass)
     disconnect_done = hass.loop.create_future()
 
-    async def async_disconnect(*args, **kwargs) -> None:
+    def async_disconnect(*args, **kwargs) -> None:
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect

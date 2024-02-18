@@ -79,4 +79,4 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await self._client.number_command(self._key, value)
+        self._client.number_command(self._key, value)

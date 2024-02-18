@@ -106,7 +106,7 @@ class EsphomeMediaPlayer(
 
         media_id = async_process_play_media_url(self.hass, media_id)
 
-        await self._client.media_player_command(
+        self._client.media_player_command(
             self._key,
             media_url=media_id,
         )
@@ -125,29 +125,23 @@ class EsphomeMediaPlayer(
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        await self._client.media_player_command(self._key, volume=volume)
+        self._client.media_player_command(self._key, volume=volume)
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self._client.media_player_command(
-            self._key, command=MediaPlayerCommand.PAUSE
-        )
+        self._client.media_player_command(self._key, command=MediaPlayerCommand.PAUSE)
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._client.media_player_command(
-            self._key, command=MediaPlayerCommand.PLAY
-        )
+        self._client.media_player_command(self._key, command=MediaPlayerCommand.PLAY)
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        await self._client.media_player_command(
-            self._key, command=MediaPlayerCommand.STOP
-        )
+        self._client.media_player_command(self._key, command=MediaPlayerCommand.STOP)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        await self._client.media_player_command(
+        self._client.media_player_command(
             self._key,
             command=MediaPlayerCommand.MUTE if mute else MediaPlayerCommand.UNMUTE,
         )

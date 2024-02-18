@@ -406,7 +406,7 @@ class RuntimeEntryData:
         ]
         return infos, services
 
-    async def async_save_to_store(self) -> None:
+    def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
         if TYPE_CHECKING:
             assert self.device_info is not None
