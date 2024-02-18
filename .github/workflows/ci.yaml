@@ -31,6 +31,10 @@ on:
         description: "Only run mypy"
         default: false
         type: boolean
+      debug:
+        description: "Run debug jobs"
+        default: false
+        type: boolean
 
 env:
   CACHE_VERSION: 5
@@ -86,6 +90,7 @@ jobs:
       tests_glob: ${{ steps.info.outputs.tests_glob }}
       tests: ${{ steps.info.outputs.tests }}
       skip_coverage: ${{ steps.info.outputs.skip_coverage }}
+      debug: ${{ steps.info.outputs.debug }}
     runs-on: ubuntu-22.04
     steps:
       - name: Check out code from GitHub
@@ -135,6 +140,7 @@ jobs:
           tests="[]"
           tests_glob=""
           skip_coverage=""
+          debug=""
 
           if [[ "${{ steps.integrations.outputs.changes }}" != "[]" ]];
           then
@@ -190,6 +196,12 @@ jobs:
             skip_coverage="true"
           fi
 
+          if [[ "${{ github.event.inputs.debug }}" == "true" ]] \
+            || [[ "${{ runner.debug }}" == "1" ]];
+          then
+            debug="true"
+          fi
+
           # Output & sent to GitHub Actions
           echo "mariadb_groups: ${mariadb_groups}"
           echo "mariadb_groups=${mariadb_groups}" >> $GITHUB_OUTPUT
@@ -211,6 +223,8 @@ jobs:
           echo "tests_glob=${tests_glob}" >> $GITHUB_OUTPUT
           echo "skip_coverage: ${skip_coverage}"
           echo "skip_coverage=${skip_coverage}" >> $GITHUB_OUTPUT
+          echo "debug: ${debug}"
+          echo "debug=${debug}" >> $GITHUB_OUTPUT
 
   pre-commit:
     name: Prepare pre-commit base
@@ -796,7 +810,9 @@ jobs:
             tests/components/${{ matrix.group }} \
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
-        if: success() || failure() && (steps.pytest-full.conclusion == 'failure' || steps.pytest-partial.conclusion == 'failure')
+        if: |
+          success() && needs.info.outputs.debug == 'true'
+          || failure() && (steps.pytest-full.conclusion == 'failure' || steps.pytest-partial.conclusion == 'failure')
         uses: actions/upload-artifact@v4.3.1
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{ matrix.group }}
@@ -923,7 +939,9 @@ jobs:
             tests/components/sensor \
               2>&1 | tee pytest-${{ matrix.python-version }}-${mariadb}.txt
       - name: Upload pytest output
-        if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
+        if: |
+          success() && needs.info.outputs.debug == 'true'
+          || failure() && steps.pytest-partial.conclusion == 'failure'
         uses: actions/upload-artifact@v4.3.1
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
@@ -1053,7 +1071,9 @@ jobs:
             tests/components/sensor \
               2>&1 | tee pytest-${{ matrix.python-version }}-${postgresql}.txt
       - name: Upload pytest output
-        if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
+        if: |
+          success() && needs.info.outputs.debug == 'true'
+          || failure() && steps.pytest-partial.conclusion == 'failure'
         uses: actions/upload-artifact@v4.3.1
         with:
           name: pytest-${{ github.run_number }}-${{ matrix.python-version }}-${{
@@ -1111,6 +1131,7 @@ jobs:
 
   debug-combine-pytest-output:
     name: "Debug: Combine pytest output"
+    if: needs.info.outputs.debug == 'true'
     runs-on: ubuntu-22.04
     needs:
       - info
