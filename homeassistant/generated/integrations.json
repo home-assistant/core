@@ -3699,7 +3699,7 @@
       "iot_class": "local_push"
     },
     "motion_blinds": {
-      "name": "Motion Blinds",
+      "name": "Motionblinds",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
@@ -5408,7 +5408,7 @@
       "iot_class": "cloud_polling"
     },
     "smart_blinds": {
-      "name": "Smart Blinds",
+      "name": "Smartblinds",
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
