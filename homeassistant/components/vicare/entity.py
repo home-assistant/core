@@ -28,10 +28,8 @@ class ViCareEntity(Entity):
             component if component else device
         )
         self._attr_unique_id = f"{device.getSerial()}-{unique_id_suffix}"
-        # valid for compressors, circuits, burners (HeatingDeviceWithComponent)
         if component:
             self._attr_unique_id += f"-{component.id}"
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.getSerial())},
             serial_number=device.getSerial(),
