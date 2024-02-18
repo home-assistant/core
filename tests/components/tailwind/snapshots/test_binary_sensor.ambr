@@ -30,6 +30,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -62,6 +64,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Tailwind',
     'model': 'iQ3',
     'name': 'Door 1',
@@ -103,6 +107,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -135,6 +141,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Tailwind',
     'model': 'iQ3',
     'name': 'Door 2',
