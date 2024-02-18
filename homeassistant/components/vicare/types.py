@@ -33,7 +33,11 @@ class HeatingProgram(enum.StrEnum):
     @staticmethod
     def to_ha_preset(program: str) -> str | None:
         """Return the mapped Home Assistant preset for the ViCare heating program."""
-        return VICARE_TO_HA_PRESET_HEATING.get(HeatingProgram(program))
+        return (
+            VICARE_TO_HA_PRESET_HEATING.get(HeatingProgram(program))
+            if program
+            else None
+        )
 
     @staticmethod
     def from_ha_preset(
