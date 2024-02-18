@@ -129,8 +129,8 @@ def _build_entities(
 
     return [
         ViCareNumber(
-            device_config,
-            device,
+            device.config,
+            device.api,
             circuit,
             description,
         )
