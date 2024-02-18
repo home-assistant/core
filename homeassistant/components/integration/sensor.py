@@ -118,13 +118,13 @@ class _IntegrationMethod(ABC):
     def validate_states(
         self, hass: HomeAssistant, left: State | None, right: State | None
     ) -> bool:
-        pass
+        """Check state requirements for integration."""
 
     @abstractmethod
     def calculate_area_with_two_states(
         self, elapsed_time: float, left: State, right: State
     ) -> Decimal:
-        pass
+        """Calculate area given two states."""
 
     def calculate_area_with_one_state(
         self, elapsed_time: float, constant_state: State
