@@ -1,7 +1,6 @@
 """Test component/platform setup."""
 
 import asyncio
-import datetime
 import threading
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -714,28 +713,22 @@ async def test_integration_only_setup_entry(hass: HomeAssistant) -> None:
 async def test_async_start_setup(hass: HomeAssistant) -> None:
     """Test setup started context manager keeps track of setup times."""
     with setup.async_start_setup(hass, ["august"]):
-        assert isinstance(
-            hass.data[setup.DATA_SETUP_STARTED]["august"], datetime.datetime
-        )
+        assert isinstance(hass.data[setup.DATA_SETUP_STARTED]["august"], float)
         with setup.async_start_setup(hass, ["august"]):
-            assert isinstance(
-                hass.data[setup.DATA_SETUP_STARTED]["august_2"], datetime.datetime
-            )
+            assert isinstance(hass.data[setup.DATA_SETUP_STARTED]["august_2"], float)
 
     assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
-    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
+    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], float)
     assert "august_2" not in hass.data[setup.DATA_SETUP_TIME]
 
 
 async def test_async_start_setup_platforms(hass: HomeAssistant) -> None:
     """Test setup started context manager keeps track of setup times for platforms."""
     with setup.async_start_setup(hass, ["august.sensor"]):
-        assert isinstance(
-            hass.data[setup.DATA_SETUP_STARTED]["august.sensor"], datetime.datetime
-        )
+        assert isinstance(hass.data[setup.DATA_SETUP_STARTED]["august.sensor"], float)
 
     assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
-    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
+    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], float)
     assert "sensor" not in hass.data[setup.DATA_SETUP_TIME]
 
 

@@ -12,6 +12,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow, loader
+from homeassistant.backports.functools import cached_property
 from homeassistant.components import dhcp
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import (
@@ -19,13 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
-    CoreState,
-    Event,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import DOMAIN as HA_DOMAIN, CoreState, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResult, FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -45,6 +40,7 @@ from .common import (
     MockEntity,
     MockModule,
     MockPlatform,
+    async_capture_events,
     async_fire_time_changed,
     mock_config_flow,
     mock_integration,
@@ -151,10 +147,11 @@ async def test_call_async_migrate_entry(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test we call <component>.async_migrate_entry when version mismatch."""
-    entry = MockConfigEntry(domain="comp")
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     assert not entry.supports_unload
-    entry.version = major_version
-    entry.minor_version = minor_version
+
     entry.add_to_hass(hass)
 
     mock_migrate_entry = AsyncMock(return_value=True)
@@ -185,9 +182,9 @@ async def test_call_async_migrate_entry_failure_false(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if returns false."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -217,9 +214,9 @@ async def test_call_async_migrate_entry_failure_exception(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if exception raised."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -249,9 +246,9 @@ async def test_call_async_migrate_entry_failure_not_bool(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if boolean not returned."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -281,9 +278,9 @@ async def test_call_async_migrate_entry_failure_not_supported(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration fails if async_migrate_entry not implemented."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -304,9 +301,9 @@ async def test_call_async_migrate_entry_not_supported_minor_version(
     hass: HomeAssistant, major_version: int, minor_version: int
 ) -> None:
     """Test migration without async_migrate_entry and minor version changed."""
-    entry = MockConfigEntry(domain="comp")
-    entry.version = major_version
-    entry.minor_version = minor_version
+    entry = MockConfigEntry(
+        domain="comp", version=major_version, minor_version=minor_version
+    )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
@@ -661,6 +658,81 @@ async def test_domains_gets_domains_excludes_ignore_and_disabled(
     ]
 
 
+async def test_entries_excludes_ignore_and_disabled(
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test ignored and disabled entries are returned by default."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_manager(manager)
+    entry2a = MockConfigEntry(domain="test2")
+    entry2a.add_to_manager(manager)
+    entry2b = MockConfigEntry(domain="test2")
+    entry2b.add_to_manager(manager)
+    entry_ignored = MockConfigEntry(
+        domain="ignored", source=config_entries.SOURCE_IGNORE
+    )
+    entry_ignored.add_to_manager(manager)
+    entry3 = MockConfigEntry(domain="test3")
+    entry3.add_to_manager(manager)
+    disabled_entry = MockConfigEntry(
+        domain="disabled", disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_manager(manager)
+    assert manager.async_entries() == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+        disabled_entry,
+    ]
+    assert manager.async_entries(include_ignore=False) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry3,
+        disabled_entry,
+    ]
+    assert manager.async_entries(include_disabled=False) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+    ]
+    assert manager.async_entries(include_ignore=False, include_disabled=False) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry3,
+    ]
+
+    assert manager.async_entries(include_ignore=True) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+        disabled_entry,
+    ]
+    assert manager.async_entries(include_disabled=True) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+        disabled_entry,
+    ]
+    assert manager.async_entries(include_ignore=True, include_disabled=True) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+        disabled_entry,
+    ]
+
+
 async def test_saving_and_loading(hass: HomeAssistant) -> None:
     """Test that we're saving and loading correctly."""
     mock_integration(
@@ -758,7 +830,14 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
 
     # Make sure the expected keys are present
     dict_repr = entry.as_dict()
-    for key in config_entries.ConfigEntry.__slots__:
+    for key in config_entries.ConfigEntry.__dict__:
+        func = getattr(config_entries.ConfigEntry, key)
+        if (
+            key.startswith("__")
+            or callable(func)
+            or type(func) in (cached_property, property)
+        ):
+            continue
         assert key in dict_repr or key in excluded_from_dict
         assert not (key in dict_repr and key in excluded_from_dict)
 
@@ -2026,7 +2105,7 @@ async def test_unique_id_update_existing_entry_with_reload(
 
     # Test we don't reload if entry not started
     updates["host"] = "2.2.2.2"
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
         "homeassistant.config_entries.ConfigEntries.async_reload"
     ) as async_reload:
@@ -2047,7 +2126,7 @@ async def test_unique_id_from_discovery_in_setup_retry(
 ) -> None:
     """Test that we reload when in a setup retry state from discovery."""
     hass.config.components.add("comp")
-    unique_id = "34:ea:34:b4:3b:5a"
+    unique_id = "34ea34b43b5a"
     host = "0.0.0.0"
     entry = MockConfigEntry(
         domain="comp",
@@ -2727,14 +2806,7 @@ async def test_async_setup_init_entry_completes_before_loaded_event_fires(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test a config entry being initialized during integration setup before the loaded event fires."""
-    load_events: list[Event] = []
-
-    @callback
-    def _record_load(event: Event) -> None:
-        nonlocal load_events
-        load_events.append(event)
-
-    listener = hass.bus.async_listen(EVENT_COMPONENT_LOADED, _record_load)
+    load_events = async_capture_events(hass, EVENT_COMPONENT_LOADED)
 
     async def mock_async_setup(hass, config):
         """Mock setup."""
@@ -2787,8 +2859,6 @@ async def test_async_setup_init_entry_completes_before_loaded_event_fires(
         entries = hass.config_entries.async_entries("comp")
         assert len(entries) == 1
         assert entries[0].state is config_entries.ConfigEntryState.LOADED
-
-    listener()
 
 
 async def test_async_setup_update_entry(hass: HomeAssistant) -> None:
@@ -3199,13 +3269,18 @@ async def test_updating_entry_with_and_without_changes(
     for change in (
         {"data": {"second": True, "third": 456}},
         {"data": {"second": True}},
+        {"minor_version": 2},
         {"options": {"hello": True}},
         {"pref_disable_new_entities": True},
         {"pref_disable_polling": True},
         {"title": "sometitle"},
         {"unique_id": "abcd1234"},
+        {"version": 2},
     ):
         assert manager.async_update_entry(entry, **change) is True
+        key = next(iter(change))
+        value = next(iter(change.values()))
+        assert getattr(entry, key) == value
         assert manager.async_update_entry(entry, **change) is False
 
     assert manager.async_entry_for_domain_unique_id("test", "abc123") is None
@@ -3375,8 +3450,7 @@ async def test_setup_raise_auth_failed(
     assert flows[0]["context"]["title_placeholders"] == {"name": "test_title"}
 
     caplog.clear()
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
-    entry.reason = None
+    entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
 
     await entry.async_setup(hass)
     await hass.async_block_till_done()
@@ -3425,7 +3499,7 @@ async def test_setup_raise_auth_failed_from_first_coordinator_update(
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
 
     caplog.clear()
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
 
     await entry.async_setup(hass)
     await hass.async_block_till_done()
@@ -3475,7 +3549,7 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
 
     caplog.clear()
-    entry.state = config_entries.ConfigEntryState.NOT_LOADED
+    entry._async_set_state(hass, config_entries.ConfigEntryState.NOT_LOADED, None)
 
     await entry.async_setup(hass)
     await hass.async_block_till_done()
@@ -4257,3 +4331,126 @@ async def test_update_entry_and_reload(
         assert entry.state == config_entries.ConfigEntryState.LOADED
         assert task["type"] == FlowResultType.ABORT
         assert task["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
+async def test_unhashable_unique_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
+) -> None:
+    """Test the ConfigEntryItems user dict handles unhashable unique_id."""
+    entries = config_entries.ConfigEntryItems(hass)
+    entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=1,
+        domain="test",
+        entry_id="mock_id",
+        title="title",
+        data={},
+        source="test",
+        unique_id=unique_id,
+    )
+
+    entries[entry.entry_id] = entry
+    assert (
+        "Config entry 'title' from integration test has an invalid unique_id "
+        f"'{str(unique_id)}'"
+    ) in caplog.text
+
+    assert entry.entry_id in entries
+    assert entries[entry.entry_id] is entry
+    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) == entry
+    del entries[entry.entry_id]
+    assert not entries
+    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
+
+
+@pytest.mark.parametrize("unique_id", [123])
+async def test_hashable_non_string_unique_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
+) -> None:
+    """Test the ConfigEntryItems user dict handles hashable non string unique_id."""
+    entries = config_entries.ConfigEntryItems(hass)
+    entry = config_entries.ConfigEntry(
+        version=1,
+        minor_version=1,
+        domain="test",
+        entry_id="mock_id",
+        title="title",
+        data={},
+        source="test",
+        unique_id=unique_id,
+    )
+
+    entries[entry.entry_id] = entry
+    assert (
+        "Config entry 'title' from integration test has an invalid unique_id"
+    ) not in caplog.text
+
+    assert entry.entry_id in entries
+    assert entries[entry.entry_id] is entry
+    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) == entry
+    del entries[entry.entry_id]
+    assert not entries
+    assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
+
+
+async def test_directly_mutating_blocked(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test directly mutating a ConfigEntry is blocked."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    with pytest.raises(AttributeError, match="entry_id cannot be changed"):
+        entry.entry_id = "new_entry_id"
+
+    with pytest.raises(AttributeError, match="domain cannot be changed"):
+        entry.domain = "new_domain"
+
+    with pytest.raises(AttributeError, match="state cannot be changed"):
+        entry.state = config_entries.ConfigEntryState.FAILED_UNLOAD
+
+    with pytest.raises(AttributeError, match="reason cannot be changed"):
+        entry.reason = "new_reason"
+
+    with pytest.raises(
+        AttributeError,
+        match="unique_id cannot be changed directly, use async_update_entry instead",
+    ):
+        entry.unique_id = "new_id"
+
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        "data",
+        "options",
+        "title",
+        "pref_disable_new_entities",
+        "pref_disable_polling",
+        "minor_version",
+        "version",
+    ),
+)
+async def test_report_direct_mutation_of_config_entry(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, field: str
+) -> None:
+    """Test directly mutating a ConfigEntry is reported."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    setattr(entry, field, "new_value")
+
+    assert (
+        f'Detected code that sets "{field}" directly to update a config entry. '
+        "This is deprecated and will stop working in Home Assistant 2024.9, "
+        "it should be updated to use async_update_entry instead. Please report this issue."
+    ) in caplog.text
+
+
+async def test_updating_non_added_entry_raises(hass: HomeAssistant) -> None:
+    """Test updating a non added entry raises UnknownEntry."""
+    entry = MockConfigEntry(domain="test")
+
+    with pytest.raises(config_entries.UnknownEntry, match=entry.entry_id):
+        hass.config_entries.async_update_entry(entry, unique_id="new_id")

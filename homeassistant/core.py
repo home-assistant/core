@@ -22,6 +22,7 @@ from dataclasses import dataclass
 import datetime
 import enum
 import functools
+import inspect
 import logging
 import os
 import pathlib
@@ -1066,7 +1067,7 @@ class Event:
     def __init__(
         self,
         event_type: str,
-        data: dict[str, Any] | None = None,
+        data: Mapping[str, Any] | None = None,
         origin: EventOrigin = EventOrigin.local,
         time_fired: datetime.datetime | None = None,
         context: Context | None = None,
@@ -1158,7 +1159,7 @@ class _OneTimeListener:
     remove: CALLBACK_TYPE | None = None
 
     @callback
-    def async_call(self, event: Event) -> None:
+    def __call__(self, event: Event) -> None:
         """Remove listener from event bus and then fire listener."""
         if not self.remove:
             # If the listener was already removed, we don't need to do anything
@@ -1166,6 +1167,13 @@ class _OneTimeListener:
         self.remove()
         self.remove = None
         self.hass.async_run_job(self.listener, event)
+
+    def __repr__(self) -> str:
+        """Return the representation of the listener and source module."""
+        module = inspect.getmodule(self.listener)
+        if module:
+            return f"<_OneTimeListener {module.__name__}:{self.listener}>"
+        return f"<_OneTimeListener {self.listener}>"
 
 
 class EventBus:
@@ -1196,7 +1204,7 @@ class EventBus:
     def fire(
         self,
         event_type: str,
-        event_data: dict[str, Any] | None = None,
+        event_data: Mapping[str, Any] | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
     ) -> None:
@@ -1209,7 +1217,7 @@ class EventBus:
     def async_fire(
         self,
         event_type: str,
-        event_data: dict[str, Any] | None = None,
+        event_data: Mapping[str, Any] | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
         time_fired: datetime.datetime | None = None,
@@ -1364,7 +1372,7 @@ class EventBus:
             event_type,
             (
                 HassJob(
-                    one_time_listener.async_call,
+                    one_time_listener,
                     f"onetime listen {event_type} {listener}",
                     job_type=HassJobType.Callback,
                 ),

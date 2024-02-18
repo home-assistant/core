@@ -7,7 +7,6 @@ from datetime import timedelta
 from typing import Any
 from uuid import UUID
 
-from aionotion import async_get_client
 from aionotion.bridge.models import Bridge
 from aionotion.errors import InvalidCredentialsError, NotionError
 from aionotion.listener.models import Listener, ListenerKind
@@ -19,7 +18,6 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
-    aiohttp_client,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
@@ -33,6 +31,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import (
+    CONF_REFRESH_TOKEN,
+    CONF_USER_UUID,
     DOMAIN,
     LOGGER,
     SENSOR_BATTERY,
@@ -46,6 +46,7 @@ from .const import (
     SENSOR_TEMPERATURE,
     SENSOR_WINDOW_HINGED,
 )
+from .util import async_get_client_with_credentials, async_get_client_with_refresh_token
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -139,24 +140,47 @@ class NotionData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Notion as a config entry."""
-    if not entry.unique_id:
-        hass.config_entries.async_update_entry(
-            entry, unique_id=entry.data[CONF_USERNAME]
-        )
+    entry_updates: dict[str, Any] = {"data": {**entry.data}}
 
-    session = aiohttp_client.async_get_clientsession(hass)
+    if not entry.unique_id:
+        entry_updates["unique_id"] = entry.data[CONF_USERNAME]
 
     try:
-        client = await async_get_client(
-            entry.data[CONF_USERNAME],
-            entry.data[CONF_PASSWORD],
-            session=session,
-            use_legacy_auth=True,
-        )
+        if password := entry_updates["data"].pop(CONF_PASSWORD, None):
+            # If a password exists in the config entry data, use it to get a new client
+            # (and pop it from the new entry data):
+            client = await async_get_client_with_credentials(
+                hass, entry.data[CONF_USERNAME], password
+            )
+        else:
+            # If a password doesn't exist in the config entry data, we can safely assume
+            # that a refresh token and user UUID do, so we use them to get the client:
+            client = await async_get_client_with_refresh_token(
+                hass,
+                entry.data[CONF_USER_UUID],
+                entry.data[CONF_REFRESH_TOKEN],
+            )
     except InvalidCredentialsError as err:
-        raise ConfigEntryAuthFailed("Invalid username and/or password") from err
+        raise ConfigEntryAuthFailed("Invalid credentials") from err
     except NotionError as err:
         raise ConfigEntryNotReady("Config entry failed to load") from err
+
+    # Always update the config entry with the latest refresh token and user UUID:
+    entry_updates["data"][CONF_REFRESH_TOKEN] = client.refresh_token
+    entry_updates["data"][CONF_USER_UUID] = client.user_uuid
+
+    @callback
+    def async_save_refresh_token(refresh_token: str) -> None:
+        """Save a refresh token to the config entry data."""
+        LOGGER.debug("Saving new refresh token to HASS storage")
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_REFRESH_TOKEN: refresh_token}
+        )
+
+    # Create a callback to save the refresh token when it changes:
+    entry.async_on_unload(client.add_refresh_token_callback(async_save_refresh_token))
+
+    hass.config_entries.async_update_entry(entry, **entry_updates)
 
     async def async_update() -> NotionData:
         """Get the latest data from the Notion API."""
