@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     CONF_DNSMASQ,
@@ -72,17 +73,20 @@ def handle_errors_and_zip(
 
         @functools.wraps(func)
         async def _wrapper(self: _AsusWrtBridgeT) -> dict[str, Any]:
-            data = await func(self)
+            try:
+                data = await func(self)
+            except exceptions as exc:
+                raise UpdateFailed(exc) from exc
 
             if keys is None:
                 if not isinstance(data, dict):
-                    raise TypeError("Received invalid data type")
+                    raise UpdateFailed("Received invalid data type")
                 return data
 
             if isinstance(data, dict):
                 return dict(zip(keys, list(data.values())))
             if not isinstance(data, (list, tuple)):
-                raise TypeError("Received invalid data type")
+                raise UpdateFailed("Received invalid data type")
             return dict(zip(keys, data))
 
         return _wrapper
