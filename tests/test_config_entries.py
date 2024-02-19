@@ -12,6 +12,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow, loader
+from homeassistant.backports.functools import cached_property
 from homeassistant.components import dhcp
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import (
@@ -19,13 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
-    CoreState,
-    Event,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import DOMAIN as HA_DOMAIN, CoreState, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResult, FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -45,6 +40,7 @@ from .common import (
     MockEntity,
     MockModule,
     MockPlatform,
+    async_capture_events,
     async_fire_time_changed,
     mock_config_flow,
     mock_integration,
@@ -662,6 +658,81 @@ async def test_domains_gets_domains_excludes_ignore_and_disabled(
     ]
 
 
+async def test_entries_excludes_ignore_and_disabled(
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test ignored and disabled entries are returned by default."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_manager(manager)
+    entry2a = MockConfigEntry(domain="test2")
+    entry2a.add_to_manager(manager)
+    entry2b = MockConfigEntry(domain="test2")
+    entry2b.add_to_manager(manager)
+    entry_ignored = MockConfigEntry(
+        domain="ignored", source=config_entries.SOURCE_IGNORE
+    )
+    entry_ignored.add_to_manager(manager)
+    entry3 = MockConfigEntry(domain="test3")
+    entry3.add_to_manager(manager)
+    disabled_entry = MockConfigEntry(
+        domain="disabled", disabled_by=config_entries.ConfigEntryDisabler.USER
+    )
+    disabled_entry.add_to_manager(manager)
+    assert manager.async_entries() == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+        disabled_entry,
+    ]
+    assert manager.async_entries(include_ignore=False) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry3,
+        disabled_entry,
+    ]
+    assert manager.async_entries(include_disabled=False) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+    ]
+    assert manager.async_entries(include_ignore=False, include_disabled=False) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry3,
+    ]
+
+    assert manager.async_entries(include_ignore=True) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+        disabled_entry,
+    ]
+    assert manager.async_entries(include_disabled=True) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+        disabled_entry,
+    ]
+    assert manager.async_entries(include_ignore=True, include_disabled=True) == [
+        entry,
+        entry2a,
+        entry2b,
+        entry_ignored,
+        entry3,
+        disabled_entry,
+    ]
+
+
 async def test_saving_and_loading(hass: HomeAssistant) -> None:
     """Test that we're saving and loading correctly."""
     mock_integration(
@@ -759,7 +830,14 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
 
     # Make sure the expected keys are present
     dict_repr = entry.as_dict()
-    for key in config_entries.ConfigEntry.__slots__:
+    for key in config_entries.ConfigEntry.__dict__:
+        func = getattr(config_entries.ConfigEntry, key)
+        if (
+            key.startswith("__")
+            or callable(func)
+            or type(func) in (cached_property, property)
+        ):
+            continue
         assert key in dict_repr or key in excluded_from_dict
         assert not (key in dict_repr and key in excluded_from_dict)
 
@@ -2728,14 +2806,7 @@ async def test_async_setup_init_entry_completes_before_loaded_event_fires(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test a config entry being initialized during integration setup before the loaded event fires."""
-    load_events: list[Event] = []
-
-    @callback
-    def _record_load(event: Event) -> None:
-        nonlocal load_events
-        load_events.append(event)
-
-    listener = hass.bus.async_listen(EVENT_COMPONENT_LOADED, _record_load)
+    load_events = async_capture_events(hass, EVENT_COMPONENT_LOADED)
 
     async def mock_async_setup(hass, config):
         """Mock setup."""
@@ -2788,8 +2859,6 @@ async def test_async_setup_init_entry_completes_before_loaded_event_fires(
         entries = hass.config_entries.async_entries("comp")
         assert len(entries) == 1
         assert entries[0].state is config_entries.ConfigEntryState.LOADED
-
-    listener()
 
 
 async def test_async_setup_update_entry(hass: HomeAssistant) -> None:

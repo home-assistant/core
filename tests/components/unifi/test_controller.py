@@ -242,7 +242,9 @@ async def setup_unifi_integration(
 
 
 async def test_controller_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Successful setup."""
     with patch(
@@ -278,7 +280,7 @@ async def test_controller_setup(
     assert controller.signal_options_update == "unifi-options-1"
     assert controller.signal_heartbeat_missed == "unifi-heartbeat-missed"
 
-    device_entry = dr.async_get(hass).async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(UNIFI_DOMAIN, config_entry.unique_id)},
     )
