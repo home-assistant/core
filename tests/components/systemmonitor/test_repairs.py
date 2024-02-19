@@ -13,7 +13,7 @@ from homeassistant.components.repairs.websocket_api import (
 )
 from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_RESTORED
+from homeassistant.const import ATTR_RESTORED, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -115,6 +115,7 @@ async def test_migrate_process_sensor(
     entity = "sensor.system_monitor_process_python3"
     state = hass.states.get(entity)
     assert state
+    assert state.state == STATE_UNAVAILABLE
     assert ATTR_RESTORED in state.attributes
 
     assert not entity_registry.async_get(entity)
