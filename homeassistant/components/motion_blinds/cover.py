@@ -1,4 +1,4 @@
-"""Support for Motion Blinds using their WLAN API."""
+"""Support for Motionblinds using their WLAN API."""
 from __future__ import annotations
 
 import logging
@@ -86,7 +86,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Motion Blind from a config entry."""
+    """Set up the Motionblind from a config entry."""
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
@@ -169,7 +169,7 @@ async def async_setup_entry(
 
 
 class MotionPositionDevice(MotionCoordinatorEntity, CoverEntity):
-    """Representation of a Motion Blind Device."""
+    """Representation of a Motionblinds Device."""
 
     _attr_name = None
     _restore_tilt = False
@@ -306,7 +306,7 @@ class MotionPositionDevice(MotionCoordinatorEntity, CoverEntity):
 
 
 class MotionTiltDevice(MotionPositionDevice):
-    """Representation of a Motion Blind Device."""
+    """Representation of a Motionblinds Device."""
 
     _restore_tilt = True
 
@@ -352,7 +352,7 @@ class MotionTiltDevice(MotionPositionDevice):
 
 
 class MotionTiltOnlyDevice(MotionTiltDevice):
-    """Representation of a Motion Blind Device."""
+    """Representation of a Motionblinds Device."""
 
     _restore_tilt = False
 
