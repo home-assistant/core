@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -82,8 +82,10 @@ HDD_SENSORS = (
         cmd_key="GetHddInfo",
         translation_key="hdd_storage",
         icon="mdi:harddisk",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value=lambda api, idx: api.hdd_storage(idx),
         supported=lambda api, idx: api.supported(None, "hdd") and api.hdd_type(idx) == "HDD",
     ),
@@ -92,8 +94,10 @@ HDD_SENSORS = (
         cmd_key="GetHddInfo",
         translation_key="sd_storage",
         icon="mdi:micro-sd",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         value=lambda api, idx: api.hdd_storage(idx),
         supported=lambda api, idx: api.supported(None, "hdd") and api.hdd_type(idx) == "SD",
     ),
@@ -188,6 +192,7 @@ class ReolinkHddSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
         self.entity_description = entity_description
         super().__init__(reolink_data)
         self._hdd_index = hdd_index
+        self._attr_translation_placeholders = {"hdd_index": str(hdd_index)}
         self._attr_unique_id = (
             f"{self._host.unique_id}_{hdd_index}_{entity_description.key}"
         )

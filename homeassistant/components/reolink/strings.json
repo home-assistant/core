@@ -377,6 +377,12 @@
       },
       "ptz_pan_position": {
         "name": "PTZ pan position"
+      },
+      "hdd_storage": {
+        "name": "HDD {hdd_index} storage"
+      },
+      "sd_storage": {
+        "name": "SD {hdd_index} storage"
       }
     },
     "siren": {
