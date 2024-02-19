@@ -1747,22 +1747,26 @@ async def test_suggest_report_issue_custom_component(
     assert suggestion == "create a bug report at https://some_url"
 
 
-async def test_reuse_entity_object_after_abort(hass: HomeAssistant) -> None:
+async def test_reuse_entity_object_after_abort(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test reuse entity object."""
     platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
     ent.entity_id = "invalid"
-    with pytest.raises(HomeAssistantError, match="Invalid entity ID: invalid"):
-        await platform.async_add_entities([ent])
-    with pytest.raises(
-        HomeAssistantError,
-        match="Entity 'invalid' cannot be added a second time to an entity platform",
-    ):
-        await platform.async_add_entities([ent])
+    await platform.async_add_entities([ent])
+    assert "Invalid entity ID: invalid" in caplog.text
+    await platform.async_add_entities([ent])
+    assert (
+        "Entity 'invalid' cannot be added a second time to an entity platform"
+        in caplog.text
+    )
 
 
 async def test_reuse_entity_object_after_entity_registry_remove(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test reuse entity object."""
     entry = entity_registry.async_get_or_create("test", "test", "5678")
@@ -1777,15 +1781,15 @@ async def test_reuse_entity_object_after_entity_registry_remove(
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == 0
 
-    with pytest.raises(
-        HomeAssistantError,
-        match="Entity 'test.test_5678' cannot be added a second time",
-    ):
-        await platform.async_add_entities([ent])
+    await platform.async_add_entities([ent])
+    assert "Entity 'test.test_5678' cannot be added a second time" in caplog.text
+    assert len(hass.states.async_entity_ids()) == 0
 
 
 async def test_reuse_entity_object_after_entity_registry_disabled(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test reuse entity object."""
     entry = entity_registry.async_get_or_create("test", "test", "5678")
@@ -1802,11 +1806,9 @@ async def test_reuse_entity_object_after_entity_registry_disabled(
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids()) == 0
 
-    with pytest.raises(
-        HomeAssistantError,
-        match="Entity 'test.test_5678' cannot be added a second time",
-    ):
-        await platform.async_add_entities([ent])
+    await platform.async_add_entities([ent])
+    assert len(hass.states.async_entity_ids()) == 0
+    assert "Entity 'test.test_5678' cannot be added a second time" in caplog.text
 
 
 async def test_change_entity_id(
