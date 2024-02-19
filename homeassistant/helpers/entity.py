@@ -1364,6 +1364,8 @@ class Entity(
             not force_remove
             and self.registry_entry
             and not self.registry_entry.disabled
+            # Check if entity is still in the entity registry
+            and er.async_get(self.hass).async_get(self.entity_id) is not None
         ):
             # Set the entity's state will to unavailable + ATTR_RESTORED: True
             self.registry_entry.write_unavailable_state(self.hass)
