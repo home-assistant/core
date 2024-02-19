@@ -524,7 +524,6 @@ class EntityPlatform:
                 self.platform_name,
                 timeout,
             )
-            raise
 
         for result in results:
             if isinstance(result, Exception):
@@ -566,7 +565,6 @@ class EntityPlatform:
                 self.platform_name,
                 timeout,
             )
-            raise
 
         if last_exception:
             raise last_exception
