@@ -144,7 +144,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     # If camera WAN blocked, firmware check fails, do not prevent setup
     # so don't check firmware_coordinator exceptions
-    if isinstance(results[0], Exception):
+    if isinstance(results[0], (Exception, BaseException)):
         await host.stop()
         raise results[0]
 
