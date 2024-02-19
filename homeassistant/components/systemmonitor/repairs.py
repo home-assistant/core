@@ -51,7 +51,9 @@ class ProcessFixFlow(RepairsFlow):
                 entity_reg.async_remove(entry.entity_id)
 
         self.hass.config_entries.async_update_entry(self.entry, options=new_options)
-        await self.hass.config_entries.async_reload(self.entry.entry_id)
+        self.hass.async_create_task(
+            self.hass.config_entries.async_reload(self.entry.entry_id)
+        )
         return self.async_create_entry(data={})
 
 
