@@ -17,6 +17,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Netgear',
     'model': 'LM1200',
     'name': 'Netgear LM1200',

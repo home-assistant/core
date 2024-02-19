@@ -80,6 +80,7 @@ homeassistant.components.anthemav.*
 homeassistant.components.apache_kafka.*
 homeassistant.components.apcupsd.*
 homeassistant.components.api.*
+homeassistant.components.apple_tv.*
 homeassistant.components.apprise.*
 homeassistant.components.aprs.*
 homeassistant.components.aqualogic.*

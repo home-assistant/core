@@ -267,3 +267,53 @@ async def test_exception_plaform_post(hass: HomeAssistant) -> None:
 
     with pytest.raises(HomeAssistantError):
         await _mock_backup_generation(manager)
+
+
+async def test_loading_platforms_when_running_pre_backup_actions(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test loading backup platforms when running post backup actions."""
+    manager = BackupManager(hass)
+
+    assert not manager.loaded_platforms
+    assert not manager.platforms
+
+    await _setup_mock_domain(
+        hass,
+        Mock(
+            async_pre_backup=AsyncMock(),
+            async_post_backup=AsyncMock(),
+        ),
+    )
+    await manager.pre_backup_actions()
+
+    assert manager.loaded_platforms
+    assert len(manager.platforms) == 1
+
+    assert "Loaded 1 platforms" in caplog.text
+
+
+async def test_loading_platforms_when_running_post_backup_actions(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test loading backup platforms when running post backup actions."""
+    manager = BackupManager(hass)
+
+    assert not manager.loaded_platforms
+    assert not manager.platforms
+
+    await _setup_mock_domain(
+        hass,
+        Mock(
+            async_pre_backup=AsyncMock(),
+            async_post_backup=AsyncMock(),
+        ),
+    )
+    await manager.post_backup_actions()
+
+    assert manager.loaded_platforms
+    assert len(manager.platforms) == 1
+
+    assert "Loaded 1 platforms" in caplog.text

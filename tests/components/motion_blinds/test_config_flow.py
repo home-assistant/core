@@ -1,4 +1,4 @@
-"""Test the Motion Blinds config flow."""
+"""Test the Motionblinds config flow."""
 import socket
 from unittest.mock import Mock, patch
 
@@ -71,7 +71,7 @@ TEST_INTERFACES = [
 
 @pytest.fixture(name="motion_blinds_connect", autouse=True)
 def motion_blinds_connect_fixture(mock_get_source_ip):
-    """Mock motion blinds connection and entry setup."""
+    """Mock Motionblinds connection and entry setup."""
     with patch(
         "homeassistant.components.motion_blinds.gateway.MotionGateway.GetDeviceList",
         return_value=True,
@@ -363,7 +363,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
 
 
 async def test_dhcp_flow_abort(hass: HomeAssistant) -> None:
-    """Test that DHCP discovery aborts if not Motion Blinds."""
+    """Test that DHCP discovery aborts if not Motionblinds."""
     dhcp_data = dhcp.DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="MOTION_abcdef",
