@@ -5,6 +5,8 @@ import asyncio
 import logging
 from typing import Any
 
+from universal_silabs_flasher.const import ApplicationType
+
 from homeassistant.components import usb
 from homeassistant.components.hassio import (
     AddonError,
@@ -18,7 +20,6 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 )
 from homeassistant.components.zha import DOMAIN as ZHA_DOMAIN
 from homeassistant.components.zha.repairs.wrong_silabs_firmware import (
-    ApplicationType,
     probe_silabs_firmware_type,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
@@ -75,8 +76,8 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         super().__init__()
 
         self._hass = None
-        self._serial_port: str | None = None
         self._current_firmware_type: ApplicationType | None = None
+        self._usb_info: usb.UsbServiceInfo | None = None
 
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
@@ -126,20 +127,56 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         if await self.async_set_unique_id(unique_id):
             self._abort_if_unique_id_configured(updates={"device": device})
 
-        self._serial_port = await self.hass.async_add_executor_job(
-            usb.get_serial_by_id, device
+        discovery_info.device = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, discovery_info.device
         )
 
-        return await self.async_step_pick_firmware()
+        self._usb_info = discovery_info
+
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm a discovery."""
+        self._set_confirm_only()
+
+        # Don't permit discovery if we are already set up
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        # Without confirmation, discovery can automatically progress into parts of the
+        # config flow logic that interacts with hardware.
+        if user_input is not None:
+            return await self.async_step_pick_firmware()
+
+        return self.async_show_form(step_id="confirm")
 
     async def async_step_pick_firmware(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Pick Thread or Zigbee firmware."""
-        assert self._serial_port is not None
+        assert self._usb_info is not None
+        assert self._current_firmware_type is not None
+
         self._current_firmware_type = await probe_silabs_firmware_type(
-            self._serial_port
+            self._usb_info.device,
+            probe_order=(
+                ApplicationType.GECKO_BOOTLOADER,
+                ApplicationType.EZSP,
+                ApplicationType.SPINEL,
+                ApplicationType.CPC,
+            ),
         )
+
+        if self._current_firmware_type not in (
+            ApplicationType.EZSP,
+            ApplicationType.SPINEL,
+        ):
+            return self.async_abort(
+                reason="unsupported_firmware",
+                description_placeholders={"firmware_type": self._current_firmware_type},
+            )
 
         return self.async_show_menu(
             step_id="pick_firmware",
@@ -217,9 +254,11 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         """Configure the flasher addon to point to the SkyConnect."""
         fw_flasher_manager = get_zigbee_flasher_addon_manager(self.hass)
         addon_info = await self._async_get_addon_info(fw_flasher_manager)
+
+        assert self._usb_info is not None
         new_addon_config = {
             **addon_info.options,
-            "device": self._serial_port,
+            "device": self._usb_info.device,
             "baudrate": 115200,
             "flow_control": True,
         }
@@ -280,6 +319,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm a discovery."""
         self._set_confirm_only()
+        assert self._usb_info is not None
 
         await self.hass.config_entries.flow.async_init(
             ZHA_DOMAIN,
@@ -287,7 +327,7 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 "name": "SkyConnect",
                 "port": {
-                    "path": self._serial_port,
+                    "path": self._usb_info.device,
                     "baudrate": 115200,
                     "flow_control": "hardware",
                 },
@@ -298,10 +338,12 @@ class HomeAssistantSkyConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title="SkyConnect",
             data={
-                "device": self._serial_port,
-                "baudrate": 115200,
-                "flow_control": "hardware",
-                "firmware_type": "ezsp",
+                "vid": self._usb_info.vid,
+                "pid": self._usb_info.pid,
+                "serial_number": self._usb_info.serial_number,
+                "manufacturer": self._usb_info.manufacturer,
+                "description": self._usb_info.description,
+                "device": self._usb_info.device,
             },
         )
 
