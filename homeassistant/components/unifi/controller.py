@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from datetime import datetime, timedelta
+from functools import partial
 import ssl
 from types import MappingProxyType
 from typing import Any, Literal
@@ -186,6 +188,17 @@ class UniFiController:
         )
 
     @callback
+    def _async_should_add_entity(
+        self, description: UnifiEntityDescription, obj_id: str
+    ) -> bool:
+        """Check if entity should be added."""
+        return bool(
+            (description.key, obj_id) not in self.known_objects
+            and description.allowed_fn(self, obj_id)
+            and description.supported_fn(self, obj_id)
+        )
+
+    @callback
     def register_platform_add_entities(
         self,
         unifi_platform_entity: type[UnifiEntity],
@@ -195,45 +208,47 @@ class UniFiController:
         """Subscribe to UniFi API handlers and create entities."""
 
         @callback
-        def async_load_entities(description: UnifiEntityDescription) -> None:
+        def async_load_entities(descriptions: Iterable[UnifiEntityDescription]) -> None:
             """Load and subscribe to UniFi endpoints."""
-            api_handler = description.api_handler_fn(self.api)
 
             @callback
-            def async_add_unifi_entity(obj_ids: list[str]) -> None:
+            def async_add_unifi_entities() -> None:
                 """Add UniFi entity."""
                 async_add_entities(
                     [
                         unifi_platform_entity(obj_id, self, description)
-                        for obj_id in obj_ids
-                        if (description.key, obj_id) not in self.known_objects
-                        if description.allowed_fn(self, obj_id)
-                        if description.supported_fn(self, obj_id)
+                        for description in descriptions
+                        for obj_id in description.api_handler_fn(self.api)
+                        if self._async_should_add_entity(description, obj_id)
                     ]
                 )
 
-            async_add_unifi_entity(list(api_handler))
+            async_add_unifi_entities()
 
             @callback
-            def async_create_entity(event: ItemEvent, obj_id: str) -> None:
+            def async_create_entity(
+                description: UnifiEntityDescription, event: ItemEvent, obj_id: str
+            ) -> None:
                 """Create new UniFi entity on event."""
-                async_add_unifi_entity([obj_id])
+                if self._async_should_add_entity(description, obj_id):
+                    async_add_entities(
+                        [unifi_platform_entity(obj_id, self, description)]
+                    )
 
-            api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
-
-            @callback
-            def async_options_updated() -> None:
-                """Load new entities based on changed options."""
-                async_add_unifi_entity(list(api_handler))
+            for description in descriptions:
+                description.api_handler_fn(self.api).subscribe(
+                    partial(async_create_entity, description), ItemEvent.ADDED
+                )
 
             self.config_entry.async_on_unload(
                 async_dispatcher_connect(
-                    self.hass, self.signal_options_update, async_options_updated
+                    self.hass,
+                    self.signal_options_update,
+                    async_add_unifi_entities,
                 )
             )
 
-        for description in descriptions:
-            async_load_entities(description)
+        async_load_entities(descriptions)
 
     @property
     def signal_reachable(self) -> str:
