@@ -133,7 +133,8 @@ async def async_setup_entry(
     """Set up the FYTA binary sensors."""
     coordinator: FytaCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
+    plant_entities: list[dict[str, Any]] = []
+    plant_entities.extend(
         [
             FytaCoordinatorSensor(coordinator, entry, sensor)
             for sensor in SENSORS
@@ -141,7 +142,6 @@ async def async_setup_entry(
         ]
     )
 
-    plant_entities: list[dict[str, Any]] = []
     plant_entities.extend(
         [
             FytaPlantSensor(coordinator, entry, plant["sensor"], plant["id"])
