@@ -12,8 +12,6 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
@@ -47,7 +45,6 @@ class OAuth2FlowHandler(
         except MicroBeesException:
             return self.async_abort(reason="invalid_auth")
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unknown error occurred")
             return self.async_abort(reason="unknown")
 
         if not self.reauth_entry:
