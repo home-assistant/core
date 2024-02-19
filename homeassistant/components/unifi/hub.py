@@ -180,10 +180,10 @@ class UnifiHub:
         requires_admin: bool = False,
     ) -> None:
         """Register platform for UniFi entity management."""
-        controller: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-        if requires_admin and not controller.is_admin:
+        hub: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        if requires_admin and not hub.is_admin:
             return
-        controller.register_platform_add_entities(
+        hub.register_platform_add_entities(
             entity_class, descriptions, async_add_entities
         )
 
@@ -384,10 +384,10 @@ class UnifiHub:
         If config entry is updated due to reauth flow
         the entry might already have been reset and thus is not available.
         """
-        if not (controller := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
+        if not (hub := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
             return
-        controller.load_config_entry_options()
-        async_dispatcher_send(hass, controller.signal_options_update)
+        hub.load_config_entry_options()
+        async_dispatcher_send(hass, hub.signal_options_update)
 
     @callback
     def start_websocket(self) -> None:
@@ -489,7 +489,7 @@ class UnifiHub:
         return True
 
 
-async def get_unifi_controller(
+async def get_unifi_api(
     hass: HomeAssistant,
     config: MappingProxyType[str, Any],
 ) -> aiounifi.Controller:

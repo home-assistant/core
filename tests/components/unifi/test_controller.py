@@ -27,7 +27,7 @@ from homeassistant.components.unifi.const import (
     UNIFI_WIRELESS_CLIENTS,
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
-from homeassistant.components.unifi.hub import get_unifi_controller
+from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -291,7 +291,7 @@ async def test_controller_setup(
 async def test_controller_not_accessible(hass: HomeAssistant) -> None:
     """Retry to login gets scheduled when connection fails."""
     with patch(
-        "homeassistant.components.unifi.hub.get_unifi_controller",
+        "homeassistant.components.unifi.hub.get_unifi_api",
         side_effect=CannotConnect,
     ):
         await setup_unifi_integration(hass)
@@ -301,7 +301,7 @@ async def test_controller_not_accessible(hass: HomeAssistant) -> None:
 async def test_controller_trigger_reauth_flow(hass: HomeAssistant) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch(
-        "homeassistant.components.unifi.get_unifi_controller",
+        "homeassistant.components.unifi.get_unifi_api",
         side_effect=AuthenticationRequired,
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await setup_unifi_integration(hass)
@@ -312,7 +312,7 @@ async def test_controller_trigger_reauth_flow(hass: HomeAssistant) -> None:
 async def test_controller_unknown_error(hass: HomeAssistant) -> None:
     """Unknown errors are handled."""
     with patch(
-        "homeassistant.components.unifi.hub.get_unifi_controller",
+        "homeassistant.components.unifi.hub.get_unifi_api",
         side_effect=Exception,
     ):
         await setup_unifi_integration(hass)
@@ -443,18 +443,18 @@ async def test_reconnect_mechanism_exceptions(
         mock_reconnect.assert_called_once()
 
 
-async def test_get_unifi_controller(hass: HomeAssistant) -> None:
+async def test_get_unifi_api(hass: HomeAssistant) -> None:
     """Successful call."""
     with patch("aiounifi.Controller.login", return_value=True):
-        assert await get_unifi_controller(hass, ENTRY_CONFIG)
+        assert await get_unifi_api(hass, ENTRY_CONFIG)
 
 
-async def test_get_unifi_controller_verify_ssl_false(hass: HomeAssistant) -> None:
+async def test_get_unifi_api_verify_ssl_false(hass: HomeAssistant) -> None:
     """Successful call with verify ssl set to false."""
     controller_data = dict(ENTRY_CONFIG)
     controller_data[CONF_VERIFY_SSL] = False
     with patch("aiounifi.Controller.login", return_value=True):
-        assert await get_unifi_controller(hass, controller_data)
+        assert await get_unifi_api(hass, controller_data)
 
 
 @pytest.mark.parametrize(
@@ -471,11 +471,11 @@ async def test_get_unifi_controller_verify_ssl_false(hass: HomeAssistant) -> Non
         (aiounifi.AiounifiException, AuthenticationRequired),
     ],
 )
-async def test_get_unifi_controller_fails_to_connect(
+async def test_get_unifi_api_fails_to_connect(
     hass: HomeAssistant, side_effect, raised_exception
 ) -> None:
-    """Check that get_unifi_controller can handle controller being unavailable."""
+    """Check that get_unifi_api can handle controller being unavailable."""
     with patch("aiounifi.Controller.login", side_effect=side_effect), pytest.raises(
         raised_exception
     ):
-        await get_unifi_controller(hass, ENTRY_CONFIG)
+        await get_unifi_api(hass, ENTRY_CONFIG)
