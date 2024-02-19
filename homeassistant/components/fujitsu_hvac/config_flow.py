@@ -39,10 +39,7 @@ class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(f"{user_input[CONF_USERNAME].lower()}")
                 self._abort_if_unique_id_configured()
             elif user_input[CONF_USERNAME] != self.reauth_entry.data[CONF_USERNAME]:
-                errors["base"] = "reauth_different_username"
-                return self.async_show_form(
-                    step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-                )
+                return self.async_abort(reason="reauth_different_username")
 
             api = new_ayla_api(
                 user_input[CONF_USERNAME],

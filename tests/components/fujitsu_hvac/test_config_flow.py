@@ -205,23 +205,5 @@ async def test_reauth_different_username(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {"base": "reauth_different_username"}
-
-    apimock = AsyncMock()
-    with patch(
-        "homeassistant.components.fujitsu_hvac.config_flow.new_ayla_api",
-        return_value=apimock,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: TEST_USERNAME,
-                CONF_PASSWORD: TEST_PASSWORD,
-                CONF_EUROPE: False,
-            },
-        )
-        await hass.async_block_till_done()
-
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
+    assert result["reason"] == "reauth_different_username"
