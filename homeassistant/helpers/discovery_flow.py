@@ -86,16 +86,21 @@ class FlowDispatcher:
         pending_flows = self.pending_flows
         self.pending_flows = {}
         self.started = True
-        init_coros = [
-            _async_init_flow(
-                self.hass, flow_key.domain, flow_values.context, flow_values.data
-            )
-            for flow_key, flows in pending_flows.items()
-            for flow_values in flows
-        ]
         await gather_with_limited_concurrency(
             FLOW_INIT_LIMIT,
-            *[init_coro for init_coro in init_coros if init_coro is not None],
+            *(
+                init_coro
+                for flow_key, flows in pending_flows.items()
+                for flow_values in flows
+                if (
+                    init_coro := _async_init_flow(
+                        self.hass,
+                        flow_key.domain,
+                        flow_values.context,
+                        flow_values.data,
+                    )
+                )
+            ),
         )
 
     @callback
