@@ -803,10 +803,11 @@ jobs:
           path: pytest-*.txt
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
+          overwrite: true
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -928,11 +929,12 @@ jobs:
           path: pytest-*.txt
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.1
         with:
-          name: coverage-${{ matrix.python-version }}-mariadb-${{
+          name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.mariadb }}
           path: coverage.xml
+          overwrite: true
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -1055,11 +1057,12 @@ jobs:
           path: pytest-*.txt
       - name: Upload coverage artifact
         if: needs.info.outputs.skip_coverage != 'true'
-        uses: actions/upload-artifact@v3.1.0
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: coverage-${{ matrix.python-version }}-${{
             steps.pytest-partial.outputs.postgresql }}
           path: coverage.xml
+          overwrite: true
       - name: Check dirty
         run: |
           ./script/check_dirty
@@ -1076,7 +1079,9 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.1
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.2
+        with:
+          pattern: coverage-*
       - name: Upload coverage to Codecov (full coverage)
         if: needs.info.outputs.test_full_suite == 'true'
         uses: Wandalen/wretry.action@v1.4.4
