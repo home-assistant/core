@@ -1,1 +1,1 @@
-"""Virtual integration: Bloc blinds.""" '--ignore-regex', '.*# codespell-ignore$'
+"""Virtual integration: Bloc blinds.""" "--ignore-regex", ".*# codespell-ignore$"
