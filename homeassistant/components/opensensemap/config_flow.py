@@ -49,13 +49,12 @@ class OpenSenseMapConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             station_id = user_input[CONF_STATION_ID]
-            name_in_conf = user_input.get(CONF_NAME)
 
             errors, received_name = await request_station_data(self.hass, station_id)
             await self.async_set_unique_id(station_id)
             self._abort_if_unique_id_configured()
 
-            name = name_in_conf or received_name
+            name = received_name
             config_data = {
                 CONF_STATION_ID: station_id,
                 CONF_NAME: name,
@@ -69,7 +68,6 @@ class OpenSenseMapConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_STATION_ID): cv.string,
-                    vol.Optional(CONF_NAME): cv.string,
                 }
             ),
         )
