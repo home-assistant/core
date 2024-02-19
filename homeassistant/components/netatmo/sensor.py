@@ -40,17 +40,30 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_URL_ENERGY,
     CONF_URL_PUBLIC_WEATHER,
+    CONF_URL_SECURITY,
     CONF_URL_WEATHER,
     CONF_WEATHER_AREAS,
     DATA_HANDLER,
     DOMAIN,
+    DOOR_TAGS_TRIGGERS,
+    EVENT_TYPE_HOME_ALARM,
     NETATMO_CREATE_BATTERY,
+    NETATMO_CREATE_OPENING_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SENSOR,
+    NETATMO_CREATE_SIREN_SENSOR,
     NETATMO_CREATE_WEATHER_SENSOR,
     SIGNAL_NAME,
+    WEBHOOK_PUSH_TYPE,
 )
-from .data_handler import HOME, PUBLIC, NetatmoDataHandler, NetatmoDevice, NetatmoRoom
+from .data_handler import (
+    EVENT,
+    HOME,
+    PUBLIC,
+    NetatmoDataHandler,
+    NetatmoDevice,
+    NetatmoRoom,
+)
 from .entity import NetatmoBaseEntity
 from .helper import NetatmoArea
 
@@ -270,6 +283,47 @@ BATTERY_SENSOR_DESCRIPTION = NetatmoSensorEntityDescription(
     device_class=SensorDeviceClass.BATTERY,
 )
 
+STATUS_SENSOR_OPENING_DESCRIPTION = NetatmoSensorEntityDescription(
+    key="status",
+    name="Status",
+    netatmo_name="status",
+    device_class=SensorDeviceClass.ENUM,
+    options=[
+        "no_news",
+        "calibrating",
+        "undefined",
+        "closed",
+        "open",
+        "calibration_failed",
+        "maintenance",
+        "weak_signal",
+    ],
+)
+
+STATUS_SENSOR_SIREN_DESCRIPTION = NetatmoSensorEntityDescription(
+    key="status",
+    name="Status",
+    netatmo_name="status",
+    device_class=SensorDeviceClass.ENUM,
+    options=[
+        "now_news",
+        "no_sound",
+        "warning",
+        "sound",
+        "playing_record_0",
+        "playing_record_1",
+        "playing_record_2",
+        "playing_record_3",
+    ],
+)
+
+MONITORING_SENSOR_SIREN_DESCRIPTION = NetatmoSensorEntityDescription(
+    key="monitoring",
+    name="Monitoring",
+    netatmo_name="monitoring",
+    device_class=SensorDeviceClass.ENUM,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -298,6 +352,46 @@ async def async_setup_entry(
     entry.async_on_unload(
         async_dispatcher_connect(
             hass, NETATMO_CREATE_WEATHER_SENSOR, _create_weather_sensor_entity
+        )
+    )
+
+    @callback
+    def _create_siren_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        async_add_entities(
+            NetatmoSecurityStatusSensor(netatmo_device, description)
+            for description in SENSOR_TYPES
+            if description.netatmo_name in netatmo_device.device.features
+        )
+        entity = NetatmoSecurityStatusSensor(
+            netatmo_device, STATUS_SENSOR_SIREN_DESCRIPTION
+        )
+        async_add_entities([entity])
+        entity = NetatmoSecurityStatusSensor(
+            netatmo_device, MONITORING_SENSOR_SIREN_DESCRIPTION
+        )
+        async_add_entities([entity])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NETATMO_CREATE_SIREN_SENSOR, _create_siren_sensor_entity
+        )
+    )
+
+    @callback
+    def _create_opening_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        async_add_entities(
+            NetatmoSecurityStatusSensor(netatmo_device, description)
+            for description in SENSOR_TYPES
+            if description.netatmo_name in netatmo_device.device.features
+        )
+        entity = NetatmoSecurityStatusSensor(
+            netatmo_device, STATUS_SENSOR_OPENING_DESCRIPTION
+        )
+        async_add_entities([entity])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, NETATMO_CREATE_OPENING_SENSOR, _create_opening_sensor_entity
         )
     )
 
@@ -523,6 +617,154 @@ class NetatmoClimateBatterySensor(NetatmoBaseEntity, SensorEntity):
 
         self._attr_available = True
         self._attr_native_value = self._module.battery
+
+
+class NetatmoSecurityStatusSensor(NetatmoBaseEntity, SensorEntity):
+    """Implementation of a Netatmo weather/home coach sensor."""
+
+    _attr_has_entity_name = True
+    entity_description: NetatmoSensorEntityDescription
+
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+        description: NetatmoSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(netatmo_device.data_handler)
+        self.entity_description = description
+
+        self._module = netatmo_device.device
+        self._id = self._module.entity_id
+        self._camera_id = (
+            self._module.bridge if self._module.bridge is not None else self._id
+        )
+        self._device_name = self._module.name
+        self._signal_name = netatmo_device.signal_name
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": netatmo_device.device.home.entity_id,
+                    SIGNAL_NAME: self._signal_name,
+                },
+            ]
+        )
+
+        self._attr_name = f"{description.name}"
+        self._model = self._module.device_type
+        self._config_url = CONF_URL_SECURITY
+        self._attr_unique_id = f"{self._id}-{description.key}"
+
+        if self.entity_description.key == "status":
+            self._publishers.extend(
+                [
+                    {
+                        "name": EVENT,
+                        "home_id": netatmo_device.device.home.entity_id,
+                        SIGNAL_NAME: f"{EVENT}-{netatmo_device.device.home.entity_id}",
+                    },
+                ]
+            )
+        elif self.entity_description.key == "monitoring":
+            self._publishers.extend(
+                [
+                    {
+                        "name": EVENT,
+                        "home_id": netatmo_device.device.home.entity_id,
+                        SIGNAL_NAME: f"{EVENT}-{netatmo_device.device.home.entity_id}",
+                    },
+                ]
+            )
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if not self._module.reachable:
+            if self.available:
+                self._attr_available = False
+            return
+
+        if (
+            state := getattr(self._module, self.entity_description.netatmo_name)
+        ) is None:
+            return
+
+        if self.entity_description.netatmo_name == "rf_strength":
+            self._attr_native_value = process_rf(state)
+        elif self.entity_description.netatmo_name == "wifi_strength":
+            self._attr_native_value = process_wifi(state)
+        else:
+            self._attr_native_value = state
+
+        self._attr_available = True
+        self.async_write_ha_state()
+
+    @callback
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
+        if self._model == "NIS" and self.entity_description.key in {
+            "monitoring",
+            "status",
+        }:
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    f"signal-{DOMAIN}-webhook-{EVENT_TYPE_HOME_ALARM}",
+                    self.handle_event,
+                )
+            )
+        elif self._model == "NACamDoorTag" and self.entity_description.key == "status":
+            for event_type in DOOR_TAGS_TRIGGERS:
+                self.async_on_remove(
+                    async_dispatcher_connect(
+                        self.hass,
+                        f"signal-{DOMAIN}-webhook-{event_type}",
+                        self.handle_event,
+                    )
+                )
+
+    @callback
+    async def handle_event(self, event: dict) -> None:
+        """Handle webhook events."""
+        if (
+            event["data"][WEBHOOK_PUSH_TYPE]
+            in (
+                "NACamera-tag_big_move",
+                "NACamera-tag_open",
+                "NACamera-tag_small_move",
+            )
+            and event["data"]["module_id"] == self._id
+        ):
+            _LOGGER.debug(
+                "Netatmo handle_event for %s with signal %s for %s and %s",
+                event["data"][WEBHOOK_PUSH_TYPE],
+                self._signal_name,
+                self._device_name,
+                self.entity_description.key,
+            )
+            if event["data"][WEBHOOK_PUSH_TYPE] == "NACamera-tag_open":
+                self._attr_native_value = "open"
+                self.async_write_ha_state()
+            elif event["data"][WEBHOOK_PUSH_TYPE] in (
+                "NACamera-tag_big_move",
+                "NACamera-tag_small_move",
+            ):
+                self.data_handler.async_force_update(self._signal_name)
+        elif (
+            event["type"] == EVENT_TYPE_HOME_ALARM
+            and event["data"]["camera_id"] == self._camera_id
+        ):
+            _LOGGER.debug(
+                "Execute Netatmo handle_event for %s with signal %s for %s and %s",
+                event["data"][WEBHOOK_PUSH_TYPE],
+                self._signal_name,
+                self._device_name,
+                self.entity_description.key,
+            )
+            self.data_handler.async_force_update(self._signal_name)
 
 
 class NetatmoSensor(NetatmoBaseEntity, SensorEntity):

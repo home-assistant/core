@@ -4134,6 +4134,234 @@
 # name: test_entity[sensor.prise_reachability-state]
   None
 # ---
+# name: test_entity[sensor.sirene_in_hall_battery_percent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sirene_in_hall_battery_percent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery Percent',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:e3:9b-battery_percent',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_entity[sensor.sirene_in_hall_battery_percent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'battery',
+      'friendly_name': 'Sirene in hall Battery Percent',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sirene_in_hall_battery_percent',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25',
+  })
+# ---
+# name: test_entity[sensor.sirene_in_hall_monitoring-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sirene_in_hall_monitoring',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Monitoring',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:e3:9b-monitoring',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.sirene_in_hall_monitoring-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'enum',
+      'friendly_name': 'Sirene in hall Monitoring',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sirene_in_hall_monitoring',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'False',
+  })
+# ---
+# name: test_entity[sensor.sirene_in_hall_radio-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sirene_in_hall_radio',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:signal',
+    'original_name': 'Radio',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:e3:9b-rf_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.sirene_in_hall_radio-state]
+  None
+# ---
+# name: test_entity[sensor.sirene_in_hall_reachability-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.sirene_in_hall_reachability',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:signal',
+    'original_name': 'Reachability',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:e3:9b-reachable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.sirene_in_hall_reachability-state]
+  None
+# ---
+# name: test_entity[sensor.sirene_in_hall_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'now_news',
+        'no_sound',
+        'warning',
+        'sound',
+        'playing_record_0',
+        'playing_record_1',
+        'playing_record_2',
+        'playing_record_3',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sirene_in_hall_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:e3:9b-status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.sirene_in_hall_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'enum',
+      'friendly_name': 'Sirene in hall Status',
+      'options': list([
+        'now_news',
+        'no_sound',
+        'warning',
+        'sound',
+        'playing_record_0',
+        'playing_record_1',
+        'playing_record_2',
+        'playing_record_3',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sirene_in_hall_status',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_sound',
+  })
+# ---
 # name: test_entity[sensor.total_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -6157,4 +6385,187 @@
 # ---
 # name: test_entity[sensor.villa_wifi-state]
   None
+# ---
+# name: test_entity[sensor.window_hall_battery_percent-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.window_hall_battery_percent',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery Percent',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:86:99-battery_percent',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_entity[sensor.window_hall_battery_percent-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'battery',
+      'friendly_name': 'Window Hall Battery Percent',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.window_hall_battery_percent',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '75',
+  })
+# ---
+# name: test_entity[sensor.window_hall_radio-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.window_hall_radio',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:signal',
+    'original_name': 'Radio',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:86:99-rf_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.window_hall_radio-state]
+  None
+# ---
+# name: test_entity[sensor.window_hall_reachability-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.window_hall_reachability',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:signal',
+    'original_name': 'Reachability',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:86:99-reachable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.window_hall_reachability-state]
+  None
+# ---
+# name: test_entity[sensor.window_hall_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no_news',
+        'calibrating',
+        'undefined',
+        'closed',
+        'open',
+        'calibration_failed',
+        'maintenance',
+        'weak_signal',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.window_hall_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:86:99-status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[sensor.window_hall_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'enum',
+      'friendly_name': 'Window Hall Status',
+      'options': list([
+        'no_news',
+        'calibrating',
+        'undefined',
+        'closed',
+        'open',
+        'calibration_failed',
+        'maintenance',
+        'weak_signal',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.window_hall_status',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_news',
+  })
 # ---
