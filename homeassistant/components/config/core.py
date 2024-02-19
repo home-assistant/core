@@ -1,19 +1,22 @@
 """Component to interact with Hassbian tools."""
+from __future__ import annotations
 
 from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView, require_admin
 from homeassistant.components.sensor import async_update_suggested_units
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import check_config, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import location, unit_system
 
 
-async def async_setup(hass):
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Set up the Hassbian config."""
     hass.http.register_view(CheckConfigView)
     websocket_api.async_register_command(hass, websocket_update_config)
@@ -28,7 +31,7 @@ class CheckConfigView(HomeAssistantView):
     name = "api:config:core:check_config"
 
     @require_admin
-    async def post(self, request):
+    async def post(self, request: web.Request) -> web.Response:
         """Validate configuration and return results."""
 
         res = await check_config.async_check_ha_config_file(request.app["hass"])

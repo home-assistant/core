@@ -906,7 +906,10 @@ async def test_option_ignore_wired_bug(
 
 
 async def test_restoring_client(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_device_registry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    mock_device_registry,
 ) -> None:
     """Verify clients are restored from clients_all if they ever was registered to entity registry."""
     client = {
@@ -939,15 +942,14 @@ async def test_restoring_client(
         entry_id="1",
     )
 
-    registry = er.async_get(hass)
-    registry.async_get_or_create(  # Unique ID updated
+    entity_registry.async_get_or_create(  # Unique ID updated
         TRACKER_DOMAIN,
         UNIFI_DOMAIN,
         f'{restored["mac"]}-site_id',
         suggested_object_id=restored["hostname"],
         config_entry=config_entry,
     )
-    registry.async_get_or_create(  # Unique ID already updated
+    entity_registry.async_get_or_create(  # Unique ID already updated
         TRACKER_DOMAIN,
         UNIFI_DOMAIN,
         f'site_id-{client["mac"]}',

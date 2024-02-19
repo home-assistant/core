@@ -1,4 +1,4 @@
-"""Support for Motion Blinds using their WLAN API."""
+"""Support for Motionblinds using their WLAN API."""
 from __future__ import annotations
 
 import logging
@@ -51,6 +51,7 @@ POSITION_DEVICE_MAP = {
     BlindType.CurtainLeft: CoverDeviceClass.CURTAIN,
     BlindType.CurtainRight: CoverDeviceClass.CURTAIN,
     BlindType.SkylightBlind: CoverDeviceClass.SHADE,
+    BlindType.InsectScreen: CoverDeviceClass.SHADE,
 }
 
 TILT_DEVICE_MAP = {
@@ -69,6 +70,7 @@ TILT_ONLY_DEVICE_MAP = {
 
 TDBU_DEVICE_MAP = {
     BlindType.TopDownBottomUp: CoverDeviceClass.SHADE,
+    BlindType.TriangleBlind: CoverDeviceClass.BLIND,
 }
 
 
@@ -84,7 +86,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Motion Blind from a config entry."""
+    """Set up the Motionblind from a config entry."""
     entities = []
     motion_gateway = hass.data[DOMAIN][config_entry.entry_id][KEY_GATEWAY]
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
@@ -167,7 +169,7 @@ async def async_setup_entry(
 
 
 class MotionPositionDevice(MotionCoordinatorEntity, CoverEntity):
-    """Representation of a Motion Blind Device."""
+    """Representation of a Motionblinds Device."""
 
     _attr_name = None
     _restore_tilt = False
@@ -304,7 +306,7 @@ class MotionPositionDevice(MotionCoordinatorEntity, CoverEntity):
 
 
 class MotionTiltDevice(MotionPositionDevice):
-    """Representation of a Motion Blind Device."""
+    """Representation of a Motionblinds Device."""
 
     _restore_tilt = True
 
@@ -350,7 +352,7 @@ class MotionTiltDevice(MotionPositionDevice):
 
 
 class MotionTiltOnlyDevice(MotionTiltDevice):
-    """Representation of a Motion Blind Device."""
+    """Representation of a Motionblinds Device."""
 
     _restore_tilt = False
 
@@ -398,6 +400,7 @@ class MotionTDBUDevice(MotionPositionDevice):
     def __init__(self, coordinator, blind, device_class, motor):
         """Initialize the blind."""
         super().__init__(coordinator, blind, device_class)
+        delattr(self, "_attr_name")
         self._motor = motor
         self._motor_key = motor[0]
         self._attr_translation_key = motor.lower()

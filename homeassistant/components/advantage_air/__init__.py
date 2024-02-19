@@ -19,11 +19,11 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.COVER,
+    Platform.LIGHT,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
-    Platform.LIGHT,
 ]
 
 _LOGGER = logging.getLogger(__name__)

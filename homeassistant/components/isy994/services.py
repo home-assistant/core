@@ -132,7 +132,7 @@ def async_get_entities(hass: HomeAssistant) -> dict[str, Entity]:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Create and register services for the ISY integration."""
-    existing_services = hass.services.async_services().get(DOMAIN)
+    existing_services = hass.services.async_services_for_domain(DOMAIN)
     if existing_services and SERVICE_SEND_PROGRAM_COMMAND in existing_services:
         # Integration-level services have already been added. Return.
         return
@@ -234,7 +234,7 @@ def async_unload_services(hass: HomeAssistant) -> None:
         # There is still another config entry for this domain, don't remove services.
         return
 
-    existing_services = hass.services.async_services().get(DOMAIN)
+    existing_services = hass.services.async_services_for_domain(DOMAIN)
     if not existing_services or SERVICE_SEND_PROGRAM_COMMAND not in existing_services:
         return
 

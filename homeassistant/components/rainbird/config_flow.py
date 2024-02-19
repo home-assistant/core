@@ -114,7 +114,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     controller.get_serial_number(),
                     controller.get_wifi_params(),
                 )
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             raise ConfigFlowError(
                 f"Timeout connecting to Rain Bird controller: {str(err)}",
                 "timeout_connect",

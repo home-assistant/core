@@ -47,7 +47,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Airversa AP2 1808 Identify',
             'platform': 'homekit_controller',
@@ -59,6 +59,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Airversa AP2 1808 Identify',
             }),
             'entity_id': 'button.airversa_ap2_1808_identify',
@@ -99,6 +100,142 @@
             }),
             'entity_id': 'button.airversa_ap2_1808_provision_preferred_thread_credentials',
             'state': 'unknown',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'preset_modes': None,
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'fan',
+            'entity_category': None,
+            'entity_id': 'fan.airversa_ap2_1808_airpurifier',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Airversa AP2 1808 AirPurifier',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': <FanEntityFeature: 1>,
+            'translation_key': None,
+            'unique_id': '00:00:00:00:00:00_1_32832',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Airversa AP2 1808 AirPurifier',
+              'percentage': 0,
+              'percentage_step': 20.0,
+              'preset_mode': None,
+              'preset_modes': None,
+              'supported_features': <FanEntityFeature: 1>,
+            }),
+            'entity_id': 'fan.airversa_ap2_1808_airpurifier',
+            'state': 'off',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'options': list([
+                'automatic',
+                'manual',
+              ]),
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'select',
+            'entity_category': <EntityCategory.CONFIG: 'config'>,
+            'entity_id': 'select.airversa_ap2_1808_air_purifier_mode',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': None,
+            'original_icon': None,
+            'original_name': 'Airversa AP2 1808 Air Purifier Mode',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'air_purifier_state_target',
+            'unique_id': '00:00:00:00:00:00_1_32832_32837',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Airversa AP2 1808 Air Purifier Mode',
+              'options': list([
+                'automatic',
+                'manual',
+              ]),
+            }),
+            'entity_id': 'select.airversa_ap2_1808_air_purifier_mode',
+            'state': 'automatic',
+          }),
+        }),
+        dict({
+          'entry': dict({
+            'aliases': list([
+            ]),
+            'area_id': None,
+            'capabilities': dict({
+              'options': list([
+                'inactive',
+                'idle',
+                'purifying',
+              ]),
+            }),
+            'config_entry_id': 'TestData',
+            'device_class': None,
+            'disabled_by': None,
+            'domain': 'sensor',
+            'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+            'entity_id': 'sensor.airversa_ap2_1808_air_purifier_status',
+            'has_entity_name': False,
+            'hidden_by': None,
+            'icon': None,
+            'name': None,
+            'options': dict({
+            }),
+            'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+            'original_icon': None,
+            'original_name': 'Airversa AP2 1808 Air Purifier Status',
+            'platform': 'homekit_controller',
+            'previous_unique_id': None,
+            'supported_features': 0,
+            'translation_key': 'air_purifier_state_current',
+            'unique_id': '00:00:00:00:00:00_1_32832_32836',
+            'unit_of_measurement': None,
+          }),
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'enum',
+              'friendly_name': 'Airversa AP2 1808 Air Purifier Status',
+              'options': list([
+                'inactive',
+                'idle',
+                'purifying',
+              ]),
+            }),
+            'entity_id': 'sensor.airversa_ap2_1808_air_purifier_status',
+            'state': 'inactive',
           }),
         }),
         dict({
@@ -495,7 +632,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'eufy HomeBase2-0AAA Identify',
             'platform': 'homekit_controller',
@@ -507,6 +644,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'eufy HomeBase2-0AAA Identify',
             }),
             'entity_id': 'button.eufy_homebase2_0aaa_identify',
@@ -598,7 +736,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'eufyCam2-0000 Identify',
             'platform': 'homekit_controller',
@@ -610,6 +748,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'eufyCam2-0000 Identify',
             }),
             'entity_id': 'button.eufycam2_0000_identify',
@@ -817,7 +956,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'eufyCam2-000A Identify',
             'platform': 'homekit_controller',
@@ -829,6 +968,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'eufyCam2-000A Identify',
             }),
             'entity_id': 'button.eufycam2_000a_identify',
@@ -1036,7 +1176,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'eufyCam2-000A Identify',
             'platform': 'homekit_controller',
@@ -1048,6 +1188,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'eufyCam2-000A Identify',
             }),
             'entity_id': 'button.eufycam2_000a_identify_2',
@@ -1263,7 +1404,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Aqara-Hub-E1-00A0 Identify',
             'platform': 'homekit_controller',
@@ -1275,6 +1416,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Aqara-Hub-E1-00A0 Identify',
             }),
             'entity_id': 'button.aqara_hub_e1_00a0_identify',
@@ -1449,7 +1591,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Contact Sensor Identify',
             'platform': 'homekit_controller',
@@ -1461,6 +1603,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Contact Sensor Identify',
             }),
             'entity_id': 'button.contact_sensor_identify',
@@ -1602,7 +1745,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Aqara Hub-1563 Identify',
             'platform': 'homekit_controller',
@@ -1614,6 +1757,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Aqara Hub-1563 Identify',
             }),
             'entity_id': 'button.aqara_hub_1563_identify',
@@ -1816,7 +1960,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Programmable Switch Identify',
             'platform': 'homekit_controller',
@@ -1828,6 +1972,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Programmable Switch Identify',
             }),
             'entity_id': 'button.programmable_switch_identify',
@@ -1965,7 +2110,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'ArloBabyA0 Identify',
             'platform': 'homekit_controller',
@@ -1977,6 +2122,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'ArloBabyA0 Identify',
             }),
             'entity_id': 'button.arlobabya0_identify',
@@ -2371,7 +2517,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'InWall Outlet-0394DE Identify',
             'platform': 'homekit_controller',
@@ -2383,6 +2529,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'InWall Outlet-0394DE Identify',
             }),
             'entity_id': 'button.inwall_outlet_0394de_identify',
@@ -2798,7 +2945,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Basement Identify',
             'platform': 'homekit_controller',
@@ -2810,6 +2957,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Basement Identify',
             }),
             'entity_id': 'button.basement_identify',
@@ -3015,7 +3163,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HomeW Identify',
             'platform': 'homekit_controller',
@@ -3027,6 +3175,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HomeW Identify',
             }),
             'entity_id': 'button.homew_identify',
@@ -3067,7 +3216,7 @@
             'original_name': 'HomeW',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <ClimateEntityFeature: 7>,
+            'supported_features': <ClimateEntityFeature: 391>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_16',
             'unit_of_measurement': None,
@@ -3089,7 +3238,7 @@
               'max_temp': 33.3,
               'min_humidity': 20,
               'min_temp': 7.2,
-              'supported_features': <ClimateEntityFeature: 7>,
+              'supported_features': <ClimateEntityFeature: 391>,
               'target_temp_high': None,
               'target_temp_low': None,
               'temperature': 22.2,
@@ -3358,7 +3507,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Kitchen Identify',
             'platform': 'homekit_controller',
@@ -3370,6 +3519,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Kitchen Identify',
             }),
             'entity_id': 'button.kitchen_identify',
@@ -3502,7 +3652,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Porch Identify',
             'platform': 'homekit_controller',
@@ -3514,6 +3664,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Porch Identify',
             }),
             'entity_id': 'button.porch_identify',
@@ -3723,7 +3874,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HomeW Identify',
             'platform': 'homekit_controller',
@@ -3735,6 +3886,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HomeW Identify',
             }),
             'entity_id': 'button.homew_identify',
@@ -3775,7 +3927,7 @@
             'original_name': 'HomeW',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <ClimateEntityFeature: 7>,
+            'supported_features': <ClimateEntityFeature: 391>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_16',
             'unit_of_measurement': None,
@@ -3797,7 +3949,7 @@
               'max_temp': 33.3,
               'min_humidity': 20,
               'min_temp': 7.2,
-              'supported_features': <ClimateEntityFeature: 7>,
+              'supported_features': <ClimateEntityFeature: 391>,
               'target_temp_high': None,
               'target_temp_low': None,
               'temperature': 22.2,
@@ -4070,7 +4222,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Basement Identify',
             'platform': 'homekit_controller',
@@ -4082,6 +4234,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Basement Identify',
             }),
             'entity_id': 'button.basement_identify',
@@ -4136,7 +4289,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HomeW Identify',
             'platform': 'homekit_controller',
@@ -4148,6 +4301,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HomeW Identify',
             }),
             'entity_id': 'button.homew_identify',
@@ -4188,7 +4342,7 @@
             'original_name': 'HomeW',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <ClimateEntityFeature: 7>,
+            'supported_features': <ClimateEntityFeature: 391>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_16',
             'unit_of_measurement': None,
@@ -4210,7 +4364,7 @@
               'max_temp': 33.3,
               'min_humidity': 20,
               'min_temp': 7.2,
-              'supported_features': <ClimateEntityFeature: 7>,
+              'supported_features': <ClimateEntityFeature: 391>,
               'target_temp_high': None,
               'target_temp_low': None,
               'temperature': 22.2,
@@ -4432,7 +4586,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Kitchen Identify',
             'platform': 'homekit_controller',
@@ -4444,6 +4598,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Kitchen Identify',
             }),
             'entity_id': 'button.kitchen_identify',
@@ -4576,7 +4731,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Porch Identify',
             'platform': 'homekit_controller',
@@ -4588,6 +4743,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Porch Identify',
             }),
             'entity_id': 'button.porch_identify',
@@ -4797,7 +4953,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'My ecobee Identify',
             'platform': 'homekit_controller',
@@ -4809,6 +4965,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'My ecobee Identify',
             }),
             'entity_id': 'button.my_ecobee_identify',
@@ -4853,7 +5010,7 @@
             'original_name': 'My ecobee',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <ClimateEntityFeature: 15>,
+            'supported_features': <ClimateEntityFeature: 399>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_16',
             'unit_of_measurement': None,
@@ -4880,7 +5037,7 @@
               'max_temp': 33.3,
               'min_humidity': 20,
               'min_temp': 7.2,
-              'supported_features': <ClimateEntityFeature: 15>,
+              'supported_features': <ClimateEntityFeature: 399>,
               'target_temp_high': 25.6,
               'target_temp_low': 7.2,
               'temperature': None,
@@ -5190,7 +5347,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Master Fan Identify',
             'platform': 'homekit_controller',
@@ -5202,6 +5359,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Master Fan Identify',
             }),
             'entity_id': 'button.master_fan_identify',
@@ -5378,7 +5536,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Eve Degree AA11 Identify',
             'platform': 'homekit_controller',
@@ -5390,6 +5548,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Eve Degree AA11 Identify',
             }),
             'entity_id': 'button.eve_degree_aa11_identify',
@@ -5705,7 +5864,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Eve Energy 50FF Identify',
             'platform': 'homekit_controller',
@@ -5717,6 +5876,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Eve Energy 50FF Identify',
             }),
             'entity_id': 'button.eve_energy_50ff_identify',
@@ -6013,7 +6173,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HAA-C718B3 Identify',
             'platform': 'homekit_controller',
@@ -6025,6 +6185,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HAA-C718B3 Identify',
             }),
             'entity_id': 'button.haa_c718b3_identify',
@@ -6196,7 +6357,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HAA-C718B3 Identify',
             'platform': 'homekit_controller',
@@ -6208,6 +6369,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HAA-C718B3 Identify',
             }),
             'entity_id': 'button.haa_c718b3_identify_2',
@@ -6302,7 +6464,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Family Room North Identify',
             'platform': 'homekit_controller',
@@ -6314,6 +6476,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Family Room North Identify',
             }),
             'entity_id': 'button.family_room_north_identify',
@@ -6448,7 +6611,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
             'platform': 'homekit_controller',
@@ -6460,6 +6623,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HASS Bridge S6 Identify',
             }),
             'entity_id': 'button.hass_bridge_s6_identify',
@@ -6514,7 +6678,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Kitchen Window Identify',
             'platform': 'homekit_controller',
@@ -6526,6 +6690,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Kitchen Window Identify',
             }),
             'entity_id': 'button.kitchen_window_identify',
@@ -6664,7 +6829,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Ceiling Fan Identify',
             'platform': 'homekit_controller',
@@ -6676,6 +6841,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Ceiling Fan Identify',
             }),
             'entity_id': 'button.ceiling_fan_identify',
@@ -6773,7 +6939,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Home Assistant Bridge Identify',
             'platform': 'homekit_controller',
@@ -6785,6 +6951,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Home Assistant Bridge Identify',
             }),
             'entity_id': 'button.home_assistant_bridge_identify',
@@ -6839,7 +7006,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Living Room Fan Identify',
             'platform': 'homekit_controller',
@@ -6851,6 +7018,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Living Room Fan Identify',
             }),
             'entity_id': 'button.living_room_fan_identify',
@@ -6953,7 +7121,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': '89 Living Room Identify',
             'platform': 'homekit_controller',
@@ -6965,6 +7133,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': '89 Living Room Identify',
             }),
             'entity_id': 'button.89_living_room_identify',
@@ -7004,7 +7173,7 @@
             'original_name': '89 Living Room',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': 0,
+            'supported_features': <ClimateEntityFeature: 384>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1233851541_169',
             'unit_of_measurement': None,
@@ -7022,7 +7191,7 @@
               ]),
               'max_temp': 35,
               'min_temp': 7,
-              'supported_features': <ClimateEntityFeature: 0>,
+              'supported_features': <ClimateEntityFeature: 384>,
               'target_temp_step': 1.0,
             }),
             'entity_id': 'climate.89_living_room',
@@ -7249,7 +7418,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
             'platform': 'homekit_controller',
@@ -7261,6 +7430,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HASS Bridge S6 Identify',
             }),
             'entity_id': 'button.hass_bridge_s6_identify',
@@ -7319,7 +7489,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
             'platform': 'homekit_controller',
@@ -7331,6 +7501,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HASS Bridge S6 Identify',
             }),
             'entity_id': 'button.hass_bridge_s6_identify',
@@ -7385,7 +7556,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Laundry Smoke ED78 Identify',
             'platform': 'homekit_controller',
@@ -7397,6 +7568,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Laundry Smoke ED78 Identify',
             }),
             'entity_id': 'button.laundry_smoke_ed78_identify',
@@ -7543,7 +7715,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Family Room North Identify',
             'platform': 'homekit_controller',
@@ -7555,6 +7727,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Family Room North Identify',
             }),
             'entity_id': 'button.family_room_north_identify',
@@ -7689,7 +7862,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
             'platform': 'homekit_controller',
@@ -7701,6 +7874,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HASS Bridge S6 Identify',
             }),
             'entity_id': 'button.hass_bridge_s6_identify',
@@ -7755,7 +7929,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Kitchen Window Identify',
             'platform': 'homekit_controller',
@@ -7767,6 +7941,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Kitchen Window Identify',
             }),
             'entity_id': 'button.kitchen_window_identify',
@@ -7905,7 +8080,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Ceiling Fan Identify',
             'platform': 'homekit_controller',
@@ -7917,6 +8092,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Ceiling Fan Identify',
             }),
             'entity_id': 'button.ceiling_fan_identify',
@@ -8014,7 +8190,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Home Assistant Bridge Identify',
             'platform': 'homekit_controller',
@@ -8026,6 +8202,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Home Assistant Bridge Identify',
             }),
             'entity_id': 'button.home_assistant_bridge_identify',
@@ -8080,7 +8257,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Living Room Fan Identify',
             'platform': 'homekit_controller',
@@ -8092,6 +8269,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Living Room Fan Identify',
             }),
             'entity_id': 'button.living_room_fan_identify',
@@ -8195,7 +8373,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Home Assistant Bridge Identify',
             'platform': 'homekit_controller',
@@ -8207,6 +8385,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Home Assistant Bridge Identify',
             }),
             'entity_id': 'button.home_assistant_bridge_identify',
@@ -8261,7 +8440,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Living Room Fan Identify',
             'platform': 'homekit_controller',
@@ -8273,6 +8452,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Living Room Fan Identify',
             }),
             'entity_id': 'button.living_room_fan_identify',
@@ -8376,7 +8556,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': '89 Living Room Identify',
             'platform': 'homekit_controller',
@@ -8388,6 +8568,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': '89 Living Room Identify',
             }),
             'entity_id': 'button.89_living_room_identify',
@@ -8431,7 +8612,7 @@
             'original_name': '89 Living Room',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <ClimateEntityFeature: 32>,
+            'supported_features': <ClimateEntityFeature: 416>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1233851541_169',
             'unit_of_measurement': None,
@@ -8449,7 +8630,7 @@
               ]),
               'max_temp': 35,
               'min_temp': 7,
-              'supported_features': <ClimateEntityFeature: 32>,
+              'supported_features': <ClimateEntityFeature: 416>,
               'swing_mode': 'vertical',
               'swing_modes': list([
                 'off',
@@ -8681,7 +8862,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
             'platform': 'homekit_controller',
@@ -8693,6 +8874,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HASS Bridge S6 Identify',
             }),
             'entity_id': 'button.hass_bridge_s6_identify',
@@ -8751,7 +8933,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
             'platform': 'homekit_controller',
@@ -8763,6 +8945,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HASS Bridge S6 Identify',
             }),
             'entity_id': 'button.hass_bridge_s6_identify',
@@ -8817,7 +9000,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Humidifier 182A Identify',
             'platform': 'homekit_controller',
@@ -8829,6 +9012,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Humidifier 182A Identify',
             }),
             'entity_id': 'button.humidifier_182a_identify',
@@ -8982,7 +9166,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
             'platform': 'homekit_controller',
@@ -8994,6 +9178,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HASS Bridge S6 Identify',
             }),
             'entity_id': 'button.hass_bridge_s6_identify',
@@ -9048,7 +9233,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Humidifier 182A Identify',
             'platform': 'homekit_controller',
@@ -9060,6 +9245,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Humidifier 182A Identify',
             }),
             'entity_id': 'button.humidifier_182a_identify',
@@ -9213,7 +9399,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'HASS Bridge S6 Identify',
             'platform': 'homekit_controller',
@@ -9225,6 +9411,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'HASS Bridge S6 Identify',
             }),
             'entity_id': 'button.hass_bridge_s6_identify',
@@ -9279,7 +9466,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Laundry Smoke ED78 Identify',
             'platform': 'homekit_controller',
@@ -9291,6 +9478,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Laundry Smoke ED78 Identify',
             }),
             'entity_id': 'button.laundry_smoke_ed78_identify',
@@ -9452,7 +9640,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Air Conditioner Identify',
             'platform': 'homekit_controller',
@@ -9464,6 +9652,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Air Conditioner Identify',
             }),
             'entity_id': 'button.air_conditioner_identify',
@@ -9509,7 +9698,7 @@
             'original_name': 'Air Conditioner SlaveID 1',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <ClimateEntityFeature: 9>,
+            'supported_features': <ClimateEntityFeature: 393>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_9',
             'unit_of_measurement': None,
@@ -9534,7 +9723,7 @@
               ]),
               'max_temp': 32,
               'min_temp': 18,
-              'supported_features': <ClimateEntityFeature: 9>,
+              'supported_features': <ClimateEntityFeature: 393>,
               'target_temp_step': 0.5,
               'temperature': 24.5,
             }),
@@ -9635,7 +9824,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue ambiance candle Identify',
             'platform': 'homekit_controller',
@@ -9647,6 +9836,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue ambiance candle Identify',
             }),
             'entity_id': 'button.hue_ambiance_candle_identify_4',
@@ -9760,7 +9950,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue ambiance candle Identify',
             'platform': 'homekit_controller',
@@ -9772,6 +9962,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue ambiance candle Identify',
             }),
             'entity_id': 'button.hue_ambiance_candle_identify_3',
@@ -9885,7 +10076,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue ambiance candle Identify',
             'platform': 'homekit_controller',
@@ -9897,6 +10088,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue ambiance candle Identify',
             }),
             'entity_id': 'button.hue_ambiance_candle_identify_2',
@@ -10010,7 +10202,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue ambiance candle Identify',
             'platform': 'homekit_controller',
@@ -10022,6 +10214,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue ambiance candle Identify',
             }),
             'entity_id': 'button.hue_ambiance_candle_identify',
@@ -10135,7 +10328,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue ambiance spot Identify',
             'platform': 'homekit_controller',
@@ -10147,6 +10340,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue ambiance spot Identify',
             }),
             'entity_id': 'button.hue_ambiance_spot_identify_2',
@@ -10270,7 +10464,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue ambiance spot Identify',
             'platform': 'homekit_controller',
@@ -10282,6 +10476,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue ambiance spot Identify',
             }),
             'entity_id': 'button.hue_ambiance_spot_identify',
@@ -10405,7 +10600,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue dimmer switch Identify',
             'platform': 'homekit_controller',
@@ -10417,6 +10612,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue dimmer switch Identify',
             }),
             'entity_id': 'button.hue_dimmer_switch_identify',
@@ -10693,7 +10889,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
             'platform': 'homekit_controller',
@@ -10705,6 +10901,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue white lamp Identify',
             }),
             'entity_id': 'button.hue_white_lamp_identify',
@@ -10805,7 +11002,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
             'platform': 'homekit_controller',
@@ -10817,6 +11014,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue white lamp Identify',
             }),
             'entity_id': 'button.hue_white_lamp_identify_2',
@@ -10917,7 +11115,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
             'platform': 'homekit_controller',
@@ -10929,6 +11127,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue white lamp Identify',
             }),
             'entity_id': 'button.hue_white_lamp_identify_4',
@@ -11029,7 +11228,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
             'platform': 'homekit_controller',
@@ -11041,6 +11240,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue white lamp Identify',
             }),
             'entity_id': 'button.hue_white_lamp_identify_3',
@@ -11141,7 +11341,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
             'platform': 'homekit_controller',
@@ -11153,6 +11353,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue white lamp Identify',
             }),
             'entity_id': 'button.hue_white_lamp_identify_7',
@@ -11253,7 +11454,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
             'platform': 'homekit_controller',
@@ -11265,6 +11466,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue white lamp Identify',
             }),
             'entity_id': 'button.hue_white_lamp_identify_6',
@@ -11365,7 +11567,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Hue white lamp Identify',
             'platform': 'homekit_controller',
@@ -11377,6 +11579,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Hue white lamp Identify',
             }),
             'entity_id': 'button.hue_white_lamp_identify_5',
@@ -11477,7 +11680,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Philips hue - 482544 Identify',
             'platform': 'homekit_controller',
@@ -11489,6 +11692,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Philips hue - 482544 Identify',
             }),
             'entity_id': 'button.philips_hue_482544_identify',
@@ -11547,7 +11751,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Koogeek-LS1-20833F Identify',
             'platform': 'homekit_controller',
@@ -11559,6 +11763,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Koogeek-LS1-20833F Identify',
             }),
             'entity_id': 'button.koogeek_ls1_20833f_identify',
@@ -11678,7 +11883,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Koogeek-P1-A00AA0 Identify',
             'platform': 'homekit_controller',
@@ -11690,6 +11895,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Koogeek-P1-A00AA0 Identify',
             }),
             'entity_id': 'button.koogeek_p1_a00aa0_identify',
@@ -11826,7 +12032,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Koogeek-SW2-187A91 Identify',
             'platform': 'homekit_controller',
@@ -11838,6 +12044,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Koogeek-SW2-187A91 Identify',
             }),
             'entity_id': 'button.koogeek_sw2_187a91_identify',
@@ -12009,7 +12216,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Lennox Identify',
             'platform': 'homekit_controller',
@@ -12021,6 +12228,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Lennox Identify',
             }),
             'entity_id': 'button.lennox_identify',
@@ -12059,7 +12267,7 @@
             'original_name': 'Lennox',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <ClimateEntityFeature: 3>,
+            'supported_features': <ClimateEntityFeature: 387>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_100',
             'unit_of_measurement': None,
@@ -12078,7 +12286,7 @@
               ]),
               'max_temp': 37,
               'min_temp': 4.5,
-              'supported_features': <ClimateEntityFeature: 3>,
+              'supported_features': <ClimateEntityFeature: 387>,
               'target_temp_high': 29.5,
               'target_temp_low': 21,
               'temperature': None,
@@ -12267,7 +12475,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'LG webOS TV AF80 Identify',
             'platform': 'homekit_controller',
@@ -12279,6 +12487,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'LG webOS TV AF80 Identify',
             }),
             'entity_id': 'button.lg_webos_tv_af80_identify',
@@ -12432,7 +12641,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Caséta® Wireless Fan Speed Control Identify',
             'platform': 'homekit_controller',
@@ -12444,6 +12653,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Caséta® Wireless Fan Speed Control Identify',
             }),
             'entity_id': 'button.caseta_r_wireless_fan_speed_control_identify',
@@ -12541,7 +12751,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Smart Bridge 2 Identify',
             'platform': 'homekit_controller',
@@ -12553,6 +12763,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Smart Bridge 2 Identify',
             }),
             'entity_id': 'button.smart_bridge_2_identify',
@@ -12611,7 +12822,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'MSS425F-15cc Identify',
             'platform': 'homekit_controller',
@@ -12623,6 +12834,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'MSS425F-15cc Identify',
             }),
             'entity_id': 'button.mss425f_15cc_identify',
@@ -12861,7 +13073,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'MSS565-28da Identify',
             'platform': 'homekit_controller',
@@ -12873,6 +13085,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'MSS565-28da Identify',
             }),
             'entity_id': 'button.mss565_28da_identify',
@@ -12977,7 +13190,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Mysa-85dda9 Identify',
             'platform': 'homekit_controller',
@@ -12989,6 +13202,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Mysa-85dda9 Identify',
             }),
             'entity_id': 'button.mysa_85dda9_identify',
@@ -13027,7 +13241,7 @@
             'original_name': 'Mysa-85dda9 Thermostat',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
-            'supported_features': <ClimateEntityFeature: 1>,
+            'supported_features': <ClimateEntityFeature: 385>,
             'translation_key': None,
             'unique_id': '00:00:00:00:00:00_1_20',
             'unit_of_measurement': None,
@@ -13046,7 +13260,7 @@
               ]),
               'max_temp': 35,
               'min_temp': 7,
-              'supported_features': <ClimateEntityFeature: 1>,
+              'supported_features': <ClimateEntityFeature: 385>,
               'temperature': None,
             }),
             'entity_id': 'climate.mysa_85dda9_thermostat',
@@ -13279,7 +13493,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Nanoleaf Strip 3B32 Identify',
             'platform': 'homekit_controller',
@@ -13291,6 +13505,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Nanoleaf Strip 3B32 Identify',
             }),
             'entity_id': 'button.nanoleaf_strip_3b32_identify',
@@ -13603,7 +13818,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Netatmo-Doorbell-g738658 Identify',
             'platform': 'homekit_controller',
@@ -13615,6 +13830,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Netatmo-Doorbell-g738658 Identify',
             }),
             'entity_id': 'button.netatmo_doorbell_g738658_identify',
@@ -13907,7 +14123,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Smart CO Alarm Identify',
             'platform': 'homekit_controller',
@@ -13919,6 +14135,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Smart CO Alarm Identify',
             }),
             'entity_id': 'button.smart_co_alarm_identify',
@@ -13977,7 +14194,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Healthy Home Coach Identify',
             'platform': 'homekit_controller',
@@ -13989,6 +14206,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Healthy Home Coach Identify',
             }),
             'entity_id': 'button.healthy_home_coach_identify',
@@ -14251,7 +14469,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'RainMachine-00ce4a Identify',
             'platform': 'homekit_controller',
@@ -14263,6 +14481,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'RainMachine-00ce4a Identify',
             }),
             'entity_id': 'button.rainmachine_00ce4a_identify',
@@ -14641,7 +14860,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'Master Bath South Identify',
             'platform': 'homekit_controller',
@@ -14653,6 +14872,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'Master Bath South Identify',
             }),
             'entity_id': 'button.master_bath_south_identify',
@@ -14787,7 +15007,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'RYSE SmartBridge Identify',
             'platform': 'homekit_controller',
@@ -14799,6 +15019,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'RYSE SmartBridge Identify',
             }),
             'entity_id': 'button.ryse_smartbridge_identify',
@@ -14853,7 +15074,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'RYSE SmartShade Identify',
             'platform': 'homekit_controller',
@@ -14865,6 +15086,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'RYSE SmartShade Identify',
             }),
             'entity_id': 'button.ryse_smartshade_identify',
@@ -15003,7 +15225,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'BR Left Identify',
             'platform': 'homekit_controller',
@@ -15015,6 +15237,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'BR Left Identify',
             }),
             'entity_id': 'button.br_left_identify',
@@ -15149,7 +15372,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'LR Left Identify',
             'platform': 'homekit_controller',
@@ -15161,6 +15384,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'LR Left Identify',
             }),
             'entity_id': 'button.lr_left_identify',
@@ -15295,7 +15519,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'LR Right Identify',
             'platform': 'homekit_controller',
@@ -15307,6 +15531,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'LR Right Identify',
             }),
             'entity_id': 'button.lr_right_identify',
@@ -15441,7 +15666,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'RYSE SmartBridge Identify',
             'platform': 'homekit_controller',
@@ -15453,6 +15678,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'RYSE SmartBridge Identify',
             }),
             'entity_id': 'button.ryse_smartbridge_identify',
@@ -15507,7 +15733,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'RZSS Identify',
             'platform': 'homekit_controller',
@@ -15519,6 +15745,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'RZSS Identify',
             }),
             'entity_id': 'button.rzss_identify',
@@ -15657,7 +15884,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'SENSE   Identify',
             'platform': 'homekit_controller',
@@ -15669,6 +15896,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'SENSE   Identify',
             }),
             'entity_id': 'button.sense_identify',
@@ -15764,7 +15992,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'SIMPLEconnect Fan-06F674 Identify',
             'platform': 'homekit_controller',
@@ -15776,6 +16004,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'SIMPLEconnect Fan-06F674 Identify',
             }),
             'entity_id': 'button.simpleconnect_fan_06f674_identify',
@@ -15924,7 +16153,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VELUX Gateway Identify',
             'platform': 'homekit_controller',
@@ -15936,6 +16165,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'VELUX Gateway Identify',
             }),
             'entity_id': 'button.velux_gateway_identify',
@@ -15990,7 +16220,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VELUX Sensor Identify',
             'platform': 'homekit_controller',
@@ -16002,6 +16232,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'VELUX Sensor Identify',
             }),
             'entity_id': 'button.velux_sensor_identify',
@@ -16179,7 +16410,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VELUX Window Identify',
             'platform': 'homekit_controller',
@@ -16191,6 +16422,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'VELUX Window Identify',
             }),
             'entity_id': 'button.velux_window_identify',
@@ -16288,7 +16520,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VOCOlinc-Flowerbud-0d324b Identify',
             'platform': 'homekit_controller',
@@ -16300,6 +16532,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'VOCOlinc-Flowerbud-0d324b Identify',
             }),
             'entity_id': 'button.vocolinc_flowerbud_0d324b_identify',
@@ -16570,7 +16803,7 @@
             'name': None,
             'options': dict({
             }),
-            'original_device_class': None,
+            'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
             'original_icon': None,
             'original_name': 'VOCOlinc-VP3-123456 Identify',
             'platform': 'homekit_controller',
@@ -16582,6 +16815,7 @@
           }),
           'state': dict({
             'attributes': dict({
+              'device_class': 'identify',
               'friendly_name': 'VOCOlinc-VP3-123456 Identify',
             }),
             'entity_id': 'button.vocolinc_vp3_123456_identify',

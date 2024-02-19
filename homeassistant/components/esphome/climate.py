@@ -137,6 +137,7 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "climate"
+    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
@@ -167,11 +168,11 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._attr_min_humidity = round(static_info.visual_min_humidity)
         self._attr_max_humidity = round(static_info.visual_max_humidity)
         features = ClimateEntityFeature(0)
-        if self._static_info.supports_two_point_target_temperature:
+        if static_info.supports_two_point_target_temperature:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         else:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
-        if self._static_info.supports_target_humidity:
+        if static_info.supports_target_humidity:
             features |= ClimateEntityFeature.TARGET_HUMIDITY
         if self.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
@@ -179,6 +180,8 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
             features |= ClimateEntityFeature.FAN_MODE
         if self.swing_modes:
             features |= ClimateEntityFeature.SWING_MODE
+        if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
+            features |= ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
         self._attr_supported_features = features
 
     def _get_precision(self) -> float:
