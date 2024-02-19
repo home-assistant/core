@@ -44,6 +44,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_group_monitor_info)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
+    websocket_api.async_register_command(hass, ws_validate_entity)
     websocket_api.async_register_command(hass, ws_create_entity)
     websocket_api.async_register_command(hass, ws_update_entity)
     websocket_api.async_register_command(hass, ws_delete_entity)
@@ -234,6 +235,30 @@ def ws_subscribe_telegram(
         name="KNX GroupMonitor subscription",
     )
     connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/validate_entity",
+        **CREATE_ENTITY_BASE_SCHEMA,
+    }
+)
+@callback
+def ws_validate_entity(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Validate entity data."""
+    try:
+        validate_entity_data(msg)
+    except EntityStoreValidationException as exc:
+        connection.send_result(msg["id"], exc.validation_error)
+        return
+    connection.send_result(
+        msg["id"], EntityStoreValidationSuccess(success=True, entity_id=None)
+    )
 
 
 @websocket_api.require_admin
