@@ -258,7 +258,6 @@ async def test_config_flow_with_invalid_credentials(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    config_entry: MockConfigEntry,
     microbees: AsyncMock,
     current_request_with_host,
 ) -> None:
