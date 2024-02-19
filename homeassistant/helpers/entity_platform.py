@@ -528,30 +528,45 @@ class EntityPlatform:
             return
 
         timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(coros), SLOW_ADD_MIN_TIMEOUT)
-        try:
-            async with self.hass.timeout.async_timeout(timeout, self.domain):
-                if update_before_add:
+        async with self.hass.timeout.async_timeout(timeout, self.domain):
+            if update_before_add:
+                try:
                     await asyncio.gather(*coros)
-                else:
-                    # If we aren't updating its unlikely that we will have to yield
-                    # control to the event loop so we can await the coros directly
-                    # without scheduling them as tasks.
-                    for coro in coros:
+                except TimeoutError:
+                    self.logger.warning(
+                        "Timed out adding entities for domain %s with platform %s after %ds",
+                        self.domain,
+                        self.platform_name,
+                        timeout,
+                    )
+                except Exception:
+                    self.logger.exception(
+                        "Error adding entities for domain %s with platform %s",
+                        self.domain,
+                        self.platform_name,
+                    )
+                    raise
+            else:
+                # If we aren't updating its unlikely that we will have to yield
+                # control to the event loop so we can await the coros directly
+                # without scheduling them as tasks.
+                for coro in coros:
+                    try:
                         await coro
-        except TimeoutError:
-            self.logger.warning(
-                "Timed out adding entities for domain %s with platform %s after %ds",
-                self.domain,
-                self.platform_name,
-                timeout,
-            )
-        except Exception:
-            self.logger.exception(
-                "Error adding entities for domain %s with platform %s",
-                self.domain,
-                self.platform_name,
-            )
-            raise
+                    except TimeoutError:
+                        self.logger.warning(
+                            "Timed out adding entities for domain %s with platform %s after %ds",
+                            self.domain,
+                            self.platform_name,
+                            timeout,
+                        )
+                        raise
+                    except Exception:  # pylint: disable=broad-except
+                        self.logger.exception(
+                            "Error adding entities for domain %s with platform %s",
+                            self.domain,
+                            self.platform_name,
+                        )
 
         if (
             (self.config_entry and self.config_entry.pref_disable_polling)
