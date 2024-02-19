@@ -372,7 +372,6 @@ async def test_async_listen_error_late_discovery(
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
     assert "Waiting for 0x15243f to be discovered" in caplog.text
 
     with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()):
