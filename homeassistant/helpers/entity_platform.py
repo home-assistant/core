@@ -535,7 +535,7 @@ class EntityPlatform:
                     entity = entities[idx]
                     self.logger.exception(
                         "Error adding entity %s for domain %s with platform %s",
-                        entity,
+                        entity.entity_id,
                         self.domain,
                         self.platform_name,
                         exc_info=result,
@@ -563,7 +563,7 @@ class EntityPlatform:
                         entity = entities[idx]
                         self.logger.exception(
                             "Error adding entity %s for domain %s with platform %s",
-                            entity,
+                            entity.entity_id,
                             self.domain,
                             self.platform_name,
                             exc_info=ex,
