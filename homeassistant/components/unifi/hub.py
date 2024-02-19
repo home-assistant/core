@@ -505,7 +505,7 @@ async def get_unifi_api(
             hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
         )
 
-    controller = aiounifi.Controller(
+    api = aiounifi.Controller(
         Configuration(
             session,
             host=config[CONF_HOST],
@@ -519,8 +519,8 @@ async def get_unifi_api(
 
     try:
         async with asyncio.timeout(10):
-            await controller.login()
-        return controller
+            await api.login()
+        return api
 
     except aiounifi.Unauthorized as err:
         LOGGER.warning(

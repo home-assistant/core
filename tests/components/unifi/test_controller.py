@@ -194,7 +194,6 @@ async def setup_unifi_integration(
     system_information_response=None,
     wlans_response=None,
     known_wireless_clients=None,
-    controllers=None,
     unique_id="1",
     config_entry_id=DEFAULT_CONFIG_ENTRY_ID,
 ):
