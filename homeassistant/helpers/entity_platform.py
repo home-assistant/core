@@ -547,7 +547,7 @@ class EntityPlatform:
                     )
                     raise
             else:
-                # If we aren't updating its unlikely that we will have to yield
+                # If we aren't updating its unlikely that we will not have to yield
                 # control to the event loop so we can await the coros directly
                 # without scheduling them as tasks.
                 for coro in coros:
