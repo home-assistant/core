@@ -47,8 +47,8 @@ from .const import (
     DEFAULT_DPI_RESTRICTIONS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from .controller import UniFiController, get_unifi_controller
 from .errors import AuthenticationRequired, CannotConnect
+from .hub import UniFiController, get_unifi_controller
 
 DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"

@@ -11,8 +11,8 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN as UNIFI_DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
-from .controller import UniFiController, get_unifi_controller
 from .errors import AuthenticationRequired, CannotConnect
+from .hub import UniFiController, get_unifi_controller
 from .services import async_setup_services, async_unload_services
 
 SAVE_DELAY = 10

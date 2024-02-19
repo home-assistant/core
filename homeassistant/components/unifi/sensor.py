@@ -40,7 +40,6 @@ from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
 from .const import DEVICE_STATES
-from .controller import UniFiController
 from .entity import (
     HandlerT,
     UnifiEntity,
@@ -51,6 +50,7 @@ from .entity import (
     async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
+from .hub import UniFiController
 
 
 @callback

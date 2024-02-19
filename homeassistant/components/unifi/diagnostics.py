@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN as UNIFI_DOMAIN
-from .controller import UniFiController
+from .hub import UniFiController
 
 TO_REDACT = {CONF_PASSWORD}
 REDACT_CONFIG = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME}

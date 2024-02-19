@@ -26,8 +26,8 @@ from homeassistant.components.unifi.const import (
     PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
-from homeassistant.components.unifi.controller import get_unifi_controller
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
+from homeassistant.components.unifi.hub import get_unifi_controller
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -291,7 +291,7 @@ async def test_controller_setup(
 async def test_controller_not_accessible(hass: HomeAssistant) -> None:
     """Retry to login gets scheduled when connection fails."""
     with patch(
-        "homeassistant.components.unifi.controller.get_unifi_controller",
+        "homeassistant.components.unifi.hub.get_unifi_controller",
         side_effect=CannotConnect,
     ):
         await setup_unifi_integration(hass)
@@ -312,7 +312,7 @@ async def test_controller_trigger_reauth_flow(hass: HomeAssistant) -> None:
 async def test_controller_unknown_error(hass: HomeAssistant) -> None:
     """Unknown errors are handled."""
     with patch(
-        "homeassistant.components.unifi.controller.get_unifi_controller",
+        "homeassistant.components.unifi.hub.get_unifi_controller",
         side_effect=Exception,
     ):
         await setup_unifi_integration(hass)
@@ -435,7 +435,7 @@ async def test_reconnect_mechanism_exceptions(
     await setup_unifi_integration(hass, aioclient_mock)
 
     with patch("aiounifi.Controller.login", side_effect=exception), patch(
-        "homeassistant.components.unifi.controller.UniFiController.reconnect"
+        "homeassistant.components.unifi.hub.UniFiController.reconnect"
     ) as mock_reconnect:
         await websocket_mock.disconnect()
 

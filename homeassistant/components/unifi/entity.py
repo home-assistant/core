@@ -29,7 +29,7 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from .const import ATTR_MANUFACTURER, DOMAIN
 
 if TYPE_CHECKING:
-    from .controller import UniFiController
+    from .hub import UniFiController
 
 HandlerT = TypeVar("HandlerT", bound=APIHandler)
 SubscriptionT = Callable[[CallbackType, ItemEvent], UnsubscribeType]

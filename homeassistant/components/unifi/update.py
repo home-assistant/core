@@ -21,13 +21,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .controller import UniFiController
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
     async_device_available_fn,
     async_device_device_info_fn,
 )
+from .hub import UniFiController
 
 LOGGER = logging.getLogger(__name__)
 

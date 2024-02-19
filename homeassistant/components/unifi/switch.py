@@ -45,7 +45,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 
 from .const import ATTR_MANUFACTURER
-from .controller import UNIFI_DOMAIN, UniFiController
 from .entity import (
     HandlerT,
     SubscriptionT,
@@ -56,6 +55,7 @@ from .entity import (
     async_device_device_info_fn,
     async_wlan_device_info_fn,
 )
+from .hub import UNIFI_DOMAIN, UniFiController
 
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)

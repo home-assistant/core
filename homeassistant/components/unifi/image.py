@@ -20,7 +20,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .controller import UniFiController
 from .entity import (
     HandlerT,
     UnifiEntity,
@@ -28,6 +27,7 @@ from .entity import (
     async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
+from .hub import UniFiController
 
 
 @callback
