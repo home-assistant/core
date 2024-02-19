@@ -1,5 +1,16 @@
 # serializer version: 1
-# name: test_backup_end_as_supervisor[with_hassio]
+# name: test_backup_end[with_hassio-hass_access_token]
+  dict({
+    'error': dict({
+      'code': 'only_supervisor',
+      'message': 'Only allowed as Supervisor',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_end[with_hassio-hass_supervisor_access_token]
   dict({
     'id': 1,
     'result': None,
@@ -7,7 +18,18 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_end_as_supervisor[without_hassio]
+# name: test_backup_end[without_hassio-hass_access_token]
+  dict({
+    'error': dict({
+      'code': 'unknown_command',
+      'message': 'Unknown command.',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_end[without_hassio-hass_supervisor_access_token]
   dict({
     'error': dict({
       'code': 'unknown_command',
@@ -51,7 +73,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_end_not_as_supervisor[with_hassio]
+# name: test_backup_start[with_hassio-hass_access_token]
   dict({
     'error': dict({
       'code': 'only_supervisor',
@@ -62,7 +84,15 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_end_not_as_supervisor[without_hassio]
+# name: test_backup_start[with_hassio-hass_supervisor_access_token]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_backup_start[without_hassio-hass_access_token]
   dict({
     'error': dict({
       'code': 'unknown_command',
@@ -73,15 +103,7 @@
     'type': 'result',
   })
 # ---
-# name: test_backup_start_as_supervisor[with_hassio]
-  dict({
-    'id': 1,
-    'result': None,
-    'success': True,
-    'type': 'result',
-  })
-# ---
-# name: test_backup_start_as_supervisor[without_hassio]
+# name: test_backup_start[without_hassio-hass_supervisor_access_token]
   dict({
     'error': dict({
       'code': 'unknown_command',
@@ -119,28 +141,6 @@
     'error': dict({
       'code': 'pre_backup_actions_failed',
       'message': 'Boom',
-    }),
-    'id': 1,
-    'success': False,
-    'type': 'result',
-  })
-# ---
-# name: test_backup_start_not_as_supervisor[with_hassio]
-  dict({
-    'error': dict({
-      'code': 'only_supervisor',
-      'message': 'Only allowed as Supervisor',
-    }),
-    'id': 1,
-    'success': False,
-    'type': 'result',
-  })
-# ---
-# name: test_backup_start_not_as_supervisor[without_hassio]
-  dict({
-    'error': dict({
-      'code': 'unknown_command',
-      'message': 'Unknown command.',
     }),
     'id': 1,
     'success': False,

@@ -12,6 +12,18 @@ from .common import TEST_BACKUP, setup_backup_integration
 from tests.typing import WebSocketGenerator
 
 
+@pytest.fixture
+def sync_access_token_proxy(
+    access_token_fixture_name: str,
+    request: pytest.FixtureRequest,
+) -> str:
+    """Non-async proxy for the *_access_token fixture.
+
+    Workaround for https://github.com/pytest-dev/pytest-asyncio/issues/112
+    """
+    return request.getfixturevalue(access_token_fixture_name)
+
+
 @pytest.mark.parametrize(
     "with_hassio",
     (
@@ -93,23 +105,30 @@ async def test_generate(
 
 
 @pytest.mark.parametrize(
+    "access_token_fixture_name",
+    ["hass_access_token", "hass_supervisor_access_token"],
+)
+@pytest.mark.parametrize(
     ("with_hassio"),
     (
         pytest.param(True, id="with_hassio"),
         pytest.param(False, id="without_hassio"),
     ),
 )
-async def test_backup_end_as_supervisor(
+async def test_backup_end(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
-    hass_supervisor_access_token: str,
+    request: pytest.FixtureRequest,
+    sync_access_token_proxy: str,
+    *,
+    access_token_fixture_name: str,
     with_hassio: bool,
 ) -> None:
     """Test handling of post backup actions from a WS command."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
 
-    client = await hass_ws_client(hass, hass_supervisor_access_token)
+    client = await hass_ws_client(hass, sync_access_token_proxy)
     await hass.async_block_till_done()
 
     with patch(
@@ -120,31 +139,9 @@ async def test_backup_end_as_supervisor(
 
 
 @pytest.mark.parametrize(
-    ("with_hassio"),
-    (
-        pytest.param(True, id="with_hassio"),
-        pytest.param(False, id="without_hassio"),
-    ),
+    "access_token_fixture_name",
+    ["hass_access_token", "hass_supervisor_access_token"],
 )
-async def test_backup_end_not_as_supervisor(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-    with_hassio: bool,
-) -> None:
-    """Test blocking the backup/start command if not called from the supervisor."""
-    await setup_backup_integration(hass, with_hassio=with_hassio)
-
-    client = await hass_ws_client(hass)
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.backup.websocket.BackupManager.post_backup_actions",
-    ):
-        await client.send_json_auto_id({"type": "backup/end"})
-        assert snapshot == await client.receive_json()
-
-
 @pytest.mark.parametrize(
     ("with_hassio"),
     (
@@ -152,43 +149,19 @@ async def test_backup_end_not_as_supervisor(
         pytest.param(False, id="without_hassio"),
     ),
 )
-async def test_backup_start_as_supervisor(
+async def test_backup_start(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
-    hass_supervisor_access_token: str,
+    sync_access_token_proxy: str,
+    *,
+    access_token_fixture_name: str,
     with_hassio: bool,
 ) -> None:
     """Test handling of pre backup actions from a WS command."""
     await setup_backup_integration(hass, with_hassio=with_hassio)
 
-    client = await hass_ws_client(hass, hass_supervisor_access_token)
-    await hass.async_block_till_done()
-
-    with patch(
-        "homeassistant.components.backup.websocket.BackupManager.pre_backup_actions",
-    ):
-        await client.send_json_auto_id({"type": "backup/start"})
-        assert snapshot == await client.receive_json()
-
-
-@pytest.mark.parametrize(
-    ("with_hassio"),
-    (
-        pytest.param(True, id="with_hassio"),
-        pytest.param(False, id="without_hassio"),
-    ),
-)
-async def test_backup_start_not_as_supervisor(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-    with_hassio: bool,
-) -> None:
-    """Test blocking the backup/start command if not called from the supervisor."""
-    await setup_backup_integration(hass, with_hassio=with_hassio)
-
-    client = await hass_ws_client(hass)
+    client = await hass_ws_client(hass, sync_access_token_proxy)
     await hass.async_block_till_done()
 
     with patch(
