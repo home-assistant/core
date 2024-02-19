@@ -63,7 +63,7 @@ class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity
             manufacturer="Fujitsu",
             model=dev.property_values["model_name"],
             serial_number=dev.device_serial_number,
-            sw_version=self._dev.property_values["mcu_firmware_version"],
+            sw_version=dev.property_values["mcu_firmware_version"],
         )
 
     @callback
