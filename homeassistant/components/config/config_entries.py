@@ -26,8 +26,8 @@ from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
     async_get_config_flows,
-    async_get_integration,
     async_get_integrations,
+    async_get_loaded_integration,
 )
 
 
@@ -479,12 +479,13 @@ async def config_entries_subscribe(
     """Subscribe to config entry updates."""
     type_filter = msg.get("type_filter")
 
-    async def async_forward_config_entry_changes(
+    @callback
+    def async_forward_config_entry_changes(
         change: config_entries.ConfigEntryChange, entry: config_entries.ConfigEntry
     ) -> None:
         """Forward config entry state events to websocket."""
         if type_filter:
-            integration = await async_get_integration(hass, entry.domain)
+            integration = async_get_loaded_integration(hass, entry.domain)
             if integration.integration_type not in type_filter:
                 return
 

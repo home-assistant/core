@@ -1,4 +1,4 @@
-"""Support for Motion Blinds using their WLAN API."""
+"""Support for Motionblinds using their WLAN API."""
 from __future__ import annotations
 
 import logging
@@ -169,7 +169,7 @@ async def async_setup_entry(
 
 
 class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):
-    """Representation of a Motion Blind Device."""
+    """Representation of a Motionblinds Device."""
 
     _restore_tilt = False
 
@@ -311,7 +311,7 @@ class MotionPositionDevice(MotionBaseDevice):
 
 
 class MotionTiltDevice(MotionPositionDevice):
-    """Representation of a Motion Blind Device."""
+    """Representation of a Motionblinds Device."""
 
     _restore_tilt = True
 
@@ -357,7 +357,7 @@ class MotionTiltDevice(MotionPositionDevice):
 
 
 class MotionTiltOnlyDevice(MotionTiltDevice):
-    """Representation of a Motion Blind Device."""
+    """Representation of a Motionblinds Device."""
 
     _restore_tilt = False
 

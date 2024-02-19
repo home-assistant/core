@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.7
+AEMET-OpenData==0.4.8
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -64,7 +64,7 @@ PyMetEireann==2021.8.0
 PyMetno==0.11.0
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.15
+PyMicroBot==0.0.16
 
 # homeassistant.components.nina
 PyNINA==0.3.3
@@ -224,7 +224,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==21.0.3
+aioesphomeapi==22.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -469,7 +469,7 @@ bellows==0.38.0
 bimmer-connected[china]==0.14.6
 
 # homeassistant.components.esphome
-bleak-esphome==0.4.1
+bleak-esphome==1.0.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.4.0
@@ -579,7 +579,7 @@ deebot-client==5.2.1
 defusedxml==0.7.1
 
 # homeassistant.components.deluge
-deluge-client==1.10.0
+deluge-client==1.10.2
 
 # homeassistant.components.lametric
 demetriek==0.4.0
@@ -793,7 +793,7 @@ gotailwind==0.2.2
 govee-ble==0.31.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.4.1
+govee-local-api==1.4.4
 
 # homeassistant.components.gpsd
 gps3==0.33.3
@@ -1038,6 +1038,9 @@ mficlient==0.3.0
 
 # homeassistant.components.xiaomi_miio
 micloud==0.5
+
+# homeassistant.components.microbees
+microBeesPy==0.2.5
 
 # homeassistant.components.mill
 mill-local==0.3.0
@@ -2130,7 +2133,7 @@ uvcclient==0.11.0
 vacuum-map-parser-roborock==0.1.1
 
 # homeassistant.components.vallox
-vallox-websocket-api==4.0.3
+vallox-websocket-api==5.0.2
 
 # homeassistant.components.rdw
 vehicle==2.2.1
