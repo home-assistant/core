@@ -14,9 +14,11 @@ _LOGGER = logging.getLogger(__name__)
 
 class FytaCoordinator(DataUpdateCoordinator):
     """Fyta custom coordinator."""
+    
+    config_entry: ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, fyta: FytaConnector, entry: ConfigEntry
+        self, hass: HomeAssistant, fyta: FytaConnector
     ) -> None:
         """Initialize my coordinator."""
 
@@ -29,7 +31,6 @@ class FytaCoordinator(DataUpdateCoordinator):
         )
 
         self.fyta = fyta
-        self.config_entry: ConfigEntry = entry
 
         self.plant_list: dict[int, str] = {}
         self.access_token = ""
