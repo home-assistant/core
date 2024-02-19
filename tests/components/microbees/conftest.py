@@ -1,5 +1,4 @@
 """Conftest for microBees tests."""
-import logging
 import time
 from unittest.mock import AsyncMock, patch
 
@@ -25,9 +24,6 @@ CLIENT_SECRET = "5678"
 TITLE = "MicroBees"
 MICROBEES_AUTH_URI = "https://dev.microbees.com/oauth/authorize"
 MICROBEES_TOKEN_URI = "https://dev.microbees.com/oauth/token"
-
-_LOGGER = logging.getLogger(__name__)
-
 
 SCOPES = ["read", "write"]
 

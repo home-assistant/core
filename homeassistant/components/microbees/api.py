@@ -1,12 +1,8 @@
 """API for microBees bound to Home Assistant OAuth."""
 
-import logging
-
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigEntryAuth:
