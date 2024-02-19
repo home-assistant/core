@@ -23,6 +23,28 @@
         }
       }
     },
+    "send_message": {
+      "name": "Send a notification message",
+      "description": "Sends a notification message.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "The message body for your notification message."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title for your notification message."
+        },
+        "recipients": {
+          "name": "Recipients",
+          "description": "The recipients that receive the notification message."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Data data mapping that is attached to the notitication message."
+        }
+      }
+    },
     "persistent_notification": {
       "name": "Send a persistent notification",
       "description": "Sends a notification that is visible in the **Notifications** panel.",
