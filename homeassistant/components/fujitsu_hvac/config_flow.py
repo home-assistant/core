@@ -89,8 +89,5 @@ class FujitsuHVACConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
-            )
+            return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
