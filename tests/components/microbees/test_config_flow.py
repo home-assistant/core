@@ -360,10 +360,7 @@ async def test_unexpected_exceptions(
         },
     )
 
-    with patch(
-        "homeassistant.components.microbees.async_setup_entry", return_value=True
-    ) as mock_setup:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == error
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == error
