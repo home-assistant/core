@@ -25,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Event,
     HassJob,
     HomeAssistant,
     ServiceCall,
@@ -332,7 +333,7 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any]] | None:
 
 @callback
 @bind_hass
-def get_addons_stats(hass):
+def get_addons_stats(hass: HomeAssistant) -> dict[str, Any]:
     """Return Addons stats.
 
     Async friendly.
@@ -342,7 +343,7 @@ def get_addons_stats(hass):
 
 @callback
 @bind_hass
-def get_core_stats(hass):
+def get_core_stats(hass: HomeAssistant) -> dict[str, Any]:
     """Return core stats.
 
     Async friendly.
@@ -352,7 +353,7 @@ def get_core_stats(hass):
 
 @callback
 @bind_hass
-def get_supervisor_stats(hass):
+def get_supervisor_stats(hass: HomeAssistant) -> dict[str, Any]:
     """Return supervisor stats.
 
     Async friendly.
@@ -362,7 +363,7 @@ def get_supervisor_stats(hass):
 
 @callback
 @bind_hass
-def get_addons_changelogs(hass):
+def get_addons_changelogs(hass: HomeAssistant):
     """Return Addons changelogs.
 
     Async friendly.
@@ -488,7 +489,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     last_timezone = None
 
-    async def push_config(_):
+    async def push_config(_: Event | None) -> None:
         """Push core config to Hass.io."""
         nonlocal last_timezone
 
@@ -745,7 +746,7 @@ def async_remove_addons_from_dev_reg(
             dev_reg.async_remove_device(dev.id)
 
 
-class HassioDataUpdateCoordinator(DataUpdateCoordinator):
+class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Class to retrieve Hass.io status."""
 
     def __init__(
@@ -986,7 +987,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             enabled_updates[key].add(entity_id)
 
         @callback
-        def _remove():
+        def _remove() -> None:
             for key in types:
                 enabled_updates[key].remove(entity_id)
 
@@ -1000,12 +1001,18 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
-        if not scheduled:
+        if not scheduled and not raise_on_auth_failed:
             # Force refreshing updates for non-scheduled updates
+            # If `raise_on_auth_failed` is set, it means this is
+            # the first refresh and we do not want to delay
+            # startup or cause a timeout so we only refresh the
+            # updates if this is not a scheduled refresh and
+            # we are not doing the first refresh.
             try:
                 await self.hassio.refresh_updates()
             except HassioAPIError as err:
                 _LOGGER.warning("Error on Supervisor API: %s", err)
+
         await super()._async_refresh(
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )

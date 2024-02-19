@@ -10,6 +10,7 @@ from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
+from homeassistant.util.json import json_loads
 
 from . import start
 from .entity import Entity
@@ -70,9 +71,9 @@ class StoredState:
         self.state = state
 
     def as_dict(self) -> dict[str, Any]:
-        """Return a dict representation of the stored state."""
+        """Return a dict representation of the stored state to be JSON serialized."""
         result = {
-            "state": self.state.as_dict(),
+            "state": self.state.json_fragment,
             "extra_data": self.extra_data.as_dict() if self.extra_data else None,
             "last_seen": self.last_seen,
         }
@@ -270,39 +271,13 @@ class RestoreStateData:
         # To fully mimic all the attribute data types when loaded from storage,
         # we're going to serialize it to JSON and then re-load it.
         if state is not None:
-            state = State.from_dict(_encode_complex(state.as_dict()))
+            state = State.from_dict(json_loads(state.as_dict_json))  # type: ignore[arg-type]
         if state is not None:
             self.last_states[entity_id] = StoredState(
                 state, extra_data, dt_util.utcnow()
             )
 
         self.entities.pop(entity_id)
-
-
-def _encode(value: Any) -> Any:
-    """Little helper to JSON encode a value."""
-    try:
-        return JSONEncoder.default(
-            None,  # type: ignore[arg-type]
-            value,
-        )
-    except TypeError:
-        return value
-
-
-def _encode_complex(value: Any) -> Any:
-    """Recursively encode all values with the JSONEncoder."""
-    if isinstance(value, dict):
-        return {_encode(key): _encode_complex(value) for key, value in value.items()}
-    if isinstance(value, list):
-        return [_encode_complex(val) for val in value]
-
-    new_value = _encode(value)
-
-    if isinstance(new_value, type(value)):
-        return new_value
-
-    return _encode_complex(new_value)
 
 
 class RestoreEntity(Entity):

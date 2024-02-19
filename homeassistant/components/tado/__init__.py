@@ -186,12 +186,13 @@ class TadoConnector:
 
     def get_mobile_devices(self):
         """Return the Tado mobile devices."""
-        return self.tado.getMobileDevices()
+        return self.tado.get_mobile_devices()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the registered zones."""
         self.update_devices()
+        self.update_mobile_devices()
         self.update_zones()
         self.update_home()
 
@@ -203,17 +204,31 @@ class TadoConnector:
             _LOGGER.error("Unable to connect to Tado while updating mobile devices")
             return
 
+        if not mobile_devices:
+            _LOGGER.debug("No linked mobile devices found for home ID %s", self.home_id)
+            return
+
+        # Errors are planned to be converted to exceptions
+        # in PyTado library, so this can be removed
+        if "errors" in mobile_devices and mobile_devices["errors"]:
+            _LOGGER.error(
+                "Error for home ID %s while updating mobile devices: %s",
+                self.home_id,
+                mobile_devices["errors"],
+            )
+            return
+
         for mobile_device in mobile_devices:
             self.data["mobile_device"][mobile_device["id"]] = mobile_device
+            _LOGGER.debug(
+                "Dispatching update to %s mobile device: %s",
+                self.home_id,
+                mobile_device,
+            )
 
-        _LOGGER.debug(
-            "Dispatching update to %s mobile devices: %s",
-            self.home_id,
-            mobile_devices,
-        )
         dispatcher_send(
             self.hass,
-            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED,
+            SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED.format(self.home_id),
         )
 
     def update_devices(self):
@@ -222,6 +237,20 @@ class TadoConnector:
             devices = self.tado.get_devices()
         except RuntimeError:
             _LOGGER.error("Unable to connect to Tado while updating devices")
+            return
+
+        if not devices:
+            _LOGGER.debug("No linked devices found for home ID %s", self.home_id)
+            return
+
+        # Errors are planned to be converted to exceptions
+        # in PyTado library, so this can be removed
+        if "errors" in devices and devices["errors"]:
+            _LOGGER.error(
+                "Error for home ID %s while updating devices: %s",
+                self.home_id,
+                devices["errors"],
+            )
             return
 
         for device in devices:

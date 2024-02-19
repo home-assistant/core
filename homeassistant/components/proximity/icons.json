@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "dir_of_travel": {
+        "default": "mdi:crosshairs-question",
+        "state": {
+          "arrived": "mdi:map-marker-radius-outline",
+          "away_from": "mdi:sign-direction-minus",
+          "stationary": "mdi:map-marker-outline",
+          "towards": "mdi:sign-direction-plus"
+        }
+      },
+      "nearest": {
+        "default": "mdi:near-me"
+      },
+      "nearest_dir_of_travel": {
+        "default": "mdi:crosshairs-question",
+        "state": {
+          "arrived": "mdi:map-marker-radius-outline",
+          "away_from": "mdi:sign-direction-minus",
+          "stationary": "mdi:map-marker-outline",
+          "towards": "mdi:sign-direction-plus"
+        }
+      }
+    }
+  }
+}

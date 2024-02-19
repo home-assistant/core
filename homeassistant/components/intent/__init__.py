@@ -1,6 +1,11 @@
 """The Intent integration."""
-import logging
 
+from __future__ import annotations
+
+import logging
+from typing import Any, Protocol
+
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import http
@@ -67,6 +72,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
+
+
+class IntentPlatformProtocol(Protocol):
+    """Define the format that intent platforms can have."""
+
+    async def async_setup_intents(self, hass: HomeAssistant) -> None:
+        """Set up platform intents."""
 
 
 class OnOffIntentHandler(intent.ServiceIntentHandler):
@@ -144,16 +156,18 @@ class GetStateIntentHandler(intent.IntentHandler):
         slots = self.async_validate_slots(intent_obj.slots)
 
         # Entity name to match
-        name: str | None = slots.get("name", {}).get("value")
+        name_slot = slots.get("name", {})
+        entity_name: str | None = name_slot.get("value")
+        entity_text: str | None = name_slot.get("text")
 
         # Look up area first to fail early
-        area_name = slots.get("area", {}).get("value")
+        area_slot = slots.get("area", {})
+        area_id = area_slot.get("value")
+        area_name = area_slot.get("text")
         area: ar.AreaEntry | None = None
-        if area_name is not None:
+        if area_id is not None:
             areas = ar.async_get(hass)
-            area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
-                area_name
-            )
+            area = areas.async_get_area(area_id)
             if area is None:
                 raise intent.IntentHandleError(f"No area named {area_name}")
 
@@ -175,7 +189,7 @@ class GetStateIntentHandler(intent.IntentHandler):
         states = list(
             intent.async_match_states(
                 hass,
-                name=name,
+                name=entity_name,
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
@@ -186,12 +200,19 @@ class GetStateIntentHandler(intent.IntentHandler):
         _LOGGER.debug(
             "Found %s state(s) that matched: name=%s, area=%s, domains=%s, device_classes=%s, assistant=%s",
             len(states),
-            name,
+            entity_name,
             area,
             domains,
             device_classes,
             intent_obj.assistant,
         )
+
+        if entity_name and (len(states) > 1):
+            # Multiple entities matched for the same name
+            raise intent.DuplicateNamesMatchedError(
+                name=entity_text or entity_name,
+                area=area_name or area_id,
+            )
 
         # Create response
         response = intent_obj.create_response()
@@ -249,7 +270,9 @@ class NevermindIntentHandler(intent.IntentHandler):
         return intent_obj.create_response()
 
 
-async def _async_process_intent(hass: HomeAssistant, domain: str, platform):
+async def _async_process_intent(
+    hass: HomeAssistant, domain: str, platform: IntentPlatformProtocol
+) -> None:
     """Process the intents of an integration."""
     await platform.async_setup_intents(hass)
 
@@ -268,9 +291,9 @@ class IntentHandleView(http.HomeAssistantView):
             }
         )
     )
-    async def post(self, request, data):
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle intent with name/data."""
-        hass = request.app["hass"]
+        hass: HomeAssistant = request.app["hass"]
         language = hass.config.language
 
         try:
@@ -286,7 +309,7 @@ class IntentHandleView(http.HomeAssistantView):
             intent_result.async_set_speech(str(err))
 
         if intent_result is None:
-            intent_result = intent.IntentResponse(language=language)
+            intent_result = intent.IntentResponse(language=language)  # type: ignore[unreachable]
             intent_result.async_set_speech("Sorry, I couldn't handle that")
 
         return self.json(intent_result)

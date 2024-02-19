@@ -12,7 +12,10 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_restart_device_button(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    websocket_mock,
 ) -> None:
     """Test restarting device button."""
     config_entry = await setup_unifi_integration(
@@ -37,8 +40,7 @@ async def test_restart_device_button(
 
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1
 
-    ent_reg = er.async_get(hass)
-    ent_reg_entry = ent_reg.async_get("button.switch_restart")
+    ent_reg_entry = entity_registry.async_get("button.switch_restart")
     assert ent_reg_entry.unique_id == "device_restart-00:00:00:00:01:01"
     assert ent_reg_entry.entity_category is EntityCategory.CONFIG
 
@@ -78,7 +80,10 @@ async def test_restart_device_button(
 
 
 async def test_power_cycle_poe(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    websocket_mock,
 ) -> None:
     """Test restarting device button."""
     config_entry = await setup_unifi_integration(
@@ -119,8 +124,7 @@ async def test_power_cycle_poe(
 
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 2
 
-    ent_reg = er.async_get(hass)
-    ent_reg_entry = ent_reg.async_get("button.switch_port_1_power_cycle")
+    ent_reg_entry = entity_registry.async_get("button.switch_port_1_power_cycle")
     assert ent_reg_entry.unique_id == "power_cycle-00:00:00:00:01:01_1"
     assert ent_reg_entry.entity_category is EntityCategory.CONFIG
 

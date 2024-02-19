@@ -58,7 +58,6 @@ async def test_api_events(
 
 async def test_calendar_created_when_workouts_available(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     withings: AsyncMock,
     polling_config_entry: MockConfigEntry,
     hass_client: ClientSessionGenerator,

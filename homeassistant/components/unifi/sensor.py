@@ -7,7 +7,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 from typing import Generic
 
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -32,8 +33,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfPower
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event as core_Event, HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
 from .const import DEVICE_STATES
@@ -109,11 +112,22 @@ def async_wlan_client_value_fn(controller: UniFiController, wlan: Wlan) -> int:
 @callback
 def async_device_uptime_value_fn(
     controller: UniFiController, device: Device
-) -> datetime:
-    """Calculate the uptime of the device."""
-    return (dt_util.now() - timedelta(seconds=device.uptime)).replace(
-        second=0, microsecond=0
-    )
+) -> datetime | None:
+    """Calculate the approximate time the device started (based on uptime returned from API, in seconds)."""
+    if device.uptime <= 0:
+        # Library defaults to 0 if uptime is not provided, e.g. when offline
+        return None
+    return (dt_util.now() - timedelta(seconds=device.uptime)).replace(microsecond=0)
+
+
+@callback
+def async_device_uptime_value_changed_fn(
+    old: StateType | date | datetime | Decimal, new: datetime | float | str | None
+) -> bool:
+    """Reject the new uptime value if it's too similar to the old one. Avoids unwanted fluctuation."""
+    if isinstance(old, datetime) and isinstance(new, datetime):
+        return new != old and abs((new - old).total_seconds()) > 120
+    return old is None or (new != old)
 
 
 @callback
@@ -130,6 +144,20 @@ def async_device_outlet_power_supported_fn(
 def async_device_outlet_supported_fn(controller: UniFiController, obj_id: str) -> bool:
     """Determine if a device supports reading overall power metrics."""
     return controller.api.devices[obj_id].outlet_ac_power_budget is not None
+
+
+@callback
+def async_client_is_connected_fn(controller: UniFiController, obj_id: str) -> bool:
+    """Check if client was last seen recently."""
+    client = controller.api.clients[obj_id]
+
+    if (
+        dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
+        > controller.option_detection_time
+    ):
+        return False
+
+    return True
 
 
 @dataclass(frozen=True)
@@ -153,6 +181,13 @@ class UnifiSensorEntityDescription(
 ):
     """Class describing UniFi sensor entity."""
 
+    is_connected_fn: Callable[[UniFiController, str], bool] | None = None
+    # Custom function to determine whether a state change should be recorded
+    value_changed_fn: Callable[
+        [StateType | date | datetime | Decimal, datetime | float | str | None],
+        bool,
+    ] = lambda old, new: old != new
+
 
 ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
     UnifiSensorEntityDescription[Clients, Client](
@@ -169,6 +204,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_client_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
+        is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda _: "RX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
         should_poll=False,
@@ -190,6 +226,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_client_device_info_fn,
         event_is_on=None,
         event_to_subscribe=None,
+        is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda _: "TX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
         should_poll=False,
@@ -330,6 +367,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         supported_fn=lambda controller, obj_id: True,
         unique_id_fn=lambda controller, obj_id: f"device_uptime-{obj_id}",
         value_fn=async_device_uptime_value_fn,
+        value_changed_fn=async_device_uptime_value_changed_fn,
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device temperature",
@@ -389,6 +427,16 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
     entity_description: UnifiSensorEntityDescription[HandlerT, ApiItemT]
 
     @callback
+    def _make_disconnected(self, *_: core_Event) -> None:
+        """No heart beat by device.
+
+        Set sensor as unavailable when client device is disconnected
+        """
+        if self._attr_available:
+            self._attr_available = False
+            self.async_write_ha_state()
+
+    @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state.
 
@@ -396,5 +444,38 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
         """
         description = self.entity_description
         obj = description.object_fn(self.controller.api, self._obj_id)
-        if (value := description.value_fn(self.controller, obj)) != self.native_value:
+        # Update the value only if value is considered to have changed relative to its previous state
+        if description.value_changed_fn(
+            self.native_value, (value := description.value_fn(self.controller, obj))
+        ):
             self._attr_native_value = value
+
+        if description.is_connected_fn is not None:
+            # Send heartbeat if client is connected
+            if description.is_connected_fn(self.controller, self._obj_id):
+                self.controller.async_heartbeat(
+                    self._attr_unique_id,
+                    dt_util.utcnow() + self.controller.option_detection_time,
+                )
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+        await super().async_added_to_hass()
+
+        if self.entity_description.is_connected_fn is not None:
+            # Register callback for missed heartbeat
+            self.async_on_remove(
+                async_dispatcher_connect(
+                    self.hass,
+                    f"{self.controller.signal_heartbeat_missed}_{self.unique_id}",
+                    self._make_disconnected,
+                )
+            )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect object when removed."""
+        await super().async_will_remove_from_hass()
+
+        if self.entity_description.is_connected_fn is not None:
+            # Remove heartbeat registration
+            self.controller.async_heartbeat(self._attr_unique_id)

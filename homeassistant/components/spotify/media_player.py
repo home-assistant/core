@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from asyncio import run_coroutine_threadsafe
+from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import requests
 from spotipy import SpotifyException
@@ -32,6 +33,10 @@ from . import HomeAssistantSpotifyData
 from .browse_media import async_browse_media_internal
 from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES, SPOTIFY_SCOPES
 from .util import fetch_image_url
+
+_SpotifyMediaPlayerT = TypeVar("_SpotifyMediaPlayerT", bound="SpotifyMediaPlayer")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,14 +85,18 @@ async def async_setup_entry(
     async_add_entities([spotify], True)
 
 
-def spotify_exception_handler(func):
+def spotify_exception_handler(
+    func: Callable[Concatenate[_SpotifyMediaPlayerT, _P], _R],
+) -> Callable[Concatenate[_SpotifyMediaPlayerT, _P], _R | None]:
     """Decorate Spotify calls to handle Spotify exception.
 
     A decorator that wraps the passed in function, catches Spotify errors,
     aiohttp exceptions and handles the availability of the media player.
     """
 
-    def wrapper(self, *args, **kwargs):
+    def wrapper(
+        self: _SpotifyMediaPlayerT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
         # pylint: disable=protected-access
         try:
             result = func(self, *args, **kwargs)
@@ -95,6 +104,7 @@ def spotify_exception_handler(func):
             return result
         except requests.RequestException:
             self._attr_available = False
+            return None
         except SpotifyException as exc:
             self._attr_available = False
             if exc.reason == "NO_ACTIVE_DEVICE":

@@ -1,6 +1,7 @@
 """Support for the cloud for speech to text service."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterable
 import logging
 
@@ -19,12 +20,13 @@ from homeassistant.components.stt import (
     SpeechToTextEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .assist_pipeline import async_migrate_cloud_pipeline_stt_engine
+from .assist_pipeline import async_migrate_cloud_pipeline_engine
 from .client import CloudClient
-from .const import DOMAIN, STT_ENTITY_UNIQUE_ID
+from .const import DATA_PLATFORMS_SETUP, DOMAIN, STT_ENTITY_UNIQUE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,18 +37,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Home Assistant Cloud speech platform via config entry."""
+    stt_platform_loaded: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][Platform.STT]
+    stt_platform_loaded.set()
     cloud: Cloud[CloudClient] = hass.data[DOMAIN]
     async_add_entities([CloudProviderEntity(cloud)])
 
 
 class CloudProviderEntity(SpeechToTextEntity):
-    """NabuCasa speech API provider."""
+    """Home Assistant Cloud speech API provider."""
 
     _attr_name = "Home Assistant Cloud"
     _attr_unique_id = STT_ENTITY_UNIQUE_ID
 
     def __init__(self, cloud: Cloud[CloudClient]) -> None:
-        """Home Assistant NabuCasa Speech to text."""
+        """Initialize cloud Speech to text entity."""
         self.cloud = cloud
 
     @property
@@ -81,7 +85,9 @@ class CloudProviderEntity(SpeechToTextEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added to hass."""
-        await async_migrate_cloud_pipeline_stt_engine(self.hass, self.entity_id)
+        await async_migrate_cloud_pipeline_engine(
+            self.hass, platform=Platform.STT, engine_id=self.entity_id
+        )
 
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]

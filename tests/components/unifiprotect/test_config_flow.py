@@ -38,7 +38,7 @@ from tests.common import MockConfigEntry
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
     hostname=DEVICE_HOSTNAME,
     ip=DEVICE_IP_ADDRESS,
-    macaddress=DEVICE_MAC_ADDRESS,
+    macaddress=DEVICE_MAC_ADDRESS.lower().replace(":", ""),
 )
 SSDP_DISCOVERY = (
     ssdp.SsdpServiceInfo(
@@ -226,9 +226,10 @@ async def test_form_reauth_auth(hass: HomeAssistant, nvr: NVR) -> None:
             result2["flow_id"],
             {
                 "username": "test-username",
-                "password": "test-password",
+                "password": "new-password",
             },
         )
+        await hass.async_block_till_done()
 
     assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"

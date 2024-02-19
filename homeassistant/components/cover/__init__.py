@@ -481,7 +481,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def _get_toggle_function(
         self, fns: dict[str, Callable[_P, _R]]
     ) -> Callable[_P, _R]:
-        if CoverEntityFeature.STOP | self.supported_features and (
+        if self.supported_features & CoverEntityFeature.STOP and (
             self.is_closing or self.is_opening
         ):
             return fns["stop"]
