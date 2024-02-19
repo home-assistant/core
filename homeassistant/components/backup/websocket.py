@@ -87,7 +87,7 @@ async def handle_backup_start(
     """Backup start notification."""
     manager: BackupManager = hass.data[DOMAIN]
     manager.backing_up = True
-    LOGGER.info("Backup start notification")
+    LOGGER.debug("Backup start notification")
 
     try:
         await manager.pre_backup_actions()
@@ -109,7 +109,7 @@ async def handle_backup_end(
     """Backup end notification."""
     manager: BackupManager = hass.data[DOMAIN]
     manager.backing_up = False
-    LOGGER.info("Backup end notification")
+    LOGGER.debug("Backup end notification")
 
     try:
         await manager.post_backup_actions()
