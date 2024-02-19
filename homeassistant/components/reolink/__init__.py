@@ -103,7 +103,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             except (
                 ReolinkError,
                 asyncio.CancelledError,
-                asyncio.exceptions.CancelledError,
             ) as err:
                 task = asyncio.current_task()
                 if task is not None:
