@@ -1741,8 +1741,8 @@ class ConfigEntries:
         Config entries which are created after Home Assistant is started can't be waited
         for, the function will just return if the config entry is loaded or not.
         """
-        if setup_event := self.hass.data.get(DATA_SETUP_DONE, {}).get(entry.domain):
-            await setup_event.wait()
+        if setup_future := self.hass.data.get(DATA_SETUP_DONE, {}).get(entry.domain):
+            await setup_future
         # The component was not loaded.
         if entry.domain not in self.hass.config.components:
             return False
@@ -2251,7 +2251,8 @@ class EntityRegistryDisabledHandler:
             event_filter=_handle_entry_updated_filter,
         )
 
-    async def _handle_entry_updated(self, event: Event) -> None:
+    @callback
+    def _handle_entry_updated(self, event: Event) -> None:
         """Handle entity registry entry update."""
         if self.registry is None:
             self.registry = entity_registry.async_get(self.hass)
