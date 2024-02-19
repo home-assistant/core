@@ -182,10 +182,10 @@ class CastStatusListener(
         if self._valid:
             self._cast_device.new_media_status(status)
 
-    def load_media_failed(self, item, error_code):
+    def load_media_failed(self, queue_item_id, error_code):
         """Handle reception of a new MediaStatus."""
         if self._valid:
-            self._cast_device.load_media_failed(item, error_code)
+            self._cast_device.load_media_failed(queue_item_id, error_code)
 
     def new_connection_status(self, status):
         """Handle reception of a new ConnectionStatus."""

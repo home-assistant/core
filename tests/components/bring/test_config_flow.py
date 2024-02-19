@@ -1,12 +1,12 @@
 """Test the Bring! config flow."""
 from unittest.mock import AsyncMock
 
-import pytest
-from python_bring_api.exceptions import (
+from bring_api.exceptions import (
     BringAuthException,
     BringParseException,
     BringRequestException,
 )
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.bring.const import DOMAIN
@@ -62,7 +62,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
     hass: HomeAssistant, mock_bring_client: AsyncMock, raise_error, text_error
 ) -> None:
     """Test unknown errors."""
-    mock_bring_client.loginAsync.side_effect = raise_error
+    mock_bring_client.login.side_effect = raise_error
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
@@ -76,7 +76,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
     assert result["errors"]["base"] == text_error
 
     # Recover
-    mock_bring_client.loginAsync.side_effect = None
+    mock_bring_client.login.side_effect = None
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )

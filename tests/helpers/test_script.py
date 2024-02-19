@@ -4633,7 +4633,7 @@ async def test_validate_action_config(
     """Validate action config."""
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     mock_device = device_registry.async_get_or_create(
