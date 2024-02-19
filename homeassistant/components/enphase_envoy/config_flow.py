@@ -103,13 +103,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 and entry.data[CONF_HOST] == self.ip_address
             ):
                 title = f"{ENVOY} {serial}" if entry.title == ENVOY else ENVOY
-                self.hass.config_entries.async_update_entry(
-                    entry, title=title, unique_id=serial
+                return self.async_update_reload_and_abort(
+                    entry, title=title, unique_id=serial, reason="already_configured"
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
-                return self.async_abort(reason="already_configured")
 
         return await self.async_step_user()
 
@@ -140,10 +136,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = (user_input or {}).get(CONF_HOST) or self.ip_address or ""
 
         if user_input is not None:
-            if not self._reauth_entry:
-                if host in self._async_current_hosts():
-                    return self.async_abort(reason="already_configured")
-
             try:
                 envoy = await validate_input(
                     self.hass,
@@ -164,23 +156,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 name = self._async_envoy_name()
 
                 if self._reauth_entry:
-                    self.hass.config_entries.async_update_entry(
+                    return self.async_update_reload_and_abort(
                         self._reauth_entry,
                         data=self._reauth_entry.data | user_input,
                     )
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(
-                            self._reauth_entry.entry_id
-                        )
-                    )
-                    return self.async_abort(reason="reauth_successful")
 
                 if not self.unique_id:
                     await self.async_set_unique_id(envoy.serial_number)
                     name = self._async_envoy_name()
 
                 if self.unique_id:
-                    self._abort_if_unique_id_configured({CONF_HOST: host})
+                    # If envoy exists in configuration update fields and exit
+                    self._abort_if_unique_id_configured(
+                        {
+                            CONF_HOST: host,
+                            CONF_USERNAME: user_input[CONF_USERNAME],
+                            CONF_PASSWORD: user_input[CONF_PASSWORD],
+                        },
+                        error="reauth_successful",
+                    )
 
                 # CONF_NAME is still set for legacy backwards compatibility
                 return self.async_create_entry(

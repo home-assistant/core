@@ -57,7 +57,7 @@ STATE_MAP = {"error": STATE_PROBLEM, "started": STATE_ON, "stopped": STATE_OFF}
 
 class UpCloudDataUpdateCoordinator(
     DataUpdateCoordinator[dict[str, upcloud_api.Server]]
-):
+):  # pylint: disable=hass-enforce-coordinator-module
     """UpCloud data update coordinator."""
 
     def __init__(

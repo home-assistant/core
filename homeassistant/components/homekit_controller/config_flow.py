@@ -20,7 +20,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import device_registry as dr
 
@@ -77,17 +77,6 @@ def normalize_hkid(hkid: str) -> str:
 def formatted_category(category: Categories) -> str:
     """Return a human readable category name."""
     return str(category.name).replace("_", " ").title()
-
-
-@callback
-def find_existing_config_entry(
-    hass: HomeAssistant, upper_case_hkid: str
-) -> config_entries.ConfigEntry | None:
-    """Return a set of the configured hosts."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data.get("AccessoryPairingID") == upper_case_hkid:
-            return entry
-    return None
 
 
 def ensure_pin_format(pin: str, allow_insecure_setup_codes: Any = None) -> str:
@@ -283,9 +272,13 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Device isn't paired with us or anyone else.
         # But we have a 'complete' config entry for it - that is probably
-        # invalid. Remove it automatically.
-        if not paired and (
-            existing := find_existing_config_entry(self.hass, upper_case_hkid)
+        # invalid. Remove it automatically if it has an accessory pairing id
+        # (which means it was paired with us at some point) and was not
+        # ignored by the user.
+        if (
+            not paired
+            and existing_entry
+            and (accessory_pairing_id := existing_entry.data.get("AccessoryPairingID"))
         ):
             if self.controller is None:
                 await self._async_setup_controller()
@@ -295,7 +288,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             assert self.controller
 
             pairing = self.controller.load_pairing(
-                existing.data["AccessoryPairingID"], dict(existing.data)
+                accessory_pairing_id, dict(existing_entry.data)
             )
 
             try:
@@ -310,7 +303,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     model,
                     hkid,
                 )
-                await self.hass.config_entries.async_remove(existing.entry_id)
+                await self.hass.config_entries.async_remove(existing_entry.entry_id)
             else:
                 _LOGGER.debug(
                     (

@@ -1,5 +1,4 @@
 """Test UniFi Network."""
-import asyncio
 from copy import deepcopy
 from datetime import timedelta
 from http import HTTPStatus
@@ -243,7 +242,9 @@ async def setup_unifi_integration(
 
 
 async def test_controller_setup(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Successful setup."""
     with patch(
@@ -279,7 +280,7 @@ async def test_controller_setup(
     assert controller.signal_options_update == "unifi-options-1"
     assert controller.signal_heartbeat_missed == "unifi-heartbeat-missed"
 
-    device_entry = dr.async_get(hass).async_get_or_create(
+    device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(UNIFI_DOMAIN, config_entry.unique_id)},
     )
@@ -421,7 +422,7 @@ async def test_reconnect_mechanism(
 @pytest.mark.parametrize(
     "exception",
     [
-        asyncio.TimeoutError,
+        TimeoutError,
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         aiounifi.AiounifiException,
@@ -459,13 +460,13 @@ async def test_get_unifi_controller_verify_ssl_false(hass: HomeAssistant) -> Non
 @pytest.mark.parametrize(
     ("side_effect", "raised_exception"),
     [
-        (asyncio.TimeoutError, CannotConnect),
+        (TimeoutError, CannotConnect),
         (aiounifi.BadGateway, CannotConnect),
+        (aiounifi.Forbidden, CannotConnect),
         (aiounifi.ServiceUnavailable, CannotConnect),
         (aiounifi.RequestError, CannotConnect),
         (aiounifi.ResponseError, CannotConnect),
         (aiounifi.Unauthorized, AuthenticationRequired),
-        (aiounifi.Forbidden, AuthenticationRequired),
         (aiounifi.LoginRequired, AuthenticationRequired),
         (aiounifi.AiounifiException, AuthenticationRequired),
     ],

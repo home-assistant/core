@@ -28,7 +28,7 @@ from .utils import async_dispatch_id as _ufpd
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ProtectButtonEntityDescription(
     ProtectSetableKeysMixin[T], ButtonEntityDescription
 ):
