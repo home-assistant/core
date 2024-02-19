@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, STATES_MAP, SUPPORTED_FEATURES
 from .model import DoorDevice
 
-SCAN_INTERVAL = timedelta(seconds=300)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup_entry(
@@ -91,15 +91,10 @@ class AladdinDevice(CoverEntity):
 
     async def async_added_to_hass(self) -> None:
         """Connect Aladdin Connect to the cloud."""
-
-        self._acc.register_callback(
-            self.async_write_ha_state, self._serial, self._number
-        )
         await self._acc.get_doors(self._serial)
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Aladdin Connect before removing."""
-        self._acc.unregister_callback(self._serial, self._number)
         await self._acc.close()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -118,7 +113,10 @@ class AladdinDevice(CoverEntity):
             await self._acc.get_doors(self._serial)
             self._attr_available = True
 
-        except (session_manager.ConnectionError, session_manager.InvalidPasswordError):
+        except (
+            session_manager.AladdinConnectionError,
+            session_manager.InvalidPasswordError,
+        ):
             self._attr_available = False
 
     @property

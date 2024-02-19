@@ -16,7 +16,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CLIENT_ID, DOMAIN
+from .const import DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -37,11 +37,11 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
         async_get_clientsession(hass),
-        CLIENT_ID,
+        None,
     )
     try:
         await acc.login()
-    except (ClientError, TimeoutError, Aladdin.ConnectionError) as ex:
+    except (ClientError, TimeoutError, Aladdin.AladdinConnectionError) as ex:
         raise ex
 
     except Aladdin.InvalidPasswordError as ex:
@@ -80,7 +80,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
-            except (ClientError, TimeoutError, Aladdin.ConnectionError):
+            except (ClientError, TimeoutError, Aladdin.AladdinConnectionError):
                 errors["base"] = "cannot_connect"
 
             else:
@@ -116,7 +116,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
 
-        except (ClientError, TimeoutError, Aladdin.ConnectionError):
+        except (ClientError, TimeoutError, Aladdin.AladdinConnectionError):
             errors["base"] = "cannot_connect"
 
         else:
