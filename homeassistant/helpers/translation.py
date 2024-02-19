@@ -5,10 +5,9 @@ import asyncio
 from collections.abc import Iterable, Mapping
 import logging
 import string
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.const import (
-    EVENT_COMPONENT_LOADED,
     EVENT_CORE_CONFIG_UPDATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -472,35 +471,6 @@ def async_setup(hass: HomeAssistant) -> None:
         _LOGGER.debug("Loading translations for language: %s", new_language)
         await cache.async_load(new_language, hass.config.components)
 
-    @callback
-    def _async_load_translations_for_component_filter(event: Event) -> bool:
-        """Filter out unwanted events."""
-        component: str | None = event.data.get("component")
-        # Platforms don't have their own translations, skip them
-        return bool(
-            component
-            and "." not in component
-            and not cache.async_is_loaded(hass.config.language, {component})
-        )
-
-    async def _async_load_translations_for_component(event: Event) -> None:
-        """Load translations for a component."""
-        component: str | None = event.data.get("component")
-        if TYPE_CHECKING:
-            assert component is not None
-        language = hass.config.language
-        _LOGGER.debug(
-            "Loading translations for language: %s and component: %s",
-            language,
-            component,
-        )
-        await cache.async_load(language, {component})
-
-    hass.bus.async_listen(
-        EVENT_COMPONENT_LOADED,
-        _async_load_translations_for_component,
-        event_filter=_async_load_translations_for_component_filter,
-    )
     hass.bus.async_listen(
         EVENT_CORE_CONFIG_UPDATE,
         _async_load_translations,
@@ -512,6 +482,14 @@ async def async_load_integrations(hass: HomeAssistant, integrations: set[str]) -
     """Load translations for integrations."""
     await _async_get_translations_cache(hass).async_load(
         hass.config.language, integrations
+    )
+
+
+@callback
+def async_translations_loaded(hass: HomeAssistant, components: set[str]) -> bool:
+    """Return if the given components are loaded for the language."""
+    return _async_get_translations_cache(hass).async_is_loaded(
+        hass.config.language, components
     )
 
 

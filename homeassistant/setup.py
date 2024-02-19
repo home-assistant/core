@@ -19,6 +19,7 @@ from .const import (
 )
 from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from .exceptions import DependencyError, HomeAssistantError
+from .helpers import translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType, EventType
 from .util import ensure_unique_string
@@ -312,7 +313,9 @@ async def _async_setup_component(
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
-    with async_start_setup(hass, [domain]):
+    integration_set = {domain}
+
+    with async_start_setup(hass, integration_set):
         if hasattr(component, "PLATFORM_SCHEMA"):
             # Entity components have their own warning
             warn_task = None
@@ -373,6 +376,9 @@ async def _async_setup_component(
                 "successful. Disabling component."
             )
             return False
+
+        if not translation.async_translations_loaded(hass, integration_set):
+            await translation.async_load_integrations(hass, integration_set)
 
         # Flush out async_setup calling create_task. Fragile but covered by test.
         await asyncio.sleep(0)
