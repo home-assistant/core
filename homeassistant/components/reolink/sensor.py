@@ -36,7 +36,7 @@ class ReolinkSensorEntityDescription(
 ):
     """A class that describes sensor entities for a camera channel."""
 
-    value: Callable[[Host, int], int]
+    value: Callable[[Host, int], int | float]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -76,6 +76,29 @@ HOST_SENSORS = (
     ),
 )
 
+HDD_SENSORS = (
+    ReolinkSensorEntityDescription(
+        key="hdd_storage",
+        cmd_key="GetHddInfo",
+        translation_key="hdd_storage",
+        icon="mdi:harddisk",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda api, idx: api.hdd_storage(idx),
+        supported=lambda api, idx: api.supported(None, "hdd") and api.hdd_type(idx) == "HDD",
+    ),
+    ReolinkSensorEntityDescription(
+        key="sd_storage",
+        cmd_key="GetHddInfo",
+        translation_key="sd_storage",
+        icon="mdi:micro-sd",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value=lambda api, idx: api.hdd_storage(idx),
+        supported=lambda api, idx: api.supported(None, "hdd") and api.hdd_type(idx) == "SD",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -85,7 +108,7 @@ async def async_setup_entry(
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[ReolinkSensorEntity | ReolinkHostSensorEntity] = [
+    entities: list[ReolinkSensorEntity | ReolinkHostSensorEntity | ReolinkHddSensorEntity] = [
         ReolinkSensorEntity(reolink_data, channel, entity_description)
         for entity_description in SENSORS
         for channel in reolink_data.host.api.channels
@@ -96,6 +119,14 @@ async def async_setup_entry(
             ReolinkHostSensorEntity(reolink_data, entity_description)
             for entity_description in HOST_SENSORS
             if entity_description.supported(reolink_data.host.api)
+        ]
+    )
+    entities.extend(
+        [
+            ReolinkHddSensorEntity(reolink_data, hdd_index, entity_description)
+            for entity_description in HDD_SENSORS
+            for hdd_index in reolink_data.host.api.hdd_list
+            if entity_description.supported(reolink_data.host.api, hdd_index)
         ]
     )
     async_add_entities(entities)
@@ -140,3 +171,33 @@ class ReolinkHostSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self.entity_description.value(self._host.api)
+
+
+class ReolinkHddSensorEntity(ReolinkHostCoordinatorEntity, SensorEntity):
+    """Base sensor class for Reolink host sensors."""
+
+    entity_description: ReolinkSensorEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        hdd_index: int,
+        entity_description: ReolinkSensorEntityDescription,
+    ) -> None:
+        """Initialize Reolink host sensor."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data)
+        self._hdd_index = hdd_index
+        self._attr_unique_id = (
+            f"{self._host.unique_id}_{hdd_index}_{entity_description.key}"
+        )
+
+    @property
+    def native_value(self) -> StateType | date | datetime | Decimal:
+        """Return the value reported by the sensor."""
+        return self.entity_description.value(self._host.api, self._hdd_index)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._host.api.hdd_available(self._hdd_index) and super().available
