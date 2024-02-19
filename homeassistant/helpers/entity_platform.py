@@ -514,7 +514,7 @@ class EntityPlatform:
         loop. This is because the update is likely to yield control to the
         event loop and will finish faster if we run them concurrently.
         """
-        results = None
+        results: list[BaseException | None] | None = None
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 results = await asyncio.gather(*coros, return_exceptions=True)
