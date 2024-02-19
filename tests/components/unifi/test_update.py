@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_controller import SITE, setup_unifi_integration
+from .test_hub import SITE, setup_unifi_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 

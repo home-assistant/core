@@ -8,7 +8,7 @@ from homeassistant.components.unifi.errors import AuthenticationRequired, Cannot
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .test_controller import DEFAULT_CONFIG_ENTRY_ID, setup_unifi_integration
+from .test_hub import DEFAULT_CONFIG_ENTRY_ID, setup_unifi_integration
 
 from tests.common import flush_store
 from tests.test_util.aiohttp import AiohttpClientMocker

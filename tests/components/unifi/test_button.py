@@ -6,7 +6,7 @@ from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .test_controller import setup_unifi_integration
+from .test_hub import setup_unifi_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 

@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr
 import homeassistant.util.dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.unifi.test_controller import DEFAULT_CONFIG_ENTRY_ID
+from tests.components.unifi.test_hub import DEFAULT_CONFIG_ENTRY_ID
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
