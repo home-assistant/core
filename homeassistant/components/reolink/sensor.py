@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -87,7 +87,9 @@ HDD_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value=lambda api, idx: api.hdd_storage(idx),
-        supported=lambda api, idx: api.supported(None, "hdd") and api.hdd_type(idx) == "HDD",
+        supported=lambda api, idx: (
+            api.supported(None, "hdd") and api.hdd_type(idx) == "HDD"
+        ),
     ),
     ReolinkSensorEntityDescription(
         key="sd_storage",
@@ -99,7 +101,9 @@ HDD_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value=lambda api, idx: api.hdd_storage(idx),
-        supported=lambda api, idx: api.supported(None, "hdd") and api.hdd_type(idx) == "SD",
+        supported=lambda api, idx: (
+            api.supported(None, "hdd") and api.hdd_type(idx) == "SD"
+        ),
     ),
 )
 
@@ -112,7 +116,9 @@ async def async_setup_entry(
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
 
-    entities: list[ReolinkSensorEntity | ReolinkHostSensorEntity | ReolinkHddSensorEntity] = [
+    entities: list[
+        ReolinkSensorEntity | ReolinkHostSensorEntity | ReolinkHddSensorEntity
+    ] = [
         ReolinkSensorEntity(reolink_data, channel, entity_description)
         for entity_description in SENSORS
         for channel in reolink_data.host.api.channels
