@@ -82,16 +82,12 @@ async def test_calendar_edge_cases(
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
-    freezer: FrozenDateTimeFactory,
     start_date: datetime,
     end_date: datetime,
 ) -> None:
     """Test edge cases."""
     start_date = start_date.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
     end_date = end_date.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
-
-    # test_time = datetime(2024, 1, 12, 11, tzinfo=dt_util.DEFAULT_TIME_ZONE)
-    # freezer.move_to(test_time)
 
     # set schedule to be only on Sunday, 07:00 - 07:30
     mock_lamarzocco.schedule[2]["enable"] = "Disabled"
