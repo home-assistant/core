@@ -5,7 +5,13 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_2, MODEL_25, MODEL_GAS, RPC_GENERATIONS
+from aioshelly.const import (
+    MODEL_2,
+    MODEL_25,
+    MODEL_GAS,
+    MODEL_WALL_DISPLAY,
+    RPC_GENERATIONS,
+)
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -20,7 +26,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DOMAIN, GAS_VALVE_OPEN_STATES, MODEL_WALL_DISPLAY
+from .const import DOMAIN, GAS_VALVE_OPEN_STATES
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
 from .entity import (
     BlockEntityDescription,
@@ -35,6 +41,7 @@ from .utils import (
     get_rpc_key_ids,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
+    is_rpc_thermostat_internal_actuator,
 )
 
 
@@ -128,7 +135,7 @@ def async_setup_rpc_entry(
             continue
 
         if coordinator.model == MODEL_WALL_DISPLAY:
-            if not coordinator.device.shelly.get("relay_in_thermostat", False):
+            if not is_rpc_thermostat_internal_actuator(coordinator.device.status):
                 # Wall Display relay is not used as the thermostat actuator,
                 # we need to remove a climate entity
                 unique_id = f"{coordinator.mac}-thermostat:{id_}"
@@ -153,6 +160,7 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
     """
 
     entity_description: BlockSwitchDescription
+    _attr_translation_key = "valve_switch"
 
     def __init__(
         self,
@@ -172,11 +180,6 @@ class BlockValveSwitch(ShellyBlockAttributeEntity, SwitchEntity):
             return self.control_result["state"] in GAS_VALVE_OPEN_STATES
 
         return self.attribute_value in GAS_VALVE_OPEN_STATES
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return "mdi:valve-open" if self.is_on else "mdi:valve-closed"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Open valve."""

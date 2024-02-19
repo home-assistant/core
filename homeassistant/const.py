@@ -15,7 +15,7 @@ from .helpers.deprecation import (
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2024
-MINOR_VERSION: Final = 2
+MINOR_VERSION: Final = 3
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -251,6 +251,7 @@ CONF_SERVICE: Final = "service"
 CONF_SERVICE_DATA: Final = "data"
 CONF_SERVICE_DATA_TEMPLATE: Final = "data_template"
 CONF_SERVICE_TEMPLATE: Final = "service_template"
+CONF_SET_CONVERSATION_RESPONSE: Final = "set_conversation_response"
 CONF_SHOW_ON_MAP: Final = "show_on_map"
 CONF_SLAVE: Final = "slave"
 CONF_SOURCE: Final = "source"
@@ -1041,7 +1042,9 @@ class UnitOfVolumeFlowRate(StrEnum):
     """Volume flow rate units."""
 
     CUBIC_METERS_PER_HOUR = "m³/h"
-    CUBIC_FEET_PER_MINUTE = "ft³/m"
+    CUBIC_FEET_PER_MINUTE = "ft³/min"
+    LITERS_PER_MINUTE = "L/min"
+    GALLONS_PER_MINUTE = "gal/min"
 
 
 _DEPRECATED_VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = DeprecatedConstantEnum(

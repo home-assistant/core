@@ -219,6 +219,10 @@
     "turn_off": {
       "name": "[%key:common::action::turn_off%]",
       "description": "Turns climate device off."
+    },
+    "toggle": {
+      "name": "[%key:common::action::toggle%]",
+      "description": "Toggles climate device, from on to off, or off to on."
     }
   },
   "selector": {

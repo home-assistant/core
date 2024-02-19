@@ -1,4 +1,5 @@
 """Module to coordinate user intentions."""
+
 from __future__ import annotations
 
 import asyncio
@@ -152,6 +153,17 @@ class NoStatesMatchedError(IntentError):
         self.area = area
         self.domains = domains
         self.device_classes = device_classes
+
+
+class DuplicateNamesMatchedError(IntentError):
+    """Error when two or more entities with the same name matched."""
+
+    def __init__(self, name: str, area: str | None) -> None:
+        """Initialize error."""
+        super().__init__()
+
+        self.name = name
+        self.area = area
 
 
 def _is_device_class(
@@ -317,8 +329,6 @@ def async_match_states(
         for state, entity in states_and_entities:
             if _has_name(state, entity, name):
                 yield state
-                break
-
     else:
         # Not filtered by name
         for state, _entity in states_and_entities:
@@ -401,19 +411,21 @@ class ServiceIntentHandler(IntentHandler):
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
 
-        name: str | None = slots.get("name", {}).get("value")
-        if name == "all":
+        name_slot = slots.get("name", {})
+        entity_name: str | None = name_slot.get("value")
+        entity_text: str | None = name_slot.get("text")
+        if entity_name == "all":
             # Don't match on name if targeting all entities
-            name = None
+            entity_name = None
 
         # Look up area first to fail early
-        area_name = slots.get("area", {}).get("value")
+        area_slot = slots.get("area", {})
+        area_id = area_slot.get("value")
+        area_name = area_slot.get("text")
         area: area_registry.AreaEntry | None = None
-        if area_name is not None:
+        if area_id is not None:
             areas = area_registry.async_get(hass)
-            area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
-                area_name
-            )
+            area = areas.async_get_area(area_id)
             if area is None:
                 raise IntentHandleError(f"No area named {area_name}")
 
@@ -431,7 +443,7 @@ class ServiceIntentHandler(IntentHandler):
         states = list(
             async_match_states(
                 hass,
-                name=name,
+                name=entity_name,
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
@@ -442,13 +454,23 @@ class ServiceIntentHandler(IntentHandler):
         if not states:
             # No states matched constraints
             raise NoStatesMatchedError(
-                name=name,
-                area=area_name,
+                name=entity_text or entity_name,
+                area=area_name or area_id,
                 domains=domains,
                 device_classes=device_classes,
             )
 
+        if entity_name and (len(states) > 1):
+            # Multiple entities matched for the same name
+            raise DuplicateNamesMatchedError(
+                name=entity_text or entity_name,
+                area=area_name or area_id,
+            )
+
         response = await self.async_handle_states(intent_obj, states, area)
+
+        # Make the matched states available in the response
+        response.async_set_states(matched_states=states, unmatched_states=[])
 
         return response
 
@@ -537,7 +559,7 @@ class ServiceIntentHandler(IntentHandler):
         """
         try:
             await asyncio.wait({task}, timeout=self.service_timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pass
         except asyncio.CancelledError:
             # Task calling us was cancelled, so cancel service call task, and wait for

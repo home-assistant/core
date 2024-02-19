@@ -410,7 +410,7 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
 async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test timeouts at each step."""
 
-    with patch.object(hass.timeout, "async_timeout", side_effect=asyncio.TimeoutError):
+    with patch.object(hass.timeout, "async_timeout", side_effect=TimeoutError):
         await hass.async_stop()
 
     assert hass.state is CoreState.stopped
@@ -1194,8 +1194,8 @@ async def test_statemachine_remove(hass: HomeAssistant) -> None:
     assert len(events) == 1
 
 
-async def test_statemachine_case_insensitivty(hass: HomeAssistant) -> None:
-    """Test insensitivty."""
+async def test_state_machine_case_insensitivity(hass: HomeAssistant) -> None:
+    """Test setting and getting states entity_id insensitivity."""
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
     hass.states.async_set("light.BOWL", "off")
@@ -1203,6 +1203,15 @@ async def test_statemachine_case_insensitivty(hass: HomeAssistant) -> None:
 
     assert hass.states.is_state("light.bowl", "off")
     assert len(events) == 1
+
+    hass.states.async_set("ligHT.Bowl", "on")
+    assert hass.states.get("light.bowl").state == "on"
+
+    hass.states.async_set("light.BOWL", "off")
+    assert hass.states.get("light.BoWL").state == "off"
+
+    hass.states.async_set("light.bowl", "on")
+    assert hass.states.get("light.bowl").state == "on"
 
 
 async def test_statemachine_last_changed_not_updated_on_same_state(
@@ -1269,13 +1278,37 @@ def test_service_call_repr() -> None:
     )
 
 
-async def test_serviceregistry_has_service(hass: HomeAssistant) -> None:
+async def test_service_registry_has_service(hass: HomeAssistant) -> None:
     """Test has_service method."""
     hass.services.async_register("test_domain", "test_service", lambda call: None)
     assert len(hass.services.async_services()) == 1
     assert hass.services.has_service("tesT_domaiN", "tesT_servicE")
     assert not hass.services.has_service("test_domain", "non_existing")
     assert not hass.services.has_service("non_existing", "test_service")
+
+
+async def test_service_registry_service_enumeration(hass: HomeAssistant) -> None:
+    """Test enumerating services methods."""
+    hass.services.async_register("test_domain", "test_service", lambda call: None)
+    services1 = hass.services.async_services()
+    services2 = hass.services.async_services()
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is not services2  # should be a copy
+
+    services1 = hass.services.async_services_internal()
+    services2 = hass.services.async_services_internal()
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is services2  # should be the same object
+
+    assert hass.services.async_services_for_domain("unknown") == {}
+
+    services1 = hass.services.async_services_for_domain("test_domain")
+    services2 = hass.services.async_services_for_domain("test_domain")
+    assert len(services1) == 1
+    assert services1 == services2
+    assert services1 is not services2  # should be a copy
 
 
 async def test_serviceregistry_call_with_blocking_done_in_time(
@@ -1723,9 +1756,7 @@ async def test_bad_timezone_raises_value_error(hass: HomeAssistant) -> None:
         await hass.config.async_update(time_zone="not_a_timezone")
 
 
-async def test_start_taking_too_long(
-    event_loop, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_start_taking_too_long(caplog: pytest.LogCaptureFixture) -> None:
     """Test when async_start takes too long."""
     hass = ha.HomeAssistant("/test/ha-config")
     caplog.set_level(logging.WARNING)
@@ -2787,3 +2818,16 @@ def test_deprecated_constants(
 ) -> None:
     """Test deprecated constants."""
     import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")
+
+
+def test_one_time_listener_repr(hass: HomeAssistant) -> None:
+    """Test one time listener repr."""
+
+    def _listener(event: ha.Event):
+        """Test listener."""
+
+    one_time_listener = ha._OneTimeListener(hass, _listener)
+    repr_str = repr(one_time_listener)
+    assert "OneTimeListener" in repr_str
+    assert "test_core" in repr_str
+    assert "_listener" in repr_str

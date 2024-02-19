@@ -291,7 +291,7 @@ def _async_dispatch_entity_id_event(
     """Dispatch to listeners."""
     if not (callbacks_list := callbacks.get(event.data["entity_id"])):
         return
-    for job in callbacks_list[:]:
+    for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -428,7 +428,7 @@ def _async_dispatch_old_entity_id_or_entity_id_event(
         )
     ):
         return
-    for job in callbacks_list[:]:
+    for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -499,7 +499,7 @@ def _async_dispatch_device_id_event(
     """Dispatch to listeners."""
     if not (callbacks_list := callbacks.get(event.data["device_id"])):
         return
-    for job in callbacks_list[:]:
+    for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -1107,6 +1107,24 @@ class TrackTemplateResultInfo:
         return result_as_boolean(result)
 
     @callback
+    def _apply_update(
+        self,
+        updates: list[TrackTemplateResult],
+        update: bool | TrackTemplateResult,
+        template: Template,
+    ) -> bool:
+        """Handle updates of a tracked template."""
+        if not update:
+            return False
+
+        self._setup_time_listener(template, self._info[template].has_time)
+
+        if isinstance(update, TrackTemplateResult):
+            updates.append(update)
+
+        return True
+
+    @callback
     def _refresh(
         self,
         event: EventType[EventStateChangedData] | None,
@@ -1129,20 +1147,6 @@ class TrackTemplateResultInfo:
         info_changed = False
         now = event.time_fired if not replayed and event else dt_util.utcnow()
 
-        def _apply_update(
-            update: bool | TrackTemplateResult, template: Template
-        ) -> bool:
-            """Handle updates of a tracked template."""
-            if not update:
-                return False
-
-            self._setup_time_listener(template, self._info[template].has_time)
-
-            if isinstance(update, TrackTemplateResult):
-                updates.append(update)
-
-            return True
-
         block_updates = False
         super_template = self._track_templates[0] if self._has_super_template else None
 
@@ -1151,7 +1155,7 @@ class TrackTemplateResultInfo:
         # Update the super template first
         if super_template is not None:
             update = self._render_template_if_ready(super_template, now, event)
-            info_changed |= _apply_update(update, super_template.template)
+            info_changed |= self._apply_update(updates, update, super_template.template)
 
             if isinstance(update, TrackTemplateResult):
                 super_result = update.result
@@ -1182,7 +1186,9 @@ class TrackTemplateResultInfo:
                     continue
 
                 update = self._render_template_if_ready(track_template_, now, event)
-                info_changed |= _apply_update(update, track_template_.template)
+                info_changed |= self._apply_update(
+                    updates, update, track_template_.template
+                )
 
         if info_changed:
             assert self._track_state_changes
@@ -1442,7 +1448,7 @@ def async_track_point_in_utc_time(
     """
     # Ensure point_in_time is UTC
     utc_point_in_time = dt_util.as_utc(point_in_time)
-    expected_fire_timestamp = dt_util.utc_to_timestamp(utc_point_in_time)
+    expected_fire_timestamp = utc_point_in_time.timestamp()
     job = (
         action
         if isinstance(action, HassJob)

@@ -34,7 +34,6 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     LaMarzoccoSensorEntityDescription(
         key="drink_stats_coffee",
         translation_key="drink_stats_coffee",
-        icon="mdi:chart-line",
         native_unit_of_measurement="drinks",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda lm: lm.current_status.get("drinks_k1", 0),
@@ -43,7 +42,6 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     LaMarzoccoSensorEntityDescription(
         key="drink_stats_flushing",
         translation_key="drink_stats_flushing",
-        icon="mdi:chart-line",
         native_unit_of_measurement="drinks",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda lm: lm.current_status.get("total_flushing", 0),
@@ -52,7 +50,6 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     LaMarzoccoSensorEntityDescription(
         key="shot_timer",
         translation_key="shot_timer",
-        icon="mdi:timer",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DURATION,
@@ -64,8 +61,8 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     LaMarzoccoSensorEntityDescription(
         key="current_temp_coffee",
         translation_key="current_temp_coffee",
-        icon="mdi:thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda lm: lm.current_status.get("coffee_temp", 0),
@@ -73,8 +70,8 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     LaMarzoccoSensorEntityDescription(
         key="current_temp_steam",
         translation_key="current_temp_steam",
-        icon="mdi:thermometer",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=1,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=lambda lm: lm.current_status.get("steam_temp", 0),

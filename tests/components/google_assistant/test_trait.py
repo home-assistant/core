@@ -1080,7 +1080,9 @@ async def test_temperature_setting_climate_onoff(hass: HomeAssistant) -> None:
             "climate.bla",
             climate.HVACMode.AUTO,
             {
-                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
                 climate.ATTR_HVAC_MODES: [
                     climate.HVACMode.OFF,
                     climate.HVACMode.COOL,
@@ -1161,7 +1163,9 @@ async def test_temperature_setting_climate_range(hass: HomeAssistant) -> None:
             {
                 climate.ATTR_CURRENT_TEMPERATURE: 70,
                 climate.ATTR_CURRENT_HUMIDITY: 25,
-                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
                 climate.ATTR_HVAC_MODES: [
                     STATE_OFF,
                     climate.HVACMode.COOL,
@@ -1273,7 +1277,9 @@ async def test_temperature_setting_climate_setpoint(hass: HomeAssistant) -> None
             "climate.bla",
             climate.HVACMode.COOL,
             {
-                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE,
+                ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.TARGET_TEMPERATURE
+                | ClimateEntityFeature.TURN_ON
+                | ClimateEntityFeature.TURN_OFF,
                 climate.ATTR_HVAC_MODES: [STATE_OFF, climate.HVACMode.COOL],
                 climate.ATTR_MIN_TEMP: 10,
                 climate.ATTR_MAX_TEMP: 30,
