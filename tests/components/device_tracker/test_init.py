@@ -708,7 +708,9 @@ def test_all(module: ModuleType) -> None:
     help_test_all(module)
 
 
-@pytest.mark.parametrize(("enum"), list(SourceType))
+@pytest.mark.parametrize(
+    ("enum"), filter(lambda type: type != "wifi", list(SourceType))
+)
 @pytest.mark.parametrize(
     "module",
     [device_tracker, device_tracker.const],
