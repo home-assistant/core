@@ -504,7 +504,7 @@ class EntityPlatform:
             self.hass.loop,
         ).result()
 
-    async def _async_add_and_update_entities_with_timeout(
+    async def _async_add_and_update_entities(
         self, coros: list[Coroutine[Any, Any, None]], timeout: float
     ) -> None:
         """Add entities for a single platform and update them.
@@ -536,7 +536,7 @@ class EntityPlatform:
                 )
                 raise result
 
-    async def _async_add_entities_with_timeout(
+    async def _async_add_entities(
         self, coros: list[Coroutine[Any, Any, None]], timeout: float
     ) -> None:
         """Add entities for a single platform without updating.
@@ -596,9 +596,9 @@ class EntityPlatform:
 
         timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(coros), SLOW_ADD_MIN_TIMEOUT)
         if update_before_add:
-            await self._async_add_and_update_entities_with_timeout(coros, timeout)
+            await self._async_add_and_update_entities(coros, timeout)
         else:
-            await self._async_add_entities_with_timeout(coros, timeout)
+            await self._async_add_entities(coros, timeout)
 
         if (
             (self.config_entry and self.config_entry.pref_disable_polling)
