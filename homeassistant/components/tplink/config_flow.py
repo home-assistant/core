@@ -28,7 +28,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -88,14 +88,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         entry_config_dict = entry_data.get(CONF_DEVICE_CONFIG)
         if entry_config_dict == config and entry_data[CONF_HOST] == host:
             return
-        self.hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_DEVICE_CONFIG: config, CONF_HOST: host}
+        self.async_update_reload_and_abort(
+            entry,
+            data={**entry.data, CONF_DEVICE_CONFIG: config, CONF_HOST: host},
+            reason="already_configured",
         )
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(entry.entry_id),
-            f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
-        )
-        raise AbortFlow("already_configured")
 
     async def _async_handle_discovery(
         self, host: str, formatted_mac: str, config: dict | None = None

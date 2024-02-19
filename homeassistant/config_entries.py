@@ -1519,6 +1519,17 @@ class ConfigEntries:
 
         return await entry.async_unload(self.hass)
 
+    @callback
+    def async_schedule_reload(self, entry_id: str) -> None:
+        """Schedule a config entry to be reloaded."""
+        if (entry := self.async_get_entry(entry_id)) is None:
+            raise UnknownEntry
+        entry.async_cancel_retry_setup()
+        self.hass.async_create_task(
+            self.async_reload(entry_id),
+            f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
+        )
+
     async def async_reload(self, entry_id: str) -> bool:
         """Reload an entry.
 
@@ -1861,10 +1872,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
             return
         if should_reload:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id),
-                f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
-            )
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
         raise data_entry_flow.AbortFlow(error)
 
     async def async_set_unique_id(
@@ -2123,10 +2131,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             options=options,
         )
         if result:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id),
-                f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
-            )
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return self.async_abort(reason=reason)
 
 

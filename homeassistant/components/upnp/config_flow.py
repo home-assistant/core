@@ -216,9 +216,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 # SETUP_RETRY, another load is started,
                 # causing the entry to be loaded twice.
                 LOGGER.debug("Reloading entry: %s", entry.entry_id)
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return self.async_abort(reason="config_entry_updated")
 
         # Store discovery.
