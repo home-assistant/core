@@ -1710,14 +1710,16 @@ async def test_register_entity_service_limited_to_matching_platforms(
     }
 
 
-async def test_invalid_entity_id(hass: HomeAssistant) -> None:
+async def test_invalid_entity_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test specifying an invalid entity id."""
     platform = MockEntityPlatform(hass)
     entity = MockEntity(entity_id="invalid_entity_id")
-    with pytest.raises(HomeAssistantError):
-        await platform.async_add_entities([entity])
+    await platform.async_add_entities([entity])
     assert entity.hass is None
     assert entity.platform is None
+    assert "Invalid entity ID: invalid_entity_id" in caplog.text
 
 
 class MockBlockingEntity(MockEntity):

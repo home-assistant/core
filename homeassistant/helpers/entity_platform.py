@@ -535,7 +535,6 @@ class EntityPlatform:
                         self.platform_name,
                         exc_info=result,
                     )
-                    raise result
 
     async def _async_add_entities(
         self, coros: list[Coroutine[Any, Any, None]], timeout: float
@@ -547,14 +546,12 @@ class EntityPlatform:
         to the event loop so we can await the coros directly without
         scheduling them as tasks.
         """
-        last_exception: BaseException | None = None
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 for coro in coros:
                     try:
                         await coro
-                    except Exception as ex:  # pylint: disable=broad-except
-                        last_exception = ex
+                    except Exception:  # pylint: disable=broad-except
                         self.logger.exception(
                             "Error adding entities for domain %s with platform %s",
                             self.domain,
@@ -567,9 +564,6 @@ class EntityPlatform:
                 self.platform_name,
                 timeout,
             )
-
-        if last_exception:
-            raise last_exception
 
     async def async_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
