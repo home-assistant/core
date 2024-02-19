@@ -1368,6 +1368,15 @@ class Entity(
             and self.registry_entry
             and not self.registry_entry.disabled
             # Check if entity is still in the entity registry
+            # by checking self._removed_from_registry
+            #
+            # Because self.registry_entry is unset in a task,
+            # its possible that the entity has been removed but
+            # the task has not yet been executed.
+            #
+            # self._removed_from_registry is set to True in a
+            # callback which does not have the same issue.
+            #
             and not self._removed_from_registry
         ):
             # Set the entity's state will to unavailable + ATTR_RESTORED: True
