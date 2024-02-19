@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "sensor": {
+      "fyta_status": {
+        "default": "mdi:flower"
+      },
+      "fyta_temperature_status": {
+        "default": "mdi:thermometer-lines"
+      },
+      "fyta_light_status": {
+        "default": "mdi:sun-clock-outline"
+      },
+      "fyta_moisture_status": {
+        "default": "mdi:water-percent-alert"
+      },
+      "fyta_salinity_status": {
+        "default": "mdi:sprout-outline"
+      },
+      "fyta_light": {
+        "default": "mdi:weather-sunny"
+      },
+      "fyta_salinity": {
+        "default": "mdi:sprout-outline"
+      },
+      "plant_number": {
+        "default": "mdi:update"
+      }
+    }
+  }
+}

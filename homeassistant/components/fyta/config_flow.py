@@ -1,7 +1,6 @@
 """Config flow for FYTA integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -85,47 +84,4 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
-
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
-        """Handle flow upon an API authentication error."""
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle reauthorization flow."""
-        errors = {}
-        assert self._entry is not None
-
-        if user_input is not None:
-            try:
-                await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-                errors[CONF_USERNAME] = "auth_error"
-                errors[CONF_PASSWORD] = "auth_error"
-            except InvalidPassword:
-                errors["base"] = "invalid_auth"
-                errors[CONF_PASSWORD] = "password_error"
-            else:
-                self.hass.config_entries.async_update_entry(
-                    self._entry,
-                    data={**self._entry.data, **user_input},
-                )
-                await self.hass.config_entries.async_reload(self._entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
-
-        data_schema = self.add_suggested_values_to_schema(
-            DATA_SCHEMA,
-            {CONF_USERNAME: self._entry.data[CONF_USERNAME], **(user_input or {})},
-        )
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=data_schema,
-            description_placeholders={"FYTA username": self._entry.data[CONF_USERNAME]},
-            errors=errors,
         )
