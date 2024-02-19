@@ -4,7 +4,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
+from typing import Any, Final
+
+from fyta_cli.fyta_connector import PLANT_STATUS
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,12 +15,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import FytaCoordinator, FytaEntity
+from .coordinator import FytaCoordinator
+from .entity import FytaCoordinatorEntity, FytaPlantEntity
 
 
 @dataclass(frozen=True)
@@ -30,6 +33,8 @@ class FytaSensorEntityDescription(SensorEntityDescription):
     )
 
 
+PLANT_STATUS_LIST: list[str] = ["too_low", "low", "perfect", "high", "too_high"]
+
 SENSORS: Final[list[FytaSensorEntityDescription]] = [
     FytaSensorEntityDescription(
         key="plant_name",
@@ -40,42 +45,45 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
         translation_key="fyta_scientific_name",
     ),
     FytaSensorEntityDescription(
-        key="plant_status",
+        key="status",
         translation_key="fyta_plant_status",
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENUM,
+        options=PLANT_STATUS_LIST,
         icon="mdi:flower",
     ),
     FytaSensorEntityDescription(
         key="temperature_status",
         translation_key="fyta_temperature_status",
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENUM,
+        options=PLANT_STATUS_LIST,
         icon="mdi:thermometer-lines",
     ),
     FytaSensorEntityDescription(
         key="light_status",
         translation_key="fyta_light_status",
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENUM,
+        options=PLANT_STATUS_LIST,
         icon="mdi:sun-clock-outline",
     ),
     FytaSensorEntityDescription(
         key="moisture_status",
         translation_key="fyta_moisture_status",
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENUM,
+        options=PLANT_STATUS_LIST,
         icon="mdi:water-percent-alert",
     ),
     FytaSensorEntityDescription(
         key="salinity_status",
         translation_key="fyta_salinity_status",
-        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.ENUM,
+        options=PLANT_STATUS_LIST,
         icon="mdi:sprout-outline",
     ),
     FytaSensorEntityDescription(
         key="temperature",
-        translation_key="fyta_temperature",
-        native_unit_of_measurement="°C",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:thermometer",
     ),
     FytaSensorEntityDescription(
         key="light",
@@ -86,11 +94,9 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
     ),
     FytaSensorEntityDescription(
         key="moisture",
-        translation_key="fyta_moisture",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.MOISTURE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:water-percent",
     ),
     FytaSensorEntityDescription(
         key="salinity",
@@ -101,26 +107,15 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
     ),
     FytaSensorEntityDescription(
         key="ph",
-        translation_key="fyta_PH",
         device_class=SensorDeviceClass.PH,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:ph",
     ),
     FytaSensorEntityDescription(
         key="battery_level",
-        translation_key="fyta_battery_level",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:battery",
-    ),
-    FytaSensorEntityDescription(
-        key="last_updated",
-        translation_key="fyta_last_updated",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:update",
     ),
     FytaSensorEntityDescription(
         key="plant_number",
@@ -140,23 +135,27 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            FytaSensor(coordinator, entry, sensor)
+            FytaCoordinatorSensor(coordinator, entry, sensor)
             for sensor in SENSORS
             if sensor.key in coordinator.data
         ]
     )
 
+    plant_entities: list[dict[str, Any]] = []
     for plant_id in coordinator.plant_list:
-        async_add_entities(
-            [
-                FytaSensor(coordinator, entry, sensor, plant_id)
-                for sensor in SENSORS
-                if sensor.key in coordinator.data[plant_id]
-            ]
-        )
+        for sensor in SENSORS:
+            if sensor.key in coordinator.data[plant_id]:
+                plant_entities.append({"id": plant_id, "sensor": sensor})
+
+    async_add_entities(
+        [
+            FytaPlantSensor(coordinator, entry, plant["sensor"], plant["id"])
+            for plant in plant_entities
+        ]
+    )
 
 
-class FytaSensor(FytaEntity, SensorEntity):
+class FytaCoordinatorSensor(FytaCoordinatorEntity, SensorEntity):
     """Represents a Fyta sensor."""
 
     entity_description: FytaSensorEntityDescription
@@ -164,8 +163,22 @@ class FytaSensor(FytaEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | float | datetime:
         """Return the state for this sensor."""
-        if self.plant_id == -1:
-            val = self.coordinator.data[self.entity_description.key]
+        val = self.coordinator.data[self.entity_description.key]
+        return self.entity_description.value_fn(val)
+
+
+class FytaPlantSensor(FytaPlantEntity, SensorEntity):
+    """Represents a Fyta sensor."""
+
+    entity_description: FytaSensorEntityDescription
+
+    @property
+    def native_value(self) -> str | int | float | datetime:
+        """Return the state for this sensor."""
+        if "status" in self.entity_description.key:
+            val = PLANT_STATUS[
+                self.coordinator.data[self.plant_id][self.entity_description.key]
+            ]
         else:
             val = self.coordinator.data[self.plant_id][self.entity_description.key]
         return self.entity_description.value_fn(val)
