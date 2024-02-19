@@ -505,7 +505,10 @@ class EntityPlatform:
         ).result()
 
     async def _async_add_and_update_entities(
-        self, coros: list[Coroutine[Any, Any, None]], timeout: float
+        self,
+        coros: list[Coroutine[Any, Any, None]],
+        entities: list[Entity],
+        timeout: float,
     ) -> None:
         """Add entities for a single platform and update them.
 
@@ -527,17 +530,22 @@ class EntityPlatform:
             )
 
         if results:
-            for result in results:
+            for idx, result in enumerate(results):
                 if isinstance(result, Exception):
+                    entity = entities[idx]
                     self.logger.exception(
-                        "Error adding entities for domain %s with platform %s",
+                        "Error adding entity %s for domain %s with platform %s",
+                        entity,
                         self.domain,
                         self.platform_name,
                         exc_info=result,
                     )
 
     async def _async_add_entities(
-        self, coros: list[Coroutine[Any, Any, None]], timeout: float
+        self,
+        coros: list[Coroutine[Any, Any, None]],
+        entities: list[Entity],
+        timeout: float,
     ) -> None:
         """Add entities for a single platform without updating.
 
@@ -548,14 +556,17 @@ class EntityPlatform:
         """
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
-                for coro in coros:
+                for idx, coro in enumerate(coros):
                     try:
                         await coro
-                    except Exception:  # pylint: disable=broad-except
+                    except Exception as ex:  # pylint: disable=broad-except
+                        entity = entities[idx]
                         self.logger.exception(
-                            "Error adding entities for domain %s with platform %s",
+                            "Error adding entity %s for domain %s with platform %s",
+                            entity,
                             self.domain,
                             self.platform_name,
+                            exc_info=ex,
                         )
         except TimeoutError:
             self.logger.warning(
@@ -577,12 +588,14 @@ class EntityPlatform:
             return
 
         hass = self.hass
-
         entity_registry = ent_reg.async_get(hass)
-        coros = [
-            self._async_add_entity(entity, update_before_add, entity_registry)
-            for entity in new_entities
-        ]
+        coros: list[Coroutine[Any, Any, None]] = []
+        entities: list[Entity] = []
+        for entity in new_entities:
+            coros.append(
+                self._async_add_entity(entity, update_before_add, entity_registry)
+            )
+            entities.append(entity)
 
         # No entities for processing
         if not coros:
@@ -590,9 +603,11 @@ class EntityPlatform:
 
         timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(coros), SLOW_ADD_MIN_TIMEOUT)
         if update_before_add:
-            await self._async_add_and_update_entities(coros, timeout)
+            add_func = self._async_add_and_update_entities
         else:
-            await self._async_add_entities(coros, timeout)
+            add_func = self._async_add_entities
+
+        await add_func(coros, entities, timeout)
 
         if (
             (self.config_entry and self.config_entry.pref_disable_polling)
