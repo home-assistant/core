@@ -194,6 +194,19 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     loop.close()
 
 
+class StoreWithoutWriteLoad(storage.Store):
+    """Fake store that does not write or load. Used for testing."""
+
+    async def async_load(self) -> None:
+        """Load the data."""
+
+    def async_delay_save(self, *args: Any, **kwargs: Any) -> None:
+        """Save the data."""
+
+    async def async_save(self, *args: Any, **kwargs: Any) -> None:
+        """Save the data."""
+
+
 @asynccontextmanager
 async def async_test_home_assistant(
     event_loop: asyncio.AbstractEventLoop | None = None,
@@ -284,9 +297,7 @@ async def async_test_home_assistant(
         hass
     )
     if load_registries:
-        with patch(
-            "homeassistant.helpers.storage.Store.async_load", return_value=None
-        ), patch(
+        with patch("homeassistant.helpers.storage.Store", StoreWithoutWriteLoad), patch(
             "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
             return_value=None,
         ), patch(
