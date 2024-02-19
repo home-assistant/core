@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aiohttp import ClientConnectorError
+from aiohttp import ClientConnectionError
 from overseerr import ApiClient, Configuration, RequestApi, exceptions
 import voluptuous as vol
 
@@ -16,7 +16,7 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
 
-_LOGGER = logging.getLogger(__package__)
+_LOGGER = logging.getLogger(__name__)
 
 
 class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -59,7 +59,7 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_API_KEY] = result[1]
             except exceptions.UnauthorizedException:
                 errors = {"base": "invalid_auth"}
-            except ClientConnectorError:
+            except ClientConnectionError:
                 errors = {"base": "cannot_connect"}
             except exceptions.OpenApiException:
                 errors = {"base": "unknown"}
@@ -101,7 +101,7 @@ async def validate_input(
 ) -> tuple[str, str, str] | None:
     """Validate the user input allows us to connect."""
     host_configuration = Configuration(
-        api_key=data.get(CONF_API_KEY, ""),
+        api_key={"apiKey": data.get(CONF_API_KEY, "")},
         ssl_ca_cert=data[CONF_VERIFY_SSL],
         host=data[CONF_URL],
     )
