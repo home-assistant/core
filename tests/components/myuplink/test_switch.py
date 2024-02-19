@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from aiohttp import ClientError
 import pytest
 
 from homeassistant.const import (
@@ -12,6 +13,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 TEST_PLATFORM = Platform.SWITCH
@@ -75,3 +77,19 @@ async def test_switch_off(
     )
     await hass.async_block_till_done()
     mock_myuplink_client.async_set_device_points.assert_called_once()
+
+
+async def test_api_failure(
+    hass: HomeAssistant,
+    mock_myuplink_client: MagicMock,
+    setup_platform: None,
+) -> None:
+    """Test handling of exception from API."""
+
+    with pytest.raises(HomeAssistantError):
+        mock_myuplink_client.async_set_device_points.side_effect = ClientError
+        await hass.services.async_call(
+            TEST_PLATFORM, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        )
+        await hass.async_block_till_done()
+        mock_myuplink_client.async_set_device_points.assert_called_once()
