@@ -1443,8 +1443,7 @@ class Entity(
         self, event: EventType[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Handle entity registry update."""
-        data = event.data
-        action = data["action"]
+        action = event.data["action"]
         is_remove = action == "remove"
         self._removed_from_registry = is_remove
         if action == "update" or is_remove:
