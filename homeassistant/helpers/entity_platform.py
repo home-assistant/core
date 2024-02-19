@@ -518,19 +518,26 @@ class EntityPlatform:
         hass = self.hass
 
         entity_registry = ent_reg.async_get(hass)
-        tasks = [
+        coros = [
             self._async_add_entity(entity, update_before_add, entity_registry)
             for entity in new_entities
         ]
 
         # No entities for processing
-        if not tasks:
+        if not coros:
             return
 
-        timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(tasks), SLOW_ADD_MIN_TIMEOUT)
+        timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(coros), SLOW_ADD_MIN_TIMEOUT)
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
-                await asyncio.gather(*tasks)
+                if update_before_add:
+                    await asyncio.gather(*coros)
+                else:
+                    # If we aren't updating its unlikely that we will have to yield
+                    # control to the event loop so we can await the coros directly
+                    # without scheduling them as tasks.
+                    for coro in coros:
+                        await coro
         except TimeoutError:
             self.logger.warning(
                 "Timed out adding entities for domain %s with platform %s after %ds",
