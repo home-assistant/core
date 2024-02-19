@@ -205,7 +205,9 @@ async def test_cover_operation(
 
     assert hass.states.get("cover.home").state == STATE_UNKNOWN
 
-    mock_aladdinconnect_api.get_doors.side_effect = session_manager.ConnectionError
+    mock_aladdinconnect_api.get_doors.side_effect = (
+        session_manager.AladdinConnectionError
+    )
 
     async_fire_time_changed(
         hass,
