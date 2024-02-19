@@ -216,6 +216,7 @@ async def test_entities_removed_after_reload(
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert mock_device.entry.entry_id == entry_id
     state = hass.states.get("binary_sensor.test_mybinary_sensor")
