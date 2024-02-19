@@ -514,6 +514,7 @@ class EntityPlatform:
         loop. This is because the update is likely to yield control to the
         event loop and will finish faster if we run them concurrently.
         """
+        results = None
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 results = await asyncio.gather(*coros, return_exceptions=True)
@@ -525,15 +526,16 @@ class EntityPlatform:
                 timeout,
             )
 
-        for result in results:
-            if isinstance(result, Exception):
-                self.logger.exception(
-                    "Error adding entities for domain %s with platform %s",
-                    self.domain,
-                    self.platform_name,
-                    exc_info=result,
-                )
-                raise result
+        if results:
+            for result in results:
+                if isinstance(result, Exception):
+                    self.logger.exception(
+                        "Error adding entities for domain %s with platform %s",
+                        self.domain,
+                        self.platform_name,
+                        exc_info=result,
+                    )
+                    raise result
 
     async def _async_add_entities(
         self, coros: list[Coroutine[Any, Any, None]], timeout: float
