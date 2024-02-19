@@ -496,6 +496,9 @@ class Entity(
     # Entry in the entity registry
     registry_entry: er.RegistryEntry | None = None
 
+    # If the entity is removed from the entity registry
+    _removed_from_registry: bool = False
+
     # The device entry for this entity
     device_entry: dr.DeviceEntry | None = None
 
@@ -1365,7 +1368,7 @@ class Entity(
             and self.registry_entry
             and not self.registry_entry.disabled
             # Check if entity is still in the entity registry
-            and er.async_get(self.hass).async_get(self.entity_id) is not None
+            and not self._removed_from_registry
         ):
             # Set the entity's state will to unavailable + ATTR_RESTORED: True
             self.registry_entry.write_unavailable_state(self.hass)
@@ -1435,10 +1438,24 @@ class Entity(
         if self.platform:
             self.hass.data[DATA_ENTITY_SOURCE].pop(self.entity_id)
 
-    async def _async_registry_updated(
+    @callback
+    def _async_registry_updated(
         self, event: EventType[er.EventEntityRegistryUpdatedData]
     ) -> None:
         """Handle entity registry update."""
+        data = event.data
+        action = data["action"]
+        is_remove = action == "remove"
+        self._removed_from_registry = is_remove
+        if action == "update" or is_remove:
+            self.hass.async_create_task(
+                self._async_process_registry_update_or_remove(event)
+            )
+
+    async def _async_process_registry_update_or_remove(
+        self, event: EventType[er.EventEntityRegistryUpdatedData]
+    ) -> None:
+        """Handle entity registry update or remove."""
         data = event.data
         if data["action"] == "remove":
             await self.async_removed_from_registry()
