@@ -188,7 +188,7 @@ class UniFiController:
         )
 
     @callback
-    def _should_add_entity(
+    def _async_should_add_entity(
         self, description: UnifiEntityDescription, obj_id: str
     ) -> bool:
         """Check if entity should be added."""
@@ -219,7 +219,7 @@ class UniFiController:
                         unifi_platform_entity(obj_id, self, description)
                         for description in descriptions
                         for obj_id in description.api_handler_fn(self.api)
-                        if self._should_add_entity(description, obj_id)
+                        if self._async_should_add_entity(description, obj_id)
                     ]
                 )
 
@@ -230,7 +230,7 @@ class UniFiController:
                 description: UnifiEntityDescription, event: ItemEvent, obj_id: str
             ) -> None:
                 """Create new UniFi entity on event."""
-                if self._should_add_entity(description, obj_id):
+                if self._async_should_add_entity(description, obj_id):
                     async_add_entities(
                         [unifi_platform_entity(obj_id, self, description)]
                     )
