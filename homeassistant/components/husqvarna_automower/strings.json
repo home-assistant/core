@@ -58,6 +58,9 @@
       "battery_level": {
         "name": "Battery level"
       },
+      "next_start_timestamp": {
+        "name": "Next start"
+      },
       "mode": {
         "name": "Mode",
         "state": {
