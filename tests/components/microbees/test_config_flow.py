@@ -1,5 +1,4 @@
 """Tests for config flow."""
-import logging
 from unittest.mock import AsyncMock, patch
 
 from microBeesPy.microbees import MicroBeesException
@@ -305,16 +304,10 @@ async def test_config_flow_with_invalid_credentials(
 
 
 @pytest.mark.parametrize(
-    ("exception_parameter"),
+    ("exception", "error"),
     [
-        {
-            "expected_reason": "invalid_auth",
-            "excepted_exception": MicroBeesException("Unexpected error"),
-        },
-        {
-            "expected_reason": "unknown",
-            "excepted_exception": Exception("Unexpected error"),
-        },
+        (MicroBeesException("Invalid auth"), "invalid_auth"),
+        (Exception("Unexpected error"), "unknown"),
     ],
 )
 async def test_unexpected_exceptions(
@@ -323,16 +316,13 @@ async def test_unexpected_exceptions(
     aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
     microbees: AsyncMock,
-    exception_parameter: dict[str, Exception],
+    exception: Exception,
+    error: str,
     current_request_with_host,
 ) -> None:
     """Test unknown error from server."""
-    _LOGGER = logging.getLogger(__name__)
-    _LOGGER.error(exception_parameter)
     await setup_integration(hass, config_entry)
-    microbees.return_value.getMyProfile.side_effect = exception_parameter[
-        "excepted_exception"
-    ]
+    microbees.return_value.getMyProfile.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -376,4 +366,4 @@ async def test_unexpected_exceptions(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result
         assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == exception_parameter["expected_reason"]
+        assert result["reason"] == error
