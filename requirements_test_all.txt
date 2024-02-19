@@ -1039,6 +1039,9 @@ mficlient==0.3.0
 # homeassistant.components.xiaomi_miio
 micloud==0.5
 
+# homeassistant.components.microbees
+microBeesPy==0.2.5
+
 # homeassistant.components.mill
 mill-local==0.3.0
 
@@ -1869,7 +1872,7 @@ renault-api==0.2.1
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.7
+reolink-aio==0.8.8
 
 # homeassistant.components.rflink
 rflink==0.0.66
@@ -2130,7 +2133,7 @@ uvcclient==0.11.0
 vacuum-map-parser-roborock==0.1.1
 
 # homeassistant.components.vallox
-vallox-websocket-api==4.0.3
+vallox-websocket-api==5.0.2
 
 # homeassistant.components.rdw
 vehicle==2.2.1
