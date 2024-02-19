@@ -147,12 +147,7 @@ async def async_setup_entry(
             if sensor.key in coordinator.data[plant_id]:
                 plant_entities.append({"id": plant_id, "sensor": sensor})
 
-    async_add_entities(
-        [
-            FytaPlantSensor(coordinator, entry, plant["sensor"], plant["id"])
-            for plant in plant_entities
-        ]
-    )
+    async_add_entities(plant_entities)
 
 
 class FytaCoordinatorSensor(FytaCoordinatorEntity, SensorEntity):
