@@ -55,14 +55,14 @@ from .entity import (
     async_device_device_info_fn,
     async_wlan_device_info_fn,
 )
-from .hub import UNIFI_DOMAIN, UniFiController
+from .hub import UNIFI_DOMAIN, UnifiHub
 
 CLIENT_BLOCKED = (EventKey.WIRED_CLIENT_BLOCKED, EventKey.WIRELESS_CLIENT_BLOCKED)
 CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UNBLOCKED)
 
 
 @callback
-def async_block_client_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
+def async_block_client_allowed_fn(controller: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
     if obj_id in controller.option_supported_clients:
         return True
@@ -71,7 +71,7 @@ def async_block_client_allowed_fn(controller: UniFiController, obj_id: str) -> b
 
 @callback
 def async_dpi_group_is_on_fn(
-    controller: UniFiController, dpi_group: DPIRestrictionGroup
+    controller: UnifiHub, dpi_group: DPIRestrictionGroup
 ) -> bool:
     """Calculate if all apps are enabled."""
     api = controller.api
@@ -83,9 +83,7 @@ def async_dpi_group_is_on_fn(
 
 
 @callback
-def async_dpi_group_device_info_fn(
-    controller: UniFiController, obj_id: str
-) -> DeviceInfo:
+def async_dpi_group_device_info_fn(controller: UnifiHub, obj_id: str) -> DeviceInfo:
     """Create device registry entry for DPI group."""
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
@@ -97,9 +95,7 @@ def async_dpi_group_device_info_fn(
 
 
 @callback
-def async_port_forward_device_info_fn(
-    controller: UniFiController, obj_id: str
-) -> DeviceInfo:
+def async_port_forward_device_info_fn(controller: UnifiHub, obj_id: str) -> DeviceInfo:
     """Create device registry entry for port forward."""
     unique_id = controller.config_entry.unique_id
     assert unique_id is not None
@@ -113,14 +109,14 @@ def async_port_forward_device_info_fn(
 
 
 async def async_block_client_control_fn(
-    controller: UniFiController, obj_id: str, target: bool
+    controller: UnifiHub, obj_id: str, target: bool
 ) -> None:
     """Control network access of client."""
     await controller.api.request(ClientBlockRequest.create(obj_id, not target))
 
 
 async def async_dpi_group_control_fn(
-    controller: UniFiController, obj_id: str, target: bool
+    controller: UnifiHub, obj_id: str, target: bool
 ) -> None:
     """Enable or disable DPI group."""
     dpi_group = controller.api.dpi_groups[obj_id]
@@ -135,16 +131,14 @@ async def async_dpi_group_control_fn(
 
 
 @callback
-def async_outlet_supports_switching_fn(
-    controller: UniFiController, obj_id: str
-) -> bool:
+def async_outlet_supports_switching_fn(controller: UnifiHub, obj_id: str) -> bool:
     """Determine if an outlet supports switching."""
     outlet = controller.api.outlets[obj_id]
     return outlet.has_relay or outlet.caps in (1, 3)
 
 
 async def async_outlet_control_fn(
-    controller: UniFiController, obj_id: str, target: bool
+    controller: UnifiHub, obj_id: str, target: bool
 ) -> None:
     """Control outlet relay."""
     mac, _, index = obj_id.partition("_")
@@ -155,7 +149,7 @@ async def async_outlet_control_fn(
 
 
 async def async_poe_port_control_fn(
-    controller: UniFiController, obj_id: str, target: bool
+    controller: UnifiHub, obj_id: str, target: bool
 ) -> None:
     """Control poe state."""
     mac, _, index = obj_id.partition("_")
@@ -166,7 +160,7 @@ async def async_poe_port_control_fn(
 
 
 async def async_port_forward_control_fn(
-    controller: UniFiController, obj_id: str, target: bool
+    controller: UnifiHub, obj_id: str, target: bool
 ) -> None:
     """Control port forward state."""
     port_forward = controller.api.port_forwarding[obj_id]
@@ -174,7 +168,7 @@ async def async_port_forward_control_fn(
 
 
 async def async_wlan_control_fn(
-    controller: UniFiController, obj_id: str, target: bool
+    controller: UnifiHub, obj_id: str, target: bool
 ) -> None:
     """Control outlet relay."""
     await controller.api.request(WlanEnableRequest.create(obj_id, target))
@@ -184,8 +178,8 @@ async def async_wlan_control_fn(
 class UnifiSwitchEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
-    control_fn: Callable[[UniFiController, str, bool], Coroutine[Any, Any, None]]
-    is_on_fn: Callable[[UniFiController, ApiItemT], bool]
+    control_fn: Callable[[UnifiHub, str, bool], Coroutine[Any, Any, None]]
+    is_on_fn: Callable[[UnifiHub, ApiItemT], bool]
 
 
 @dataclass(frozen=True)
@@ -329,7 +323,7 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: ConfigEntry) -> No
 
     Introduced with release 2023.12.
     """
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     ent_reg = er.async_get(hass)
 
     @callback
@@ -358,7 +352,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches for UniFi Network integration."""
     async_update_unique_id(hass, config_entry)
-    UniFiController.register_platform(
+    UnifiHub.register_platform(
         hass,
         config_entry,
         async_add_entities,

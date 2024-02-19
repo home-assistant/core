@@ -31,7 +31,7 @@ from .entity import (
     UnifiEntityDescription,
     async_device_available_fn,
 )
-from .hub import UNIFI_DOMAIN, UniFiController
+from .hub import UNIFI_DOMAIN, UnifiHub
 
 LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ WIRELESS_DISCONNECTION = (
 
 
 @callback
-def async_client_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
+def async_client_allowed_fn(controller: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
     if obj_id in controller.option_supported_clients:
         return True
@@ -103,7 +103,7 @@ def async_client_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
 
 
 @callback
-def async_client_is_connected_fn(controller: UniFiController, obj_id: str) -> bool:
+def async_client_is_connected_fn(controller: UnifiHub, obj_id: str) -> bool:
     """Check if device object is disabled."""
     client = controller.api.clients[obj_id]
 
@@ -129,9 +129,7 @@ def async_client_is_connected_fn(controller: UniFiController, obj_id: str) -> bo
 
 
 @callback
-def async_device_heartbeat_timedelta_fn(
-    controller: UniFiController, obj_id: str
-) -> timedelta:
+def async_device_heartbeat_timedelta_fn(controller: UnifiHub, obj_id: str) -> timedelta:
     """Check if device object is disabled."""
     device = controller.api.devices[obj_id]
     return timedelta(seconds=device.next_interval + 60)
@@ -141,9 +139,9 @@ def async_device_heartbeat_timedelta_fn(
 class UnifiEntityTrackerDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Device tracker local functions."""
 
-    heartbeat_timedelta_fn: Callable[[UniFiController, str], timedelta]
+    heartbeat_timedelta_fn: Callable[[UnifiHub, str], timedelta]
     ip_address_fn: Callable[[aiounifi.Controller, str], str | None]
-    is_connected_fn: Callable[[UniFiController, str], bool]
+    is_connected_fn: Callable[[UnifiHub, str], bool]
     hostname_fn: Callable[[aiounifi.Controller, str], str | None]
 
 
@@ -208,7 +206,7 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: ConfigEntry) -> No
 
     Introduced with release 2023.12.
     """
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     ent_reg = er.async_get(hass)
 
     @callback
@@ -233,7 +231,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
     async_update_unique_id(hass, config_entry)
-    UniFiController.register_platform(
+    UnifiHub.register_platform(
         hass, config_entry, async_add_entities, UnifiScannerEntity, ENTITY_DESCRIPTIONS
     )
 

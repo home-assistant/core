@@ -435,7 +435,7 @@ async def test_reconnect_mechanism_exceptions(
     await setup_unifi_integration(hass, aioclient_mock)
 
     with patch("aiounifi.Controller.login", side_effect=exception), patch(
-        "homeassistant.components.unifi.hub.UniFiController.reconnect"
+        "homeassistant.components.unifi.hub.UnifiHub.reconnect"
     ) as mock_reconnect:
         await websocket_mock.disconnect()
 

@@ -29,14 +29,14 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from .const import ATTR_MANUFACTURER, DOMAIN
 
 if TYPE_CHECKING:
-    from .hub import UniFiController
+    from .hub import UnifiHub
 
 HandlerT = TypeVar("HandlerT", bound=APIHandler)
 SubscriptionT = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
 
 @callback
-def async_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
+def async_device_available_fn(controller: UnifiHub, obj_id: str) -> bool:
     """Check if device is available."""
     if "_" in obj_id:  # Sub device (outlet or port)
         obj_id = obj_id.partition("_")[0]
@@ -46,14 +46,14 @@ def async_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
 
 
 @callback
-def async_wlan_available_fn(controller: UniFiController, obj_id: str) -> bool:
+def async_wlan_available_fn(controller: UnifiHub, obj_id: str) -> bool:
     """Check if WLAN is available."""
     wlan = controller.api.wlans[obj_id]
     return controller.available and wlan.enabled
 
 
 @callback
-def async_device_device_info_fn(controller: UniFiController, obj_id: str) -> DeviceInfo:
+def async_device_device_info_fn(controller: UnifiHub, obj_id: str) -> DeviceInfo:
     """Create device registry entry for device."""
     if "_" in obj_id:  # Sub device (outlet or port)
         obj_id = obj_id.partition("_")[0]
@@ -70,7 +70,7 @@ def async_device_device_info_fn(controller: UniFiController, obj_id: str) -> Dev
 
 
 @callback
-def async_wlan_device_info_fn(controller: UniFiController, obj_id: str) -> DeviceInfo:
+def async_wlan_device_info_fn(controller: UnifiHub, obj_id: str) -> DeviceInfo:
     """Create device registry entry for WLAN."""
     wlan = controller.api.wlans[obj_id]
     return DeviceInfo(
@@ -83,7 +83,7 @@ def async_wlan_device_info_fn(controller: UniFiController, obj_id: str) -> Devic
 
 
 @callback
-def async_client_device_info_fn(controller: UniFiController, obj_id: str) -> DeviceInfo:
+def async_client_device_info_fn(controller: UnifiHub, obj_id: str) -> DeviceInfo:
     """Create device registry entry for client."""
     client = controller.api.clients[obj_id]
     return DeviceInfo(
@@ -97,17 +97,17 @@ def async_client_device_info_fn(controller: UniFiController, obj_id: str) -> Dev
 class UnifiDescription(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
-    allowed_fn: Callable[[UniFiController, str], bool]
+    allowed_fn: Callable[[UnifiHub, str], bool]
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
-    available_fn: Callable[[UniFiController, str], bool]
-    device_info_fn: Callable[[UniFiController, str], DeviceInfo | None]
+    available_fn: Callable[[UnifiHub, str], bool]
+    device_info_fn: Callable[[UnifiHub, str], DeviceInfo | None]
     event_is_on: tuple[EventKey, ...] | None
     event_to_subscribe: tuple[EventKey, ...] | None
     name_fn: Callable[[ApiItemT], str | None]
     object_fn: Callable[[aiounifi.Controller, str], ApiItemT]
     should_poll: bool
-    supported_fn: Callable[[UniFiController, str], bool | None]
-    unique_id_fn: Callable[[UniFiController, str], str]
+    supported_fn: Callable[[UnifiHub, str], bool | None]
+    unique_id_fn: Callable[[UnifiHub, str], str]
 
 
 @dataclass(frozen=True)
@@ -124,7 +124,7 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
     def __init__(
         self,
         obj_id: str,
-        controller: UniFiController,
+        controller: UnifiHub,
         description: UnifiEntityDescription[HandlerT, ApiItemT],
     ) -> None:
         """Set up UniFi switch entity."""

@@ -37,7 +37,7 @@ from .entity import (
     async_device_available_fn,
     async_device_device_info_fn,
 )
-from .hub import UniFiController
+from .hub import UnifiHub
 
 
 @callback
@@ -119,7 +119,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up button platform for UniFi Network integration."""
-    UniFiController.register_platform(
+    UnifiHub.register_platform(
         hass,
         config_entry,
         async_add_entities,

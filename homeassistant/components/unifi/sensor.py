@@ -50,11 +50,11 @@ from .entity import (
     async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
-from .hub import UniFiController
+from .hub import UnifiHub
 
 
 @callback
-def async_bandwidth_sensor_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
+def async_bandwidth_sensor_allowed_fn(controller: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
     if obj_id in controller.option_supported_clients:
         return True
@@ -62,7 +62,7 @@ def async_bandwidth_sensor_allowed_fn(controller: UniFiController, obj_id: str) 
 
 
 @callback
-def async_uptime_sensor_allowed_fn(controller: UniFiController, obj_id: str) -> bool:
+def async_uptime_sensor_allowed_fn(controller: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
     if obj_id in controller.option_supported_clients:
         return True
@@ -70,7 +70,7 @@ def async_uptime_sensor_allowed_fn(controller: UniFiController, obj_id: str) -> 
 
 
 @callback
-def async_client_rx_value_fn(controller: UniFiController, client: Client) -> float:
+def async_client_rx_value_fn(controller: UnifiHub, client: Client) -> float:
     """Calculate receiving data transfer value."""
     if controller.wireless_clients.is_wireless(client):
         return client.rx_bytes_r / 1000000
@@ -78,7 +78,7 @@ def async_client_rx_value_fn(controller: UniFiController, client: Client) -> flo
 
 
 @callback
-def async_client_tx_value_fn(controller: UniFiController, client: Client) -> float:
+def async_client_tx_value_fn(controller: UnifiHub, client: Client) -> float:
     """Calculate transmission data transfer value."""
     if controller.wireless_clients.is_wireless(client):
         return client.tx_bytes_r / 1000000
@@ -86,9 +86,7 @@ def async_client_tx_value_fn(controller: UniFiController, client: Client) -> flo
 
 
 @callback
-def async_client_uptime_value_fn(
-    controller: UniFiController, client: Client
-) -> datetime:
+def async_client_uptime_value_fn(controller: UnifiHub, client: Client) -> datetime:
     """Calculate the uptime of the client."""
     if client.uptime < 1000000000:
         return dt_util.now() - timedelta(seconds=client.uptime)
@@ -96,7 +94,7 @@ def async_client_uptime_value_fn(
 
 
 @callback
-def async_wlan_client_value_fn(controller: UniFiController, wlan: Wlan) -> int:
+def async_wlan_client_value_fn(controller: UnifiHub, wlan: Wlan) -> int:
     """Calculate the amount of clients connected to a wlan."""
     return len(
         [
@@ -111,7 +109,7 @@ def async_wlan_client_value_fn(controller: UniFiController, wlan: Wlan) -> int:
 
 @callback
 def async_device_uptime_value_fn(
-    controller: UniFiController, device: Device
+    controller: UnifiHub, device: Device
 ) -> datetime | None:
     """Calculate the approximate time the device started (based on uptime returned from API, in seconds)."""
     if device.uptime <= 0:
@@ -131,9 +129,7 @@ def async_device_uptime_value_changed_fn(
 
 
 @callback
-def async_device_outlet_power_supported_fn(
-    controller: UniFiController, obj_id: str
-) -> bool:
+def async_device_outlet_power_supported_fn(controller: UnifiHub, obj_id: str) -> bool:
     """Determine if an outlet has the power property."""
     # At this time, an outlet_caps value of 3 is expected to indicate that the outlet
     # supports metering
@@ -141,13 +137,13 @@ def async_device_outlet_power_supported_fn(
 
 
 @callback
-def async_device_outlet_supported_fn(controller: UniFiController, obj_id: str) -> bool:
+def async_device_outlet_supported_fn(controller: UnifiHub, obj_id: str) -> bool:
     """Determine if a device supports reading overall power metrics."""
     return controller.api.devices[obj_id].outlet_ac_power_budget is not None
 
 
 @callback
-def async_client_is_connected_fn(controller: UniFiController, obj_id: str) -> bool:
+def async_client_is_connected_fn(controller: UnifiHub, obj_id: str) -> bool:
     """Check if client was last seen recently."""
     client = controller.api.clients[obj_id]
 
@@ -164,11 +160,11 @@ def async_client_is_connected_fn(controller: UniFiController, obj_id: str) -> bo
 class UnifiSensorEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
-    value_fn: Callable[[UniFiController, ApiItemT], datetime | float | str | None]
+    value_fn: Callable[[UnifiHub, ApiItemT], datetime | float | str | None]
 
 
 @callback
-def async_device_state_value_fn(controller: UniFiController, device: Device) -> str:
+def async_device_state_value_fn(controller: UnifiHub, device: Device) -> str:
     """Retrieve the state of the device."""
     return DEVICE_STATES[device.state]
 
@@ -181,7 +177,7 @@ class UnifiSensorEntityDescription(
 ):
     """Class describing UniFi sensor entity."""
 
-    is_connected_fn: Callable[[UniFiController, str], bool] | None = None
+    is_connected_fn: Callable[[UnifiHub, str], bool] | None = None
     # Custom function to determine whether a state change should be recorded
     value_changed_fn: Callable[
         [StateType | date | datetime | Decimal, datetime | float | str | None],
@@ -416,7 +412,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Network integration."""
-    UniFiController.register_platform(
+    UnifiHub.register_platform(
         hass, config_entry, async_add_entities, UnifiSensorEntity, ENTITY_DESCRIPTIONS
     )
 

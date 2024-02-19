@@ -27,11 +27,11 @@ from .entity import (
     async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
-from .hub import UniFiController
+from .hub import UnifiHub
 
 
 @callback
-def async_wlan_qr_code_image_fn(controller: UniFiController, wlan: Wlan) -> bytes:
+def async_wlan_qr_code_image_fn(controller: UnifiHub, wlan: Wlan) -> bytes:
     """Calculate receiving data transfer value."""
     return controller.api.wlans.generate_wlan_qr_code(wlan)
 
@@ -40,7 +40,7 @@ def async_wlan_qr_code_image_fn(controller: UniFiController, wlan: Wlan) -> byte
 class UnifiImageEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
-    image_fn: Callable[[UniFiController, ApiItemT], bytes]
+    image_fn: Callable[[UnifiHub, ApiItemT], bytes]
     value_fn: Callable[[ApiItemT], str | None]
 
 
@@ -82,7 +82,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up image platform for UniFi Network integration."""
-    UniFiController.register_platform(
+    UnifiHub.register_platform(
         hass,
         config_entry,
         async_add_entities,
@@ -104,7 +104,7 @@ class UnifiImageEntity(UnifiEntity[HandlerT, ApiItemT], ImageEntity):
     def __init__(
         self,
         obj_id: str,
-        controller: UniFiController,
+        controller: UnifiHub,
         description: UnifiEntityDescription[HandlerT, ApiItemT],
     ) -> None:
         """Initiatlize UniFi Image entity."""

@@ -80,7 +80,7 @@ CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
 CHECK_WEBSOCKET_INTERVAL = timedelta(minutes=1)
 
 
-class UniFiController:
+class UnifiHub:
     """Manages a single UniFi Network instance."""
 
     def __init__(
@@ -180,7 +180,7 @@ class UniFiController:
         requires_admin: bool = False,
     ) -> None:
         """Register platform for UniFi entity management."""
-        controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        controller: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
         if requires_admin and not controller.is_admin:
             return
         controller.register_platform_add_entities(

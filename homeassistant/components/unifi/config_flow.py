@@ -48,7 +48,7 @@ from .const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from .errors import AuthenticationRequired, CannotConnect
-from .hub import UniFiController, get_unifi_controller
+from .hub import UnifiHub, get_unifi_controller
 
 DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"
@@ -160,9 +160,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 abort_reason = "reauth_successful"
 
             if config_entry:
-                controller: UniFiController | None = self.hass.data.get(
-                    UNIFI_DOMAIN, {}
-                ).get(config_entry.entry_id)
+                controller: UnifiHub | None = self.hass.data.get(UNIFI_DOMAIN, {}).get(
+                    config_entry.entry_id
+                )
 
                 if controller and controller.available:
                     return self.async_abort(reason="already_configured")
@@ -240,7 +240,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Unifi Network options."""
 
-    controller: UniFiController
+    controller: UnifiHub
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize UniFi Network options flow."""

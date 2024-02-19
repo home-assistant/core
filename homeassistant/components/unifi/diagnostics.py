@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN as UNIFI_DOMAIN
-from .hub import UniFiController
+from .hub import UnifiHub
 
 TO_REDACT = {CONF_PASSWORD}
 REDACT_CONFIG = {CONF_HOST, CONF_PASSWORD, CONF_USERNAME}
@@ -75,7 +75,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     diag: dict[str, Any] = {}
     macs_to_redact: dict[str, str] = {}
 

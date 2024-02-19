@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN as UNIFI_DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
 from .errors import AuthenticationRequired, CannotConnect
-from .hub import UniFiController, get_unifi_controller
+from .hub import UnifiHub, get_unifi_controller
 from .services import async_setup_services, async_unload_services
 
 SAVE_DELAY = 10
@@ -43,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except AuthenticationRequired as err:
         raise ConfigEntryAuthFailed from err
 
-    controller = UniFiController(hass, config_entry, api)
+    controller = UnifiHub(hass, config_entry, api)
     await controller.initialize()
     hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
 
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    controller: UniFiController = hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
+    controller: UnifiHub = hass.data[UNIFI_DOMAIN].pop(config_entry.entry_id)
 
     if not hass.data[UNIFI_DOMAIN]:
         async_unload_services(hass)
