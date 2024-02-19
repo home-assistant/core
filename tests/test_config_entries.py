@@ -3629,6 +3629,12 @@ async def test_scheduling_reload_cancels_setup_retry(hass: HomeAssistant) -> Non
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
+async def test_scheduling_reload_unknown_entry(hass: HomeAssistant) -> None:
+    """Test scheduling a reload raises with an unknown entry."""
+    with pytest.raises(config_entries.UnknownEntry):
+        hass.config_entries.async_schedule_reload("non-existing")
+
+
 @pytest.mark.parametrize(
     ("matchers", "reason"),
     [
