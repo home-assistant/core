@@ -16,7 +16,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CLIENT_ID, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -37,7 +37,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
         async_get_clientsession(hass),
-        None,
+        CLIENT_ID,
     )
     try:
         await acc.login()
