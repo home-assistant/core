@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.fujitsu_hvac.const import (
+    API_TIMEOUT,
     CONF_EUROPE,
     DOMAIN,
     FGLAIR_APP_ID,
@@ -48,7 +49,12 @@ async def _initial_step(hass: HomeAssistant, apimock: AsyncMock) -> FlowResult:
         await hass.async_block_till_done()
 
         mock_new_api.assert_called_once_with(
-            TEST_USERNAME, TEST_PASSWORD, FGLAIR_APP_ID, FGLAIR_APP_SECRET, europe=False
+            TEST_USERNAME,
+            TEST_PASSWORD,
+            FGLAIR_APP_ID,
+            FGLAIR_APP_SECRET,
+            europe=False,
+            timeout=API_TIMEOUT,
         )
         apimock.async_sign_in.assert_called_once()
 
