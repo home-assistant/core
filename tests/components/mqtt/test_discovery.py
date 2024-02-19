@@ -1528,8 +1528,7 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
     wait_unsub = asyncio.Event()
 
     def _mock_unsubscribe(topics: list[str]) -> tuple[int, int]:
-        if not wait_unsub.is_set():
-            wait_unsub.set()
+        wait_unsub.set()
         return (0, 0)
 
     with mock_config_flow("comp", TestFlow), patch.object(
