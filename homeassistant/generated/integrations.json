@@ -5272,7 +5272,7 @@
     "seventeentrack": {
       "name": "17TRACK",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "sfr_box": {

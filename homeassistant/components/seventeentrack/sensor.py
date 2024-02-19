@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from py17track import Client as SeventeenTrackClient
@@ -11,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_LOCATION,
@@ -25,43 +25,34 @@ from homeassistant.helpers import (
     entity,
     entity_registry as er,
 )
+from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, slugify
 
-_LOGGER = logging.getLogger(__name__)
-
-ATTR_DESTINATION_COUNTRY = "destination_country"
-ATTR_INFO_TEXT = "info_text"
-ATTR_TIMESTAMP = "timestamp"
-ATTR_ORIGIN_COUNTRY = "origin_country"
-ATTR_PACKAGES = "packages"
-ATTR_PACKAGE_TYPE = "package_type"
-ATTR_STATUS = "status"
-ATTR_TRACKING_INFO_LANGUAGE = "tracking_info_language"
-ATTR_TRACKING_NUMBER = "tracking_number"
-
-CONF_SHOW_ARCHIVED = "show_archived"
-CONF_SHOW_DELIVERED = "show_delivered"
-
-DATA_PACKAGES = "package_data"
-DATA_SUMMARY = "summary_data"
-
-ATTRIBUTION = "Data provided by 17track.net"
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
-
-UNIQUE_ID_TEMPLATE = "package_{0}_{1}"
-ENTITY_ID_TEMPLATE = "sensor.seventeentrack_package_{0}"
-
-NOTIFICATION_DELIVERED_ID = "package_delivered_{0}"
-NOTIFICATION_DELIVERED_TITLE = "Package {0} delivered"
-NOTIFICATION_DELIVERED_MESSAGE = (
-    "Package Delivered: {0}<br />Visit 17.track for more information: "
-    "https://t.17track.net/track#nums={1}"
+from .const import (
+    ATTR_DESTINATION_COUNTRY,
+    ATTR_INFO_TEXT,
+    ATTR_ORIGIN_COUNTRY,
+    ATTR_PACKAGE_TYPE,
+    ATTR_PACKAGES,
+    ATTR_STATUS,
+    ATTR_TIMESTAMP,
+    ATTR_TRACKING_INFO_LANGUAGE,
+    ATTR_TRACKING_NUMBER,
+    ATTRIBUTION,
+    CONF_SHOW_ARCHIVED,
+    CONF_SHOW_DELIVERED,
+    DOMAIN,
+    ENTITY_ID_TEMPLATE,
+    NOTIFICATION_DELIVERED_MESSAGE,
+    NOTIFICATION_DELIVERED_TITLE,
+    UNIQUE_ID_TEMPLATE,
+    VALUE_DELIVERED,
 )
 
-VALUE_DELIVERED = "Delivered"
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -105,6 +96,30 @@ async def async_setup_platform(
         scan_interval,
         config[CONF_SHOW_ARCHIVED],
         config[CONF_SHOW_DELIVERED],
+        str(hass.config.time_zone),
+    )
+    await data.async_update()
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up a 17Track sensor entry."""
+
+    entry_id = config_entry.entry_id
+
+    client = hass.data[DOMAIN][entry_id]
+
+    scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+
+    data = SeventeenTrackData(
+        client,
+        async_add_entities,
+        scan_interval,
+        False,
+        False,
         str(hass.config.time_zone),
     )
     await data.async_update()
