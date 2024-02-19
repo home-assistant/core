@@ -74,15 +74,10 @@ async def test_switch_commands(
         service_data={"entity_id": "switch.test_mower_1_enable_schedule"},
         blocking=True,
     )
+    mocked_method = getattr(mock_automower_client, aioautomower_command)
+    assert len(mocked_method.mock_calls) == 1
 
-    if aioautomower_command == "parked_until_further_notice":
-        mock_automower_client.parked_until_further_notice.assert_called_once()
-    if aioautomower_command == "resume_schedule":
-        mock_automower_client.resume_schedule.assert_called_once()
-
-    getattr(mock_automower_client, aioautomower_command).side_effect = ApiException(
-        "Test error"
-    )
+    mocked_method.side_effect = ApiException("Test error")
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             domain="switch",
@@ -94,6 +89,7 @@ async def test_switch_commands(
         str(exc_info.value)
         == "Command couldn't be sent to the command queue: Test error"
     )
+    assert len(mocked_method.mock_calls) == 2
 
 
 async def test_switch(
