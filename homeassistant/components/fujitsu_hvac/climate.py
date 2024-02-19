@@ -40,7 +40,7 @@ async def async_setup_entry(
     )
 
 
-class FujitsuHVACDevice(CoordinatorEntity, ClimateEntity):
+class FujitsuHVACDevice(CoordinatorEntity[FujitsuHVACCoordinator], ClimateEntity):
     """Represent a Fujitsu HVAC device."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
