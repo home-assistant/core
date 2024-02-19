@@ -424,6 +424,66 @@ async def test_sensor_calculated_properties(hass: HomeAssistant) -> None:
     assert state.state == str(float(sum(VALUES)))
 
 
+async def test_sensor_calculated_properties_device_class_none(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test the sensor calculating device_class, state_class and unit of measurement when device class is None."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": GROUP_DOMAIN,
+            "name": "test_last",
+            "type": "last",
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_last_sensor",
+        }
+    }
+
+    entity_ids = config["sensor"]["entities"]
+
+    hass.states.async_set(
+        entity_ids[0],
+        VALUES[0],
+        {
+            "device_class": SensorDeviceClass.POWER,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": "W",
+        },
+    )
+    hass.states.async_set(
+        entity_ids[1],
+        VALUES[1],
+        {
+            "device_class": SensorDeviceClass.POWER,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": "W",
+        },
+    )
+    hass.states.async_set(
+        entity_ids[2],
+        VALUES[2],
+        {
+            "device_class": None,
+            "state_class": SensorStateClass.MEASUREMENT,
+            "unit_of_measurement": "W",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_last")
+    assert state.state == str(float(VALUES[2]))
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("state_class") == SensorStateClass.MEASUREMENT
+    assert state.attributes.get("unit_of_measurement") == "W"
+
+    assert issue_registry.async_get_issue(
+        GROUP_DOMAIN, "sensor.test_last_uoms_not_matching_no_device_class"
+    )
+
+
 async def test_sensor_calculated_properties_not_same(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:

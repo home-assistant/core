@@ -602,6 +602,9 @@ class SensorGroup(GroupEntity, SensorEntity):
                     "uoms": ", ".join(unit_of_measurements),
                 },
             )
+
+            if all(x == unit_of_measurements[0] for x in unit_of_measurements):
+                return unit_of_measurements[0]
         return None
 
     def _get_valid_units(self) -> set[str | None]:
