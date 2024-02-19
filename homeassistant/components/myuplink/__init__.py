@@ -1,7 +1,9 @@
 """The myUplink integration."""
 from __future__ import annotations
 
-from aiohttp import ClientError
+from http import HTTPStatus
+
+from aiohttp import ClientError, ClientResponseError
 from myuplink import MyUplinkAPI
 
 from homeassistant.config_entries import ConfigEntry
@@ -39,6 +41,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     try:
         await auth.async_get_access_token()
+    except ClientResponseError as err:
+        if err.status in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
+            raise ConfigEntryAuthFailed from err
+        raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err
 
