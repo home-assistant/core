@@ -396,7 +396,7 @@ async def test_bandwidth_sensors(
 
     # Verify reset sensor after heartbeat expires
 
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     new_time = dt_util.utcnow()
     wireless_client["last_seen"] = dt_util.as_timestamp(new_time)
 
@@ -410,7 +410,7 @@ async def test_bandwidth_sensors(
     assert hass.states.get("sensor.wireless_client_rx").state == "3456.0"
     assert hass.states.get("sensor.wireless_client_tx").state == "7891.0"
 
-    new_time = new_time + controller.option_detection_time + timedelta(seconds=1)
+    new_time = new_time + hub.option_detection_time + timedelta(seconds=1)
 
     with freeze_time(new_time):
         async_fire_time_changed(hass, new_time)

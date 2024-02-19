@@ -356,7 +356,7 @@ async def test_flow_fails_user_credentials_faulty(
     assert result["errors"] == {"base": "faulty_credentials"}
 
 
-async def test_flow_fails_controller_unavailable(
+async def test_flow_fails_hub_unavailable(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test config flow."""
@@ -390,8 +390,8 @@ async def test_reauth_flow_update_configuration(
 ) -> None:
     """Verify reauth flow can update controller configuration."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.available = False
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub.available = False
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,

@@ -36,7 +36,7 @@ async def test_restart_device_button(
             }
         ],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1
 
@@ -52,7 +52,7 @@ async def test_restart_device_button(
     # Send restart device command
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/devmgr",
+        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/devmgr",
     )
 
     await hass.services.async_call(
@@ -120,7 +120,7 @@ async def test_power_cycle_poe(
             }
         ],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 2
 
@@ -136,7 +136,7 @@ async def test_power_cycle_poe(
     # Send restart device command
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/devmgr",
+        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/devmgr",
     )
 
     await hass.services.async_call(

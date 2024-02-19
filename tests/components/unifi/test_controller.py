@@ -241,7 +241,7 @@ async def setup_unifi_integration(
     return config_entry
 
 
-async def test_controller_setup(
+async def test_hub_setup(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
@@ -254,9 +254,9 @@ async def test_controller_setup(
         config_entry = await setup_unifi_integration(
             hass, aioclient_mock, system_information_response=SYSTEM_INFORMATION
         )
-        controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    entry = controller.config_entry
+    entry = hub.config_entry
     assert len(forward_entry_setup.mock_calls) == len(PLATFORMS)
     assert forward_entry_setup.mock_calls[0][1] == (entry, BUTTON_DOMAIN)
     assert forward_entry_setup.mock_calls[1][1] == (entry, TRACKER_DOMAIN)
@@ -264,21 +264,21 @@ async def test_controller_setup(
     assert forward_entry_setup.mock_calls[3][1] == (entry, SENSOR_DOMAIN)
     assert forward_entry_setup.mock_calls[4][1] == (entry, SWITCH_DOMAIN)
 
-    assert controller.host == ENTRY_CONFIG[CONF_HOST]
-    assert controller.is_admin == (SITE[0]["role"] == "admin")
+    assert hub.host == ENTRY_CONFIG[CONF_HOST]
+    assert hub.is_admin == (SITE[0]["role"] == "admin")
 
-    assert controller.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
-    assert controller.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS
-    assert isinstance(controller.option_block_clients, list)
-    assert controller.option_track_clients == DEFAULT_TRACK_CLIENTS
-    assert controller.option_track_devices == DEFAULT_TRACK_DEVICES
-    assert controller.option_track_wired_clients == DEFAULT_TRACK_WIRED_CLIENTS
-    assert controller.option_detection_time == timedelta(seconds=DEFAULT_DETECTION_TIME)
-    assert isinstance(controller.option_ssid_filter, set)
+    assert hub.option_allow_bandwidth_sensors == DEFAULT_ALLOW_BANDWIDTH_SENSORS
+    assert hub.option_allow_uptime_sensors == DEFAULT_ALLOW_UPTIME_SENSORS
+    assert isinstance(hub.option_block_clients, list)
+    assert hub.option_track_clients == DEFAULT_TRACK_CLIENTS
+    assert hub.option_track_devices == DEFAULT_TRACK_DEVICES
+    assert hub.option_track_wired_clients == DEFAULT_TRACK_WIRED_CLIENTS
+    assert hub.option_detection_time == timedelta(seconds=DEFAULT_DETECTION_TIME)
+    assert isinstance(hub.option_ssid_filter, set)
 
-    assert controller.signal_reachable == "unifi-reachable-1"
-    assert controller.signal_options_update == "unifi-options-1"
-    assert controller.signal_heartbeat_missed == "unifi-heartbeat-missed"
+    assert hub.signal_reachable == "unifi-reachable-1"
+    assert hub.signal_options_update == "unifi-options-1"
+    assert hub.signal_heartbeat_missed == "unifi-heartbeat-missed"
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -288,7 +288,7 @@ async def test_controller_setup(
     assert device_entry.sw_version == "7.4.162"
 
 
-async def test_controller_not_accessible(hass: HomeAssistant) -> None:
+async def test_hub_not_accessible(hass: HomeAssistant) -> None:
     """Retry to login gets scheduled when connection fails."""
     with patch(
         "homeassistant.components.unifi.hub.get_unifi_api",
@@ -298,7 +298,7 @@ async def test_controller_not_accessible(hass: HomeAssistant) -> None:
     assert hass.data[UNIFI_DOMAIN] == {}
 
 
-async def test_controller_trigger_reauth_flow(hass: HomeAssistant) -> None:
+async def test_hub_trigger_reauth_flow(hass: HomeAssistant) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch(
         "homeassistant.components.unifi.get_unifi_api",
@@ -309,7 +309,7 @@ async def test_controller_trigger_reauth_flow(hass: HomeAssistant) -> None:
     assert hass.data[UNIFI_DOMAIN] == {}
 
 
-async def test_controller_unknown_error(hass: HomeAssistant) -> None:
+async def test_hub_unknown_error(hass: HomeAssistant) -> None:
     """Unknown errors are handled."""
     with patch(
         "homeassistant.components.unifi.hub.get_unifi_api",
@@ -324,10 +324,10 @@ async def test_config_entry_updated(
 ) -> None:
     """Calling reset when the entry has been setup."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     event_call = Mock()
-    unsub = async_dispatcher_connect(hass, controller.signal_options_update, event_call)
+    unsub = async_dispatcher_connect(hass, hub.signal_options_update, event_call)
 
     hass.config_entries.async_update_entry(
         config_entry, options={CONF_TRACK_CLIENTS: False, CONF_TRACK_DEVICES: False}
@@ -347,9 +347,9 @@ async def test_reset_after_successful_setup(
 ) -> None:
     """Calling reset when the entry has been setup."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
-    result = await controller.async_reset()
+    result = await hub.async_reset()
     await hass.async_block_till_done()
 
     assert result is True
@@ -360,13 +360,13 @@ async def test_reset_fails(
 ) -> None:
     """Calling reset when the entry has been setup can return false."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
         return_value=False,
     ):
-        result = await controller.async_reset()
+        result = await hub.async_reset()
         await hass.async_block_till_done()
 
     assert result is False
@@ -451,10 +451,10 @@ async def test_get_unifi_api(hass: HomeAssistant) -> None:
 
 async def test_get_unifi_api_verify_ssl_false(hass: HomeAssistant) -> None:
     """Successful call with verify ssl set to false."""
-    controller_data = dict(ENTRY_CONFIG)
-    controller_data[CONF_VERIFY_SSL] = False
+    hub_data = dict(ENTRY_CONFIG)
+    hub_data[CONF_VERIFY_SSL] = False
     with patch("aiounifi.Controller.login", return_value=True):
-        assert await get_unifi_api(hass, controller_data)
+        assert await get_unifi_api(hass, hub_data)
 
 
 @pytest.mark.parametrize(

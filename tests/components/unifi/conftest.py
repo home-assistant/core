@@ -43,12 +43,12 @@ class WebsocketStateManager(asyncio.Event):
         Mock api calls done by 'await self.api.login'.
         Fail will make 'await self.api.start_websocket' return immediately.
         """
-        controller = self.hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
+        hub = self.hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
         self.aioclient_mock.get(
-            f"https://{controller.host}:1234", status=302
+            f"https://{hub.host}:1234", status=302
         )  # Check UniFi OS
         self.aioclient_mock.post(
-            f"https://{controller.host}:1234/api/login",
+            f"https://{hub.host}:1234/api/login",
             json={"data": "login successful", "meta": {"rc": "ok"}},
             headers={"content-type": CONTENT_TYPE_JSON},
         )
@@ -79,13 +79,13 @@ def mock_unifi_websocket(hass):
         data: list[dict] | dict | None = None,
     ):
         """Generate a websocket call."""
-        controller = hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
+        hub = hass.data[UNIFI_DOMAIN][DEFAULT_CONFIG_ENTRY_ID]
         if data and not message:
-            controller.api.messages.handler(data)
+            hub.api.messages.handler(data)
         elif data and message:
             if not isinstance(data, list):
                 data = [data]
-            controller.api.messages.handler(
+            hub.api.messages.handler(
                 {
                     "meta": {"message": message.value},
                     "data": data,

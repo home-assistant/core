@@ -183,7 +183,7 @@ async def test_install(
     )
 
 
-async def test_controller_state_change(
+async def test_hub_state_change(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
 ) -> None:
     """Verify entities state reflect on controller becoming unavailable."""

@@ -66,11 +66,11 @@ async def test_reconnect_client(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=clients
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/stamgr",
     )
 
     device_entry = device_registry.async_get_or_create(
@@ -128,7 +128,7 @@ async def test_reconnect_device_without_mac(
     assert aioclient_mock.call_count == 0
 
 
-async def test_reconnect_client_controller_unavailable(
+async def test_reconnect_client_hub_unavailable(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
@@ -143,12 +143,12 @@ async def test_reconnect_client_controller_unavailable(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_response=clients
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.available = False
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub.available = False
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/stamgr",
     )
 
     device_entry = device_registry.async_get_or_create(
@@ -261,11 +261,11 @@ async def test_remove_clients(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_all_response=clients
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/stamgr",
     )
 
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)
@@ -277,7 +277,7 @@ async def test_remove_clients(
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
 
-async def test_remove_clients_controller_unavailable(
+async def test_remove_clients_hub_unavailable(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Verify no call is made if controller is unavailable."""
@@ -291,8 +291,8 @@ async def test_remove_clients_controller_unavailable(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, clients_all_response=clients
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    controller.available = False
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub.available = False
 
     aioclient_mock.clear_requests()
 
