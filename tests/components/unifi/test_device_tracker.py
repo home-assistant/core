@@ -413,7 +413,7 @@ async def test_hub_state_change(
     websocket_mock,
     mock_device_registry,
 ) -> None:
-    """Verify entities state reflect on controller becoming unavailable."""
+    """Verify entities state reflect on hub connection becoming unavailable."""
     client = {
         "essid": "ssid",
         "hostname": "client",

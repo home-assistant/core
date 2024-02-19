@@ -783,7 +783,7 @@ async def test_no_clients(
 async def test_hub_not_client(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test that the controller doesn't become a switch."""
+    """Test that the cloud key doesn't become a switch."""
     await setup_unifi_integration(
         hass,
         aioclient_mock,

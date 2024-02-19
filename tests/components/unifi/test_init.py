@@ -15,7 +15,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_setup_with_no_config(hass: HomeAssistant) -> None:
-    """Test that we do not discover anything or try to set up a controller."""
+    """Test that we do not discover anything or try to set up a hub."""
     assert await async_setup_component(hass, UNIFI_DOMAIN, {}) is True
     assert UNIFI_DOMAIN not in hass.data
 

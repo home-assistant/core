@@ -302,7 +302,7 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
         """Update entity state.
 
-        Remove heartbeat check if controller state has changed
+        Remove heartbeat check if hub connection state has changed
          and entity is unavailable.
         Update is_connected.
         Schedule new heartbeat check if connected.

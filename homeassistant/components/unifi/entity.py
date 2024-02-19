@@ -210,7 +210,7 @@ class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
 
     @callback
     def async_signal_reachable_callback(self) -> None:
-        """Call when controller connection state change."""
+        """Call when hub connection state change."""
         self.async_signalling_callback(ItemEvent.ADDED, self._obj_id)
 
     async def async_signal_options_updated(self) -> None:

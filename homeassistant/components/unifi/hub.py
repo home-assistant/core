@@ -165,7 +165,7 @@ class UnifiHub:
 
     @property
     def host(self) -> str:
-        """Return the host of this controller."""
+        """Return the host of this hub."""
         host: str = self.config_entry.data[CONF_HOST]
         return host
 
@@ -351,7 +351,7 @@ class UnifiHub:
 
     @property
     def device_info(self) -> DeviceInfo:
-        """UniFi controller device info."""
+        """UniFi Network device info."""
         assert self.config_entry.unique_id is not None
 
         version: str | None = None
@@ -449,7 +449,7 @@ class UnifiHub:
             self.ws_task.cancel()
 
     async def async_reset(self) -> bool:
-        """Reset this controller to default state.
+        """Reset this hub to default state.
 
         Will cancel any scheduled setup retry and will unload
         the config entry.
@@ -493,7 +493,7 @@ async def get_unifi_api(
     hass: HomeAssistant,
     config: MappingProxyType[str, Any],
 ) -> aiounifi.Controller:
-    """Create a controller object and verify authentication."""
+    """Create a aiounifi object and verify authentication."""
     ssl_context: ssl.SSLContext | Literal[False] = False
 
     if verify_ssl := config.get(CONF_VERIFY_SSL):

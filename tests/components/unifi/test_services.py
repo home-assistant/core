@@ -133,7 +133,7 @@ async def test_reconnect_client_hub_unavailable(
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Verify no call is made if controller is unavailable."""
+    """Verify no call is made if hub is unavailable."""
     clients = [
         {
             "is_wired": False,
@@ -170,14 +170,14 @@ async def test_reconnect_client_unknown_mac(
     device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Verify no call is made if trying to reconnect a mac unknown to controller."""
+    """Verify no call is made if trying to reconnect a mac unknown to hub."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
 
     aioclient_mock.clear_requests()
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "mac unknown to controller")},
+        connections={(dr.CONNECTION_NETWORK_MAC, "mac unknown to hub")},
     )
 
     await hass.services.async_call(
@@ -280,7 +280,7 @@ async def test_remove_clients(
 async def test_remove_clients_hub_unavailable(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Verify no call is made if controller is unavailable."""
+    """Verify no call is made if UniFi Network is unavailable."""
     clients = [
         {
             "first_seen": 100,

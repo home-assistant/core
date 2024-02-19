@@ -84,7 +84,7 @@ async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -
 
 
 async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> None:
-    """Remove select clients from controller.
+    """Remove select clients from UniFi Network.
 
     Validates based on:
     - Total time between first seen and last seen is less than 15 minutes.

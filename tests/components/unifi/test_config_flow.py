@@ -388,7 +388,7 @@ async def test_flow_fails_hub_unavailable(
 async def test_reauth_flow_update_configuration(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Verify reauth flow can update controller configuration."""
+    """Verify reauth flow can update hub configuration."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
     hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     hub.available = False

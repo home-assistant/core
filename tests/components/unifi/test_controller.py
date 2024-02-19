@@ -473,7 +473,7 @@ async def test_get_unifi_api_verify_ssl_false(hass: HomeAssistant) -> None:
 async def test_get_unifi_api_fails_to_connect(
     hass: HomeAssistant, side_effect, raised_exception
 ) -> None:
-    """Check that get_unifi_api can handle controller being unavailable."""
+    """Check that get_unifi_api can handle UniFi Network being unavailable."""
     with patch("aiounifi.Controller.login", side_effect=side_effect), pytest.raises(
         raised_exception
     ):
