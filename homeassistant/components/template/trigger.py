@@ -113,6 +113,7 @@ async def async_attach_trigger(
             "entity_id": entity_id,
             "from_state": from_s,
             "to_state": to_s,
+            "value": result,
         }
         trigger_variables = {
             **trigger_data,
