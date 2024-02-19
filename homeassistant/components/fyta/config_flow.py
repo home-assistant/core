@@ -73,8 +73,6 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-                errors[CONF_USERNAME] = "auth_error"
-                errors[CONF_PASSWORD] = "auth_error"
             except InvalidPassword:
                 errors["base"] = "invalid_auth"
                 errors[CONF_PASSWORD] = "password_error"
