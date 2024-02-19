@@ -142,10 +142,14 @@ async def async_setup_entry(
     )
 
     plant_entities: list[dict[str, Any]] = []
-    for plant_id in coordinator.plant_list:
-        for sensor in SENSORS:
-            if sensor.key in coordinator.data[plant_id]:
-                plant_entities.append({"id": plant_id, "sensor": sensor})
+    plant_entities.extend(
+        [
+            FytaPlantSensor(coordinator, entry, plant["sensor"], plant["id"])
+            for plant_id in coordinator.plant_list
+            for sensor in SENSORS
+            if sensor.key in coordinator.data[plant_id]
+        ]
+    )
 
     async_add_entities(plant_entities)
 
