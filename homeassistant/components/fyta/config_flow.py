@@ -64,7 +64,7 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
 
         errors = {}
-        if user_input is not None:
+        if user_input:
             try:
                 info = await validate_input(self.hass, user_input)
 
