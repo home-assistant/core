@@ -24,7 +24,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     CONF_DNSMASQ,
@@ -73,20 +72,17 @@ def handle_errors_and_zip(
 
         @functools.wraps(func)
         async def _wrapper(self: _AsusWrtBridgeT) -> dict[str, Any]:
-            try:
-                data = await func(self)
-            except exceptions as exc:
-                raise UpdateFailed(exc) from exc
+            data = await func(self)
 
             if keys is None:
                 if not isinstance(data, dict):
-                    raise UpdateFailed("Received invalid data type")
+                    raise TypeError("Received invalid data type")
                 return data
 
             if isinstance(data, dict):
                 return dict(zip(keys, list(data.values())))
             if not isinstance(data, (list, tuple)):
-                raise UpdateFailed("Received invalid data type")
+                raise TypeError("Received invalid data type")
             return dict(zip(keys, data))
 
         return _wrapper
@@ -211,10 +207,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
 
     async def async_get_connected_devices(self) -> dict[str, WrtDevice]:
         """Get list of connected devices."""
-        try:
-            api_devices = await self._api.async_get_connected_devices()
-        except OSError as exc:
-            raise UpdateFailed(exc) from exc
+        api_devices = await self._api.async_get_connected_devices()
         return {
             format_mac(mac): WrtDevice(dev.ip, dev.name, None)
             for mac, dev in api_devices.items()
@@ -343,10 +336,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
 
     async def async_get_connected_devices(self) -> dict[str, WrtDevice]:
         """Get list of connected devices."""
-        try:
-            api_devices = await self._api.async_get_connected_devices()
-        except AsusWrtError as exc:
-            raise UpdateFailed(exc) from exc
+        api_devices = await self._api.async_get_connected_devices()
         return {
             format_mac(mac): WrtDevice(dev.ip, dev.name, dev.node)
             for mac, dev in api_devices.items()
