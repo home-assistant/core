@@ -292,15 +292,13 @@ async def async_test_home_assistant(
         ), patch(
             "homeassistant.helpers.restore_state.start.async_at_start",
         ):
-            await asyncio.gather(
-                ar.async_load(hass),
-                dr.async_load(hass),
-                er.async_load(hass),
-                fr.async_load(hass),
-                ir.async_load(hass),
-                lr.async_load(hass),
-                rs.async_load(hass),
-            )
+            await ar.async_load(hass)
+            await dr.async_load(hass)
+            await er.async_load(hass)
+            await fr.async_load(hass)
+            await ir.async_load(hass)
+            await lr.async_load(hass)
+            await rs.async_load(hass)
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
     hass.set_state(CoreState.running)
