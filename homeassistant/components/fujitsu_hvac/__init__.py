@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_ID, FGLAIR_APP_SECRET
+from .coordinator import FujitsuHVACCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
@@ -33,7 +34,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except AylaAuthError as e:
         raise ConfigEntryAuthFailed("Credentuials expired for Ayla IoT API") from e
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = api
+    coordinator = FujitsuHVACCoordinator(hass, api)
+    await coordinator.async_config_entry_first_refresh()
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

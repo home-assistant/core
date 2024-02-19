@@ -33,9 +33,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up one Fujitsu HVAC device."""
-    api = hass.data[DOMAIN][entry.entry_id]
-    coordinator = FujitsuHVACCoordinator(hass, api)
-    await coordinator.async_config_entry_first_refresh()
+    coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [FujitsuHVACDevice(coordinator, dev) for dev in coordinator.data.values()]
