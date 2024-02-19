@@ -4,8 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
-from myuplink.api import MyUplinkAPI
-from myuplink.models import Device, DevicePoint, System
+from myuplink import Device, DevicePoint, MyUplinkAPI, System
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator

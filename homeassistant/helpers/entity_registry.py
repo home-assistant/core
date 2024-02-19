@@ -65,7 +65,7 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 12
+STORAGE_VERSION_MINOR = 13
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -135,6 +135,7 @@ ReadOnlyEntityOptionsType = ReadOnlyDict[str, ReadOnlyDict[str, Any]]
 
 DISPLAY_DICT_OPTIONAL = (
     ("ai", "area_id"),
+    ("lb", "labels"),
     ("di", "device_id"),
     ("ic", "icon"),
     ("tk", "translation_key"),
@@ -174,6 +175,7 @@ class RegistryEntry:
         converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex),  # type: ignore[misc]
     )
     has_entity_name: bool = attr.ib(default=False)
+    labels: set[str] = attr.ib(factory=set)
     name: str | None = attr.ib(default=None)
     options: ReadOnlyEntityOptionsType = attr.ib(
         default=None, converter=_protect_entity_options
@@ -262,6 +264,7 @@ class RegistryEntry:
             "hidden_by": self.hidden_by,
             "icon": self.icon,
             "id": self.id,
+            "labels": self.labels,
             "name": self.name,
             "options": self.options,
             "original_name": self.original_name,
@@ -348,7 +351,7 @@ class DeletedRegistryEntry:
 class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
-    async def _async_migrate_func(
+    async def _async_migrate_func(  # noqa: C901
         self,
         old_major_version: int,
         old_minor_version: int,
@@ -428,6 +431,11 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             # Version 1.12 adds previous_unique_id
             for entity in data["entities"]:
                 entity["previous_unique_id"] = None
+
+        if old_major_version == 1 and old_minor_version < 13:
+            # Version 1.13 adds labels
+            for entity in data["entities"]:
+                entity["labels"] = []
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -878,6 +886,7 @@ class EntityRegistry:
         hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         has_entity_name: bool | UndefinedType = UNDEFINED,
+        labels: set[str] | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
@@ -928,6 +937,7 @@ class EntityRegistry:
             ("hidden_by", hidden_by),
             ("icon", icon),
             ("has_entity_name", has_entity_name),
+            ("labels", labels),
             ("name", name),
             ("options", options),
             ("original_device_class", original_device_class),
@@ -1005,6 +1015,7 @@ class EntityRegistry:
         hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         has_entity_name: bool | UndefinedType = UNDEFINED,
+        labels: set[str] | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
@@ -1029,6 +1040,7 @@ class EntityRegistry:
             hidden_by=hidden_by,
             icon=icon,
             has_entity_name=has_entity_name,
+            labels=labels,
             name=name,
             new_entity_id=new_entity_id,
             new_unique_id=new_unique_id,
@@ -1126,6 +1138,7 @@ class EntityRegistry:
                     icon=entity["icon"],
                     id=entity["id"],
                     has_entity_name=entity["has_entity_name"],
+                    labels=set(entity["labels"]),
                     name=entity["name"],
                     options=entity["options"],
                     original_device_class=entity["original_device_class"],
@@ -1182,6 +1195,7 @@ class EntityRegistry:
                 "icon": entry.icon,
                 "id": entry.id,
                 "has_entity_name": entry.has_entity_name,
+                "labels": list(entry.labels),
                 "name": entry.name,
                 "options": entry.options,
                 "original_device_class": entry.original_device_class,
@@ -1209,6 +1223,15 @@ class EntityRegistry:
         ]
 
         return data
+
+    @callback
+    def async_clear_label_id(self, label_id: str) -> None:
+        """Clear label from registry entries."""
+        for entity_id, entry in self.entities.items():
+            if label_id in entry.labels:
+                labels = entry.labels.copy()
+                labels.remove(label_id)
+                self.async_update_entity(entity_id, labels=labels)
 
     @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
@@ -1283,6 +1306,14 @@ def async_entries_for_area(
 
 
 @callback
+def async_entries_for_label(
+    registry: EntityRegistry, label_id: str
+) -> list[RegistryEntry]:
+    """Return entries that match a label."""
+    return [entry for entry in registry.entities.values() if label_id in entry.labels]
+
+
+@callback
 def async_entries_for_config_entry(
     registry: EntityRegistry, config_entry_id: str
 ) -> list[RegistryEntry]:
@@ -1323,7 +1354,26 @@ def async_config_entry_disabled_by_changed(
 @callback
 def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
     """Clean up device registry when entities removed."""
-    from . import event  # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
+    from . import event, label_registry as lr
+
+    @callback
+    def _label_removed_from_registry_filter(
+        event: lr.EventLabelRegistryUpdated,
+    ) -> bool:
+        """Filter all except for the remove action from label registry events."""
+        return event.data["action"] == "remove"
+
+    @callback
+    def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
+        """Update entity that have a label that has been removed."""
+        registry.async_clear_label_id(event.data["label_id"])
+
+    hass.bus.async_listen(
+        event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
+        event_filter=_label_removed_from_registry_filter,  # type: ignore[arg-type]
+        listener=_handle_label_registry_update,  # type: ignore[arg-type]
+    )
 
     @callback
     def cleanup(_: datetime) -> None:

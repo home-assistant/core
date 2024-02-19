@@ -1,4 +1,5 @@
 """DataUpdateCoordinators for the System monitor integration."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -43,7 +44,8 @@ dataT = TypeVar(
     | sswap
     | VirtualMemory
     | tuple[float, float, float]
-    | sdiskusage,
+    | sdiskusage
+    | None,
 )
 
 
@@ -130,12 +132,15 @@ class SystemMonitorLoadCoordinator(MonitorCoordinator[tuple[float, float, float]
         return os.getloadavg()
 
 
-class SystemMonitorProcessorCoordinator(MonitorCoordinator[float]):
+class SystemMonitorProcessorCoordinator(MonitorCoordinator[float | None]):
     """A System monitor Processor Data Update Coordinator."""
 
-    def update_data(self) -> float:
+    def update_data(self) -> float | None:
         """Fetch data."""
-        return psutil.cpu_percent(interval=None)
+        cpu_percent = psutil.cpu_percent(interval=None)
+        if cpu_percent > 0.0:
+            return cpu_percent
+        return None
 
 
 class SystemMonitorBootTimeCoordinator(MonitorCoordinator[datetime]):

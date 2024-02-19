@@ -1953,9 +1953,10 @@ async def test_migration_ti_cc_to_znp(
     old_type: str, new_type: str, hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test zigpy-cc to zigpy-znp config migration."""
-    config_entry.data = {**config_entry.data, CONF_RADIO_TYPE: old_type}
-    config_entry.version = 2
     config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, data={**config_entry.data, CONF_RADIO_TYPE: old_type}, version=2
+    )
 
     with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
         await hass.config_entries.async_setup(config_entry.entry_id)

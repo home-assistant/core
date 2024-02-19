@@ -135,7 +135,7 @@ def async_active_zone(
             is None
             # Skip zone that are outside the radius aka the
             # lat/long is outside the zone
-            or not (zone_dist - (radius := zone_attrs[ATTR_RADIUS]) < radius)
+            or not (zone_dist - (zone_radius := zone_attrs[ATTR_RADIUS]) < radius)
         ):
             continue
 
@@ -144,7 +144,7 @@ def async_active_zone(
             zone_dist < min_dist
             or (
                 # If same distance, prefer smaller zone
-                zone_dist == min_dist and radius < closest.attributes[ATTR_RADIUS]
+                zone_dist == min_dist and zone_radius < closest.attributes[ATTR_RADIUS]
             )
         ):
             continue

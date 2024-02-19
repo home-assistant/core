@@ -61,7 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
         return await self._async_handle_discovery(
-            discovery_info.ip, discovery_info.macaddress
+            discovery_info.ip, dr.format_mac(discovery_info.macaddress)
         )
 
     async def async_step_integration_discovery(

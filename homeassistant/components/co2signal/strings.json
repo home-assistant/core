@@ -28,12 +28,9 @@
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "api_ratelimit": "API Ratelimit exceeded"
+      "no_data": "No data is available for the location you have selected."
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "api_ratelimit": "[%key:component::co2signal::config::error::api_ratelimit%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },

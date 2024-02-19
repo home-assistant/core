@@ -6,7 +6,7 @@ from homeassistant.components.google_assistant import helpers, http
 
 def mock_google_config_store(agent_user_ids=None):
     """Fake a storage for google assistant."""
-    store = MagicMock(spec=helpers.GoogleConfigStore)
+    store = MagicMock(spec=http.GoogleConfigStore)
     if agent_user_ids is not None:
         store.agent_user_ids = agent_user_ids
     else:

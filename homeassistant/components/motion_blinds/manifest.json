@@ -1,6 +1,6 @@
 {
   "domain": "motion_blinds",
-  "name": "Motion Blinds",
+  "name": "Motionblinds",
   "codeowners": ["@starkillerOG"],
   "config_flow": true,
   "dependencies": ["network"],
