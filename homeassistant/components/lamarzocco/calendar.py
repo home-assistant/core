@@ -34,15 +34,14 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        # only need to check the dates between now and 7 days from now,
-        # because if we don't find anything there
-        # then there is no event scheduled
         now = dt_util.now()
-        for date in self._get_date_range(now, now + timedelta(days=7)):
-            if scheduled := self._async_get_calendar_event(date):
-                if scheduled.end < now:
-                    continue
-                return scheduled
+
+        events = self._get_events(
+            start_date=now,
+            end_date=now + timedelta(days=7),  # only need to check a week ahead
+        )
+        if events:
+            return events[0]
         return None
 
     async def async_get_events(
@@ -53,10 +52,23 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
 
-        events: list[CalendarEvent] = []
+        return self._get_events(
+            start_date=start_date,
+            end_date=end_date,
+        )
 
+    def _get_events(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> list[CalendarEvent]:
+        """Get calendar events within a datetime range."""
+
+        events: list[CalendarEvent] = []
         for date in self._get_date_range(start_date, end_date):
             if scheduled := self._async_get_calendar_event(date):
+                if scheduled.end < start_date:
+                    continue
                 events.append(scheduled)
         return events
 
