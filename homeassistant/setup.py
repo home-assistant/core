@@ -17,7 +17,13 @@ from .const import (
     PLATFORM_FORMAT,
     Platform,
 )
-from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from .core import (
+    CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HomeAssistant,
+    callback,
+)
 from .exceptions import DependencyError, HomeAssistantError
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType, EventType
@@ -528,7 +534,7 @@ def _async_when_setup(
 
     listeners: list[CALLBACK_TYPE] = []
 
-    async def _matched_event(event: EventType[EventComponentLoaded]) -> None:
+    async def _matched_event(event: Event) -> None:
         """Call the callback when we matched an event."""
         for listener in listeners:
             listener()
@@ -542,13 +548,13 @@ def _async_when_setup(
     listeners.append(
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
-            _matched_event,  # type: ignore[arg-type]
+            _matched_event,
             event_filter=_async_is_component_filter,  # type: ignore[arg-type]
         )
     )
     if start_event:
         listeners.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)  # type: ignore[arg-type]
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
         )
 
 
