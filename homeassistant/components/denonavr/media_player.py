@@ -451,9 +451,6 @@ class DenonDevice(MediaPlayerEntity):
     @async_log_errors
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        # Ensure that the AVR is turned on, which is necessary for input
-        # switch to work.
-        await self.async_turn_on()
         await self._receiver.async_set_input_func(source)
 
     @async_log_errors
