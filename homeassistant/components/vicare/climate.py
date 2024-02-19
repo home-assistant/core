@@ -293,9 +293,8 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode and deactivate any existing programs."""
-        supported_heating_programs = self._attributes["vicare_programs"]
         target_program = HeatingProgram.from_ha_preset(
-            preset_mode, supported_heating_programs
+            preset_mode, self._attributes["vicare_programs"]
         )
         if target_program is None:
             raise ServiceValidationError(
