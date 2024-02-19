@@ -344,10 +344,19 @@ class USBDiscovery:
 
     async def _async_process_ports(self, ports: list[ListPortInfo]) -> None:
         """Process each discovered port."""
-        for port in ports:
-            if port.vid is None and port.pid is None:
-                continue
-            await self._async_process_discovered_usb_device(usb_device_from_port(port))
+        usb_devices = [
+            usb_device_from_port(port) for port in ports if port.vid is not None
+        ]
+
+        if sys.platform == "darwin":
+            # Push the duplicate CP2102N port to the top: the other ones don't work
+            usb_devices.sort(
+                key=lambda usb: usb.device.startswith("/dev/cu.SLAB_USBtoUART"),
+                reverse=True,
+            )
+
+        for usb_device in usb_devices:
+            await self._async_process_discovered_usb_device(usb_device)
 
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""
