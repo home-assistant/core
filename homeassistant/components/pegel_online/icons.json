@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "air_temperature": {
+        "default": "mdi:thermometer-lines"
+      },
+      "clearance_height": {
+        "default": "mdi:bridge"
+      },
+      "oxygen_level": {
+        "default": "mdi:water-opacity"
+      },
+      "water_speed": {
+        "default": "mdi:waves-arrow-right"
+      },
+      "water_flow": {
+        "default": "mdi:waves"
+      },
+      "water_level": {
+        "default": "mdi:waves-arrow-up"
+      },
+      "water_temperature": {
+        "default": "mdi:thermometer-water"
+      }
+    }
+  }
+}

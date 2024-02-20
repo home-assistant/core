@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from datetime import datetime, timedelta
+from functools import partial
 import ssl
 from types import MappingProxyType
 from typing import Any, Literal
 
+import aiohttp
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -74,6 +77,7 @@ from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
+CHECK_WEBSOCKET_INTERVAL = timedelta(minutes=1)
 
 
 class UniFiController:
@@ -88,6 +92,7 @@ class UniFiController:
         self.api = api
 
         self.ws_task: asyncio.Task | None = None
+        self._cancel_websocket_check: CALLBACK_TYPE | None = None
 
         self.available = True
         self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
@@ -183,6 +188,17 @@ class UniFiController:
         )
 
     @callback
+    def _async_should_add_entity(
+        self, description: UnifiEntityDescription, obj_id: str
+    ) -> bool:
+        """Check if entity should be added."""
+        return bool(
+            (description.key, obj_id) not in self.known_objects
+            and description.allowed_fn(self, obj_id)
+            and description.supported_fn(self, obj_id)
+        )
+
+    @callback
     def register_platform_add_entities(
         self,
         unifi_platform_entity: type[UnifiEntity],
@@ -192,45 +208,47 @@ class UniFiController:
         """Subscribe to UniFi API handlers and create entities."""
 
         @callback
-        def async_load_entities(description: UnifiEntityDescription) -> None:
+        def async_load_entities(descriptions: Iterable[UnifiEntityDescription]) -> None:
             """Load and subscribe to UniFi endpoints."""
-            api_handler = description.api_handler_fn(self.api)
 
             @callback
-            def async_add_unifi_entity(obj_ids: list[str]) -> None:
+            def async_add_unifi_entities() -> None:
                 """Add UniFi entity."""
                 async_add_entities(
                     [
                         unifi_platform_entity(obj_id, self, description)
-                        for obj_id in obj_ids
-                        if (description.key, obj_id) not in self.known_objects
-                        if description.allowed_fn(self, obj_id)
-                        if description.supported_fn(self, obj_id)
+                        for description in descriptions
+                        for obj_id in description.api_handler_fn(self.api)
+                        if self._async_should_add_entity(description, obj_id)
                     ]
                 )
 
-            async_add_unifi_entity(list(api_handler))
+            async_add_unifi_entities()
 
             @callback
-            def async_create_entity(event: ItemEvent, obj_id: str) -> None:
+            def async_create_entity(
+                description: UnifiEntityDescription, event: ItemEvent, obj_id: str
+            ) -> None:
                 """Create new UniFi entity on event."""
-                async_add_unifi_entity([obj_id])
+                if self._async_should_add_entity(description, obj_id):
+                    async_add_entities(
+                        [unifi_platform_entity(obj_id, self, description)]
+                    )
 
-            api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
-
-            @callback
-            def async_options_updated() -> None:
-                """Load new entities based on changed options."""
-                async_add_unifi_entity(list(api_handler))
+            for description in descriptions:
+                description.api_handler_fn(self.api).subscribe(
+                    partial(async_create_entity, description), ItemEvent.ADDED
+                )
 
             self.config_entry.async_on_unload(
                 async_dispatcher_connect(
-                    self.hass, self.signal_options_update, async_options_updated
+                    self.hass,
+                    self.signal_options_update,
+                    async_add_unifi_entities,
                 )
             )
 
-        for description in descriptions:
-            async_load_entities(description)
+        async_load_entities(descriptions)
 
     @property
     def signal_reachable(self) -> str:
@@ -273,6 +291,9 @@ class UniFiController:
 
         self._cancel_heartbeat_check = async_track_time_interval(
             self.hass, self._async_check_for_stale, CHECK_HEARTBEAT_INTERVAL
+        )
+        self._cancel_websocket_check = async_track_time_interval(
+            self.hass, self._async_watch_websocket, CHECK_WEBSOCKET_INTERVAL
         )
 
     @callback
@@ -374,7 +395,10 @@ class UniFiController:
 
         async def _websocket_runner() -> None:
             """Start websocket."""
-            await self.api.start_websocket()
+            try:
+                await self.api.start_websocket()
+            except (aiohttp.ClientConnectorError, aiounifi.WebsocketError):
+                LOGGER.error("Websocket disconnected")
             self.available = False
             async_dispatcher_send(self.hass, self.signal_reachable)
             self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
@@ -400,12 +424,20 @@ class UniFiController:
                 async_dispatcher_send(self.hass, self.signal_reachable)
 
         except (
-            asyncio.TimeoutError,
+            TimeoutError,
             aiounifi.BadGateway,
             aiounifi.ServiceUnavailable,
             aiounifi.AiounifiException,
         ):
             self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
+
+    @callback
+    def _async_watch_websocket(self, now: datetime) -> None:
+        """Watch timestamp for last received websocket message."""
+        LOGGER.debug(
+            "Last received websocket timestamp: %s",
+            self.api.connectivity.ws_message_received,
+        )
 
     @callback
     def shutdown(self, event: Event) -> None:
@@ -445,6 +477,10 @@ class UniFiController:
         if self._cancel_heartbeat_check:
             self._cancel_heartbeat_check()
             self._cancel_heartbeat_check = None
+
+        if self._cancel_websocket_check:
+            self._cancel_websocket_check()
+            self._cancel_websocket_check = None
 
         if self._cancel_poe_command:
             self._cancel_poe_command()
@@ -495,8 +531,9 @@ async def get_unifi_controller(
         raise AuthenticationRequired from err
 
     except (
-        asyncio.TimeoutError,
+        TimeoutError,
         aiounifi.BadGateway,
+        aiounifi.Forbidden,
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
         aiounifi.ResponseError,
@@ -505,14 +542,6 @@ async def get_unifi_controller(
             "Error connecting to the UniFi Network at %s: %s", config[CONF_HOST], err
         )
         raise CannotConnect from err
-
-    except aiounifi.Forbidden as err:
-        LOGGER.warning(
-            "Access forbidden to UniFi Network at %s, check access rights: %s",
-            config[CONF_HOST],
-            err,
-        )
-        raise AuthenticationRequired from err
 
     except aiounifi.LoginRequired as err:
         LOGGER.warning(

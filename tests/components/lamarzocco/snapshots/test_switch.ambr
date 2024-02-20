@@ -17,6 +17,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'La Marzocco',
     'model': 'GS3 AV',
     'name': 'GS01234',
@@ -31,7 +33,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234',
-      'icon': 'mdi:power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gs01234',
@@ -57,16 +58,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:power',
+    'original_icon': None,
     'original_name': None,
     'platform': 'lamarzocco',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'main',
     'unique_id': 'GS01234_main',
     'unit_of_measurement': None,
   })
@@ -75,7 +78,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Auto on/off',
-      'icon': 'mdi:alarm',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gs01234_auto_on_off',
@@ -101,11 +103,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alarm',
+    'original_icon': None,
     'original_name': 'Auto on/off',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
@@ -119,7 +123,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS01234 Steam boiler',
-      'icon': 'mdi:water-boiler',
     }),
     'context': <ANY>,
     'entity_id': 'switch.gs01234_steam_boiler',
@@ -145,11 +148,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:water-boiler',
+    'original_icon': None,
     'original_name': 'Steam boiler',
     'platform': 'lamarzocco',
     'previous_unique_id': None,

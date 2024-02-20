@@ -36,7 +36,7 @@ async def _async_can_discover_devices() -> bool:
         try:
             client.on(EVENT_DEVICE_DISCOVERED, _async_found)
             await future_event
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return False
 
     return True

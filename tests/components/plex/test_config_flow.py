@@ -442,7 +442,8 @@ async def test_option_flow_new_users_available(
     OPTIONS_OWNER_ONLY[Platform.MEDIA_PLAYER][CONF_MONITORED_USERS] = {
         "User 1": {"enabled": True}
     }
-    entry.options = OPTIONS_OWNER_ONLY
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, options=OPTIONS_OWNER_ONLY)
 
     mock_plex_server = await setup_plex_server(config_entry=entry)
     await hass.async_block_till_done()

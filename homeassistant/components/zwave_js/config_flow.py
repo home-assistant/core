@@ -118,7 +118,7 @@ async def async_get_version_info(hass: HomeAssistant, ws_address: str) -> Versio
             version_info: VersionInfo = await get_server_version(
                 ws_address, async_get_clientsession(hass)
             )
-    except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+    except (TimeoutError, aiohttp.ClientError) as err:
         # We don't want to spam the log if the add-on isn't started
         # or takes a long time to start.
         _LOGGER.debug("Failed to connect to Z-Wave JS server: %s", err)
@@ -750,9 +750,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
                 }
             )
 
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            )
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
             return self.async_create_entry(title=TITLE, data={})
 
         return self.async_show_form(
@@ -917,9 +915,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
             }
         )
         # Always reload entry since we may have disconnected the client.
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self.config_entry.entry_id)
-        )
+        self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
         return self.async_create_entry(title=TITLE, data={})
 
     async def async_revert_addon_config(self, reason: str) -> FlowResult:
@@ -935,9 +931,7 @@ class OptionsFlowHandler(BaseZwaveJSFlow, config_entries.OptionsFlow):
             )
 
         if self.revert_reason or not self.original_addon_config:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(self.config_entry.entry_id)
-            )
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
             return self.async_abort(reason=reason)
 
         self.revert_reason = reason

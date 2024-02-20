@@ -19,10 +19,10 @@ from .const import KEY_HASS
 CACHE_TIME: Final = 31 * 86400  # = 1 month
 CACHE_HEADER = f"public, max-age={CACHE_TIME}"
 CACHE_HEADERS: Mapping[str, str] = {hdrs.CACHE_CONTROL: CACHE_HEADER}
-PATH_CACHE: LRU[tuple[str, Path, bool], tuple[Path | None, str | None]] = LRU(512)
+PATH_CACHE: LRU[tuple[str, Path], tuple[Path | None, str | None]] = LRU(512)
 
 
-def _get_file_path(rel_url: str, directory: Path, follow_symlinks: bool) -> Path | None:
+def _get_file_path(rel_url: str, directory: Path) -> Path | None:
     """Return the path to file on disk or None."""
     filename = Path(rel_url)
     if filename.anchor:
@@ -31,8 +31,7 @@ def _get_file_path(rel_url: str, directory: Path, follow_symlinks: bool) -> Path
         # where the static dir is totally different
         raise HTTPForbidden
     filepath: Path = directory.joinpath(filename).resolve()
-    if not follow_symlinks:
-        filepath.relative_to(directory)
+    filepath.relative_to(directory)
     # on opening a dir, load its contents if allowed
     if filepath.is_dir():
         return None
@@ -47,7 +46,7 @@ class CachingStaticResource(StaticResource):
     async def _handle(self, request: Request) -> StreamResponse:
         """Return requested file from disk as a FileResponse."""
         rel_url = request.match_info["filename"]
-        key = (rel_url, self._directory, self._follow_symlinks)
+        key = (rel_url, self._directory)
         if (filepath_content_type := PATH_CACHE.get(key)) is None:
             hass: HomeAssistant = request.app[KEY_HASS]
             try:

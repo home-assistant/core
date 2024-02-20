@@ -67,7 +67,7 @@ def async_setup_block_attribute_entities(
     sensor_class: Callable,
 ) -> None:
     """Set up entities for block attributes."""
-    blocks = []
+    entities = []
 
     assert coordinator.device.blocks
 
@@ -90,17 +90,14 @@ def async_setup_block_attribute_entities(
                 unique_id = f"{coordinator.mac}-{block.description}-{sensor_id}"
                 async_remove_shelly_entity(hass, domain, unique_id)
             else:
-                blocks.append((block, sensor_id, description))
+                entities.append(
+                    sensor_class(coordinator, block, sensor_id, description)
+                )
 
-    if not blocks:
+    if not entities:
         return
 
-    async_add_entities(
-        [
-            sensor_class(coordinator, block, sensor_id, description)
-            for block, sensor_id, description in blocks
-        ]
-    )
+    async_add_entities(entities)
 
 
 @callback
@@ -172,6 +169,7 @@ def async_setup_rpc_attribute_entities(
     coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
     assert coordinator
 
+    polling_coordinator = None
     if not (sleep_period := config_entry.data[CONF_SLEEP_PERIOD]):
         polling_coordinator = get_entry_data(hass)[config_entry.entry_id].rpc_poll
         assert polling_coordinator
@@ -272,7 +270,6 @@ class BlockEntityDescription(EntityDescription):
     # restrict the type to str.
     name: str = ""
 
-    icon_fn: Callable[[dict], str] | None = None
     unit_fn: Callable[[dict], str] | None = None
     value: Callable[[Any], Any] = lambda val: val
     available: Callable[[Block], bool] | None = None

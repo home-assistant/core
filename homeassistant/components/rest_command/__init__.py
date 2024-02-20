@@ -1,7 +1,6 @@
 """Support for exposing regular REST commands as services."""
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 from json.decoder import JSONDecodeError
 import logging
@@ -79,7 +78,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if conf is None:
             return
 
-        existing = hass.services.async_services().get(DOMAIN, {})
+        existing = hass.services.async_services_for_domain(DOMAIN)
         for existing_service in existing:
             if existing_service == SERVICE_RELOAD:
                 continue
@@ -188,7 +187,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         ) from err
                     return {"content": _content, "status": response.status}
 
-            except asyncio.TimeoutError as err:
+            except TimeoutError as err:
                 raise HomeAssistantError(
                     f"Timeout when calling resource '{request_url}'",
                     translation_domain=DOMAIN,
