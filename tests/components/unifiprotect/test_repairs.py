@@ -55,7 +55,10 @@ async def test_ea_warning_ignore(
     data = await resp.json()
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {"version": str(version)}
+    assert data["description_placeholders"] == {
+        "learn_more": "https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access",
+        "version": str(version),
+    }
     assert data["step_id"] == "start"
 
     url = RepairsFlowResourceView.url.format(flow_id=flow_id)
@@ -64,7 +67,10 @@ async def test_ea_warning_ignore(
     data = await resp.json()
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {"version": str(version)}
+    assert data["description_placeholders"] == {
+        "learn_more": "https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access",
+        "version": str(version),
+    }
     assert data["step_id"] == "confirm"
 
     url = RepairsFlowResourceView.url.format(flow_id=flow_id)
@@ -107,7 +113,10 @@ async def test_ea_warning_fix(
     data = await resp.json()
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {"version": str(version)}
+    assert data["description_placeholders"] == {
+        "learn_more": "https://www.home-assistant.io/integrations/unifiprotect#about-unifi-early-access",
+        "version": str(version),
+    }
     assert data["step_id"] == "start"
 
     new_nvr = copy(ufp.api.bootstrap.nvr)
