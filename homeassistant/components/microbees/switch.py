@@ -9,7 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import MicroBeesUpdateCoordinator
-from .entity import MicroBeesEntity
+from .entity import MicroBeesActuatorEntity
 
 SOCKET_TRANSLATIONS = {46: "socket_it", 38: "socket_eu"}
 
@@ -28,7 +28,7 @@ async def async_setup_entry(
     async_add_entities(switches)
 
 
-class MBSwitch(MicroBeesEntity, SwitchEntity):
+class MBSwitch(MicroBeesActuatorEntity, SwitchEntity):
     """Representation of a microBees switch."""
 
     def __init__(
