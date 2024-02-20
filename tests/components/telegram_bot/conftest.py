@@ -9,7 +9,12 @@ from homeassistant.components.telegram_bot import (
     CONF_TRUSTED_NETWORKS,
     DOMAIN,
 )
-from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_PLATFORM,
+    CONF_URL,
+    EVENT_HOMEASSISTANT_START,
+)
 from homeassistant.setup import async_setup_component
 
 
@@ -79,14 +84,7 @@ def mock_external_calls():
     ), patch(
         "telegram._bot.Bot.bot",
         test_user,
-    ):
-        yield
-
-
-@pytest.fixture
-def mock_stop_polling():
-    """Mock stop_polling as it makes an external call."""
-    with patch("homeassistant.components.telegram_bot.polling.PollBot.stop_polling"):
+    ), patch("telegram.ext.Updater._bootstrap"):
         yield
 
 
@@ -217,11 +215,13 @@ async def webhook_platform(
 
 
 @pytest.fixture
-async def polling_platform(hass, config_polling, mock_stop_polling):
+async def polling_platform(hass, config_polling, mock_external_calls):
     """Fixture for setting up the polling platform using appropriate config and mocks."""
     await async_setup_component(
         hass,
         DOMAIN,
         config_polling,
     )
+    # Fire this event to start polling
+    hass.bus.fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()

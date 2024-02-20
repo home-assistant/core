@@ -106,7 +106,7 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
 
 
 async def test_polling_platform_message_text_update(
-    hass: HomeAssistant, config_polling, update_message_text, mock_stop_polling
+    hass: HomeAssistant, config_polling, update_message_text
 ) -> None:
     """Provide the `BaseTelegramBotEntity.update_handler` with an `Update` and assert fired `telegram_text` event."""
     events = async_capture_events(hass, "telegram_text")
