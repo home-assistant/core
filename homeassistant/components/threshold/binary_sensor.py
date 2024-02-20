@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
@@ -114,7 +115,6 @@ async def async_setup_entry(
     async_add_entities(
         [
             ThresholdSensor(
-                hass,
                 entity_id,
                 name,
                 lower,
@@ -148,7 +148,7 @@ async def async_setup_platform(
     async_add_entities(
         [
             ThresholdSensor(
-                hass, entity_id, name, lower, upper, hysteresis, device_class, None
+                entity_id, name, lower, upper, hysteresis, device_class, None
             )
         ],
     )
@@ -170,7 +170,6 @@ class ThresholdSensor(BinarySensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         entity_id: str,
         name: str,
         lower: float | None,
@@ -181,6 +180,7 @@ class ThresholdSensor(BinarySensorEntity):
         device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the Threshold sensor."""
+        self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
         self._attr_unique_id = unique_id
         self._attr_device_info = device_info
         self._entity_id = entity_id
@@ -196,9 +196,17 @@ class ThresholdSensor(BinarySensorEntity):
         self._state: bool | None = None
         self.sensor_value: float | None = None
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self._async_setup_sensor()
+
+    @callback
+    def _async_setup_sensor(self) -> None:
+        """Set up the sensor and start tracking state changes."""
+
         def _update_sensor_state() -> None:
             """Handle sensor state changes."""
-            if (new_state := hass.states.get(self._entity_id)) is None:
+            if (new_state := self.hass.states.get(self._entity_id)) is None:
                 return
 
             try:
@@ -213,17 +221,26 @@ class ThresholdSensor(BinarySensorEntity):
 
             self._update_state()
 
+            if self._preview_callback:
+                calculated_state = self._async_calculate_state()
+                self._preview_callback(
+                    calculated_state.state, calculated_state.attributes
+                )
+
         @callback
         def async_threshold_sensor_state_listener(
             event: Event[EventStateChangedData],
         ) -> None:
             """Handle sensor state changes."""
             _update_sensor_state()
-            self.async_write_ha_state()
+
+            # only write state to the state machine if we are not in preview mode
+            if not self._preview_callback:
+                self.async_write_ha_state()
 
         self.async_on_remove(
             async_track_state_change_event(
-                hass, [entity_id], async_threshold_sensor_state_listener
+                self.hass, [self._entity_id], async_threshold_sensor_state_listener
             )
         )
         _update_sensor_state()
@@ -259,6 +276,14 @@ class ThresholdSensor(BinarySensorEntity):
             return sensor_value > (threshold + self._hysteresis)
 
         if self.sensor_value is None:
+            self._state_position = POSITION_UNKNOWN
+            self._state = None
+            return
+
+        # guard against the case where the thresholds are not set
+        if not hasattr(self, "_threshold_lower") and not hasattr(
+            self, "_threshold_upper"
+        ):
             self._state_position = POSITION_UNKNOWN
             self._state = None
             return
@@ -308,3 +333,22 @@ class ThresholdSensor(BinarySensorEntity):
                 self._state_position = POSITION_IN_RANGE
                 self._state = True
             return
+
+    @callback
+    def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+        # abort early if there is no entity_id
+        # as without we can't track changes
+        if not self._entity_id:
+            self._attr_available = False
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
+            return self._call_on_remove_callbacks
+
+        self._preview_callback = preview_callback
+
+        self._async_setup_sensor()
+        return self._call_on_remove_callbacks
