@@ -775,6 +775,7 @@ omit =
     homeassistant/components/microbees/const.py
     homeassistant/components/microbees/coordinator.py
     homeassistant/components/microbees/entity.py
+    homeassistant/components/microbees/sensor.py
     homeassistant/components/microbees/switch.py
     homeassistant/components/microsoft/tts.py
     homeassistant/components/mikrotik/hub.py
