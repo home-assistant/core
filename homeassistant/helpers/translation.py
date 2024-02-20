@@ -151,7 +151,7 @@ def build_resources(
 
 async def _async_get_component_strings(
     hass: HomeAssistant,
-    language: str,
+    languages: Iterable[str],
     components: set[str],
     integrations: dict[str, Integration],
 ) -> dict[str, Any]:
@@ -159,17 +159,18 @@ async def _async_get_component_strings(
     translations: dict[str, Any] = {}
     # Determine paths of missing components/platforms
     files_to_load: dict[str, str] = {}
-    for loaded in components:
-        domain = loaded.partition(".")[0]
-        if not (integration := integrations.get(domain)):
-            continue
+    for language in languages:
+        for loaded in components:
+            domain = loaded.partition(".")[0]
+            if not (integration := integrations.get(domain)):
+                continue
 
-        path = component_translation_path(loaded, language, integration)
-        # No translation available
-        if path is None:
-            translations[loaded] = {}
-        else:
-            files_to_load[loaded] = path
+            path = component_translation_path(loaded, language, integration)
+            # No translation available
+            if path is None:
+                translations[loaded] = {}
+            else:
+                files_to_load[loaded] = path
 
     if not files_to_load:
         return translations
@@ -280,13 +281,10 @@ class _TranslationCache:
                 continue
             integrations[domain] = int_or_exc
 
-        for translation_strings in await asyncio.gather(
-            *(
-                _async_get_component_strings(self.hass, lang, components, integrations)
-                for lang in languages
-            )
-        ):
-            self._build_category_cache(language, components, translation_strings)
+        translation_strings = await _async_get_component_strings(
+            self.hass, languages, components, integrations
+        )
+        self._build_category_cache(language, components, translation_strings)
 
         self.loaded[language].update(components)
 
