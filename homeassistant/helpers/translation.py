@@ -293,9 +293,26 @@ class _TranslationCache:
         translation_by_language_strings = await _async_get_component_strings(
             self.hass, languages, components, integrations
         )
-        for loaded_lang, translation_strings in translation_by_language_strings.items():
-            self._build_category_cache(loaded_lang, components, translation_strings)
-            self.loaded.setdefault(loaded_lang, set()).update(components)
+
+        # English is always the fallback language so we load them first
+        self._build_category_cache(
+            language, components, translation_by_language_strings[LOCALE_EN]
+        )
+
+        if language != LOCALE_EN:
+            # Now overlay the requested language on top of the English
+            self._build_category_cache(
+                language, components, translation_by_language_strings[language]
+            )
+
+            # Since we just loaded english anyway we can avoid loading
+            # again if they switch back to english.
+            self._build_category_cache(
+                LOCALE_EN, components, translation_by_language_strings[LOCALE_EN]
+            )
+            self.loaded.setdefault(LOCALE_EN, set()).update(components)
+
+        self.loaded.setdefault(language, set()).update(components)
 
     def _validate_placeholders(
         self,
