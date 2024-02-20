@@ -1,6 +1,6 @@
 """Base entity for microBees."""
 
-from microBeesPy.microbees import Actuator, Bee
+from microBeesPy import Actuator, Bee, Sensor
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -19,12 +19,13 @@ class MicroBeesEntity(CoordinatorEntity[MicroBeesUpdateCoordinator]):
         coordinator: MicroBeesUpdateCoordinator,
         bee_id: int,
         actuator_id: int,
+        sensor_id: int = 0,
     ) -> None:
         """Initialize the microBees entity."""
         super().__init__(coordinator)
         self.bee_id = bee_id
         self.actuator_id = actuator_id
-        self._attr_unique_id = f"{bee_id}_{actuator_id}"
+        self.sensor_id = sensor_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(bee_id))},
             manufacturer="microBees",
@@ -49,4 +50,11 @@ class MicroBeesEntity(CoordinatorEntity[MicroBeesUpdateCoordinator]):
     @property
     def actuator(self) -> Actuator:
         """Return the actuator."""
-        return self.coordinator.data.actuators[self.actuator_id]
+        if self.actuator_id is not None:
+            return self.coordinator.data.actuators[self.actuator_id]
+
+    @property
+    def sensor(self) -> Sensor:
+        """Return the sensor."""
+        if self.sensor_id is not None:
+            return self.coordinator.data.sensors[self.sensor_id]

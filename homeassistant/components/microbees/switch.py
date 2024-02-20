@@ -39,6 +39,7 @@ class MBSwitch(MicroBeesEntity, SwitchEntity):
     ) -> None:
         """Initialize the microBees switch."""
         super().__init__(coordinator, bee_id, actuator_id)
+        self._attr_unique_id = f"switch_{bee_id}_{actuator_id}"
         self._attr_translation_key = SOCKET_TRANSLATIONS.get(self.bee.productID)
 
     @property
