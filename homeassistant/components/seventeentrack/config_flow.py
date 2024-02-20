@@ -69,10 +69,6 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    # async def async_step_import(self, import_data):
-    #     """Import sabnzbd config from configuration.yaml."""
-    #     protocol = "https://" if import_data[CONF_SSL] else "http://"
-    #     import_data[
-    #         CONF_URL
-    #     ] = f"{protocol}{import_data[CONF_HOST]}:{import_data[CONF_PORT]}"
-    #     return await self.async_step_user(import_data)
+    async def async_step_import(self, import_data):
+        """Import 17Track config from configuration.yaml."""
+        return await self.async_step_user(import_data)
