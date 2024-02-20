@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Self
 
 from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
-from zigpy.quirks.v2 import EntityMetadata, SwitchMetadata
+from zigpy.quirks.v2 import SwitchMetadata
 from zigpy.zcl.clusters.closures import ConfigStatus, WindowCovering, WindowCoveringMode
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
@@ -191,22 +191,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         Return entity if it is a supported configuration, otherwise return None
         """
         cluster_handler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            quirk_entity_metadata: EntityMetadata = kwargs[QUIRK_METADATA]
-            switch_metadata: SwitchMetadata = quirk_entity_metadata.entity_metadata
-            attribute_name: str = switch_metadata.attribute_name
-            if (
-                attribute_name in cluster_handler.cluster.unsupported_attributes
-                or attribute_name not in cluster_handler.cluster.attributes_by_name
-                or cluster_handler.cluster.get(attribute_name) is None
-            ):
-                _LOGGER.debug(
-                    "%s is not supported - skipping %s entity creation",
-                    attribute_name,
-                    cls.__name__,
-                )
-                return None
-        elif (
+        if QUIRK_METADATA not in kwargs and (
             cls._attribute_name in cluster_handler.cluster.unsupported_attributes
             or cls._attribute_name not in cluster_handler.cluster.attributes_by_name
             or cluster_handler.cluster.get(cls._attribute_name) is None
