@@ -1,4 +1,4 @@
-"""Tests for switch platform."""
+"""Tests for sensor platform."""
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -45,6 +45,33 @@ async def test_sensor_unknown_states(
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_mower_1_mode")
     assert state.state == "unknown"
+
+
+async def test_cutting_blade_usage_time_sensor(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test if this sensor is only added, if data is available."""
+
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("sensor.test_mower_1_cutting_blade_usage_time")
+    assert state is not None
+    assert state.state == "0.034"
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+    values = mower_list_to_dictionary_dataclass(
+        load_json_value_fixture("mower.json", DOMAIN)
+    )
+
+    delattr(values[TEST_MOWER_ID].statistics, "cutting_blade_usage_time")
+    mock_automower_client.get_status.return_value = values
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("sensor.test_mower_1_cutting_blade_usage_time")
+    assert state is None
 
 
 async def test_sensor(
