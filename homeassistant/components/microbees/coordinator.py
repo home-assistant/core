@@ -7,7 +7,7 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-from microBeesPy import Actuator, Bee, MicroBees, MicroBeesException, Sensor
+from microBeesPy import Actuator, Bee, MicroBees, MicroBeesException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -22,7 +22,6 @@ class MicroBeesCoordinatorData:
 
     bees: dict[int, Bee]
     actuators: dict[int, Actuator]
-    sensors: dict[int, Sensor]
 
 
 class MicroBeesUpdateCoordinator(DataUpdateCoordinator[MicroBeesCoordinatorData]):
@@ -55,13 +54,8 @@ class MicroBeesUpdateCoordinator(DataUpdateCoordinator[MicroBeesCoordinatorData]
 
             bees_dict = {}
             actuators_dict = {}
-            sensors_dict = {}
             for bee in bees:
                 bees_dict[bee.id] = bee
                 for actuator in bee.actuators:
                     actuators_dict[actuator.id] = actuator
-                for sensor in bee.sensors:
-                    sensors_dict[sensor.id] = sensor
-            return MicroBeesCoordinatorData(
-                bees=bees_dict, actuators=actuators_dict, sensors=sensors_dict
-            )
+            return MicroBeesCoordinatorData(bees=bees_dict, actuators=actuators_dict)

@@ -2,7 +2,9 @@
 import time
 from unittest.mock import AsyncMock, patch
 
-from microBeesPy import Bee, MicroBees, Profile
+from microBeesPy.bee import Bee
+from microBeesPy.microbees import MicroBees
+from microBeesPy.profile import Profile
 import pytest
 
 from homeassistant.components.application_credentials import (
