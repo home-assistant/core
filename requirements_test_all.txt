@@ -1229,6 +1229,7 @@ prometheus-client==0.17.1
 
 # homeassistant.components.hardware
 # homeassistant.components.recorder
+# homeassistant.components.systemmonitor
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor

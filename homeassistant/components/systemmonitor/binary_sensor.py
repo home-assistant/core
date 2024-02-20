@@ -10,6 +10,7 @@ import sys
 from typing import Generic, Literal
 
 import psutil
+import psutil_home_assistant as ha_psutil
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -94,8 +95,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up System Montor binary sensors based on a config entry."""
+    psutil_wrapper: ha_psutil.PsutilWrapper = hass.data[DOMAIN][entry.entry_id]
+
     entities: list[SystemMonitorSensor] = []
-    process_coordinator = SystemMonitorProcessCoordinator(hass, "Process coordinator")
+    process_coordinator = SystemMonitorProcessCoordinator(
+        hass, psutil_wrapper, "Process coordinator"
+    )
     await process_coordinator.async_request_refresh()
 
     for sensor_description in SENSOR_TYPES:
