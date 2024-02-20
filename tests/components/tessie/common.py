@@ -1,7 +1,6 @@
 """Tessie common helpers for tests."""
 
 from http import HTTPStatus
-import pprint
 from unittest.mock import patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
@@ -80,10 +79,6 @@ def assert_entities(
 
     assert entity_entries
     for entity_entry in entity_entries:
-        snapshot_entry = snapshot(name=f"{entity_entry.entity_id}-entry")
-
-        pprint.pprint(["Current", entity_entry])  # noqa: T203
-        pprint.pprint(["Snapshot", snapshot_entry])  # noqa: T203
-        assert entity_entry == snapshot_entry
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert (state := hass.states.get(entity_entry.entity_id))
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
