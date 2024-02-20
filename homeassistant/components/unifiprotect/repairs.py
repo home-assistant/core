@@ -36,10 +36,11 @@ class ProtectRepair(RepairsFlow):
     @callback
     def _async_get_placeholders(self) -> dict[str, str]:
         issue_registry = async_get_issue_registry(self.hass)
-        description_placeholders = None
+        description_placeholders = {}
         if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
             description_placeholders = issue.translation_placeholders or {}
-            description_placeholders["learn_more"] = issue.learn_more_url
+            if issue.learn_more_url:
+                description_placeholders["learn_more"] = issue.learn_more_url
 
         return description_placeholders
 
