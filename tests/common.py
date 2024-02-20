@@ -17,7 +17,7 @@ import pathlib
 import threading
 import time
 from types import ModuleType
-from typing import Any, NoReturn
+from typing import Any, NoReturn, TypeVar
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
@@ -194,7 +194,10 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     loop.close()
 
 
-class StoreWithoutWriteLoad(storage.Store):
+_T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
+
+
+class StoreWithoutWriteLoad(storage.Store[_T]):
     """Fake store that does not write or load. Used for testing."""
 
     async def async_save(self, *args: Any, **kwargs: Any) -> None:
@@ -296,7 +299,22 @@ async def async_test_home_assistant(
     if load_registries:
         with patch.object(
             StoreWithoutWriteLoad, "async_load", return_value=None
-        ), patch("homeassistant.helpers.storage.Store", StoreWithoutWriteLoad), patch(
+        ), patch(
+            "homeassistant.helpers.area_registry.AreaRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.device_registry.DeviceRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.entity_registry.EntityRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.storage.Store",  # Floor & label registry are different
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.issue_registry.IssueRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
             "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
             return_value=None,
         ), patch(
