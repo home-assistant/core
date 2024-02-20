@@ -80,7 +80,9 @@ async def test_component_translation_path(
     )
 
 
-def test__load_translations_files_by_language(hass: HomeAssistant) -> None:
+def test__load_translations_files_by_language(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the load translation files function."""
     # Test one valid and one invalid file
     file1 = hass.config.path(
@@ -89,8 +91,11 @@ def test__load_translations_files_by_language(hass: HomeAssistant) -> None:
     file2 = hass.config.path(
         "custom_components", "test", "translations", "invalid.json"
     )
+    file3 = hass.config.path(
+        "custom_components", "test", "translations", "_broken.en.json"
+    )
     assert translation._load_translations_files_by_language(
-        {"en": {"switch.test": file1, "invalid": file2}}
+        {"en": {"switch.test": file1, "invalid": file2, "broken": file3}}
     ) == {
         "en": {
             "switch.test": {
@@ -100,6 +105,8 @@ def test__load_translations_files_by_language(hass: HomeAssistant) -> None:
             "invalid": {},
         }
     }
+    assert "Translation file is unexpected type" in caplog.text
+    assert "_broken.en.json" in caplog.text
 
 
 @pytest.mark.parametrize(
