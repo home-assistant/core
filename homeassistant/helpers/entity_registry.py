@@ -1272,7 +1272,9 @@ class EntityRegistry(BaseRegistry):
     def async_clear_category_id(self, scope: str, category_id: str) -> None:
         """Clear category id from registry entries."""
         for entity_id, entry in self.entities.items():
-            if scope in entry.categories and category_id == entry.categories[scope]:
+            if (
+                existing_category_id := entry.categories.get(scope)
+            ) and category_id == existing_category_id:
                 categories = entry.categories.copy()
                 del categories[scope]
                 self.async_update_entity(entity_id, categories=categories)
@@ -1374,7 +1376,10 @@ def async_entries_for_category(
     return [
         entry
         for entry in registry.entities.values()
-        if scope in entry.categories and entry.categories[scope] == category_id
+        if (
+            (existing_category_id := entry.categories.get(scope))
+            and category_id == existing_category_id
+        )
     ]
 
 
