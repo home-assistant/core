@@ -46,17 +46,8 @@
       "total_searching_time": {
         "name": "Total searching time"
       },
-      "searching_time_percent": {
-        "name": "Searching time percent"
-      },
-      "cutting_time_percent": {
-        "name": "Cutting time percent"
-      },
       "total_drive_distance": {
         "name": "Total drive distance"
-      },
-      "battery_level": {
-        "name": "Battery level"
       },
       "next_start_timestamp": {
         "name": "Next start"
@@ -67,8 +58,7 @@
           "main_area": "Main area",
           "secondary_area": "Secondary area",
           "home": "Home",
-          "demo": "Demo",
-          "unknown": "Unknown"
+          "demo": "Demo"
         }
       }
     }

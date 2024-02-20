@@ -1,9 +1,10 @@
 """Creates a the sensor entities for the mower."""
 from collections.abc import Callable
 from dataclasses import dataclass
+import datetime
 import logging
 
-from aioautomower.model import MowerAttributes
+from aioautomower.model import MowerAttributes, MowerModes
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -34,7 +35,6 @@ class AutomowerSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="battery_percent",
-        translation_key="battery_percent",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
@@ -44,7 +44,7 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         key="mode",
         translation_key="mode",
         device_class=SensorDeviceClass.ENUM,
-        options=["main_area", "secondary_area", "home", "demo", "unknown"],
+        options=[option.lower() for option in list(MowerModes)],
         value_fn=lambda data: data.mower.mode.lower(),
     ),
     AutomowerSensorEntityDescription(
@@ -164,10 +164,12 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
         """Set up AutomowerSensors."""
         super().__init__(mower_id, coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{self.mower_id}_{description.key}"
+        self._attr_unique_id = f"{mower_id}_{description.key}"
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | int | datetime.datetime | None:
         """Return the state of the sensor."""
-        attributes = self.mower_attributes
-        return self.entity_description.value_fn(attributes)
+        value = self.entity_description.value_fn(self.mower_attributes)
+        if value == "unknown":
+            return None
+        return value

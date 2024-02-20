@@ -29,7 +29,7 @@
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'battery_percent',
+    'translation_key': None,
     'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_battery_percent',
     'unit_of_measurement': '%',
   })
@@ -111,9 +111,9 @@
     'capabilities': dict({
       'options': list([
         'main_area',
+        'demo',
         'secondary_area',
         'home',
-        'demo',
         'unknown',
       ]),
     }),
@@ -151,9 +151,9 @@
       'friendly_name': 'Test Mower 1 Mode',
       'options': list([
         'main_area',
+        'demo',
         'secondary_area',
         'home',
-        'demo',
         'unknown',
       ]),
     }),
