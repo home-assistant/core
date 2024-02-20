@@ -168,8 +168,16 @@ async def _async_process_dependencies(
 
     Returns a list of dependencies which failed to set up.
     """
+    setup_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
+        DATA_SETUP, {}
+    )
+
     dependencies_tasks = {
-        dep: hass.loop.create_task(async_setup_component(hass, dep, config))
+        dep: setup_futures.get(dep)
+        or hass.loop.create_task(
+            async_setup_component(hass, dep, config),
+            name=f"setup {dep} as dependency of {integration.domain}",
+        )
         for dep in integration.dependencies
         if dep not in hass.config.components
     }
