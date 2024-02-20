@@ -200,9 +200,6 @@ class StoreWithoutWriteLoad(storage.Store):
     async def async_save(self, *args: Any, **kwargs: Any) -> None:
         """Save the data."""
 
-    async def _async_callback_final_write(self, _event: Event) -> None:
-        """Write callback."""
-
 
 @asynccontextmanager
 async def async_test_home_assistant(
