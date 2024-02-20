@@ -167,11 +167,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 if controller and controller.available:
                     return self.async_abort(reason="already_configured")
 
-                self.hass.config_entries.async_update_entry(
-                    config_entry, data=self.config
+                return self.async_update_reload_and_abort(
+                    config_entry, data=self.config, reason=abort_reason
                 )
-                await self.hass.config_entries.async_reload(config_entry.entry_id)
-                return self.async_abort(reason=abort_reason)
 
             site_nice_name = self.sites[unique_id].description
             return self.async_create_entry(title=site_nice_name, data=self.config)
