@@ -884,18 +884,42 @@ def _resolve_integrations_from_root(
 
 
 @callback
+def async_loaded_integration_has_no_requirements(
+    hass: HomeAssistant, domain: str
+) -> bool:
+    """Check if an loaded integration has no requirements.
+
+    If the integration is not loaded, this will return False
+    as we don't know if it has requirements or not.
+    """
+    if integration := _async_get_loaded_integration(hass, domain):
+        return not integration.requirements
+    return False
+
+
+@callback
+def _async_get_loaded_integration(
+    hass: HomeAssistant, domain: str
+) -> Integration | None:
+    """Get an integration which is already loaded.
+
+    Raises None if the integration is not loaded or is in the
+    process of being loaded.
+    """
+    cache: dict[str, Integration | asyncio.Future[None]] = hass.data[DATA_INTEGRATIONS]
+    int_or_fut = cache.get(domain, _UNDEF)
+    # Integration is never subclassed, so we can check for type
+    return int_or_fut if type(int_or_fut) is Integration else None  # noqa: E721
+
+
+@callback
 def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get an integration which is already loaded.
 
     Raises IntegrationNotLoaded if the integration is not loaded.
     """
-    cache = hass.data[DATA_INTEGRATIONS]
-    if TYPE_CHECKING:
-        cache = cast(dict[str, Integration | asyncio.Future[None]], cache)
-    int_or_fut = cache.get(domain, _UNDEF)
-    # Integration is never subclassed, so we can check for type
-    if type(int_or_fut) is Integration:  # noqa: E721
-        return int_or_fut
+    if integration := _async_get_loaded_integration(hass, domain):
+        return integration
     raise IntegrationNotLoaded(domain)
 
 

@@ -12,7 +12,12 @@ from packaging.requirements import Requirement
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers.typing import UNDEFINED, UndefinedType
-from .loader import Integration, IntegrationNotFound, async_get_integration
+from .loader import (
+    Integration,
+    IntegrationNotFound,
+    async_get_integration,
+    async_loaded_integration_has_no_requirements,
+)
 from .util import package as pkg_util
 
 # The default is too low when the internet connection is satellite or high latency
@@ -206,6 +211,7 @@ class RequirementsManager:
                 not (cached_integration := cache.get(dep))
                 or type(cached_integration) is not Integration
             )
+            and not async_loaded_integration_has_no_requirements(self.hass, dep)
         }
 
         for check_domain, to_check in DISCOVERY_INTEGRATIONS.items():
@@ -228,7 +234,10 @@ class RequirementsManager:
 
         results = await asyncio.gather(
             *(
-                self.async_get_integration_with_requirements(dep, done)
+                asyncio.create_task(
+                    self.async_get_integration_with_requirements(dep, done),
+                    name=f"get_integration_with_requirements for {dep} as a dep of {integration.domain}",
+                )
                 for dep in deps_to_check
             ),
             return_exceptions=True,
