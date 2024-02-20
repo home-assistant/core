@@ -203,13 +203,13 @@ async def _async_process_dependencies(
         _LOGGER.debug(
             "Dependency %s will wait for dependencies %s",
             integration.domain,
-            list(dependencies_tasks),
+            dependencies_tasks,
         )
     if after_dependencies_tasks:
         _LOGGER.debug(
             "Dependency %s will wait for after dependencies %s",
             integration.domain,
-            list(after_dependencies_tasks),
+            after_dependencies_tasks,
         )
 
     async with hass.timeout.async_freeze(integration.domain):
@@ -225,7 +225,7 @@ async def _async_process_dependencies(
         _LOGGER.error(
             "Unable to set up dependencies of '%s'. Setup failed for dependencies: %s",
             integration.domain,
-            ", ".join(failed),
+            failed,
         )
 
     return failed
