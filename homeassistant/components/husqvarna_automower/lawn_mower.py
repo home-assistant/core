@@ -64,7 +64,7 @@ async def async_setup_entry(
     )
 
 
-class AutomowerLawnMowerEntity(LawnMowerEntity, AutomowerBaseEntity):
+class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
     """Defining each mower Entity."""
 
     _attr_name = None

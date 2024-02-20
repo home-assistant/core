@@ -293,7 +293,7 @@ async def test_setup_api_push_api_data(
     assert aioclient_mock.call_count == 19
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 9999
-    assert aioclient_mock.mock_calls[1][2]["watchdog"]
+    assert "watchdog" not in aioclient_mock.mock_calls[1][2]
 
 
 async def test_setup_api_push_api_data_server_host(

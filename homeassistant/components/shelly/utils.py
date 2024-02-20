@@ -367,6 +367,11 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     return cast(str, con_types[channel]).lower().startswith("light")
 
 
+def is_rpc_thermostat_internal_actuator(status: dict[str, Any]) -> bool:
+    """Return true if the thermostat uses an internal relay."""
+    return cast(bool, status["sys"].get("relay_in_thermostat", False))
+
+
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
     """Return list of input triggers for RPC device."""
     triggers = []

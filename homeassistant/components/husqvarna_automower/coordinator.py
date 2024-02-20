@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aioautomower.model import MowerAttributes, MowerList
+from aioautomower.model import MowerAttributes
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -42,6 +42,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         await self.api.close()
 
     @callback
-    def callback(self, ws_data: MowerList) -> None:
+    def callback(self, ws_data: dict[str, MowerAttributes]) -> None:
         """Process websocket callbacks and write them to the DataUpdateCoordinator."""
         self.async_set_updated_data(ws_data)

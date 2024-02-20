@@ -41,9 +41,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Repair will remove sensors when user submit the fix
             if processes := entry.options.get(SENSOR_DOMAIN):
                 new_options[BINARY_SENSOR_DOMAIN] = processes
-        entry.version = 1
-        entry.minor_version = 2
-        hass.config_entries.async_update_entry(entry, options=new_options)
+        hass.config_entries.async_update_entry(
+            entry, options=new_options, version=1, minor_version=2
+        )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version

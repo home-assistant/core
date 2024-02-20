@@ -38,7 +38,7 @@ from tests.common import MockConfigEntry
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
     hostname=DEVICE_HOSTNAME,
     ip=DEVICE_IP_ADDRESS,
-    macaddress=DEVICE_MAC_ADDRESS,
+    macaddress=DEVICE_MAC_ADDRESS.lower().replace(":", ""),
 )
 SSDP_DISCOVERY = (
     ssdp.SsdpServiceInfo(
