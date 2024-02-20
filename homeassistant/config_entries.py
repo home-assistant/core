@@ -603,7 +603,8 @@ class ConfigEntry:
             )
         return self._setup_again_job
 
-    async def async_shutdown(self) -> None:
+    @callback
+    def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
         self.async_cancel_retry_setup()
 
@@ -1409,15 +1410,8 @@ class ConfigEntries:
 
     async def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
-        await asyncio.gather(
-            *(
-                asyncio.create_task(
-                    entry.async_shutdown(),
-                    name=f"config entry shutdown {entry.title} {entry.domain} {entry.entry_id}",
-                )
-                for entry in self._entries.values()
-            )
-        )
+        for entry in self._entries.values():
+            entry.async_shutdown()
         await self.flow.async_shutdown()
 
     async def async_initialize(self) -> None:
