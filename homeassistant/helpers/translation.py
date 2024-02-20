@@ -72,23 +72,27 @@ def component_translation_path(
     return str(translation_path / filename)
 
 
-def load_translations_files(
-    translation_files: dict[str, str],
+def _load_translations_files_by_language(
+    translation_files: dict[str, dict[str, str]],
 ) -> dict[str, dict[str, Any]]:
     """Load and parse translation.json files."""
-    loaded = {}
-    for component, translation_file in translation_files.items():
-        loaded_json = load_json(translation_file)
+    loaded: dict[str, dict[str, Any]] = {}
+    for language, component_translation_file in translation_files.items():
+        loaded_for_language: dict[str, Any] = {}
+        loaded[language] = loaded_for_language
 
-        if not isinstance(loaded_json, dict):
-            _LOGGER.warning(
-                "Translation file is unexpected type %s. Expected dict for %s",
-                type(loaded_json),
-                translation_file,
-            )
-            continue
+        for component, translation_file in component_translation_file.items():
+            loaded_json = load_json(translation_file)
 
-        loaded[component] = loaded_json
+            if not isinstance(loaded_json, dict):
+                _LOGGER.warning(
+                    "Translation file is unexpected type %s. Expected dict for %s",
+                    type(loaded_json),
+                    translation_file,
+                )
+                continue
+
+            loaded_for_language[component] = loaded_json
 
     return loaded
 
@@ -154,12 +158,18 @@ async def _async_get_component_strings(
     languages: Iterable[str],
     components: set[str],
     integrations: dict[str, Integration],
-) -> dict[str, Any]:
+) -> dict[str, dict[str, Any]]:
     """Load translations."""
-    translations: dict[str, Any] = {}
+    translations_by_language: dict[str, dict[str, Any]] = {}
     # Determine paths of missing components/platforms
-    files_to_load: dict[str, str] = {}
+    files_to_load_by_language: dict[str, dict[str, str]] = {}
     for language in languages:
+        files_to_load: dict[str, str] = {}
+        files_to_load_by_language[language] = files_to_load
+
+        loaded_translations: dict[str, Any] = {}
+        translations_by_language[language] = loaded_translations
+
         for loaded in components:
             domain = loaded.partition(".")[0]
             if not (integration := integrations.get(domain)):
@@ -168,31 +178,30 @@ async def _async_get_component_strings(
             path = component_translation_path(loaded, language, integration)
             # No translation available
             if path is None:
-                translations[loaded] = {}
+                loaded_translations[loaded] = {}
             else:
                 files_to_load[loaded] = path
 
     if not files_to_load:
-        return translations
+        return translations_by_language
 
     # Load files
-    load_translations_job = hass.async_add_executor_job(
-        load_translations_files, files_to_load
+    loaded_translations_by_language = await hass.async_add_executor_job(
+        _load_translations_files_by_language, files_to_load_by_language
     )
-    assert load_translations_job is not None
-    loaded_translations = await load_translations_job
 
     # Translations that miss "title" will get integration put in.
-    for loaded, loaded_translation in loaded_translations.items():
-        if "." in loaded:
-            continue
+    for language, loaded_translations in loaded_translations_by_language.items():
+        for loaded, loaded_translation in loaded_translations.items():
+            if "." in loaded:
+                continue
 
-        if "title" not in loaded_translation:
-            loaded_translation["title"] = integrations[loaded].name
+            if "title" not in loaded_translation:
+                loaded_translation["title"] = integrations[loaded].name
 
-    translations.update(loaded_translations)
+        translations_by_language[language].update(loaded_translations)
 
-    return translations
+    return translations_by_language
 
 
 class _TranslationCache:
@@ -281,12 +290,12 @@ class _TranslationCache:
                 continue
             integrations[domain] = int_or_exc
 
-        translation_strings = await _async_get_component_strings(
+        translation_by_language_strings = await _async_get_component_strings(
             self.hass, languages, components, integrations
         )
-        self._build_category_cache(language, components, translation_strings)
-
-        self.loaded[language].update(components)
+        for loaded_lang, translation_strings in translation_by_language_strings.items():
+            self._build_category_cache(loaded_lang, components, translation_strings)
+            self.loaded[loaded_lang].update(components)
 
     def _validate_placeholders(
         self,
