@@ -295,7 +295,7 @@ class _TranslationCache:
         )
         for loaded_lang, translation_strings in translation_by_language_strings.items():
             self._build_category_cache(loaded_lang, components, translation_strings)
-            self.loaded[loaded_lang].update(components)
+            self.loaded.setdefault(loaded_lang, set()).update(components)
 
     def _validate_placeholders(
         self,
