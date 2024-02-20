@@ -1,5 +1,5 @@
 """Tests for the telegram_bot component."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from telegram import Update
 
@@ -129,6 +129,10 @@ async def test_polling_platform_message_text_update(
 
         # handle_update_callback == BaseTelegramBotEntity.update_handler
         await handle_update_callback(update, None)
+
+        application.updater.stop = AsyncMock()
+        application.stop = AsyncMock()
+        application.shutdown = AsyncMock()
 
     # Make sure event has fired
     await hass.async_block_till_done()
