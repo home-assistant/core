@@ -20,7 +20,7 @@ from .utils import async_create_api_client
 _LOGGER = logging.getLogger(__name__)
 
 
-class EAConfirm(RepairsFlow):
+class ProtectRepair(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     _api: ProtectApiClient
@@ -34,13 +34,17 @@ class EAConfirm(RepairsFlow):
         super().__init__()
 
     @callback
-    def _async_get_placeholders(self) -> dict[str, str] | None:
+    def _async_get_placeholders(self) -> dict[str, str]:
         issue_registry = async_get_issue_registry(self.hass)
         description_placeholders = None
         if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
-            description_placeholders = issue.translation_placeholders
+            description_placeholders = issue.translation_placeholders or {}
+            description_placeholders["learn_more"] = issue.learn_more_url
 
         return description_placeholders
+
+class EAConfirm(ProtectRepair):
+    """Handler for an issue fixing flow."""
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -85,27 +89,8 @@ class EAConfirm(RepairsFlow):
         )
 
 
-class CloudAccount(RepairsFlow):
+class CloudAccount(ProtectRepair):
     """Handler for an issue fixing flow."""
-
-    _api: ProtectApiClient
-    _entry: ConfigEntry
-
-    def __init__(self, api: ProtectApiClient, entry: ConfigEntry) -> None:
-        """Create flow."""
-
-        self._api = api
-        self._entry = entry
-        super().__init__()
-
-    @callback
-    def _async_get_placeholders(self) -> dict[str, str] | None:
-        issue_registry = async_get_issue_registry(self.hass)
-        description_placeholders = None
-        if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
-            description_placeholders = issue.translation_placeholders
-
-        return description_placeholders
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
