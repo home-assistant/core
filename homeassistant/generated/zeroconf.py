@@ -767,6 +767,11 @@ ZEROCONF = {
             "name": "*zigate*",
         },
     ],
+    "_zigbee._tcp.local.": [
+        {
+            "domain": "zha",
+        },
+    ],
     "_zigstar_gw._tcp.local.": [
         {
             "domain": "zha",

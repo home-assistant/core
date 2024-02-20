@@ -605,34 +605,40 @@ class ZhaConfigFlowHandler(BaseZhaFlow, config_entries.ConfigFlow, domain=DOMAIN
     ) -> FlowResult:
         """Handle zeroconf discovery."""
 
-        # Hostname is format: livingroom.local.
-        local_name = discovery_info.hostname[:-1]
-        port = discovery_info.port or DEFAULT_ZHA_ZEROCONF_PORT
-
-        # Fix incorrect port for older TubesZB devices
-        if "tube" in local_name and port == ESPHOME_API_PORT:
-            port = DEFAULT_ZHA_ZEROCONF_PORT
-
-        if "radio_type" in discovery_info.properties:
-            self._radio_mgr.radio_type = self._radio_mgr.parse_radio_type(
+        if discovery_info.type == "_zigbee._tcp.local.":
+            name = discovery_info.name
+            port = discovery_info.port
+            radio_type = self._radio_mgr.parse_radio_type(
                 discovery_info.properties["radio_type"]
             )
-        elif "efr32" in local_name:
-            self._radio_mgr.radio_type = RadioType.ezsp
         else:
-            self._radio_mgr.radio_type = RadioType.znp
+            name = discovery_info.hostname.removesuffix(".local.")
+            port = discovery_info.port or DEFAULT_ZHA_ZEROCONF_PORT
 
-        node_name = local_name.removesuffix(".local")
+            # Fix incorrect port for older TubesZB devices
+            if "tube" in discovery_info.hostname and port == ESPHOME_API_PORT:
+                port = DEFAULT_ZHA_ZEROCONF_PORT
+
+            if "radio_type" in discovery_info.properties:
+                radio_type = self._radio_mgr.parse_radio_type(
+                    discovery_info.properties["radio_type"]
+                )
+            elif "efr32" in discovery_info.hostname:
+                radio_type = RadioType.ezsp
+            else:
+                radio_type = RadioType.znp
+
         device_path = f"socket://{discovery_info.host}:{port}"
 
         await self._set_unique_id_or_update_path(
-            unique_id=node_name,
+            unique_id=name,
             device_path=device_path,
         )
 
-        self.context["title_placeholders"] = {CONF_NAME: node_name}
+        self.context["title_placeholders"] = {CONF_NAME: name}
         self._title = device_path
         self._radio_mgr.device_path = device_path
+        self._radio_mgr.radio_type = radio_type
 
         return await self.async_step_confirm()
 
