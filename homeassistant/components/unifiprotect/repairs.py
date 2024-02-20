@@ -43,6 +43,7 @@ class ProtectRepair(RepairsFlow):
 
         return description_placeholders
 
+
 class EAConfirm(ProtectRepair):
     """Handler for an issue fixing flow."""
 
