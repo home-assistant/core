@@ -9,6 +9,8 @@ from aiohttp.web import Request, WebSocketResponse
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
     BLOCK_GENERATIONS,
+    DEFAULT_COAP_PORT,
+    DEFAULT_IP_ADDRESS,
     MODEL_1L,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
@@ -19,6 +21,7 @@ from aioshelly.const import (
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
 
+from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -36,7 +39,6 @@ from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
     CONF_COAP_PORT,
     CONF_GEN,
-    DEFAULT_COAP_PORT,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -221,12 +223,22 @@ def get_shbtn_input_triggers() -> list[tuple[str, str]]:
 async def get_coap_context(hass: HomeAssistant) -> COAP:
     """Get CoAP context to be used in all Shelly Gen1 devices."""
     context = COAP()
+
+    adapters = await network.async_get_adapters(hass)
+    LOGGER.debug("Network adapters: %s", adapters)
+    if network.async_only_default_interface_enabled(adapters):
+        ipv4 = DEFAULT_IP_ADDRESS
+    else:
+        for adapter in adapters:
+            if adapter["enabled"] and adapter["default"]:
+                ipv4 = adapter["ipv4"][0]["address"]
+
     if DOMAIN in hass.data:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
     else:
         port = DEFAULT_COAP_PORT
-    LOGGER.info("Starting CoAP context with UDP port %s", port)
-    await context.initialize(port)
+    LOGGER.info("Starting CoAP context on IP %s with UDP port %s", ipv4, port)
+    await context.initialize(ipv4, port)
 
     @callback
     def shutdown_listener(ev: Event) -> None:
