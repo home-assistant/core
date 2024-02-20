@@ -56,6 +56,7 @@
         "data": {
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "sync": "Synchronize Entities",
           "name": "[%key:common::config_flow::data::name%]"
         }
       },
@@ -126,7 +127,8 @@
         "data": {
           "all": "[%key:component::group::config::step::binary_sensor::data::all%]",
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
-          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]"
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "sync": "[%key:component::group::config::step::light::data::sync%]"
         }
       },
       "lock": {
