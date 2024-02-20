@@ -368,14 +368,14 @@ async def test_hassio_discovery_flow_2x_addons(
         "homeassistant.components.otbr.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        results = await asyncio.gather(
-            hass.config_entries.flow.async_init(
-                otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
-            ),
-            hass.config_entries.flow.async_init(
-                otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA_2
-            ),
+        result1 = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
+        result2 = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA_2
+        )
+
+        results = [result1, result2]
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
