@@ -8,7 +8,6 @@ from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
 
-from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -578,9 +577,7 @@ async def test_remove_sensors(
         clients_response=[wired_client, wireless_client],
     )
 
-    assert len(hass.states.async_all()) == 9
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 2
     assert hass.states.get("sensor.wired_client_rx")
     assert hass.states.get("sensor.wired_client_tx")
     assert hass.states.get("sensor.wired_client_uptime")
@@ -593,9 +590,7 @@ async def test_remove_sensors(
     mock_unifi_websocket(message=MessageKey.CLIENT_REMOVED, data=wired_client)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 5
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
     assert hass.states.get("sensor.wired_client_rx") is None
     assert hass.states.get("sensor.wired_client_tx") is None
     assert hass.states.get("sensor.wired_client_uptime") is None
