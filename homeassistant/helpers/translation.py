@@ -312,7 +312,7 @@ class _TranslationCache:
             )
             self.loaded.setdefault(LOCALE_EN, set()).update(components)
 
-        self.loaded.setdefault(language, set()).update(components)
+        self.loaded[language].update(components)
 
     def _validate_placeholders(
         self,
