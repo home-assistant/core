@@ -45,7 +45,9 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         translation_key="mode",
         device_class=SensorDeviceClass.ENUM,
         options=[option.lower() for option in list(MowerModes)],
-        value_fn=lambda data: data.mower.mode.lower(),
+        value_fn=lambda data: data.mower.mode.lower()
+        if data.mower.mode != MowerModes.UNKNOWN
+        else None,
     ),
     AutomowerSensorEntityDescription(
         key="cutting_blade_usage_time",
@@ -164,7 +166,4 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | datetime.datetime | None:
         """Return the state of the sensor."""
-        value = self.entity_description.value_fn(self.mower_attributes)
-        if value == "unknown":
-            return None
-        return value
+        return self.entity_description.value_fn(self.mower_attributes)
