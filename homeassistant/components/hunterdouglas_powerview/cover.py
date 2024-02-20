@@ -56,7 +56,6 @@ async def async_setup_entry(
 
     pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
     coordinator: PowerviewShadeUpdateCoordinator = pv_entry.coordinator
-    cancel_resync: CALLBACK_TYPE | None = None
 
     async def _async_refresh_after_import(self, *_: Any) -> None:
         """Force position refresh shortly after adding.
@@ -71,20 +70,8 @@ async def async_setup_entry(
             with suppress(asyncio.TimeoutError):
                 # hold off to avoid spamming the hub
                 async with asyncio.timeout(10):
-                    _LOGGER.debug("Initial refresh of shade: %s", shade.name)
+                    _LOGGER.warning("Initial refresh of shade: %s", shade.name)
                     await shade.refresh()
-
-    if cancel_resync is None:
-        cancel_resync = async_call_later(
-            hass, RESYNC_DELAY, _async_refresh_after_import
-        )
-
-    @callback
-    def _async_cancel_resync() -> None:
-        nonlocal cancel_resync
-        if cancel_resync is not None:
-            cancel_resync()
-            cancel_resync = None
 
     entities: list[ShadeEntity] = []
     for shade in pv_entry.shade_data.values():
@@ -97,7 +84,13 @@ async def async_setup_entry(
         )
 
     async_add_entities(entities)
-    entry.async_on_unload(_async_cancel_resync)
+
+    # background the fetching of state for initial launch
+    entry.async_create_background_task(
+        hass,
+        _async_refresh_after_import(pv_entry),
+        "powerview.shade-refresh",
+    )
 
 
 class PowerViewShadeBase(ShadeEntity, CoverEntity):
