@@ -2,7 +2,11 @@
 from motionblinds import DEVICE_TYPES_WIFI
 from motionblinds.motion_blinds import DEVICE_TYPE_TDBU
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity, 
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
