@@ -116,7 +116,7 @@ def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) 
      - Properly handle after_dependencies.
      - Keep track of domains which will load but have not yet finished loading
     """
-    setup_done_futures: dict[str, asyncio.Future[bool]] = hass.data.get(
+    setup_done_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
         DATA_SETUP_DONE, {}
     )
     setup_done_futures.update({domain: hass.loop.create_future() for domain in domains})
