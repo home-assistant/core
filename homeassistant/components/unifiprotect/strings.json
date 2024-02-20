@@ -79,6 +79,10 @@
     "ea_setup_failed": {
       "title": "Setup error using Early Access version",
       "description": "You are using v{version} of UniFi Protect which is an Early Access version. An unrecoverable error occurred while trying to load the integration. Please [downgrade to a stable version](https://www.home-assistant.io/integrations/unifiprotect#downgrading-unifi-protect) of UniFi Protect to continue using the integration.\n\nError: {error}"
+    },
+    "cloud_user": {
+      "title": "Ubiquiti Cloud Users are not Supported",
+      "description": "You are using a Ubiquiti Cloud user. These users have never been supported. You need to migrate to using a [local user](https://www.home-assistant.io/integrations/unifiprotect/#local-user) as soon as possible. Starting on July 22nd 2024, all Ubiquiti Cloud users will be required to use MFA and there is no way to make Ubiquiti's MFA implementation to work with Home Assistant."
     }
   },
   "entity": {

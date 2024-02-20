@@ -19,6 +19,7 @@ from pyunifiprotect.data import (
     Bootstrap,
     Camera,
     Chime,
+    CloudAccount,
     Doorlock,
     Light,
     Liveview,
@@ -346,3 +347,19 @@ def chime():
 def fixed_now_fixture():
     """Return datetime object that will be consistent throughout test."""
     return dt_util.utcnow()
+
+
+@pytest.fixture(name="cloud_account")
+def cloud_account() -> CloudAccount:
+    """Return UI Cloud Account."""
+
+    return CloudAccount(
+        id="42",
+        first_name="Test",
+        last_name="User",
+        email="test@example.com",
+        user_id="42",
+        name="Test User",
+        location=None,
+        profile_img=None,
+    )

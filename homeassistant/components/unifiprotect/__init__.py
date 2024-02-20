@@ -69,8 +69,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     auth_user = bootstrap.users.get(bootstrap.auth_user_id)
     if auth_user and auth_user.cloud_account:
-        raise ConfigEntryAuthFailed(
-            "Ubiquiti Cloud SSO Accounts are not supported. Use a local user."
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "cloud_user",
+            is_fixable=True,
+            is_persistent=True,
+            learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#local-user",
+            severity=IssueSeverity.ERROR,
+            translation_key="cloud_user",
+            data={"entry_id": entry.entry_id},
         )
 
     if nvr_info.version < MIN_REQUIRED_PROTECT_V:
