@@ -1,7 +1,7 @@
 """Tests for config flow."""
 from unittest.mock import AsyncMock, patch
 
-from microBeesPy.exceptions import MicroBeesException
+from microBeesPy import MicroBeesException
 import pytest
 
 from homeassistant.components.microbees.const import DOMAIN

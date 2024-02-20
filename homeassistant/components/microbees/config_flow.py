@@ -3,7 +3,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from microBeesPy.microbees import MicroBees, MicroBeesException
+from microBeesPy import MicroBees, MicroBeesException
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
