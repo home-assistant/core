@@ -13,7 +13,7 @@ from homeassistant.components.http import StaticPathConfig
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import UNDEFINED
-from homeassistant.util.uuid import random_uuid_hex
+from homeassistant.util.ulid import ulid_now
 
 from .const import DOMAIN
 from .storage.config_store import ConfigStoreException
@@ -419,7 +419,7 @@ def ws_create_device(
 ) -> None:
     """Create a new KNX device."""
     knx: KNXModule = hass.data[DOMAIN]
-    identifier = f"knx_vdev_{random_uuid_hex()}"
+    identifier = f"knx_vdev_{ulid_now()}"
     device_registry = dr.async_get(hass)
     _device = device_registry.async_get_or_create(
         config_entry_id=knx.entry.entry_id,
