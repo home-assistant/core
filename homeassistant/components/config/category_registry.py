@@ -118,6 +118,8 @@ def websocket_update_category(
         entry = category_registry.async_update(**data)
     except ValueError as err:
         connection.send_error(msg["id"], "invalid_info", str(err))
+    except KeyError:
+        connection.send_error(msg["id"], "invalid_info", "Category ID doesn't exist")
     else:
         connection.send_result(msg["id"], _entry_dict(entry))
 
