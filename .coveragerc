@@ -769,6 +769,13 @@ omit =
     homeassistant/components/meteoclimatic/__init__.py
     homeassistant/components/meteoclimatic/sensor.py
     homeassistant/components/meteoclimatic/weather.py
+    homeassistant/components/microbees/__init__.py
+    homeassistant/components/microbees/api.py
+    homeassistant/components/microbees/application_credentials.py
+    homeassistant/components/microbees/const.py
+    homeassistant/components/microbees/coordinator.py
+    homeassistant/components/microbees/entity.py
+    homeassistant/components/microbees/switch.py
     homeassistant/components/microsoft/tts.py
     homeassistant/components/mikrotik/hub.py
     homeassistant/components/mill/climate.py
