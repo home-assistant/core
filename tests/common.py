@@ -200,14 +200,20 @@ class StoreWithoutWriteLoad(storage.Store):
     async def async_save(self, *args: Any, **kwargs: Any) -> None:
         """Save the data."""
 
+    async def _async_callback_final_write(self, _event: Event) -> None:
+        """Write callback."""
+
 
 @asynccontextmanager
 async def async_test_home_assistant(
     event_loop: asyncio.AbstractEventLoop | None = None,
     load_registries: bool = True,
+    storage_dir: str | None = None,
 ) -> AsyncGenerator[HomeAssistant, None]:
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(get_test_config_dir())
+    if storage_dir:
+        hass.config.config_dir = storage_dir
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
