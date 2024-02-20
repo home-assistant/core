@@ -203,13 +203,13 @@ async def _async_process_dependencies(
         _LOGGER.debug(
             "Dependency %s will wait for dependencies %s",
             integration.domain,
-            dependencies_tasks,
+            dependencies_tasks.keys(),
         )
     if after_dependencies_tasks:
         _LOGGER.debug(
             "Dependency %s will wait for after dependencies %s",
             integration.domain,
-            after_dependencies_tasks,
+            after_dependencies_tasks.keys(),
         )
 
     async with hass.timeout.async_freeze(integration.domain):
