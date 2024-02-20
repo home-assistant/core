@@ -390,10 +390,8 @@ def _async_track_event(
 
     hass_data = hass.data
 
-    callbacks: dict[
-        str, list[HassJob[[EventType[_TypedDictT]], Any]]
-    ] | None = hass_data.get(callbacks_key)
-    if not callbacks:
+    callbacks: dict[str, list[HassJob[[EventType[_TypedDictT]], Any]]] | None
+    if not (callbacks := hass_data.get(callbacks_key)):
         callbacks = hass_data[callbacks_key] = {}
 
     if listeners_key not in hass_data:
@@ -407,8 +405,7 @@ def _async_track_event(
     job = HassJob(action, f"track {event_type} event {keys}")
 
     for key in keys:
-        callback_list = callbacks.get(key)
-        if callback_list:
+        if callback_list := callbacks.get(key):
             callback_list.append(job)
         else:
             callbacks[key] = [job]
