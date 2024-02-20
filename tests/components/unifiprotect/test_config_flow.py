@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
-from pyunifiprotect.data import NVR, Bootstrap
+from pyunifiprotect.data import NVR, Bootstrap, CloudAccount
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp
@@ -147,6 +147,34 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
+
+
+async def test_form_cloud_user(
+    hass: HomeAssistant, bootstrap: Bootstrap, cloud_account: CloudAccount
+) -> None:
+    """Test we handle cloud users."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    user = bootstrap.users[bootstrap.auth_user_id]
+    user.cloud_account = cloud_account
+    bootstrap.users[bootstrap.auth_user_id] = user
+    with patch(
+        "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+        return_value=bootstrap,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "cloud_user"}
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
