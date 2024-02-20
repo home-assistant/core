@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime as dt
 from datetime import datetime
+from typing import Any
 
 import hdate
 from hdate.zmanim import Zmanim
@@ -13,10 +14,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from . import DOMAIN
@@ -56,19 +58,17 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Jewish Calendar binary sensor devices."""
-    if discovery_info is None:
-        return
-
     async_add_entities(
         [
-            JewishCalendarBinarySensor(hass.data[DOMAIN], description)
+            JewishCalendarBinarySensor(
+                hass.data[DOMAIN][config_entry.entry_id], description
+            )
             for description in BINARY_SENSORS
         ]
     )
@@ -79,16 +79,16 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
 
     _attr_should_poll = False
     entity_description: JewishCalendarBinarySensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        data: dict[str, str | bool | int | float],
+        data: dict[str, Any],
         description: JewishCalendarBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
-        self._attr_name = f"{data['name']} {description.name}"
-        self._attr_unique_id = f"{data['prefix']}_{description.key}"
+        self._attr_unique_id = f"{slugify(data['name'])}_{description.key}"
         self._location = data["location"]
         self._hebrew = data["language"] == "hebrew"
         self._candle_lighting_offset = data["candle_lighting_offset"]
