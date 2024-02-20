@@ -1,14 +1,9 @@
 """Tests for the telegram_bot component."""
-from datetime import datetime
 from unittest.mock import patch
 
-from telegram import Chat, Message, Update
+from telegram import Update
 
-from homeassistant.components.telegram_bot import (
-    CONF_ALLOWED_CHAT_IDS,
-    DOMAIN,
-    SERVICE_SEND_MESSAGE,
-)
+from homeassistant.components.telegram_bot import DOMAIN, SERVICE_SEND_MESSAGE
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -128,15 +123,10 @@ async def test_polling_platform_message_text_update(
         handler = application.add_handler.call_args[0][0]
         handle_update_callback = handler.callback
 
-        update = Update(
-            123456,
-            message=Message(
-                123456,
-                datetime.now(),
-                Chat(config_polling[DOMAIN][0][CONF_ALLOWED_CHAT_IDS][0], "PRIVATE"),
-                text=update_message_text["message"]["text"],
-            ),
-        )
+        # Create Update object using library API.
+        application.bot.defaults.tzinfo = None
+        update = Update.de_json(update_message_text, application.bot)
+
         # handle_update_callback == BaseTelegramBotEntity.update_handler
         await handle_update_callback(update, None)
 
