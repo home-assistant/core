@@ -144,10 +144,6 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             for current_entry in current_entries:
                 if current_entry.source != SOURCE_HASSIO:
                     continue
-                if current_entry.unique_id != discovery_info.uuid:
-                    self.hass.config_entries.async_update_entry(
-                        current_entry, unique_id=discovery_info.uuid
-                    )
                 current_url = yarl.URL(current_entry.data["url"])
                 if (
                     current_url.host != config["host"]
@@ -156,7 +152,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     continue
                 # Update URL with the new port
                 self.hass.config_entries.async_update_entry(
-                    current_entry, data=config_entry_data
+                    current_entry, data=config_entry_data, unique_id=discovery_info.uuid
                 )
             return self.async_abort(reason="single_instance_allowed")
 
