@@ -88,7 +88,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_UNIT_PREFIX): vol.In(UNIT_PREFIXES),
             vol.Optional(CONF_UNIT_TIME, default=UnitOfTime.HOURS): vol.In(UNIT_TIME),
             vol.Remove(CONF_UNIT_OF_MEASUREMENT): cv.string,
-            vol.Optional(CONF_MAX_DT, default=None): vol.Any(None, vol.Coerce(int)),
+            vol.Optional(CONF_MAX_DT): cv.time_period,
             vol.Optional(CONF_METHOD, default=METHOD_TRAPEZOIDAL): vol.In(
                 INTEGRATION_METHODS
             ),
@@ -255,6 +255,13 @@ async def async_setup_entry(
         # Before we had support for optional selectors, "none" was used for selecting nothing
         unit_prefix = None
 
+    max_dt_seconds = config_entry.options.get(CONF_MAX_DT, None)
+    max_dt = (
+        timedelta(seconds=max_dt_seconds)
+        if max_dt_seconds is not None and max_dt_seconds != 0
+        else None
+    )
+
     integral = IntegrationSensor(
         integration_method=config_entry.options[CONF_METHOD],
         name=config_entry.title,
@@ -264,7 +271,7 @@ async def async_setup_entry(
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
         device_info=device_info,
-        max_dt=config_entry.options.get(CONF_MAX_DT, None),
+        max_dt=max_dt,
     )
 
     async_add_entities([integral])
@@ -285,7 +292,7 @@ async def async_setup_platform(
         unique_id=config.get(CONF_UNIQUE_ID),
         unit_prefix=config.get(CONF_UNIT_PREFIX),
         unit_time=config[CONF_UNIT_TIME],
-        max_dt=config[CONF_MAX_DT],
+        max_dt=config.get(CONF_MAX_DT),
     )
 
     async_add_entities([integral])
@@ -307,7 +314,7 @@ class IntegrationSensor(RestoreSensor):
         unique_id: str | None,
         unit_prefix: str | None,
         unit_time: UnitOfTime,
-        max_dt: int | None,
+        max_dt: timedelta | None,
         device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the integration sensor."""
@@ -327,9 +334,7 @@ class IntegrationSensor(RestoreSensor):
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
         self._attr_device_info = device_info
-        self._max_dt: timedelta | None = (
-            timedelta(seconds=max_dt) if max_dt is not None and max_dt != 0 else None
-        )
+        self._max_dt: timedelta | None = max_dt
         self._max_dt_exceeded_callback: CALLBACK_TYPE = lambda *args: None
         self._last_integration_time: datetime = datetime.now(tz=UTC)
         self._last_integration_trigger = _IntegrationTrigger.StateChange
