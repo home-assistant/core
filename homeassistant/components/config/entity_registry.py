@@ -157,7 +157,8 @@ def websocket_get_entities(
         # If passed in, we update/adjust only the provided scope(s).
         # Other category scopes in the entity, are left as is.
         #
-        # Categories can only be in 1 category ID per scope at a time.
+        # Categorized items such as entities
+        # can only be in 1 category ID per scope at a time.
         # Therefore, passing in a category ID will either add or move
         # the entity to that specific category. Passing in None will
         # remove the entity from the category.
