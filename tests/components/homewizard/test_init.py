@@ -1,5 +1,4 @@
 """Tests for the homewizard component."""
-from asyncio import TimeoutError
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import DisabledError, HomeWizardEnergyException

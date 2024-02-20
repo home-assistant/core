@@ -6,6 +6,7 @@ from collections.abc import Mapping
 import contextlib
 from dataclasses import asdict, dataclass
 from enum import StrEnum
+from functools import lru_cache
 import logging
 from typing import Any, cast
 
@@ -216,3 +217,11 @@ class LoggerSettings:
                 )
 
         return dict(combined_logs)
+
+
+get_logger = lru_cache(maxsize=256)(logging.getLogger)
+"""Get a logger.
+
+getLogger uses a threading.RLock, so we cache the result to avoid
+locking the threads every time the integrations page is loaded.
+"""

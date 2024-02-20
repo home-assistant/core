@@ -7,9 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aemet.const import ATTRIBUTION, DOMAIN
-from homeassistant.components.aemet.weather_update_coordinator import (
-    WEATHER_UPDATE_INTERVAL,
-)
+from homeassistant.components.aemet.coordinator import WEATHER_UPDATE_INTERVAL
 from homeassistant.components.weather import (
     ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_SNOWY,

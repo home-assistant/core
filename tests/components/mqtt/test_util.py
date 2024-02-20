@@ -140,7 +140,7 @@ async def test_waiting_for_client_not_loaded(
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test waiting for client while mqtt entry is not yet loaded."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
@@ -199,7 +199,7 @@ async def test_waiting_for_client_entry_fails(
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test waiting for client where mqtt entry is failing."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
@@ -227,7 +227,7 @@ async def test_waiting_for_client_setup_fails(
     mqtt_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test waiting for client where mqtt entry is failing during setup."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
@@ -254,7 +254,7 @@ async def test_waiting_for_client_timeout(
     hass: HomeAssistant,
 ) -> None:
     """Test waiting for client with timeout."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
@@ -273,7 +273,7 @@ async def test_waiting_for_client_with_disabled_entry(
     hass: HomeAssistant,
 ) -> None:
     """Test waiting for client with timeout."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(

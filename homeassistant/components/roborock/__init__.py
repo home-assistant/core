@@ -35,9 +35,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         home_data = await api_client.get_home_data(user_data)
     except RoborockInvalidCredentials as err:
-        raise ConfigEntryAuthFailed("Invalid credentials.") from err
+        raise ConfigEntryAuthFailed(
+            "Invalid credentials",
+            translation_domain=DOMAIN,
+            translation_key="invalid_credentials",
+        ) from err
     except RoborockException as err:
-        raise ConfigEntryNotReady("Failed getting Roborock home_data.") from err
+        raise ConfigEntryNotReady(
+            "Failed to get Roborock home data",
+            translation_domain=DOMAIN,
+            translation_key="home_data_fail",
+        ) from err
     _LOGGER.debug("Got home data %s", home_data)
     device_map: dict[str, HomeDataDevice] = {
         device.duid: device for device in home_data.devices + home_data.received_devices
@@ -57,7 +65,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if isinstance(coord, RoborockDataUpdateCoordinator)
     ]
     if len(valid_coordinators) == 0:
-        raise ConfigEntryNotReady("No coordinators were able to successfully setup.")
+        raise ConfigEntryNotReady(
+            "No devices were able to successfully setup",
+            translation_domain=DOMAIN,
+            translation_key="no_coordinators",
+        )
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         coordinator.roborock_device_info.device.duid: coordinator
         for coordinator in valid_coordinators
@@ -103,6 +115,7 @@ async def setup_device(
             device.name,
         )
         _LOGGER.debug(err)
+        await mqtt_client.async_release()
         raise err
     coordinator = RoborockDataUpdateCoordinator(
         hass, device, networking, product_info, mqtt_client
@@ -111,8 +124,14 @@ async def setup_device(
     await coordinator.verify_api()
     coordinator.api.is_available = True
     try:
+        await coordinator.get_maps()
+    except RoborockException as err:
+        _LOGGER.warning("Failed to get map data")
+        _LOGGER.debug(err)
+    try:
         await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryNotReady:
+    except ConfigEntryNotReady as ex:
+        await coordinator.release()
         if isinstance(coordinator.api, RoborockMqttClient):
             _LOGGER.warning(
                 "Not setting up %s because the we failed to get data for the first time using the online client. "
@@ -124,7 +143,7 @@ async def setup_device(
             # but in case if it isn't, the error can be included in debug logs for the user to grab.
             if coordinator.last_exception:
                 _LOGGER.debug(coordinator.last_exception)
-                raise coordinator.last_exception
+                raise coordinator.last_exception from ex
         elif coordinator.last_exception:
             # If this is reached, we have verified that we can communicate with the Vacuum locally,
             # so if there is an error here - it is not a communication issue but some other problem
@@ -135,20 +154,16 @@ async def setup_device(
                 device.name,
                 extra_error,
             )
-            raise coordinator.last_exception
+            raise coordinator.last_exception from ex
     return coordinator
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        await asyncio.gather(
-            *(
-                coordinator.release()
-                for coordinator in hass.data[DOMAIN][entry.entry_id].values()
-            )
-        )
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        release_tasks = set()
+        for coordinator in hass.data[DOMAIN][entry.entry_id].values():
+            release_tasks.add(coordinator.release())
         hass.data[DOMAIN].pop(entry.entry_id)
-
+        await asyncio.gather(*release_tasks)
     return unload_ok

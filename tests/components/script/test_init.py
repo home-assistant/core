@@ -718,7 +718,7 @@ async def test_extraction_functions(
 ) -> None:
     """Test extraction functions."""
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
 
     device_in_both = device_registry.async_get_or_create(
@@ -1152,7 +1152,7 @@ async def test_script_restore_last_triggered(hass: HomeAssistant) -> None:
             State("script.last_triggered", STATE_OFF, {"last_triggered": time}),
         ),
     )
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(
         hass,
@@ -1373,7 +1373,7 @@ async def test_recursive_script_turn_on(
         await asyncio.wait_for(service_called.wait(), 1)
 
         # Trigger 1st stage script shutdown
-        hass.state = CoreState.stopping
+        hass.set_state(CoreState.stopping)
         hass.bus.async_fire("homeassistant_stop")
         await asyncio.wait_for(stop_scripts_at_shutdown_called.wait(), 1)
 

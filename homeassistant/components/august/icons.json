@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "image_capture": {
+        "default": "mdi:file-image"
+      }
+    }
+  }
+}

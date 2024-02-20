@@ -1295,7 +1295,7 @@ async def websocket_browse_media(
         connection.send_error(msg["id"], "entity_not_found", "Entity not found")
         return
 
-    if MediaPlayerEntityFeature.BROWSE_MEDIA not in player.supported_features:
+    if MediaPlayerEntityFeature.BROWSE_MEDIA not in player.supported_features_compat:
         connection.send_message(
             websocket_api.error_message(
                 msg["id"], ERR_NOT_SUPPORTED, "Player does not support browsing media"
@@ -1345,7 +1345,7 @@ async def async_fetch_image(
     """Retrieve an image."""
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    with suppress(asyncio.TimeoutError):
+    with suppress(TimeoutError):
         async with asyncio.timeout(10):
             response = await websession.get(url)
             if response.status == HTTPStatus.OK:

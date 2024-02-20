@@ -27,7 +27,7 @@ from aemet_opendata.const import (
     AOD_TEMP,
     AOD_TEMP_MAX,
     AOD_TEMP_MIN,
-    AOD_TIMESTAMP,
+    AOD_TIMESTAMP_UTC,
     AOD_TOWN,
     AOD_WEATHER,
     AOD_WIND_DIRECTION,
@@ -90,8 +90,8 @@ from .const import (
     ENTRY_NAME,
     ENTRY_WEATHER_COORDINATOR,
 )
+from .coordinator import WeatherUpdateCoordinator
 from .entity import AemetEntity
-from .weather_update_coordinator import WeatherUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -171,7 +171,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     ),
     AemetSensorEntityDescription(
         key=f"forecast-daily-{ATTR_API_FORECAST_TIME}",
-        keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP],
+        keys=[AOD_TOWN, AOD_FORECAST_DAILY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP_UTC],
         name="Daily forecast time",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
@@ -179,7 +179,7 @@ FORECAST_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     AemetSensorEntityDescription(
         entity_registry_enabled_default=False,
         key=f"forecast-hourly-{ATTR_API_FORECAST_TIME}",
-        keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP],
+        keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_FORECAST_CURRENT, AOD_TIMESTAMP_UTC],
         name="Hourly forecast time",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
@@ -286,7 +286,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_STATION_TIMESTAMP,
-        keys=[AOD_STATION, AOD_TIMESTAMP],
+        keys=[AOD_STATION, AOD_TIMESTAMP_UTC],
         name="Station timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,
@@ -326,7 +326,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
     ),
     AemetSensorEntityDescription(
         key=ATTR_API_TOWN_TIMESTAMP,
-        keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_TIMESTAMP],
+        keys=[AOD_TOWN, AOD_FORECAST_HOURLY, AOD_TIMESTAMP_UTC],
         name="Town timestamp",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=dt_util.parse_datetime,

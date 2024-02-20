@@ -217,7 +217,7 @@ async def test_async_get_user_site(mock_env_copy) -> None:
     assert ret == os.path.join(deps_dir, "lib_dir")
 
 
-def test_check_package_global() -> None:
+def test_check_package_global(caplog: pytest.LogCaptureFixture) -> None:
     """Test for an installed package."""
     pkg = metadata("homeassistant")
     installed_package = pkg["name"]
@@ -229,10 +229,19 @@ def test_check_package_global() -> None:
     assert package.is_installed(f"{installed_package}<={installed_version}")
     assert not package.is_installed(f"{installed_package}<{installed_version}")
 
+    assert package.is_installed("-1 invalid_package") is False
+    assert "Invalid requirement '-1 invalid_package'" in caplog.text
 
-def test_check_package_zip() -> None:
-    """Test for an installed zip package."""
+
+def test_check_package_fragment(caplog: pytest.LogCaptureFixture) -> None:
+    """Test for an installed package with a fragment."""
     assert not package.is_installed(TEST_ZIP_REQ)
+    assert package.is_installed("git+https://github.com/pypa/pip#pip>=1")
+    assert not package.is_installed("git+https://github.com/pypa/pip#-1 invalid")
+    assert (
+        "Invalid requirement 'git+https://github.com/pypa/pip#-1 invalid'"
+        in caplog.text
+    )
 
 
 def test_get_is_installed() -> None:
