@@ -149,7 +149,7 @@ class PowerviewConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm dhcp or homekit discovery."""
         # If we already have the host configured do
         # not open connections to it if we can avoid it.
-        assert self.discovered_ip and self.discovered_name
+        assert self.discovered_ip and self.discovered_name is not None
         self.context[CONF_HOST] = self.discovered_ip
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == self.discovered_ip:
@@ -159,15 +159,19 @@ class PowerviewConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         info, error = await self._async_validate_or_error(self.discovered_ip)
         if error:
             return self.async_abort(reason=error)
-
         assert info is not None
+
+        api_version = info[CONF_API_VERSION]
+        if not self.discovered_name:
+            self.discovered_name = f"Powerview Generation {api_version}"
+
         await self.async_set_unique_id(info["unique_id"], raise_on_progress=False)
         self._abort_if_unique_id_configured({CONF_HOST: self.discovered_ip})
 
         self.powerview_config = {
             CONF_HOST: self.discovered_ip,
             CONF_NAME: self.discovered_name,
-            CONF_API_VERSION: info[CONF_API_VERSION],
+            CONF_API_VERSION: api_version,
         }
         return await self.async_step_link()
 
