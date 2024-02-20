@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             DOMAIN,
             "cloud_user",
             is_fixable=True,
-            is_persistent=True,
+            is_persistent=False,
             learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#local-user",
             severity=IssueSeverity.ERROR,
             translation_key="cloud_user",
