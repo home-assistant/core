@@ -76,13 +76,13 @@ def mock_external_calls():
     """Mock calls that make calls to the live Telegram API."""
     test_user = User(123456, "Testbot", True)
     with patch(
-        "telegram._bot.Bot.get_me",
+        "telegram.Bot.get_me",
         return_value=test_user,
     ), patch(
-        "telegram._bot.Bot._bot_user",
+        "telegram.Bot._bot_user",
         test_user,
     ), patch(
-        "telegram._bot.Bot.bot",
+        "telegram.Bot.bot",
         test_user,
     ), patch("telegram.ext.Updater._bootstrap"):
         yield
