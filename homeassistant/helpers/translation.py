@@ -305,12 +305,14 @@ class _TranslationCache:
                 language, components, translation_by_language_strings[language]
             )
 
+            loaded_english_components = self.loaded.setdefault(LOCALE_EN, set())
             # Since we just loaded english anyway we can avoid loading
             # again if they switch back to english.
-            self._build_category_cache(
-                LOCALE_EN, components, translation_by_language_strings[LOCALE_EN]
-            )
-            self.loaded.setdefault(LOCALE_EN, set()).update(components)
+            if loaded_english_components.isdisjoint(components):
+                self._build_category_cache(
+                    LOCALE_EN, components, translation_by_language_strings[LOCALE_EN]
+                )
+                loaded_english_components.update(components)
 
         self.loaded[language].update(components)
 
