@@ -69,8 +69,10 @@ async def async_setup_entry(
     sensors = []
     for bee_id, bee in coordinator.data.bees.items():
         for sensor in bee.sensors:
-            if sensor.device_type in (0, 2, 14, 16, 21):
-                sensors.append(MBSensor(coordinator, bee_id, sensor.id))
+            if (entity_description := SENSOR_TYPES.get(sensor.device_type)) is not None:
+                sensors.append(
+                    MBSensor(coordinator, entity_description, bee_id, sensor.id)
+                )
 
     async_add_entities(sensors)
 
@@ -81,6 +83,7 @@ class MBSensor(MicroBeesEntity, SensorEntity):
     def __init__(
         self,
         coordinator: MicroBeesUpdateCoordinator,
+        entity_description: SensorEntityDescription,
         bee_id: int,
         sensor_id: int,
     ) -> None:
@@ -88,7 +91,7 @@ class MBSensor(MicroBeesEntity, SensorEntity):
         super().__init__(coordinator, bee_id)
         self._attr_unique_id = f"{bee_id}_{sensor_id}"
         self.sensor_id = sensor_id
-        self.entity_description = SENSOR_TYPES[self.sensor.device_type]
+        self.entity_description = entity_description
 
     @property
     def name(self) -> str:
