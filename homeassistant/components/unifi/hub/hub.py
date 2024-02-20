@@ -45,7 +45,7 @@ from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.dt as dt_util
 
-from .const import (
+from ..const import (
     ATTR_MANUFACTURER,
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -72,8 +72,8 @@ from .const import (
     PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
-from .entity import UnifiEntity, UnifiEntityDescription
-from .errors import AuthenticationRequired, CannotConnect
+from ..entity import UnifiEntity, UnifiEntityDescription
+from ..errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
