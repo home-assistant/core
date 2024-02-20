@@ -10,11 +10,9 @@ from .atlantic_electrical_heater_with_adjustable_temperature_setpoint import (
 )
 from .atlantic_electrical_towel_dryer import AtlanticElectricalTowelDryer
 from .atlantic_heat_recovery_ventilation import AtlanticHeatRecoveryVentilation
-from .atlantic_pass_apc_heating_and_cooling_controlled_zone import (
-    AtlanticPassAPCHeatingAndCoolingControlledZone,
-)
 from .atlantic_pass_apc_heating_zone import AtlanticPassAPCHeatingZone
 from .atlantic_pass_apc_zone_control import AtlanticPassAPCZoneControl
+from .atlantic_pass_apc_zone_control_zone import AtlanticPassAPCZoneControlZone
 from .hitachi_air_to_air_heat_pump_hlrrwifi import HitachiAirToAirHeatPumpHLRRWIFI
 from .somfy_heating_temperature_interface import SomfyHeatingTemperatureInterface
 from .somfy_thermostat import SomfyThermostat
@@ -45,13 +43,12 @@ WIDGET_TO_CLIMATE_ENTITY = {
     UIWidget.VALVE_HEATING_TEMPERATURE_INTERFACE: ValveHeatingTemperatureInterface,
 }
 
-# For Atlantic APC, some devices are standalone and control themselve, some others needs to be
+# For Atlantic APC, some devices are standalone and control themselves, some others needs to be
 # managed by a ZoneControl device. Widget name is the same in the two cases.
 WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY = {
     UIWidget.ATLANTIC_PASS_APC_HEATING_AND_COOLING_ZONE: {
-        # Beavious seems to be the same as AtlanticPassAPCHeatingZone.
         Controllable.IO_ATLANTIC_PASS_APC_HEATING_AND_COOLING_ZONE: AtlanticPassAPCHeatingZone,
-        Controllable.IO_ATLANTIC_PASS_APC_ZONE_CONTROL_ZONE: AtlanticPassAPCHeatingAndCoolingControlledZone,
+        Controllable.IO_ATLANTIC_PASS_APC_ZONE_CONTROL_ZONE: AtlanticPassAPCZoneControlZone,
     }
 }
 

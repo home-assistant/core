@@ -6,8 +6,7 @@ from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
-from homeassistant.components.climate import HVACMode
-from homeassistant.components.climate.const import PRESET_NONE
+from homeassistant.components.climate import PRESET_NONE, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE
 
 from ..coordinator import OverkizDataUpdateCoordinator
@@ -24,8 +23,9 @@ OVERKIZ_MODE_TO_PRESET_MODES: dict[str, str] = {
 
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_MODE_TO_PRESET_MODES.items()}
 
+
 # Those device depends on a main probe that choose the operating mode (heating, cooling, ...)
-class AtlanticPassAPCHeatingAndCoolingControlledZone(AtlanticPassAPCHeatingZone):
+class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     """Representation of Atlantic Pass APC Heating And Cooling Zone Control."""
 
     def __init__(
@@ -47,7 +47,6 @@ class AtlanticPassAPCHeatingAndCoolingControlledZone(AtlanticPassAPCHeatingZone)
         # Like to retrieve and set the current operating mode (heating, cooling, drying, off).
         self.zone_control_device = self.executor.linked_device(1)
 
-    # TODO a better implementation for those device should be made in a future PR.
     @property
     def is_using_derogated_temperature_fallback(self) -> bool:
         """Check if the device behave like the Pass APC Heating Zone."""
@@ -60,11 +59,13 @@ class AtlanticPassAPCHeatingAndCoolingControlledZone(AtlanticPassAPCHeatingZone)
     def zone_control_hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool, dry, off mode."""
 
-        return OVERKIZ_TO_HVAC_MODE[
-            self.zone_control_device.states[
-                OverkizState.IO_PASS_APC_OPERATING_MODE
-            ].value_as_str
-        ]
+        state = self.zone_control_device.states[OverkizState.IO_PASS_APC_OPERATING_MODE]
+
+        return (
+            OVERKIZ_TO_HVAC_MODE[state.value_as_str]
+            if state is not None and state.value_as_str is not None
+            else HVACMode.OFF
+        )
 
     @property
     def hvac_mode(self) -> HVACMode:

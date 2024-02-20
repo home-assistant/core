@@ -1,6 +1,8 @@
 """Support for Overkiz climate devices."""
 from __future__ import annotations
 
+from typing import cast
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -11,6 +13,7 @@ from .climate_entities import (
     WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY,
     WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY,
     WIDGET_TO_CLIMATE_ENTITY,
+    Controllable,
 )
 from .const import DOMAIN
 
@@ -32,7 +35,7 @@ async def async_setup_entry(
     # Mainly Atlantic APC
     async_add_entities(
         WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY[device.widget][
-            device.controllable_name
+            cast(Controllable, device.controllable_name)
         ](device.device_url, data.coordinator)
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY

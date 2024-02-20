@@ -48,8 +48,8 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
         """Check if auto mode is available on the ZoneControl."""
 
         return self.executor.has_command(
-            "setHeatingCoolingAutoSwitch"
-        ) and self.executor.has_state("core:HeatingCoolingAutoSwitchState")
+            OverkizCommand.SET_HEATING_COOLING_AUTO_SWITCH
+        ) and self.executor.has_state(OverkizState.CORE_HEATING_COOLING_AUTO_SWITCH)
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -58,7 +58,10 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
         if (
             self.is_auto_hvac_mode_available
             and cast(
-                str, self.executor.select_state("core:HeatingCoolingAutoSwitchState")
+                str,
+                self.executor.select_state(
+                    OverkizState.CORE_HEATING_COOLING_AUTO_SWITCH
+                ),
             )
             == OverkizCommandParam.ON
         ):
@@ -75,7 +78,7 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
 
         if self.is_auto_hvac_mode_available:
             await self.executor.async_execute_command(
-                "setHeatingCoolingAutoSwitch",
+                OverkizCommand.SET_HEATING_COOLING_AUTO_SWITCH,
                 OverkizCommandParam.ON
                 if hvac_mode == HVACMode.AUTO
                 else OverkizCommandParam.OFF,
