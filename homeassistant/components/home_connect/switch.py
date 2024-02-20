@@ -90,14 +90,6 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
     def update(self) -> None:
         """Update the switch's status."""
 
-        _LOGGER.debug("Updating setting status %s", self._key)
-        try:
-            self.device.appliance.get_settings()
-        except HomeConnectError as err:
-            _LOGGER.error("Error retrieving status: %s", err)
-            self._attr_available = False
-            return
-
         state = self.device.appliance.status.get(self._key, {})
         self._attr_is_on = state.get(ATTR_VALUE)
         self._attr_available = True
