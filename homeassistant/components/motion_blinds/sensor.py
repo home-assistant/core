@@ -4,7 +4,7 @@ from motionblinds.motion_blinds import DEVICE_TYPE_TDBU
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
-    SensorEntity, 
+    SensorEntity,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
