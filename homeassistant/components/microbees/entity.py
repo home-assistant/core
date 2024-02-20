@@ -1,6 +1,6 @@
 """Base entity for microBees."""
 
-from microBeesPy.bee import Actuator, Bee
+from microBeesPy import Actuator, Bee
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
