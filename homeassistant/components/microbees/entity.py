@@ -56,7 +56,7 @@ class MicroBeesActuatorEntity(MicroBeesEntity):
         """Initialize the microBees entity."""
         super().__init__(coordinator, bee_id)
         self.actuator_id = actuator_id
-        self._attr_unique_id = f"switch_{bee_id}_{actuator_id}"
+        self._attr_unique_id = f"{bee_id}_{actuator_id}"
 
     @property
     def actuator(self) -> Actuator:
