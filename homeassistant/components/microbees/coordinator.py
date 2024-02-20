@@ -7,7 +7,7 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-from microBeesPy.microbees import Actuator, Bee, MicroBees, MicroBeesException
+from microBeesPy import Actuator, Bee, MicroBees, MicroBeesException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
