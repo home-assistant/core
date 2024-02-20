@@ -1707,7 +1707,6 @@ omit =
     homeassistant/components/myuplink/__init__.py
     homeassistant/components/myuplink/api.py
     homeassistant/components/myuplink/application_credentials.py
-    homeassistant/components/myuplink/binary_sensor.py
     homeassistant/components/myuplink/coordinator.py
     homeassistant/components/myuplink/entity.py
     homeassistant/components/myuplink/helpers.py
