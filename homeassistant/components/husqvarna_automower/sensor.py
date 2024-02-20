@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass(frozen=True, kw_only=True)
 class AutomowerSensorEntityDescription(SensorEntityDescription):
-    """Describes WLED sensor entity."""
+    """Describes Automower sensor entity."""
 
     exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
     value_fn: Callable[[MowerAttributes], str]
@@ -50,7 +50,6 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="cutting_blade_usage_time",
         translation_key="cutting_blade_usage_time",
-        icon="mdi:clock-outline",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -61,7 +60,6 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="total_charging_time",
         translation_key="total_charging_time",
-        icon="mdi:clock-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.DURATION,
@@ -72,7 +70,6 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="total_cutting_time",
         translation_key="total_cutting_time",
-        icon="mdi:clock-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.DURATION,
@@ -83,7 +80,6 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="total_running_time",
         translation_key="total_running_time",
-        icon="mdi:clock-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.DURATION,
@@ -94,7 +90,6 @@ SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
     AutomowerSensorEntityDescription(
         key="total_searching_time",
         translation_key="total_searching_time",
-        icon="mdi:clock-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.DURATION,
