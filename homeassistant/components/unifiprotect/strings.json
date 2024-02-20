@@ -86,7 +86,7 @@
         "step": {
           "confirm": {
             "title": "Ubiquiti Cloud Users are not Supported",
-            "description": "You are using a Ubiquiti Cloud user. These users have never been supported. You need to migrate to using a [local user](https://www.home-assistant.io/integrations/unifiprotect/#local-user) as soon as possible.\n\nStarting on July 22nd 2024, all Ubiquiti Cloud users will be required to use MFA and there is no way to make Ubiquiti's MFA implementation to work with Home Assistant.\n\nConfirming this repair will trigger a re-authentication flow to enter need authentication credentials."
+            "description": "Starting on July 22nd, 2024, Ubiquiti will require all cloud users to enroll in multi-factor authentication (MFA), which is incompatible with Home Assistant.\n\nIt would be best to migrate to using a [local user](https://www.home-assistant.io/integrations/unifiprotect/#local-user) as soon as possible to keep the integration working.\n\nConfirming this repair will trigger a re-authentication flow to enter the needed authentication credentials."
           }
         }
       }
