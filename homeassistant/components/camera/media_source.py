@@ -29,13 +29,17 @@ async def async_get_media_source(hass: HomeAssistant) -> CameraMediaSource:
 def _media_source_for_camera(
     hass: HomeAssistant, camera: Camera, content_type: str
 ) -> BrowseMediaSource:
-    assert (camera_state := hass.states.get(camera.entity_id)) is not None
+    camera_state = hass.states.get(camera.entity_id)
+    title = camera.name
+    if camera_state:
+        title = camera_state.attributes.get(ATTR_FRIENDLY_NAME, camera.name)
+
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=camera.entity_id,
         media_class=MediaClass.VIDEO,
         media_content_type=content_type,
-        title=camera_state.attributes.get(ATTR_FRIENDLY_NAME, camera.name),
+        title=title,
         thumbnail=f"/api/camera_proxy/{camera.entity_id}",
         can_play=True,
         can_expand=False,
