@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_LOCATION,
@@ -88,17 +88,11 @@ async def async_setup_platform(
         _LOGGER.error("There was an error while logging in: %s", err)
         return
 
-    scan_interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-
-    data = SeventeenTrackData(
-        client,
-        async_add_entities,
-        scan_interval,
-        config[CONF_SHOW_ARCHIVED],
-        config[CONF_SHOW_DELIVERED],
-        str(hass.config.time_zone),
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
     )
-    await data.async_update()
 
 
 async def async_setup_entry(
