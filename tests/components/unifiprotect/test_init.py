@@ -131,7 +131,9 @@ async def test_setup_too_old(
 ) -> None:
     """Test setup of unifiprotect entry with too old of version of UniFi Protect."""
 
-    ufp.api.get_nvr.return_value = old_nvr
+    old_bootstrap = ufp.api.bootstrap.copy()
+    old_bootstrap.nvr = old_nvr
+    ufp.api.get_bootstrap.return_value = old_bootstrap
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
@@ -177,7 +179,7 @@ async def test_setup_failed_update_reauth(
 async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     """Test setup of unifiprotect entry with generic error."""
 
-    ufp.api.get_nvr = AsyncMock(side_effect=NvrError)
+    ufp.api.get_bootstrap = AsyncMock(side_effect=NvrError)
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
@@ -188,7 +190,7 @@ async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture) -> N
 async def test_setup_failed_auth(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
     """Test setup of unifiprotect entry with unauthorized error."""
 
-    ufp.api.get_nvr = AsyncMock(side_effect=NotAuthorized)
+    ufp.api.get_bootstrap = AsyncMock(side_effect=NotAuthorized)
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     assert ufp.entry.state == ConfigEntryState.SETUP_ERROR

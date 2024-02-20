@@ -60,11 +60,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
 
     try:
-        nvr_info = await protect.get_nvr()
+        bootstrap = await protect.get_bootstrap()
+        nvr_info = bootstrap.nvr
     except NotAuthorized as err:
         raise ConfigEntryAuthFailed(err) from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         raise ConfigEntryNotReady from err
+
+    auth_user = bootstrap.users.get(bootstrap.auth_user_id)
+    if auth_user and auth_user.cloud_account:
+        raise ConfigEntryAuthFailed(
+            "Ubiquiti Cloud SSO Accounts are not supported. Use a local user."
+        )
 
     if nvr_info.version < MIN_REQUIRED_PROTECT_V:
         _LOGGER.error(
