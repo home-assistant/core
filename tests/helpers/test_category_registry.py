@@ -75,6 +75,29 @@ async def test_create_category_with_name_already_in_use(
     assert len(update_events) == 1
 
 
+async def test_create_category_with_duplicate_name_in_other_scopes(
+    hass: HomeAssistant, category_registry: cr.CategoryRegistry
+) -> None:
+    """Make we can create the same category in multiple scopes."""
+    update_events = async_capture_events(hass, cr.EVENT_CATEGORY_REGISTRY_UPDATED)
+    category_registry.async_create(
+        scope="automation",
+        name="Energy saving",
+        icon="mdi:leaf",
+    )
+    category_registry.async_create(
+        scope="script",
+        name="Energy saving",
+        icon="mdi:leaf",
+    )
+
+    await hass.async_block_till_done()
+
+    assert len(category_registry.categories["script"]) == 1
+    assert len(category_registry.categories["automation"]) == 1
+    assert len(update_events) == 2
+
+
 async def test_delete_category(
     hass: HomeAssistant, category_registry: cr.CategoryRegistry
 ) -> None:

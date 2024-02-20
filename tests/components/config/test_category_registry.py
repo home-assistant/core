@@ -119,6 +119,28 @@ async def test_create_category(
         "name": "Something else",
     }
 
+    # Test adding the same one again in a different scope
+    await client.send_json_auto_id(
+        {
+            "type": "config/category_registry/create",
+            "scope": "script",
+            "name": "Energy saving",
+            "icon": "mdi:leaf",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert len(category_registry.categories) == 2
+    assert len(category_registry.categories["automation"]) == 2
+    assert len(category_registry.categories["script"]) == 1
+
+    assert msg["result"] == {
+        "icon": "mdi:leaf",
+        "category_id": ANY,
+        "name": "Energy saving",
+    }
+
 
 async def test_create_category_with_name_already_in_use(
     client: MockHAClientWebSocket,
