@@ -1,56 +1,61 @@
 """Overseer coordinator s."""
-import asyncio
 from datetime import timedelta
 import logging
+from random import randrange
 
-from overseerr.exceptions import OpenApiException, UnauthorizedException
+from overseerr import ApiClient, Configuration, RequestApi
+from overseerr.models import RequestCountGet200Response, RequestGet200Response
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class OverseerrCoordinator(DataUpdateCoordinator):
-    """Overseerr update coordinator."""
+class CannotConnect(HomeAssistantError):
+    """Unable to connect to the web site."""
 
-    config_entry: ConfigEntry
-    update_interval = timedelta(minutes=1)
 
-    def __init__(self, hass: HomeAssistant, api_client, configuration) -> None:
-        """Initialize overseerr coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            # Name of the data. For logging purposes.
-            name="Overseerr sensor",
-            # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=30),
-        )
-        self.configuration = configuration
-        self.api_client = api_client
+class OverseerrRequestData:
+    """Keep data for Overseerr entities."""
 
-        async def _async_update_data(self):
-            """Fetch data from API endpoint.
+    def __init__(
+        self, requests: RequestGet200Response, request_count: RequestCountGet200Response
+    ) -> None:
+        """Initialise the weather entity data."""
+        self._requests = requests
+        self._request_count = request_count
 
-            This is the place to pre-process the data to lookup tables
-            so entities can quickly look up their data.
-            """
-            try:
-                # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-                # handled by the data update coordinator.
-                async with asyncio.timeout(10):
-                    # Grab active context variables to limit data required to be fetched from API
-                    # Note: using context is not required if there is no need or ability to limit
-                    # data retrieved from API.
 
-                    listening_idx = set(self.async_contexts())
-                    return await self.my_api.fetch_data(listening_idx)
-            except UnauthorizedException as err:
-                # Raising ConfigEntryAuthFailed will cancel future updates
-                # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-                raise ConfigEntryAuthFailed from err
-            except OpenApiException as err:
-                raise UpdateFailed(f"Error communicating with API: {err}") from err
+class OverseerrRequestUpdateCoordinator(DataUpdateCoordinator[OverseerrRequestData]):
+    """Class to manage fetching Overseerr data."""
+
+    def __init__(
+        self, hass: HomeAssistant, configuration: Configuration, api_client: ApiClient
+    ) -> None:
+        """Initialize global Overseerr data updater."""
+        self.hass = hass
+        self._configuration = configuration
+        self._api_client = api_client
+        self.request_api = RequestApi(self._api_client)
+        self.request_data = None
+
+        update_interval = timedelta(minutes=randrange(55, 65))
+
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+
+    async def _async_update_data(self) -> OverseerrRequestData:
+        """Fetch data from Overseerr."""
+        try:
+            return await self._fetch_data()
+        except Exception as err:
+            raise UpdateFailed(f"Update failed: {err}") from err
+
+    async def _fetch_data(self) -> OverseerrRequestData:
+        """Fetch the actual data."""
+        requests = await self.request_api.request_get()
+        request_count = await self.request_api.request_count_get()
+        return OverseerrRequestData(requests, request_count)
