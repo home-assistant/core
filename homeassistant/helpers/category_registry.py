@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Literal, TypedDict, cast
 
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.util.uuid as uuid_util
+from homeassistant.util.ulid import ulid_now
 
 from .typing import UNDEFINED, EventType, UndefinedType
 
@@ -33,7 +33,7 @@ EventCategoryRegistryUpdated = EventType[EventCategoryRegistryUpdatedData]
 class CategoryEntry:
     """Category registry entry."""
 
-    category_id: str = field(default_factory=uuid_util.random_uuid_hex)
+    category_id: str = field(default_factory=ulid_now)
     icon: str | None = None
     name: str
 
