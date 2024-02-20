@@ -328,6 +328,7 @@ def _async_track_state_change_event(
         _async_dispatch_entity_id_event,
         _async_state_change_filter,
         action,
+        False,
     )
 
 
@@ -378,6 +379,7 @@ def _async_track_event(
         bool,
     ],
     action: Callable[[EventType[_TypedDictT]], None],
+    run_immediately: bool,
 ) -> CALLBACK_TYPE:
     """Track an event by a specific key."""
     if not keys:
@@ -388,10 +390,8 @@ def _async_track_event(
 
     hass_data = hass.data
 
-    callbacks: dict[
-        str, list[HassJob[[EventType[_TypedDictT]], Any]]
-    ] | None = hass_data.get(callbacks_key)
-    if not callbacks:
+    callbacks: dict[str, list[HassJob[[EventType[_TypedDictT]], Any]]] | None
+    if not (callbacks := hass_data.get(callbacks_key)):
         callbacks = hass_data[callbacks_key] = {}
 
     if listeners_key not in hass_data:
@@ -399,13 +399,13 @@ def _async_track_event(
             event_type,
             ft.partial(dispatcher_callable, hass, callbacks),
             event_filter=ft.partial(filter_callable, hass, callbacks),
+            run_immediately=run_immediately,
         )
 
     job = HassJob(action, f"track {event_type} event {keys}")
 
     for key in keys:
-        callback_list = callbacks.get(key)
-        if callback_list:
+        if callback_list := callbacks.get(key):
             callback_list.append(job)
         else:
             callbacks[key] = [job]
@@ -473,6 +473,7 @@ def async_track_entity_registry_updated_event(
         _async_dispatch_old_entity_id_or_entity_id_event,
         _async_entity_registry_updated_filter,
         action,
+        True,
     )
 
 
@@ -529,6 +530,7 @@ def async_track_device_registry_updated_event(
         _async_dispatch_device_id_event,
         _async_device_registry_updated_filter,
         action,
+        True,
     )
 
 
@@ -590,6 +592,7 @@ def _async_track_state_added_domain(
         _async_dispatch_domain_event,
         _async_domain_added_filter,
         action,
+        False,
     )
 
 
@@ -622,6 +625,7 @@ def async_track_state_removed_domain(
         _async_dispatch_domain_event,
         _async_domain_removed_filter,
         action,
+        False,
     )
 
 
