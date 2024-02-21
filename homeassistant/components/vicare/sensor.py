@@ -598,7 +598,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ),
     ViCareSensorEntityDescription(
         key="ess_state_of_charge",
-        translation_key="ess_state_of_charge",
         icon="mdi:home-battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -668,7 +667,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="photovoltaic_status",
         translation_key="photovoltaic_status",
         device_class=SensorDeviceClass.ENUM,
-        options=["nothing", "ready", "production"],
+        options=["ready", "production"],
         value_getter=lambda api: _filter_pv_states(api.getPhotovoltaicStatus()),
     ),
 )
@@ -791,8 +790,8 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
-def _filter_pv_states(state: str):
-    return None if state in ["nothing", "unknown"] else state
+def _filter_pv_states(state: str) -> str | None:
+    return None if state in ("nothing", "unknown") else state
 
 
 def _build_entities(
