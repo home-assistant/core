@@ -137,7 +137,7 @@ class GrowattInverter(SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         result = self.probe.get_data(self.entity_description)
         if self.entity_description.precision is not None:
@@ -159,15 +159,15 @@ class GrowattInverter(SensorEntity):
 class GrowattData:
     """The class for handling data retrieval."""
 
-    def __init__(self, api, username, password, device_id, growatt_type):
+    def __init__(self, api, username, password, device_id, growatt_type) -> None:
         """Initialize the probe."""
 
         self.growatt_type = growatt_type
         self.api = api
         self.device_id = device_id
         self.plant_id = None
-        self.data = {}
-        self.previous_values = {}
+        self.data: dict = {}
+        self.previous_values: dict = {}
         self.username = username
         self.password = password
 
