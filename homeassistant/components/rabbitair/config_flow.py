@@ -1,7 +1,6 @@
 """Config flow for Rabbit Air integration."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -36,7 +35,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except ValueError as err:
         # Most likely caused by the invalid access token.
         raise InvalidAccessToken from err
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         # Either the host doesn't respond or the auth failed.
         raise TimeoutConnect from err
     except OSError as err:

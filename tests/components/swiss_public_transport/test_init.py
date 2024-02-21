@@ -45,24 +45,25 @@ CONNECTIONS = [
 ]
 
 
-async def test_migration_1_to_2(
+async def test_migration_1_1_to_1_2(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test successful setup."""
+
+    config_entry_faulty = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_DATA_STEP,
+        title="MIGRATION_TEST",
+        version=1,
+        minor_version=1,
+    )
+    config_entry_faulty.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.swiss_public_transport.OpendataTransport",
         return_value=AsyncMock(),
     ) as mock:
         mock().connections = CONNECTIONS
-
-        config_entry_faulty = MockConfigEntry(
-            domain=DOMAIN,
-            data=MOCK_DATA_STEP,
-            title="MIGRATION_TEST",
-            minor_version=1,
-        )
-        config_entry_faulty.add_to_hass(hass)
 
         # Setup the config entry
         await hass.config_entries.async_setup(config_entry_faulty.entry_id)

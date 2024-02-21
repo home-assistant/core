@@ -117,6 +117,8 @@ class RefreshToken:
     last_used_at: datetime | None = attr.ib(default=None)
     last_used_ip: str | None = attr.ib(default=None)
 
+    expire_at: float | None = attr.ib(default=None)
+
     credential: Credentials | None = attr.ib(default=None)
 
     version: str | None = attr.ib(default=__version__)
