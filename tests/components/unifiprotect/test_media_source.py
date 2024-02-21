@@ -690,6 +690,15 @@ async def test_browse_media_recent_truncated(
                 smart_detect_types=["person"],
                 smart_detect_event_ids=[],
                 camera_id="test",
+                metadata={
+                    "detected_thumbnails": [
+                        {
+                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
+                            "type": "person",
+                            "cropped_id": "event_id",
+                        }
+                    ],
+                },
             ),
             "Object Detection - Person",
         ),
@@ -794,7 +803,12 @@ async def test_browse_media_recent_truncated(
                                     "confidence": 95,
                                 }
                             },
-                        }
+                        },
+                        {
+                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
+                            "type": "person",
+                            "cropped_id": "event_id",
+                        },
                     ],
                 },
             ),
