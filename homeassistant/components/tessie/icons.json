@@ -28,6 +28,12 @@
           "on": "mdi:camera"
         }
       },
+      "vehicle_state_is_user_present": {
+        "default": "mdi:account-outline",
+        "state": {
+          "on": "mdi:account"
+        }
+      },
       "vehicle_state_tpms_soft_warning_fl": {
         "default": "mdi:tire",
         "state": {
