@@ -156,7 +156,7 @@ def _get_object_name(event: Event | dict[str, Any]) -> str:
 
         types.remove(thumb_type)
         if thumb_type == SmartDetectObjectType.VEHICLE.value:
-            attributes = thumb.get("attributes")
+            attributes = thumb.get("attributes") or {}
             color = attributes.get("color", {}).get("val", "")
             vehicle_type = attributes.get("vehicleType", {}).get("val", "vehicle")
             license_plate = metadata.get("licensePlate", {}).get("name")
@@ -174,7 +174,7 @@ def _get_object_name(event: Event | dict[str, Any]) -> str:
         smart_type = SmartDetectObjectType(raw)
         names.append(smart_type.name.title().replace("_", " "))
 
-    return ", ".join(names)
+    return ", ".join(sorted(names))
 
 
 @callback
