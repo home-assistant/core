@@ -4,7 +4,7 @@ from __future__ import annotations
 import functools
 from typing import Any
 
-from zigpy.quirks.v2 import BinarySensorMetadata
+from zigpy.quirks.v2 import BinarySensorMetadata, EntityMetadata
 import zigpy.types as t
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasZone
@@ -80,17 +80,14 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
         """Initialize the ZHA binary sensor."""
         self._cluster_handler = cluster_handlers[0]
         if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA].entity_metadata)
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(
-        self, binary_sensor_metadata: BinarySensorMetadata
-    ) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
         """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        binary_sensor_metadata: BinarySensorMetadata = entity_metadata.entity_metadata
         self._attribute_name = binary_sensor_metadata.attribute_name
-        # standardize the unique id suffix and translation key to be the attribute name
-        self._attr_translation_key = self._attribute_name
-        self._unique_id_suffix = self._attribute_name
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""

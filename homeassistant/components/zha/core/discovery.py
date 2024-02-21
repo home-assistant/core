@@ -217,6 +217,7 @@ class ProbeEndpoint:
             return
 
         zigpy_device: CustomDeviceV2 = device.device
+
         if not zigpy_device.exposes_metadata:
             _LOGGER.debug(
                 "Device: %s-%s does not expose any quirks v2 entities",
@@ -230,6 +231,7 @@ class ProbeEndpoint:
             quirk_metadata_list,
         ) in zigpy_device.exposes_metadata.items():
             endpoint_id, cluster_id, cluster_type = cluster_details
+
             if endpoint_id not in device.endpoints:
                 _LOGGER.debug(
                     "Device: %s-%s does not have an endpoint with id: %s - unable to create entity with cluster details: %s",
@@ -239,6 +241,7 @@ class ProbeEndpoint:
                     cluster_details,
                 )
                 continue
+
             endpoint: Endpoint = device.endpoints[endpoint_id]
             cluster = (
                 endpoint.zigpy_endpoint.in_clusters.get(cluster_id)
@@ -251,6 +254,7 @@ class ProbeEndpoint:
                 if cluster_type is ClusterType.Server
                 else endpoint.client_cluster_handlers.get(cluster_handler_id)
             )
+
             if cluster_handler is None:
                 _LOGGER.debug(
                     "Device: %s-%s does not have a cluster handler with id: %s - unable to create entity with cluster details: %s",
@@ -260,8 +264,10 @@ class ProbeEndpoint:
                     cluster_details,
                 )
                 continue
+
             for quirk_metadata in quirk_metadata_list:
                 platform = Platform(quirk_metadata.entity_platform.value)
+
                 if platform is None:
                     _LOGGER.debug(
                         "Device: %s-%s has an entity with details: %s that does not have a platform mapping - unable to create entity",
@@ -273,10 +279,12 @@ class ProbeEndpoint:
                         },
                     )
                     continue
+
                 metadata_type = type(quirk_metadata.entity_metadata)
                 entity_class = QUIRKS_ENTITY_META_TO_ENTITY_CLASS.get(
                     (platform, metadata_type, quirk_metadata.entity_type)
                 )
+
                 if entity_class is None:
                     _LOGGER.debug(
                         "Device: %s-%s has an entity with details: %s that does not have an entity class mapping - unable to create entity",
@@ -288,13 +296,20 @@ class ProbeEndpoint:
                         },
                     )
                     continue
+
+                # automatically add the attribute to ZCL_INIT_ATTRS for the cluster handler if it
+                # is not already in the list
                 if (
-                    quirk_metadata.entity_metadata.attribute_name
+                    hasattr(quirk_metadata.entity_metadata, "attribute_name")
+                    and quirk_metadata.entity_metadata.attribute_name
                     not in cluster_handler.ZCL_INIT_ATTRS
                 ):
                     init_attrs = cluster_handler.ZCL_INIT_ATTRS.copy()
-                    init_attrs[quirk_metadata.entity_metadata.attribute_name] = True
+                    init_attrs[
+                        quirk_metadata.entity_metadata.attribute_name
+                    ] = quirk_metadata.attribute_initialized_from_cache
                     cluster_handler.__dict__[zha_const.ZCL_INIT_ATTRS] = init_attrs
+
                 endpoint.async_new_entity(
                     platform,
                     entity_class,
@@ -302,6 +317,7 @@ class ProbeEndpoint:
                     [cluster_handler],
                     quirk_metadata=quirk_metadata,
                 )
+
                 _LOGGER.debug(
                     "'%s' platform -> '%s' using %s",
                     platform,

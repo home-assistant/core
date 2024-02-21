@@ -12,7 +12,7 @@ import random
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
-from zigpy.quirks.v2 import ZCLEnumMetadata, ZCLSensorMetadata
+from zigpy.quirks.v2 import EntityMetadata, ZCLEnumMetadata, ZCLSensorMetadata
 from zigpy.state import Counter, State
 from zigpy.zcl.clusters.closures import WindowCovering
 from zigpy.zcl.clusters.general import Basic
@@ -176,15 +176,14 @@ class Sensor(ZhaEntity, SensorEntity):
         """Init this sensor."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA].entity_metadata)
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, sensor_metadata: ZCLSensorMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
         """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        sensor_metadata: ZCLSensorMetadata = entity_metadata.entity_metadata
         self._attribute_name = sensor_metadata.attribute_name
-        # standardize the unique id suffix and translation key to be the attribute name
-        self._attr_translation_key = sensor_metadata.attribute_name
-        self._unique_id_suffix = sensor_metadata.attribute_name
         if sensor_metadata.decimals is not None:
             self._decimals = sensor_metadata.decimals
         if sensor_metadata.divisor is not None:
@@ -355,12 +354,11 @@ class EnumSensor(Sensor):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
     _enum: type[enum.Enum]
 
-    def _init_from_quirks_metadata(self, sensor_metadata: ZCLEnumMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
         """Init this entity from the quirks metadata."""
+        ZhaEntity._init_from_quirks_metadata(self, entity_metadata)  # pylint: disable=protected-access
+        sensor_metadata: ZCLEnumMetadata = entity_metadata.entity_metadata
         self._attribute_name = sensor_metadata.attribute_name
-        # standardize the unique id suffix and translation key to be the attribute name
-        self._attr_translation_key = sensor_metadata.attribute_name
-        self._unique_id_suffix = sensor_metadata.attribute_name
         self._enum = sensor_metadata.enum
 
     def formatter(self, value: int) -> str | None:

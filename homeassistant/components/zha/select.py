@@ -86,20 +86,21 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
         """Init this select entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         if QUIRK_METADATA in kwargs:
-            quirk_entity_metadata: EntityMetadata = kwargs[QUIRK_METADATA]
-            enum_metadata: EnumMetadata = quirk_entity_metadata.entity_metadata
-            self._init_from_quirks_metadata(enum_metadata)
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
 
         self._attribute_name = self._enum.__name__
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, enum_metadata: EnumMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
         """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        enum_metadata: EnumMetadata = entity_metadata.entity_metadata
         self._enum = enum_metadata.enum
-        # standardize the unique id suffix and translation key to be the enum name
-        self._attr_translation_key = self._enum.__name__
-        self._unique_id_suffix = self._enum.__name__
+        if not entity_metadata.translation_key:
+            # standardize the unique id suffix and translation key to be the enum name
+            self._attr_translation_key = self._enum.__name__
+            self._unique_id_suffix = self._enum.__name__
 
     @property
     def current_option(self) -> str | None:
@@ -214,17 +215,15 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         """Init this select entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA].entity_metadata)
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, zcl_enum__metadata: ZCLEnumMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
         """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        zcl_enum__metadata: ZCLEnumMetadata = entity_metadata.entity_metadata
         self._attribute_name = zcl_enum__metadata.attribute_name
-        # standardize the unique id suffix and translation key to be the attribute name
-        self._attr_translation_key = self._attribute_name
-        self._unique_id_suffix = self._attribute_name
-
         self._enum = zcl_enum__metadata.enum
 
     @property

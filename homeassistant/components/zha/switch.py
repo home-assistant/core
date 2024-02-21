@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Self
 
 from zhaquirks.quirk_ids import TUYA_PLUG_ONOFF
-from zigpy.quirks.v2 import SwitchMetadata
+from zigpy.quirks.v2 import EntityMetadata, SwitchMetadata
 from zigpy.zcl.clusters.closures import ConfigStatus, WindowCovering, WindowCoveringMode
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.foundation import Status
@@ -215,15 +215,14 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         """Init this number configuration entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA].entity_metadata)
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, switch_metadata: SwitchMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
         """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        switch_metadata: SwitchMetadata = entity_metadata.entity_metadata
         self._attribute_name = switch_metadata.attribute_name
-        # standardize the unique id suffix and translation key to be the attribute name
-        self._attr_translation_key = self._attribute_name
-        self._unique_id_suffix = self._attribute_name
         if switch_metadata.invert_attribute_name:
             self._inverter_attribute_name = switch_metadata.invert_attribute_name
         if switch_metadata.force_inverted:

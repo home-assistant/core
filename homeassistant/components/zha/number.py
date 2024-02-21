@@ -5,7 +5,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zigpy.quirks.v2 import NumberMetadata
+from zigpy.quirks.v2 import EntityMetadata, NumberMetadata
 from zigpy.zcl.clusters.hvac import Thermostat
 
 from homeassistant.components.number import NumberEntity, NumberMode
@@ -426,15 +426,14 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         """Init this number configuration entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA].entity_metadata)
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(self, number_metadata: NumberMetadata) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
         """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        number_metadata: NumberMetadata = entity_metadata.entity_metadata
         self._attribute_name = number_metadata.attribute_name
-        # standardize the unique id suffix and translation key to be the attribute name
-        self._attr_translation_key = self._attribute_name
-        self._unique_id_suffix = self._attribute_name
 
         if number_metadata.min is not None:
             self._attr_native_min_value = number_metadata.min

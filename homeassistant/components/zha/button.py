@@ -5,7 +5,11 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zigpy.quirks.v2 import WriteAttributeButtonMetadata, ZCLCommandButtonMetadata
+from zigpy.quirks.v2 import (
+    EntityMetadata,
+    WriteAttributeButtonMetadata,
+    ZCLCommandButtonMetadata,
+)
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -72,17 +76,14 @@ class ZHAButton(ZhaEntity, ButtonEntity):
         """Init this button."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA].entity_metadata)
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(
-        self, button_metadata: ZCLCommandButtonMetadata
-    ) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
         """Init this entity from the quirks metadata."""
-        self._attribute_name = button_metadata.attribute_name
-        # standardize the unique id suffix and translation key to be the attribute name
-        self._attr_translation_key = self._attribute_name
-        self._unique_id_suffix = self._attribute_name
+        super()._init_from_quirks_metadata(entity_metadata)
+        button_metadata: ZCLCommandButtonMetadata = entity_metadata.entity_metadata
+        self._command_name = button_metadata.command_name
         self._args = button_metadata.args
         self._kwargs = button_metadata.kwargs
 
@@ -147,17 +148,14 @@ class ZHAAttributeButton(ZhaEntity, ButtonEntity):
         """Init this button."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA].entity_metadata)
+            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
 
-    def _init_from_quirks_metadata(
-        self, button_metadata: WriteAttributeButtonMetadata
-    ) -> None:
+    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
         """Init this entity from the quirks metadata."""
+        super()._init_from_quirks_metadata(entity_metadata)
+        button_metadata: WriteAttributeButtonMetadata = entity_metadata.entity_metadata
         self._attribute_name = button_metadata.attribute_name
-        # standardize the unique id suffix and translation key to be the attribute name
-        self._attr_translation_key = self._attribute_name
-        self._unique_id_suffix = self._attribute_name
         self._attribute_value = button_metadata.attribute_value
 
     async def async_press(self) -> None:
