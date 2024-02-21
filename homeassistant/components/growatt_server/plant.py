@@ -47,3 +47,13 @@ def get_device_list(api: growattServer.GrowattApi, config):
     # Get a list of devices for specified plant to add sensors for.
     devices = api.device_list(plant_id)
     return [devices, plant_id]
+
+
+def get_inverter_list(api: growattServer.GrowattApi, config):
+    """Retrieve the device list for the selected plant."""
+
+    plant_id = get_plant_id(api, config)
+
+    # Get a list of inverters for specified plant.
+    inverters = api.inverter_list(plant_id)
+    return [inverters, plant_id]
