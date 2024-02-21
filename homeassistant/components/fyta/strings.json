@@ -21,7 +21,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "unknown": "Unknown error occurred",
-      "cannot_connect": "Unable to connect to the FYTA-server"
+      "cannot_connect": "Unable to connect to the FYTA server"
     }
   },
   "entity": {
