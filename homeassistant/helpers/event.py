@@ -381,7 +381,14 @@ def _async_track_event(
     action: Callable[[EventType[_TypedDictT]], None],
     run_immediately: bool,
 ) -> CALLBACK_TYPE:
-    """Track an event by a specific key."""
+    """Track an event by a specific key.
+
+    This function is intended for internal use only.
+
+    The dispatcher_callable, filter_callable, event_type, and run_immediately
+    must always be the same for the listener_key as the first call to this
+    function will set the listener_key in hass.data.
+    """
     if not keys:
         return _remove_empty_listener
 
