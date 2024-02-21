@@ -163,12 +163,13 @@ async def async_setup_component(
         if setup_done_future := setup_done_futures.pop(domain, None):
             futures.append(setup_done_future)
         for future in futures:
-            future.set_exception(err)
-            with contextlib.suppress(BaseException):
-                # Clear the flag as its normal that nothing
-                # will wait for this future to be resolved
-                # if there are no concurrent setup attempts
-                await future
+            if not future.done():
+                future.set_exception(err)
+                with contextlib.suppress(BaseException):
+                    # Clear the flag as its normal that nothing
+                    # will wait for this future to be resolved
+                    # if there are no concurrent setup attempts
+                    await future
         raise
 
 
