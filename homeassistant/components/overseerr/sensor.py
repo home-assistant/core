@@ -16,7 +16,6 @@ from .const import DOMAIN, SENSOR_TYPES
 from .coordinator import OverseerrRequestUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-_LOGGER.setLevel(logging.DEBUG)
 
 
 async def async_setup_entry(
