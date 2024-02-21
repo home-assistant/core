@@ -163,6 +163,9 @@ async def async_setup_component(
         if setup_done_future := setup_done_futures.pop(domain, None):
             futures.append(setup_done_future)
         for future in futures:
+            # If the setup call is cancelled it likely means
+            # Home Assistant is shutting down so the future might
+            # already be done.
             if not future.done():
                 future.set_exception(err)
                 with contextlib.suppress(BaseException):
