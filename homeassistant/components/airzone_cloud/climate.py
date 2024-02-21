@@ -61,17 +61,15 @@ from .entity import (
     AirzoneZoneEntity,
 )
 
-BASE_FAN_SPEEDS: Final[dict[int, str]] = {
-    0: FAN_AUTO,
-    1: FAN_LOW,
-}
 FAN_SPEED_MAPS: Final[dict[int, dict[int, str]]] = {
-    2: BASE_FAN_SPEEDS
-    | {
+    2: {
+        0: FAN_AUTO,
+        1: FAN_LOW,
         2: FAN_HIGH,
     },
-    3: BASE_FAN_SPEEDS
-    | {
+    3: {
+        0: FAN_AUTO,
+        1: FAN_LOW,
         2: FAN_MEDIUM,
         3: FAN_HIGH,
     },
