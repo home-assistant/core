@@ -128,7 +128,28 @@ async def test_immediate_works_with_schedule_call(hass: HomeAssistant) -> None:
 
 
 async def test_immediate_works_with_callback_function(hass: HomeAssistant) -> None:
-    """Test immediate works."""
+    """Test immediate works with callback function."""
+    calls = []
+    debouncer = debounce.Debouncer(
+        hass,
+        _LOGGER,
+        cooldown=0.01,
+        immediate=True,
+        function=callback(Mock(side_effect=lambda: calls.append(None))),
+    )
+
+    # Call when nothing happening
+    await debouncer.async_call()
+    assert len(calls) == 1
+    assert debouncer._timer_task is not None
+    assert debouncer._execute_at_end_of_timer is False
+    assert debouncer._job.target == debouncer.function
+
+    debouncer.async_cancel()
+
+
+async def test_immediate_works_with_executor_function(hass: HomeAssistant) -> None:
+    """Test immediate works with executor function."""
     calls = []
     debouncer = debounce.Debouncer(
         hass,
