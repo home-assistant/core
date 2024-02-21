@@ -2271,10 +2271,9 @@ async def test_cast_platform_play_media_local_media(
     quick_play_mock.assert_called()
     app_data = quick_play_mock.call_args[0][2]
     # No authSig appended
-    assert (
-        app_data["media_id"]
-        == f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla"
-    )
+    assert app_data[
+        "media_id"
+    ] == f"{network.get_url(hass)}/api/hls/bla/master_playlist.m3u8?token=bla"
 
 
 async def test_ha_cast(hass: HomeAssistant, ha_controller_mock) -> None:
