@@ -1590,7 +1590,7 @@ async def test_cleanup_entity_registry_change(hass: HomeAssistant) -> None:
     ent_reg = er.async_get(hass)
 
     with patch(
-        "homeassistant.helpers.device_registry.Debouncer.async_call"
+        "homeassistant.helpers.device_registry.Debouncer.async_schedule_call"
     ) as mock_call:
         entity = ent_reg.async_get_or_create("light", "hue", "e1")
         await hass.async_block_till_done()
