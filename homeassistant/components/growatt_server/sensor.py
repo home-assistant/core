@@ -5,24 +5,16 @@ import datetime
 import json
 import logging
 
-import growattServer
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
 
-from .const import (
-    CONF_PLANT_ID,
-    DEFAULT_PLANT_ID,
-    DEFAULT_URL,
-    DEPRECATED_URLS,
-    DOMAIN,
-    LOGIN_INVALID_AUTH_CODE,
-)
+from .api import get_configured_api
+from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN, LOGIN_INVALID_AUTH_CODE
 from .sensor_types.inverter import INVERTER_SENSOR_TYPES
 from .sensor_types.mix import MIX_SENSOR_TYPES
 from .sensor_types.sensor_entity_description import GrowattSensorEntityDescription
@@ -66,23 +58,9 @@ async def async_setup_entry(
     config = {**config_entry.data}
     username = config[CONF_USERNAME]
     password = config[CONF_PASSWORD]
-    url = config.get(CONF_URL, DEFAULT_URL)
     name = config[CONF_NAME]
 
-    # If the URL has been deprecated then change to the default instead
-    if url in DEPRECATED_URLS:
-        _LOGGER.info(
-            "URL: %s has been deprecated, migrating to the latest default: %s",
-            url,
-            DEFAULT_URL,
-        )
-        url = DEFAULT_URL
-        config[CONF_URL] = url
-        hass.config_entries.async_update_entry(config_entry, data=config)
-
-    # Initialise the library with the username & a random id each time it is started
-    api = growattServer.GrowattApi(add_random_user_id=True, agent_identifier=username)
-    api.server_url = url
+    api = get_configured_api(hass, config_entry)
 
     devices, plant_id = await hass.async_add_executor_job(get_device_list, api, config)
 
