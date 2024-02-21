@@ -121,7 +121,7 @@ class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEn
         state = self._state
         if state.missing_state:
             return None
-        if self._attr_device_class == SensorDeviceClass.TIMESTAMP:
+        if self._attr_device_class is SensorDeviceClass.TIMESTAMP:
             return dt_util.parse_datetime(state.state)
         if self._attr_device_class == SensorDeviceClass.DATE:
             return dt_util.parse_datetime(state.state).date()
