@@ -14,6 +14,9 @@ ATTR_TRACKING_NUMBER = "tracking_number"
 CONF_SHOW_ARCHIVED = "show_archived"
 CONF_SHOW_DELIVERED = "show_delivered"
 
+DEFAULT_SHOW_ARCHIVED = False
+DEFAULT_SHOW_DELIVERED = False
+
 DOMAIN = "seventeentrack"
 
 DATA_PACKAGES = "package_data"

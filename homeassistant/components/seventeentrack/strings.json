@@ -12,5 +12,16 @@
       "invalid_credentials": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Configure general settings",
+        "data": {
+          "show_archived": "Whether sensors should be created for archived packages",
+          "show_delivered": "Whether sensors should be created for delivered packages"
+        }
+      }
+    }
   }
 }

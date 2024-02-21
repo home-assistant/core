@@ -10,12 +10,33 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaFlowFormStep,
+    SchemaOptionsFlowHandler,
+)
 
-from .const import DOMAIN
+from .const import (
+    CONF_SHOW_ARCHIVED,
+    CONF_SHOW_DELIVERED,
+    DEFAULT_SHOW_ARCHIVED,
+    DEFAULT_SHOW_DELIVERED,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_SHOW_ARCHIVED, default=DEFAULT_SHOW_ARCHIVED): bool,
+        vol.Optional(CONF_SHOW_DELIVERED, default=DEFAULT_SHOW_DELIVERED): bool,
+    }
+)
+OPTIONS_FLOW = {
+    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
+}
 
 USER_SCHEMA = vol.Schema(
     {
@@ -29,6 +50,14 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """17track config flow."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> SchemaOptionsFlowHandler:
+        """Get options flow for this handler."""
+        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     async def _async_validate_input(self, user_input):
         """Validate the user input allows us to connect."""
@@ -71,6 +100,6 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data):
+    async def async_step_import(self, import_data) -> FlowResult:
         """Import 17Track config from configuration.yaml."""
         return await self.async_step_user(import_data)
