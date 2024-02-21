@@ -529,17 +529,19 @@ class EntityPlatform:
                 timeout,
             )
 
-        if results:
-            for idx, result in enumerate(results):
-                if isinstance(result, Exception):
-                    entity = entities[idx]
-                    self.logger.exception(
-                        "Error adding entity %s for domain %s with platform %s",
-                        entity.entity_id,
-                        self.domain,
-                        self.platform_name,
-                        exc_info=result,
-                    )
+        if not results:
+            return
+
+        for idx, result in enumerate(results):
+            if isinstance(result, Exception):
+                entity = entities[idx]
+                self.logger.exception(
+                    "Error adding entity %s for domain %s with platform %s",
+                    entity.entity_id,
+                    self.domain,
+                    self.platform_name,
+                    exc_info=result,
+                )
 
     async def _async_add_entities(
         self,
