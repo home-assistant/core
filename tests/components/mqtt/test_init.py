@@ -181,7 +181,7 @@ async def test_mqtt_await_ack_at_disconnect(
             data={"certificate": "auto", mqtt.CONF_BROKER: "test-broker"},
         )
         entry.add_to_hass(hass)
-        assert await mqtt.async_setup_entry(hass, entry)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         mqtt_client = mock_client.return_value
 
         # publish from MQTT client without awaiting
@@ -1998,8 +1998,7 @@ async def test_initial_setup_logs_error(
     entry.add_to_hass(hass)
     mqtt_client_mock.connect.return_value = 1
     try:
-        assert await mqtt.async_setup_entry(hass, entry)
-        await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(entry.entry_id)
     except HomeAssistantError:
         assert True
     assert "Failed to connect to MQTT server:" in caplog.text
@@ -2054,8 +2053,7 @@ async def test_publish_error(
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect = lambda *args: 1
         mock_client().publish().rc = 1
-        assert await mqtt.async_setup_entry(hass, entry)
-        await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(entry.entry_id)
         with pytest.raises(HomeAssistantError):
             await mqtt.async_publish(
                 hass, "some-topic", b"test-payload", qos=0, retain=False, encoding=None
@@ -2234,8 +2232,7 @@ async def test_handle_mqtt_timeout_on_callback(
         # Make sure we are connected correctly
         mock_client.on_connect(mock_client, None, None, 0)
         # Set up the integration
-        assert await mqtt.async_setup_entry(hass, entry)
-        await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(entry.entry_id)
 
         # Now call we publish without simulating and ACK callback
         await mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
@@ -2254,7 +2251,7 @@ async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
 
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect = MagicMock(side_effect=OSError("Connection error"))
-        assert await mqtt.async_setup_entry(hass, entry)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert "Failed to connect to MQTT server due to exception:" in caplog.text
 

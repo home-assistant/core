@@ -979,7 +979,7 @@ async def test_stop_shutdown_cancels_retry_setup_and_interval_listener(
     assert len(mock_call_later.return_value.mock_calls) == 0
     assert ent_platform._async_cancel_retry_setup is not None
 
-    await ent_platform.async_shutdown()
+    ent_platform.async_shutdown()
 
     assert len(mock_call_later.return_value.mock_calls) == 1
     assert ent_platform._async_unsub_polling is None
