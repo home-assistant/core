@@ -21,9 +21,9 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise growatt server flow."""
-        self.api = None
+        self.api: growattServer.GrowattApi
         self.user_id = None
         self.data: dict = {}
 
