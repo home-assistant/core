@@ -263,6 +263,7 @@ async def async_attach_trigger(
     trigger_data = {
         **trigger_info["trigger_data"],
         "platform": DOMAIN,
+        "entity_id": entity_id,
         "event": event_type,
         "offset": offset,
     }
