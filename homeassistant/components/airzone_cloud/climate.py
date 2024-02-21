@@ -320,11 +320,11 @@ class AirzoneAidooClimate(AirzoneAidooEntity, AirzoneDeviceClimate):
             self.get_airzone_value(AZD_SPEED) is not None
             and self.get_airzone_value(AZD_SPEEDS) is not None
         ):
-            self._set_fan_speeds()
+            self._initialize_fan_speeds()
 
         self._async_update_attrs()
 
-    def _set_fan_speeds(self) -> None:
+    def _initialize_fan_speeds(self) -> None:
         """Initialize Aidoo fan speeds."""
         azd_speeds: dict[int, int] = self.get_airzone_value(AZD_SPEEDS)
         max_speed = max(azd_speeds)
