@@ -61,7 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
 
     try:
-        nvr_info = await protect.get_nvr()
+        bootstrap = await protect.get_bootstrap()
+        nvr_info = bootstrap.nvr
     except NotAuthorized as err:
         retry_key = f"{entry.entry_id}_auth"
         retries = hass.data.setdefault(DOMAIN, {}).get(retry_key, 0)
@@ -72,6 +73,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed(err) from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         raise ConfigEntryNotReady from err
+
+    auth_user = bootstrap.users.get(bootstrap.auth_user_id)
+    if auth_user and auth_user.cloud_account:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "cloud_user",
+            is_fixable=True,
+            is_persistent=False,
+            learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#local-user",
+            severity=IssueSeverity.ERROR,
+            translation_key="cloud_user",
+            data={"entry_id": entry.entry_id},
+        )
 
     if nvr_info.version < MIN_REQUIRED_PROTECT_V:
         _LOGGER.error(
