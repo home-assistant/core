@@ -51,7 +51,7 @@ class SwissPublicTransportSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[DataConnection], datetime | None]
 
     index: int
-    has_legacy_attributes = False
+    has_legacy_attributes: bool
 
 
 SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
@@ -60,8 +60,7 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
             key=f"departure{i or ''}",
             translation_key=f"departure{i}",
             device_class=SensorDeviceClass.TIMESTAMP,
-            icon="mdi:bus",
-            has_entity_name=True,
+            has_legacy_attributes=i == 0,
             value_fn=lambda data_connection: data_connection["departure"],
             exists_fn=lambda data_connection: data_connection is not None,
             index=i,
@@ -141,6 +140,8 @@ class SwissPublicTransportSensor(
 
     entity_description: SwissPublicTransportSensorEntityDescription
     _attr_attribution = "Data provided by transport.opendata.ch"
+    _attr_icon = "mdi:bus"
+    _attr_has_entity_name = True
 
     def __init__(
         self,
