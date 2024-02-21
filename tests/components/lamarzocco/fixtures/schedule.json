@@ -1,0 +1,44 @@
+[
+  {
+    "day": "MONDAY",
+    "enable": "Disabled",
+    "on": "00:00",
+    "off": "00:00"
+  },
+  {
+    "day": "TUESDAY",
+    "enable": "Disabled",
+    "on": "00:00",
+    "off": "00:00"
+  },
+  {
+    "day": "WEDNESDAY",
+    "enable": "Enabled",
+    "on": "08:00",
+    "off": "13:00"
+  },
+  {
+    "day": "THURSDAY",
+    "enable": "Disabled",
+    "on": "00:00",
+    "off": "00:00"
+  },
+  {
+    "day": "FRIDAY",
+    "enable": "Enabled",
+    "on": "06:00",
+    "off": "09:00"
+  },
+  {
+    "day": "SATURDAY",
+    "enable": "Enabled",
+    "on": "10:00",
+    "off": "23:00"
+  },
+  {
+    "day": "SUNDAY",
+    "enable": "Disabled",
+    "on": "00:00",
+    "off": "00:00"
+  }
+]
