@@ -1,7 +1,6 @@
 """Support for an Intergas boiler via an InComfort/Intouch Lan2RF gateway."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -101,7 +100,7 @@ class IncomfortWaterHeater(IncomfortEntity, WaterHeaterEntity):
         try:
             await self._heater.update()
 
-        except (ClientResponseError, asyncio.TimeoutError) as err:
+        except (ClientResponseError, TimeoutError) as err:
             _LOGGER.warning("Update failed, message is: %s", err)
 
         else:

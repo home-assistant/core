@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -167,6 +168,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         [ClimateEntityFeature.TURN_OFF],
     )
     component.async_register_entity_service(
+        SERVICE_TOGGLE,
+        {},
+        "async_toggle",
+        [ClimateEntityFeature.TURN_OFF, ClimateEntityFeature.TURN_ON],
+    )
+    component.async_register_entity_service(
         SERVICE_SET_HVAC_MODE,
         {vol.Required(ATTR_HVAC_MODE): vol.Coerce(HVACMode)},
         "async_set_hvac_mode",
@@ -301,6 +308,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_temperature_unit: str
 
     __mod_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
+    # Integrations should set `_enable_turn_on_off_backwards_compatibility` to False
+    # once migrated and set the feature flags TURN_ON/TURN_OFF as needed.
+    _enable_turn_on_off_backwards_compatibility: bool = True
 
     def __getattribute__(self, __name: str) -> Any:
         """Get attribute.
@@ -345,7 +355,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             else:
                 message = (
                     "Entity %s (%s) implements HVACMode(s): %s and therefore implicitly"
-                    " supports the %s service without setting the proper"
+                    " supports the %s methods without setting the proper"
                     " ClimateEntityFeature. Please %s"
                 )
             _LOGGER.warning(
@@ -353,48 +363,44 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 self.entity_id,
                 type(self),
                 feature,
-                feature.lower(),
+                method,
                 report_issue,
             )
 
         # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
         # This should be removed in 2025.1.
-        if not self.supported_features & ClimateEntityFeature.TURN_OFF:
-            if (
-                type(self).async_turn_off is not ClimateEntity.async_turn_off
-                or type(self).turn_off is not ClimateEntity.turn_off
-            ):
-                # turn_off implicitly supported by implementing turn_off method
-                _report_turn_on_off("TURN_OFF", "turn_off")
-                self.__mod_supported_features |= (  # pylint: disable=unused-private-member
-                    ClimateEntityFeature.TURN_OFF
-                )
-            elif self.hvac_modes and HVACMode.OFF in self.hvac_modes:
-                # turn_off implicitly supported by including HVACMode.OFF
-                _report_turn_on_off("off", "turn_off")
-                self.__mod_supported_features |= (  # pylint: disable=unused-private-member
-                    ClimateEntityFeature.TURN_OFF
-                )
+        if self._enable_turn_on_off_backwards_compatibility is False:
+            # Return if integration has migrated already
+            return
 
-        if not self.supported_features & ClimateEntityFeature.TURN_ON:
-            if (
-                type(self).async_turn_on is not ClimateEntity.async_turn_on
-                or type(self).turn_on is not ClimateEntity.turn_on
-            ):
-                # turn_on implicitly supported by implementing turn_on method
-                _report_turn_on_off("TURN_ON", "turn_on")
-                self.__mod_supported_features |= (  # pylint: disable=unused-private-member
-                    ClimateEntityFeature.TURN_ON
-                )
-            elif self.hvac_modes and any(
-                _mode != HVACMode.OFF and _mode is not None for _mode in self.hvac_modes
-            ):
-                # turn_on implicitly supported by including any other HVACMode than HVACMode.OFF
-                _modes = [_mode for _mode in self.hvac_modes if _mode != HVACMode.OFF]
-                _report_turn_on_off(", ".join(_modes or []), "turn_on")
-                self.__mod_supported_features |= (  # pylint: disable=unused-private-member
-                    ClimateEntityFeature.TURN_ON
-                )
+        if not self.supported_features & ClimateEntityFeature.TURN_OFF and (
+            type(self).async_turn_off is not ClimateEntity.async_turn_off
+            or type(self).turn_off is not ClimateEntity.turn_off
+        ):
+            # turn_off implicitly supported by implementing turn_off method
+            _report_turn_on_off("TURN_OFF", "turn_off")
+            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                ClimateEntityFeature.TURN_OFF
+            )
+
+        if not self.supported_features & ClimateEntityFeature.TURN_ON and (
+            type(self).async_turn_on is not ClimateEntity.async_turn_on
+            or type(self).turn_on is not ClimateEntity.turn_on
+        ):
+            # turn_on implicitly supported by implementing turn_on method
+            _report_turn_on_off("TURN_ON", "turn_on")
+            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                ClimateEntityFeature.TURN_ON
+            )
+
+        if (modes := self.hvac_modes) and len(modes) >= 2 and HVACMode.OFF in modes:
+            # turn_on/off implicitly supported by including more modes than 1 and one of these
+            # are HVACMode.OFF
+            _modes = [_mode for _mode in self.hvac_modes if _mode is not None]
+            _report_turn_on_off(", ".join(_modes or []), "turn_on/turn_off")
+            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+            )
 
     @final
     @property
@@ -757,7 +763,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if mode not in self.hvac_modes:
                 continue
             await self.async_set_hvac_mode(mode)
-            break
+            return
+
+        raise NotImplementedError
 
     def turn_off(self) -> None:
         """Turn the entity off."""
@@ -773,6 +781,26 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Fake turn off
         if HVACMode.OFF in self.hvac_modes:
             await self.async_set_hvac_mode(HVACMode.OFF)
+            return
+
+        raise NotImplementedError
+
+    def toggle(self) -> None:
+        """Toggle the entity."""
+        raise NotImplementedError
+
+    async def async_toggle(self) -> None:
+        """Toggle the entity."""
+        # Forward to self.toggle if it's been overridden.
+        if type(self).toggle is not ClimateEntity.toggle:
+            await self.hass.async_add_executor_job(self.toggle)
+            return
+
+        # We assume that since turn_off is supported, HVACMode.OFF is as well.
+        if self.hvac_mode == HVACMode.OFF:
+            await self.async_turn_on()
+        else:
+            await self.async_turn_off()
 
     @cached_property
     def supported_features(self) -> ClimateEntityFeature:

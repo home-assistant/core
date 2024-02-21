@@ -140,6 +140,30 @@
       "gas_consumption_heating_this_year": {
         "name": "Heating gas consumption this year"
       },
+      "gas_consumption_fuelcell_today": {
+        "name": "Fuel cell gas consumption today"
+      },
+      "gas_consumption_fuelcell_this_week": {
+        "name": "Fuel cell gas consumption this week"
+      },
+      "gas_consumption_fuelcell_this_month": {
+        "name": "Fuel cell gas consumption this month"
+      },
+      "gas_consumption_fuelcell_this_year": {
+        "name": "Fuel cell gas consumption this year"
+      },
+      "gas_consumption_total_today": {
+        "name": "Gas consumption today"
+      },
+      "gas_consumption_total_this_week": {
+        "name": "Gas consumption this week"
+      },
+      "gas_consumption_total_this_month": {
+        "name": "Gas consumption this month"
+      },
+      "gas_consumption_total_this_year": {
+        "name": "Gas consumption this year"
+      },
       "gas_summary_consumption_heating_currentday": {
         "name": "Heating gas consumption today"
       },

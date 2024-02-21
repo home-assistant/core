@@ -227,13 +227,15 @@ async def test_on_node_added_not_ready(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    # the only entities are the node status sensor and ping button
-    assert len(hass.states.async_all()) == 3
-
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     # no extended device identifier yet
     assert len(device.identifiers) == 1
+
+    ent_reg = er.async_get(hass)
+    entities = er.async_entries_for_device(ent_reg, device.id)
+    # the only entities are the node status sensor, last_seen sensor, and ping button
+    assert len(entities) == 3
 
 
 async def test_existing_node_ready(
@@ -329,13 +331,15 @@ async def test_existing_node_not_ready(
     assert not device.model
     assert not device.sw_version
 
-    # the only entities are the node status sensor and ping button
-    assert len(hass.states.async_all()) == 3
-
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
     # no extended device identifier yet
     assert len(device.identifiers) == 1
+
+    ent_reg = er.async_get(hass)
+    entities = er.async_entries_for_device(ent_reg, device.id)
+    # the only entities are the node status sensor, last_seen sensor, and ping button
+    assert len(entities) == 3
 
 
 async def test_existing_node_not_replaced_when_not_ready(

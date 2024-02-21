@@ -291,7 +291,7 @@ def _async_dispatch_entity_id_event(
     """Dispatch to listeners."""
     if not (callbacks_list := callbacks.get(event.data["entity_id"])):
         return
-    for job in callbacks_list[:]:
+    for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -328,6 +328,7 @@ def _async_track_state_change_event(
         _async_dispatch_entity_id_event,
         _async_state_change_filter,
         action,
+        False,
     )
 
 
@@ -378,8 +379,16 @@ def _async_track_event(
         bool,
     ],
     action: Callable[[EventType[_TypedDictT]], None],
+    run_immediately: bool,
 ) -> CALLBACK_TYPE:
-    """Track an event by a specific key."""
+    """Track an event by a specific key.
+
+    This function is intended for internal use only.
+
+    The dispatcher_callable, filter_callable, event_type, and run_immediately
+    must always be the same for the listener_key as the first call to this
+    function will set the listener_key in hass.data.
+    """
     if not keys:
         return _remove_empty_listener
 
@@ -388,10 +397,8 @@ def _async_track_event(
 
     hass_data = hass.data
 
-    callbacks: dict[
-        str, list[HassJob[[EventType[_TypedDictT]], Any]]
-    ] | None = hass_data.get(callbacks_key)
-    if not callbacks:
+    callbacks: dict[str, list[HassJob[[EventType[_TypedDictT]], Any]]] | None
+    if not (callbacks := hass_data.get(callbacks_key)):
         callbacks = hass_data[callbacks_key] = {}
 
     if listeners_key not in hass_data:
@@ -399,13 +406,13 @@ def _async_track_event(
             event_type,
             ft.partial(dispatcher_callable, hass, callbacks),
             event_filter=ft.partial(filter_callable, hass, callbacks),
+            run_immediately=run_immediately,
         )
 
     job = HassJob(action, f"track {event_type} event {keys}")
 
     for key in keys:
-        callback_list = callbacks.get(key)
-        if callback_list:
+        if callback_list := callbacks.get(key):
             callback_list.append(job)
         else:
             callbacks[key] = [job]
@@ -428,7 +435,7 @@ def _async_dispatch_old_entity_id_or_entity_id_event(
         )
     ):
         return
-    for job in callbacks_list[:]:
+    for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -473,6 +480,7 @@ def async_track_entity_registry_updated_event(
         _async_dispatch_old_entity_id_or_entity_id_event,
         _async_entity_registry_updated_filter,
         action,
+        True,
     )
 
 
@@ -499,7 +507,7 @@ def _async_dispatch_device_id_event(
     """Dispatch to listeners."""
     if not (callbacks_list := callbacks.get(event.data["device_id"])):
         return
-    for job in callbacks_list[:]:
+    for job in callbacks_list.copy():
         try:
             hass.async_run_hass_job(job, event)
         except Exception:  # pylint: disable=broad-except
@@ -529,6 +537,7 @@ def async_track_device_registry_updated_event(
         _async_dispatch_device_id_event,
         _async_device_registry_updated_filter,
         action,
+        True,
     )
 
 
@@ -590,6 +599,7 @@ def _async_track_state_added_domain(
         _async_dispatch_domain_event,
         _async_domain_added_filter,
         action,
+        False,
     )
 
 
@@ -622,6 +632,7 @@ def async_track_state_removed_domain(
         _async_dispatch_domain_event,
         _async_domain_removed_filter,
         action,
+        False,
     )
 
 
@@ -1107,6 +1118,24 @@ class TrackTemplateResultInfo:
         return result_as_boolean(result)
 
     @callback
+    def _apply_update(
+        self,
+        updates: list[TrackTemplateResult],
+        update: bool | TrackTemplateResult,
+        template: Template,
+    ) -> bool:
+        """Handle updates of a tracked template."""
+        if not update:
+            return False
+
+        self._setup_time_listener(template, self._info[template].has_time)
+
+        if isinstance(update, TrackTemplateResult):
+            updates.append(update)
+
+        return True
+
+    @callback
     def _refresh(
         self,
         event: EventType[EventStateChangedData] | None,
@@ -1129,20 +1158,6 @@ class TrackTemplateResultInfo:
         info_changed = False
         now = event.time_fired if not replayed and event else dt_util.utcnow()
 
-        def _apply_update(
-            update: bool | TrackTemplateResult, template: Template
-        ) -> bool:
-            """Handle updates of a tracked template."""
-            if not update:
-                return False
-
-            self._setup_time_listener(template, self._info[template].has_time)
-
-            if isinstance(update, TrackTemplateResult):
-                updates.append(update)
-
-            return True
-
         block_updates = False
         super_template = self._track_templates[0] if self._has_super_template else None
 
@@ -1151,7 +1166,7 @@ class TrackTemplateResultInfo:
         # Update the super template first
         if super_template is not None:
             update = self._render_template_if_ready(super_template, now, event)
-            info_changed |= _apply_update(update, super_template.template)
+            info_changed |= self._apply_update(updates, update, super_template.template)
 
             if isinstance(update, TrackTemplateResult):
                 super_result = update.result
@@ -1182,7 +1197,9 @@ class TrackTemplateResultInfo:
                     continue
 
                 update = self._render_template_if_ready(track_template_, now, event)
-                info_changed |= _apply_update(update, track_template_.template)
+                info_changed |= self._apply_update(
+                    updates, update, track_template_.template
+                )
 
         if info_changed:
             assert self._track_state_changes
@@ -1442,7 +1459,7 @@ def async_track_point_in_utc_time(
     """
     # Ensure point_in_time is UTC
     utc_point_in_time = dt_util.as_utc(point_in_time)
-    expected_fire_timestamp = dt_util.utc_to_timestamp(utc_point_in_time)
+    expected_fire_timestamp = utc_point_in_time.timestamp()
     job = (
         action
         if isinstance(action, HassJob)

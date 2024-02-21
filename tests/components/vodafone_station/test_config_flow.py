@@ -61,8 +61,8 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
     with patch(
         "aiovodafone.api.VodafoneStationSercommApi.login",
@@ -74,6 +74,7 @@ async def test_exception_connection(hass: HomeAssistant, side_effect, error) -> 
 
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
+        assert result["errors"] is not None
         assert result["errors"]["base"] == error
 
         # Should be recoverable after hits error
@@ -184,6 +185,7 @@ async def test_reauth_not_successful(hass: HomeAssistant, side_effect, error) ->
 
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] is not None
         assert result["errors"]["base"] == error
 
         # Should be recoverable after hits error

@@ -685,3 +685,15 @@ class WindowCoveringInversionSwitch(ZHASwitchConfigurationEntity):
         if send_command:
             await self._cluster_handler.write_attributes_safe({name: current_mode})
             await self.async_update()
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names="opple_cluster", models={"lumi.curtain.agl001"}
+)
+class AqaraE1CurtainMotorHooksLockedSwitch(ZHASwitchConfigurationEntity):
+    """Representation of a switch that controls whether the curtain motor hooks are locked."""
+
+    _unique_id_suffix = "hooks_lock"
+    _attribute_name = "hooks_lock"
+    _attr_translation_key = "hooks_locked"
+    _attr_icon: str = "mdi:lock"

@@ -17,7 +17,7 @@ async def setup_media_source(hass):
 
 
 async def test_browsing_hls(hass: HomeAssistant, mock_camera_hls) -> None:
-    """Test browsing camera media source."""
+    """Test browsing HLS camera media source."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item is not None
     assert item.title == "Camera"
@@ -34,7 +34,7 @@ async def test_browsing_hls(hass: HomeAssistant, mock_camera_hls) -> None:
 
 
 async def test_browsing_mjpeg(hass: HomeAssistant, mock_camera) -> None:
-    """Test browsing camera media source."""
+    """Test browsing MJPEG camera media source."""
     item = await media_source.async_browse_media(hass, "media-source://camera")
     assert item is not None
     assert item.title == "Camera"
@@ -43,15 +43,29 @@ async def test_browsing_mjpeg(hass: HomeAssistant, mock_camera) -> None:
     assert item.children[0].media_content_type == "image/jpg"
 
 
-async def test_browsing_filter_web_rtc(
-    hass: HomeAssistant, mock_camera_web_rtc
-) -> None:
-    """Test browsing camera media source hides non-HLS cameras."""
-    item = await media_source.async_browse_media(hass, "media-source://camera")
-    assert item is not None
-    assert item.title == "Camera"
-    assert len(item.children) == 0
-    assert item.not_shown == 3
+async def test_browsing_web_rtc(hass: HomeAssistant, mock_camera_web_rtc) -> None:
+    """Test browsing WebRTC camera media source."""
+    # 3 cameras:
+    # one only supports WebRTC (no stream source)
+    # one raises when getting the source
+    # One has a stream source, and should be the only browsable one
+    with patch(
+        "homeassistant.components.camera.Camera.stream_source",
+        side_effect=["test", None, Exception],
+    ):
+        item = await media_source.async_browse_media(hass, "media-source://camera")
+        assert item is not None
+        assert item.title == "Camera"
+        assert len(item.children) == 0
+        assert item.not_shown == 3
+
+        # Adding stream enables HLS camera
+        hass.config.components.add("stream")
+
+        item = await media_source.async_browse_media(hass, "media-source://camera")
+        assert item.not_shown == 2
+        assert len(item.children) == 1
+        assert item.children[0].media_content_type == FORMAT_CONTENT_TYPE["hls"]
 
 
 async def test_resolving(hass: HomeAssistant, mock_camera_hls) -> None:

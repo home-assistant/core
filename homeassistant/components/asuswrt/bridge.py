@@ -11,6 +11,7 @@ from typing import Any, TypeVar, cast
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aiohttp import ClientSession
 from pyasuswrt import AsusWrtError, AsusWrtHttp
+from pyasuswrt.exceptions import AsusWrtNotAvailableInfoError
 
 from homeassistant.const import (
     CONF_HOST,
@@ -354,13 +355,14 @@ class AsusWrtHttpBridge(AsusWrtBridge):
     async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:
         """Return a dictionary of available sensors for this bridge."""
         sensors_temperatures = await self._get_available_temperature_sensors()
+        sensors_loadavg = await self._get_loadavg_sensors_availability()
         sensors_types = {
             SENSORS_TYPE_BYTES: {
                 KEY_SENSORS: SENSORS_BYTES,
                 KEY_METHOD: self._get_bytes,
             },
             SENSORS_TYPE_LOAD_AVG: {
-                KEY_SENSORS: SENSORS_LOAD_AVG,
+                KEY_SENSORS: sensors_loadavg,
                 KEY_METHOD: self._get_load_avg,
             },
             SENSORS_TYPE_RATES: {
@@ -392,6 +394,16 @@ class AsusWrtHttpBridge(AsusWrtBridge):
             )
             return []
         return available_sensors
+
+    async def _get_loadavg_sensors_availability(self) -> list[str]:
+        """Check if load avg is available on the router."""
+        try:
+            await self._api.async_get_loadavg()
+        except AsusWrtNotAvailableInfoError:
+            return []
+        except AsusWrtError:
+            pass
+        return SENSORS_LOAD_AVG
 
     @handle_errors_and_zip(AsusWrtError, SENSORS_BYTES)
     async def _get_bytes(self) -> Any:

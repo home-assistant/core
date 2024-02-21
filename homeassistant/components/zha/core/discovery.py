@@ -6,6 +6,8 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, cast
 
+from zigpy.zcl.clusters.general import Ota
+
 from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -32,6 +34,7 @@ from .. import (  # noqa: F401
     sensor,
     siren,
     switch,
+    update,
 )
 from . import const as zha_const, registries as zha_regs
 
@@ -233,10 +236,16 @@ class ProbeEndpoint:
         cmpt_by_dev_type = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
 
         if config_diagnostic_entities:
+            cluster_handlers = list(endpoint.all_cluster_handlers.values())
+            ota_handler_id = f"{endpoint.id}:0x{Ota.cluster_id:04x}"
+            if ota_handler_id in endpoint.client_cluster_handlers:
+                cluster_handlers.append(
+                    endpoint.client_cluster_handlers[ota_handler_id]
+                )
             matches, claimed = zha_regs.ZHA_ENTITIES.get_config_diagnostic_entity(
                 endpoint.device.manufacturer,
                 endpoint.device.model,
-                list(endpoint.all_cluster_handlers.values()),
+                cluster_handlers,
                 endpoint.device.quirk_id,
             )
         else:

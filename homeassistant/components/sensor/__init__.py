@@ -502,6 +502,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Note:
             suggested_unit_of_measurement is stored in the entity registry the first
             time the entity is seen, and then never updated.
+
         """
         if hasattr(self, "_attr_suggested_unit_of_measurement"):
             return self._attr_suggested_unit_of_measurement

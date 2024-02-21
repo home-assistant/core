@@ -41,6 +41,7 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
         key="charge_state_charging_state",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         is_on=lambda x: x == "Charging",
+        entity_registry_enabled_default=False,
     ),
     TessieBinarySensorEntityDescription(
         key="charge_state_preconditioning_enabled",
@@ -62,17 +63,14 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     ),
     TessieBinarySensorEntityDescription(
         key="climate_state_auto_seat_climate_left",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
         key="climate_state_auto_seat_climate_right",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
         key="climate_state_auto_steering_wheel_heat",
-        device_class=BinarySensorDeviceClass.HEAT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TessieBinarySensorEntityDescription(
@@ -94,7 +92,7 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     ),
     TessieBinarySensorEntityDescription(
         key="vehicle_state_is_user_present",
-        device_class=BinarySensorDeviceClass.PRESENCE,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
     TessieBinarySensorEntityDescription(
         key="vehicle_state_tpms_soft_warning_fl",

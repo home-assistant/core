@@ -1,6 +1,5 @@
 """Test the Fully Kiosk Browser config flow."""
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -67,7 +66,7 @@ async def test_user_flow(
     [
         (FullyKioskError("error", "status"), "cannot_connect"),
         (ClientConnectorError(None, Mock()), "cannot_connect"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (RuntimeError, "unknown"),
     ],
 )
@@ -179,7 +178,7 @@ async def test_dhcp_discovery_updates_entry(
         data=DhcpServiceInfo(
             hostname="tablet",
             ip="127.0.0.2",
-            macaddress="aa:bb:cc:dd:ee:ff",
+            macaddress="aabbccddeeff",
         ),
     )
 
@@ -207,7 +206,7 @@ async def test_dhcp_unknown_device(
         data=DhcpServiceInfo(
             hostname="tablet",
             ip="127.0.0.2",
-            macaddress="aa:bb:cc:dd:ee:00",
+            macaddress="aabbccddee00",
         ),
     )
 
