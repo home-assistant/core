@@ -122,9 +122,7 @@ async def test_f1data_update_failed_too_few_races(hass: HomeAssistant) -> None:
     ), patch(
         "ergast_py.Ergast.get_races",
         return_value=[],
-    ), pytest.raises(
-        UpdateFailed
-    ):
+    ), pytest.raises(UpdateFailed):
         await f1_data.update()
 
 
@@ -142,9 +140,7 @@ async def test_f1data_update_failed_constructor_standings(hass: HomeAssistant) -
     ), patch(
         "ergast_py.Ergast.get_races",
         return_value=[MOCK_RACE],
-    ), pytest.raises(
-        UpdateFailed
-    ):
+    ), pytest.raises(UpdateFailed):
         await f1_data.update()
 
 
@@ -162,9 +158,7 @@ async def test_f1data_update_failed_driver_standings(hass: HomeAssistant) -> Non
     ), patch(
         "ergast_py.Ergast.get_races",
         return_value=[MOCK_RACE],
-    ), pytest.raises(
-        UpdateFailed
-    ):
+    ), pytest.raises(UpdateFailed):
         await f1_data.update()
 
 
@@ -182,9 +176,7 @@ async def test_f1data_update_failed_races(hass: HomeAssistant) -> None:
     ), patch(
         "ergast_py.Ergast.get_races",
         side_effect=Exception,
-    ), pytest.raises(
-        UpdateFailed
-    ):
+    ), pytest.raises(UpdateFailed):
         await f1_data.update()
 
 
