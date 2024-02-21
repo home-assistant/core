@@ -290,8 +290,12 @@ class Store(Generic[_T]):
 
         now = self.hass.loop.time()
 
-        if (handle := self._delay_handle) and (
-            handle.when() - now / delay > MIN_PERCENT_DELAY_REMAINING_TO_RESCHEDULE
+        if (
+            delay
+            and (handle := self._delay_handle)
+            and (
+                handle.when() - now / delay > MIN_PERCENT_DELAY_REMAINING_TO_RESCHEDULE
+            )
         ):
             # Debounce logic:
             #
