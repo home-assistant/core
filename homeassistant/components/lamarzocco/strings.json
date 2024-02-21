@@ -56,6 +56,11 @@
         "name": "Start backflush"
       }
     },
+    "calendar": {
+      "auto_on_off_schedule": {
+        "name": "Auto on/off schedule"
+      }
+    },
     "number": {
       "coffee_temp": {
         "name": "Coffee target temperature"
