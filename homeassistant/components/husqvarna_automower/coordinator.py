@@ -3,10 +3,11 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerAttributes
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
@@ -35,7 +36,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             await self.api.connect()
             self.api.register_data_callback(self.callback)
             self.ws_connected = True
-        return await self.api.get_status()
+        try:
+            return await self.api.get_status()
+        except ApiException as err:
+            raise UpdateFailed from err
 
     async def shutdown(self, *_: Any) -> None:
         """Close resources."""
