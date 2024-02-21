@@ -20,6 +20,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    AUTH_RETRIES,
     CONF_ALLOW_EA,
     DEFAULT_SCAN_INTERVAL,
     DEVICES_THAT_ADOPT,
@@ -62,6 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         nvr_info = await protect.get_nvr()
     except NotAuthorized as err:
+        retry_key = f"{entry.entry_id}_auth"
+        retries = hass.data.setdefault(DOMAIN, {}).get(retry_key, 0)
+        if retries < AUTH_RETRIES:
+            retries += 1
+            hass.data[DOMAIN][retry_key] = retries
+            raise ConfigEntryNotReady from err
         raise ConfigEntryAuthFailed(err) from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         raise ConfigEntryNotReady from err
