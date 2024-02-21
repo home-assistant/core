@@ -87,6 +87,20 @@
         }
       }
     },
+    "device_tracker": {
+      "location": {
+        "default": "mdi:car",
+        "state": {
+          "not_home": "mdi:car-arrow-right"
+        }
+      },
+      "route": {
+        "default": "mdi:map-marker",
+        "state": {
+          "home": "mdi:home-map-marker"
+        }
+      }
+    },
     "select": {
       "climate_state_seat_heater_left": {
         "default": "mdi:car-seat",
