@@ -630,9 +630,9 @@ class KodiEntity(MediaPlayerEntity):
         return None
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        state_attr = {}
+        state_attr: dict[str, str | None] = {}
         if self.state == MediaPlayerState.OFF:
             return state_attr
 
