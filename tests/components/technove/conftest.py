@@ -32,6 +32,16 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
+def mock_onboarding() -> Generator[MagicMock, None, None]:
+    """Mock that Home Assistant is currently onboarding."""
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=False,
+    ) as mock_onboarding:
+        yield mock_onboarding
+
+
+@pytest.fixture
 def device_fixture() -> TechnoVEStation:
     """Return the device fixture for a specific device."""
     return TechnoVEStation(load_json_object_fixture("station_charging.json", DOMAIN))

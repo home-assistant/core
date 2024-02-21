@@ -1,4 +1,5 @@
 """Config flow for Tedee integration."""
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -83,14 +84,24 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_LOCAL_ACCESS_TOKEN,
-                        default=entry_data[CONF_LOCAL_ACCESS_TOKEN],
-                    ): str,
-                }
-            ),
-        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        assert self.reauth_entry
+
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_LOCAL_ACCESS_TOKEN,
+                            default=self.reauth_entry.data[CONF_LOCAL_ACCESS_TOKEN],
+                        ): str,
+                    }
+                ),
+            )
+        return await self.async_step_user(user_input)

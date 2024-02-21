@@ -1,7 +1,6 @@
 """Config flow for OurGroceries integration."""
 from __future__ import annotations
 
-from asyncio import TimeoutError as AsyncIOTimeoutError
 import logging
 from typing import Any
 
@@ -40,7 +39,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             og = OurGroceries(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
             try:
                 await og.login()
-            except (AsyncIOTimeoutError, ClientError):
+            except (TimeoutError, ClientError):
                 errors["base"] = "cannot_connect"
             except InvalidLoginException:
                 errors["base"] = "invalid_auth"

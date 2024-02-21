@@ -13,6 +13,7 @@ from homeassistant.components.calendar import (
     EVENT_START_DATETIME,
     SERVICE_GET_EVENTS,
 )
+
 from homeassistant.components.lamarzocco.calendar import (
     ATTR_DAY_OF_WEEK,
     ATTR_ENABLE,
@@ -71,6 +72,56 @@ async def test_calendar_events(
     )
 
     assert events == snapshot
+  
+@pytest.mark.parametrize(
+    (
+        "start_date",
+        "end_date",
+    ),
+    [
+        (datetime(2024, 2, 11, 6, 0), datetime(2024, 2, 18, 6, 0)),
+        (datetime(2024, 2, 11, 7, 15), datetime(2024, 2, 18, 6, 0)),
+        (datetime(2024, 2, 11, 9, 0), datetime(2024, 2, 18, 7, 15)),
+        (datetime(2024, 2, 11, 9, 0), datetime(2024, 2, 18, 8, 0)),
+        (datetime(2024, 2, 11, 9, 0), datetime(2024, 2, 18, 6, 0)),
+        (datetime(2024, 2, 11, 6, 0), datetime(2024, 2, 18, 8, 0)),
+    ],
+)
+async def test_calendar_edge_cases(
+    hass: HomeAssistant,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    start_date: datetime,
+    end_date: datetime,
+) -> None:
+    """Test edge cases."""
+    start_date = start_date.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+    end_date = end_date.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
+
+    # set schedule to be only on Sunday, 07:00 - 07:30
+    mock_lamarzocco.schedule[2]["enable"] = "Disabled"
+    mock_lamarzocco.schedule[4]["enable"] = "Disabled"
+    mock_lamarzocco.schedule[5]["enable"] = "Disabled"
+    mock_lamarzocco.schedule[6]["enable"] = "Enabled"
+    mock_lamarzocco.schedule[6]["on"] = "07:00"
+    mock_lamarzocco.schedule[6]["off"] = "07:30"
+
+    await async_init_integration(hass, mock_config_entry)
+
+    events = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: f"calendar.{mock_lamarzocco.serial_number}_auto_on_off_schedule",
+            EVENT_START_DATETIME: start_date,
+            EVENT_END_DATETIME: end_date,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert events == snapshot
 
 
 async def test_no_calendar_events_global_disable(
@@ -106,7 +157,7 @@ async def test_no_calendar_events_global_disable(
     )
     assert events == snapshot
 
-
+   
 # test services
 
 
@@ -199,3 +250,4 @@ async def test_service_call_error(
             },
             blocking=True,
         )
+

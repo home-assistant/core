@@ -40,7 +40,6 @@ ENTITIES: tuple[LaMarzoccoUpdateEntityDescription, ...] = (
         key="machine_firmware",
         translation_key="machine_firmware",
         device_class=UpdateDeviceClass.FIRMWARE,
-        icon="mdi:cloud-download",
         current_fw_fn=lambda lm: lm.firmware_version,
         latest_fw_fn=lambda lm: lm.latest_firmware_version,
         component=LaMarzoccoUpdateableComponent.MACHINE,
@@ -50,7 +49,6 @@ ENTITIES: tuple[LaMarzoccoUpdateEntityDescription, ...] = (
         key="gateway_firmware",
         translation_key="gateway_firmware",
         device_class=UpdateDeviceClass.FIRMWARE,
-        icon="mdi:cloud-download",
         current_fw_fn=lambda lm: lm.gateway_version,
         latest_fw_fn=lambda lm: lm.latest_gateway_version,
         component=LaMarzoccoUpdateableComponent.GATEWAY,
@@ -102,4 +100,4 @@ class LaMarzoccoUpdateEntity(LaMarzoccoEntity, UpdateEntity):
         if not success:
             raise HomeAssistantError("Update failed")
         self._attr_in_progress = False
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()

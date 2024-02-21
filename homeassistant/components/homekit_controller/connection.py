@@ -46,6 +46,7 @@ from .const import (
     SUBSCRIBE_COOLDOWN,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
+from .utils import IidTuple, unique_id_to_iids
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
@@ -514,6 +515,54 @@ class HKDevice:
             device_registry.async_update_device(device.id, new_identifiers=identifiers)
 
     @callback
+    def async_reap_stale_entity_registry_entries(self) -> None:
+        """Delete entity registry entities for removed characteristics, services and accessories."""
+        _LOGGER.debug(
+            "Removing stale entity registry entries for pairing %s",
+            self.unique_id,
+        )
+
+        reg = er.async_get(self.hass)
+
+        # For the current config entry only, visit all registry entity entries
+        # Build a set of (unique_id, aid, sid, iid)
+        # For services, (unique_id, aid, sid, None)
+        # For accessories, (unique_id, aid, None, None)
+        entries = er.async_entries_for_config_entry(reg, self.config_entry.entry_id)
+        existing_entities = {
+            iids: entry.entity_id
+            for entry in entries
+            if (iids := unique_id_to_iids(entry.unique_id))
+        }
+
+        # Process current entity map and produce a similar set
+        current_unique_id: set[IidTuple] = set()
+        for accessory in self.entity_map.accessories:
+            current_unique_id.add((accessory.aid, None, None))
+
+            for service in accessory.services:
+                current_unique_id.add((accessory.aid, service.iid, None))
+
+                for char in service.characteristics:
+                    current_unique_id.add(
+                        (
+                            accessory.aid,
+                            service.iid,
+                            char.iid,
+                        )
+                    )
+
+        # Remove the difference
+        if stale := existing_entities.keys() - current_unique_id:
+            for parts in stale:
+                _LOGGER.debug(
+                    "Removing stale entity registry entry %s for pairing %s",
+                    existing_entities[parts],
+                    self.unique_id,
+                )
+                reg.async_remove(existing_entities[parts])
+
+    @callback
     def async_migrate_ble_unique_id(self) -> None:
         """Config entries from step_bluetooth used incorrect identifier for unique_id."""
         unique_id = normalize_hkid(self.unique_id)
@@ -614,6 +663,8 @@ class HKDevice:
         self.async_remove_legacy_device_serial_numbers()
 
         self.async_migrate_ble_unique_id()
+
+        self.async_reap_stale_entity_registry_entries()
 
         self.async_create_devices()
 

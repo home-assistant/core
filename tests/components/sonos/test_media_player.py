@@ -1,26 +1,45 @@
 """Tests for the Sonos Media Player platform."""
 from homeassistant.const import STATE_IDLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    CONNECTION_UPNP,
+    DeviceRegistry,
+)
 
 
 async def test_device_registry(
-    hass: HomeAssistant, async_autosetup_sonos, soco
+    hass: HomeAssistant, device_registry: DeviceRegistry, async_autosetup_sonos, soco
 ) -> None:
     """Test sonos device registered in the device registry."""
-    device_registry = dr.async_get(hass)
     reg_device = device_registry.async_get_device(
         identifiers={("sonos", "RINCON_test")}
     )
+    assert reg_device is not None
     assert reg_device.model == "Model Name"
     assert reg_device.sw_version == "13.1"
     assert reg_device.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55"),
-        (dr.CONNECTION_UPNP, "uuid:RINCON_test"),
+        (CONNECTION_NETWORK_MAC, "00:11:22:33:44:55"),
+        (CONNECTION_UPNP, "uuid:RINCON_test"),
     }
     assert reg_device.manufacturer == "Sonos"
-    assert reg_device.suggested_area == "Zone A"
     assert reg_device.name == "Zone A"
+    # Default device provides battery info, area should not be suggested
+    assert reg_device.suggested_area is None
+
+
+async def test_device_registry_not_portable(
+    hass: HomeAssistant, device_registry: DeviceRegistry, async_setup_sonos, soco
+) -> None:
+    """Test non-portable sonos device registered in the device registry to ensure area suggested."""
+    soco.get_battery_info.return_value = {}
+    await async_setup_sonos()
+
+    reg_device = device_registry.async_get_device(
+        identifiers={("sonos", "RINCON_test")}
+    )
+    assert reg_device is not None
+    assert reg_device.suggested_area == "Zone A"
 
 
 async def test_entity_basic(

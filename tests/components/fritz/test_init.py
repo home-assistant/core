@@ -14,7 +14,6 @@ from homeassistant.components.fritz.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .const import MOCK_USER_DATA
 
@@ -27,7 +26,7 @@ async def test_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
 
@@ -51,7 +50,7 @@ async def test_options_reload(
         "homeassistant.config_entries.ConfigEntries.async_reload",
         return_value=None,
     ) as mock_reload:
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state == ConfigEntryState.LOADED
 
@@ -79,7 +78,7 @@ async def test_setup_auth_fail(hass: HomeAssistant, error) -> None:
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=error,
     ):
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.SETUP_ERROR
@@ -99,7 +98,7 @@ async def test_setup_fail(hass: HomeAssistant, error) -> None:
         "homeassistant.components.fritz.common.FritzConnection",
         side_effect=error,
     ):
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.SETUP_RETRY

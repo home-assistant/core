@@ -39,6 +39,8 @@ OPTIONS_DAY_OF_WEEK: Final = (
     "sat",
     "sun",
 )
+=======
+CALENDAR_KEY = "auto_on_off_schedule"
 
 
 async def async_setup_entry(
@@ -82,17 +84,13 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        # only need to check the next 6 days, because if we don't find anything there
-        # then there is no event scheduled
-        for date in self._get_date_range(
-            dt_util.now(), dt_util.now() + timedelta(days=6)
-        ):
-            scheduled = self._async_get_calendar_event(date)
-            if scheduled:
-                if scheduled.start < dt_util.now() and scheduled.end < dt_util.now():
-                    continue
-                return scheduled
-        return None
+        now = dt_util.now()
+
+        events = self._get_events(
+            start_date=now,
+            end_date=now + timedelta(days=7),  # only need to check a week ahead
+        )
+        return next(iter(events), None)
 
     async def async_get_events(
         self,
@@ -102,11 +100,25 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
     ) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
 
-        events: list[CalendarEvent] = []
+        return self._get_events(
+            start_date=start_date,
+            end_date=end_date,
+        )
 
+    def _get_events(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> list[CalendarEvent]:
+        """Get calendar events within a datetime range."""
+
+        events: list[CalendarEvent] = []
         for date in self._get_date_range(start_date, end_date):
-            scheduled = self._async_get_calendar_event(date)
-            if scheduled:
+            if scheduled := self._async_get_calendar_event(date):
+                if scheduled.end < start_date:
+                    continue
+                if scheduled.start > end_date:
+                    continue
                 events.append(scheduled)
         return events
 
@@ -114,9 +126,11 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         self, start_date: datetime, end_date: datetime
     ) -> Iterator[datetime]:
         current_date = start_date
-        while current_date <= end_date:
+        
+        while current_date.date() < end_date.date():
             yield current_date
             current_date += timedelta(days=1)
+        yield end_date
 
     def _async_get_calendar_event(self, date: datetime) -> CalendarEvent | None:
         """Return calendar event for a given weekday."""
@@ -145,7 +159,8 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
                 second=0,
                 microsecond=0,
             ),
-            summary=f"Machine {self.coordinator.lm.true_model_name} ({self.coordinator.lm.serial_number}) on",
+
+            summary=f"Machine {self.coordinator.config_entry.title} on",
             description="Machine is scheduled to turn on at the start time and off at the end time",
         )
 

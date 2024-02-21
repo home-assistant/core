@@ -1,0 +1,79 @@
+{
+  "config": {
+    "rev": 1,
+    "hwVersion": "3.0.4",
+    "model": "Pro",
+    "brand": "HD",
+    "serialNumber": "A1B2C3D4E5G6H7",
+    "firmware": {
+      "mainProcessor": {
+        "revision": 3,
+        "subRevision": 1,
+        "build": 472,
+        "name": "Powerview Generation 3"
+      },
+      "radios": [
+        {
+          "revision": 3,
+          "subRevision": 0,
+          "build": 39
+        },
+        {
+          "revision": 3,
+          "subRevision": 0,
+          "build": 39
+        }
+      ]
+    },
+    "rangeMapper": {
+      "minRSSI": -90,
+      "levelingSeconds": 4
+    },
+    "homeAssoc": 60325,
+    "color": {
+      "red": 0,
+      "green": 0,
+      "blue": 255,
+      "brightness": 50
+    },
+    "cloudConfig": {
+      "homeId": "G3pH6kP87QX5rWFD2vL",
+      "gatewayId": 385,
+      "collection": "homes",
+      "cloudEnv": 1
+    },
+    "networkConfig": {
+      "staticIpEnabled": false,
+      "staticIp": {
+        "ip_address": "0.0.0.0",
+        "gateway_ip": "0.0.0.0",
+        "netmask": "0.0.0.0",
+        "dns": ["0.0.0.0"]
+      }
+    },
+    "networkStatus": {
+      "ipAddress": "192.168.0.20",
+      "activeInterface": "eth0",
+      "primaryMacAddress": "AA:BB:CC:DD:EE:FF",
+      "dns": [],
+      "eth0": {
+        "name": "eth0",
+        "ip_address": "192.168.0.20",
+        "mac_address": "AA:BB:CC:DD:EE:FF",
+        "gateway_ip": "192.168.0.1",
+        "netmask": "255.255.255.0",
+        "type": "Wired"
+      },
+      "wlan0": {},
+      "internetState": "Connected",
+      "ssid": "Hub-E5:G6:H7"
+    },
+    "mgwConfig": {
+      "primary": true
+    },
+    "mgwStatus": {
+      "running": true
+    },
+    "ip": "192.168.0.20"
+  }
+}
