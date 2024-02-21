@@ -885,8 +885,9 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
             entity_namespace=entity_namespace,
         )
 
-        async def _async_on_stop(_: Event) -> None:
-            await self.async_shutdown()
+        @callback
+        def _async_on_stop(_: Event) -> None:
+            self.async_shutdown()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
 
