@@ -2,9 +2,12 @@
 from datetime import time
 import logging
 
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
+import homeassistant.helpers.config_validation as cv
 
 from . import const
 from .api import get_configured_api
@@ -109,6 +112,20 @@ async def async_setup_entry(
 
         process_response(response)
 
+    hass.services.async_register(
+        const.DOMAIN,
+        const.SET_GRID_FIRST,
+        set_grid_first,
+        schema=SET_GRID_FIRST_SERVICE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        const.DOMAIN,
+        const.SET_BATTERY_FIRST,
+        set_battery_first,
+        schema=SET_BATTERY_FIRST_SERVICE_SCHEMA,
+    )
+
     return True
 
 
@@ -127,3 +144,37 @@ def process_response(response) -> bool:
         return False
 
     return True
+
+
+SET_GRID_FIRST_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(const.DISCHARGE_POWER_RATE): cv.positive_int,
+        vol.Required(const.DISCHARGE_STOPPED_SOC): cv.positive_int,
+        vol.Optional(const.TIME_SLOT_1_START): cv.time,
+        vol.Optional(const.TIME_SLOT_1_END): cv.time,
+        vol.Required(const.TIME_SLOT_1_ENABLED): cv.boolean,
+        vol.Optional(const.TIME_SLOT_2_START): cv.time,
+        vol.Optional(const.TIME_SLOT_2_END): cv.time,
+        vol.Required(const.TIME_SLOT_2_ENABLED): cv.boolean,
+        vol.Optional(const.TIME_SLOT_3_START): cv.time,
+        vol.Optional(const.TIME_SLOT_3_END): cv.time,
+        vol.Required(const.TIME_SLOT_3_ENABLED): cv.boolean,
+    }
+)
+
+SET_BATTERY_FIRST_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(const.CHARGE_POWER_RATE): cv.positive_int,
+        vol.Required(const.CHARGE_STOPPED_SOC): cv.positive_int,
+        vol.Required(const.AC_CHARGE): cv.boolean,
+        vol.Optional(const.TIME_SLOT_1_START): cv.time,
+        vol.Optional(const.TIME_SLOT_1_END): cv.time,
+        vol.Required(const.TIME_SLOT_1_ENABLED): cv.boolean,
+        vol.Optional(const.TIME_SLOT_2_START): cv.time,
+        vol.Optional(const.TIME_SLOT_2_END): cv.time,
+        vol.Required(const.TIME_SLOT_2_ENABLED): cv.boolean,
+        vol.Optional(const.TIME_SLOT_3_START): cv.time,
+        vol.Optional(const.TIME_SLOT_3_END): cv.time,
+        vol.Required(const.TIME_SLOT_3_ENABLED): cv.boolean,
+    }
+)
