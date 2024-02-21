@@ -41,6 +41,12 @@
       "known_devices": ["slae.sh cc2652rb stick"]
     },
     {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*slzb-07*",
+      "known_devices": ["smlight slzb-07"]
+    },
+    {
       "vid": "1A86",
       "pid": "55D4",
       "description": "*sonoff*plus*",
