@@ -179,14 +179,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer)
 
-    @hass_callback
-    def _async_call_debouncer(now: datetime.datetime) -> None:
+    async def _async_call_debouncer(now: datetime.datetime) -> None:
         """Call the debouncer at a later time."""
-        discovery_debouncer.async_schedule_call()
+        await discovery_debouncer.async_call()
 
     call_debouncer_job = HassJob(_async_call_debouncer, cancel_on_shutdown=True)
 
-    @hass_callback
     def _async_trigger_discovery() -> None:
         # There are so many bluetooth adapter models that
         # we check the bus whenever a usb device is plugged in
@@ -195,7 +193,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # actually supported unless we ask DBus if its now
         # present.
         _LOGGER.debug("Triggering bluetooth usb discovery")
-        discovery_debouncer.async_schedule_call()
+        hass.async_create_task(discovery_debouncer.async_call())
         # Because it can take 120s for the firmware loader
         # fallback to timeout we need to wait that plus
         # the debounce time to ensure we do not miss the
