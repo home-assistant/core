@@ -14,7 +14,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle, dt as dt_util
 
 from .api import get_configured_api
-from .const import CONF_PLANT_ID, DEFAULT_PLANT_ID, DOMAIN, LOGIN_INVALID_AUTH_CODE
+from .const import DOMAIN
+from .plant import get_device_list
 from .sensor_types.inverter import INVERTER_SENSOR_TYPES
 from .sensor_types.mix import MIX_SENSOR_TYPES
 from .sensor_types.sensor_entity_description import GrowattSensorEntityDescription
@@ -25,28 +26,6 @@ from .sensor_types.total import TOTAL_SENSOR_TYPES
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = datetime.timedelta(minutes=5)
-
-
-def get_device_list(api, config):
-    """Retrieve the device list for the selected plant."""
-    plant_id = config[CONF_PLANT_ID]
-
-    # Log in to api and fetch first plant if no plant id is defined.
-    login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
-    if (
-        not login_response["success"]
-        and login_response["msg"] == LOGIN_INVALID_AUTH_CODE
-    ):
-        _LOGGER.error("Username, Password or URL may be incorrect!")
-        return
-    user_id = login_response["user"]["id"]
-    if plant_id == DEFAULT_PLANT_ID:
-        plant_info = api.plant_list(user_id)
-        plant_id = plant_info["data"][0]["plantId"]
-
-    # Get a list of devices for specified plant to add sensors for.
-    devices = api.device_list(plant_id)
-    return [devices, plant_id]
 
 
 async def async_setup_entry(
