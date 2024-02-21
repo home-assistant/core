@@ -26,13 +26,13 @@
   },
   "entity": {
     "sensor": {
-      "fyta_plant_name": {
+      "plant_name": {
         "name": "Plant name"
       },
-      "fyta_scientific_name": {
+      "scientific_name": {
         "name": "Scientific name"
       },
-      "fyta_plant_status": {
+      "plant_status": {
         "name": "Plant state",
         "state": {
           "too_low": "Too low",
@@ -42,56 +42,53 @@
           "too_high": "Too high"
         }
       },
-      "fyta_temperature_status": {
+      "temperature_status": {
         "name": "Temperature state",
         "state": {
-          "too_low": "Too low",
-          "low": "Low",
-          "perfect": "Perfect",
-          "high": "High",
-          "too_high": "Too high"
+          "too_low": "[%key:component::fyta::entity::sensor::plant_status::state::too_low%]",
+          "low": "[%key:component::fyta::entity::sensor::plant_status::state::low%]",
+          "perfect": "[%key:component::fyta::entity::sensor::plant_status::state::perfect%]",
+          "high": "[%key:component::fyta::entity::sensor::plant_status::state::high%]",
+          "too_high": "[%key:component::fyta::entity::sensor::plant_status::state::too_high%]"
         }
       },
-      "fyta_light_status": {
+      "light_status": {
         "name": "Light state",
         "state": {
-          "too_low": "Too low",
-          "low": "Low",
-          "perfect": "Perfect",
-          "high": "High",
-          "too_high": "Too high"
+          "too_low": "[%key:component::fyta::entity::sensor::plant_status::state::too_low%]",
+          "low": "[%key:component::fyta::entity::sensor::plant_status::state::low%]",
+          "perfect": "[%key:component::fyta::entity::sensor::plant_status::state::perfect%]",
+          "high": "[%key:component::fyta::entity::sensor::plant_status::state::high%]",
+          "too_high": "[%key:component::fyta::entity::sensor::plant_status::state::too_high%]"
         }
       },
-      "fyta_moisture_status": {
+      "moisture_status": {
         "name": "Moisture state",
         "state": {
-          "too_low": "Too low",
-          "low": "Low",
-          "perfect": "Perfect",
-          "high": "High",
-          "too_high": "Too high"
+          "too_low": "[%key:component::fyta::entity::sensor::plant_status::state::too_low%]",
+          "low": "[%key:component::fyta::entity::sensor::plant_status::state::low%]",
+          "perfect": "[%key:component::fyta::entity::sensor::plant_status::state::perfect%]",
+          "high": "[%key:component::fyta::entity::sensor::plant_status::state::high%]",
+          "too_high": "[%key:component::fyta::entity::sensor::plant_status::state::too_high%]"
         }
       },
-      "fyta_salinity_status": {
+      "salinity_status": {
         "name": "Salinity state",
         "state": {
-          "too_low": "Too low",
-          "low": "Low",
-          "perfect": "Perfect",
-          "high": "High",
-          "too_high": "Too high"
+          "too_low": "[%key:component::fyta::entity::sensor::plant_status::state::too_low%]",
+          "low": "[%key:component::fyta::entity::sensor::plant_status::state::low%]",
+          "perfect": "[%key:component::fyta::entity::sensor::plant_status::state::perfect%]",
+          "high": "[%key:component::fyta::entity::sensor::plant_status::state::high%]",
+          "too_high": "[%key:component::fyta::entity::sensor::plant_status::state::too_high%]"
         }
       },
-      "fyta_light": {
+      "light": {
         "name": "Light"
       },
-      "fyta_salinity": {
+      "salinity": {
         "name": "Salinity"
       },
-      "fyta_ph": {
-        "name": "pH"
-      },
-      "fyta_plant_number": {
+      "plant_number": {
         "name": "Number of plants"
       }
     }

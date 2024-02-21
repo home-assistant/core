@@ -4,16 +4,10 @@ from __future__ import annotations
 import logging
 
 from fyta_cli.fyta_connector import FytaConnector
-from fyta_cli.fyta_exceptions import (
-    FytaAuthentificationError,
-    FytaConnectionError,
-    FytaPasswordError,
-)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import FytaCoordinator
@@ -33,24 +27,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     fyta = FytaConnector(username, password)
 
-    coordinator = FytaCoordinator(hass, fyta, entry)
+    coordinator = FytaCoordinator(hass, fyta)
 
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    try:
-        await fyta.login()
-    except FytaConnectionError as ex:
-        raise ConfigEntryNotReady from ex
-    except FytaAuthentificationError as ex:
-        raise ConfigEntryAuthFailed from ex
-    except FytaPasswordError as ex:
-        raise ConfigEntryAuthFailed from ex
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Fyta entity."""
