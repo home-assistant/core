@@ -6,6 +6,7 @@ import os
 from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import py
 import pytest
 
@@ -19,7 +20,11 @@ from homeassistant.helpers import issue_registry as ir, storage
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
 
-from tests.common import async_fire_time_changed, async_test_home_assistant
+from tests.common import (
+    async_fire_time_changed,
+    async_fire_time_changed_exact,
+    async_test_home_assistant,
+)
 
 MOCK_VERSION = 1
 MOCK_VERSION_2 = 2
@@ -115,7 +120,7 @@ async def test_loading_parallel(
 
 
 async def test_saving_with_delay(
-    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+    hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
 ) -> None:
     """Test saving data after a delay."""
     store.async_delay_save(lambda: MOCK_DATA, 1)
@@ -129,6 +134,69 @@ async def test_saving_with_delay(
         "key": MOCK_KEY,
         "data": MOCK_DATA,
     }
+
+
+async def test_saving_with_delay_churn_reduction(
+    hass: HomeAssistant,
+    store: storage.Store,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test saving data after a delay with timer churn reduction."""
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    assert store.key not in hass_storage
+
+    freezer.tick(0.2)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    freezer.tick(1)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "minor_version": 1,
+        "key": MOCK_KEY,
+        "data": MOCK_DATA,
+    }
+
+    del hass_storage[store.key]
+    # Simulate what some of the registries do when they add 100 entities
+    for _ in range(100):
+        store.async_delay_save(lambda: MOCK_DATA, 1)
+
+    freezer.tick(0.2)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+    # This call should not cause a reschedule since we are within ~80% of the delay
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+
+    freezer.tick(1)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key in hass_storage
+
+    del hass_storage[store.key]
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+
+    freezer.tick(0.5)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+    # This call should cause a reschedule since we are not within ~80% of the delay
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+
+    freezer.tick(0.8)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    freezer.tick(0.2)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key in hass_storage
 
 
 async def test_saving_on_final_write(
@@ -706,7 +774,7 @@ async def test_os_error_is_fatal(tmpdir: py.path.local) -> None:
 
 
 async def test_read_only_store(
-    hass: HomeAssistant, read_only_store, hass_storage: dict[str, Any]
+    hass: HomeAssistant, read_only_store: storage.Store, hass_storage: dict[str, Any]
 ) -> None:
     """Test store opened in read only mode does not save."""
     read_only_store.async_delay_save(lambda: MOCK_DATA, 1)

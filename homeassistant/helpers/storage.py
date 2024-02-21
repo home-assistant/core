@@ -42,6 +42,8 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_SEMAPHORE = "storage_semaphore"
 
+MIN_PERCENT_DELAY_REMAINING_TO_RESCHEDULE = 0.80
+
 _T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
 
 
@@ -108,7 +110,7 @@ class Store(Generic[_T]):
         self.hass = hass
         self._private = private
         self._data: dict[str, Any] | None = None
-        self._unsub_delay_listener: asyncio.TimerHandle | None = None
+        self._delay_handle: asyncio.TimerHandle | None = None
         self._unsub_final_write_listener: CALLBACK_TYPE | None = None
         self._write_lock = asyncio.Lock()
         self._load_task: asyncio.Future[_T | None] | None = None
@@ -286,16 +288,32 @@ class Store(Generic[_T]):
             "data_func": data_func,
         }
 
+        now = self.hass.loop.time()
+
+        if (handle := self._delay_handle) and (
+            handle.when() - now / delay > MIN_PERCENT_DELAY_REMAINING_TO_RESCHEDULE
+        ):
+            # Debounce logic:
+            #
+            # If we still have more than 80% of the delay
+            # remaining we avoid rescheduling to reduce the
+            # amount of timer handles being churned on the
+            # event loop. This means that if multiple calls
+            # are made in quick succession, only the first
+            # one will actually be scheduled to ensure
+            # we still honor the first requested delay.
+            return
+
         self._async_cleanup_delay_listener()
-        self._async_ensure_final_write_listener()
 
         if self.hass.state is CoreState.stopping:
             return
 
         # We use call_later directly here to avoid a circular import
-        self._unsub_delay_listener = self.hass.loop.call_later(
-            delay, self._async_schedule_callback_delayed_write
+        self._delay_handle = self.hass.loop.call_at(
+            now + delay, self._async_schedule_callback_delayed_write
         )
+        self._async_ensure_final_write_listener()
 
     @callback
     def _async_schedule_callback_delayed_write(self) -> None:
@@ -320,9 +338,9 @@ class Store(Generic[_T]):
     @callback
     def _async_cleanup_delay_listener(self) -> None:
         """Clean up a delay listener."""
-        if self._unsub_delay_listener is not None:
-            self._unsub_delay_listener.cancel()
-            self._unsub_delay_listener = None
+        if self._delay_handle is not None:
+            self._delay_handle.cancel()
+            self._delay_handle = None
 
     async def _async_callback_delayed_write(self) -> None:
         """Handle a delayed write callback."""
