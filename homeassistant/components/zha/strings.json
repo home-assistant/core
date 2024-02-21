@@ -869,16 +869,16 @@
       "setpoint_response_time": {
         "name": "Setpoint response time",
         "state": {
-          "quick_5min": "5 Minutes",
-          "quick_10min": "10 Minutes",
-          "quick_15min": "15 Minutes",
-          "quick_25min": "25 Minutes",
-          "moderate_30min": "30 Minutes",
-          "moderate_40min": "40 Minutes",
-          "moderate_50min": "50 Minutes",
-          "moderate_60min": "60 Minutes",
-          "moderate_70min": "70 Minutes",
-          "slow_80min": "80 Minutes",
+          "quick_5min": "5 minutes",
+          "quick_10min": "10 minutes",
+          "quick_15min": "15 minutes",
+          "quick_25min": "25 minutes",
+          "moderate_30min": "30 minutes",
+          "moderate_40min": "40 minutes",
+          "moderate_50min": "50 minutes",
+          "moderate_60min": "60 minutes",
+          "moderate_70min": "70 minutes",
+          "slow_80min": "80 minutes",
           "quick_open_disabled": "Disabled"
         }
       }

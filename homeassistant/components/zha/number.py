@@ -10,7 +10,13 @@ from zigpy.zcl.clusters.hvac import Thermostat
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemperature
+from homeassistant.const import (
+    EntityCategory,
+    Platform,
+    UnitOfMass,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -1070,7 +1076,7 @@ class DanfossExerciseTriggerTime(ZHANumberConfigurationEntity):
     _attr_native_min_value: int = 0
     _attr_native_max_value: int = 1439
     _attr_mode: NumberMode = NumberMode.BOX
-    _attr_native_unit_of_measurement: str = "Minutes"
+    _attr_native_unit_of_measurement: str = UnitOfTime.MINUTES
     _attr_icon: str = "mdi:clock"
 
 
@@ -1119,7 +1125,7 @@ class DanfossRegulationSetpointOffset(ZHANumberConfigurationEntity):
     _attribute_name: str = "regulation_setpoint_offset"
     _attr_translation_key: str = "regulation_setpoint_offset"
     _attr_mode: NumberMode = NumberMode.BOX
-    _attr_native_unit_of_measurement: str = "°C"
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
     _attr_icon: str = "mdi:thermostat"
     _attr_native_min_value: float = -2.5
     _attr_native_max_value: float = 2.5
