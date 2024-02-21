@@ -61,6 +61,26 @@
         }
       }
     },
+    "button": {
+      "wake": {
+        "default": "mdi:sleep-off"
+      },
+      "flash_lights": {
+        "default": "mdi:flashlight"
+      },
+      "honk": {
+        "default": "mdi:bullhorn"
+      },
+      "trigger_homelink": {
+        "default": "mdi:garage"
+      },
+      "enable_keyless_driving": {
+        "default": "mdi:car-key"
+      },
+      "boombox": {
+        "default": "mdi:volume-high"
+      }
+    },
     "select": {
       "climate_state_seat_heater_left": {
         "default": "mdi:car-seat",
