@@ -818,7 +818,7 @@ epson-projector==0.5.1
 epsonprinter==0.0.9
 
 # homeassistant.components.formula_one
-ergast-py==0.7.0
+ergast-py==1.0.0
 
 # homeassistant.components.esphome
 esphome-dashboard-api==1.2.3
