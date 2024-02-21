@@ -39,7 +39,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         try:
             return await self.api.get_status()
         except ApiException as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(err) from err
 
     async def shutdown(self, *_: Any) -> None:
         """Close resources."""
