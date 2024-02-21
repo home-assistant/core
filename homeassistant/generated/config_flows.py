@@ -168,6 +168,7 @@ FLOWS = {
         "flo",
         "flume",
         "flux_led",
+        "foobar",
         "forecast_solar",
         "forked_daapd",
         "foscam",

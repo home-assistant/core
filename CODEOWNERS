@@ -428,6 +428,8 @@ build.json @home-assistant/supervisor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
 /homeassistant/components/flux_led/ @icemanch
 /tests/components/flux_led/ @icemanch
+/homeassistant/components/foobar/ @PoebelPogge
+/tests/components/foobar/ @PoebelPogge
 /homeassistant/components/forecast_solar/ @klaasnicolaas @frenck
 /tests/components/forecast_solar/ @klaasnicolaas @frenck
 /homeassistant/components/forked_daapd/ @uvjustin

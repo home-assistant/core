@@ -1,0 +1,13 @@
+{
+  "domain": "foobar",
+  "name": "SuperFancyTool",
+  "codeowners": ["@PoebelPogge"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/foobar",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
