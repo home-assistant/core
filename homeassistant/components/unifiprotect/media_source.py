@@ -496,8 +496,7 @@ class ProtectMediaSource(MediaSource):
     ) -> list[BrowseMediaSource]:
         """Build media source for a given range of time and event type."""
 
-        if not event_types:
-            event_types = get_ufp_event(SimpleEventType.ALL)
+        event_types = event_types or get_ufp_event(SimpleEventType.ALL)
         types = list(event_types)
         sources: list[BrowseMediaSource] = []
         events = await data.api.get_events_raw(
