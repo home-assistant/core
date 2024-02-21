@@ -179,7 +179,7 @@ TADO_TO_HA_SWING_MODE_MAP = {
 DOMAIN = "tado"
 
 SIGNAL_TADO_UPDATE_RECEIVED = "tado_update_received_{}_{}_{}"
-SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED = "tado_mobile_device_update_received"
+SIGNAL_TADO_MOBILE_DEVICE_UPDATE_RECEIVED = "tado_mobile_device_update_received_{}"
 UNIQUE_ID = "unique_id"
 
 DEFAULT_NAME = "Tado"

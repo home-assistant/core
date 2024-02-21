@@ -50,6 +50,7 @@ class AnthemAVR(MediaPlayerEntity):
     """Entity reading values from Anthem AVR protocol."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_should_poll = False
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_icon = "mdi:audio-video"
@@ -77,18 +78,23 @@ class AnthemAVR(MediaPlayerEntity):
         self._zone_number = zone_number
         self._zone = avr.zones[zone_number]
         if zone_number > 1:
-            self._attr_name = f"zone {zone_number}"
-            self._attr_unique_id = f"{mac_address}_{zone_number}"
+            unique_id = f"{mac_address}_{zone_number}"
+            self._attr_unique_id = unique_id
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, unique_id)},
+                name=f"Zone {zone_number}",
+                manufacturer=MANUFACTURER,
+                model=model,
+                via_device=(DOMAIN, mac_address),
+            )
         else:
-            self._attr_name = None
             self._attr_unique_id = mac_address
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, mac_address)},
-            name=name,
-            manufacturer=MANUFACTURER,
-            model=model,
-        )
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, mac_address)},
+                name=name,
+                manufacturer=MANUFACTURER,
+                model=model,
+            )
         self.set_states()
 
     async def async_added_to_hass(self) -> None:

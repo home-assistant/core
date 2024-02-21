@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aioshelly.ble import async_start_scanner
+from aioshelly.ble import async_start_scanner, create_scanner
 from aioshelly.ble.const import (
     BLE_SCAN_RESULT_EVENT,
     BLE_SCAN_RESULT_VERSION,
@@ -12,15 +12,11 @@ from aioshelly.ble.const import (
     DEFAULT_WINDOW_MS,
 )
 
-from homeassistant.components.bluetooth import (
-    HaBluetoothConnector,
-    async_register_scanner,
-)
+from homeassistant.components.bluetooth import async_register_scanner
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 from homeassistant.helpers.device_registry import format_mac
 
 from ..const import BLEScannerMode
-from .scanner import ShellyBLEScanner
 
 if TYPE_CHECKING:
     from ..coordinator import ShellyRpcCoordinator
@@ -35,13 +31,7 @@ async def async_connect_scanner(
     device = coordinator.device
     entry = coordinator.entry
     source = format_mac(coordinator.mac).upper()
-    connector = HaBluetoothConnector(
-        # no active connections to shelly yet
-        client=None,  # type: ignore[arg-type]
-        source=source,
-        can_connect=lambda: False,
-    )
-    scanner = ShellyBLEScanner(source, entry.title, connector, False)
+    scanner = create_scanner(source, entry.title)
     unload_callbacks = [
         async_register_scanner(hass, scanner),
         scanner.async_setup(),

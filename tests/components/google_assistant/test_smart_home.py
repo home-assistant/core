@@ -971,7 +971,6 @@ async def test_device_class_switch(
         None,
         "Demo Sensor",
         state=False,
-        icon="mdi:switch",
         assumed=False,
         device_class=device_class,
     )

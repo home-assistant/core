@@ -5,6 +5,8 @@ from __future__ import annotations
 import datetime as dt
 import logging
 
+from reolink_aio.enums import VodRequestType
+
 from homeassistant.components.camera import DOMAIN as CAM_DOMAIN, DynamicStreamSettings
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source.error import Unresolvable
@@ -56,7 +58,14 @@ class ReolinkVODMediaSource(MediaSource):
         channel = int(channel_str)
 
         host = self.data[config_entry_id].host
-        mime_type, url = await host.api.get_vod_source(channel, filename, stream_res)
+
+        vod_type = VodRequestType.RTMP
+        if host.api.is_nvr:
+            vod_type = VodRequestType.FLV
+
+        mime_type, url = await host.api.get_vod_source(
+            channel, filename, stream_res, vod_type
+        )
         if _LOGGER.isEnabledFor(logging.DEBUG):
             url_log = f"{url.split('&user=')[0]}&user=xxxxx&password=xxxxx"
             _LOGGER.debug(

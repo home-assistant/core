@@ -26,20 +26,13 @@ from . import AirVisualProData, AirVisualProEntity
 from .const import DOMAIN
 
 
-@dataclass(frozen=True)
-class AirVisualProMeasurementKeyMixin:
-    """Define an entity description mixin to include a measurement key."""
+@dataclass(frozen=True, kw_only=True)
+class AirVisualProMeasurementDescription(SensorEntityDescription):
+    """Describe an AirVisual Pro sensor."""
 
     value_fn: Callable[
         [dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any]], float | int
     ]
-
-
-@dataclass(frozen=True)
-class AirVisualProMeasurementDescription(
-    SensorEntityDescription, AirVisualProMeasurementKeyMixin
-):
-    """Describe an AirVisual Pro sensor."""
 
 
 SENSOR_DESCRIPTIONS = (
@@ -67,6 +60,7 @@ SENSOR_DESCRIPTIONS = (
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda settings, status, measurements, history: status["battery"],
     ),
     AirVisualProMeasurementDescription(
@@ -80,6 +74,7 @@ SENSOR_DESCRIPTIONS = (
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda settings, status, measurements, history: measurements[
             "humidity"
         ],

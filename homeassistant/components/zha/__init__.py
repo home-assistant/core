@@ -272,8 +272,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if data[CONF_RADIO_TYPE] != RadioType.deconz and baudrate in BAUD_RATES:
             data[CONF_DEVICE][CONF_BAUDRATE] = baudrate
 
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=2)
 
     if config_entry.version == 2:
         data = {**config_entry.data}
@@ -281,8 +280,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if data[CONF_RADIO_TYPE] == "ti_cc":
             data[CONF_RADIO_TYPE] = "znp"
 
-        config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=3)
 
     if config_entry.version == 3:
         data = {**config_entry.data}
@@ -299,8 +297,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if not data[CONF_DEVICE].get(CONF_FLOW_CONTROL):
             data[CONF_DEVICE][CONF_FLOW_CONTROL] = None
 
-        config_entry.version = 4
-        hass.config_entries.async_update_entry(config_entry, data=data)
+        hass.config_entries.async_update_entry(config_entry, data=data, version=4)
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True

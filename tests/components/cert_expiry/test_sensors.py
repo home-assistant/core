@@ -57,7 +57,7 @@ async def test_async_setup_entry_bad_cert(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.cert_expiry.helper.get_cert",
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
         side_effect=ssl.SSLError("some error"),
     ):
         entry.add_to_hass(hass)
@@ -146,7 +146,7 @@ async def test_update_sensor_network_errors(hass: HomeAssistant) -> None:
     next_update = starting_time + timedelta(hours=24)
 
     with freeze_time(next_update), patch(
-        "homeassistant.components.cert_expiry.helper.get_cert",
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
         side_effect=socket.gaierror,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=24))
@@ -174,7 +174,7 @@ async def test_update_sensor_network_errors(hass: HomeAssistant) -> None:
     next_update = starting_time + timedelta(hours=72)
 
     with freeze_time(next_update), patch(
-        "homeassistant.components.cert_expiry.helper.get_cert",
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
         side_effect=ssl.SSLError("something bad"),
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=72))
@@ -189,7 +189,8 @@ async def test_update_sensor_network_errors(hass: HomeAssistant) -> None:
     next_update = starting_time + timedelta(hours=96)
 
     with freeze_time(next_update), patch(
-        "homeassistant.components.cert_expiry.helper.get_cert", side_effect=Exception()
+        "homeassistant.components.cert_expiry.helper.async_get_cert",
+        side_effect=Exception(),
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=96))
         await hass.async_block_till_done()

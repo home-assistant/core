@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -401,9 +402,9 @@ async def test_attributes_from_yaml_setup(
     state = hass.states.get("sensor.get_value")
 
     assert state.state == "5"
-    assert state.attributes["device_class"] == SensorDeviceClass.DATA_RATE
+    assert state.attributes["device_class"] == SensorDeviceClass.DATA_SIZE
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
-    assert state.attributes["unit_of_measurement"] == "MiB"
+    assert state.attributes["unit_of_measurement"] == UnitOfInformation.MEBIBYTES
 
 
 async def test_binary_data_from_yaml_setup(

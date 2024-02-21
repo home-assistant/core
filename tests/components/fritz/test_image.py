@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_registry
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from .const import MOCK_FB_SERVICES, MOCK_USER_DATA
@@ -102,7 +101,7 @@ async def test_image_entity(
     ):
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
         entry.add_to_hass(hass)
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
@@ -152,7 +151,7 @@ async def test_image_update(
     ):
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
         entry.add_to_hass(hass)
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
@@ -188,7 +187,7 @@ async def test_image_update_unavailable(
     ):
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
         entry.add_to_hass(hass)
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(entry.entry_id)
 
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED

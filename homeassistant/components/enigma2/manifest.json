@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/enigma2",
   "iot_class": "local_polling",
   "loggers": ["openwebif"],
-  "requirements": ["openwebifpy==4.0.2"]
+  "requirements": ["openwebifpy==4.2.4"]
 }

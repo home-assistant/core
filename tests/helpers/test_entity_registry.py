@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import patch
 
 import attr
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
@@ -17,26 +18,17 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed, flush_store
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_fire_time_changed,
+    flush_store,
+)
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
 
 
-@pytest.fixture
-def update_events(hass):
-    """Capture update events."""
-    events = []
-
-    @callback
-    def async_capture(event):
-        events.append(event.data)
-
-    hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, async_capture)
-
-    return events
-
-
-async def test_get(hass: HomeAssistant, entity_registry: er.EntityRegistry):
+async def test_get(entity_registry: er.EntityRegistry):
     """Test we can get an item."""
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
 
@@ -47,9 +39,10 @@ async def test_get(hass: HomeAssistant, entity_registry: er.EntityRegistry):
 
 
 async def test_get_or_create_returns_same_entry(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Make sure we do not duplicate entries."""
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     entry = entity_registry.async_get_or_create("light", "hue", "1234")
     entry2 = entity_registry.async_get_or_create("light", "hue", "1234")
 
@@ -59,8 +52,10 @@ async def test_get_or_create_returns_same_entry(
     assert entry is entry2
     assert entry.entity_id == "light.hue_1234"
     assert len(update_events) == 1
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["entity_id"] == entry.entity_id
+    assert update_events[0].data == {
+        "action": "create",
+        "entity_id": entry.entity_id,
+    }
 
 
 def test_get_or_create_suggested_object_id(entity_registry: er.EntityRegistry) -> None:
@@ -277,6 +272,9 @@ async def test_loading_saving_data(
     entity_registry.async_update_entity_options(
         orig_entry2.entity_id, "light", {"minimum_brightness": 20}
     )
+    entity_registry.async_update_entity(
+        orig_entry2.entity_id, labels={"label1", "label2"}
+    )
     orig_entry2 = entity_registry.async_get(orig_entry2.entity_id)
     orig_entry3 = entity_registry.async_get_or_create("light", "hue", "ABCD")
     orig_entry4 = entity_registry.async_get_or_create("light", "hue", "EFGH")
@@ -314,6 +312,7 @@ async def test_loading_saving_data(
     assert new_entry2.icon == "hass:user-icon"
     assert new_entry2.hidden_by == er.RegistryEntryHider.INTEGRATION
     assert new_entry2.has_entity_name is True
+    assert new_entry2.labels == {"label1", "label2"}
     assert new_entry2.name == "User Name"
     assert new_entry2.options == {"light": {"minimum_brightness": 20}}
     assert new_entry2.original_device_class == "mock-device-class"
@@ -449,9 +448,10 @@ def test_async_get_entity_id(entity_registry: er.EntityRegistry) -> None:
 
 
 async def test_updating_config_entry_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that we update config entry id in registry."""
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     mock_config_1 = MockConfigEntry(domain="light", entry_id="mock-id-1")
     entry = entity_registry.async_get_or_create(
         "light", "hue", "5678", config_entry=mock_config_1
@@ -467,17 +467,22 @@ async def test_updating_config_entry_id(
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["entity_id"] == entry.entity_id
-    assert update_events[1]["action"] == "update"
-    assert update_events[1]["entity_id"] == entry.entity_id
-    assert update_events[1]["changes"] == {"config_entry_id": "mock-id-1"}
+    assert update_events[0].data == {
+        "action": "create",
+        "entity_id": entry.entity_id,
+    }
+    assert update_events[1].data == {
+        "action": "update",
+        "entity_id": entry.entity_id,
+        "changes": {"config_entry_id": "mock-id-1"},
+    }
 
 
 async def test_removing_config_entry_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test that we update config entry id in registry."""
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
 
     entry = entity_registry.async_get_or_create(
@@ -491,14 +496,18 @@ async def test_removing_config_entry_id(
     await hass.async_block_till_done()
 
     assert len(update_events) == 2
-    assert update_events[0]["action"] == "create"
-    assert update_events[0]["entity_id"] == entry.entity_id
-    assert update_events[1]["action"] == "remove"
-    assert update_events[1]["entity_id"] == entry.entity_id
+    assert update_events[0].data == {
+        "action": "create",
+        "entity_id": entry.entity_id,
+    }
+    assert update_events[1].data == {
+        "action": "remove",
+        "entity_id": entry.entity_id,
+    }
 
 
 async def test_deleted_entity_removing_config_entry_id(
-    hass, entity_registry: er.EntityRegistry
+    entity_registry: er.EntityRegistry,
 ):
     """Test that we update config entry id in registry on deleted entity."""
     mock_config = MockConfigEntry(domain="light", entry_id="mock-id-1")
@@ -870,7 +879,7 @@ async def test_restore_states(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test restoring states."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entity_registry.async_get_or_create(
         "light",
@@ -936,7 +945,7 @@ async def test_async_get_device_class_lookup(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test registry device class lookup."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entity_registry.async_get_or_create(
         "binary_sensor",
@@ -1370,6 +1379,13 @@ async def test_disabled_entities_excluded_from_entity_list(
     )
     assert entries == [entry1, entry2]
 
+    ent_reg = er.async_get(hass)
+    assert ent_reg.entities.get_entries_for_device_id(device_entry.id) == [entry1]
+
+    assert ent_reg.entities.get_entries_for_device_id(
+        device_entry.id, include_disabled_entities=True
+    ) == [entry1, entry2]
+
 
 async def test_entity_max_length_exceeded(entity_registry: er.EntityRegistry) -> None:
     """Test that an exception is raised when the max character length is exceeded."""
@@ -1508,9 +1524,7 @@ async def test_entity_category_str_not_allowed(
         )
 
 
-async def test_hidden_by_str_not_allowed(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
+async def test_hidden_by_str_not_allowed(entity_registry: er.EntityRegistry) -> None:
     """Test we need to pass hidden by type."""
     with pytest.raises(ValueError):
         entity_registry.async_get_or_create(
@@ -1598,9 +1612,12 @@ def test_migrate_entity_to_new_platform(
 
 
 async def test_restore_entity(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, update_events, freezer
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ):
     """Make sure entity registry id is stable and entity_id is reused if possible."""
+    update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
     config_entry = MockConfigEntry(domain="light")
     entry1 = entity_registry.async_get_or_create(
         "light", "hue", "1234", config_entry=config_entry
@@ -1672,22 +1689,22 @@ async def test_restore_entity(
     # Check the events
     await hass.async_block_till_done()
     assert len(update_events) == 13
-    assert update_events[0] == {"action": "create", "entity_id": "light.hue_1234"}
-    assert update_events[1] == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[2]["action"] == "update"
-    assert update_events[3] == {"action": "remove", "entity_id": "light.custom_1"}
-    assert update_events[4] == {"action": "remove", "entity_id": "light.hue_5678"}
+    assert update_events[0].data == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[1].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[2].data["action"] == "update"
+    assert update_events[3].data == {"action": "remove", "entity_id": "light.custom_1"}
+    assert update_events[4].data == {"action": "remove", "entity_id": "light.hue_5678"}
     # Restore entities the 1st time
-    assert update_events[5] == {"action": "create", "entity_id": "light.hue_1234"}
-    assert update_events[6] == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[7] == {"action": "remove", "entity_id": "light.hue_1234"}
-    assert update_events[8] == {"action": "remove", "entity_id": "light.hue_5678"}
+    assert update_events[5].data == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[6].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[7].data == {"action": "remove", "entity_id": "light.hue_1234"}
+    assert update_events[8].data == {"action": "remove", "entity_id": "light.hue_5678"}
     # Restore entities the 2nd time
-    assert update_events[9] == {"action": "create", "entity_id": "light.hue_1234"}
-    assert update_events[10] == {"action": "create", "entity_id": "light.hue_5678"}
-    assert update_events[11] == {"action": "remove", "entity_id": "light.hue_1234"}
+    assert update_events[9].data == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[10].data == {"action": "create", "entity_id": "light.hue_5678"}
+    assert update_events[11].data == {"action": "remove", "entity_id": "light.hue_1234"}
     # Restore entities the 3rd time
-    assert update_events[12] == {"action": "create", "entity_id": "light.hue_1234"}
+    assert update_events[12].data == {"action": "create", "entity_id": "light.hue_1234"}
 
 
 async def test_async_migrate_entry_delete_self(
@@ -1756,3 +1773,70 @@ async def test_async_migrate_entry_delete_other(
     await er.async_migrate_entries(hass, config_entry1.entry_id, _async_migrator)
     assert entries == {entry1.entity_id}
     assert not entity_registry.async_is_registered(entry2.entity_id)
+
+
+async def test_removing_labels(entity_registry: er.EntityRegistry) -> None:
+    """Make sure we can clear labels."""
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="5678",
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, labels={"label1", "label2"}
+    )
+
+    entity_registry.async_clear_label_id("label1")
+    entry_cleared_label1 = entity_registry.async_get(entry.entity_id)
+
+    entity_registry.async_clear_label_id("label2")
+    entry_cleared_label2 = entity_registry.async_get(entry.entity_id)
+
+    assert entry_cleared_label1
+    assert entry_cleared_label2
+    assert entry != entry_cleared_label1
+    assert entry != entry_cleared_label2
+    assert entry_cleared_label1 != entry_cleared_label2
+    assert entry.labels == {"label1", "label2"}
+    assert entry_cleared_label1.labels == {"label2"}
+    assert not entry_cleared_label2.labels
+
+
+async def test_entries_for_label(entity_registry: er.EntityRegistry) -> None:
+    """Test getting entity entries by label."""
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="000",
+    )
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="123",
+    )
+    label_1 = entity_registry.async_update_entity(entry.entity_id, labels={"label1"})
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="456",
+    )
+    label_2 = entity_registry.async_update_entity(entry.entity_id, labels={"label2"})
+    entry = entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="789",
+    )
+    label_1_and_2 = entity_registry.async_update_entity(
+        entry.entity_id, labels={"label1", "label2"}
+    )
+
+    entries = er.async_entries_for_label(entity_registry, "label1")
+    assert len(entries) == 2
+    assert entries == [label_1, label_1_and_2]
+
+    entries = er.async_entries_for_label(entity_registry, "label2")
+    assert len(entries) == 2
+    assert entries == [label_2, label_1_and_2]
+
+    assert not er.async_entries_for_label(entity_registry, "unknown")
+    assert not er.async_entries_for_label(entity_registry, "")
