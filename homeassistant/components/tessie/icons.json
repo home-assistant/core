@@ -76,6 +76,23 @@
           "high": "mdi:car-seat-heater"
         }
       }
+    },
+    "switch": {
+      "climate_state_defrost_mode": {
+        "default": "mdi:car-defrost-front"
+      },
+      "vehicle_state_sentry_mode": {
+        "default": "mdi:radiobox-marked"
+      },
+      "climate_state_steering_wheel_heater": {
+        "default": "mdi:steering"
+      },
+      "vehicle_state_valet_mode": {
+        "default": "mdi:bow-tie"
+      },
+      "charge_state_charge_enable_request": {
+        "default": "mdi:ev-plug-ccs2"
+      }
     }
   }
 }
