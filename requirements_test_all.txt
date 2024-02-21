@@ -864,7 +864,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.42
+holidays==0.43
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240207.1
@@ -2188,7 +2188,7 @@ wiffi==1.1.2
 wled==0.17.0
 
 # homeassistant.components.wolflink
-wolf-smartset==0.1.11
+wolf-comm==0.0.4
 
 # homeassistant.components.wyoming
 wyoming==1.5.2
