@@ -349,6 +349,23 @@ async def test_multiple_delay_save_calls(
     assert data == {"delay": "no"}
 
 
+async def test_delay_save_zero(
+    hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
+) -> None:
+    """Test async_delay_save accepts 0."""
+    store.async_delay_save(lambda: {"delay": "0"}, 0)
+    # sleep is to run one event loop to get the task scheduled
+    await asyncio.sleep(0)
+    await hass.async_block_till_done()
+    assert store.key in hass_storage
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "minor_version": 1,
+        "key": MOCK_KEY,
+        "data": {"delay": "0"},
+    }
+
+
 async def test_multiple_save_calls(
     hass: HomeAssistant, store, hass_storage: dict[str, Any]
 ) -> None:
