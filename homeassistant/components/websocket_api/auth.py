@@ -8,6 +8,7 @@ from aiohttp.web import Request
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant.auth import TokenScope
 from homeassistant.components.http.ban import process_success_login, process_wrong_login
 from homeassistant.const import __version__
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
@@ -80,7 +81,9 @@ class AuthPhase:
             raise Disconnect from err
 
         if (access_token := valid_msg.get("access_token")) and (
-            refresh_token := self._hass.auth.async_validate_access_token(access_token)
+            refresh_token := self._hass.auth.async_validate_access_token(
+                access_token, TokenScope.AUTH
+            )
         ):
             conn = ActiveConnection(
                 self._logger,

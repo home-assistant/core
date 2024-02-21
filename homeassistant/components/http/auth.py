@@ -16,9 +16,10 @@ import jwt
 from jwt import api_jws
 from yarl import URL
 
-from homeassistant.auth import jwt_wrapper
+from homeassistant.auth import TokenScope, jwt_wrapper
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
+from homeassistant.auth.strict_connection import async_is_valid_token
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes
@@ -155,7 +156,7 @@ async def async_setup_auth(
         if auth_type != "Bearer":
             return False
 
-        refresh_token = hass.auth.async_validate_access_token(auth_val)
+        refresh_token = hass.auth.async_validate_access_token(auth_val, TokenScope.AUTH)
 
         if refresh_token is None:
             return False
@@ -230,6 +231,7 @@ async def async_setup_auth(
         if (
             not authenticated
             and strict_connection
+            and not async_is_valid_token(hass, request)
             and (is_cloud_connection(hass) or not is_local(ip_address_))
         ):
             if not (transport := request.transport):

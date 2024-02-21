@@ -142,6 +142,7 @@ from homeassistant.auth.models import (
     RefreshToken,
     User,
 )
+from homeassistant.auth.strict_connection import async_delete_cookie, async_set_cookie
 from homeassistant.components import websocket_api
 from homeassistant.components.http.auth import (
     async_sign_path,
@@ -209,6 +210,12 @@ class RevokeTokenView(HomeAssistantView):
 
     async def post(self, request: web.Request) -> web.Response:
         """Revoke a token."""
+        response = await self._post(request)
+        async_delete_cookie(response)
+        return response
+
+    async def _post(self, request: web.Request) -> web.Response:
+        """Revoke a token."""
         hass: HomeAssistant = request.app["hass"]
         data = cast(MultiDictProxy[str], await request.post())
 
@@ -267,6 +274,17 @@ class TokenView(HomeAssistantView):
             {"error": "unsupported_grant_type"}, status_code=HTTPStatus.BAD_REQUEST
         )
 
+    @staticmethod
+    @callback
+    def _async_set_strict_connection_cookie(
+        hass: HomeAssistant,
+        remote_addr: str | None,
+        refresh_token: RefreshToken,
+        response: web.Response,
+    ) -> web.Response:
+        async_set_cookie(hass, remote_addr, refresh_token, response)
+        return response
+
     async def _async_handle_auth_code(
         self,
         hass: HomeAssistant,
@@ -319,20 +337,25 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.FORBIDDEN,
             )
 
-        return self.json(
-            {
-                "access_token": access_token,
-                "token_type": "Bearer",
-                "refresh_token": refresh_token.token,
-                "expires_in": int(
-                    refresh_token.access_token_expiration.total_seconds()
-                ),
-                "ha_auth_provider": credential.auth_provider_type,
-            },
-            headers={
-                "Cache-Control": "no-store",
-                "Pragma": "no-cache",
-            },
+        return self._async_set_strict_connection_cookie(
+            hass,
+            remote_addr,
+            refresh_token,
+            self.json(
+                {
+                    "access_token": access_token,
+                    "token_type": "Bearer",
+                    "refresh_token": refresh_token.token,
+                    "expires_in": int(
+                        refresh_token.access_token_expiration.total_seconds()
+                    ),
+                    "ha_auth_provider": credential.auth_provider_type,
+                },
+                headers={
+                    "Cache-Control": "no-store",
+                    "Pragma": "no-cache",
+                },
+            ),
         )
 
     async def _async_handle_refresh_token(
@@ -387,18 +410,23 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.FORBIDDEN,
             )
 
-        return self.json(
-            {
-                "access_token": access_token,
-                "token_type": "Bearer",
-                "expires_in": int(
-                    refresh_token.access_token_expiration.total_seconds()
-                ),
-            },
-            headers={
-                "Cache-Control": "no-store",
-                "Pragma": "no-cache",
-            },
+        return self._async_set_strict_connection_cookie(
+            hass,
+            remote_addr,
+            refresh_token,
+            self.json(
+                {
+                    "access_token": access_token,
+                    "token_type": "Bearer",
+                    "expires_in": int(
+                        refresh_token.access_token_expiration.total_seconds()
+                    ),
+                },
+                headers={
+                    "Cache-Control": "no-store",
+                    "Pragma": "no-cache",
+                },
+            ),
         )
 
 

@@ -5,6 +5,7 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
 from datetime import datetime, timedelta
+from enum import StrEnum
 from functools import partial
 import time
 from typing import Any, cast
@@ -35,6 +36,13 @@ EVENT_USER_REMOVED = "user_removed"
 _MfaModuleDict = dict[str, MultiFactorAuthModule]
 _ProviderKey = tuple[str, str | None]
 _ProviderDict = dict[_ProviderKey, AuthProvider]
+
+
+class TokenScope(StrEnum):
+    """Token audience."""
+
+    AUTH = "au"
+    STRICT_CONNECTION = "sc"
 
 
 class InvalidAuthError(Exception):
@@ -563,7 +571,10 @@ class AuthManager:
 
     @callback
     def async_create_access_token(
-        self, refresh_token: models.RefreshToken, remote_ip: str | None = None
+        self,
+        refresh_token: models.RefreshToken,
+        remote_ip: str | None = None,
+        scope: TokenScope = TokenScope.AUTH,
     ) -> str:
         """Create a new access token."""
         self.async_validate_refresh_token(refresh_token, remote_ip)
@@ -571,12 +582,16 @@ class AuthManager:
         self._store.async_log_refresh_token_usage(refresh_token, remote_ip)
 
         now = int(time.time())
-        expire_seconds = int(refresh_token.access_token_expiration.total_seconds())
+        if scope == TokenScope.STRICT_CONNECTION:
+            expire = refresh_token.expire_at or now + REFRESH_TOKEN_EXPIRATION
+        else:
+            expire = now + refresh_token.access_token_expiration.total_seconds()
         return jwt.encode(
             {
                 "iss": refresh_token.id,
                 "iat": now,
-                "exp": now + expire_seconds,
+                "exp": int(expire),
+                "sco": scope,
             },
             refresh_token.jwt_key,
             algorithm="HS256",
@@ -617,7 +632,9 @@ class AuthManager:
             provider.async_validate_refresh_token(refresh_token, remote_ip)
 
     @callback
-    def async_validate_access_token(self, token: str) -> models.RefreshToken | None:
+    def async_validate_access_token(
+        self, token: str, scope: TokenScope = TokenScope.AUTH
+    ) -> models.RefreshToken | None:
         """Return refresh token if an access token is valid."""
         try:
             unverif_claims = jwt_wrapper.unverified_hs256_token_decode(token)
@@ -636,13 +653,17 @@ class AuthManager:
             issuer = refresh_token.id
 
         try:
-            jwt_wrapper.verify_and_decode(
+            claims = jwt_wrapper.verify_and_decode(
                 token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"]
             )
         except jwt.InvalidTokenError:
             return None
 
         if refresh_token is None or not refresh_token.user.is_active:
+            return None
+
+        if claims.get("sco", TokenScope.AUTH) != scope:
+            # The token is not intended for requested audience
             return None
 
         return refresh_token
