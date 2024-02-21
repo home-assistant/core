@@ -532,7 +532,7 @@ class Entity(
 
     __capabilities_updated_at: deque[float]
     __capabilities_updated_at_reported: bool = False
-    __remove_event: asyncio.Event | None = None
+    __remove_future: asyncio.Future[None] | None = None
 
     # Entity Properties
     _attr_assumed_state: bool = False
@@ -1338,15 +1338,18 @@ class Entity(
         If the entity doesn't have a non disabled entry in the entity registry,
         or if force_remove=True, its state will be removed.
         """
-        if self.__remove_event is not None:
-            await self.__remove_event.wait()
+        if self.__remove_future is not None:
+            await self.__remove_future
             return
 
-        self.__remove_event = asyncio.Event()
+        self.__remove_future = self.hass.loop.create_future()
         try:
             await self.__async_remove_impl(force_remove)
+        except BaseException as ex:
+            self.__remove_future.set_exception(ex)
+            raise
         finally:
-            self.__remove_event.set()
+            self.__remove_future.set_result(None)
 
     @final
     async def __async_remove_impl(self, force_remove: bool) -> None:
@@ -1496,8 +1499,8 @@ class Entity(
 
         self.entity_id = registry_entry.entity_id
 
-        # Clear the remove event to handle entity added again after entity id change
-        self.__remove_event = None
+        # Clear the remove future to handle entity added again after entity id change
+        self.__remove_future = None
         self._platform_state = EntityPlatformState.NOT_ADDED
         await self.platform.async_add_entities([self])
 
