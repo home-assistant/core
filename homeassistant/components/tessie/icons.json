@@ -1,13 +1,5 @@
 {
   "entity": {
-    "sensor": {
-      "drive_state_shift_state": {
-        "default": "mdi:car-shift-pattern"
-      },
-      "drive_state_active_route_destination": {
-        "default": "mdi:map-marker"
-      }
-    },
     "binary_sensor": {
       "charge_state_scheduled_charging_pending": {
         "default": "mdi:battery-clock"
@@ -151,6 +143,32 @@
           "medium": "mdi:car-seat-heater",
           "high": "mdi:car-seat-heater"
         }
+      }
+    },
+    "sensor": {
+      "charge_state_charging_state": {
+        "default": "mdi:ev-station"
+      },
+      "charge_state_minutes_to_full_charge": {
+        "default": "mdi:clock-end"
+      },
+      "drive_state_shift_state": {
+        "default": "mdi:car-shift-pattern"
+      },
+      "vehicle_state_odometer": {
+        "default": "mdi:counter"
+      },
+      "drive_state_active_route_traffic_minutes_delay": {
+        "default": "mdi:clock-alert-outline"
+      },
+      "drive_state_active_route_miles_to_arrival": {
+        "default": "mdi:map-marker-distance"
+      },
+      "drive_state_active_route_minutes_to_arrival": {
+        "default": "mdi:timer-marker-outline"
+      },
+      "drive_state_active_route_destination": {
+        "default": "mdi:map-marker"
       }
     },
     "switch": {
