@@ -81,6 +81,20 @@
         "default": "mdi:volume-high"
       }
     },
+    "climate": {
+      "primary": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "off": "mdi:fan",
+              "on": "mdi:thermometer-auto",
+              "dog": "mdi:paw",
+              "camp": "mdi:tent"
+            }
+          }
+        }
+      }
+    },
     "select": {
       "climate_state_seat_heater_left": {
         "default": "mdi:car-seat",
