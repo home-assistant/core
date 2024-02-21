@@ -34,7 +34,7 @@ import homeassistant.components.zha.core.discovery as disc
 from homeassistant.components.zha.core.endpoint import Endpoint
 from homeassistant.components.zha.core.helpers import get_zha_gateway
 import homeassistant.components.zha.core.registries as zha_regs
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -580,14 +580,24 @@ async def test_quirks_v2_entity_discovery_e1_curtain(
         Locking = 0x02
         Unlocking = 0x03
 
+    class FakeXiaomiAqaraDriverE1(XiaomiAqaraDriverE1):
+        """Fake XiaomiAqaraDriverE1 cluster."""
+
+        attributes = XiaomiAqaraDriverE1.attributes.copy()
+        attributes.update(
+            {
+                0x9999: ("error_detected", zigpy.types.Bool, True),
+            }
+        )
+
     (
         add_to_registry_v2("LUMI", "lumi.curtain.agl006")
         .adds(LocalIlluminanceMeasurementCluster)
         .replaces(BasicCluster)
         .replaces(XiaomiPowerConfigurationPercent)
         .replaces(WindowCoveringE1)
-        .replaces(XiaomiAqaraDriverE1)
-        .removes(XiaomiAqaraDriverE1, cluster_type=ClusterType.Client)
+        .replaces(FakeXiaomiAqaraDriverE1)
+        .removes(FakeXiaomiAqaraDriverE1, cluster_type=ClusterType.Client)
         .enum(
             BasicCluster.AttributeDefs.power_source.name,
             BasicCluster.PowerSource,
@@ -598,10 +608,11 @@ async def test_quirks_v2_entity_discovery_e1_curtain(
         .enum(
             "hooks_state",
             AqaraE1HookState,
-            XiaomiAqaraDriverE1.cluster_id,
+            FakeXiaomiAqaraDriverE1.cluster_id,
             entity_platform=Platform.SENSOR,
             entity_type=EntityType.DIAGNOSTIC,
         )
+        .binary_sensor("error_detected", FakeXiaomiAqaraDriverE1.cluster_id)
     )
 
     aqara_E1_device = zigpy.quirks._DEVICE_REGISTRY.get_device(aqara_E1_device)
@@ -612,6 +623,7 @@ async def test_quirks_v2_entity_discovery_e1_curtain(
         "hooks_lock": 0,
         "hooks_state": AqaraE1HookState.Unlocked,
         "light_level": 0,
+        "error_detected": 0,
     }
     update_attribute_cache(aqara_E1_device.endpoints[1].opple_cluster)
 
@@ -653,3 +665,13 @@ async def test_quirks_v2_entity_discovery_e1_curtain(
     state = hass.states.get(hook_state_entity_id)
     assert state is not None
     assert state.state == AqaraE1HookState.Unlocked.name
+
+    error_detected_entity_id = find_entity_id(
+        Platform.BINARY_SENSOR,
+        zha_device,
+        hass,
+    )
+    assert error_detected_entity_id is not None
+    state = hass.states.get(error_detected_entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
