@@ -63,8 +63,10 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
     event,
+    floor_registry as fr,
     intent,
     issue_registry as ir,
+    label_registry as lr,
     recorder as recorder_helper,
     restore_state,
     restore_state as rs,
@@ -294,7 +296,9 @@ async def async_test_home_assistant(
                 ar.async_load(hass),
                 dr.async_load(hass),
                 er.async_load(hass),
+                fr.async_load(hass),
                 ir.async_load(hass),
+                lr.async_load(hass),
                 rs.async_load(hass),
             )
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
@@ -1375,7 +1379,7 @@ def mock_integration(
         f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
         if built_in
         else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
-        None,
+        pathlib.Path(""),
         module.mock_manifest(),
     )
 
