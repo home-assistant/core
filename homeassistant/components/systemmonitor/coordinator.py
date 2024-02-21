@@ -92,7 +92,8 @@ class SystemMonitorDiskCoordinator(MonitorCoordinator[sdiskusage]):
     def update_data(self) -> sdiskusage:
         """Fetch data."""
         try:
-            return self._psutil.disk_usage(self._argument)
+            usage: sdiskusage = self._psutil.disk_usage(self._argument)
+            return usage
         except PermissionError as err:
             raise UpdateFailed(f"No permission to access {self._argument}") from err
         except OSError as err:
@@ -104,7 +105,8 @@ class SystemMonitorSwapCoordinator(MonitorCoordinator[sswap]):
 
     def update_data(self) -> sswap:
         """Fetch data."""
-        return self._psutil.swap_memory()
+        swap: sswap = self._psutil.swap_memory()
+        return swap
 
 
 class SystemMonitorMemoryCoordinator(MonitorCoordinator[VirtualMemory]):
@@ -123,7 +125,8 @@ class SystemMonitorNetIOCoordinator(MonitorCoordinator[dict[str, snetio]]):
 
     def update_data(self) -> dict[str, snetio]:
         """Fetch data."""
-        return self._psutil.net_io_counters(pernic=True)
+        io_counters: dict[str, snetio] = self._psutil.net_io_counters(pernic=True)
+        return io_counters
 
 
 class SystemMonitorNetAddrCoordinator(MonitorCoordinator[dict[str, list[snicaddr]]]):
@@ -131,14 +134,17 @@ class SystemMonitorNetAddrCoordinator(MonitorCoordinator[dict[str, list[snicaddr
 
     def update_data(self) -> dict[str, list[snicaddr]]:
         """Fetch data."""
-        return self._psutil.net_if_addrs()
+        addresses: dict[str, list[snicaddr]] = self._psutil.net_if_addrs()
+        return addresses
 
 
-class SystemMonitorLoadCoordinator(MonitorCoordinator[tuple[float, float, float]]):
+class SystemMonitorLoadCoordinator(
+    MonitorCoordinator[tuple[float, float, float] | None]
+):
     """A System monitor Load Data Update Coordinator."""
 
     def update_data(self) -> tuple[float, float, float] | None:
-        """This coordinator is not async."""
+        """Coordinator is not async."""
 
     async def _async_update_data(self) -> tuple[float, float, float] | None:
         """Fetch data."""
@@ -149,7 +155,7 @@ class SystemMonitorProcessorCoordinator(MonitorCoordinator[float | None]):
     """A System monitor Processor Data Update Coordinator."""
 
     def update_data(self) -> float | None:
-        """This coordinator is not async."""
+        """Coordinator is not async."""
 
     async def _async_update_data(self) -> float | None:
         """Get cpu usage.
@@ -159,7 +165,10 @@ class SystemMonitorProcessorCoordinator(MonitorCoordinator[float | None]):
         in the same thread every time as psutil checks the thread
         tid and compares it against the previous one.
         """
-        cpu_percent = self._psutil.cpu_percent(interval=None)
+        cpu_percent: float = self._psutil.cpu_percent(interval=None)
+        print(type(self._psutil))
+        print(self._psutil.cpu_percent.__dict__)
+        print(self._psutil.cpu_percent().__dict__)
         if cpu_percent > 0.0:
             return cpu_percent
         return None
@@ -188,6 +197,7 @@ class SystemMonitorCPUtempCoordinator(MonitorCoordinator[dict[str, list[shwtemp]
     def update_data(self) -> dict[str, list[shwtemp]]:
         """Fetch data."""
         try:
-            return self._psutil.sensors_temperatures()
+            temps: dict[str, list[shwtemp]] = self._psutil.sensors_temperatures()
+            return temps
         except AttributeError as err:
             raise UpdateFailed("OS does not provide temperature sensors") from err

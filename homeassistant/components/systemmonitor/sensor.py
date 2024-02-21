@@ -13,6 +13,7 @@ import time
 from typing import Any, Generic, Literal
 
 import psutil
+from psutil import NoSuchProcess, Process
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
 import psutil_home_assistant as ha_psutil
 import voluptuous as vol
@@ -90,10 +91,10 @@ def get_processor_temperature(
     entity: SystemMonitorSensor[dict[str, list[shwtemp]]],
 ) -> float | None:
     """Return processor temperature."""
-    return read_cpu_temperature(entity.coordinator.data)
+    return read_cpu_temperature(entity.hass, entity.coordinator.data)
 
 
-def get_process(entity: SystemMonitorSensor[list[psutil.Process]]) -> str:
+def get_process(entity: SystemMonitorSensor[list[Process]]) -> str:
     """Return process."""
     state = STATE_OFF
     for proc in entity.coordinator.data:
@@ -102,7 +103,7 @@ def get_process(entity: SystemMonitorSensor[list[psutil.Process]]) -> str:
             if entity.argument == proc.name():
                 state = STATE_ON
                 break
-        except psutil.NoSuchProcess as err:
+        except NoSuchProcess as err:
             _LOGGER.warning(
                 "Failed to load process with ID: %s, old name: %s",
                 err.pid,
@@ -333,7 +334,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription[Any]] = {
         mandatory_arg=True,
         value_fn=get_throughput,
     ),
-    "process": SysMonitorSensorEntityDescription[list[psutil.Process]](
+    "process": SysMonitorSensorEntityDescription[list[Process]](
         key="process",
         translation_key="process",
         placeholder="process",
@@ -488,13 +489,13 @@ async def async_setup_entry(  # noqa: C901
     entities: list[SystemMonitorSensor] = []
     legacy_resources: set[str] = set(entry.options.get("resources", []))
     loaded_resources: set[str] = set()
-    psutil_wrapper: ha_psutil.PsutilWrapper = hass.data[DOMAIN][entry.entry_id]
+    psutil_wrapper: ha_psutil.PsutilWrapper = hass.data[DOMAIN]
 
     def get_arguments() -> dict[str, Any]:
         """Return startup information."""
-        disk_arguments = get_all_disk_mounts()
-        network_arguments = get_all_network_interfaces()
-        cpu_temperature = read_cpu_temperature()
+        disk_arguments = get_all_disk_mounts(hass)
+        network_arguments = get_all_network_interfaces(hass)
+        cpu_temperature = read_cpu_temperature(hass)
         return {
             "disk_arguments": disk_arguments,
             "network_arguments": network_arguments,

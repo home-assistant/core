@@ -95,7 +95,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up System Montor binary sensors based on a config entry."""
-    psutil_wrapper: ha_psutil.PsutilWrapper = hass.data[DOMAIN][entry.entry_id]
+    psutil_wrapper: ha_psutil.PsutilWrapper = hass.data[DOMAIN]
 
     entities: list[SystemMonitorSensor] = []
     process_coordinator = SystemMonitorProcessCoordinator(

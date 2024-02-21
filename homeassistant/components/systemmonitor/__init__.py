@@ -20,7 +20,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up System Monitor from a config entry."""
     psutil_wrapper = await hass.async_add_executor_job(ha_psutil.PsutilWrapper)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = psutil_wrapper
+    hass.data[DOMAIN] = psutil_wrapper
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
     return True
@@ -28,7 +28,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload System Monitor config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
