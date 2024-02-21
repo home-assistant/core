@@ -179,7 +179,7 @@ MOCK_CONFIG = {
         "ui_data": {},
         "device": {"name": "Test name"},
     },
-    "wifi": {"sta": {"enable": True}},
+    "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
 }
 
 MOCK_SHELLY_COAP = {
