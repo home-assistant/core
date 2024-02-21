@@ -325,6 +325,11 @@ class Store(Generic[_T]):
         self.hass.async_create_task(self._async_callback_delayed_write())
 
     @callback
+    def _async_schedule_callback_delayed_write(self) -> None:
+        """Schedule the delayed write in a task."""
+        self.hass.async_create_task(self._async_callback_delayed_write())
+
+    @callback
     def _async_ensure_final_write_listener(self) -> None:
         """Ensure that we write if we quit before delay has passed."""
         if self._unsub_final_write_listener is None:
