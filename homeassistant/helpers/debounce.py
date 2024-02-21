@@ -71,9 +71,9 @@ class Debouncer(Generic[_R_co]):
     def _async_schedule_or_call_now(self) -> bool:
         """Check if a call should be scheduled.
 
-        Returns true if the function should be called immediately.
+        Returns True if the function should be called immediately.
 
-        Returns false if there is nothing to do.
+        Returns False if there is nothing to do.
         """
         if self._shutdown_requested:
             self.logger.debug("Debouncer call ignored as shutdown has been requested.")
