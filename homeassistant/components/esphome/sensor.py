@@ -1,7 +1,7 @@
 """Support for esphome sensors."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 import math
 
 from aioesphomeapi import (
@@ -116,13 +116,16 @@ class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEn
 
     @property
     @esphome_state_property
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | datetime | date | None:
         """Return the state of the entity."""
         state = self._state
         if state.missing_state:
             return None
         if self._attr_device_class is SensorDeviceClass.TIMESTAMP:
             return dt_util.parse_datetime(state.state)
-        if self._attr_device_class is SensorDeviceClass.DATE:
-            return dt_util.parse_datetime(state.state).date()
+        if (
+            self._attr_device_class is SensorDeviceClass.DATE
+            and (value := dt_util.parse_datetime(state.state)) is not None
+        ):
+            return value.date()
         return state.state
