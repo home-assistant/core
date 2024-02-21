@@ -1,7 +1,6 @@
 """Sensor for Shelly."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final, cast
 
@@ -36,7 +35,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.enum import try_parse_enum
 
 from .const import CONF_SLEEP_PERIOD, SHAIR_MAX_WORK_HOURS
 from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator
@@ -53,7 +51,11 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen, get_device_uptime
+from .utils import (
+    get_device_entry_gen,
+    get_device_uptime,
+    is_rpc_wifi_stations_disabled,
+)
 
 
 @dataclass(frozen=True)
@@ -71,7 +73,7 @@ class RestSensorDescription(RestEntityDescription, SensorEntityDescription):
     """Class to describe a REST sensor."""
 
 
-SENSORS: Final = {
+SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
     ("device", "battery"): BlockSensorDescription(
         key="device|battery",
         name="Battery",
@@ -237,7 +239,7 @@ SENSORS: Final = {
         key="sensor|concentration",
         name="Gas concentration",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        icon="mdi:gauge",
+        translation_key="gas_concentration",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("sensor", "temp"): BlockSensorDescription(
@@ -281,14 +283,14 @@ SENSORS: Final = {
         key="sensor|tilt",
         name="Tilt",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:angle-acute",
+        translation_key="tilt",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("relay", "totalWorkTime"): BlockSensorDescription(
         key="relay|totalWorkTime",
         name="Lamp life",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:progress-wrench",
+        translation_key="lamp_life",
         value=lambda value: 100 - (value / 3600 / SHAIR_MAX_WORK_HOURS),
         suggested_display_precision=1,
         extra_state_attributes=lambda block: {
@@ -310,7 +312,6 @@ SENSORS: Final = {
         device_class=SensorDeviceClass.ENUM,
         options=["unknown", "warmup", "normal", "fault"],
         translation_key="operation",
-        icon="mdi:cog-transfer",
         value=lambda value: value,
         extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
@@ -318,7 +319,6 @@ SENSORS: Final = {
         key="valve|valve",
         name="Valve status",
         translation_key="valve_status",
-        icon="mdi:valve",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "checking",
@@ -909,6 +909,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        removal_condition=is_rpc_wifi_stations_disabled,
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
@@ -957,21 +958,37 @@ RPC_SENSORS: Final = {
         sub_key="percent",
         name="Analog input",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda config, _status, key: (config[key]["enable"] is False),
+    ),
+    "analoginput_xpercent": RpcSensorDescription(
+        key="input",
+        sub_key="xpercent",
+        name="Analog value",
+        removal_condition=lambda config, status, key: (
+            config[key]["enable"] is False or status[key].get("xpercent") is None
+        ),
+    ),
+    "pulse_counter": RpcSensorDescription(
+        key="input",
+        sub_key="counts",
+        name="Pulse counter",
+        native_unit_of_measurement="pulse",
+        state_class=SensorStateClass.TOTAL,
+        value=lambda status, _: status["total"],
+        removal_condition=lambda config, _status, key: (config[key]["enable"] is False),
+    ),
+    "counter_value": RpcSensorDescription(
+        key="input",
+        sub_key="counts",
+        name="Counter value",
+        value=lambda status, _: status["xtotal"],
+        removal_condition=lambda config, status, key: (
+            config[key]["enable"] is False
+            or status[key]["counts"].get("xtotal") is None
+        ),
     ),
 }
-
-
-def _build_block_description(entry: RegistryEntry) -> BlockSensorDescription:
-    """Build description when restoring block attribute entities."""
-    return BlockSensorDescription(
-        key="",
-        name="",
-        icon=entry.original_icon,
-        native_unit_of_measurement=entry.unit_of_measurement,
-        device_class=try_parse_enum(SensorDeviceClass, entry.original_device_class),
-    )
 
 
 async def async_setup_entry(
@@ -1002,7 +1019,6 @@ async def async_setup_entry(
             async_add_entities,
             SENSORS,
             BlockSleepingSensor,
-            _build_block_description,
         )
     else:
         async_setup_entry_attribute_entities(
@@ -1011,7 +1027,6 @@ async def async_setup_entry(
             async_add_entities,
             SENSORS,
             BlockSensor,
-            _build_block_description,
         )
         async_setup_entry_rest(
             hass, config_entry, async_add_entities, REST_SENSORS, RestSensor
@@ -1075,10 +1090,9 @@ class BlockSleepingSensor(ShellySleepingBlockAttributeEntity, RestoreSensor):
         attribute: str,
         description: BlockSensorDescription,
         entry: RegistryEntry | None = None,
-        sensors: Mapping[tuple[str, str], BlockSensorDescription] | None = None,
     ) -> None:
         """Initialize the sleeping sensor."""
-        super().__init__(coordinator, block, attribute, description, entry, sensors)
+        super().__init__(coordinator, block, attribute, description, entry)
         self.restored_data: SensorExtraStoredData | None = None
 
     async def async_added_to_hass(self) -> None:

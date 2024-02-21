@@ -215,6 +215,12 @@ class OAuth2FlowHandler(
             _LOGGER.error("Error reading primary calendar: %s", err)
             return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(primary_calendar.id)
+
+        if found := self.hass.config_entries.async_entry_for_domain_unique_id(
+            self.handler, primary_calendar.id
+        ):
+            _LOGGER.debug("Found existing '%s' entry: %s", primary_calendar.id, found)
+
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=primary_calendar.id,

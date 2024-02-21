@@ -17,7 +17,7 @@ except ImportError:
     )
 
 
-def dump(_dict: dict) -> str:
+def dump(_dict: dict | list) -> str:
     """Dump YAML to a string and remove null."""
     return yaml.dump(
         _dict,
