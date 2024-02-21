@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import Coroutine, ValuesView
+from collections.abc import ValuesView
 from enum import StrEnum
 from functools import partial
 import logging
@@ -1098,18 +1098,20 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         listener=_handle_label_registry_update,  # type: ignore[arg-type]
     )
 
-    async def cleanup() -> None:
+    @callback
+    def _async_cleanup() -> None:
         """Cleanup."""
         ent_reg = entity_registry.async_get(hass)
         async_cleanup(hass, dev_reg, ent_reg)
 
-    debounced_cleanup: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
-        hass, _LOGGER, cooldown=CLEANUP_DELAY, immediate=False, function=cleanup
+    debounced_cleanup: Debouncer[None] = Debouncer(
+        hass, _LOGGER, cooldown=CLEANUP_DELAY, immediate=False, function=_async_cleanup
     )
 
-    async def entity_registry_changed(event: Event) -> None:
+    @callback
+    def _async_entity_registry_changed(event: Event) -> None:
         """Handle entity updated or removed dispatch."""
-        await debounced_cleanup.async_call()
+        debounced_cleanup.async_schedule_call()
 
     @callback
     def entity_registry_changed_filter(event: Event) -> bool:
@@ -1125,7 +1127,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     if hass.is_running:
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            entity_registry_changed,
+            _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
         )
         return
@@ -1134,7 +1136,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         """Clean up on startup."""
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            entity_registry_changed,
+            _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
         )
         await debounced_cleanup.async_call()
