@@ -119,14 +119,19 @@ class TestComponentsCore(unittest.TestCase):
 
     def setUp(self):
         """Set up things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+        self._manager = get_test_home_assistant()
+        self.hass = self._manager.__enter__()
         assert asyncio.run_coroutine_threadsafe(
             async_setup_component(self.hass, "homeassistant", {}), self.hass.loop
         ).result()
 
         self.hass.states.set("light.Bowl", STATE_ON)
         self.hass.states.set("light.Ceiling", STATE_OFF)
-        self.addCleanup(self.hass.stop)
+
+    def tearDown(self) -> None:
+        """Tear down hass object."""
+        self.hass.stop()
+        self._manager.__exit__(None, None, None)
 
     def test_is_on(self):
         """Test is_on method."""

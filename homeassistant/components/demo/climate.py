@@ -97,6 +97,7 @@ class DemoClimate(ClimateEntity):
     _attr_name = None
     _attr_should_poll = False
     _attr_translation_key = "ubercool"
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -137,6 +138,9 @@ class DemoClimate(ClimateEntity):
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
+        self._attr_supported_features |= (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
         self._target_temperature = target_temperature
         self._target_humidity = target_humidity
         self._unit_of_measurement = unit_of_measurement

@@ -30,6 +30,7 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
     )
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def hvac_mode(self) -> HVACMode:

@@ -57,6 +57,7 @@ SLOW_ADD_MIN_TIMEOUT = 500
 PLATFORM_NOT_READY_RETRIES = 10
 DATA_ENTITY_PLATFORM = "entity_platform"
 DATA_DOMAIN_ENTITIES = "domain_entities"
+DATA_DOMAIN_PLATFORM_ENTITIES = "domain_platform_entities"
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = getLogger(__name__)
@@ -124,6 +125,8 @@ class EntityPlatform:
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
         self.config_entry: config_entries.ConfigEntry | None = None
+        # Storage for entities for this specific platform only
+        # which are indexed by entity_id
         self.entities: dict[str, Entity] = {}
         self.component_translations: dict[str, Any] = {}
         self.platform_translations: dict[str, Any] = {}
@@ -145,9 +148,24 @@ class EntityPlatform:
         # which powers entity_component.add_entities
         self.parallel_updates_created = platform is None
 
-        self.domain_entities: dict[str, Entity] = hass.data.setdefault(
+        # Storage for entities indexed by domain
+        # with the child dict indexed by entity_id
+        #
+        # This is usually media_player, light, switch, etc.
+        domain_entities: dict[str, dict[str, Entity]] = hass.data.setdefault(
             DATA_DOMAIN_ENTITIES, {}
-        ).setdefault(domain, {})
+        )
+        self.domain_entities = domain_entities.setdefault(domain, {})
+
+        # Storage for entities indexed by domain and platform
+        # with the child dict indexed by entity_id
+        #
+        # This is usually media_player.yamaha, light.hue, switch.tplink, etc.
+        domain_platform_entities: dict[
+            tuple[str, str], dict[str, Entity]
+        ] = hass.data.setdefault(DATA_DOMAIN_PLATFORM_ENTITIES, {})
+        key = (domain, platform_name)
+        self.domain_platform_entities = domain_platform_entities.setdefault(key, {})
 
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
@@ -370,7 +388,7 @@ class EntityPlatform:
                         EVENT_HOMEASSISTANT_STARTED, setup_again
                     )
                 return False
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.error(
                     (
                         "Setup of platform %s is taking longer than %s seconds."
@@ -513,7 +531,7 @@ class EntityPlatform:
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 await asyncio.gather(*tasks)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self.logger.warning(
                 "Timed out adding entities for domain %s with platform %s after %ds",
                 self.domain,
@@ -743,6 +761,7 @@ class EntityPlatform:
         entity_id = entity.entity_id
         self.entities[entity_id] = entity
         self.domain_entities[entity_id] = entity
+        self.domain_platform_entities[entity_id] = entity
 
         if not restored:
             # Reserve the state in the state machine
@@ -756,6 +775,7 @@ class EntityPlatform:
             """Remove entity from entities dict."""
             self.entities.pop(entity_id)
             self.domain_entities.pop(entity_id)
+            self.domain_platform_entities.pop(entity_id)
 
         entity.async_on_remove(remove_entity_cb)
 
@@ -852,7 +872,7 @@ class EntityPlatform:
             partial(
                 service.entity_service_call,
                 self.hass,
-                self.domain_entities,
+                self.domain_platform_entities,
                 service_func,
                 required_features=required_features,
             ),

@@ -430,25 +430,27 @@ async def test_value_template_fails(
     entity.hass = hass
     tpl = template.Template("{{ value_json.some_var * 2 }}")
     val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass, entity=entity)
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError) as exc:
         val_tpl.async_render_with_possible_json_value('{"some_var": null }')
-    await hass.async_block_till_done()
+    assert str(exc.value) == "unsupported operand type(s) for *: 'NoneType' and 'int'"
     assert (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
         "rendering template for entity 'sensor.test', "
         "template: '{{ value_json.some_var * 2 }}'"
     ) in caplog.text
     caplog.clear()
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError) as exc:
         val_tpl.async_render_with_possible_json_value(
             '{"some_var": null }', default=100
         )
+    assert str(exc.value) == "unsupported operand type(s) for *: 'NoneType' and 'int'"
     assert (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
         "rendering template for entity 'sensor.test', "
         "template: '{{ value_json.some_var * 2 }}', default value: 100 and payload: "
         '{"some_var": null }'
     ) in caplog.text
+    await hass.async_block_till_done()
 
 
 async def test_service_call_without_topic_does_not_publish(
@@ -2480,7 +2482,7 @@ async def test_delayed_birth_message(
         await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
-        with pytest.raises(asyncio.TimeoutError):
+        with pytest.raises(TimeoutError):
             await asyncio.wait_for(birth.wait(), 0.2)
         assert not mqtt_client_mock.publish.called
         assert not birth.is_set()
@@ -2638,7 +2640,9 @@ async def test_default_entry_setting_are_applied(
 
     # Config entry data is incomplete but valid according the schema
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    entry.data = {"broker": "test-broker", "port": 1234}
+    hass.config_entries.async_update_entry(
+        entry, data={"broker": "test-broker", "port": 1234}
+    )
     await mqtt_mock_entry()
     await hass.async_block_till_done()
 

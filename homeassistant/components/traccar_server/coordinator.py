@@ -78,7 +78,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 self.client.get_geofences(),
             )
         except TraccarException as ex:
-            raise UpdateFailed("Error while updating device data: %s") from ex
+            raise UpdateFailed(f"Error while updating device data: {ex}") from ex
 
         if TYPE_CHECKING:
             assert isinstance(devices, list[DeviceModel])  # type: ignore[misc]

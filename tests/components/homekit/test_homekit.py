@@ -982,7 +982,7 @@ async def test_homekit_reload_accessory_in_accessory_mode(
     with patch(f"{PATH_HOMEKIT}.HomeKit", return_value=homekit):
         await async_init_entry(hass, entry)
         primary_accessory = homekit.driver.accessory
-        await primary_accessory.run()
+        primary_accessory.run()
         assert type(primary_accessory).__name__ == "Switch"
         await hass.async_block_till_done()
         assert homekit.status == STATUS_RUNNING
