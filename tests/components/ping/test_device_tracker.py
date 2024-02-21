@@ -1,4 +1,5 @@
 """Test the binary sensor platform of ping."""
+from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -15,6 +16,16 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import dump
 
 from tests.common import MockConfigEntry, async_fire_time_changed, patch_yaml_files
+
+
+@pytest.fixture
+def entity_registry_enabled_by_default() -> Generator[None, None, None]:
+    """Test fixture that ensures ping device_tracker entities are enabled in the registry."""
+    with patch(
+        "homeassistant.components.ping.device_tracker.PingDeviceTracker.entity_registry_enabled_default",
+        return_value=True,
+    ):
+        yield
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -125,3 +136,38 @@ async def test_import_delete_known_devices(
         await hass.async_block_till_done()
 
         assert len(remove_device_from_config.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "setup_integration")
+async def test_reload_not_triggering_home(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+):
+    """Test if reload/restart does not trigger home when device is unavailable."""
+    assert hass.states.get("device_tracker.10_10_10_10").state == "home"
+
+    with patch(
+        "homeassistant.components.ping.helpers.async_ping",
+        return_value=Host("10.10.10.10", 5, []),
+    ):
+        # device should be "not_home" after consider_home interval
+        freezer.tick(timedelta(minutes=5, seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        assert hass.states.get("device_tracker.10_10_10_10").state == "not_home"
+
+        # reload config entry
+        await hass.config_entries.async_reload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # device should still be "not_home" after a reload
+    assert hass.states.get("device_tracker.10_10_10_10").state == "not_home"
+
+    # device should be "home" after the next refresh
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.10_10_10_10").state == "home"

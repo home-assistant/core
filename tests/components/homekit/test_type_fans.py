@@ -45,7 +45,7 @@ async def test_fan_basic(hass: HomeAssistant, hk_driver, events) -> None:
     # If there are no speed_list values, then HomeKit speed is unsupported
     assert acc.char_speed is None
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
     assert acc.char_active.value == 1
 
@@ -125,7 +125,7 @@ async def test_fan_direction(hass: HomeAssistant, hk_driver, events) -> None:
 
     assert acc.char_direction.value == 0
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
     assert acc.char_direction.value == 0
 
@@ -200,7 +200,7 @@ async def test_fan_oscillate(hass: HomeAssistant, hk_driver, events) -> None:
 
     assert acc.char_swing.value == 0
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
     assert acc.char_swing.value == 0
 
@@ -280,7 +280,7 @@ async def test_fan_speed(hass: HomeAssistant, hk_driver, events) -> None:
     assert acc.char_speed.value != 0
     assert acc.char_speed.properties[PROP_MIN_STEP] == 25
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     hass.states.async_set(
@@ -383,7 +383,7 @@ async def test_fan_set_all_one_shot(hass: HomeAssistant, hk_driver, events) -> N
     # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
     # speed to 100 when turning on a fan on a freshly booted up server.
     assert acc.char_speed.value != 0
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     hass.states.async_set(
@@ -557,7 +557,7 @@ async def test_fan_restore(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, hk_driver, events
 ) -> None:
     """Test setting up an entity from state in the event registry."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     entity_registry.async_get_or_create(
         "fan",
@@ -617,7 +617,7 @@ async def test_fan_multiple_preset_modes(
     assert acc.preset_mode_chars["auto"].value == 1
     assert acc.preset_mode_chars["smart"].value == 0
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     hass.states.async_set(
@@ -698,7 +698,7 @@ async def test_fan_single_preset_mode(hass: HomeAssistant, hk_driver, events) ->
 
     assert acc.char_target_fan_state.value == 1
 
-    await acc.run()
+    acc.run()
     await hass.async_block_till_done()
 
     # Set from HomeKit

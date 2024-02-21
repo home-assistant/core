@@ -17,7 +17,12 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -289,12 +294,8 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="reauth_successful")
 
 
-class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
-    """Handle a option flow."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
+class FritzBoxToolsOptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Handle an options flow."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -308,13 +309,13 @@ class FritzBoxToolsOptionsFlowHandler(OptionsFlow):
             {
                 vol.Optional(
                     CONF_CONSIDER_HOME,
-                    default=self.config_entry.options.get(
+                    default=self.options.get(
                         CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
                     ),
                 ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900)),
                 vol.Optional(
                     CONF_OLD_DISCOVERY,
-                    default=self.config_entry.options.get(
+                    default=self.options.get(
                         CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY
                     ),
                 ): bool,

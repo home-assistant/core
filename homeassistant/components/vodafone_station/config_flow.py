@@ -7,9 +7,18 @@ from typing import Any
 from aiovodafone import VodafoneStationSercommApi, exceptions as aiovodafone_exceptions
 import voluptuous as vol
 
-from homeassistant import core
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.components.device_tracker import (
+    CONF_CONSIDER_HOME,
+    DEFAULT_CONSIDER_HOME,
+)
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlow,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import _LOGGER, DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
@@ -30,9 +39,7 @@ def user_form_schema(user_input: dict[str, Any] | None) -> vol.Schema:
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
-async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, Any]
-) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
 
     api = VodafoneStationSercommApi(
@@ -53,6 +60,12 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     entry: ConfigEntry | None = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Get the options flow for this handler."""
+        return VodafoneStationOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -133,3 +146,27 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
+
+
+class VodafoneStationOptionsFlowHandler(OptionsFlowWithConfigEntry):
+    """Handle a option flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle options flow."""
+
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_CONSIDER_HOME,
+                    default=self.options.get(
+                        CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)

@@ -19,6 +19,7 @@ from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from .util import (
     CONFIG,
@@ -34,7 +35,7 @@ from tests.common import MockConfigEntry
 DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
     hostname="airzone",
     ip="192.168.1.100",
-    macaddress="E84F25000000",
+    macaddress=dr.format_mac("E84F25000000").replace(":", ""),
 )
 
 TEST_ID = 1

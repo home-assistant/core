@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
@@ -35,12 +36,14 @@ SENSORS: tuple[NetgearLTESensorEntityDescription, ...] = (
     NetgearLTESensorEntityDescription(
         key="sms",
         translation_key="sms",
+        icon="mdi:message-processing",
         native_unit_of_measurement="unread",
         value_fn=lambda modem_data: sum(1 for x in modem_data.data.sms if x.unread),
     ),
     NetgearLTESensorEntityDescription(
         key="sms_total",
         translation_key="sms_total",
+        icon="mdi:message-processing",
         native_unit_of_measurement="messages",
         value_fn=lambda modem_data: len(modem_data.data.sms),
     ),
@@ -48,39 +51,84 @@ SENSORS: tuple[NetgearLTESensorEntityDescription, ...] = (
         key="usage",
         translation_key="usage",
         device_class=SensorDeviceClass.DATA_SIZE,
-        native_unit_of_measurement=UnitOfInformation.MEBIBYTES,
-        value_fn=lambda modem_data: round(modem_data.data.usage / 1024**2, 1),
+        entity_registry_enabled_default=False,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        suggested_display_precision=1,
+        value_fn=lambda modem_data: modem_data.data.usage,
     ),
     NetgearLTESensorEntityDescription(
         key="radio_quality",
         translation_key="radio_quality",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
     ),
     NetgearLTESensorEntityDescription(
         key="rx_level",
         translation_key="rx_level",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     ),
     NetgearLTESensorEntityDescription(
         key="tx_level",
         translation_key="tx_level",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     ),
-    NetgearLTESensorEntityDescription(key="upstream", translation_key="upstream"),
     NetgearLTESensorEntityDescription(
-        key="connection_text", translation_key="connection_text"
+        key="upstream",
+        translation_key="upstream",
+        entity_registry_enabled_default=False,
+        icon="mdi:ip-network",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NetgearLTESensorEntityDescription(
-        key="connection_type", translation_key="connection_type"
+        key="connection_text",
+        translation_key="connection_text",
+        entity_registry_enabled_default=False,
+        icon="mdi:radio-tower",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NetgearLTESensorEntityDescription(
-        key="current_ps_service_type", translation_key="service_type"
+        key="connection_type",
+        translation_key="connection_type",
+        entity_registry_enabled_default=False,
+        icon="mdi:ip",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     NetgearLTESensorEntityDescription(
-        key="register_network_display", translation_key="register_network_display"
+        key="current_ps_service_type",
+        translation_key="service_type",
+        entity_registry_enabled_default=False,
+        icon="mdi:radio-tower",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    NetgearLTESensorEntityDescription(key="current_band", translation_key="band"),
-    NetgearLTESensorEntityDescription(key="cell_id", translation_key="cell_id"),
+    NetgearLTESensorEntityDescription(
+        key="register_network_display",
+        translation_key="register_network_display",
+        entity_registry_enabled_default=False,
+        icon="mdi:web",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NetgearLTESensorEntityDescription(
+        key="current_band",
+        translation_key="band",
+        entity_registry_enabled_default=False,
+        icon="mdi:radio-tower",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    NetgearLTESensorEntityDescription(
+        key="cell_id",
+        translation_key="cell_id",
+        entity_registry_enabled_default=False,
+        icon="mdi:radio-tower",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 

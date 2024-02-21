@@ -126,9 +126,7 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         native_unit_of_measurement=AREA_SQUARE_METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: (
-            self.run_stats.get("sqft") * 9.29
-            if self.run_stats.get("sqft") is not None
-            else None
+            None if (sqft := self.run_stats.get("sqft")) is None else sqft * 9.29
         ),
         suggested_display_precision=0,
         entity_registry_enabled_default=False,

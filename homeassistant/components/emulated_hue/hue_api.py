@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from functools import lru_cache
 import hashlib
 from http import HTTPStatus
@@ -41,6 +42,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
+    ColorMode,
     LightEntityFeature,
 )
 from homeassistant.components.media_player import (
@@ -115,12 +117,19 @@ UNAUTHORIZED_USER = [
     {"error": {"address": "/", "description": "unauthorized user", "type": "1"}}
 ]
 
-DIMMABLE_SUPPORT_FEATURES = (
-    CoverEntityFeature.SET_POSITION
-    | FanEntityFeature.SET_SPEED
-    | MediaPlayerEntityFeature.VOLUME_SET
-    | ClimateEntityFeature.TARGET_TEMPERATURE
-)
+DIMMABLE_SUPPORTED_FEATURES_BY_DOMAIN = {
+    cover.DOMAIN: CoverEntityFeature.SET_POSITION,
+    fan.DOMAIN: FanEntityFeature.SET_SPEED,
+    media_player.DOMAIN: MediaPlayerEntityFeature.VOLUME_SET,
+    climate.DOMAIN: ClimateEntityFeature.TARGET_TEMPERATURE,
+}
+
+ENTITY_FEATURES_BY_DOMAIN = {
+    cover.DOMAIN: CoverEntityFeature,
+    fan.DOMAIN: FanEntityFeature,
+    media_player.DOMAIN: MediaPlayerEntityFeature,
+    climate.DOMAIN: ClimateEntityFeature,
+}
 
 
 @lru_cache(maxsize=32)
@@ -377,7 +386,7 @@ class HueOneLightChangeView(HomeAssistantView):
         # Get the entity's supported features
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if entity.domain == light.DOMAIN:
-            color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
+            color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) or []
 
         # Parse the request
         parsed: dict[str, Any] = {
@@ -756,8 +765,7 @@ def _entity_unique_id(entity_id: str) -> str:
 
 def state_to_json(config: Config, state: State) -> dict[str, Any]:
     """Convert an entity to its Hue bridge JSON representation."""
-    entity_features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
+    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES) or []
     unique_id = _entity_unique_id(state.entity_id)
     state_dict = get_entity_state_dict(config, state)
 
@@ -773,9 +781,9 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
         "manufacturername": "Home Assistant",
         "swversion": "123",
     }
-
-    color_supported = light.color_supported(color_modes)
-    color_temp_supported = light.color_temp_supported(color_modes)
+    is_light = state.domain == light.DOMAIN
+    color_supported = is_light and light.color_supported(color_modes)
+    color_temp_supported = is_light and light.color_temp_supported(color_modes)
     if color_supported and color_temp_supported:
         # Extended Color light (Zigbee Device ID: 0x0210)
         # Same as Color light, but which supports additional setting of color temperature
@@ -820,9 +828,7 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
                 HUE_API_STATE_BRI: state_dict[STATE_BRIGHTNESS],
             }
         )
-    elif entity_features & DIMMABLE_SUPPORT_FEATURES or light.brightness_supported(
-        color_modes
-    ):
+    elif state_supports_hue_brightness(state, color_modes):
         # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming
         retval["type"] = "Dimmable light"
@@ -843,6 +849,21 @@ def state_to_json(config: Config, state: State) -> dict[str, Any]:
         json_state.update({HUE_API_STATE_BRI: HUE_API_STATE_BRI_MAX})
 
     return retval
+
+
+def state_supports_hue_brightness(
+    state: State, color_modes: Iterable[ColorMode]
+) -> bool:
+    """Return True if the state supports brightness."""
+    domain = state.domain
+    if domain == light.DOMAIN:
+        return light.brightness_supported(color_modes)
+    if not (required_feature := DIMMABLE_SUPPORTED_FEATURES_BY_DOMAIN.get(domain)):
+        return False
+    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    enum = ENTITY_FEATURES_BY_DOMAIN[domain]
+    features = enum(features) if type(features) is int else features  # noqa: E721
+    return required_feature in features
 
 
 def create_hue_success_response(
@@ -869,18 +890,11 @@ def create_config_model(config: Config, request: web.Request) -> dict[str, Any]:
 def create_list_of_entities(config: Config, request: web.Request) -> dict[str, Any]:
     """Create a list of all entities."""
     hass: core.HomeAssistant = request.app["hass"]
-
-    json_response: dict[str, Any] = {}
-    for cached_state in config.get_exposed_states():
-        entity_id = cached_state.entity_id
-        state = hass.states.get(entity_id)
-        assert state is not None
-
-        json_response[config.entity_id_to_number(entity_id)] = state_to_json(
-            config, state
-        )
-
-    return json_response
+    return {
+        config.entity_id_to_number(entity_id): state_to_json(config, state)
+        for entity_id in config.get_exposed_entity_ids()
+        if (state := hass.states.get(entity_id))
+    }
 
 
 def hue_brightness_to_hass(value: int) -> int:
@@ -913,7 +927,7 @@ async def wait_for_state_change_or_timeout(
     try:
         async with asyncio.timeout(STATE_CHANGE_WAIT_TIMEOUT):
             await ev.wait()
-    except asyncio.TimeoutError:
+    except TimeoutError:
         pass
     finally:
         unsub()

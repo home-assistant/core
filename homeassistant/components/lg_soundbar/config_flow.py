@@ -1,7 +1,6 @@
 """Config flow to configure the LG Soundbar integration."""
 import logging
 from queue import Empty, Full, Queue
-import socket
 
 import temescal
 import voluptuous as vol
@@ -60,7 +59,7 @@ def test_connect(host, port):
         details["uuid"] = uuid_q.get(timeout=QUEUE_TIMEOUT)
     except Empty:
         pass
-    except socket.timeout as err:
+    except TimeoutError as err:
         raise ConnectionError(f"Connection timeout with server: {host}:{port}") from err
     except OSError as err:
         raise ConnectionError(f"Cannot resolve hostname: {host}") from err
