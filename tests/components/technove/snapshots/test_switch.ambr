@@ -16,12 +16,14 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Auto Charge',
+    'original_name': 'Auto charge',
     'platform': 'technove',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -33,7 +35,7 @@
 # name: test_switches[switch.technove_station_auto_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TechnoVE Station Auto Charge',
+      'friendly_name': 'TechnoVE Station Auto charge',
     }),
     'context': <ANY>,
     'entity_id': 'switch.technove_station_auto_charge',
