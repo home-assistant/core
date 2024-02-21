@@ -689,14 +689,14 @@ class KeypadLockout(ZCLEnumSelectEntity):
 class DanfossExerciseDayOfTheWeekEnum(types.enum8):
     """Day of the week."""
 
-    Sunday = 0
-    Monday = 1
-    Tuesday = 2
-    Wednesday = 3
-    Thursday = 4
-    Friday = 5
-    Saturday = 6
-    Undefined = 7
+    sunday = 0
+    monday = 1
+    tuesday = 2
+    wednesday = 3
+    thursday = 4
+    friday = 5
+    saturday = 6
+    undefined = 7
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -716,8 +716,8 @@ class DanfossExerciseDayOfTheWeek(ZCLEnumSelectEntity):
 class DanfossOrientationEnum(types.enum8):
     """Vertical or Horizontal."""
 
-    Horizontal = 0x00
-    Vertical = 0x01
+    horizontal = 0x00
+    vertical = 0x01
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -740,9 +740,9 @@ class DanfossOrientation(ZCLEnumSelectEntity):
 class DanfossAdaptationRunControlEnum(types.enum8):
     """Initiate or Cancel Adaptation Run."""
 
-    Nothing = 0x00
-    Initiate = 0x01
-    Cancel = 0x02
+    nothing = 0x00
+    initiate = 0x01
+    cancel = 0x02
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -765,22 +765,22 @@ class DanfossControlAlgorithmScaleFactorEnum(types.enum8):
     This is implemented as an enum here, but is a number on the device.
     """
 
-    Quick_5min = 0x01
+    quick_5min = 0x01
 
-    Quick_10min = 0x02  # extrapolated
-    Quick_15min = 0x03  # extrapolated
-    Quick_25min = 0x04  # extrapolated
+    quick_10min = 0x02  # extrapolated
+    quick_15min = 0x03  # extrapolated
+    quick_25min = 0x04  # extrapolated
 
-    Moderate_30min = 0x05
+    moderate_30min = 0x05
 
-    Moderate_40min = 0x06  # extrapolated
-    Moderate_50min = 0x07  # extrapolated
-    Moderate_60min = 0x08  # extrapolated
-    Moderate_70min = 0x09  # extrapolated
+    moderate_40min = 0x06  # extrapolated
+    moderate_50min = 0x07  # extrapolated
+    moderate_60min = 0x08  # extrapolated
+    moderate_70min = 0x09  # extrapolated
 
-    Slow_80min = 0x0A
+    slow_80min = 0x0A
 
-    Quick_open_disabled = 0x11  # not sure what it does; also requires lower 4 bits to be in [1, 10] I assume
+    quick_open_disabled = 0x11  # not sure what it does; also requires lower 4 bits to be in [1, 10] I assume
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -799,8 +799,8 @@ class DanfossControlAlgorithmScaleFactor(ZCLEnumSelectEntity):
 class DanfossViewingDirectionEnum(types.enum8):
     """Default (button above screen when looking at it) or Inverted (button below screen when looking at it)."""
 
-    Default = 0x00
-    Inverted = 0x01
+    default = 0x00
+    inverted = 0x01
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
