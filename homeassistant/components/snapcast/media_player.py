@@ -10,7 +10,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, SERVICE_VOLUME_SET, VOLUME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -51,6 +51,11 @@ def register_services():
         SERVICE_SET_LATENCY,
         {vol.Required(ATTR_LATENCY): cv.positive_int},
         handle_set_latency,
+    )
+    platform.async_register_entity_service(
+        SERVICE_VOLUME_SET,
+        {vol.Required(VOLUME): cv.positive_int},
+        handle_volume_set,
     )
 
 
@@ -101,6 +106,13 @@ async def handle_set_latency(entity, service_call):
     if not isinstance(entity, SnapcastClientDevice):
         raise TypeError("Latency can only be set for a Snapcast client.")
     await entity.async_set_latency(service_call.data[ATTR_LATENCY])
+
+
+async def handle_volume_set(entity, service_call):
+    """Handle the entity service volume_set."""
+    if not (isinstance(entity, SnapcastClientDevice | SnapcastGroupDevice)):
+        raise TypeError("Volume can only be set for a Snapcast client or group.")
+    await entity.async_set_volume_level(service_call.data[VOLUME] / 100)
 
 
 class SnapcastGroupDevice(MediaPlayerEntity):

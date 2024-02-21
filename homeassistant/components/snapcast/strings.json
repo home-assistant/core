@@ -57,6 +57,16 @@
           "description": "Latency in master."
         }
       }
+    },
+    "volume_set": {
+      "name": "Set volume",
+      "description": "Sets client volume.",
+      "fields": {
+        "volume": {
+          "name": "Volume",
+          "description": "Volume in percent."
+        }
+      }
     }
   }
 }
