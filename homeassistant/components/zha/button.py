@@ -89,7 +89,7 @@ class ZHAButton(ZhaEntity, ButtonEntity):
 
     def get_args(self) -> list[Any]:
         """Return the arguments to use in the command."""
-        return list(self._args)
+        return list(self._args) if self._args else []
 
     def get_kwargs(self) -> dict[str, Any]:
         """Return the keyword arguments to use in the command."""
