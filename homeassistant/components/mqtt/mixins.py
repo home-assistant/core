@@ -94,6 +94,7 @@ from .const import (
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
+    TEMPLATE_ERRORS,
 )
 from .debug_info import log_message, log_messages
 from .discovery import (
@@ -110,7 +111,6 @@ from .models import (
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from .subscription import (
     EntitySubscription,
@@ -480,7 +480,10 @@ def write_state_on_attr_change(
                 attribute: getattr(entity, attribute, UNDEFINED)
                 for attribute in attributes
             }
-            msg_callback(msg)
+            try:
+                msg_callback(msg)
+            except TEMPLATE_ERRORS:
+                return
             if not _attrs_have_changed(tracked_attrs):
                 return
 
@@ -527,8 +530,9 @@ class MqttAttributes(Entity):
         @log_messages(self.hass, self.entity_id)
         @write_state_on_attr_change(self, {"_attr_extra_state_attributes"})
         def attributes_message_received(msg: ReceiveMessage) -> None:
+            """Update extra state attributes."""
+            payload = attr_tpl(msg.payload)
             try:
-                payload = attr_tpl(msg.payload)
                 json_dict = json_loads(payload) if isinstance(payload, str) else None
                 if isinstance(json_dict, dict):
                     filtered_dict = {
@@ -636,7 +640,6 @@ class MqttAvailability(Entity):
         def availability_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT availability message."""
             topic = msg.topic
-            payload: ReceivePayloadType
             payload = self._avail_topics[topic][CONF_AVAILABILITY_TEMPLATE](msg.payload)
             if payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
                 self._available[topic] = True

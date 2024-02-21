@@ -1,5 +1,4 @@
 """Update entity for myUplink."""
-from typing import cast
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -65,9 +64,9 @@ class MyUplinkDeviceUpdate(MyUplinkEntity, UpdateEntity):
     @property
     def installed_version(self) -> str | None:
         """Return installed_version."""
-        return cast(str, self.coordinator.data.devices[self.device_id].firmwareCurrent)
+        return self.coordinator.data.devices[self.device_id].firmwareCurrent
 
     @property
     def latest_version(self) -> str | None:
         """Return latest_version."""
-        return cast(str, self.coordinator.data.devices[self.device_id].firmwareDesired)
+        return self.coordinator.data.devices[self.device_id].firmwareDesired
