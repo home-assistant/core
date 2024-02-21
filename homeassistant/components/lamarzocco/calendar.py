@@ -1,4 +1,5 @@
 """Calendar platform for La Marzocco espresso machines."""
+
 from collections.abc import Callable, Coroutine, Iterator
 from datetime import datetime, time, timedelta
 import logging
@@ -39,8 +40,6 @@ OPTIONS_DAY_OF_WEEK: Final = (
     "sat",
     "sun",
 )
-=======
-CALENDAR_KEY = "auto_on_off_schedule"
 
 
 async def async_setup_entry(
@@ -126,7 +125,7 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
         self, start_date: datetime, end_date: datetime
     ) -> Iterator[datetime]:
         current_date = start_date
-        
+
         while current_date.date() < end_date.date():
             yield current_date
             current_date += timedelta(days=1)
@@ -159,7 +158,6 @@ class LaMarzoccoCalendarEntity(LaMarzoccoBaseEntity, CalendarEntity):
                 second=0,
                 microsecond=0,
             ),
-
             summary=f"Machine {self.coordinator.config_entry.title} on",
             description="Machine is scheduled to turn on at the start time and off at the end time",
         )

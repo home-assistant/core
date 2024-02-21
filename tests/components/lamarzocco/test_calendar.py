@@ -1,4 +1,5 @@
 """Tests for La Marzocco calendar."""
+
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
@@ -13,7 +14,6 @@ from homeassistant.components.calendar import (
     EVENT_START_DATETIME,
     SERVICE_GET_EVENTS,
 )
-
 from homeassistant.components.lamarzocco.calendar import (
     ATTR_DAY_OF_WEEK,
     ATTR_ENABLE,
@@ -72,7 +72,8 @@ async def test_calendar_events(
     )
 
     assert events == snapshot
-  
+
+
 @pytest.mark.parametrize(
     (
         "start_date",
@@ -157,7 +158,7 @@ async def test_no_calendar_events_global_disable(
     )
     assert events == snapshot
 
-   
+
 # test services
 
 
@@ -250,4 +251,3 @@ async def test_service_call_error(
             },
             blocking=True,
         )
-
