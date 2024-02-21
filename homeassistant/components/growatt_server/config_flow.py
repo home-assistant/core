@@ -5,6 +5,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_PLANT_ID,
@@ -24,7 +25,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialise growatt server flow."""
         self.api = None
         self.user_id = None
-        self.data = {}
+        self.data: dict = {}
 
     @callback
     def _async_show_user_form(self, errors=None):
@@ -41,7 +42,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> FlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return self._async_show_user_form()
@@ -65,7 +66,7 @@ class GrowattServerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data = user_input
         return await self.async_step_plant()
 
-    async def async_step_plant(self, user_input=None):
+    async def async_step_plant(self, user_input=None) -> FlowResult:
         """Handle adding a "plant" to Home Assistant."""
         plant_info = await self.hass.async_add_executor_job(
             self.api.plant_list, self.user_id
