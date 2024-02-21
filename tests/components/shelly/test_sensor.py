@@ -27,6 +27,7 @@ from homeassistant.helpers.entity_registry import async_get
 from homeassistant.setup import async_setup_component
 
 from . import (
+    get_entity_state,
     init_integration,
     mock_polling_rpc_update,
     mock_rest_update,
@@ -297,6 +298,32 @@ async def test_rpc_sensor(hass: HomeAssistant, mock_rpc_device, monkeypatch) -> 
     mock_rpc_device.mock_update()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+async def test_rpc_rssi_sensor_removal(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry_enabled_by_default: None,
+) -> None:
+    """Test RPC RSSI sensor removal if no WiFi stations enabled."""
+    entity_id = f"{SENSOR_DOMAIN}.test_name_rssi"
+    entry = await init_integration(hass, 2)
+
+    # WiFi1 enabled, do not remove sensor
+    assert get_entity_state(hass, entity_id) == "-63"
+
+    # WiFi1 & WiFi2 disabled - remove sensor
+    monkeypatch.setitem(mock_rpc_device.config["wifi"]["sta"], "enable", False)
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+
+    # WiFi2 enabled, do not remove sensor
+    monkeypatch.setitem(mock_rpc_device.config["wifi"]["sta1"], "enable", True)
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert get_entity_state(hass, entity_id) == "-63"
 
 
 async def test_rpc_illuminance_sensor(
