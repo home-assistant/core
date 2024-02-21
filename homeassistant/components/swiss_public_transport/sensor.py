@@ -86,8 +86,7 @@ async def async_setup_entry(
 
     async_add_entities(
         SwissPublicTransportSensor(coordinator, description, unique_id)
-        for description, data in zip(SENSORS, coordinator.data)
-        if description.exists_fn(data)
+        for description in SENSORS
     )
 
 
@@ -143,8 +142,6 @@ class SwissPublicTransportSensor(
     entity_description: SwissPublicTransportSensorEntityDescription
     _attr_attribution = "Data provided by transport.opendata.ch"
 
-    _native_key: str
-
     def __init__(
         self,
         coordinator: SwissPublicTransportDataUpdateCoordinator,
@@ -159,6 +156,13 @@ class SwissPublicTransportSensor(
             identifiers={(DOMAIN, unique_id)},
             manufacturer="Opendata.ch",
             entry_type=DeviceEntryType.SERVICE,
+        )
+
+    @property
+    def enabled(self) -> bool:
+        """Enable the sensor if data is available."""
+        return self.entity_description.exists_fn(
+            self.coordinator.data[self.entity_description.index]
         )
 
     @property
