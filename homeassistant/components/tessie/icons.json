@@ -18,6 +18,64 @@
       "climate_state_auto_steering_wheel_heat": {
         "default": "mdi:steering"
       }
+    },
+    "select": {
+      "climate_state_seat_heater_left": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_right": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_rear_left": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_rear_center": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_rear_right": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_third_row_left": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      },
+      "climate_state_seat_heater_third_row_right": {
+        "default": "mdi:car-seat",
+        "state": {
+          "low": "mdi:car-seat-heater",
+          "medium": "mdi:car-seat-heater",
+          "high": "mdi:car-seat-heater"
+        }
+      }
     }
   }
 }
