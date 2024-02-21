@@ -182,8 +182,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = store_result
 
-    hass.http.register_view(TokenView(retrieve_result))
-    hass.http.register_view(RevokeTokenView())
+    revoke_view = RevokeTokenView()
+    hass.http.register_view(TokenView(retrieve_result, revoke_view))
+    hass.http.register_view(revoke_view)
     hass.http.register_view(LinkUserView(retrieve_result))
     hass.http.register_view(OAuth2AuthorizeCallbackView())
 
@@ -243,9 +244,12 @@ class TokenView(HomeAssistantView):
     requires_auth = False
     cors_allowed = True
 
-    def __init__(self, retrieve_auth: RetrieveResultType) -> None:
+    def __init__(
+        self, retrieve_auth: RetrieveResultType, revoke_view: RevokeTokenView
+    ) -> None:
         """Initialize the token view."""
         self._retrieve_auth = retrieve_auth
+        self._revoke_view = revoke_view
 
     @log_invalid_auth
     async def post(self, request: web.Request) -> web.Response:
@@ -262,7 +266,7 @@ class TokenView(HomeAssistantView):
         if data.get("action") == "revoke":
             # action=revoke is deprecated. Use /auth/revoke instead.
             # Keep here for backwards compat
-            return await RevokeTokenView.post(self, request)  # type: ignore[arg-type]
+            return await self._revoke_view.post(request)
 
         if grant_type == "authorization_code":
             return await self._async_handle_auth_code(hass, data, request)

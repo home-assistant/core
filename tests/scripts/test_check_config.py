@@ -133,6 +133,7 @@ def test_secrets(mock_is_file, event_loop, mock_hass_config_yaml: None) -> None:
         "login_attempts_threshold": -1,
         "server_port": 8123,
         "ssl_profile": "modern",
+        "strict_connection": False,
         "use_x_frame_options": True,
     }
     assert res["secret_cache"] == {
