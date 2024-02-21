@@ -237,6 +237,14 @@ class DeviceWithAmbientLight(HomeConnectDevice):
         return {ATTR_DEVICE: self, ATTR_DESC: "AmbientLight", ATTR_AMBIENT: True}
 
 
+class DeviceWithCoolingLight(HomeConnectDevice):
+    """Cooling Device with lighting."""
+
+    def get_coolinglight_entity(self):
+        """Get a dictionary with info about the cooling appliance lighting."""
+        return {ATTR_DEVICE: self, ATTR_DESC: "CoolingLight", ATTR_AMBIENT: False}
+
+
 class DeviceWithRemoteControl(HomeConnectDevice):
     """Device that has Remote Control binary sensor."""
 
@@ -429,31 +437,43 @@ class Hood(
         }
 
 
-class FridgeFreezer(DeviceWithDoor):
+class FridgeFreezer(
+    DeviceWithDoor,
+    DeviceWithCoolingLight,
+):
     """Fridge/Freezer class."""
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+        lights = self.get_coolinglight_entity()
+        return {"binary_sensor": [door_entity], "light": [lights]}
 
 
-class Refrigerator(DeviceWithDoor):
+class Refrigerator(
+    DeviceWithDoor,
+    DeviceWithCoolingLight,
+):
     """Refrigerator class."""
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+        lights = self.get_coolinglight_entity()
+        return {"binary_sensor": [door_entity], "light": [lights]}
 
 
-class Freezer(DeviceWithDoor):
+class Freezer(
+    DeviceWithDoor,
+    DeviceWithCoolingLight,
+):
     """Freezer class."""
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
         door_entity = self.get_door_entity()
-        return {"binary_sensor": [door_entity]}
+        lights = self.get_coolinglight_entity()
+        return {"binary_sensor": [door_entity], "light": [lights]}
 
 
 class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):

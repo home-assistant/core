@@ -1,5 +1,6 @@
 """Provides a light for Home Connect."""
 
+from dataclasses import dataclass
 import logging
 from math import ceil
 from typing import Any
@@ -11,6 +12,7 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ColorMode,
     LightEntity,
+    LightEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITIES
@@ -28,10 +30,33 @@ from .const import (
     COOKING_LIGHTING,
     COOKING_LIGHTING_BRIGHTNESS,
     DOMAIN,
+    REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS,
+    REFRIGERATION_EXTERNAL_LIGHT_POWER,
+    REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS,
+    REFRIGERATION_INTERNAL_LIGHT_POWER,
 )
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class HomeConnectLightEntityDescription(LightEntityDescription):
+    """Light entity description."""
+
+    brightness_key: str | None = None
+
+
+LIGHTS: dict[str, HomeConnectLightEntityDescription] = {
+    REFRIGERATION_INTERNAL_LIGHT_POWER: HomeConnectLightEntityDescription(
+        key=REFRIGERATION_INTERNAL_LIGHT_POWER,
+        brightness_key=REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS,
+    ),
+    REFRIGERATION_EXTERNAL_LIGHT_POWER: HomeConnectLightEntityDescription(
+        key=REFRIGERATION_EXTERNAL_LIGHT_POWER,
+        brightness_key=REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS,
+    ),
+}
 
 
 async def async_setup_entry(
@@ -68,6 +93,30 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             self._color_key = BSH_AMBIENT_LIGHT_COLOR
             self._attr_color_mode = ColorMode.HS
             self._attr_supported_color_modes = {ColorMode.HS}
+        elif desc == "CoolingLight":
+            for key, ent_desc in LIGHTS.items():
+                _LOGGER.debug("Looking for key: %s in settings cache", key)
+                if key in device.appliance.status:
+                    _LOGGER.debug("Found key %s in status", key)
+                    self._key = key
+                    self.entity_description = ent_desc
+                    self._brightness_key = ent_desc.brightness_key
+                    self._attr_color_mode = ColorMode.BRIGHTNESS
+                    self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+                    self._custom_color_key = None
+                    self._color_key = None
+                    break
+
+            if self._key is None:
+                _LOGGER.error(
+                    (
+                        "Device: %s has no known setting key for CoolingLight."
+                        "Keys: %s"
+                    ),
+                    device.appliance.type,
+                    device.appliance.status,
+                )
+
         else:
             self._brightness_key = COOKING_LIGHTING_BRIGHTNESS
             self._key = COOKING_LIGHTING
