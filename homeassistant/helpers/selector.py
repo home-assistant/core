@@ -900,7 +900,7 @@ class LabelSelector(Selector[LabelSelectorConfig]):
             return label_id
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
-        return [vol.Schema(str)(val) for val in data]
+        return vol.Schema([str])(data)
 
 
 class LanguageSelectorConfig(TypedDict, total=False):
