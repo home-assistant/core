@@ -159,19 +159,16 @@ async def async_setup_component(
             setup_done_future.set_result(result)
         return result
     except BaseException as err:  # pylint: disable=broad-except
-        setup_future.set_exception(err)
-        with contextlib.suppress(BaseException):
-            # Clear the flag as its normal that nothing
-            # will wait for this future to be resolved
-            # if there are no concurrent setup attempts
-            await setup_future
+        futures = [setup_future]
         if setup_done_future := setup_done_futures.pop(domain, None):
-            setup_done_future.set_exception(err)
+            futures.append(setup_done_future)
+        for future in futures:
+            future.set_exception(err)
             with contextlib.suppress(BaseException):
                 # Clear the flag as its normal that nothing
                 # will wait for this future to be resolved
                 # if there are no concurrent setup attempts
-                await setup_done_future
+                await future
         raise
 
 
