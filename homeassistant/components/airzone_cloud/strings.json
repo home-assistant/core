@@ -18,8 +18,8 @@
   },
   "entity": {
     "binary_sensor": {
-      "air_quality": {
-        "name": "Air Quality"
+      "air_quality_active": {
+        "name": "Air Quality active"
       }
     }
   }

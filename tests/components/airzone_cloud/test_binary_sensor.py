@@ -41,7 +41,7 @@ async def test_airzone_create_binary_sensors(hass: HomeAssistant) -> None:
     assert state.attributes.get("warnings") is None
 
     # Zones
-    state = hass.states.get("binary_sensor.dormitorio_air_quality")
+    state = hass.states.get("binary_sensor.dormitorio_air_quality_active")
     assert state.state == STATE_OFF
 
     state = hass.states.get("binary_sensor.dormitorio_problem")
@@ -51,7 +51,7 @@ async def test_airzone_create_binary_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("binary_sensor.dormitorio_running")
     assert state.state == STATE_OFF
 
-    state = hass.states.get("binary_sensor.salon_air_quality")
+    state = hass.states.get("binary_sensor.salon_air_quality_active")
     assert state.state == STATE_OFF
 
     state = hass.states.get("binary_sensor.salon_problem")

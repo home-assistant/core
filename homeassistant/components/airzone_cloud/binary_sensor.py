@@ -79,7 +79,7 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
     ),
     AirzoneBinarySensorEntityDescription(
         key=AZD_AQ_ACTIVE,
-        translation_key="air_quality",
+        translation_key="air_quality_active",
     ),
     AirzoneBinarySensorEntityDescription(
         attributes={
