@@ -9,14 +9,56 @@
       }
     },
     "binary_sensor": {
+      "charge_state_scheduled_charging_pending": {
+        "default": "mdi:battery-clock"
+      },
+      "charge_state_trip_charging": {
+        "default": "mdi:car-clock"
+      },
       "climate_state_auto_seat_climate_left": {
-        "default": "mdi:car-seat-heater"
+        "default": "mdi:car-seat",
+        "state": {
+          "on": "mdi:car-seat-heater"
+        }
       },
       "climate_state_auto_seat_climate_right": {
-        "default": "mdi:car-seat-heater"
+        "default": "mdi:car-seat",
+        "state": {
+          "on": "mdi:car-seat-heater"
+        }
       },
       "climate_state_auto_steering_wheel_heat": {
         "default": "mdi:steering"
+      },
+      "vehicle_state_dashcam_state": {
+        "default": "mdi:camera-off",
+        "state": {
+          "on": "mdi:camera"
+        }
+      },
+      "vehicle_state_tpms_soft_warning_fl": {
+        "default": "mdi:tire",
+        "state": {
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "vehicle_state_tpms_soft_warning_fr": {
+        "default": "mdi:tire",
+        "state": {
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "vehicle_state_tpms_soft_warning_rl": {
+        "default": "mdi:tire",
+        "state": {
+          "on": "mdi:car-tire-alert"
+        }
+      },
+      "vehicle_state_tpms_soft_warning_rr": {
+        "default": "mdi:tire",
+        "state": {
+          "on": "mdi:car-tire-alert"
+        }
       }
     },
     "select": {
