@@ -210,13 +210,13 @@ class RevokeTokenView(HomeAssistantView):
 
     async def post(self, request: web.Request) -> web.Response:
         """Revoke a token."""
-        response = await self._post(request)
-        async_delete_cookie(response)
+        hass: HomeAssistant = request.app["hass"]
+        response = await self._post(hass, request)
+        async_delete_cookie(hass, response)
         return response
 
-    async def _post(self, request: web.Request) -> web.Response:
+    async def _post(self, hass: HomeAssistant, request: web.Request) -> web.Response:
         """Revoke a token."""
-        hass: HomeAssistant = request.app["hass"]
         data = cast(MultiDictProxy[str], await request.post())
 
         # OAuth 2.0 Token Revocation [RFC7009]
@@ -265,10 +265,10 @@ class TokenView(HomeAssistantView):
             return await RevokeTokenView.post(self, request)  # type: ignore[arg-type]
 
         if grant_type == "authorization_code":
-            return await self._async_handle_auth_code(hass, data, request.remote)
+            return await self._async_handle_auth_code(hass, data, request)
 
         if grant_type == "refresh_token":
-            return await self._async_handle_refresh_token(hass, data, request.remote)
+            return await self._async_handle_refresh_token(hass, data, request)
 
         return self.json(
             {"error": "unsupported_grant_type"}, status_code=HTTPStatus.BAD_REQUEST
@@ -278,18 +278,18 @@ class TokenView(HomeAssistantView):
     @callback
     def _async_set_strict_connection_cookie(
         hass: HomeAssistant,
-        remote_addr: str | None,
+        request: web.Request,
         refresh_token: RefreshToken,
         response: web.Response,
     ) -> web.Response:
-        async_set_cookie(hass, remote_addr, refresh_token, response)
+        async_set_cookie(hass, request, refresh_token, response)
         return response
 
     async def _async_handle_auth_code(
         self,
         hass: HomeAssistant,
         data: MultiDictProxy[str],
-        remote_addr: str | None,
+        request: web.Request,
     ) -> web.Response:
         """Handle authorization code request."""
         client_id = data.get("client_id")
@@ -329,7 +329,7 @@ class TokenView(HomeAssistantView):
         )
         try:
             access_token = hass.auth.async_create_access_token(
-                refresh_token, remote_addr
+                refresh_token, request.remote
             )
         except InvalidAuthError as exc:
             return self.json(
@@ -339,7 +339,7 @@ class TokenView(HomeAssistantView):
 
         return self._async_set_strict_connection_cookie(
             hass,
-            remote_addr,
+            request,
             refresh_token,
             self.json(
                 {
@@ -362,7 +362,7 @@ class TokenView(HomeAssistantView):
         self,
         hass: HomeAssistant,
         data: MultiDictProxy[str],
-        remote_addr: str | None,
+        request: web.Request,
     ) -> web.Response:
         """Handle authorization code request."""
         client_id = data.get("client_id")
@@ -402,7 +402,7 @@ class TokenView(HomeAssistantView):
 
         try:
             access_token = hass.auth.async_create_access_token(
-                refresh_token, remote_addr
+                refresh_token, request.remote
             )
         except InvalidAuthError as exc:
             return self.json(
@@ -412,7 +412,7 @@ class TokenView(HomeAssistantView):
 
         return self._async_set_strict_connection_cookie(
             hass,
-            remote_addr,
+            request,
             refresh_token,
             self.json(
                 {

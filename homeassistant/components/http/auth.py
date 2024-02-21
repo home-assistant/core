@@ -234,13 +234,12 @@ async def async_setup_auth(
             and not async_is_valid_token(hass, request)
             and (is_cloud_connection(hass) or not is_local(ip_address_))
         ):
-            if not (transport := request.transport):
-                # If we don't have a transport, we can't close the connection.
-                # This should never happen.
-                raise HTTPBadRequest()
+            if transport := request.transport:
+                # it should never happen that we don't have a transport
+                transport.close()
 
-            transport.close()
-            # What should happen after closing the connection?
+            # Anyway we need to raise an exception to stop processing the request
+            raise HTTPBadRequest()
 
         if authenticated and _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
