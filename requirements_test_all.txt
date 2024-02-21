@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.8
+AEMET-OpenData==0.4.9
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -1824,7 +1824,7 @@ pywaze==0.5.1
 pyweatherflowudp==1.4.5
 
 # homeassistant.components.html5
-pywebpush==1.9.2
+pywebpush==1.14.1
 
 # homeassistant.components.wemo
 pywemo==1.4.0
@@ -2188,7 +2188,7 @@ wiffi==1.1.2
 wled==0.17.0
 
 # homeassistant.components.wolflink
-wolf-smartset==0.1.11
+wolf-comm==0.0.4
 
 # homeassistant.components.wyoming
 wyoming==1.5.2

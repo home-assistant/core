@@ -201,7 +201,17 @@ class StoreWithoutWriteLoad(storage.Store[_T]):
     """Fake store that does not write or load. Used for testing."""
 
     async def async_save(self, *args: Any, **kwargs: Any) -> None:
-        """Save the data."""
+        """Save the data.
+
+        This function is mocked out in tests.
+        """
+
+    @callback
+    def async_save_delay(self, *args: Any, **kwargs: Any) -> None:
+        """Save data with an optional delay.
+
+        This function is mocked out in tests.
+        """
 
 
 @asynccontextmanager

@@ -505,7 +505,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'Charging',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -520,7 +520,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'Test Charging',
-      'icon': 'mdi:ev-station',
       'options': list([
         'starting',
         'charging',
