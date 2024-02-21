@@ -23,7 +23,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up harmony activities select."""
-    data = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
+    data: HarmonyData = hass.data[DOMAIN][entry.entry_id][HARMONY_DATA]
     _LOGGER.debug("creating select for %s hub activities", entry.data[CONF_NAME])
     async_add_entities(
         [HarmonyActivitySelect(f"{entry.data[CONF_NAME]} Activities", data)]
@@ -85,5 +85,5 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
         )
 
     @callback
-    def _async_activity_update(self, activity_info: tuple):
+    def _async_activity_update(self, activity_info: tuple) -> None:
         self.async_write_ha_state()

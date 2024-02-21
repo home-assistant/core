@@ -1,7 +1,6 @@
 """Switcher integration Switch platform."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
@@ -105,16 +104,20 @@ class SwitcherBaseSwitchEntity(
 
     async def _async_call_api(self, api: str, *args: Any) -> None:
         """Call Switcher API."""
-        _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
+        _LOGGER.debug(
+            "Calling api for %s, api: '%s', args: %s", self.coordinator.name, api, args
+        )
         response: SwitcherBaseResponse = None
         error = None
 
         try:
             async with SwitcherType1Api(
-                self.coordinator.data.ip_address, self.coordinator.data.device_id
+                self.coordinator.data.ip_address,
+                self.coordinator.data.device_id,
+                self.coordinator.data.device_key,
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
-        except (asyncio.TimeoutError, OSError, RuntimeError) as err:
+        except (TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 
         if error or not response or not response.successful:

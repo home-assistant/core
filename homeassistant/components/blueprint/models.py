@@ -90,17 +90,17 @@ class Blueprint:
     @property
     def name(self) -> str:
         """Return blueprint name."""
-        return self.data[CONF_BLUEPRINT][CONF_NAME]
+        return self.data[CONF_BLUEPRINT][CONF_NAME]  # type: ignore[no-any-return]
 
     @property
-    def inputs(self) -> dict:
+    def inputs(self) -> dict[str, Any]:
         """Return blueprint inputs."""
-        return self.data[CONF_BLUEPRINT][CONF_INPUT]
+        return self.data[CONF_BLUEPRINT][CONF_INPUT]  # type: ignore[no-any-return]
 
     @property
-    def metadata(self) -> dict:
+    def metadata(self) -> dict[str, Any]:
         """Return blueprint metadata."""
-        return self.data[CONF_BLUEPRINT]
+        return self.data[CONF_BLUEPRINT]  # type: ignore[no-any-return]
 
     def update_metadata(self, *, source_url: str | None = None) -> None:
         """Update metadata."""
@@ -140,12 +140,12 @@ class BlueprintInputs:
         self.config_with_inputs = config_with_inputs
 
     @property
-    def inputs(self):
+    def inputs(self) -> dict[str, Any]:
         """Return the inputs."""
-        return self.config_with_inputs[CONF_USE_BLUEPRINT][CONF_INPUT]
+        return self.config_with_inputs[CONF_USE_BLUEPRINT][CONF_INPUT]  # type: ignore[no-any-return]
 
     @property
-    def inputs_with_default(self):
+    def inputs_with_default(self) -> dict[str, Any]:
         """Return the inputs and fallback to defaults."""
         no_input = set(self.blueprint.inputs) - set(self.inputs)
 
@@ -212,7 +212,7 @@ class DomainBlueprints:
         async with self._load_lock:
             self._blueprints = {}
 
-    def _load_blueprint(self, blueprint_path) -> Blueprint:
+    def _load_blueprint(self, blueprint_path: str) -> Blueprint:
         """Load a blueprint."""
         try:
             blueprint_data = yaml.load_yaml_dict(self.blueprint_folder / blueprint_path)
@@ -262,7 +262,7 @@ class DomainBlueprints:
     async def async_get_blueprint(self, blueprint_path: str) -> Blueprint:
         """Get a blueprint."""
 
-        def load_from_cache():
+        def load_from_cache() -> Blueprint:
             """Load blueprint from cache."""
             if (blueprint := self._blueprints[blueprint_path]) is None:
                 raise FailedToLoad(
@@ -337,7 +337,7 @@ class DomainBlueprints:
         return exists
 
     async def async_add_blueprint(
-        self, blueprint: Blueprint, blueprint_path: str, allow_override=False
+        self, blueprint: Blueprint, blueprint_path: str, allow_override: bool = False
     ) -> bool:
         """Add a blueprint."""
         overrides_existing = await self.hass.async_add_executor_job(
@@ -359,7 +359,7 @@ class DomainBlueprints:
 
         integration = await loader.async_get_integration(self.hass, self.domain)
 
-        def populate():
+        def populate() -> None:
             if self.blueprint_folder.exists():
                 return
 

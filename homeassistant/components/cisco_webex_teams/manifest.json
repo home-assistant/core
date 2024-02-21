@@ -2,6 +2,7 @@
   "domain": "cisco_webex_teams",
   "name": "Cisco Webex Teams",
   "codeowners": ["@fbradyirl"],
+  "disabled": "Integration library not compatible with Python 3.12",
   "documentation": "https://www.home-assistant.io/integrations/cisco_webex_teams",
   "iot_class": "cloud_push",
   "loggers": ["webexteamssdk"],

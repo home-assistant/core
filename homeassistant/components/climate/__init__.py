@@ -1,6 +1,7 @@
 """Provides functionality to interact with climate devices."""
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
@@ -13,6 +14,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -28,11 +30,13 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
     make_entity_service_schema,
 )
 from homeassistant.helpers.deprecation import (
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -141,12 +145,6 @@ SET_TEMPERATURE_SCHEMA = vol.All(
     ),
 )
 
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
-
 # mypy: disallow-any-generics
 
 
@@ -157,8 +155,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
+    component.async_register_entity_service(
+        SERVICE_TURN_ON,
+        {},
+        "async_turn_on",
+        [ClimateEntityFeature.TURN_ON],
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF,
+        {},
+        "async_turn_off",
+        [ClimateEntityFeature.TURN_OFF],
+    )
+    component.async_register_entity_service(
+        SERVICE_TOGGLE,
+        {},
+        "async_toggle",
+        [ClimateEntityFeature.TURN_OFF, ClimateEntityFeature.TURN_ON],
+    )
     component.async_register_entity_service(
         SERVICE_SET_HVAC_MODE,
         {vol.Required(ATTR_HVAC_MODE): vol.Coerce(HVACMode)},
@@ -227,6 +241,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "temperature_unit",
     "current_humidity",
     "target_humidity",
+    "hvac_mode",
     "hvac_modes",
     "hvac_action",
     "current_temperature",
@@ -291,6 +306,101 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature_step: float | None = None
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
+
+    __mod_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
+    # Integrations should set `_enable_turn_on_off_backwards_compatibility` to False
+    # once migrated and set the feature flags TURN_ON/TURN_OFF as needed.
+    _enable_turn_on_off_backwards_compatibility: bool = True
+
+    def __getattribute__(self, __name: str) -> Any:
+        """Get attribute.
+
+        Modify return of `supported_features` to
+        include `_mod_supported_features` if attribute is set.
+        """
+        if __name != "supported_features":
+            return super().__getattribute__(__name)
+
+        # Convert the supported features to ClimateEntityFeature.
+        # Remove this compatibility shim in 2025.1 or later.
+        _supported_features = super().__getattribute__(__name)
+        if type(_supported_features) is int:  # noqa: E721
+            new_features = ClimateEntityFeature(_supported_features)
+            self._report_deprecated_supported_features_values(new_features)
+
+        # Add automatically calculated ClimateEntityFeature.TURN_OFF/TURN_ON to
+        # supported features and return it
+        return _supported_features | super().__getattribute__(
+            "_ClimateEntity__mod_supported_features"
+        )
+
+    @callback
+    def add_to_platform_start(
+        self,
+        hass: HomeAssistant,
+        platform: EntityPlatform,
+        parallel_updates: asyncio.Semaphore | None,
+    ) -> None:
+        """Start adding an entity to a platform."""
+        super().add_to_platform_start(hass, platform, parallel_updates)
+
+        def _report_turn_on_off(feature: str, method: str) -> None:
+            """Log warning not implemented turn on/off feature."""
+            report_issue = self._suggest_report_issue()
+            if feature.startswith("TURN"):
+                message = (
+                    "Entity %s (%s) does not set ClimateEntityFeature.%s"
+                    " but implements the %s method. Please %s"
+                )
+            else:
+                message = (
+                    "Entity %s (%s) implements HVACMode(s): %s and therefore implicitly"
+                    " supports the %s methods without setting the proper"
+                    " ClimateEntityFeature. Please %s"
+                )
+            _LOGGER.warning(
+                message,
+                self.entity_id,
+                type(self),
+                feature,
+                method,
+                report_issue,
+            )
+
+        # Adds ClimateEntityFeature.TURN_OFF/TURN_ON depending on service calls implemented
+        # This should be removed in 2025.1.
+        if self._enable_turn_on_off_backwards_compatibility is False:
+            # Return if integration has migrated already
+            return
+
+        if not self.supported_features & ClimateEntityFeature.TURN_OFF and (
+            type(self).async_turn_off is not ClimateEntity.async_turn_off
+            or type(self).turn_off is not ClimateEntity.turn_off
+        ):
+            # turn_off implicitly supported by implementing turn_off method
+            _report_turn_on_off("TURN_OFF", "turn_off")
+            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                ClimateEntityFeature.TURN_OFF
+            )
+
+        if not self.supported_features & ClimateEntityFeature.TURN_ON and (
+            type(self).async_turn_on is not ClimateEntity.async_turn_on
+            or type(self).turn_on is not ClimateEntity.turn_on
+        ):
+            # turn_on implicitly supported by implementing turn_on method
+            _report_turn_on_off("TURN_ON", "turn_on")
+            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                ClimateEntityFeature.TURN_ON
+            )
+
+        if (modes := self.hvac_modes) and len(modes) >= 2 and HVACMode.OFF in modes:
+            # turn_on/off implicitly supported by including more modes than 1 and one of these
+            # are HVACMode.OFF
+            _modes = [_mode for _mode in self.hvac_modes if _mode is not None]
+            _report_turn_on_off(", ".join(_modes or []), "turn_on/turn_off")
+            self.__mod_supported_features |= (  # pylint: disable=unused-private-member
+                ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+            )
 
     @final
     @property
@@ -414,7 +524,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the humidity we try to reach."""
         return self._attr_target_humidity
 
-    @property
+    @cached_property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
         return self._attr_hvac_mode
@@ -629,9 +739,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Turn auxiliary heater off."""
         await self.hass.async_add_executor_job(self.turn_aux_heat_off)
 
+    def turn_on(self) -> None:
+        """Turn the entity on."""
+        raise NotImplementedError
+
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        if hasattr(self, "turn_on"):
+        # Forward to self.turn_on if it's been overridden.
+        if type(self).turn_on is not ClimateEntity.turn_on:
             await self.hass.async_add_executor_job(self.turn_on)
             return
 
@@ -648,17 +763,44 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if mode not in self.hvac_modes:
                 continue
             await self.async_set_hvac_mode(mode)
-            break
+            return
+
+        raise NotImplementedError
+
+    def turn_off(self) -> None:
+        """Turn the entity off."""
+        raise NotImplementedError
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
-        if hasattr(self, "turn_off"):
+        # Forward to self.turn_on if it's been overridden.
+        if type(self).turn_off is not ClimateEntity.turn_off:
             await self.hass.async_add_executor_job(self.turn_off)
             return
 
         # Fake turn off
         if HVACMode.OFF in self.hvac_modes:
             await self.async_set_hvac_mode(HVACMode.OFF)
+            return
+
+        raise NotImplementedError
+
+    def toggle(self) -> None:
+        """Toggle the entity."""
+        raise NotImplementedError
+
+    async def async_toggle(self) -> None:
+        """Toggle the entity."""
+        # Forward to self.toggle if it's been overridden.
+        if type(self).toggle is not ClimateEntity.toggle:
+            await self.hass.async_add_executor_job(self.toggle)
+            return
+
+        # We assume that since turn_off is supported, HVACMode.OFF is as well.
+        if self.hvac_mode == HVACMode.OFF:
+            await self.async_turn_on()
+        else:
+            await self.async_turn_off()
 
     @cached_property
     def supported_features(self) -> ClimateEntityFeature:
@@ -720,3 +862,13 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
+
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

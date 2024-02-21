@@ -40,8 +40,8 @@ def validate_input(data: dict[str, Any]) -> None:
         )
         if not client.check_credentials():
             raise InvalidAuth
-    except PySuezError:
-        raise CannotConnect
+    except PySuezError as ex:
+        raise CannotConnect from ex
 
 
 class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):

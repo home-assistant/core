@@ -72,6 +72,14 @@ class BondFan(BondEntity, FanEntity):
         super().__init__(hub, device, bpup_subs)
         if self._device.has_action(Action.BREEZE_ON):
             self._attr_preset_modes = [PRESET_MODE_BREEZE]
+        features = FanEntityFeature(0)
+        if self._device.supports_speed():
+            features |= FanEntityFeature.SET_SPEED
+        if self._device.supports_direction():
+            features |= FanEntityFeature.DIRECTION
+        if self._device.has_action(Action.BREEZE_ON):
+            features |= FanEntityFeature.PRESET_MODE
+        self._attr_supported_features = features
 
     def _apply_state(self) -> None:
         state = self._device.state
@@ -80,18 +88,6 @@ class BondFan(BondEntity, FanEntity):
         self._direction = state.get("direction")
         breeze = state.get("breeze", [0, 0, 0])
         self._attr_preset_mode = PRESET_MODE_BREEZE if breeze[0] else None
-
-    @property
-    def supported_features(self) -> FanEntityFeature:
-        """Flag supported features."""
-        features = FanEntityFeature(0)
-        if self._device.supports_speed():
-            features |= FanEntityFeature.SET_SPEED
-        if self._device.supports_direction():
-            features |= FanEntityFeature.DIRECTION
-        if self._device.has_action(Action.BREEZE_ON):
-            features |= FanEntityFeature.PRESET_MODE
-        return features
 
     @property
     def _speed_range(self) -> tuple[int, int]:

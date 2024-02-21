@@ -171,7 +171,7 @@ class SmhiWeather(WeatherEntity):
                 self._forecast_daily = await self._smhi_api.async_get_forecast()
                 self._forecast_hourly = await self._smhi_api.async_get_forecast_hour()
                 self._fail_count = 0
-        except (asyncio.TimeoutError, SmhiForecastException):
+        except (TimeoutError, SmhiForecastException):
             _LOGGER.error("Failed to connect to SMHI API, retry in 5 minutes")
             self._fail_count += 1
             if self._fail_count < 3:

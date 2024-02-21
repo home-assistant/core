@@ -290,6 +290,17 @@ class SonosDiscoveryManager:
         sub.callback = _async_subscription_succeeded
         # Hold lock to prevent concurrent subscription attempts
         await asyncio.sleep(ZGS_SUBSCRIPTION_TIMEOUT * 2)
+        try:
+            # Cancel this subscription as we create an autorenewing
+            # subscription when setting up the SonosSpeaker instance
+            await sub.unsubscribe()
+        except ClientError as ex:
+            # Will be rejected if already replaced by new subscription
+            _LOGGER.debug(
+                "Cleanup unsubscription from %s was rejected: %s", ip_address, ex
+            )
+        except (OSError, Timeout) as ex:
+            _LOGGER.error("Cleanup unsubscription from %s failed: %s", ip_address, ex)
 
     async def _async_stop_event_listener(self, event: Event | None = None) -> None:
         for speaker in self.data.discovered.values():
@@ -382,7 +393,7 @@ class SonosDiscoveryManager:
                 OSError,
                 SoCoException,
                 Timeout,
-                asyncio.TimeoutError,
+                TimeoutError,
             ) as ex:
                 if not self.hosts_in_error.get(ip_addr):
                     _LOGGER.warning(
@@ -436,7 +447,7 @@ class SonosDiscoveryManager:
                     OSError,
                     SoCoException,
                     Timeout,
-                    asyncio.TimeoutError,
+                    TimeoutError,
                 ) as ex:
                     _LOGGER.warning("Discovery message failed to %s : %s", ip_addr, ex)
             elif not known_speaker.available:

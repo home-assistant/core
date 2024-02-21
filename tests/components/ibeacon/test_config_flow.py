@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.ibeacon.const import DOMAIN
+from homeassistant.components.ibeacon.const import CONF_ALLOW_NAMELESS_UUIDS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -49,3 +49,70 @@ async def test_setup_user_already_setup(
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_options_flow(hass: HomeAssistant, enable_bluetooth: None) -> None:
+    """Test config flow options."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # test save invalid uuid
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "new_uuid": "invalid",
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"new_uuid": "invalid_uuid_format"}
+
+    # test save new uuid
+    uuid = "daa4b6bb-b77a-4662-aeb8-b3ed56454091"
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "new_uuid": uuid,
+        },
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_ALLOW_NAMELESS_UUIDS: [uuid]}
+
+    # test save duplicate uuid
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ALLOW_NAMELESS_UUIDS: [uuid],
+            "new_uuid": uuid,
+        },
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_ALLOW_NAMELESS_UUIDS: [uuid]}
+
+    # delete
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ALLOW_NAMELESS_UUIDS: [],
+        },
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_ALLOW_NAMELESS_UUIDS: []}
