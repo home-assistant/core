@@ -16,12 +16,6 @@ from . import setup_with_selected_platforms
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-@pytest.fixture
-def platforms() -> Platform | list[Platform]:
-    """Platforms, which should be loaded during the test."""
-    return Platform.BINARY_SENSOR
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_technove")
 async def test_sensors(
     hass: HomeAssistant,

@@ -21,12 +21,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture
-def platforms() -> Platform | list[Platform]:
-    """Platforms, which should be loaded during the test."""
-    return Platform.SENSOR
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_technove")
 async def test_sensors(
     hass: HomeAssistant,
