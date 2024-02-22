@@ -25,20 +25,6 @@ SUPPORT_STATE_SERVICES = (
 )
 
 DOCKED_ACTIVITIES = (MowerActivities.PARKED_IN_CS, MowerActivities.CHARGING)
-ERROR_ACTIVITIES = (
-    MowerActivities.STOPPED_IN_GARDEN,
-    MowerActivities.UNKNOWN,
-    MowerActivities.NOT_APPLICABLE,
-)
-ERROR_STATES = [
-    MowerStates.FATAL_ERROR,
-    MowerStates.ERROR,
-    MowerStates.ERROR_AT_POWER_UP,
-    MowerStates.NOT_APPLICABLE,
-    MowerStates.UNKNOWN,
-    MowerStates.STOPPED,
-    MowerStates.OFF,
-]
 MOWING_ACTIVITIES = (
     MowerActivities.MOWING,
     MowerActivities.LEAVING,
