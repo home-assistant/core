@@ -30,7 +30,7 @@ async def test_setup_and_remove_config_entry(
             "source": "sensor.input",
             "unit_prefix": "k",
             "unit_time": "min",
-            "max_dt": 60,
+            "max_age": 60,
         },
         title="My integration",
     )

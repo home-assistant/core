@@ -18,7 +18,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import (
-    CONF_MAX_DT,
+    CONF_MAX_AGE,
     CONF_ROUND_DIGITS,
     CONF_SOURCE_SENSOR,
     CONF_UNIT_PREFIX,
@@ -88,7 +88,7 @@ CONFIG_SCHEMA = vol.Schema(
                 translation_key=CONF_UNIT_TIME,
             ),
         ),
-        vol.Optional(CONF_MAX_DT, default=0): selector.NumberSelector(
+        vol.Optional(CONF_MAX_AGE, default=0): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
                 max=1000000000,
