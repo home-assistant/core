@@ -441,7 +441,7 @@ class TimestampValidator:
         # is not flagged by one stream, it should just get flagged by the other
         # stream. Either value should result in a value which is much less than
         # a 32 bit INT_MAX, which helps avoid the assertion error from FFmpeg.
-        self._max_dts_gap = MAX_TIMESTAMP_GAP * max(
+        self._max_ages_gap = MAX_TIMESTAMP_GAP * max(
             inv_video_time_base, inv_audio_time_base
         )
 
@@ -458,7 +458,7 @@ class TimestampValidator:
         self._missing_dts = 0
         # Discard when dts is not monotonic. Terminate if gap is too wide.
         prev_dts = self._last_dts[packet.stream]
-        if abs(prev_dts - packet.dts) > self._max_dts_gap and prev_dts != NEGATIVE_INF:
+        if abs(prev_dts - packet.dts) > self._max_ages_gap and prev_dts != NEGATIVE_INF:
             raise StreamWorkerError(
                 f"Timestamp discontinuity detected: last dts = {prev_dts}, dts ="
                 f" {packet.dts}"

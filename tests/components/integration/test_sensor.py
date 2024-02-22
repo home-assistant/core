@@ -752,20 +752,22 @@ async def test_device_id(
     assert integration_entity.device_id == source_entity.device_id
 
 
-def _integral_sensor_config(max_dt: int | None = 60):
+def _integral_sensor_config(max_age: int | None = 60):
     sensor = {
         "platform": "integration",
         "name": "integration",
         "source": "sensor.power",
         "method": "right",
     }
-    if max_dt is not None:
-        sensor["max_dt"] = max_dt
+    if max_age is not None:
+        sensor["max_age"] = max_age
     return {"sensor": sensor}
 
 
-async def _setup_integral_sensor(hass: HomeAssistant, max_dt: int | None = 60) -> None:
-    await async_setup_component(hass, "sensor", _integral_sensor_config(max_dt=max_dt))
+async def _setup_integral_sensor(hass: HomeAssistant, max_age: int | None = 60) -> None:
+    await async_setup_component(
+        hass, "sensor", _integral_sensor_config(max_age=max_age)
+    )
     await hass.async_block_till_done()
 
 
@@ -788,7 +790,7 @@ async def test_on_valid_source_expect_update_on_time(
     with freeze_time(start_time) as freezer:
         await _setup_integral_sensor(hass)
         await _update_source_sensor(hass, 100)
-        state_before_max_dt_exceeded = hass.states.get("sensor.integration")
+        state_before_max_age_exceeded = hass.states.get("sensor.integration")
 
         freezer.tick(61)
         async_fire_time_changed(hass, dt_util.now())
@@ -796,9 +798,9 @@ async def test_on_valid_source_expect_update_on_time(
 
         state = hass.states.get("sensor.integration")
         assert (
-            condition.async_numeric_state(hass, state_before_max_dt_exceeded) is False
+            condition.async_numeric_state(hass, state_before_max_age_exceeded) is False
         )
-        assert state_before_max_dt_exceeded.state != state.state
+        assert state_before_max_age_exceeded.state != state.state
         assert condition.async_numeric_state(hass, state) is True
         assert float(state.state) > 1.69  # approximately 100 * 61 / 3600
         assert float(state.state) < 1.8
@@ -864,14 +866,14 @@ async def test_on_statechanges_source_expect_no_update_on_time(
         assert float(state_after_105s.state) > float(state_after_65s.state)
 
 
-async def test_on_no_max_dt_expect_no_timebased_updates(
+async def test_on_no_max_age_expect_no_timebased_updates(
     hass: HomeAssistant,
 ) -> None:
-    """Test whether integratal is not updated by time when max_dt is not configured."""
+    """Test whether integratal is not updated by time when max_age is not configured."""
 
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
-        await _setup_integral_sensor(hass, max_dt=None)
+        await _setup_integral_sensor(hass, max_age=None)
         await _update_source_sensor(hass, 100)
         await hass.async_block_till_done()
         await _update_source_sensor(hass, 101)
