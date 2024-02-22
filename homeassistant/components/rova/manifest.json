@@ -2,7 +2,7 @@
   "domain": "rova",
   "name": "ROVA",
   "documentation": "https://www.home-assistant.io/integrations/rova",
-  "requirements": ["rova==0.3.0"],
+  "requirements": ["rova==0.4.0"],
   "codeowners": [],
   "iot_class": "cloud_polling",
   "loggers": ["rova"]
