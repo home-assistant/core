@@ -184,12 +184,12 @@ class Sensor(ZhaEntity, SensorEntity):
         super()._init_from_quirks_metadata(entity_metadata)
         sensor_metadata: ZCLSensorMetadata = entity_metadata.entity_metadata
         self._attribute_name = sensor_metadata.attribute_name
-        if sensor_metadata.decimals is not None:
-            self._decimals = sensor_metadata.decimals
         if sensor_metadata.divisor is not None:
             self._divisor = sensor_metadata.divisor
         if sensor_metadata.multiplier is not None:
             self._multiplier = sensor_metadata.multiplier
+        if sensor_metadata.unit is not None:
+            self._attr_native_unit_of_measurement = sensor_metadata.unit
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
