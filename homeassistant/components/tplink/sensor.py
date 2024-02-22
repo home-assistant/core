@@ -142,9 +142,19 @@ async def async_setup_entry(
     device = parent_coordinator.device
 
     for idx, child in enumerate(device.children):
-        entities.extend(
-            _async_sensors_for_device(child, children_coordinators[idx], parent=device)
-        )
+        # TODO: nicer way for multi-coordinator updates.
+        from kasa import SmartStrip
+
+        if isinstance(device, SmartStrip):
+            entities.extend(
+                _async_sensors_for_device(
+                    child, children_coordinators[idx], parent=device
+                )
+            )
+        else:
+            entities.extend(
+                _async_sensors_for_device(child, parent_coordinator, parent=device)
+            )
 
     entities.extend(_async_sensors_for_device(device, parent_coordinator))
 
