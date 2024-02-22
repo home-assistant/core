@@ -8,7 +8,7 @@ import logging
 import os
 from typing import NamedTuple, TypeVar
 
-import psutil
+from psutil import Process
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
 import psutil_home_assistant as ha_psutil
 
@@ -41,7 +41,7 @@ dataT = TypeVar(
     | dict[str, list[snicaddr]]
     | dict[str, snetio]
     | float
-    | list[psutil.Process]
+    | list[Process]
     | sswap
     | VirtualMemory
     | tuple[float, float, float]
@@ -166,9 +166,6 @@ class SystemMonitorProcessorCoordinator(MonitorCoordinator[float | None]):
         tid and compares it against the previous one.
         """
         cpu_percent: float = self._psutil.cpu_percent(interval=None)
-        print(type(self._psutil))
-        print(self._psutil.cpu_percent.__dict__)
-        print(self._psutil.cpu_percent().__dict__)
         if cpu_percent > 0.0:
             return cpu_percent
         return None
@@ -182,10 +179,10 @@ class SystemMonitorBootTimeCoordinator(MonitorCoordinator[datetime]):
         return dt_util.utc_from_timestamp(self._psutil.boot_time())
 
 
-class SystemMonitorProcessCoordinator(MonitorCoordinator[list[psutil.Process]]):
+class SystemMonitorProcessCoordinator(MonitorCoordinator[list[Process]]):
     """A System monitor Process Data Update Coordinator."""
 
-    def update_data(self) -> list[psutil.Process]:
+    def update_data(self) -> list[Process]:
         """Fetch data."""
         processes = self._psutil.process_iter()
         return list(processes)

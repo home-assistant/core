@@ -9,7 +9,7 @@ import logging
 import sys
 from typing import Generic, Literal
 
-import psutil
+from psutil import NoSuchProcess, Process
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.components.binary_sensor import (
@@ -51,7 +51,7 @@ def get_cpu_icon() -> Literal["mdi:cpu-64-bit", "mdi:cpu-32-bit"]:
     return "mdi:cpu-32-bit"
 
 
-def get_process(entity: SystemMonitorSensor[list[psutil.Process]]) -> bool:
+def get_process(entity: SystemMonitorSensor[list[Process]]) -> bool:
     """Return process."""
     state = False
     for proc in entity.coordinator.data:
@@ -60,7 +60,7 @@ def get_process(entity: SystemMonitorSensor[list[psutil.Process]]) -> bool:
             if entity.argument == proc.name():
                 state = True
                 break
-        except psutil.NoSuchProcess as err:
+        except NoSuchProcess as err:
             _LOGGER.warning(
                 "Failed to load process with ID: %s, old name: %s",
                 err.pid,
@@ -78,10 +78,8 @@ class SysMonitorBinarySensorEntityDescription(
     value_fn: Callable[[SystemMonitorSensor[dataT]], bool]
 
 
-SENSOR_TYPES: tuple[
-    SysMonitorBinarySensorEntityDescription[list[psutil.Process]], ...
-] = (
-    SysMonitorBinarySensorEntityDescription[list[psutil.Process]](
+SENSOR_TYPES: tuple[SysMonitorBinarySensorEntityDescription[list[Process]], ...] = (
+    SysMonitorBinarySensorEntityDescription[list[Process]](
         key="binary_process",
         translation_key="process",
         icon=get_cpu_icon(),

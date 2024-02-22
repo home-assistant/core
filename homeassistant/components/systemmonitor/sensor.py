@@ -12,7 +12,6 @@ import sys
 import time
 from typing import Any, Generic, Literal
 
-import psutil
 from psutil import NoSuchProcess, Process
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
 import psutil_home_assistant as ha_psutil

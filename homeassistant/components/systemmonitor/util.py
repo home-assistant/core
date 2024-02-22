@@ -3,7 +3,6 @@
 import logging
 import os
 
-import psutil
 from psutil._common import shwtemp
 import psutil_home_assistant as ha_psutil
 
