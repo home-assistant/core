@@ -71,10 +71,12 @@ async def async_setup_entry(
                 entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
         elif isinstance(
             device,
-            AsyncBrandSwitch2
-            | AsyncPrintedCircuitBoardSwitch2
-            | AsyncHeatingSwitch2
-            | AsyncMultiIOBox,
+            (
+                AsyncBrandSwitch2,
+                AsyncPrintedCircuitBoardSwitch2,
+                AsyncHeatingSwitch2,
+                AsyncMultiIOBox,
+            ),
         ):
             for channel in range(1, 3):
                 entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
