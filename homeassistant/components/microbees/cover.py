@@ -1,5 +1,4 @@
 """Cover integration microBees."""
-
 from threading import Timer
 from typing import Any
 
@@ -16,6 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesEntity
 
 
@@ -23,7 +23,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
+    coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
+        entry.entry_id
+    ].coordinator
     covers = []
     for bee_id, bee in coordinator.data.bees.items():
         if bee.productID == 47:
@@ -50,8 +52,9 @@ class MBCover(MicroBeesEntity, CoverEntity):
             CoverEntityFeature.STOP,
             CoverEntityFeature.CLOSE,
         }
-        self.attr_device_class = CoverDeviceClass.SHUTTER
         self._attr_is_closed = None
+
+    _attr_device_class = CoverDeviceClass.SHUTTER
 
     @property
     def name(self) -> str:
@@ -68,12 +71,10 @@ class MBCover(MicroBeesEntity, CoverEntity):
         """Return the rolling down actuator."""
         return self.coordinator.data.actuators[self.actuator_down_id]
 
-    def reset_open_close(self, close: bool = False):
+    def reset_open_close(self):
         """Reset the opening and closing state."""
         self._attr_is_opening = False
-        self._attr_is_closing = False
-        if close:
-            self._attr_is_closed = True
+        self._attr_is_closing = None
         self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -84,7 +85,6 @@ class MBCover(MicroBeesEntity, CoverEntity):
         )
         if sendCommand:
             self._attr_is_opening = True
-            self.async_write_ha_state()
             Timer(
                 self.actuator_up.configuration.actuator_timing,
                 self.reset_open_close,
@@ -100,9 +100,8 @@ class MBCover(MicroBeesEntity, CoverEntity):
         )
         if sendCommand:
             self._attr_is_closing = True
-            self.async_write_ha_state()
             Timer(
-                self.actuator_down.configuration.actuator_timing,
+                self.actuator_up.configuration.actuator_timing,
                 self.reset_open_close,
             ).start()
         else:
