@@ -170,7 +170,9 @@ class TadoConnector:
             "zone": {},
         }
 
-    def decide_overlay_mode(self, duration, zone_id, overlay_mode=None):
+    def decide_overlay_mode(
+        self, duration: str, zone_id: int, overlay_mode: str | None = None
+    ) -> str:
         """Return correct overlay mode based on the action and defaults."""
         # If user gave duration then overlay mode needs to be timer
         if duration:
@@ -180,21 +182,15 @@ class TadoConnector:
             overlay_mode = (
                 self.fallback if self.fallback is not None else CONST_OVERLAY_TADO_MODE
             )
-        zone_data = self.data["zone"][zone_id]
         # If default is Tado default then look it up
         if overlay_mode == CONST_OVERLAY_TADO_DEFAULT:
+            zone_data = self.data["zone"][zone_id]
             overlay_mode = (
                 zone_data.default_overlay_termination_type
                 if zone_data.default_overlay_termination_type is not None
                 else CONST_OVERLAY_TADO_MODE
             )
-        # If we ended up with a timer but no duration, set a default duration
-        if overlay_mode == CONST_OVERLAY_TIMER and duration is None:
-            duration = (
-                zone_data.default_overlay_termination_duration
-                if zone_data.default_overlay_termination_duration is not None
-                else "3600"
-            )
+
         return overlay_mode
 
     @property
