@@ -113,9 +113,7 @@ def mock_setup_entry() -> Generator[MockConfigEntry, None, None]:
 
 # Fixtures for mocking the Azure Data Explorer SDK calls.
 @pytest.fixture(autouse=True)
-def mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data() -> (
-    Generator[None, None, None]
-):
+def mock_ManagedStreaming() -> Generator[Any, Any, Any]:
     """mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.ManagedStreamingIngestClient.ingest_from_stream",
@@ -125,9 +123,7 @@ def mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data() -> (
 
 
 @pytest.fixture(autouse=True)
-def mock_azure_data_explorer_QueuedIngestClient_ingest_data() -> (
-    Generator[None, None, None]
-):
+def mock_QueuedIngest() -> Generator[Any, Any, Any]:
     """mock_azure_data_explorer_QueuedIngestClient_ingest_data."""
     with patch(
         "azure.kusto.ingest.QueuedIngestClient.ingest_from_stream",
@@ -137,7 +133,7 @@ def mock_azure_data_explorer_QueuedIngestClient_ingest_data() -> (
 
 
 @pytest.fixture(autouse=True)
-def mock_execute_query() -> Generator[None, None, None]:
+def mock_execute_query() -> Generator[Any, Any, Any]:
     """Mock KustoClient execute_query."""
     with patch(
         "azure.kusto.data.KustoClient.execute_query",

@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 async def test_put_event_on_queue_with_managed_client(
     hass,
     entry_managed,
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+    mock_ManagedStreaming,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
@@ -40,14 +40,7 @@ async def test_put_event_on_queue_with_managed_client(
 
     await hass.async_block_till_done()
 
-    assert (
-        type(
-            mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.call_args.args[
-                0
-            ]
-        )
-        is StreamDescriptor
-    )
+    assert type(mock_ManagedStreaming.call_args.args[0]) is StreamDescriptor
 
 
 @pytest.mark.freeze_time("2024-01-01 00:00:00")
@@ -65,16 +58,14 @@ async def test_put_event_on_queue_with_managed_client(
 async def test_put_event_on_queue_with_managed_client_with_errors(
     hass,
     entry_managed,
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+    mock_ManagedStreaming,
     sideeffect,
     log_message,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.side_effect = (
-        sideeffect
-    )
+    mock_ManagedStreaming.side_effect = sideeffect
 
     hass.states.async_set("sensor.test_sensor", STATE_ON)
 
@@ -88,7 +79,7 @@ async def test_put_event_on_queue_with_managed_client_with_errors(
 async def test_put_event_on_queue_with_queueing_client(
     hass,
     entry_queued,
-    mock_azure_data_explorer_QueuedIngestClient_ingest_data,
+    mock_QueuedIngest,
 ) -> None:
     """Test listening to events from Hass. and writing to ADX with managed client."""
 
@@ -99,11 +90,8 @@ async def test_put_event_on_queue_with_queueing_client(
     )
 
     await hass.async_block_till_done()
-    mock_azure_data_explorer_QueuedIngestClient_ingest_data.assert_called_once()
-    assert (
-        type(mock_azure_data_explorer_QueuedIngestClient_ingest_data.call_args.args[0])
-        is StreamDescriptor
-    )
+    mock_QueuedIngest.assert_called_once()
+    assert type(mock_QueuedIngest.call_args.args[0]) is StreamDescriptor
 
 
 async def test_import(hass) -> None:
@@ -130,7 +118,7 @@ async def test_import(hass) -> None:
 async def test_unload_entry(
     hass,
     entry_managed,
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+    mock_ManagedStreaming,
 ) -> None:
     """Test being able to unload an entry.
 
@@ -140,7 +128,7 @@ async def test_unload_entry(
     """
     assert entry_managed.state == ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(entry_managed.entry_id)
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.assert_not_called()
+    mock_ManagedStreaming.assert_not_called()
     assert entry_managed.state == ConfigEntryState.NOT_LOADED
 
 
@@ -148,7 +136,7 @@ async def test_unload_entry(
 async def test_late_event(
     hass,
     entry_with_one_event,
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+    mock_ManagedStreaming,
 ) -> None:
     """Test the check on late events."""
     with patch(
@@ -157,7 +145,7 @@ async def test_late_event(
     ):
         async_fire_time_changed(hass, datetime(2024, 1, 2, 00, 00, 00))
         await hass.async_block_till_done()
-        mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.assert_not_called()
+        mock_ManagedStreaming.add.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -232,7 +220,7 @@ async def test_filter(
     hass,
     entry_managed,
     tests,
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+    mock_ManagedStreaming,
 ) -> None:
     """Test different filters.
 
@@ -250,12 +238,8 @@ async def test_filter(
             utcnow() + timedelta(seconds=entry_managed.options[CONF_SEND_INTERVAL]),
         )
         await hass.async_block_till_done()
-        assert (
-            len(
-                mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.call_args_list
-            )
-            == count
-        )
+        assert len(mock_ManagedStreaming.call_args_list) == count
+        assert "filter" in hass.data[DOMAIN]
 
 
 @pytest.mark.parametrize(
@@ -266,7 +250,7 @@ async def test_filter(
 async def test_event(
     hass,
     entry_managed,
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data,
+    mock_ManagedStreaming,
     event,
 ) -> None:
     """Test listening to events from Hass. and getting an event with a newline in the state."""
@@ -278,7 +262,7 @@ async def test_event(
     )
 
     await hass.async_block_till_done()
-    mock_azure_data_explorer_ManagedStreamingIngestClient_ingest_data.add.assert_not_called()
+    mock_ManagedStreaming.add.assert_not_called()
 
 
 @pytest.mark.parametrize(

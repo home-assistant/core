@@ -49,6 +49,8 @@ async def test_config_flow_errors(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
+    # Test error handling with error
+
     mock_execute_query.side_effect = test_input
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -60,6 +62,19 @@ async def test_config_flow_errors(
     await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+    # Retest error handling if error is corrected and connection is successful
+
+    mock_execute_query.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        BASE_CONFIG.copy(),
+    )
+
+    await hass.async_block_till_done()
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
 async def test_options_flow(hass, entry_managed) -> None:
