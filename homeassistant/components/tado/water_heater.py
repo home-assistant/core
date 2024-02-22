@@ -22,7 +22,6 @@ from .const import (
     CONST_MODE_OFF,
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
-    CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TIMER,
     DATA,
@@ -276,24 +275,10 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             self._tado.set_zone_off(self.zone_id, CONST_OVERLAY_MANUAL, TYPE_HOT_WATER)
             return
 
-        overlay_mode = None
-        if duration:
-            overlay_mode = CONST_OVERLAY_TIMER
-
-        # use integration default configuration
-        if overlay_mode is None:
-            overlay_mode = (
-                self._tado.fallback
-                if self._tado.fallback is not None
-                else CONST_OVERLAY_TADO_MODE
-            )
-        # If integration default is Tado default then fetch it
-        if overlay_mode == CONST_OVERLAY_TADO_DEFAULT:
-            overlay_mode = (
-                self._tado_zone_data.default_overlay_termination_type
-                if self._tado_zone_data.default_overlay_termination_type is not None
-                else CONST_OVERLAY_TADO_MODE
-            )
+        overlay_mode = self._tado.decide_overlay_mode(
+            duration=duration,
+            zone_id=self.zone_id,
+        )
 
         _LOGGER.debug(
             "Switching to %s for zone %s (%d) with temperature %s",

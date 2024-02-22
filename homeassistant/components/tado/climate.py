@@ -32,10 +32,7 @@ from .const import (
     CONST_MODE_OFF,
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
-    CONST_OVERLAY_TADO_DEFAULT,
-    CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TADO_OPTIONS,
-    CONST_OVERLAY_TIMER,
     DATA,
     DOMAIN,
     HA_TERMINATION_DURATION,
@@ -585,30 +582,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             self._tado.reset_zone_overlay(self.zone_id)
             return
 
-        # If user gave duration then overlay mode needs to be timer
-        if duration:
-            overlay_mode = CONST_OVERLAY_TIMER
-        # If no duration or timer set to fallback setting
-        if overlay_mode is None:
-            overlay_mode = (
-                self._tado.fallback
-                if self._tado.fallback is not None
-                else CONST_OVERLAY_TADO_MODE
-            )
-        # If default is Tado default then look it up
-        if overlay_mode == CONST_OVERLAY_TADO_DEFAULT:
-            overlay_mode = (
-                self._tado_zone_data.default_overlay_termination_type
-                if self._tado_zone_data.default_overlay_termination_type is not None
-                else CONST_OVERLAY_TADO_MODE
-            )
-        # If we ended up with a timer but no duration, set a default duration
-        if overlay_mode == CONST_OVERLAY_TIMER and duration is None:
-            duration = (
-                self._tado_zone_data.default_overlay_termination_duration
-                if self._tado_zone_data.default_overlay_termination_duration is not None
-                else "3600"
-            )
+        overlay_mode = self._tado.decide_overlay_mode(
+            duration=duration,
+            overlay_mode=overlay_mode,
+            zone_id=self.zone_id,
+        )
 
         _LOGGER.debug(
             (

@@ -22,6 +22,7 @@ from .const import (
     CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TADO_OPTIONS,
+    CONST_OVERLAY_TIMER,
     DATA,
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
@@ -168,6 +169,33 @@ class TadoConnector:
             "geofence": {},
             "zone": {},
         }
+
+    def decide_overlay_mode(self, duration, zone_id, overlay_mode=None):
+        """Return correct overlay mode based on the action and defaults."""
+        # If user gave duration then overlay mode needs to be timer
+        if duration:
+            overlay_mode = CONST_OVERLAY_TIMER
+        # If no duration or timer set to fallback setting
+        if overlay_mode is None:
+            overlay_mode = (
+                self.fallback if self.fallback is not None else CONST_OVERLAY_TADO_MODE
+            )
+        zone_data = self.data["zone"][zone_id]
+        # If default is Tado default then look it up
+        if overlay_mode == CONST_OVERLAY_TADO_DEFAULT:
+            overlay_mode = (
+                zone_data.default_overlay_termination_type
+                if zone_data.default_overlay_termination_type is not None
+                else CONST_OVERLAY_TADO_MODE
+            )
+        # If we ended up with a timer but no duration, set a default duration
+        if overlay_mode == CONST_OVERLAY_TIMER and duration is None:
+            duration = (
+                zone_data.default_overlay_termination_duration
+                if zone_data.default_overlay_termination_duration is not None
+                else "3600"
+            )
+        return overlay_mode
 
     @property
     def fallback(self):
