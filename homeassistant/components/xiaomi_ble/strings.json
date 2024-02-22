@@ -48,7 +48,23 @@
       "rotate_left": "Rotate Left",
       "rotate_right": "Rotate Right",
       "rotate_left_pressed": "Rotate Left (Pressed)",
-      "rotate_right_pressed": "Rotate Right (Pressed)"
+      "rotate_right_pressed": "Rotate Right (Pressed)",
+      "match_successful": "Match successful",
+      "match_failed": "Match failed",
+      "low_quality_too_light_fuzzy": "Low quality (too light, fuzzy)",
+      "insufficient_area": "Insufficient area",
+      "skin_is_too_dry": "Skin is too dry",
+      "skin_is_too_wet": "skin is too wet",
+      "lock_outside_the_door": "Lock outside the door",
+      "unlock_outside_the_door": "Unlock outside the door",
+      "lock_inside_the_door": "Lock inside the door",
+      "unlock_inside_the_door": "Unlock outside the door",
+      "locked": "Locked",
+      "turn_on_antilock": "Turn on antilock",
+      "release_the_antilock": "Release antilock",
+      "turn_on_child_lock": "Turn on child lock",
+      "turn_off_child_lock": "Turn off child lock",
+      "abnormal": "Abnormal"
     },
     "trigger_type": {
       "button": "Button \"{subtype}\"",
@@ -79,6 +95,8 @@
       "button_increase_wind_speed": "Button Increase Wind Speed \"{subtype}\"",
       "button_decrease_wind_speed": "Button Decrease Wind Speed \"{subtype}\"",
       "dimmer": "{subtype}",
+      "fingerprint": "{subtype}",
+      "lock": "{subtype}",
       "motion": "{subtype}",
       "cube": "{subtype}"
     }

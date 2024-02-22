@@ -44,6 +44,7 @@ from .const import (
     EVENT_TYPE,
     FINGERPRINT,
     LOCK,
+    LOCK_FINGERPRINT,
     MOTION,
     MOTION_DEVICE,
     REMOTE,
@@ -87,7 +88,7 @@ TRIGGERS_BY_TYPE = {
         "palmprints_frequently_fail_to_unlock",
         "the_safe_was_moved",
         "the_battery_level_is_less_than_10_percent",
-        "the_battery_is_less_than_5_percent",
+        "the_battery_level_is_less_than_5_percent",
         "the_fingerprint_sensor_is_abnormal",
         "the_accessory_battery_is_low",
         "mechanical_failure",
@@ -209,10 +210,10 @@ TRIGGER_MODEL_DATA = {
         event_types=EVENT_TYPES[ERROR],
         triggers=TRIGGERS_BY_TYPE[ERROR],
     ),
-    FINGERPRINT: TriggerModelData(
+    LOCK_FINGERPRINT: TriggerModelData(
         event_class=EVENT_CLASS_FINGERPRINT,
-        event_types=EVENT_TYPES[FINGERPRINT],
-        triggers=TRIGGERS_BY_TYPE[FINGERPRINT],
+        event_types=EVENT_TYPES[LOCK] + EVENT_TYPES[FINGERPRINT],
+        triggers=TRIGGERS_BY_TYPE[LOCK] + TRIGGERS_BY_TYPE[FINGERPRINT],
     ),
     LOCK: TriggerModelData(
         event_class=EVENT_CLASS_LOCK,
@@ -266,7 +267,13 @@ MODEL_DATA = {
     "MUE4094RT": TRIGGER_MODEL_DATA[MOTION_DEVICE],
     "XMMF01JQD": TRIGGER_MODEL_DATA[CUBE],
     "YLKG07YL/YLKG08YL": TRIGGER_MODEL_DATA[DIMMER],
-    "Lockin-SV40": TRIGGER_MODEL_DATA[LOCK],
+    "DSL-C08": TRIGGER_MODEL_DATA[LOCK],
+    "XMZNMS08LM": TRIGGER_MODEL_DATA[LOCK],
+    "Lockin-SV40": TRIGGER_MODEL_DATA[LOCK_FINGERPRINT],
+    "MJZNMSQ01YD": TRIGGER_MODEL_DATA[LOCK_FINGERPRINT],
+    "XMZNMS04LM": TRIGGER_MODEL_DATA[LOCK_FINGERPRINT],
+    "ZNMS16LM": TRIGGER_MODEL_DATA[LOCK_FINGERPRINT],
+    "ZNMS17LM": TRIGGER_MODEL_DATA[LOCK_FINGERPRINT],
 }
 
 
