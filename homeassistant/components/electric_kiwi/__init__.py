@@ -12,8 +12,11 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
-from .const import DOMAIN
-from .coordinator import ElectricKiwiHOPDataCoordinator
+from .const import ACCOUNT_COORDINATOR, DOMAIN, HOP_COORDINATOR
+from .coordinator import (
+    ElectricKiwiAccountDataCoordinator,
+    ElectricKiwiHOPDataCoordinator,
+)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SELECT]
 
@@ -41,14 +44,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         api.AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     )
     hop_coordinator = ElectricKiwiHOPDataCoordinator(hass, ek_api)
+    account_coordinator = ElectricKiwiAccountDataCoordinator(hass, ek_api)
 
     try:
         await ek_api.set_active_session()
         await hop_coordinator.async_config_entry_first_refresh()
+        await account_coordinator.async_config_entry_first_refresh()
     except ApiException as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hop_coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
+        HOP_COORDINATOR: hop_coordinator,
+        ACCOUNT_COORDINATOR: account_coordinator,
+    }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

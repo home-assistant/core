@@ -6,7 +6,7 @@ from datetime import timedelta
 from enum import IntFlag, StrEnum
 import functools as ft
 import logging
-from typing import Any, ParamSpec, TypeVar, final
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, final
 
 import voluptuous as vol
 
@@ -34,6 +34,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -41,6 +42,11 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,10 +143,6 @@ _DEPRECATED_SUPPORT_STOP_TILT = DeprecatedConstantEnum(
 _DEPRECATED_SUPPORT_SET_TILT_POSITION = DeprecatedConstantEnum(
     CoverEntityFeature.SET_TILT_POSITION, "2025.1"
 )
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
 
 ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
@@ -252,7 +254,17 @@ class CoverEntityDescription(EntityDescription, frozen_or_thawed=True):
     device_class: CoverDeviceClass | None = None
 
 
-class CoverEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "current_cover_position",
+    "current_cover_tilt_position",
+    "device_class",
+    "is_opening",
+    "is_closing",
+    "is_closed",
+}
+
+
+class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for cover entities."""
 
     entity_description: CoverEntityDescription
@@ -267,7 +279,7 @@ class CoverEntity(Entity):
 
     _cover_is_last_toggle_direction_open = True
 
-    @property
+    @cached_property
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -275,7 +287,7 @@ class CoverEntity(Entity):
         """
         return self._attr_current_cover_position
 
-    @property
+    @cached_property
     def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt.
 
@@ -283,7 +295,7 @@ class CoverEntity(Entity):
         """
         return self._attr_current_cover_tilt_position
 
-    @property
+    @cached_property
     def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -325,8 +337,12 @@ class CoverEntity(Entity):
     @property
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
-        if self._attr_supported_features is not None:
-            return self._attr_supported_features
+        if (features := self._attr_supported_features) is not None:
+            if type(features) is int:  # noqa: E721
+                new_features = CoverEntityFeature(features)
+                self._report_deprecated_supported_features_values(new_features)
+                return new_features
+            return features
 
         supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
@@ -345,17 +361,17 @@ class CoverEntity(Entity):
 
         return supported_features
 
-    @property
+    @cached_property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
         return self._attr_is_opening
 
-    @property
+    @cached_property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
         return self._attr_is_closing
 
-    @property
+    @cached_property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         return self._attr_is_closed
@@ -465,7 +481,7 @@ class CoverEntity(Entity):
     def _get_toggle_function(
         self, fns: dict[str, Callable[_P, _R]]
     ) -> Callable[_P, _R]:
-        if CoverEntityFeature.STOP | self.supported_features and (
+        if self.supported_features & CoverEntityFeature.STOP and (
             self.is_closing or self.is_opening
         ):
             return fns["stop"]
@@ -474,3 +490,11 @@ class CoverEntity(Entity):
         if self._cover_is_last_toggle_direction_open:
             return fns["close"]
         return fns["open"]
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Any, Final, final
+from typing import TYPE_CHECKING, Any, Final, final
 
 import voluptuous as vol
 
@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.deprecation import (
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -47,11 +48,10 @@ from .const import (  # noqa: F401
     CodeFormat,
 )
 
-# As we import constants of the cost module here, we need to add the following
-# functions to check for deprecated constants again
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER: Final = logging.getLogger(__name__)
 
@@ -135,7 +135,15 @@ class AlarmControlPanelEntityDescription(EntityDescription, frozen_or_thawed=Tru
     """A class that describes alarm control panel entities."""
 
 
-class AlarmControlPanelEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "code_format",
+    "changed_by",
+    "code_arm_required",
+    "supported_features",
+}
+
+
+class AlarmControlPanelEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """An abstract class for alarm control entities."""
 
     entity_description: AlarmControlPanelEntityDescription
@@ -146,17 +154,17 @@ class AlarmControlPanelEntity(Entity):
         AlarmControlPanelEntityFeature(0)
     )
 
-    @property
+    @cached_property
     def code_format(self) -> CodeFormat | None:
         """Code format or None if no code is required."""
         return self._attr_code_format
 
-    @property
+    @cached_property
     def changed_by(self) -> str | None:
         """Last change triggered by."""
         return self._attr_changed_by
 
-    @property
+    @cached_property
     def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
         return self._attr_code_arm_required
@@ -217,10 +225,15 @@ class AlarmControlPanelEntity(Entity):
         """Send arm custom bypass command."""
         await self.hass.async_add_executor_job(self.alarm_arm_custom_bypass, code)
 
-    @property
+    @cached_property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
-        return self._attr_supported_features
+        features = self._attr_supported_features
+        if type(features) is int:  # noqa: E721
+            new_features = AlarmControlPanelEntityFeature(features)
+            self._report_deprecated_supported_features_values(new_features)
+            return new_features
+        return features
 
     @final
     @property
@@ -231,3 +244,13 @@ class AlarmControlPanelEntity(Entity):
             ATTR_CHANGED_BY: self.changed_by,
             ATTR_CODE_ARM_REQUIRED: self.code_arm_required,
         }
+
+
+# As we import constants of the const module here, we need to add the following
+# functions to check for deprecated constants again
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

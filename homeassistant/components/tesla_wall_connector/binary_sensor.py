@@ -50,7 +50,7 @@ WALL_CONNECTOR_SENSORS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the Wall Connector sensor devices."""
     wall_connector_data = hass.data[DOMAIN][config_entry.entry_id]
@@ -60,7 +60,7 @@ async def async_setup_entry(
         for description in WALL_CONNECTOR_SENSORS
     ]
 
-    async_add_devices(all_entities)
+    async_add_entities(all_entities)
 
 
 class WallConnectorBinarySensorEntity(WallConnectorEntity, BinarySensorEntity):

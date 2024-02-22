@@ -31,6 +31,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from . import TEST_MAC
 
@@ -77,7 +78,7 @@ async def test_select_bad_attr(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "forward"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             "select",
             SERVICE_SELECT_OPTION,

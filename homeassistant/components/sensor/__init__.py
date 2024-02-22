@@ -18,36 +18,36 @@ from homeassistant.config_entries import ConfigEntry
 
 # pylint: disable-next=hass-deprecated-import
 from homeassistant.const import (  # noqa: F401
+    _DEPRECATED_DEVICE_CLASS_AQI,
+    _DEPRECATED_DEVICE_CLASS_BATTERY,
+    _DEPRECATED_DEVICE_CLASS_CO,
+    _DEPRECATED_DEVICE_CLASS_CO2,
+    _DEPRECATED_DEVICE_CLASS_CURRENT,
+    _DEPRECATED_DEVICE_CLASS_DATE,
+    _DEPRECATED_DEVICE_CLASS_ENERGY,
+    _DEPRECATED_DEVICE_CLASS_FREQUENCY,
+    _DEPRECATED_DEVICE_CLASS_GAS,
+    _DEPRECATED_DEVICE_CLASS_HUMIDITY,
+    _DEPRECATED_DEVICE_CLASS_ILLUMINANCE,
+    _DEPRECATED_DEVICE_CLASS_MONETARY,
+    _DEPRECATED_DEVICE_CLASS_NITROGEN_DIOXIDE,
+    _DEPRECATED_DEVICE_CLASS_NITROGEN_MONOXIDE,
+    _DEPRECATED_DEVICE_CLASS_NITROUS_OXIDE,
+    _DEPRECATED_DEVICE_CLASS_OZONE,
+    _DEPRECATED_DEVICE_CLASS_PM1,
+    _DEPRECATED_DEVICE_CLASS_PM10,
+    _DEPRECATED_DEVICE_CLASS_PM25,
+    _DEPRECATED_DEVICE_CLASS_POWER,
+    _DEPRECATED_DEVICE_CLASS_POWER_FACTOR,
+    _DEPRECATED_DEVICE_CLASS_PRESSURE,
+    _DEPRECATED_DEVICE_CLASS_SIGNAL_STRENGTH,
+    _DEPRECATED_DEVICE_CLASS_SULPHUR_DIOXIDE,
+    _DEPRECATED_DEVICE_CLASS_TEMPERATURE,
+    _DEPRECATED_DEVICE_CLASS_TIMESTAMP,
+    _DEPRECATED_DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
+    _DEPRECATED_DEVICE_CLASS_VOLTAGE,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_UNIT_OF_MEASUREMENT,
-    DEVICE_CLASS_AQI,
-    DEVICE_CLASS_BATTERY,
-    DEVICE_CLASS_CO,
-    DEVICE_CLASS_CO2,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_DATE,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_FREQUENCY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_NITROGEN_DIOXIDE,
-    DEVICE_CLASS_NITROGEN_MONOXIDE,
-    DEVICE_CLASS_NITROUS_OXIDE,
-    DEVICE_CLASS_OZONE,
-    DEVICE_CLASS_PM1,
-    DEVICE_CLASS_PM10,
-    DEVICE_CLASS_PM25,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_POWER_FACTOR,
-    DEVICE_CLASS_PRESSURE,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_SULPHUR_DIOXIDE,
-    DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_TIMESTAMP,
-    DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS,
-    DEVICE_CLASS_VOLTAGE,
     EntityCategory,
     UnitOfTemperature,
 )
@@ -59,6 +59,7 @@ from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA_BASE,
 )
 from homeassistant.helpers.deprecation import (
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -119,12 +120,6 @@ __all__ = [
     "SensorExtraStoredData",
     "SensorStateClass",
 ]
-
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
 
 # mypy: disallow-any-generics
 
@@ -198,6 +193,8 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "suggested_unit_of_measurement",
 }
 
+TEMPERATURE_UNITS = {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
+
 
 class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Base class for sensor entities."""
@@ -222,6 +219,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _last_reset_reported = False
     _sensor_option_display_precision: int | None = None
     _sensor_option_unit_of_measurement: str | None | UndefinedType = UNDEFINED
+    _invalid_suggested_unit_of_measurement_reported = False
 
     @callback
     def add_to_platform_start(
@@ -379,6 +377,34 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         return None
 
+    def _is_valid_suggested_unit(self, suggested_unit_of_measurement: str) -> bool:
+        """Validate the suggested unit.
+
+        Validate that a unit converter exists for the sensor's device class and that the
+        unit converter supports both the native and the suggested units of measurement.
+        """
+        # Make sure we can convert the units
+        if (
+            (unit_converter := UNIT_CONVERTERS.get(self.device_class)) is None
+            or self.native_unit_of_measurement not in unit_converter.VALID_UNITS
+            or suggested_unit_of_measurement not in unit_converter.VALID_UNITS
+        ):
+            if not self._invalid_suggested_unit_of_measurement_reported:
+                self._invalid_suggested_unit_of_measurement_reported = True
+                report_issue = self._suggest_report_issue()
+                # This should raise in Home Assistant Core 2024.5
+                _LOGGER.warning(
+                    (
+                        "%s sets an invalid suggested_unit_of_measurement. Please %s. "
+                        "This warning will become an error in Home Assistant Core 2024.5"
+                    ),
+                    type(self),
+                    report_issue,
+                )
+            return False
+
+        return True
+
     def _get_initial_suggested_unit(self) -> str | UndefinedType:
         """Return the initial unit."""
         # Unit suggested by the integration
@@ -391,6 +417,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         if suggested_unit_of_measurement is None:
+            return UNDEFINED
+
+        # Make sure we can convert the units
+        if not self._is_valid_suggested_unit(suggested_unit_of_measurement):
             return UNDEFINED
 
         return suggested_unit_of_measurement
@@ -419,21 +449,12 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return state attributes."""
         if last_reset := self.last_reset:
             state_class = self.state_class
-            if state_class != SensorStateClass.TOTAL and not self._last_reset_reported:
-                self._last_reset_reported = True
-                report_issue = self._suggest_report_issue()
-                # This should raise in Home Assistant Core 2022.5
-                _LOGGER.warning(
-                    (
-                        "Entity %s (%s) with state_class %s has set last_reset. Setting"
-                        " last_reset for entities with state_class other than 'total'"
-                        " is not supported. Please update your configuration if"
-                        " state_class is manually configured, otherwise %s"
-                    ),
-                    self.entity_id,
-                    type(self),
-                    state_class,
-                    report_issue,
+            if state_class != SensorStateClass.TOTAL:
+                raise ValueError(
+                    f"Entity {self.entity_id} ({type(self)}) with state_class {state_class}"
+                    " has set last_reset. Setting last_reset for entities with state_class"
+                    " other than 'total' is not supported. Please update your configuration"
+                    " if state_class is manually configured."
                 )
 
             if state_class == SensorStateClass.TOTAL:
@@ -481,6 +502,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Note:
             suggested_unit_of_measurement is stored in the entity registry the first
             time the entity is seen, and then never updated.
+
         """
         if hasattr(self, "_attr_suggested_unit_of_measurement"):
             return self._attr_suggested_unit_of_measurement
@@ -498,20 +520,20 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self._sensor_option_unit_of_measurement is not UNDEFINED:
             return self._sensor_option_unit_of_measurement
 
+        native_unit_of_measurement = self.native_unit_of_measurement
+
         # Second priority, for non registered entities: unit suggested by integration
         if not self.registry_entry and (
             suggested_unit_of_measurement := self.suggested_unit_of_measurement
         ):
-            return suggested_unit_of_measurement
+            if self._is_valid_suggested_unit(suggested_unit_of_measurement):
+                return suggested_unit_of_measurement
 
         # Third priority: Legacy temperature conversion, which applies
         # to both registered and non registered entities
-        native_unit_of_measurement = self.native_unit_of_measurement
-
         if (
-            native_unit_of_measurement
-            in {UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT}
-            and self.device_class == SensorDeviceClass.TEMPERATURE
+            native_unit_of_measurement in TEMPERATURE_UNITS
+            and self.device_class is SensorDeviceClass.TEMPERATURE
         ):
             return self.hass.config.units.temperature_unit
 
@@ -572,7 +594,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return None
 
         # Received a datetime
-        if device_class == SensorDeviceClass.TIMESTAMP:
+        if device_class is SensorDeviceClass.TIMESTAMP:
             try:
                 # We cast the value, to avoid using isinstance, but satisfy
                 # typechecking. The errors are guarded in this try.
@@ -594,7 +616,7 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 ) from err
 
         # Received a date value
-        if device_class == SensorDeviceClass.DATE:
+        if device_class is SensorDeviceClass.DATE:
             try:
                 # We cast the value, to avoid using isinstance, but satisfy
                 # typechecking. The errors are guarded in this try.
@@ -609,8 +631,8 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Enum checks
         if (
             options := self.options
-        ) is not None or device_class == SensorDeviceClass.ENUM:
-            if device_class != SensorDeviceClass.ENUM:
+        ) is not None or device_class is SensorDeviceClass.ENUM:
+            if device_class is not SensorDeviceClass.ENUM:
                 reason = "is missing the enum device class"
                 if device_class is not None:
                     reason = f"has device class '{device_class}' instead of 'enum'"
@@ -670,11 +692,10 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             converter := UNIT_CONVERTERS.get(device_class)
         ):
             # Unit conversion needed
-            converted_numerical_value = converter.convert(
-                float(numerical_value),
+            converted_numerical_value = converter.converter_factory(
                 native_unit_of_measurement,
                 unit_of_measurement,
-            )
+            )(float(numerical_value))
 
             # If unit conversion is happening, and there's no rounding for display,
             # do a best effort rounding here.
@@ -732,17 +753,6 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         return value
-
-    def __repr__(self) -> str:
-        """Return the representation.
-
-        Entity.__repr__ includes the state in the generated string, this fails if we're
-        called before self.hass is set.
-        """
-        if not self.hass:
-            return f"<Entity {self.name}>"
-
-        return super().__repr__()
 
     def _suggested_precision_or_none(self) -> int | None:
         """Return suggested display precision, or None if not set."""
@@ -965,3 +975,13 @@ def async_rounded_state(hass: HomeAssistant, entity_id: str, state: State) -> st
         value = f"{numerical_value:z.{precision}f}"
 
     return value
+
+
+# As we import deprecated constants from the const module, we need to add these two functions
+# otherwise this module will be logged for using deprecated constants and not the custom component
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

@@ -74,6 +74,10 @@
       "title": "`{config_key}` configuration key is being removed",
       "description": "Please remove the `{config_key}` key from the {integration} entry in your configuration.yaml file and restart Home Assistant to fix this issue. All errors will be reported, as lazy_error_count is accepted but ignored"
     },
+    "deprecated_retries": {
+      "title": "`{config_key}` configuration key is being removed",
+      "description": "Please remove the `{config_key}` key from the {integration} entry in your configuration.yaml file and restart Home Assistant to fix this issue.\n\nThe maximum number of retries is now fixed to 3."
+    },
     "deprecated_close_comm_config": {
       "title": "`{config_key}` configuration key is being removed",
       "description": "Please remove the `{config_key}` key from the {integration} entry in your `configuration.yaml` file and restart Home Assistant to fix this issue. All errors will be reported, as `lazy_error_count` is accepted but ignored."

@@ -113,9 +113,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             new_data[CONF_PASSWORD] = password
 
         ir.async_delete_issue(hass, DOMAIN, "firmware_5_1_required")
-        config_entry.minor_version = 2
-
-        hass.config_entries.async_update_entry(config_entry, data=new_data)
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, minor_version=2
+        )
 
     return True
 
@@ -131,7 +131,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
 
 
-class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
+class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):  # pylint: disable=hass-enforce-coordinator-module
     """Update coordinator for the printer."""
 
     config_entry: ConfigEntry
@@ -176,7 +176,7 @@ class PrusaLinkUpdateCoordinator(DataUpdateCoordinator[T], ABC):
         return timedelta(seconds=30)
 
 
-class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):
+class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):  # pylint: disable=hass-enforce-coordinator-module
     """Printer update coordinator."""
 
     async def _fetch_data(self) -> PrinterStatus:
@@ -184,7 +184,7 @@ class StatusCoordinator(PrusaLinkUpdateCoordinator[PrinterStatus]):
         return await self.api.get_status()
 
 
-class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):
+class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):  # pylint: disable=hass-enforce-coordinator-module
     """Printer legacy update coordinator."""
 
     async def _fetch_data(self) -> LegacyPrinterStatus:
@@ -192,7 +192,7 @@ class LegacyStatusCoordinator(PrusaLinkUpdateCoordinator[LegacyPrinterStatus]):
         return await self.api.get_legacy_printer()
 
 
-class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):
+class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):  # pylint: disable=hass-enforce-coordinator-module
     """Job update coordinator."""
 
     async def _fetch_data(self) -> JobInfo:
@@ -200,7 +200,7 @@ class JobUpdateCoordinator(PrusaLinkUpdateCoordinator[JobInfo]):
         return await self.api.get_job()
 
 
-class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
+class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):  # pylint: disable=hass-enforce-coordinator-module
     """Defines a base PrusaLink entity."""
 
     _attr_has_entity_name = True

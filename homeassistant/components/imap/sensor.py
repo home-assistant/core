@@ -20,6 +20,8 @@ IMAP_MAIL_COUNT_DESCRIPTION = SensorEntityDescription(
     key="imap_mail_count",
     state_class=SensorStateClass.MEASUREMENT,
     suggested_display_precision=0,
+    translation_key="imap_mail_count",
+    name=None,
 )
 
 
@@ -40,9 +42,7 @@ class ImapSensor(
 ):
     """Representation of an IMAP sensor."""
 
-    _attr_icon = "mdi:email-outline"
     _attr_has_entity_name = True
-    _attr_name = None
 
     def __init__(
         self,

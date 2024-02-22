@@ -38,8 +38,8 @@ class NetgearNotifyService(BaseNotificationService):
         if not modem_data:
             LOGGER.error("Modem not ready")
             return
-
-        targets = kwargs.get(ATTR_TARGET, self.config[CONF_NOTIFY][CONF_RECIPIENT])
+        if not (targets := kwargs.get(ATTR_TARGET)):
+            targets = self.config[CONF_NOTIFY][CONF_RECIPIENT]
         if not targets:
             LOGGER.warning("No recipients")
             return

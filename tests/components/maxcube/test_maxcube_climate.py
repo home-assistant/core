@@ -50,6 +50,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import utcnow
 
@@ -88,7 +89,10 @@ async def test_setup_thermostat(
     assert state.attributes.get(ATTR_PRESET_MODE) == PRESET_NONE
     assert (
         state.attributes.get(ATTR_SUPPORTED_FEATURES)
-        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     assert state.attributes.get(ATTR_MAX_TEMP) == MAX_TEMPERATURE
     assert state.attributes.get(ATTR_MIN_TEMP) == 5.0
@@ -370,7 +374,7 @@ async def test_thermostat_set_invalid_preset(
     hass: HomeAssistant, cube: MaxCube, thermostat: MaxThermostat
 ) -> None:
     """Set hvac mode to heat."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
