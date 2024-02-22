@@ -120,6 +120,69 @@
           }
         }
       },
+      "error": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "frequent_unlocking_with_incorrect_password": "Frequent unlocking with incorrect password",
+              "frequent_unlocking_with_wrong_fingerprints": "Frequent unlocking with wrong fingerprints",
+              "operation_timeout_password_input_timeout": "Operation timeout password input timeout",
+              "lock_picking": "Lock picking",
+              "reset_button_is_pressed": "Reset button is pressed",
+              "the_wrong_key_is_frequently_unlocked": "The wrong key is frequently unlocked",
+              "foreign_body_in_the_keyhole": "foreign body in the keyhole",
+              "the_key_has_not_been_taken_out": "The key has not been taken out",
+              "error_nfc_frequently_unlocks": "Error NFC frequently unlocks",
+              "timeout_is_not_locked_as_required": "Timeout is not locked as required",
+              "failure_to_unlock_frequently_in_multiple_ways": "Failure to unlock frequently in multiple ways",
+              "unlocking_the_face_frequently_fails": "Unlocking the face frequently fails",
+              "failure_to_unlock_the_vein_frequently": "Failure to unlock the vein frequently",
+              "hijacking_alarm": "Hijacking alarm",
+              "unlock_inside_the_door_after_arming": "Unlock inside the door after arming",
+              "palmprints_frequently_fail_to_unlock": "Palmprints frequently fail to unlock",
+              "the_safe_was_moved": "The safe was moved",
+              "the_battery_level_is_less_than_10_percent": "The battery level is less than 10%",
+              "the_battery_level_is_less_than_5_percent": "The battery level is less than 5%",
+              "the_fingerprint_sensor_is_abnormal": "the fingerprint sensor is abnormal",
+              "the_accessory_battery_is_low": "the accessory battery is low",
+              "mechanical_failure": "Mechanical failure",
+              "the_lock_sensor_is_faulty": "The lock sensor is faulty"
+            }
+          }
+        }
+      },
+      "fingerprint": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "match_successful": "Match successful",
+              "match_failed": "Match failed",
+              "low_quality_too_light_fuzzy": "Low quality (too light, fuzzy)",
+              "insufficient_area": "Insufficient area",
+              "skin_is_too_dry": "Skin is too dry",
+              "skin_is_too_wet": "skin is too wet"
+            }
+          }
+        }
+      },
+      "lock": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "lock_outside_the_door": "Lock outside the door",
+              "unlock_outside_the_door": "Unlock outside the door",
+              "lock_inside_the_door": "Lock inside the door",
+              "unlock_inside_the_door": "Unlock outside the door",
+              "locked": "Locked",
+              "turn_on_antilock": "Turn on antilock",
+              "release_the_antilock": "Release antilock",
+              "turn_on_child_lock": "Turn on child lock",
+              "turn_off_child_lock": "Turn off child lock",
+              "abnormal": "Abnormal"
+            }
+          }
+        }
+      },
       "motion": {
         "state_attributes": {
           "event_type": {

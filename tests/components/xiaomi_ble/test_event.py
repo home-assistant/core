@@ -142,6 +142,56 @@ from tests.components.bluetooth import (
                 }
             ],
         ),
+        (
+            "D7:1F:44:EB:8A:91",
+            make_advertisement(
+                "D7:1F:44:EB:8A:91",
+                b"PD\x9e\x06B\x91\x8a\xebD\x1f\xd7" b"\x06\x00\x05\xff\xff\xff\xff\x00",
+            ),
+            None,
+            [
+                {
+                    "entity": "event.door_lock_8a91_fingerprint",
+                    ATTR_FRIENDLY_NAME: "Door Lock 8A91 Fingerprint",
+                    ATTR_EVENT_TYPE: "match_successful",
+                },
+                {
+                    "entity": "binary_sensor.door_lock_8a91_fingerprint",
+                    ATTR_FRIENDLY_NAME: "Door Lock 8A91 Fingerprint",
+                },
+                {
+                    "entity": "sensor.door_lock_8a91_key_id",
+                    ATTR_FRIENDLY_NAME: "Door Lock 8A91 Key id",
+                },
+            ],
+        ),
+        (
+            "D7:1F:44:EB:8A:91",
+            make_advertisement(
+                "D7:1F:44:EB:8A:91",
+                b"PD\x9e\x06C\x91\x8a\xebD\x1f\xd7\x0b\x00\t" b" \x02\x00\x01\x80|D/a",
+            ),
+            None,
+            [
+                {
+                    "entity": "event.door_lock_8a91_lock",
+                    ATTR_FRIENDLY_NAME: "Door Lock 8A91 Lock",
+                    ATTR_EVENT_TYPE: "unlock_outside_the_door",
+                },
+                {
+                    "entity": "binary_sensor.door_lock_8a91_lock",
+                    ATTR_FRIENDLY_NAME: "Door Lock 8A91 Lock",
+                },
+                {
+                    "entity": "sensor.door_lock_8a91_lock_method",
+                    ATTR_FRIENDLY_NAME: "Door Lock 8A91 Lock method",
+                },
+                {
+                    "entity": "sensor.door_lock_8a91_key_id",
+                    ATTR_FRIENDLY_NAME: "Door Lock 8A91 Key id",
+                },
+            ],
+        ),
     ],
 )
 async def test_events(
@@ -175,7 +225,8 @@ async def test_events(
         state = hass.states.get(meas["entity"])
         attributes = state.attributes
         assert attributes[ATTR_FRIENDLY_NAME] == meas[ATTR_FRIENDLY_NAME]
-        assert attributes[ATTR_EVENT_TYPE] == meas[ATTR_EVENT_TYPE]
+        if ATTR_EVENT_TYPE in attributes:
+            assert attributes[ATTR_EVENT_TYPE] == meas[ATTR_EVENT_TYPE]
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -199,6 +250,7 @@ async def test_events(
         state = hass.states.get(meas["entity"])
         attributes = state.attributes
         assert attributes[ATTR_FRIENDLY_NAME] == meas[ATTR_FRIENDLY_NAME]
-        assert attributes[ATTR_EVENT_TYPE] == meas[ATTR_EVENT_TYPE]
+        if ATTR_EVENT_TYPE in attributes:
+            assert attributes[ATTR_EVENT_TYPE] == meas[ATTR_EVENT_TYPE]
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
