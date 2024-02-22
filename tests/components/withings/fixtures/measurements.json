@@ -1,0 +1,327 @@
+[
+  {
+    "grpid": 1,
+    "attrib": 0,
+    "date": 1564660800,
+    "created": 1564660800,
+    "modified": 1564660800,
+    "category": 1,
+    "deviceid": "91a7e556c2022ef54dca6e07a853c3193734d148",
+    "hash_deviceid": "91a7e556c2022ef54dca6e07a853c3193734d148",
+    "measures": [
+      {
+        "type": 1,
+        "unit": 0,
+        "value": 70
+      },
+      {
+        "type": 8,
+        "unit": 0,
+        "value": 5
+      },
+      {
+        "type": 5,
+        "unit": 0,
+        "value": 60
+      },
+      {
+        "type": 76,
+        "unit": 0,
+        "value": 50
+      },
+      {
+        "type": 88,
+        "unit": 0,
+        "value": 10
+      },
+      {
+        "type": 4,
+        "unit": 0,
+        "value": 2
+      },
+      {
+        "type": 12,
+        "unit": 0,
+        "value": 40
+      },
+      {
+        "type": 71,
+        "unit": 0,
+        "value": 40
+      },
+      {
+        "type": 73,
+        "unit": 0,
+        "value": 20
+      },
+      {
+        "type": 6,
+        "unit": -3,
+        "value": 70
+      },
+      {
+        "type": 9,
+        "unit": 0,
+        "value": 70
+      },
+      {
+        "type": 10,
+        "unit": 0,
+        "value": 100
+      },
+      {
+        "type": 11,
+        "unit": 0,
+        "value": 60
+      },
+      {
+        "type": 54,
+        "unit": -2,
+        "value": 95
+      },
+      {
+        "type": 77,
+        "unit": -2,
+        "value": 95
+      },
+      {
+        "type": 91,
+        "unit": 0,
+        "value": 100
+      },
+      {
+        "type": 123,
+        "unit": 0,
+        "value": 100
+      },
+      {
+        "type": 155,
+        "unit": 0,
+        "value": 100
+      },
+      {
+        "type": 168,
+        "unit": 0,
+        "value": 100
+      },
+      {
+        "type": 169,
+        "unit": 0,
+        "value": 100
+      },
+      {
+        "type": 198,
+        "unit": 0,
+        "value": 102
+      },
+      {
+        "type": 197,
+        "unit": 0,
+        "value": 102
+      },
+      {
+        "type": 196,
+        "unit": 0,
+        "value": 102
+      },
+      {
+        "type": 170,
+        "unit": 0,
+        "value": 102
+      }
+    ],
+    "modelid": 45,
+    "model": "BPM Connect",
+    "comment": null
+  },
+  {
+    "grpid": 1,
+    "attrib": 0,
+    "date": 1564657200,
+    "created": 1564657200,
+    "modified": 1564657200,
+    "category": 1,
+    "deviceid": "91a7e556c2022ef54dca6e07a853c3193734d148",
+    "hash_deviceid": "91a7e556c2022ef54dca6e07a853c3193734d148",
+    "measures": [
+      {
+        "type": 1,
+        "unit": 0,
+        "value": 71
+      },
+      {
+        "type": 8,
+        "unit": 0,
+        "value": 51
+      },
+      {
+        "type": 5,
+        "unit": 0,
+        "value": 61
+      },
+      {
+        "type": 76,
+        "unit": 0,
+        "value": 51
+      },
+      {
+        "type": 88,
+        "unit": 0,
+        "value": 11
+      },
+      {
+        "type": 4,
+        "unit": 0,
+        "value": 21
+      },
+      {
+        "type": 12,
+        "unit": 0,
+        "value": 41
+      },
+      {
+        "type": 71,
+        "unit": 0,
+        "value": 41
+      },
+      {
+        "type": 73,
+        "unit": 0,
+        "value": 21
+      },
+      {
+        "type": 6,
+        "unit": -3,
+        "value": 71
+      },
+      {
+        "type": 9,
+        "unit": 0,
+        "value": 71
+      },
+      {
+        "type": 10,
+        "unit": 0,
+        "value": 101
+      },
+      {
+        "type": 11,
+        "unit": 0,
+        "value": 61
+      },
+      {
+        "type": 54,
+        "unit": -2,
+        "value": 96
+      },
+      {
+        "type": 77,
+        "unit": -2,
+        "value": 96
+      },
+      {
+        "type": 91,
+        "unit": 0,
+        "value": 101
+      }
+    ],
+    "modelid": 45,
+    "model": "BPM Connect",
+    "comment": null
+  },
+  {
+    "grpid": 1,
+    "attrib": 1,
+    "date": 1564664400,
+    "created": 1564664400,
+    "modified": 1564664400,
+    "category": 1,
+    "deviceid": "91a7e556c2022ef54dca6e07a853c3193734d148",
+    "hash_deviceid": "91a7e556c2022ef54dca6e07a853c3193734d148",
+    "measures": [
+      {
+        "type": 1,
+        "unit": 0,
+        "value": 71
+      },
+      {
+        "type": 8,
+        "unit": 0,
+        "value": 4
+      },
+      {
+        "type": 5,
+        "unit": 0,
+        "value": 40
+      },
+      {
+        "type": 76,
+        "unit": 0,
+        "value": 51
+      },
+      {
+        "type": 88,
+        "unit": 0,
+        "value": 11
+      },
+      {
+        "type": 4,
+        "unit": 0,
+        "value": 201
+      },
+      {
+        "type": 12,
+        "unit": 0,
+        "value": 41
+      },
+      {
+        "type": 71,
+        "unit": 0,
+        "value": 34
+      },
+      {
+        "type": 73,
+        "unit": 0,
+        "value": 21
+      },
+      {
+        "type": 6,
+        "unit": -3,
+        "value": 71
+      },
+      {
+        "type": 9,
+        "unit": 0,
+        "value": 71
+      },
+      {
+        "type": 10,
+        "unit": 0,
+        "value": 101
+      },
+      {
+        "type": 11,
+        "unit": 0,
+        "value": 61
+      },
+      {
+        "type": 54,
+        "unit": -2,
+        "value": 98
+      },
+      {
+        "type": 77,
+        "unit": -2,
+        "value": 96
+      },
+      {
+        "type": 91,
+        "unit": 0,
+        "value": 102
+      }
+    ],
+    "modelid": 45,
+    "model": "BPM Connect",
+    "comment": null
+  }
+]

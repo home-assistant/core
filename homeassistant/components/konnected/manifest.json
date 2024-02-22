@@ -1,16 +1,16 @@
 {
   "domain": "konnected",
   "name": "Konnected.io",
+  "codeowners": ["@heythisisnate"],
   "config_flow": true,
+  "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/konnected",
+  "iot_class": "local_push",
+  "loggers": ["konnected"],
   "requirements": ["konnected==1.2.0"],
   "ssdp": [
     {
       "manufacturer": "konnected.io"
     }
-  ],
-  "dependencies": ["http"],
-  "codeowners": ["@heythisisnate"],
-  "iot_class": "local_push",
-  "loggers": ["konnected"]
+  ]
 }

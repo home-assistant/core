@@ -48,7 +48,7 @@ async def async_setup_platform(
         [
             GeniusWaterHeater(broker, z)
             for z in broker.client.zone_objs
-            if z.data["type"] in GH_HEATERS
+            if z.data.get("type") in GH_HEATERS
         ]
     )
 

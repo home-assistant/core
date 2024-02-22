@@ -9,9 +9,8 @@ from demetriek import Device, LaMetricDevice
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -20,19 +19,12 @@ from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
 
 
-@dataclass
-class LaMetricEntityDescriptionMixin:
-    """Mixin values for LaMetric entities."""
+@dataclass(frozen=True, kw_only=True)
+class LaMetricNumberEntityDescription(NumberEntityDescription):
+    """Class describing LaMetric number entities."""
 
     value_fn: Callable[[Device], int | None]
     set_value_fn: Callable[[LaMetricDevice, float], Awaitable[Any]]
-
-
-@dataclass
-class LaMetricNumberEntityDescription(
-    NumberEntityDescription, LaMetricEntityDescriptionMixin
-):
-    """Class describing LaMetric number entities."""
 
 
 NUMBERS = [

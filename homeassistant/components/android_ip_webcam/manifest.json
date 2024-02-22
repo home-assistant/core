@@ -1,9 +1,9 @@
 {
   "domain": "android_ip_webcam",
   "name": "Android IP Webcam",
+  "codeowners": ["@engrbm87"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/android_ip_webcam",
-  "requirements": ["pydroid-ipcam==2.0.0"],
-  "codeowners": ["@engrbm87"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "requirements": ["pydroid-ipcam==2.0.0"]
 }

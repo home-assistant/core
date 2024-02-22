@@ -54,19 +54,120 @@
       "websocket_status": "Event Socket Status"
     }
   },
-  "issues": {
-    "deprecated_service": {
-      "title": "The {deprecated_service} service will be removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "The {deprecated_service} service will be removed",
-            "description": "Update any automations or scripts that use this service to instead use the `{alternate_service}` service with a target entity ID of `{alternate_target}`."
-          },
-          "deprecated_yaml": {
-            "title": "The ISY/IoX YAML configuration is being removed",
-            "description": "Configuring Universal Devices ISY/IoX using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `isy994` YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
-          }
+  "services": {
+    "send_raw_node_command": {
+      "name": "Send raw node command",
+      "description": "[%key:component::isy994::options::step::init::description%]",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "The ISY REST Command to be sent to the device."
+        },
+        "value": {
+          "name": "Value",
+          "description": "The integer value to be sent with the command."
+        },
+        "parameters": {
+          "name": "Parameters",
+          "description": "A dict of parameters to be sent in the query string (e.g. for controlling colored bulbs)."
+        },
+        "unit_of_measurement": {
+          "name": "Unit of measurement",
+          "description": "The ISY Unit of Measurement (UOM) to send with the command, if required."
+        }
+      }
+    },
+    "send_node_command": {
+      "name": "Send node command",
+      "description": "Sends a command to an ISY Device using its Home Assistant entity ID. Valid commands are: beep, brighten, dim, disable, enable, fade_down, fade_stop, fade_up, fast_off, fast_on, and query.",
+      "fields": {
+        "command": {
+          "name": "Command",
+          "description": "The command to be sent to the device."
+        }
+      }
+    },
+    "get_zwave_parameter": {
+      "name": "Get Z-Wave Parameter",
+      "description": "Requests a Z-Wave Device parameter via the ISY. The parameter value will be returned as a entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
+      "fields": {
+        "parameter": {
+          "name": "Parameter",
+          "description": "The parameter number to retrieve from the device."
+        }
+      }
+    },
+    "set_zwave_parameter": {
+      "name": "Set Z-Wave Parameter",
+      "description": "Updates a Z-Wave Device parameter via the ISY. The parameter value will also be returned as a entity extra state attribute with the name \"ZW_#\" where \"#\" is the parameter number.",
+      "fields": {
+        "parameter": {
+          "name": "[%key:component::isy994::services::get_zwave_parameter::fields::parameter::name%]",
+          "description": "The parameter number to set on the end device."
+        },
+        "value": {
+          "name": "Value",
+          "description": "The value to set for the parameter. May be an integer or byte string (e.g. \"0xFFFF\")."
+        },
+        "size": {
+          "name": "Size",
+          "description": "The size of the parameter, either 1, 2, or 4 bytes."
+        }
+      }
+    },
+    "set_zwave_lock_user_code": {
+      "name": "Set Z-Wave Lock User Code",
+      "description": "Sets a Z-Wave Lock User Code via the ISY.",
+      "fields": {
+        "user_num": {
+          "name": "User Number",
+          "description": "The user slot number on the lock."
+        },
+        "code": {
+          "name": "Code",
+          "description": "The code to set for the user."
+        }
+      }
+    },
+    "delete_zwave_lock_user_code": {
+      "name": "Delete Z-Wave Lock User Code",
+      "description": "Delete a Z-Wave Lock User Code via the ISY.",
+      "fields": {
+        "user_num": {
+          "name": "[%key:component::isy994::services::set_zwave_lock_user_code::fields::user_num::name%]",
+          "description": "[%key:component::isy994::services::set_zwave_lock_user_code::fields::user_num::description%]"
+        }
+      }
+    },
+    "rename_node": {
+      "name": "Rename Node on ISY",
+      "description": "Renames a node or group (scene) on the ISY. Note: this will not automatically change the Home Assistant Entity Name or Entity ID to match. The entity name and ID will only be updated after reloading the integration or restarting Home Assistant, and ONLY IF you have not already customized the name within Home Assistant.",
+      "fields": {
+        "name": {
+          "name": "New Name",
+          "description": "The new name to use within the ISY."
+        }
+      }
+    },
+    "send_program_command": {
+      "name": "Send program command",
+      "description": "Sends a command to control an ISY program or folder. Valid commands are run, run_then, run_else, stop, enable, disable, enable_run_at_startup, and disable_run_at_startup.",
+      "fields": {
+        "address": {
+          "name": "Address",
+          "description": "The address of the program to control (use either address or name)."
+        },
+        "name": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "description": "The name of the program to control (use either address or name)."
+        },
+        "command": {
+          "name": "Command",
+          "description": "The ISY Program Command to be sent."
+        },
+        "isy": {
+          "name": "ISY",
+          "description": "If you have more than one ISY connected, provide the name of the ISY to query (as shown on the Device Registry or as the top-first node in the ISY Admin Console).  If you have the same program name or address on multiple ISYs, omitting this will run the command on them all."
         }
       }
     }

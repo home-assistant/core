@@ -1,0 +1,6 @@
+{
+  "domain": "peco_opower",
+  "name": "PECO Energy Company (PECO)",
+  "integration_type": "virtual",
+  "supported_by": "opower"
+}

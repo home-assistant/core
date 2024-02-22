@@ -76,6 +76,9 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         self._device_name = device_name
         self._async_unsub_hook_dispatcher_connect = None
         self._events = EVENTS[device_name]
+        self._attr_unique_id = f"point.{device_id}-{device_name}"
+        self._attr_icon = DEVICES[self._device_name].get("icon")
+        self._attr_name = f"{self._name} {device_name.capitalize()}"
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to HOme Assistant."""
@@ -96,7 +99,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
             return
         if self.device_class == BinarySensorDeviceClass.CONNECTIVITY:
             # connectivity is the other way around.
-            self._attr_is_on = not (self._events[0] in self.device.ongoing_events)
+            self._attr_is_on = self._events[0] not in self.device.ongoing_events
         else:
             self._attr_is_on = self._events[0] in self.device.ongoing_events
         self.async_write_ha_state()
@@ -124,18 +127,3 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         else:
             self._attr_is_on = _is_on
         self.async_write_ha_state()
-
-    @property
-    def name(self):
-        """Return the display name of this device."""
-        return f"{self._name} {self._device_name.capitalize()}"
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return DEVICES[self._device_name].get("icon")
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return f"point.{self._id}-{self._device_name}"

@@ -1,5 +1,6 @@
 """The config flow tests for the forked_daapd media player platform."""
-from unittest.mock import AsyncMock, patch
+from ipaddress import ip_address
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -12,8 +13,11 @@ from homeassistant.components.forked_daapd.const import (
     CONF_TTS_VOLUME,
     DOMAIN,
 )
+from homeassistant.components.forked_daapd.media_player import async_setup_entry
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 
 from tests.common import MockConfigEntry
 
@@ -52,17 +56,17 @@ def config_entry_fixture():
     )
 
 
-async def test_show_form(hass):
+async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
 
-async def test_config_flow(hass, config_entry):
+async def test_config_flow(hass: HomeAssistant, config_entry) -> None:
     """Test that the user step works."""
     with patch(
         "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
@@ -94,14 +98,14 @@ async def test_config_flow(hass, config_entry):
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
-async def test_zeroconf_updates_title(hass, config_entry):
+async def test_zeroconf_updates_title(hass: HomeAssistant, config_entry) -> None:
     """Test that zeroconf updates title and aborts with same host."""
     MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "different host"}).add_to_hass(hass)
     config_entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.1",
-        addresses=["192.168.1.1"],
+        ip_address=ip_address("192.168.1.1"),
+        ip_addresses=[ip_address("192.168.1.1")],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -117,7 +121,7 @@ async def test_zeroconf_updates_title(hass, config_entry):
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
 
-async def test_config_flow_no_websocket(hass, config_entry):
+async def test_config_flow_no_websocket(hass: HomeAssistant, config_entry) -> None:
     """Test config flow setup without websocket enabled on server."""
     with patch(
         "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
@@ -131,12 +135,12 @@ async def test_config_flow_no_websocket(hass, config_entry):
         assert result["type"] == data_entry_flow.FlowResultType.FORM
 
 
-async def test_config_flow_zeroconf_invalid(hass):
+async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     """Test that an invalid zeroconf entry doesn't work."""
     # test with no discovery properties
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
-        addresses=["127.0.0.1"],
+        ip_address=ip_address("127.0.0.1"),
+        ip_addresses=[ip_address("127.0.0.1")],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -150,8 +154,8 @@ async def test_config_flow_zeroconf_invalid(hass):
     assert result["reason"] == "not_forked_daapd"
     # test with forked-daapd version < 27
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
-        addresses=["127.0.0.1"],
+        ip_address=ip_address("127.0.0.1"),
+        ip_addresses=[ip_address("127.0.0.1")],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -165,8 +169,8 @@ async def test_config_flow_zeroconf_invalid(hass):
     assert result["reason"] == "not_forked_daapd"
     # test with verbose mtd-version from Firefly
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
-        addresses=["127.0.0.1"],
+        ip_address=ip_address("127.0.0.1"),
+        ip_addresses=[ip_address("127.0.0.1")],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -180,8 +184,8 @@ async def test_config_flow_zeroconf_invalid(hass):
     assert result["reason"] == "not_forked_daapd"
     # test with svn mtd-version from Firefly
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="127.0.0.1",
-        addresses=["127.0.0.1"],
+        ip_address=ip_address("127.0.0.1"),
+        ip_addresses=[ip_address("127.0.0.1")],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -195,11 +199,11 @@ async def test_config_flow_zeroconf_invalid(hass):
     assert result["reason"] == "not_forked_daapd"
 
 
-async def test_config_flow_zeroconf_valid(hass):
+async def test_config_flow_zeroconf_valid(hass: HomeAssistant) -> None:
     """Test that a valid zeroconf entry works."""
     discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="192.168.1.1",
-        addresses=["192.168.1.1"],
+        ip_address=ip_address("192.168.1.1"),
+        ip_addresses=[ip_address("192.168.1.1")],
         hostname="mock_hostname",
         name="mock_name",
         port=23,
@@ -216,7 +220,7 @@ async def test_config_flow_zeroconf_valid(hass):
     assert result["type"] == data_entry_flow.FlowResultType.FORM
 
 
-async def test_options_flow(hass, config_entry):
+async def test_options_flow(hass: HomeAssistant, config_entry) -> None:
     """Test config flow options."""
 
     with patch(
@@ -241,3 +245,18 @@ async def test_options_flow(hass, config_entry):
             },
         )
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+
+async def test_async_setup_entry_not_ready(hass: HomeAssistant, config_entry) -> None:
+    """Test that a PlatformNotReady exception is thrown during platform setup."""
+
+    with patch(
+        "homeassistant.components.forked_daapd.media_player.ForkedDaapdAPI",
+        autospec=True,
+    ) as mock_api:
+        mock_api.return_value.get_request.return_value = None
+        config_entry.add_to_hass(hass)
+        with pytest.raises(PlatformNotReady):
+            await async_setup_entry(hass, config_entry, MagicMock())
+        await hass.async_block_till_done()
+        mock_api.return_value.get_request.assert_called_once()

@@ -13,8 +13,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -23,14 +23,14 @@ from .coordinator import AndroidIPCamDataUpdateCoordinator
 from .entity import AndroidIPCamBaseEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class AndroidIPWebcamSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[PyDroidIPCam], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AndroidIPWebcamSensorEntityDescription(
     SensorEntityDescription, AndroidIPWebcamSensorEntityDescriptionMixin
 ):

@@ -20,7 +20,7 @@ from .hardware import async_process_hardware_platforms
 from .models import HardwareProtocol
 
 
-@dataclass
+@dataclass(slots=True)
 class SystemStatus:
     """System status."""
 

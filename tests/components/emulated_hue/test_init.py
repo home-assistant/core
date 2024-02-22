@@ -1,6 +1,9 @@
 """Test the Emulated Hue component."""
 from datetime import timedelta
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
+
+from aiohttp import web
 
 from homeassistant.components.emulated_hue.config import (
     DATA_KEY,
@@ -10,13 +13,16 @@ from homeassistant.components.emulated_hue.config import (
 )
 from homeassistant.components.emulated_hue.upnp import UPNPResponderProtocol
 from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
 
 from tests.common import async_fire_time_changed
 
 
-async def test_config_google_home_entity_id_to_number(hass, hass_storage):
+async def test_config_google_home_entity_id_to_number(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test config adheres to the type."""
     conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {
@@ -47,7 +53,9 @@ async def test_config_google_home_entity_id_to_number(hass, hass_storage):
     assert entity_id == "light.test2"
 
 
-async def test_config_google_home_entity_id_to_number_altered(hass, hass_storage):
+async def test_config_google_home_entity_id_to_number_altered(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test config adheres to the type."""
     conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {
@@ -78,7 +86,9 @@ async def test_config_google_home_entity_id_to_number_altered(hass, hass_storage
     assert entity_id == "light.test2"
 
 
-async def test_config_google_home_entity_id_to_number_empty(hass, hass_storage):
+async def test_config_google_home_entity_id_to_number_empty(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test config adheres to the type."""
     conf = Config(hass, {"type": "google_home"}, "127.0.0.1")
     hass_storage[DATA_KEY] = {"version": DATA_VERSION, "key": DATA_KEY, "data": {}}
@@ -102,7 +112,7 @@ async def test_config_google_home_entity_id_to_number_empty(hass, hass_storage):
     assert entity_id == "light.test2"
 
 
-def test_config_alexa_entity_id_to_number():
+def test_config_alexa_entity_id_to_number() -> None:
     """Test config adheres to the type."""
     conf = Config(None, {"type": "alexa"}, "127.0.0.1")
 
@@ -119,7 +129,7 @@ def test_config_alexa_entity_id_to_number():
     assert entity_id == "light.test"
 
 
-async def test_setup_works(hass):
+async def test_setup_works(hass: HomeAssistant) -> None:
     """Test setup works."""
     hass.config.components.add("network")
     with patch(
@@ -127,6 +137,9 @@ async def test_setup_works(hass):
         AsyncMock(),
     ) as mock_create_upnp_datagram_endpoint, patch(
         "homeassistant.components.emulated_hue.async_get_source_ip"
+    ), patch(
+        "homeassistant.components.emulated_hue.web.TCPSite",
+        return_value=Mock(spec_set=web.TCPSite),
     ):
         mock_create_upnp_datagram_endpoint.return_value = AsyncMock(
             spec=UPNPResponderProtocol

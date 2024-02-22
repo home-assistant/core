@@ -1,0 +1,16 @@
+{
+  "productName": "Elgato Key Light Mini",
+  "hardwareBoardType": 202,
+  "hardwareRevision": 0.1,
+  "macAddress": "11:22:33:44:55:66",
+  "firmwareBuildNumber": 229,
+  "firmwareVersion": "1.0.4",
+  "serialNumber": "GW24L1A02987",
+  "displayName": "Frenck",
+  "features": ["lights"],
+  "wifi-info": {
+    "ssid": "Frenck-IoT",
+    "frequencyMHz": 2400,
+    "rssi": -41
+  }
+}

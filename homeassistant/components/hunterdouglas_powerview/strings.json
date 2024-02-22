@@ -4,21 +4,63 @@
       "user": {
         "title": "Connect to the PowerView Hub",
         "data": {
-          "host": "[%key:common::config_flow::data::ip%]"
+          "host": "[%key:common::config_flow::data::ip%]",
+          "api_version": "Hub Generation"
+        },
+        "data_description": {
+          "api_version": "API version is detectable, but you can override and force a specific version"
         }
       },
       "link": {
-        "title": "Connect to the PowerView Hub",
+        "title": "[%key:component::hunterdouglas_powerview::config::step::user::title%]",
         "description": "Do you want to set up {name} ({host})?"
       }
     },
     "flow_title": "{name} ({host})",
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unsupported_device": "Only the primary powerview hub can be added",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "button": {
+      "calibrate": {
+        "name": "Calibrate"
+      },
+      "favorite": {
+        "name": "Favorite"
+      }
+    },
+    "cover": {
+      "bottom": {
+        "name": "Bottom"
+      },
+      "top": {
+        "name": "Top"
+      },
+      "combined": {
+        "name": "Combined"
+      },
+      "front": {
+        "name": "Front"
+      },
+      "rear": {
+        "name": "Rear"
+      }
+    },
+    "select": {
+      "power_source": {
+        "name": "Power source"
+      }
+    },
+    "sensor": {
+      "signal_strength": {
+        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
+      }
     }
   }
 }

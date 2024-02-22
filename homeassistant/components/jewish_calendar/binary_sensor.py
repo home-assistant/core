@@ -22,14 +22,14 @@ import homeassistant.util.dt as dt_util
 from . import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class JewishCalendarBinarySensorMixIns(BinarySensorEntityDescription):
     """Binary Sensor description mixin class for Jewish Calendar."""
 
     is_on: Callable[..., bool] = lambda _: False
 
 
-@dataclass
+@dataclass(frozen=True)
 class JewishCalendarBinarySensorEntityDescription(
     JewishCalendarBinarySensorMixIns, BinarySensorEntityDescription
 ):
@@ -115,6 +115,13 @@ class JewishCalendarBinarySensor(BinarySensorEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         self._schedule_update()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        if self._update_unsub:
+            self._update_unsub()
+            self._update_unsub = None
+        return await super().async_will_remove_from_hass()
 
     @callback
     def _update(self, now: datetime | None = None) -> None:

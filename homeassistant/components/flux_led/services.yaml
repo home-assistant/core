@@ -1,12 +1,10 @@
 set_custom_effect:
-  description: Set a custom light effect.
   target:
     entity:
       integration: flux_led
       domain: light
   fields:
     colors:
-      description: List of colors for the custom effect (RGB). (Max 16 Colors)
       example: |
         - [255,0,0]
         - [0,255,0]
@@ -15,7 +13,6 @@ set_custom_effect:
       selector:
         object:
     speed_pct:
-      description: Effect speed for the custom effect (0-100).
       example: 80
       default: 50
       required: false
@@ -26,7 +23,6 @@ set_custom_effect:
           max: 100
           unit_of_measurement: "%"
     transition:
-      description: Effect transition.
       example: "jump"
       default: "gradual"
       required: false
@@ -37,14 +33,12 @@ set_custom_effect:
             - "jump"
             - "strobe"
 set_zones:
-  description: Set strip zones for Addressable v3 controllers (0xA3).
   target:
     entity:
       integration: flux_led
       domain: light
   fields:
     colors:
-      description: List of colors for each zone (RGB). The length of each zone is the number of pixels per segment divided by the number of colors. (Max 2048 Colors)
       example: |
         - [255,0,0]
         - [0,255,0]
@@ -54,7 +48,6 @@ set_zones:
       selector:
         object:
     speed_pct:
-      description: Effect speed for the custom effect (0-100)
       example: 80
       default: 50
       required: false
@@ -65,7 +58,6 @@ set_zones:
           max: 100
           unit_of_measurement: "%"
     effect:
-      description: Effect
       example: "running_water"
       default: "static"
       required: false
@@ -78,14 +70,12 @@ set_zones:
             - "jump"
             - "breathing"
 set_music_mode:
-  description: Configure music mode on Controller RGB with MIC (0x08), Addressable v2 (0xA2), and Addressable v3 (0xA3) devices that have a built-in microphone.
   target:
     entity:
       integration: flux_led
       domain: light
   fields:
     sensitivity:
-      description: Microphone sensitivity (0-100)
       example: 80
       default: 100
       required: false
@@ -96,7 +86,6 @@ set_music_mode:
           max: 100
           unit_of_measurement: "%"
     brightness:
-      description: Light brightness (0-100)
       example: 80
       default: 100
       required: false
@@ -107,13 +96,11 @@ set_music_mode:
           max: 100
           unit_of_measurement: "%"
     light_screen:
-      description: Light screen mode for 2 dimensional pixels (Addressable models only)
       default: false
       required: false
       selector:
         boolean:
     effect:
-      description: Effect (1-16 on Addressable models, 0-3 on RGB with MIC models)
       example: 1
       default: 1
       required: false
@@ -123,14 +110,12 @@ set_music_mode:
           step: 1
           max: 16
     foreground_color:
-      description: The foreground RGB color
       example: "[255, 100, 100]"
       required: false
       selector:
-        object:
+        color_rgb:
     background_color:
-      description: The background RGB color (Addressable models only)
       example: "[255, 100, 100]"
       required: false
       selector:
-        object:
+        color_rgb:

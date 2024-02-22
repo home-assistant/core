@@ -37,7 +37,7 @@ from homeassistant.components.smartthings.const import (
     STORAGE_VERSION,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_CLIENT_ID,
@@ -55,13 +55,13 @@ COMPONENT_PREFIX = "homeassistant.components.smartthings."
 async def setup_platform(hass, platform: str, *, devices=None, scenes=None):
     """Set up the SmartThings platform and prerequisites."""
     hass.config.components.add(DOMAIN)
-    config_entry = ConfigEntry(
-        2,
-        DOMAIN,
-        "Test",
-        {CONF_INSTALLED_APP_ID: str(uuid4())},
-        SOURCE_USER,
+    config_entry = MockConfigEntry(
+        version=2,
+        domain=DOMAIN,
+        title="Test",
+        data={CONF_INSTALLED_APP_ID: str(uuid4())},
     )
+    config_entry.add_to_hass(hass)
     broker = DeviceBroker(
         hass, config_entry, Mock(), Mock(), devices or [], scenes or []
     )

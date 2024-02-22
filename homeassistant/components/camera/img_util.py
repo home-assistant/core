@@ -70,8 +70,7 @@ def scale_jpeg_camera_image(cam_image: Image, width: int, height: int) -> bytes:
 
 
 class TurboJPEGSingleton:
-    """
-    Load TurboJPEG only once.
+    """Load TurboJPEG only once.
 
     Ensures we do not log load failures each snapshot
     since camera image fetches happen every few
@@ -99,6 +98,6 @@ class TurboJPEGSingleton:
             TurboJPEGSingleton.__instance = TurboJPEG()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
-                "Error loading libturbojpeg; Cameras may impact HomeKit performance"
+                "Error loading libturbojpeg; Camera snapshot performance will be sub-optimal"
             )
             TurboJPEGSingleton.__instance = False

@@ -4,18 +4,27 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
-from datetime import timedelta
+from datetime import datetime, timedelta
+from functools import partial
+import time
 from typing import Any, cast
 
 import jwt
 
 from homeassistant import data_entry_flow
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
-from . import auth_store, models
-from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN
+from . import auth_store, jwt_wrapper, models
+from .const import ACCESS_TOKEN_EXPIRATION, GROUP_ID_ADMIN, REFRESH_TOKEN_EXPIRATION
 from .mfa_modules import MultiFactorAuthModule, auth_mfa_module_from_config
 from .providers import AuthProvider, LoginFlow, auth_provider_from_config
 
@@ -47,6 +56,7 @@ async def auth_manager_from_config(
     mfa modules exist in configs.
     """
     store = auth_store.AuthStore(hass)
+    await store.async_load()
     if provider_configs:
         providers = await asyncio.gather(
             *(
@@ -74,6 +84,7 @@ async def auth_manager_from_config(
         module_hash[module.id] = module
 
     manager = AuthManager(hass, store, provider_hash, module_hash)
+    manager.async_setup()
     return manager
 
 
@@ -157,7 +168,22 @@ class AuthManager:
         self._providers = providers
         self._mfa_modules = mfa_modules
         self.login_flow = AuthManagerFlowManager(hass, self)
-        self._revoke_callbacks: dict[str, list[CALLBACK_TYPE]] = {}
+        self._revoke_callbacks: dict[str, set[CALLBACK_TYPE]] = {}
+        self._expire_callback: CALLBACK_TYPE | None = None
+        self._remove_expired_job = HassJob(
+            self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
+        )
+
+    @callback
+    def async_setup(self) -> None:
+        """Set up the auth manager."""
+        hass = self.hass
+        hass.async_add_shutdown_job(
+            HassJob(
+                self._async_cancel_expiration_schedule, job_type=HassJobType.Callback
+            )
+        )
+        self._async_track_next_refresh_token_expiration()
 
     @property
     def auth_providers(self) -> list[AuthProvider]:
@@ -280,7 +306,8 @@ class AuthManager:
             credentials=credentials,
             name=info.name,
             is_active=info.is_active,
-            group_ids=[GROUP_ID_ADMIN],
+            group_ids=[GROUP_ID_ADMIN if info.group is None else info.group],
+            local_only=info.local_only,
         )
 
         self.hass.bus.async_fire(EVENT_USER_ADDED, {"user_id": user.id})
@@ -422,6 +449,11 @@ class AuthManager:
             else:
                 token_type = models.TOKEN_TYPE_NORMAL
 
+        if token_type is models.TOKEN_TYPE_NORMAL:
+            expire_at = time.time() + REFRESH_TOKEN_EXPIRATION
+        else:
+            expire_at = None
+
         if user.system_generated != (token_type == models.TOKEN_TYPE_SYSTEM):
             raise ValueError(
                 "System generated users can only have system type refresh tokens"
@@ -453,30 +485,69 @@ class AuthManager:
             client_icon,
             token_type,
             access_token_expiration,
+            expire_at,
             credential,
         )
 
-    async def async_get_refresh_token(
-        self, token_id: str
-    ) -> models.RefreshToken | None:
+    @callback
+    def async_get_refresh_token(self, token_id: str) -> models.RefreshToken | None:
         """Get refresh token by id."""
-        return await self._store.async_get_refresh_token(token_id)
+        return self._store.async_get_refresh_token(token_id)
 
-    async def async_get_refresh_token_by_token(
+    @callback
+    def async_get_refresh_token_by_token(
         self, token: str
     ) -> models.RefreshToken | None:
         """Get refresh token by token."""
-        return await self._store.async_get_refresh_token_by_token(token)
+        return self._store.async_get_refresh_token_by_token(token)
 
-    async def async_remove_refresh_token(
-        self, refresh_token: models.RefreshToken
-    ) -> None:
+    @callback
+    def async_remove_refresh_token(self, refresh_token: models.RefreshToken) -> None:
         """Delete a refresh token."""
-        await self._store.async_remove_refresh_token(refresh_token)
+        self._store.async_remove_refresh_token(refresh_token)
 
-        callbacks = self._revoke_callbacks.pop(refresh_token.id, [])
+        callbacks = self._revoke_callbacks.pop(refresh_token.id, ())
         for revoke_callback in callbacks:
             revoke_callback()
+
+    @callback
+    def _async_remove_expired_refresh_tokens(self, _: datetime | None = None) -> None:
+        """Remove expired refresh tokens."""
+        now = time.time()
+        for token in self._store.async_get_refresh_tokens():
+            if (expire_at := token.expire_at) is not None and expire_at <= now:
+                self.async_remove_refresh_token(token)
+        self._async_track_next_refresh_token_expiration()
+
+    @callback
+    def _async_track_next_refresh_token_expiration(self) -> None:
+        """Initialise all token expiration scheduled tasks."""
+        next_expiration = time.time() + REFRESH_TOKEN_EXPIRATION
+        for token in self._store.async_get_refresh_tokens():
+            if (
+                expire_at := token.expire_at
+            ) is not None and expire_at < next_expiration:
+                next_expiration = expire_at
+
+        self._expire_callback = async_track_point_in_utc_time(
+            self.hass,
+            self._remove_expired_job,
+            dt_util.utc_from_timestamp(next_expiration),
+        )
+
+    @callback
+    def _async_cancel_expiration_schedule(self) -> None:
+        """Cancel tracking of expired refresh tokens."""
+        if self._expire_callback:
+            self._expire_callback()
+            self._expire_callback = None
+
+    @callback
+    def _async_unregister(
+        self, callbacks: set[CALLBACK_TYPE], callback_: CALLBACK_TYPE
+    ) -> None:
+        """Unregister a callback."""
+        callbacks.remove(callback_)
 
     @callback
     def async_register_revoke_token_callback(
@@ -484,17 +555,11 @@ class AuthManager:
     ) -> CALLBACK_TYPE:
         """Register a callback to be called when the refresh token id is revoked."""
         if refresh_token_id not in self._revoke_callbacks:
-            self._revoke_callbacks[refresh_token_id] = []
+            self._revoke_callbacks[refresh_token_id] = set()
 
         callbacks = self._revoke_callbacks[refresh_token_id]
-        callbacks.append(revoke_callback)
-
-        @callback
-        def unregister() -> None:
-            if revoke_callback in callbacks:
-                callbacks.remove(revoke_callback)
-
-        return unregister
+        callbacks.add(revoke_callback)
+        return partial(self._async_unregister, callbacks, revoke_callback)
 
     @callback
     def async_create_access_token(
@@ -505,12 +570,13 @@ class AuthManager:
 
         self._store.async_log_refresh_token_usage(refresh_token, remote_ip)
 
-        now = dt_util.utcnow()
+        now = int(time.time())
+        expire_seconds = int(refresh_token.access_token_expiration.total_seconds())
         return jwt.encode(
             {
                 "iss": refresh_token.id,
                 "iat": now,
-                "exp": now + refresh_token.access_token_expiration,
+                "exp": now + expire_seconds,
             },
             refresh_token.jwt_key,
             algorithm="HS256",
@@ -550,18 +616,15 @@ class AuthManager:
         if provider := self._async_resolve_provider(refresh_token):
             provider.async_validate_refresh_token(refresh_token, remote_ip)
 
-    async def async_validate_access_token(
-        self, token: str
-    ) -> models.RefreshToken | None:
+    @callback
+    def async_validate_access_token(self, token: str) -> models.RefreshToken | None:
         """Return refresh token if an access token is valid."""
         try:
-            unverif_claims = jwt.decode(
-                token, algorithms=["HS256"], options={"verify_signature": False}
-            )
+            unverif_claims = jwt_wrapper.unverified_hs256_token_decode(token)
         except jwt.InvalidTokenError:
             return None
 
-        refresh_token = await self.async_get_refresh_token(
+        refresh_token = self.async_get_refresh_token(
             cast(str, unverif_claims.get("iss"))
         )
 
@@ -573,7 +636,9 @@ class AuthManager:
             issuer = refresh_token.id
 
         try:
-            jwt.decode(token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"])
+            jwt_wrapper.verify_and_decode(
+                token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"]
+            )
         except jwt.InvalidTokenError:
             return None
 

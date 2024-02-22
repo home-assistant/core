@@ -1,8 +1,9 @@
 """Test Telegram broadcast."""
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test setting up Telegram broadcast."""
     assert await async_setup_component(
         hass,

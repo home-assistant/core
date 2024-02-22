@@ -30,6 +30,8 @@ async def async_setup_entry(
 class BraviaTVRemote(BraviaTVEntity, RemoteEntity):
     """Representation of a Bravia TV Remote."""
 
+    _attr_name = None
+
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""

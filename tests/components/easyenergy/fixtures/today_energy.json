@@ -1,0 +1,146 @@
+[
+  {
+    "Timestamp": "2023-01-18T23:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1349513,
+    "TariffReturn": 0.11153
+  },
+  {
+    "Timestamp": "2023-01-19T00:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1294458,
+    "TariffReturn": 0.10698
+  },
+  {
+    "Timestamp": "2023-01-19T01:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1270137,
+    "TariffReturn": 0.10497
+  },
+  {
+    "Timestamp": "2023-01-19T02:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1230812,
+    "TariffReturn": 0.10172
+  },
+  {
+    "Timestamp": "2023-01-19T03:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1297483,
+    "TariffReturn": 0.10723
+  },
+  {
+    "Timestamp": "2023-01-19T04:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1386902,
+    "TariffReturn": 0.11462
+  },
+  {
+    "Timestamp": "2023-01-19T05:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1439174,
+    "TariffReturn": 0.11894
+  },
+  {
+    "Timestamp": "2023-01-19T06:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.193479,
+    "TariffReturn": 0.1599
+  },
+  {
+    "Timestamp": "2023-01-19T07:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.19844,
+    "TariffReturn": 0.164
+  },
+  {
+    "Timestamp": "2023-01-19T08:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.2077449,
+    "TariffReturn": 0.17169
+  },
+  {
+    "Timestamp": "2023-01-19T09:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.16819,
+    "TariffReturn": 0.139
+  },
+  {
+    "Timestamp": "2023-01-19T10:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1649835,
+    "TariffReturn": 0.13635
+  },
+  {
+    "Timestamp": "2023-01-19T11:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.156816,
+    "TariffReturn": 0.1296
+  },
+  {
+    "Timestamp": "2023-01-19T12:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1873927,
+    "TariffReturn": 0.15487
+  },
+  {
+    "Timestamp": "2023-01-19T13:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1941929,
+    "TariffReturn": 0.16049
+  },
+  {
+    "Timestamp": "2023-01-19T14:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.2129116,
+    "TariffReturn": 0.17596
+  },
+  {
+    "Timestamp": "2023-01-19T15:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.2254109,
+    "TariffReturn": 0.18629
+  },
+  {
+    "Timestamp": "2023-01-19T16:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.2467674,
+    "TariffReturn": 0.20394
+  },
+  {
+    "Timestamp": "2023-01-19T17:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.2390597,
+    "TariffReturn": 0.19757
+  },
+  {
+    "Timestamp": "2023-01-19T18:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.2074303,
+    "TariffReturn": 0.17143
+  },
+  {
+    "Timestamp": "2023-01-19T19:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1815,
+    "TariffReturn": 0.15
+  },
+  {
+    "Timestamp": "2023-01-19T20:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1795761,
+    "TariffReturn": 0.14841
+  },
+  {
+    "Timestamp": "2023-01-19T21:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.1807014,
+    "TariffReturn": 0.14934
+  },
+  {
+    "Timestamp": "2023-01-19T22:00:00+00:00",
+    "SupplierId": 0,
+    "TariffUsage": 0.16819,
+    "TariffReturn": 0.139
+  }
+]

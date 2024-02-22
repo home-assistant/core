@@ -18,17 +18,16 @@ from homeassistant.const import (
     PRECISION_HALVES,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FritzboxDataUpdateCoordinator, FritzBoxDeviceEntity
+from . import FritzBoxDeviceEntity
+from .common import get_coordinator
 from .const import (
     ATTR_STATE_BATTERY_LOW,
     ATTR_STATE_HOLIDAY_MODE,
     ATTR_STATE_SUMMER_MODE,
     ATTR_STATE_WINDOW_OPEN,
-    CONF_COORDINATOR,
-    DOMAIN as FRITZBOX_DOMAIN,
 )
 from .model import ClimateExtraAttributes
 
@@ -50,17 +49,24 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
-    coordinator: FritzboxDataUpdateCoordinator = hass.data[FRITZBOX_DOMAIN][
-        entry.entry_id
-    ][CONF_COORDINATOR]
+    coordinator = get_coordinator(hass, entry.entry_id)
 
-    async_add_entities(
-        [
+    @callback
+    def _add_entities(devices: set[str] | None = None) -> None:
+        """Add devices."""
+        if devices is None:
+            devices = coordinator.new_devices
+        if not devices:
+            return
+        async_add_entities(
             FritzboxThermostat(coordinator, ain)
-            for ain, device in coordinator.data.devices.items()
-            if device.has_thermostat
-        ]
-    )
+            for ain in devices
+            if coordinator.data.devices[ain].has_thermostat
+        )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
+
+    _add_entities(set(coordinator.data.devices))
 
 
 class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
@@ -68,9 +74,13 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
 
     _attr_precision = PRECISION_HALVES
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def current_temperature(self) -> float:
@@ -101,7 +111,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
         await self.coordinator.async_refresh()
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return the current operation mode."""
         if self.data.target_temperature in (
             OFF_REPORT_SET_TEMPERATURE,

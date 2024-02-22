@@ -1,8 +1,0 @@
-{
-    "config": {
-        "error": {
-            "invalid_api_token": "Neplatn\u00fd kl\u00ed\u010d API",
-            "unknown_error": "Neo\u010dek\u00e1van\u00e1 chyba"
-        }
-    }
-}

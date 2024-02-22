@@ -13,46 +13,52 @@ from aiounifi.interfaces.api_handlers import (
     ItemEvent,
     UnsubscribeType,
 )
-from aiounifi.interfaces.outlets import Outlets
-from aiounifi.interfaces.ports import Ports
-from aiounifi.models.api import APIItem
+from aiounifi.models.api import ApiItemT
 from aiounifi.models.event import Event, EventKey
-from aiounifi.models.outlet import Outlet
-from aiounifi.models.port import Port
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceEntryType,
+    DeviceInfo,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
+from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import ATTR_MANUFACTURER
+from .const import ATTR_MANUFACTURER, DOMAIN
 
 if TYPE_CHECKING:
-    from .controller import UniFiController
+    from .hub import UnifiHub
 
-DataT = TypeVar("DataT", bound=APIItem | Outlet | Port)
-HandlerT = TypeVar("HandlerT", bound=APIHandler | Outlets | Ports)
+HandlerT = TypeVar("HandlerT", bound=APIHandler)
 SubscriptionT = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
 
 @callback
-def async_device_available_fn(controller: UniFiController, obj_id: str) -> bool:
+def async_device_available_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if device is available."""
     if "_" in obj_id:  # Sub device (outlet or port)
         obj_id = obj_id.partition("_")[0]
 
-    device = controller.api.devices[obj_id]
-    return controller.available and not device.disabled
+    device = hub.api.devices[obj_id]
+    return hub.available and not device.disabled
 
 
 @callback
-def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> DeviceInfo:
+def async_wlan_available_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if WLAN is available."""
+    wlan = hub.api.wlans[obj_id]
+    return hub.available and wlan.enabled
+
+
+@callback
+def async_device_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     """Create device registry entry for device."""
     if "_" in obj_id:  # Sub device (outlet or port)
         obj_id = obj_id.partition("_")[0]
 
-    device = api.devices[obj_id]
+    device = hub.api.devices[obj_id]
     return DeviceInfo(
         connections={(CONNECTION_NETWORK_MAC, device.mac)},
         manufacturer=ATTR_MANUFACTURER,
@@ -63,60 +69,93 @@ def async_device_device_info_fn(api: aiounifi.Controller, obj_id: str) -> Device
     )
 
 
-@dataclass
-class UnifiDescription(Generic[HandlerT, DataT]):
+@callback
+def async_wlan_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for WLAN."""
+    wlan = hub.api.wlans[obj_id]
+    return DeviceInfo(
+        entry_type=DeviceEntryType.SERVICE,
+        identifiers={(DOMAIN, wlan.id)},
+        manufacturer=ATTR_MANUFACTURER,
+        model="UniFi WLAN",
+        name=wlan.name,
+    )
+
+
+@callback
+def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
+    """Create device registry entry for client."""
+    client = hub.api.clients[obj_id]
+    return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, obj_id)},
+        default_manufacturer=client.oui,
+        default_name=client.name or client.hostname,
+    )
+
+
+@dataclass(frozen=True)
+class UnifiDescription(Generic[HandlerT, ApiItemT]):
     """Validate and load entities from different UniFi handlers."""
 
-    allowed_fn: Callable[[UniFiController, str], bool]
+    allowed_fn: Callable[[UnifiHub, str], bool]
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
-    available_fn: Callable[[UniFiController, str], bool]
-    device_info_fn: Callable[[aiounifi.Controller, str], DeviceInfo | None]
+    available_fn: Callable[[UnifiHub, str], bool]
+    device_info_fn: Callable[[UnifiHub, str], DeviceInfo | None]
     event_is_on: tuple[EventKey, ...] | None
     event_to_subscribe: tuple[EventKey, ...] | None
-    name_fn: Callable[[DataT], str | None]
-    object_fn: Callable[[aiounifi.Controller, str], DataT]
-    supported_fn: Callable[[UniFiController, str], bool | None]
-    unique_id_fn: Callable[[UniFiController, str], str]
+    name_fn: Callable[[ApiItemT], str | None]
+    object_fn: Callable[[aiounifi.Controller, str], ApiItemT]
+    should_poll: bool
+    supported_fn: Callable[[UnifiHub, str], bool | None]
+    unique_id_fn: Callable[[UnifiHub, str], str]
 
 
-@dataclass
-class UnifiEntityDescription(EntityDescription, UnifiDescription[HandlerT, DataT]):
+@dataclass(frozen=True)
+class UnifiEntityDescription(EntityDescription, UnifiDescription[HandlerT, ApiItemT]):
     """UniFi Entity Description."""
 
 
-class UnifiEntity(Entity, Generic[HandlerT, DataT]):
+class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
     """Representation of a UniFi entity."""
 
-    entity_description: UnifiEntityDescription[HandlerT, DataT]
-    _attr_should_poll = False
-
+    entity_description: UnifiEntityDescription[HandlerT, ApiItemT]
     _attr_unique_id: str
 
     def __init__(
         self,
         obj_id: str,
-        controller: UniFiController,
-        description: UnifiEntityDescription[HandlerT, DataT],
+        hub: UnifiHub,
+        description: UnifiEntityDescription[HandlerT, ApiItemT],
     ) -> None:
         """Set up UniFi switch entity."""
         self._obj_id = obj_id
-        self.controller = controller
+        self.hub = hub
         self.entity_description = description
+
+        hub.known_objects.add((description.key, obj_id))
 
         self._removed = False
 
-        self._attr_available = description.available_fn(controller, obj_id)
-        self._attr_device_info = description.device_info_fn(controller.api, obj_id)
-        self._attr_unique_id = description.unique_id_fn(controller, obj_id)
+        self._attr_available = description.available_fn(hub, obj_id)
+        self._attr_device_info = description.device_info_fn(hub, obj_id)
+        self._attr_should_poll = description.should_poll
+        self._attr_unique_id = description.unique_id_fn(hub, obj_id)
 
-        obj = description.object_fn(self.controller.api, obj_id)
+        obj = description.object_fn(self.hub.api, obj_id)
         self._attr_name = description.name_fn(obj)
         self.async_initiate_state()
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         description = self.entity_description
-        handler = description.api_handler_fn(self.controller.api)
+        handler = description.api_handler_fn(self.hub.api)
+
+        @callback
+        def unregister_object() -> None:
+            """Remove object ID from known_objects when unloaded."""
+            self.hub.known_objects.discard((description.key, self._obj_id))
+
+        self.async_on_remove(unregister_object)
 
         # New data from handler
         self.async_on_remove(
@@ -126,11 +165,11 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
             )
         )
 
-        # State change from controller or websocket
+        # State change from hub or websocket
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                self.controller.signal_reachable,
+                self.hub.signal_reachable,
                 self.async_signal_reachable_callback,
             )
         )
@@ -139,7 +178,7 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                self.controller.signal_options_update,
+                self.hub.signal_options_update,
                 self.async_signal_options_updated,
             )
         )
@@ -147,7 +186,7 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
         # Subscribe to events if defined
         if description.event_to_subscribe is not None:
             self.async_on_remove(
-                self.controller.api.events.subscribe(
+                self.hub.api.events.subscribe(
                     self.async_event_callback,
                     description.event_to_subscribe,
                 )
@@ -161,22 +200,22 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
             return
 
         description = self.entity_description
-        if not description.supported_fn(self.controller, self._obj_id):
+        if not description.supported_fn(self.hub, self._obj_id):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        self._attr_available = description.available_fn(self.controller, self._obj_id)
+        self._attr_available = description.available_fn(self.hub, self._obj_id)
         self.async_update_state(event, obj_id)
         self.async_write_ha_state()
 
     @callback
     def async_signal_reachable_callback(self) -> None:
-        """Call when controller connection state change."""
+        """Call when hub connection state change."""
         self.async_signalling_callback(ItemEvent.ADDED, self._obj_id)
 
     async def async_signal_options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
-        if not self.entity_description.allowed_fn(self.controller, self._obj_id):
+        if not self.entity_description.allowed_fn(self.hub, self._obj_id):
             await self.remove_item({self._obj_id})
 
     async def remove_item(self, keys: set) -> None:
@@ -188,6 +227,10 @@ class UnifiEntity(Entity, Generic[HandlerT, DataT]):
             er.async_get(self.hass).async_remove(self.entity_id)
         else:
             await self.async_remove(force_remove=True)
+
+    async def async_update(self) -> None:
+        """Update state if polling is configured."""
+        self.async_update_state(ItemEvent.CHANGED, self._obj_id)
 
     @callback
     def async_initiate_state(self) -> None:

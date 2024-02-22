@@ -1,9 +1,9 @@
 {
   "domain": "transport_nsw",
   "name": "Transport NSW",
-  "documentation": "https://www.home-assistant.io/integrations/transport_nsw",
-  "requirements": ["PyTransportNSW==0.1.1"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/transport_nsw",
   "iot_class": "cloud_polling",
-  "loggers": ["TransportNSW"]
+  "loggers": ["TransportNSW"],
+  "requirements": ["PyTransportNSW==0.1.1"]
 }

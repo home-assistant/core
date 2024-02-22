@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes import FritzhomeTemplate
-import requests
+from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -37,6 +37,8 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
         self.fritz: Fritzhome = hass.data[DOMAIN][self.entry.entry_id][CONF_CONNECTIONS]
         self.configuration_url = self.fritz.get_prefixed_host()
         self.has_templates = has_templates
+        self.new_devices: set[str] = set()
+        self.new_templates: set[str] = set()
 
         super().__init__(
             hass,
@@ -45,15 +47,17 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             update_interval=timedelta(seconds=30),
         )
 
+        self.data = FritzboxCoordinatorData({}, {})
+
     def _update_fritz_devices(self) -> FritzboxCoordinatorData:
         """Update all fritzbox device data."""
         try:
             self.fritz.update_devices()
             if self.has_templates:
                 self.fritz.update_templates()
-        except requests.exceptions.ConnectionError as ex:
+        except RequestConnectionError as ex:
             raise UpdateFailed from ex
-        except requests.exceptions.HTTPError:
+        except HTTPError:
             # If the device rebooted, login again
             try:
                 self.fritz.login()
@@ -86,6 +90,9 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             templates = self.fritz.get_templates()
             for template in templates:
                 template_data[template.ain] = template
+
+        self.new_devices = device_data.keys() - self.data.devices.keys()
+        self.new_templates = template_data.keys() - self.data.templates.keys()
 
         return FritzboxCoordinatorData(devices=device_data, templates=template_data)
 

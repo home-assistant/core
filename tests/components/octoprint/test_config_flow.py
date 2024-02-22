@@ -1,4 +1,5 @@
 """Test the OctoPrint config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from pyoctoprintapi import ApiError, DiscoverySettings
@@ -11,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -69,7 +70,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -94,8 +95,9 @@ async def test_form_cannot_connect(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
         )
+        await hass.async_block_till_done()
+    assert result["type"] == "progress"
 
-    assert result["type"] == "progress_done"
     with patch(
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         side_effect=ApiError,
@@ -118,7 +120,7 @@ async def test_form_cannot_connect(hass):
     assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_form_unknown_exception(hass):
+async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle a random error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -143,8 +145,9 @@ async def test_form_unknown_exception(hass):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
         )
+        await hass.async_block_till_done()
+    assert result["type"] == "progress"
 
-    assert result["type"] == "progress_done"
     with patch(
         "pyoctoprintapi.OctoprintClient.get_discovery_info",
         side_effect=Exception,
@@ -174,8 +177,8 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=80,
@@ -202,7 +205,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "progress_done"
+    assert result["type"] == "progress"
 
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
@@ -268,7 +271,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == "progress_done"
+    assert result["type"] == "progress"
 
     with patch(
         "pyoctoprintapi.OctoprintClient.get_server_info",
@@ -389,10 +392,11 @@ async def test_failed_auth(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
         )
+        await hass.async_block_till_done()
 
-    assert result["type"] == "progress_done"
+    assert result["type"] == "progress"
+
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
     assert result["type"] == "abort"
     assert result["reason"] == "auth_failed"
 
@@ -420,15 +424,16 @@ async def test_failed_auth_unexpected_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
         )
+        await hass.async_block_till_done()
 
-    assert result["type"] == "progress_done"
+    assert result["type"] == "progress"
+
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
     assert result["type"] == "abort"
     assert result["reason"] == "auth_failed"
 
 
-async def test_user_duplicate_entry(hass):
+async def test_user_duplicate_entry(hass: HomeAssistant) -> None:
     """Test that duplicate entries abort."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -496,8 +501,8 @@ async def test_duplicate_zerconf_ignored(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="192.168.1.123",
-            addresses=["192.168.1.123"],
+            ip_address=ip_address("192.168.1.123"),
+            ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
             name="mock_name",
             port=80,
@@ -535,7 +540,7 @@ async def test_duplicate_ssdp_ignored(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth_form(hass):
+async def test_reauth_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
     entry = MockConfigEntry(
         domain=DOMAIN,

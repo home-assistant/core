@@ -34,7 +34,7 @@ from .entity import ZWaveBaseEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZwaveHumidifierEntityDescriptionRequiredKeys:
     """A class for humidifier entity description required keys."""
 
@@ -48,7 +48,7 @@ class ZwaveHumidifierEntityDescriptionRequiredKeys:
     setpoint_type: HumidityControlSetpointType
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZwaveHumidifierEntityDescription(
     HumidifierEntityDescription, ZwaveHumidifierEntityDescriptionRequiredKeys
 ):
@@ -175,7 +175,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
         else:
             return
 
-        await self.info.node.async_set_value(self._current_mode, new_mode)
+        await self._async_set_value(self._current_mode, new_mode)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off device."""
@@ -192,7 +192,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
         else:
             return
 
-        await self.info.node.async_set_value(self._current_mode, new_mode)
+        await self._async_set_value(self._current_mode, new_mode)
 
     @property
     def target_humidity(self) -> int | None:
@@ -204,7 +204,7 @@ class ZWaveHumidifier(ZWaveBaseEntity, HumidifierEntity):
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self._setpoint:
-            await self.info.node.async_set_value(self._setpoint, humidity)
+            await self._async_set_value(self._setpoint, humidity)
 
     @property
     def min_humidity(self) -> int:

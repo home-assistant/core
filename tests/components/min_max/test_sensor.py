@@ -60,7 +60,9 @@ async def test_default_name_sensor(hass: HomeAssistant) -> None:
     assert entity_ids[2] == state.attributes.get("min_entity_id")
 
 
-async def test_min_sensor(hass: HomeAssistant) -> None:
+async def test_min_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the min sensor."""
     config = {
         "sensor": {
@@ -87,8 +89,7 @@ async def test_min_sensor(hass: HomeAssistant) -> None:
     assert entity_ids[2] == state.attributes.get("min_entity_id")
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("sensor.test_min")
+    entity = entity_registry.async_get("sensor.test_min")
     assert entity.unique_id == "very_unique_id"
 
 
@@ -306,14 +307,14 @@ async def test_not_enough_sensor_value(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
-    assert STATE_UNKNOWN != state.state
+    assert state.state != STATE_UNKNOWN
     assert entity_ids[1] == state.attributes.get("max_entity_id")
 
     hass.states.async_set(entity_ids[2], STATE_UNKNOWN)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.test_max")
-    assert STATE_UNKNOWN != state.state
+    assert state.state != STATE_UNKNOWN
     assert entity_ids[1] == state.attributes.get("max_entity_id")
 
     hass.states.async_set(entity_ids[1], STATE_UNAVAILABLE)
@@ -470,7 +471,9 @@ async def test_sensor_incorrect_state(
     assert "Unable to store state. Only numerical states are supported" in caplog.text
 
 
-async def test_sum_sensor(hass: HomeAssistant) -> None:
+async def test_sum_sensor(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test the sum sensor."""
     config = {
         "sensor": {
@@ -496,8 +499,7 @@ async def test_sum_sensor(hass: HomeAssistant) -> None:
     assert str(float(SUM_VALUE)) == state.state
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
-    entity_reg = er.async_get(hass)
-    entity = entity_reg.async_get("sensor.test_sum")
+    entity = entity_registry.async_get("sensor.test_sum")
     assert entity.unique_id == "very_unique_id_sum_sensor"
 
 

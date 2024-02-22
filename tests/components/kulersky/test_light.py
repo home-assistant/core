@@ -28,6 +28,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 import homeassistant.util.dt as dt_util
 
@@ -62,7 +63,7 @@ async def mock_light(hass, mock_entry):
         yield light
 
 
-async def test_init(hass, mock_light):
+async def test_init(hass: HomeAssistant, mock_light) -> None:
     """Test platform setup."""
     state = hass.states.get("light.bedroom")
     assert state.state == STATE_OFF
@@ -70,6 +71,12 @@ async def test_init(hass, mock_light):
         ATTR_FRIENDLY_NAME: "Bedroom",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
         ATTR_SUPPORTED_FEATURES: 0,
+        ATTR_COLOR_MODE: None,
+        ATTR_BRIGHTNESS: None,
+        ATTR_HS_COLOR: None,
+        ATTR_RGB_COLOR: None,
+        ATTR_XY_COLOR: None,
+        ATTR_RGBW_COLOR: None,
     }
 
     with patch.object(hass.loop, "stop"):
@@ -79,7 +86,7 @@ async def test_init(hass, mock_light):
     assert mock_light.disconnect.called
 
 
-async def test_remove_entry(hass, mock_light, mock_entry):
+async def test_remove_entry(hass: HomeAssistant, mock_light, mock_entry) -> None:
     """Test platform setup."""
     assert hass.data[DOMAIN][DATA_ADDRESSES] == {"AA:BB:CC:11:22:33"}
     assert DATA_DISCOVERY_SUBSCRIPTION in hass.data[DOMAIN]
@@ -90,7 +97,9 @@ async def test_remove_entry(hass, mock_light, mock_entry):
     assert DOMAIN not in hass.data
 
 
-async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):
+async def test_remove_entry_exceptions_caught(
+    hass: HomeAssistant, mock_light, mock_entry
+) -> None:
     """Assert that disconnect exceptions are caught."""
     mock_light.disconnect.side_effect = pykulersky.PykulerskyException("Mock error")
     await hass.config_entries.async_remove(mock_entry.entry_id)
@@ -98,7 +107,7 @@ async def test_remove_entry_exceptions_caught(hass, mock_light, mock_entry):
     assert mock_light.disconnect.called
 
 
-async def test_update_exception(hass, mock_light):
+async def test_update_exception(hass: HomeAssistant, mock_light) -> None:
     """Test platform setup."""
 
     mock_light.get_color.side_effect = pykulersky.PykulerskyException
@@ -108,7 +117,7 @@ async def test_update_exception(hass, mock_light):
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_light_turn_on(hass, mock_light):
+async def test_light_turn_on(hass: HomeAssistant, mock_light) -> None:
     """Test KulerSkyLight turn_on."""
     mock_light.get_color.return_value = (255, 255, 255, 255)
     await hass.services.async_call(
@@ -165,7 +174,7 @@ async def test_light_turn_on(hass, mock_light):
     mock_light.set_color.assert_called_with(50, 41, 0, 50)
 
 
-async def test_light_turn_off(hass, mock_light):
+async def test_light_turn_off(hass: HomeAssistant, mock_light) -> None:
     """Test KulerSkyLight turn_on."""
     mock_light.get_color.return_value = (0, 0, 0, 0)
     await hass.services.async_call(
@@ -178,7 +187,7 @@ async def test_light_turn_off(hass, mock_light):
     mock_light.set_color.assert_called_with(0, 0, 0, 0)
 
 
-async def test_light_update(hass, mock_light):
+async def test_light_update(hass: HomeAssistant, mock_light) -> None:
     """Test KulerSkyLight update."""
     utcnow = dt_util.utcnow()
 
@@ -188,6 +197,12 @@ async def test_light_update(hass, mock_light):
         ATTR_FRIENDLY_NAME: "Bedroom",
         ATTR_SUPPORTED_COLOR_MODES: [ColorMode.RGBW],
         ATTR_SUPPORTED_FEATURES: 0,
+        ATTR_COLOR_MODE: None,
+        ATTR_BRIGHTNESS: None,
+        ATTR_HS_COLOR: None,
+        ATTR_RGB_COLOR: None,
+        ATTR_RGBW_COLOR: None,
+        ATTR_XY_COLOR: None,
     }
 
     # Test an exception during discovery

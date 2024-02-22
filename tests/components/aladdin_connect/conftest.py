@@ -12,6 +12,10 @@ DEVICE_CONFIG_OPEN = {
     "link_status": "Connected",
     "serial": "12345",
     "model": "02",
+    "rssi": -67,
+    "ble_strength": 0,
+    "vendor": "GENIE",
+    "battery_level": 0,
 }
 
 
@@ -35,9 +39,9 @@ def fixture_mock_aladdinconnect_api():
         mock_opener.async_get_ble_strength = AsyncMock(return_value="-45")
         mock_opener.get_ble_strength.return_value = "-45"
         mock_opener.get_doors = AsyncMock(return_value=[DEVICE_CONFIG_OPEN])
-
+        mock_opener.doors = [DEVICE_CONFIG_OPEN]
         mock_opener.register_callback = mock.Mock(return_value=True)
         mock_opener.open_door = AsyncMock(return_value=True)
         mock_opener.close_door = AsyncMock(return_value=True)
 
-    yield mock_opener
+    return mock_opener

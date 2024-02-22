@@ -28,7 +28,11 @@ def config_fixture(hass):
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass, config):
     """Define a config entry fixture."""
-    entry = MockConfigEntry(domain=DOMAIN, data=config)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config,
+        entry_id="382cf7643f016fd48b3fe52163fe8877",
+    )
     entry.add_to_hass(hass)
     return entry
 
@@ -60,4 +64,3 @@ async def setup_config_entry_fixture(hass, config_entry, mock_aioambient):
     """Define a fixture to set up ambient_station."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    yield

@@ -1,8 +1,9 @@
 """Axis conftest."""
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from axis.rtsp import Signal, State
 import pytest
@@ -41,6 +42,16 @@ from .const import (
 from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.axis.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 # Config entry fixtures
 
 
@@ -49,6 +60,7 @@ def config_entry_fixture(hass, config, options, config_entry_version):
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=AXIS_DOMAIN,
+        entry_id="676abe5b73621446e6550a2e86ffe3dd",
         unique_id=FORMATTED_MAC,
         data=config,
         options=options,
@@ -154,7 +166,7 @@ def default_request_fixture(respx_mock):
         )
         respx.post(f"{path}/local/vmd/control.cgi").respond(json=VMD4_RESPONSE)
 
-    yield __mock_default_requests
+    return __mock_default_requests
 
 
 @pytest.fixture
@@ -187,7 +199,7 @@ async def prep_config_entry_fixture(hass, config_entry, setup_default_vapix_requ
         await hass.async_block_till_done()
         return config_entry
 
-    yield __mock_setup_config_entry
+    return __mock_setup_config_entry
 
 
 @pytest.fixture(name="setup_config_entry")
@@ -195,7 +207,7 @@ async def setup_config_entry_fixture(hass, config_entry, setup_default_vapix_req
     """Define a fixture to set up Axis network device."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    yield config_entry
+    return config_entry
 
 
 # RTSP fixtures
@@ -205,7 +217,6 @@ async def setup_config_entry_fixture(hass, config_entry, setup_default_vapix_req
 def mock_axis_rtspclient():
     """No real RTSP communication allowed."""
     with patch("axis.stream_manager.RTSPClient") as rtsp_client_mock:
-
         rtsp_client_mock.return_value.session.state = State.STOPPED
 
         async def start_stream():
@@ -283,7 +294,7 @@ def mock_rtsp_event(mock_axis_rtspclient):
 
         mock_axis_rtspclient(data=event.encode("utf-8"))
 
-    yield send_event
+    return send_event
 
 
 @pytest.fixture(autouse=True)
@@ -295,4 +306,4 @@ def mock_rtsp_signal_state(mock_axis_rtspclient):
         signal = Signal.PLAYING if connected else Signal.FAILED
         mock_axis_rtspclient(state=signal)
 
-    yield send_signal
+    return send_signal

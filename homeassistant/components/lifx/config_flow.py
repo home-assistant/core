@@ -1,7 +1,6 @@
 """Config flow flow LIFX."""
 from __future__ import annotations
 
-import asyncio
 import socket
 from typing import Any
 
@@ -18,12 +17,19 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import _LOGGER, CONF_SERIAL, DOMAIN, TARGET_ANY
+from .const import (
+    _LOGGER,
+    CONF_SERIAL,
+    DEFAULT_ATTEMPTS,
+    DOMAIN,
+    OVERALL_TIMEOUT,
+    TARGET_ANY,
+)
 from .discovery import async_discover_devices
 from .util import (
     async_entry_is_legacy,
-    async_execute_lifx,
     async_get_legacy_entry,
+    async_multi_execute_lifx_with_retries,
     formatted_serial,
     lifx_features,
     mac_matches_serial_number,
@@ -225,15 +231,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # get_version required for lifx_features()
             # get_label required to log the name of the device
             # get_group required to populate suggested areas
-            messages = await asyncio.gather(
-                *[
-                    async_execute_lifx(device.get_hostfirmware),
-                    async_execute_lifx(device.get_version),
-                    async_execute_lifx(device.get_label),
-                    async_execute_lifx(device.get_group),
-                ]
+            messages = await async_multi_execute_lifx_with_retries(
+                [
+                    device.get_hostfirmware,
+                    device.get_version,
+                    device.get_label,
+                    device.get_group,
+                ],
+                DEFAULT_ATTEMPTS,
+                OVERALL_TIMEOUT,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return None
         finally:
             connection.async_stop()

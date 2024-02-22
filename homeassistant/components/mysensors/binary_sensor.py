@@ -21,7 +21,7 @@ from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
 from .helpers import on_unload
 
 
-@dataclass
+@dataclass(frozen=True)
 class MySensorsBinarySensorDescription(BinarySensorEntityDescription):
     """Describe a MySensors binary sensor entity."""
 
@@ -95,7 +95,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsBinarySensor(mysensors.device.MySensorsEntity, BinarySensorEntity):
+class MySensorsBinarySensor(mysensors.device.MySensorsChildEntity, BinarySensorEntity):
     """Representation of a MySensors binary sensor child node."""
 
     entity_description: MySensorsBinarySensorDescription

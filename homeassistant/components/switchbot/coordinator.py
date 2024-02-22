@@ -6,7 +6,6 @@ import contextlib
 import logging
 from typing import TYPE_CHECKING
 
-import async_timeout
 import switchbot
 from switchbot import SwitchbotModel
 
@@ -66,7 +65,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         # Only poll if hass is running, we need to poll,
         # and we actually have a way to connect to the device
         return (
-            self.hass.state == CoreState.running
+            self.hass.state is CoreState.running
             and self.device.poll_needed(seconds_since_last_poll)
             and bool(
                 bluetooth.async_ble_device_from_address(
@@ -116,8 +115,8 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
 
     async def async_wait_ready(self) -> bool:
         """Wait for the device to be ready."""
-        with contextlib.suppress(asyncio.TimeoutError):
-            async with async_timeout.timeout(DEVICE_STARTUP_TIMEOUT):
+        with contextlib.suppress(TimeoutError):
+            async with asyncio.timeout(DEVICE_STARTUP_TIMEOUT):
                 await self._ready_event.wait()
                 return True
         return False

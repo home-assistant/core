@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import json
 import pathlib
-from typing import Any
+from typing import Any, Literal
 
 
 @dataclass
@@ -26,7 +26,7 @@ class Config:
 
     specific_integrations: list[pathlib.Path] | None
     root: pathlib.Path
-    action: str
+    action: Literal["validate", "generate"]
     requirements: bool
     errors: list[Error] = field(default_factory=list)
     cache: dict[str, Any] = field(default_factory=dict)
@@ -130,6 +130,7 @@ class Integration:
 
     path: pathlib.Path
     _manifest: dict[str, Any] | None = None
+    manifest_path: pathlib.Path | None = None
     errors: list[Error] = field(default_factory=list)
     warnings: list[Error] = field(default_factory=list)
     translated_name: bool = False
@@ -223,3 +224,4 @@ class Integration:
             return
 
         self._manifest = manifest
+        self.manifest_path = manifest_path

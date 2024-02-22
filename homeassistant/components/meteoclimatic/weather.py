@@ -5,22 +5,20 @@ from homeassistant.components.weather import WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import ATTRIBUTION, CONDITION_CLASSES, DOMAIN, MANUFACTURER, MODEL
+from .const import ATTRIBUTION, CONDITION_MAP, DOMAIN, MANUFACTURER, MODEL
 
 
 def format_condition(condition):
-    """Return condition from dict CONDITION_CLASSES."""
-    for key, value in CONDITION_CLASSES.items():
-        if condition in value:
-            return key
+    """Return condition from dict CONDITION_MAP."""
+    if condition in CONDITION_MAP:
+        return CONDITION_MAP[condition]
     if isinstance(condition, Condition):
         return condition.value
     return condition
@@ -38,6 +36,7 @@ async def async_setup_entry(
 class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_attribution = ATTRIBUTION
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
@@ -98,8 +97,3 @@ class MeteoclimaticWeather(CoordinatorEntity, WeatherEntity):
     def wind_bearing(self):
         """Return the wind bearing."""
         return self.coordinator.data["weather"].wind_bearing
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION

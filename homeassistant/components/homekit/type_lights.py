@@ -1,7 +1,9 @@
 """Class to hold all light accessories."""
 from __future__ import annotations
 
+from datetime import datetime
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_LIGHTBULB
 
@@ -29,7 +31,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired,
@@ -68,15 +70,22 @@ class Light(HomeAccessory):
     Currently supports: state, brightness, color temperature, rgb_color.
     """
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a new Light accessory object."""
         super().__init__(*args, category=CATEGORY_LIGHTBULB)
-
+        self._reload_on_change_attrs.extend(
+            (
+                ATTR_SUPPORTED_COLOR_MODES,
+                ATTR_MAX_COLOR_TEMP_KELVIN,
+                ATTR_MIN_COLOR_TEMP_KELVIN,
+            )
+        )
         self.chars = []
-        self._event_timer = None
-        self._pending_events = {}
+        self._event_timer: CALLBACK_TYPE | None = None
+        self._pending_events: dict[str, Any] = {}
 
         state = self.hass.states.get(self.entity_id)
+        assert state
         attributes = state.attributes
         self.color_modes = color_modes = (
             attributes.get(ATTR_SUPPORTED_COLOR_MODES) or []
@@ -134,7 +143,7 @@ class Light(HomeAccessory):
         self.async_update_state(state)
         serv_light.setter_callback = self._set_chars
 
-    def _set_chars(self, char_values):
+    def _set_chars(self, char_values: dict[str, Any]) -> None:
         _LOGGER.debug("Light _set_chars: %s", char_values)
         # Newest change always wins
         if CHAR_COLOR_TEMPERATURE in self._pending_events and (
@@ -153,14 +162,14 @@ class Light(HomeAccessory):
         )
 
     @callback
-    def _async_send_events(self, *_):
+    def _async_send_events(self, _now: datetime) -> None:
         """Process all changes at once."""
         _LOGGER.debug("Coalesced _set_chars: %s", self._pending_events)
         char_values = self._pending_events
         self._pending_events = {}
         events = []
         service = SERVICE_TURN_ON
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        params: dict[str, Any] = {ATTR_ENTITY_ID: self.entity_id}
 
         if CHAR_ON in char_values:
             if not char_values[CHAR_ON]:
@@ -225,7 +234,7 @@ class Light(HomeAccessory):
         self.async_call_service(DOMAIN, service, params, ", ".join(events))
 
     @callback
-    def async_update_state(self, new_state):
+    def async_update_state(self, new_state: State) -> None:
         """Update light after state change."""
         # Handle State
         state = new_state.state
@@ -265,8 +274,11 @@ class Light(HomeAccessory):
                 hue, saturation = color_temperature_to_hs(color_temp)
             elif color_mode == ColorMode.WHITE:
                 hue, saturation = 0, 0
+            elif hue_sat := attributes.get(ATTR_HS_COLOR):
+                hue, saturation = hue_sat
             else:
-                hue, saturation = attributes.get(ATTR_HS_COLOR, (None, None))
+                hue = None
+                saturation = None
             if isinstance(hue, (int, float)) and isinstance(saturation, (int, float)):
                 self.char_hue.set_value(round(hue, 0))
                 self.char_saturation.set_value(round(saturation, 0))

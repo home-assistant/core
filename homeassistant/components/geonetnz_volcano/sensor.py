@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
@@ -54,7 +54,7 @@ async def async_setup_entry(
 
 
 class GeonetnzVolcanoSensor(SensorEntity):
-    """This represents an external event with GeoNet NZ Volcano feed data."""
+    """Represents an external event with GeoNet NZ Volcano feed data."""
 
     _attr_should_poll = False
 
@@ -63,6 +63,7 @@ class GeonetnzVolcanoSensor(SensorEntity):
         self._config_entry_id = config_entry_id
         self._feed_manager = feed_manager
         self._external_id = external_id
+        self._attr_unique_id = f"{config_entry_id}_{external_id}"
         self._unit_system = unit_system
         self._title = None
         self._distance = None
@@ -124,9 +125,9 @@ class GeonetnzVolcanoSensor(SensorEntity):
         self._alert_level = feed_entry.alert_level
         self._activity = feed_entry.activity
         self._hazards = feed_entry.hazards
-        self._feed_last_update = dt.as_utc(last_update) if last_update else None
+        self._feed_last_update = dt_util.as_utc(last_update) if last_update else None
         self._feed_last_update_successful = (
-            dt.as_utc(last_update_successful) if last_update_successful else None
+            dt_util.as_utc(last_update_successful) if last_update_successful else None
         )
 
     @property

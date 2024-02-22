@@ -119,7 +119,7 @@ class ComponentFactory:
         if controller_config.legacy_entity_unique_id:
             component_config[CONF_LEGACY_UNIQUE_ID] = True
 
-        controller: pv.VeraController = MagicMock(spec=pv.VeraController)
+        controller: pv.VeraController = MagicMock()
         controller.base_url = component_config.get(CONF_CONTROLLER)
         controller.register = MagicMock()
         controller.start = MagicMock()

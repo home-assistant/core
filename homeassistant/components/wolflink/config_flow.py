@@ -3,8 +3,8 @@ import logging
 
 from httpcore import ConnectError
 import voluptuous as vol
-from wolf_smartset.token_auth import InvalidAuth
-from wolf_smartset.wolf_client import WolfClient
+from wolf_comm.token_auth import InvalidAuth
+from wolf_comm.wolf_client import WolfClient
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -23,7 +23,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize with empty username and password."""
         self.username = None
         self.password = None

@@ -1,5 +1,4 @@
-"""
-Provide a mock remote platform.
+"""Provide a mock remote platform.
 
 Call init before using it in your tests to ensure clean test data.
 """

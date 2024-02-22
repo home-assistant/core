@@ -11,7 +11,7 @@ from .conftest import KNXTestKit
 from tests.common import mock_restore_cache_with_extra_data
 
 
-async def test_number_set_value(hass: HomeAssistant, knx: KNXTestKit):
+async def test_number_set_value(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX number with passive_address and respond_to_read restoring state."""
     test_address = "1/1/1"
     await knx.setup_integration(
@@ -60,7 +60,7 @@ async def test_number_set_value(hass: HomeAssistant, knx: KNXTestKit):
     assert state.state == "90"
 
 
-async def test_number_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit):
+async def test_number_restore_and_respond(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX number with passive_address and respond_to_read restoring state."""
     test_address = "1/1/1"
     test_passive_address = "3/3/3"

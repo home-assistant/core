@@ -1,14 +1,40 @@
+select_first:
+  target:
+    entity:
+      domain: select
+
+select_last:
+  target:
+    entity:
+      domain: select
+
+select_next:
+  target:
+    entity:
+      domain: select
+  fields:
+    cycle:
+      default: true
+      selector:
+        boolean:
+
 select_option:
-  name: Select
-  description: Select an option of an select entity.
   target:
     entity:
       domain: select
   fields:
     option:
-      name: Option
-      description: Option to be selected.
       required: true
       example: '"Item A"'
       selector:
         text:
+
+select_previous:
+  target:
+    entity:
+      domain: select
+  fields:
+    cycle:
+      default: true
+      selector:
+        boolean:

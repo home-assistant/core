@@ -11,9 +11,8 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ValloxDataUpdateCoordinator, ValloxEntity
@@ -24,7 +23,6 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
     """Representation of a Vallox number entity."""
 
     entity_description: ValloxNumberEntityDescription
-    _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
@@ -46,9 +44,7 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
     def native_value(self) -> float | None:
         """Return the value reported by the sensor."""
         if (
-            value := self.coordinator.data.get_metric(
-                self.entity_description.metric_key
-            )
+            value := self.coordinator.data.get(self.entity_description.metric_key)
         ) is None:
             return None
 
@@ -62,14 +58,14 @@ class ValloxNumberEntity(ValloxEntity, NumberEntity):
         await self.coordinator.async_request_refresh()
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxMetricMixin:
     """Holds Vallox metric key."""
 
     metric_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxNumberEntityDescription(NumberEntityDescription, ValloxMetricMixin):
     """Describes Vallox number entity."""
 
@@ -77,7 +73,7 @@ class ValloxNumberEntityDescription(NumberEntityDescription, ValloxMetricMixin):
 NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
     ValloxNumberEntityDescription(
         key="supply_air_target_home",
-        name="Supply air temperature (Home)",
+        translation_key="supply_air_target_home",
         metric_key="A_CYC_HOME_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -88,7 +84,7 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
     ),
     ValloxNumberEntityDescription(
         key="supply_air_target_away",
-        name="Supply air temperature (Away)",
+        translation_key="supply_air_target_away",
         metric_key="A_CYC_AWAY_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -99,7 +95,7 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
     ),
     ValloxNumberEntityDescription(
         key="supply_air_target_boost",
-        name="Supply air temperature (Boost)",
+        translation_key="supply_air_target_boost",
         metric_key="A_CYC_BOOST_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,

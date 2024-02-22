@@ -1,7 +1,6 @@
 """Config flow for Xiaomi Bluetooth integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import dataclasses
 from typing import Any
@@ -54,7 +53,10 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_wait_for_full_advertisement(
         self, discovery_info: BluetoothServiceInfo, device: DeviceData
     ) -> BluetoothServiceInfo:
-        """Sometimes first advertisement we receive is blank or incomplete. Wait until we get a useful one."""
+        """Sometimes first advertisement we receive is blank or incomplete.
+
+        Wait until we get a useful one.
+        """
         if not device.pending:
             return discovery_info
 
@@ -87,15 +89,16 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovered_device = device
 
-        # Wait until we have received enough information about this device to detect its encryption type
+        # Wait until we have received enough information about
+        # this device to detect its encryption type
         try:
             self._discovery_info = await self._async_wait_for_full_advertisement(
                 discovery_info, device
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # This device might have a really long advertising interval
-            # So create a config entry for it, and if we discover it has encryption later
-            # We can do a reauth
+            # So create a config entry for it, and if we discover it has
+            # encryption later, we can do a reauth
             return await self.async_step_confirm_slow()
 
         if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
@@ -119,7 +122,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 24:
                 errors["bindkey"] = "expected_24_characters"
             else:
-                self._discovered_device.bindkey = bytes.fromhex(bindkey)
+                self._discovered_device.set_bindkey(bytes.fromhex(bindkey))
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -153,7 +156,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             if len(bindkey) != 32:
                 errors["bindkey"] = "expected_32_characters"
             else:
-                self._discovered_device.bindkey = bytes.fromhex(bindkey)
+                self._discovered_device.set_bindkey(bytes.fromhex(bindkey))
 
                 # If we got this far we already know supported will
                 # return true so we don't bother checking that again
@@ -210,15 +213,16 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self.context["title_placeholders"] = {"name": discovery.title}
 
-            # Wait until we have received enough information about this device to detect its encryption type
+            # Wait until we have received enough information about
+            # this device to detect its encryption type
             try:
                 self._discovery_info = await self._async_wait_for_full_advertisement(
                     discovery.discovery_info, discovery.device
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # This device might have a really long advertising interval
-                # So create a config entry for it, and if we discover it has encryption later
-                # We can do a reauth
+                # So create a config entry for it, and if we discover
+                # it has encryption later, we can do a reauth
                 return await self.async_step_confirm_slow()
 
             self._discovered_device = discovery.device
@@ -275,8 +279,8 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         # Otherwise there wasn't actually encryption so abort
         return self.async_abort(reason="reauth_successful")
 
-    def _async_get_or_create_entry(self, bindkey=None):
-        data = {}
+    def _async_get_or_create_entry(self, bindkey: str | None = None) -> FlowResult:
+        data: dict[str, Any] = {}
 
         if bindkey:
             data["bindkey"] = bindkey
@@ -284,15 +288,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
         if entry_id := self.context.get("entry_id"):
             entry = self.hass.config_entries.async_get_entry(entry_id)
             assert entry is not None
-
-            self.hass.config_entries.async_update_entry(entry, data=data)
-
-            # Reload the config entry to notify of updated config
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id)
-            )
-
-            return self.async_abort(reason="reauth_successful")
+            return self.async_update_reload_and_abort(entry, data=data)
 
         return self.async_create_entry(
             title=self.context["title_placeholders"]["name"],

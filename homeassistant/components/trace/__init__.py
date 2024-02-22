@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.limited_size_dict import LimitedSizeDict
 
 from . import websocket_api
 from .const import (
@@ -24,7 +25,6 @@ from .const import (
     DEFAULT_STORED_TRACES,
 )
 from .models import ActionTrace, BaseTrace, RestoredTrace
-from .utils import LimitedSizeDict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,12 +37,14 @@ TRACE_CONFIG_SCHEMA = {
     vol.Optional(CONF_STORED_TRACES, default=DEFAULT_STORED_TRACES): cv.positive_int
 }
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 TraceData = dict[str, LimitedSizeDict[str, BaseTrace]]
 
 
 @callback
 def _get_data(hass: HomeAssistant) -> TraceData:
-    return hass.data[DATA_TRACE]
+    return hass.data[DATA_TRACE]  # type: ignore[no-any-return]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

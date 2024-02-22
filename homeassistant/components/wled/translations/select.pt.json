@@ -1,8 +1,0 @@
-{
-    "state": {
-        "wled__live_override": {
-            "0": "Desligado",
-            "1": "Ligado"
-        }
-    }
-}

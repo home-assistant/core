@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors(enable_bluetooth, hass: HomeAssistant):
+async def test_sensors(enable_bluetooth: None, hass: HomeAssistant) -> None:
     """Test the Sensirion BLE sensors."""
     entry = MockConfigEntry(domain=DOMAIN, unique_id=SENSIRION_SERVICE_INFO.address)
     entry.add_to_hass(hass)

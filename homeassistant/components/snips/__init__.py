@@ -90,12 +90,9 @@ SERVICE_SCHEMA_FEEDBACK = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate Snips component."""
-    # Make sure MQTT is available and the entry is loaded
-    if not hass.config_entries.async_entries(
-        mqtt.DOMAIN
-    ) or not await hass.config_entries.async_wait_component(
-        hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    ):
+
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
         _LOGGER.error("MQTT integration is not available")
         return False
 
@@ -179,7 +176,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
-        return
 
     async def snips_say_action(call: ServiceCall) -> None:
         """Send a Snips action message."""
@@ -196,7 +192,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await mqtt.async_publish(
             hass, "hermes/dialogueManager/startSession", json.dumps(notification)
         )
-        return
 
     async def feedback_on(call: ServiceCall) -> None:
         """Turn feedback sounds on."""

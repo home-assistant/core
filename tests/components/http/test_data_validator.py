@@ -8,6 +8,8 @@ import voluptuous as vol
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
+from tests.typing import ClientSessionGenerator
+
 
 async def get_client(aiohttp_client, validator):
     """Generate a client that hits a view decorated with validator."""
@@ -25,12 +27,12 @@ async def get_client(aiohttp_client, validator):
             """Test method."""
             return b""
 
-    TestView().register(app, app.router)
+    TestView().register(app["hass"], app, app.router)
     client = await aiohttp_client(app)
     return client
 
 
-async def test_validator(aiohttp_client):
+async def test_validator(aiohttp_client: ClientSessionGenerator) -> None:
     """Test the validator."""
     client = await get_client(
         aiohttp_client, RequestDataValidator(vol.Schema({vol.Required("test"): str}))
@@ -46,7 +48,7 @@ async def test_validator(aiohttp_client):
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_validator_allow_empty(aiohttp_client):
+async def test_validator_allow_empty(aiohttp_client: ClientSessionGenerator) -> None:
     """Test the validator with empty data."""
     client = await get_client(
         aiohttp_client,

@@ -1,7 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "cloud_not_connected": "\u672a\u8fde\u63a5\u81f3 Home Assistant Cloud\u3002"
-        }
-    }
-}

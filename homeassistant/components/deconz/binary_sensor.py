@@ -24,9 +24,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.const import ATTR_TEMPERATURE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 
@@ -66,24 +65,15 @@ T = TypeVar(
 )
 
 
-@dataclass
-class DeconzBinarySensorDescriptionMixin(Generic[T]):
-    """Required values when describing secondary sensor attributes."""
-
-    update_key: str
-    value_fn: Callable[[T], bool | None]
-
-
-@dataclass
-class DeconzBinarySensorDescription(
-    BinarySensorEntityDescription,
-    DeconzBinarySensorDescriptionMixin[T],
-):
+@dataclass(frozen=True, kw_only=True)
+class DeconzBinarySensorDescription(Generic[T], BinarySensorEntityDescription):
     """Class describing deCONZ binary sensor entities."""
 
     instance_check: type[T] | None = None
     name_suffix: str = ""
     old_unique_id_suffix: str = ""
+    update_key: str
+    value_fn: Callable[[T], bool | None]
 
 
 ENTITY_DESCRIPTIONS: tuple[DeconzBinarySensorDescription, ...] = (
@@ -271,7 +261,6 @@ class DeconzBinarySensor(DeconzDevice[SensorResources], BinarySensorEntity):
             attr[ATTR_TEMPERATURE] = self._device.internal_temperature
 
         if isinstance(self._device, Presence):
-
             if self._device.dark is not None:
                 attr[ATTR_DARK] = self._device.dark
 

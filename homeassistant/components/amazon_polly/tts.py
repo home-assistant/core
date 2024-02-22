@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Final
+from typing import Any, Final
 
 import boto3
 import botocore
@@ -166,13 +166,10 @@ class AmazonPollyProvider(Provider):
     def get_tts_audio(
         self,
         message: str,
-        language: str | None = None,
-        options: dict[str, str] | None = None,
+        language: str,
+        options: dict[str, Any],
     ) -> TtsAudioType:
         """Request TTS file from Polly."""
-        if options is None or language is None:
-            _LOGGER.debug("language and/or options were missing")
-            return None, None
         voice_id = options.get(CONF_VOICE, self.default_voice)
         voice_in_dict = self.all_voices[voice_id]
         if language != voice_in_dict.get("LanguageCode"):

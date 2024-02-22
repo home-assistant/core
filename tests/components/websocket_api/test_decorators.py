@@ -1,8 +1,11 @@
 """Test decorators."""
 from homeassistant.components import http, websocket_api
+from homeassistant.core import HomeAssistant
 
 
-async def test_async_response_request_context(hass, websocket_client):
+async def test_async_response_request_context(
+    hass: HomeAssistant, websocket_client
+) -> None:
     """Test we can access current request."""
 
     def handle_request(request, connection, msg):
@@ -68,7 +71,7 @@ async def test_async_response_request_context(hass, websocket_client):
     assert msg["error"]["code"] == "not_found"
 
 
-async def test_supervisor_only(hass, websocket_client):
+async def test_supervisor_only(hass: HomeAssistant, websocket_client) -> None:
     """Test that only the Supervisor can make requests."""
 
     @websocket_api.ws_require_user(only_supervisor=True)

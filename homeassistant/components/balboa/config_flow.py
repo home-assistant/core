@@ -1,13 +1,15 @@
 """Config flow for Balboa Spa Client integration."""
 from __future__ import annotations
 
-import asyncio
+import logging
 from typing import Any
 
-from pybalboa import BalboaSpaWifi
+from pybalboa import SpaClient
+from pybalboa.exceptions import SpaConnectionError
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import exceptions
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -17,7 +19,9 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaOptionsFlowHandler,
 )
 
-from .const import _LOGGER, CONF_SYNC_TIME, DOMAIN
+from .const import CONF_SYNC_TIME, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -34,33 +38,28 @@ OPTIONS_FLOW = {
 async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     _LOGGER.debug("Attempting to connect to %s", data[CONF_HOST])
-    spa = BalboaSpaWifi(data[CONF_HOST])
-    connected = await spa.connect()
-    _LOGGER.debug("Got connected = %d", connected)
-    if not connected:
-        raise CannotConnect
+    try:
+        async with SpaClient(data[CONF_HOST]) as spa:
+            if not await spa.async_configuration_loaded():
+                raise CannotConnect
+            mac = format_mac(spa.mac_address)
+            model = spa.model
+    except SpaConnectionError as err:
+        raise CannotConnect from err
 
-    task = asyncio.create_task(spa.listen())
-    await spa.spa_configured()
-
-    mac_addr = format_mac(spa.get_macaddr())
-    model = spa.get_model_name()
-    task.cancel()
-    await spa.disconnect()
-
-    return {"title": model, "formatted_mac": mac_addr}
+    return {"title": model, "formatted_mac": mac}
 
 
-class BalboaSpaClientFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Balboa Spa Client config flow."""
 
     VERSION = 1
 
+    _host: str | None
+
     @staticmethod
     @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> SchemaOptionsFlowHandler:
+    def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 

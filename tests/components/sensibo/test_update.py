@@ -10,12 +10,12 @@ import pytest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
 
-async def test_select(
+async def test_update(
     hass: HomeAssistant,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
@@ -23,8 +23,8 @@ async def test_select(
 ) -> None:
     """Test the Sensibo update."""
 
-    state1 = hass.states.get("update.hallway_update_available")
-    state2 = hass.states.get("update.kitchen_update_available")
+    state1 = hass.states.get("update.hallway_firmware")
+    state2 = hass.states.get("update.kitchen_firmware")
     assert state1.state == STATE_ON
     assert state1.attributes["installed_version"] == "SKY30046"
     assert state1.attributes["latest_version"] == "SKY30048"
@@ -39,9 +39,9 @@ async def test_select(
     ):
         async_fire_time_changed(
             hass,
-            dt.utcnow() + timedelta(minutes=5),
+            dt_util.utcnow() + timedelta(minutes=5),
         )
         await hass.async_block_till_done()
 
-    state1 = hass.states.get("update.hallway_update_available")
+    state1 = hass.states.get("update.hallway_firmware")
     assert state1.state == STATE_OFF

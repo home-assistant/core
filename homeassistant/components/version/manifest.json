@@ -1,11 +1,11 @@
 {
   "domain": "version",
   "name": "Version",
-  "documentation": "https://www.home-assistant.io/integrations/version",
-  "requirements": ["pyhaversion==22.8.0"],
   "codeowners": ["@ludeeus"],
-  "quality_scale": "internal",
-  "iot_class": "local_push",
   "config_flow": true,
-  "loggers": ["pyhaversion"]
+  "documentation": "https://www.home-assistant.io/integrations/version",
+  "iot_class": "local_push",
+  "loggers": ["pyhaversion"],
+  "quality_scale": "internal",
+  "requirements": ["pyhaversion==22.8.0"]
 }

@@ -1,7 +1,6 @@
 """Harmony data object which contains the Harmony Client."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterable
 import logging
 
@@ -9,8 +8,9 @@ from aioharmony.const import ClientCallbackType, SendCommandDevice
 import aioharmony.exceptions as aioexc
 from aioharmony.harmonyapi import HarmonyAPI as HarmonyClient
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import ACTIVITY_POWER_OFF
 from .subscriber import HarmonySubscriberMixin
@@ -23,7 +23,9 @@ class HarmonyData(HarmonySubscriberMixin):
 
     _client: HarmonyClient
 
-    def __init__(self, hass, address: str, name: str, unique_id: str | None) -> None:
+    def __init__(
+        self, hass: HomeAssistant, address: str, name: str, unique_id: str | None
+    ) -> None:
         """Initialize a data object."""
         super().__init__(hass)
         self._name = name
@@ -42,7 +44,7 @@ class HarmonyData(HarmonySubscriberMixin):
         ]
 
     @property
-    def activity_names(self):
+    def activity_names(self) -> list[str]:
         """Names of all the remotes activities."""
         activity_infos = self.activities
         activities = [activity["label"] for activity in activity_infos]
@@ -58,7 +60,7 @@ class HarmonyData(HarmonySubscriberMixin):
         return devices
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the Harmony device's name."""
         return self._name
 
@@ -118,7 +120,7 @@ class HarmonyData(HarmonySubscriberMixin):
         connected = False
         try:
             connected = await self._client.connect()
-        except (asyncio.TimeoutError, aioexc.TimeOut) as err:
+        except (TimeoutError, aioexc.TimeOut) as err:
             await self._client.close()
             raise ConfigEntryNotReady(
                 f"{self._name}: Connection timed-out to {self._address}:8088"
@@ -135,7 +137,7 @@ class HarmonyData(HarmonySubscriberMixin):
                 f"{self._name}: Unable to connect to HUB at: {self._address}:8088"
             )
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         """Close connection on shutdown."""
         _LOGGER.debug("%s: Closing Harmony Hub", self._name)
         try:
@@ -143,7 +145,7 @@ class HarmonyData(HarmonySubscriberMixin):
         except aioexc.TimeOut:
             _LOGGER.warning("%s: Disconnect timed-out", self._name)
 
-    async def async_start_activity(self, activity: str):
+    async def async_start_activity(self, activity: str) -> None:
         """Start an activity from the Harmony device."""
 
         if not activity:
@@ -186,7 +188,7 @@ class HarmonyData(HarmonySubscriberMixin):
             _LOGGER.error("%s: Starting activity %s timed-out", self.name, activity)
             self.async_unlock_start_activity()
 
-    async def async_power_off(self):
+    async def async_power_off(self) -> None:
         """Start the PowerOff activity."""
         _LOGGER.debug("%s: Turn Off", self.name)
         try:
@@ -201,7 +203,7 @@ class HarmonyData(HarmonySubscriberMixin):
         num_repeats: int,
         delay_secs: float,
         hold_secs: float,
-    ):
+    ) -> None:
         """Send a list of commands to one device."""
         device_id = None
         if device.isdigit():
@@ -256,7 +258,7 @@ class HarmonyData(HarmonySubscriberMixin):
                 result.msg,
             )
 
-    async def change_channel(self, channel: int):
+    async def change_channel(self, channel: int) -> None:
         """Change the channel using Harmony remote."""
         _LOGGER.debug("%s: Changing channel to %s", self.name, channel)
         try:

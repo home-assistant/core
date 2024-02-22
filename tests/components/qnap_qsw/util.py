@@ -109,17 +109,17 @@ FIRMWARE_UPDATE_CHECK_MOCK = {
     API_ERROR_CODE: 200,
     API_ERROR_MESSAGE: "OK",
     API_RESULT: {
-        API_VERSION: "1.2.0",
-        API_NUMBER: "29649",
-        API_BUILD_NUMBER: "20220128",
-        API_DATE: "Fri, 28 Jan 2022 01:17:39 +0800",
+        API_VERSION: "1.3.0",
+        API_NUMBER: "527638",
+        API_BUILD_NUMBER: "20221123",
+        API_DATE: "Wed, 07, Dec 2022 16:30:00 +0800",
         API_DESCRIPTION: "",
         API_DOWNLOAD_URL: [
-            "https://download.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.2.0_S20220128_29649.img",
-            "https://eu1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.2.0_S20220128_29649.img",
-            "https://us1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.2.0_S20220128_29649.img",
+            "https://download.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.3.0_S20221123_527638.img",
+            "https://eu1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.3.0_S20221123_527638.img",
+            "https://us1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.3.0_S20221123_527638.img",
         ],
-        API_NEWER: False,
+        API_NEWER: True,
     },
 }
 

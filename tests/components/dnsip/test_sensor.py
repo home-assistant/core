@@ -5,6 +5,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from aiodns.error import DNSError
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.dnsip.const import (
     CONF_HOSTNAME,
@@ -14,10 +15,10 @@ from homeassistant.components.dnsip.const import (
     CONF_RESOLVER_IPV6,
     DOMAIN,
 )
+from homeassistant.components.dnsip.sensor import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt
 
 from . import RetrieveDNS
 
@@ -37,7 +38,7 @@ async def test_sensor(hass: HomeAssistant) -> None:
         },
         options={
             CONF_RESOLVER: "208.67.222.222",
-            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
         },
         entry_id="1",
         unique_id="home-assistant.io",
@@ -58,7 +59,9 @@ async def test_sensor(hass: HomeAssistant) -> None:
     assert state2.state == "1.2.3.4"
 
 
-async def test_sensor_no_response(hass: HomeAssistant) -> None:
+async def test_sensor_no_response(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test the DNS IP sensor with DNS error."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -71,7 +74,7 @@ async def test_sensor_no_response(hass: HomeAssistant) -> None:
         },
         options={
             CONF_RESOLVER: "208.67.222.222",
-            CONF_RESOLVER_IPV6: "2620:0:ccc::2",
+            CONF_RESOLVER_IPV6: "2620:119:53::53",
         },
         entry_id="1",
         unique_id="home-assistant.io",
@@ -95,10 +98,18 @@ async def test_sensor_no_response(hass: HomeAssistant) -> None:
         "homeassistant.components.dnsip.sensor.aiodns.DNSResolver",
         return_value=dns_mock,
     ):
-        async_fire_time_changed(
-            hass,
-            dt.utcnow() + timedelta(minutes=10),
-        )
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
+        async_fire_time_changed(hass)
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        # Allows 2 retries before going unavailable
+        state = hass.states.get("sensor.home_assistant_io")
+        assert state.state == "1.2.3.4"
+
+        freezer.tick(timedelta(seconds=SCAN_INTERVAL.seconds))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.home_assistant_io")

@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
+import PyTado
 from PyTado.interface import Tado
 import requests.exceptions
 import voluptuous as vol
@@ -15,6 +17,7 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_FALLBACK,
+    CONF_HOME_ID,
     CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
@@ -31,7 +34,9 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(
+    hass: core.HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -66,7 +71,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -105,12 +112,46 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         return await self.async_step_user()
 
-    def _username_already_configured(self, user_input):
-        """See if we already have a username matching user input configured."""
-        existing_username = {
-            entry.data[CONF_USERNAME] for entry in self._async_current_entries()
-        }
-        return user_input[CONF_USERNAME] in existing_username
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
+        """Import a config entry from configuration.yaml."""
+        _LOGGER.debug("Importing Tado from configuration.yaml")
+        username = import_config[CONF_USERNAME]
+        password = import_config[CONF_PASSWORD]
+        imported_home_id = import_config[CONF_HOME_ID]
+
+        self._async_abort_entries_match(
+            {
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_HOME_ID: imported_home_id,
+            }
+        )
+
+        try:
+            validate_result = await validate_input(
+                self.hass,
+                {
+                    CONF_USERNAME: username,
+                    CONF_PASSWORD: password,
+                },
+            )
+        except exceptions.HomeAssistantError:
+            return self.async_abort(reason="import_failed")
+        except PyTado.exceptions.TadoWrongCredentialsException:
+            return self.async_abort(reason="import_failed_invalid_auth")
+
+        home_id = validate_result[UNIQUE_ID]
+        await self.async_set_unique_id(home_id)
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=import_config[CONF_USERNAME],
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_HOME_ID: home_id,
+            },
+        )
 
     @staticmethod
     @callback
@@ -122,16 +163,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for tado."""
+    """Handle an option flow for Tado."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle options flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(data=user_input)
 
         data_schema = vol.Schema(
             {

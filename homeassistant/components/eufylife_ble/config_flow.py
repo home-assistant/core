@@ -11,10 +11,10 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_MODEL, DOMAIN
+from .const import DOMAIN
 
 
 class EufyLifeConfigFlow(ConfigFlow, domain=DOMAIN):

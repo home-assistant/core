@@ -1,6 +1,7 @@
 """Configure tests for the Google Mail integration."""
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable, Coroutine
 import time
+from typing import Any
 from unittest.mock import patch
 
 from httplib2 import Response
@@ -93,7 +94,7 @@ def mock_connection(aioclient_mock: AiohttpClientMocker) -> None:
 @pytest.fixture(name="setup_integration")
 async def mock_setup_integration(
     hass: HomeAssistant, config_entry: MockConfigEntry
-) -> Generator[ComponentSetup, None, None]:
+) -> Callable[[], Coroutine[Any, Any, None]]:
     """Fixture for setting up the component."""
     config_entry.add_to_hass(hass)
 
@@ -114,6 +115,6 @@ async def mock_setup_integration(
             ),
         ):
             assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+            await hass.async_block_till_done()
 
-    yield func
+    return func

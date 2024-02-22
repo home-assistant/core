@@ -4,9 +4,16 @@ import pytest
 from homeassistant import core
 from homeassistant.components import switch
 from homeassistant.const import CONF_PLATFORM
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import common
+
+from tests.common import (
+    MockUser,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -14,10 +21,12 @@ def entities(hass):
     """Initialize the test switch."""
     platform = getattr(hass.components, "test.switch")
     platform.init()
-    yield platform.ENTITIES
+    return platform.ENTITIES
 
 
-async def test_methods(hass, entities, enable_custom_integrations):
+async def test_methods(
+    hass: HomeAssistant, entities, enable_custom_integrations: None
+) -> None:
     """Test is_on, turn_on, turn_off methods."""
     switch_1, switch_2, switch_3 = entities
     assert await async_setup_component(
@@ -50,8 +59,11 @@ async def test_methods(hass, entities, enable_custom_integrations):
 
 
 async def test_switch_context(
-    hass, entities, hass_admin_user, enable_custom_integrations
-):
+    hass: HomeAssistant,
+    entities,
+    hass_admin_user: MockUser,
+    enable_custom_integrations: None,
+) -> None:
     """Test that switch context works."""
     assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
 
@@ -72,3 +84,19 @@ async def test_switch_context(
     assert state2 is not None
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
+
+
+def test_all() -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(switch)
+
+
+@pytest.mark.parametrize(("enum"), list(switch.SwitchDeviceClass))
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: switch.SwitchDeviceClass,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, switch, enum, "DEVICE_CLASS_", "2025.1"
+    )

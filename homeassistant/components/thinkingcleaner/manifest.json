@@ -1,9 +1,9 @@
 {
   "domain": "thinkingcleaner",
   "name": "Thinking Cleaner",
-  "documentation": "https://www.home-assistant.io/integrations/thinkingcleaner",
-  "requirements": ["pythinkingcleaner==0.0.3"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/thinkingcleaner",
   "iot_class": "local_polling",
-  "loggers": ["pythinkingcleaner"]
+  "loggers": ["pythinkingcleaner"],
+  "requirements": ["pythinkingcleaner==0.0.3"]
 }

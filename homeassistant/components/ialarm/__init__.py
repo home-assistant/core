@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from async_timeout import timeout
 from pyialarm import IAlarm
 
 from homeassistant.components.alarm_control_panel import SCAN_INTERVAL
@@ -27,9 +26,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ialarm = IAlarm(host, port)
 
     try:
-        async with timeout(10):
+        async with asyncio.timeout(10):
             mac = await hass.async_add_executor_job(ialarm.get_mac)
-    except (asyncio.TimeoutError, ConnectionError) as ex:
+    except (TimeoutError, ConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
     coordinator = IAlarmDataUpdateCoordinator(hass, ialarm, mac)
@@ -54,7 +53,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class IAlarmDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class IAlarmDataUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching iAlarm data."""
 
     def __init__(self, hass: HomeAssistant, ialarm: IAlarm, mac: str) -> None:
@@ -81,7 +80,7 @@ class IAlarmDataUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from iAlarm."""
         try:
-            async with timeout(10):
+            async with asyncio.timeout(10):
                 await self.hass.async_add_executor_job(self._update_data)
         except ConnectionError as error:
             raise UpdateFailed(error) from error

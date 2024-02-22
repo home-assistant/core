@@ -13,7 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_AZIMUTH,
-    CONF_DAMPING,
+    CONF_DAMPING_EVENING,
+    CONF_DAMPING_MORNING,
     CONF_DECLINATION,
     CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
@@ -48,7 +49,8 @@ class ForecastSolarDataUpdateCoordinator(DataUpdateCoordinator[Estimate]):
             declination=entry.options[CONF_DECLINATION],
             azimuth=(entry.options[CONF_AZIMUTH] - 180),
             kwp=(entry.options[CONF_MODULES_POWER] / 1000),
-            damping=entry.options.get(CONF_DAMPING, 0),
+            damping_morning=entry.options.get(CONF_DAMPING_MORNING, 0.0),
+            damping_evening=entry.options.get(CONF_DAMPING_EVENING, 0.0),
             inverter=inverter_size,
         )
 

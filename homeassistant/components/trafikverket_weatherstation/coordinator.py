@@ -4,11 +4,17 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from pytrafikverket.exceptions import (
+    InvalidAuthentication,
+    MultipleWeatherStationsFound,
+    NoWeatherStationFound,
+)
 from pytrafikverket.trafikverket_weather import TrafikverketWeather, WeatherStationInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -38,6 +44,8 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[WeatherStationInfo]):
         """Fetch data from Trafikverket."""
         try:
             weatherdata = await self._weather_api.async_get_weather(self._station)
-        except ValueError as error:
+        except InvalidAuthentication as error:
+            raise ConfigEntryAuthFailed from error
+        except (NoWeatherStationFound, MultipleWeatherStationsFound) as error:
             raise UpdateFailed from error
         return weatherdata

@@ -1,5 +1,5 @@
 """Tests for Shelly number platform."""
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
@@ -11,36 +11,53 @@ from homeassistant.components.number import (
 )
 from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import State
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration, register_device, register_entity
 
-from tests.common import mock_restore_cache
+from tests.common import mock_restore_cache_with_extra_data
 
 DEVICE_BLOCK_ID = 4
 
 
-async def test_block_number_update(hass, mock_block_device, monkeypatch):
+async def test_block_number_update(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test block device number update."""
+    entity_id = "number.test_name_valve_position"
     await init_integration(hass, 1, sleep_period=1000)
 
-    assert hass.states.get("number.test_name_valve_position") is None
+    assert hass.states.get(entity_id) is None
 
     # Make device online
     mock_block_device.mock_update()
     await hass.async_block_till_done()
 
-    assert hass.states.get("number.test_name_valve_position").state == "50"
+    assert hass.states.get(entity_id).state == "50"
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "valvePos", 30)
     mock_block_device.mock_update()
 
-    assert hass.states.get("number.test_name_valve_position").state == "30"
+    assert hass.states.get(entity_id).state == "30"
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == "123456789ABC-device_0-valvePos"
 
 
-async def test_block_restored_number(hass, mock_block_device, device_reg, monkeypatch):
+async def test_block_restored_number(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    device_reg: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Test block restored number."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
     register_device(device_reg, entry)
@@ -58,7 +75,14 @@ async def test_block_restored_number(hass, mock_block_device, device_reg, monkey
         entry,
         capabilities,
     )
-    mock_restore_cache(hass, [State(entity_id, "40")])
+    extra_data = {
+        "native_max_value": 100,
+        "native_min_value": 0,
+        "native_step": 1,
+        "native_unit_of_measurement": "%",
+        "native_value": "40",
+    }
+    mock_restore_cache_with_extra_data(hass, ((State(entity_id, ""), extra_data),))
 
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -74,7 +98,46 @@ async def test_block_restored_number(hass, mock_block_device, device_reg, monkey
     assert hass.states.get(entity_id).state == "50"
 
 
-async def test_block_number_set_value(hass, mock_block_device):
+async def test_block_restored_number_no_last_state(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    device_reg: DeviceRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test block restored number missing last state."""
+    entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
+    register_device(device_reg, entry)
+    capabilities = {
+        "min": 0,
+        "max": 100,
+        "step": 1,
+        "mode": "slider",
+    }
+    entity_id = register_entity(
+        hass,
+        NUMBER_DOMAIN,
+        "test_name_valve_position",
+        "device_0-valvePos",
+        entry,
+        capabilities,
+    )
+    monkeypatch.setattr(mock_block_device, "initialized", False)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    # Make device online
+    monkeypatch.setattr(mock_block_device, "initialized", True)
+    mock_block_device.mock_update()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "50"
+
+
+async def test_block_number_set_value(
+    hass: HomeAssistant, mock_block_device: Mock
+) -> None:
     """Test block device number set value."""
     await init_integration(hass, 1, sleep_period=1000)
 
@@ -94,7 +157,9 @@ async def test_block_number_set_value(hass, mock_block_device):
     )
 
 
-async def test_block_set_value_connection_error(hass, mock_block_device, monkeypatch):
+async def test_block_set_value_connection_error(
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test block device set value connection error."""
     monkeypatch.setattr(
         mock_block_device,
@@ -116,7 +181,9 @@ async def test_block_set_value_connection_error(hass, mock_block_device, monkeyp
         )
 
 
-async def test_block_set_value_auth_error(hass, mock_block_device, monkeypatch):
+async def test_block_set_value_auth_error(
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test block device set value authentication error."""
     monkeypatch.setattr(
         mock_block_device,
@@ -137,6 +204,7 @@ async def test_block_set_value_auth_error(hass, mock_block_device, monkeypatch):
         {ATTR_ENTITY_ID: "number.test_name_valve_position", ATTR_VALUE: 30},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
     assert entry.state == ConfigEntryState.LOADED
 

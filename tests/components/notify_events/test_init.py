@@ -1,9 +1,10 @@
 """The tests for notify_events."""
 from homeassistant.components.notify_events.const import DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test setup of the integration."""
     config = {"notify_events": {"token": "ABC"}}
     assert await async_setup_component(hass, DOMAIN, config)

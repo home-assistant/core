@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "services": {
+    "set_away_mode": {
+      "name": "Set away mode",
+      "description": "Sets the home/away mode for a Streamlabs Water Monitor.",
+      "fields": {
+        "away_mode": {
+          "name": "Away mode",
+          "description": "Home or away."
+        },
+        "location_id": {
+          "name": "Location ID",
+          "description": "The location ID of the Streamlabs Water Monitor."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "away_mode": {
+        "name": "Away mode"
+      }
+    },
+    "sensor": {
+      "daily_usage": {
+        "name": "Daily usage"
+      },
+      "monthly_usage": {
+        "name": "Monthly usage"
+      },
+      "yearly_usage": {
+        "name": "Yearly usage"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The Streamlabs water YAML configuration import failed",
+      "description": "Configuring Streamlabs water using YAML is being removed but there was an connection error importing your YAML configuration.\n\nEnsure connection to Streamlabs water works and restart Home Assistant to try again or remove the Streamlabs water YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "title": "The Streamlabs water YAML configuration import failed",
+      "description": "Configuring Streamlabs water using YAML is being removed but there was an unknown error when trying to import the YAML configuration.\n\nEnsure the imported configuration is correct and remove the Streamlabs water YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    }
+  }
+}

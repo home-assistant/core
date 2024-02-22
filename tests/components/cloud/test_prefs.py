@@ -1,11 +1,15 @@
 """Test Cloud preferences."""
+from typing import Any
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.cloud.prefs import STORAGE_KEY, CloudPreferences
+from homeassistant.core import HomeAssistant
 
 
-async def test_set_username(hass):
+async def test_set_username(hass: HomeAssistant) -> None:
     """Test we clear config if we set different username."""
     prefs = CloudPreferences(hass)
     await prefs.async_initialize()
@@ -21,7 +25,7 @@ async def test_set_username(hass):
     assert prefs.google_enabled
 
 
-async def test_set_username_migration(hass):
+async def test_set_username_migration(hass: HomeAssistant) -> None:
     """Test we not clear config if we had no username."""
     prefs = CloudPreferences(hass)
 
@@ -39,7 +43,9 @@ async def test_set_username_migration(hass):
     assert not prefs.google_enabled
 
 
-async def test_set_new_username(hass, hass_storage):
+async def test_set_new_username(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test if setting new username returns true."""
     hass_storage[STORAGE_KEY] = {"version": 1, "data": {"username": "old-user"}}
 
@@ -51,7 +57,9 @@ async def test_set_new_username(hass, hass_storage):
     assert await prefs.async_set_username("new-user")
 
 
-async def test_load_invalid_cloud_user(hass, hass_storage):
+async def test_load_invalid_cloud_user(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test loading cloud user with invalid storage."""
     hass_storage[STORAGE_KEY] = {"version": 1, "data": {"cloud_user": "non-existing"}}
 
@@ -70,7 +78,9 @@ async def test_load_invalid_cloud_user(hass, hass_storage):
     assert cloud_user.groups[0].id == GROUP_ID_ADMIN
 
 
-async def test_setup_remove_cloud_user(hass, hass_storage):
+async def test_setup_remove_cloud_user(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test creating and removing cloud user."""
     hass_storage[STORAGE_KEY] = {"version": 1, "data": {"cloud_user": None}}
 
@@ -90,3 +100,25 @@ async def test_setup_remove_cloud_user(hass, hass_storage):
     assert cloud_user2
     assert cloud_user2.groups[0].id == GROUP_ID_ADMIN
     assert cloud_user2.id != cloud_user.id
+
+
+@pytest.mark.parametrize(
+    ("google_assistant_users", "google_connected"),
+    [([], False), (["cloud-user"], True), (["other-user"], False)],
+)
+async def test_import_google_assistant_settings(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    google_assistant_users: list[str],
+    google_connected: bool,
+) -> None:
+    """Test importing from the google assistant store."""
+    hass_storage[STORAGE_KEY] = {"version": 1, "data": {"username": "cloud-user"}}
+
+    with patch(
+        "homeassistant.components.cloud.prefs.async_get_google_assistant_users"
+    ) as mock_get_users:
+        mock_get_users.return_value = google_assistant_users
+        prefs = CloudPreferences(hass)
+        await prefs.async_initialize()
+        assert prefs.google_connected == google_connected

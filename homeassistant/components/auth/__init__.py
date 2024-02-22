@@ -127,6 +127,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from http import HTTPStatus
+from logging import getLogger
 from typing import Any, cast
 import uuid
 
@@ -138,6 +139,7 @@ from homeassistant.auth import InvalidAuthError
 from homeassistant.auth.models import (
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
     Credentials,
+    RefreshToken,
     User,
 )
 from homeassistant.components import websocket_api
@@ -149,6 +151,7 @@ from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -160,6 +163,8 @@ DOMAIN = "auth"
 
 StoreResultType = Callable[[str, Credentials], str]
 RetrieveResultType = Callable[[str, str], Credentials | None]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @bind_hass
@@ -185,6 +190,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_create_long_lived_access_token)
     websocket_api.async_register_command(hass, websocket_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_delete_refresh_token)
+    websocket_api.async_register_command(hass, websocket_delete_all_refresh_tokens)
     websocket_api.async_register_command(hass, websocket_sign_path)
 
     await login_flow.async_setup(hass, store_result)
@@ -213,12 +219,12 @@ class RevokeTokenView(HomeAssistantView):
         if (token := data.get("token")) is None:
             return web.Response(status=HTTPStatus.OK)
 
-        refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
+        refresh_token = hass.auth.async_get_refresh_token_by_token(token)
 
         if refresh_token is None:
             return web.Response(status=HTTPStatus.OK)
 
-        await hass.auth.async_remove_refresh_token(refresh_token)
+        hass.auth.async_remove_refresh_token(refresh_token)
         return web.Response(status=HTTPStatus.OK)
 
 
@@ -348,7 +354,7 @@ class TokenView(HomeAssistantView):
                 {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
             )
 
-        refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
+        refresh_token = hass.auth.async_get_refresh_token_by_token(token)
 
         if refresh_token is None:
             return self.json(
@@ -438,7 +444,7 @@ def _create_auth_code_store() -> tuple[StoreResultType, RetrieveResultType]:
     def store_result(client_id: str, result: Credentials) -> str:
         """Store flow result and return a code to retrieve it."""
         if not isinstance(result, Credentials):
-            raise ValueError("result has to be a Credentials instance")
+            raise TypeError("result has to be a Credentials instance")
 
         code = uuid.uuid4().hex
         temp_results[(client_id, code)] = (
@@ -572,6 +578,7 @@ def websocket_refresh_tokens(
     connection.send_result(msg["id"], tokens)
 
 
+@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "auth/delete_refresh_token",
@@ -579,8 +586,7 @@ def websocket_refresh_tokens(
     }
 )
 @websocket_api.ws_require_user()
-@websocket_api.async_response
-async def websocket_delete_refresh_token(
+def websocket_delete_refresh_token(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle a delete refresh token request."""
@@ -590,9 +596,60 @@ async def websocket_delete_refresh_token(
         connection.send_error(msg["id"], "invalid_token_id", "Received invalid token")
         return
 
-    await hass.auth.async_remove_refresh_token(refresh_token)
+    hass.auth.async_remove_refresh_token(refresh_token)
 
     connection.send_result(msg["id"], {})
+
+
+@callback
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/delete_all_refresh_tokens",
+        vol.Optional("token_type"): cv.string,
+        vol.Optional("delete_current_token", default=True): bool,
+    }
+)
+@websocket_api.ws_require_user()
+def websocket_delete_all_refresh_tokens(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle delete all refresh tokens request."""
+    current_refresh_token: RefreshToken
+    remove_failed = False
+    token_type = msg.get("token_type")
+    delete_current_token = msg.get("delete_current_token")
+    limit_token_types = token_type is not None
+
+    for token in list(connection.user.refresh_tokens.values()):
+        if token.id == connection.refresh_token_id:
+            # Skip the current refresh token as it has revoke_callback,
+            # which cancels/closes the connection.
+            # It will be removed after sending the result.
+            current_refresh_token = token
+            continue
+        if limit_token_types and token_type != token.token_type:
+            continue
+        try:
+            hass.auth.async_remove_refresh_token(token)
+        except Exception as err:  # pylint: disable=broad-except
+            getLogger(__name__).exception(
+                "During refresh token removal, the following error occurred: %s",
+                err,
+            )
+            remove_failed = True
+
+    if remove_failed:
+        connection.send_error(
+            msg["id"], "token_removing_error", "During removal, an error was raised."
+        )
+    else:
+        connection.send_result(msg["id"], {})
+
+    if delete_current_token and (
+        not limit_token_types or current_refresh_token.token_type == token_type
+    ):
+        # This will close the connection so we need to send the result first.
+        hass.loop.call_soon(hass.auth.async_remove_refresh_token, current_refresh_token)
 
 
 @websocket_api.websocket_command(

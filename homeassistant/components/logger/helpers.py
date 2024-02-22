@@ -5,10 +5,12 @@ from collections import defaultdict
 from collections.abc import Mapping
 import contextlib
 from dataclasses import asdict, dataclass
+from enum import StrEnum
+from functools import lru_cache
 import logging
 from typing import Any, cast
 
-from homeassistant.backports.enum import StrEnum
+from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -16,7 +18,6 @@ from homeassistant.loader import IntegrationNotFound, async_get_integration
 
 from .const import (
     DOMAIN,
-    EVENT_LOGGING_CHANGED,
     LOGGER_DEFAULT,
     LOGGER_LOGS,
     LOGSEVERITY,
@@ -66,17 +67,18 @@ def _chattiest_log_level(level1: int, level2: int) -> int:
     return min(level1, level2)
 
 
-async def get_integration_loggers(hass: HomeAssistant, domain: str) -> list[str]:
+async def get_integration_loggers(hass: HomeAssistant, domain: str) -> set[str]:
     """Get loggers for an integration."""
-    loggers = [f"homeassistant.components.{domain}"]
+    loggers: set[str] = {f"homeassistant.components.{domain}"}
     with contextlib.suppress(IntegrationNotFound):
         integration = await async_get_integration(hass, domain)
+        loggers.add(integration.pkg_path)
         if integration.loggers:
-            loggers.extend(integration.loggers)
+            loggers.update(integration.loggers)
     return loggers
 
 
-@dataclass
+@dataclass(slots=True)
 class LoggerSetting:
     """Settings for a single module or integration."""
 
@@ -85,7 +87,7 @@ class LoggerSetting:
     type: str
 
 
-@dataclass
+@dataclass(slots=True)
 class LoggerDomainConfig:
     """Logger domain config."""
 
@@ -118,7 +120,7 @@ class LoggerSettings:
 
         self._yaml_config = yaml_config
         self._default_level = logging.INFO
-        if DOMAIN in yaml_config:
+        if DOMAIN in yaml_config and LOGGER_DEFAULT in yaml_config[DOMAIN]:
             self._default_level = yaml_config[DOMAIN][LOGGER_DEFAULT]
         self._store: Store[dict[str, dict[str, dict[str, Any]]]] = Store(
             hass, STORAGE_VERSION, STORAGE_KEY
@@ -188,7 +190,7 @@ class LoggerSettings:
         if settings.type == LogSettingsType.INTEGRATION:
             loggers = await get_integration_loggers(hass, domain)
         else:
-            loggers = [domain]
+            loggers = {domain}
 
         combined_logs = {logger: LOGSEVERITY[settings.level] for logger in loggers}
         # Don't override the log levels with the ones from YAML
@@ -203,7 +205,7 @@ class LoggerSettings:
             if settings.type == LogSettingsType.INTEGRATION:
                 loggers = await get_integration_loggers(hass, domain)
             else:
-                loggers = [domain]
+                loggers = {domain}
 
             for logger in loggers:
                 combined_logs[logger] = LOGSEVERITY[settings.level]
@@ -215,3 +217,11 @@ class LoggerSettings:
                 )
 
         return dict(combined_logs)
+
+
+get_logger = lru_cache(maxsize=256)(logging.getLogger)
+"""Get a logger.
+
+getLogger uses a threading.RLock, so we cache the result to avoid
+locking the threads every time the integrations page is loaded.
+"""

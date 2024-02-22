@@ -1,5 +1,4 @@
-"""
-Manage allocation of instance ID's.
+"""Manage allocation of instance ID's.
 
 HomeKit needs to allocate unique numbers to each accessory. These need to
 be stable between reboots and upgrades.
@@ -37,7 +36,7 @@ class IIDStorage(Store):
         old_major_version: int,
         old_minor_version: int,
         old_data: dict,
-    ):
+    ) -> dict:
         """Migrate to the new version."""
         if old_major_version == 1:
             # Convert v1 to v2 format which uses a unique iid set per accessory
@@ -61,8 +60,7 @@ class IIDStorage(Store):
 
 
 class AccessoryIIDStorage:
-    """
-    Provide stable allocation of IIDs for the lifetime of an accessory.
+    """Provide stable allocation of IIDs for the lifetime of an accessory.
 
     Will generate new ID's, ensure they are unique and store them to make sure they
     persist over reboots.

@@ -12,15 +12,20 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL, DEGREE, REVOLUTIONS_PER_MINUTE, UnitOfTime
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_MODEL,
+    DEGREE,
+    REVOLUTIONS_PER_MINUTE,
+    EntityCategory,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
-    CONF_DEVICE,
     CONF_FLOW_TYPE,
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
@@ -103,14 +108,14 @@ ATTR_OSCILLATION_ANGLE = "angle"
 ATTR_VOLUME = "volume"
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioNumberMixin:
     """A class that describes number entities."""
 
     method: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class XiaomiMiioNumberDescription(NumberEntityDescription, XiaomiMiioNumberMixin):
     """A class that describes number entities."""
 
@@ -287,7 +292,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Selectors from a config entry."""
     entities = []
-    if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
+    if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
     model = config_entry.data[CONF_MODEL]
     device = hass.data[DOMAIN][config_entry.entry_id][KEY_DEVICE]
@@ -412,7 +417,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
     async def async_set_fan_level(self, level: int = 1) -> bool:
         """Set the fan level."""
         return await self._try_command(
-            "Setting the favorite level of the miio device failed.",
+            "Setting the fan level of the miio device failed.",
             self._device.set_fan_level,
             level,
         )
@@ -436,7 +441,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         return await self._try_command(
             "Setting delay off miio device failed.",
             self._device.delay_off,
-            delay_off_countdown * 60,
+            delay_off_countdown,
         )
 
     async def async_set_led_brightness_level(self, level: int) -> bool:

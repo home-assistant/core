@@ -6,18 +6,20 @@ from unittest.mock import ANY
 import pytest
 
 from homeassistant.components.kitchen_sink import DOMAIN
-from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder import Recorder, get_instance
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
     list_statistic_ids,
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
+from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
@@ -26,7 +28,9 @@ def mock_history(hass):
     hass.config.components.add("history")
 
 
-async def test_demo_statistics(recorder_mock, mock_history, hass):
+async def test_demo_statistics(
+    recorder_mock: Recorder, mock_history, hass: HomeAssistant
+) -> None:
     """Test that the kitchen sink component makes some statistics available."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -58,7 +62,9 @@ async def test_demo_statistics(recorder_mock, mock_history, hass):
     } in statistic_ids
 
 
-async def test_demo_statistics_growth(recorder_mock, mock_history, hass):
+async def test_demo_statistics_growth(
+    recorder_mock: Recorder, mock_history, hass: HomeAssistant
+) -> None:
     """Test that the kitchen sink sum statistics adds to the previous state."""
     hass.config.units = US_CUSTOMARY_SYSTEM
 
@@ -96,7 +102,13 @@ async def test_demo_statistics_growth(recorder_mock, mock_history, hass):
     assert statistics[statistic_id][0]["sum"] <= (2**20 + 24)
 
 
-async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
+@pytest.mark.freeze_time("2023-10-21")
+async def test_issues_created(
+    mock_history,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
     """Test issues are created and can be fixed."""
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -114,7 +126,7 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
         "issues": [
             {
                 "breaks_in_ha_version": "2023.1.1",
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -128,7 +140,7 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
             },
             {
                 "breaks_in_ha_version": "2023.1.1",
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -142,7 +154,7 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
             },
             {
                 "breaks_in_ha_version": None,
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -156,7 +168,7 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
             },
             {
                 "breaks_in_ha_version": None,
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -170,7 +182,7 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
             },
             {
                 "breaks_in_ha_version": None,
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "is_fixable": True,
@@ -179,6 +191,20 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
                 "learn_more_url": None,
                 "severity": "warning",
                 "translation_key": "cold_tea",
+                "translation_placeholders": None,
+                "ignored": False,
+            },
+            {
+                "breaks_in_ha_version": None,
+                "created": "2023-10-21T00:00:00+00:00",
+                "dismissed_version": None,
+                "domain": "homeassistant",
+                "is_fixable": False,
+                "issue_domain": DOMAIN,
+                "issue_id": ANY,
+                "learn_more_url": None,
+                "severity": "error",
+                "translation_key": "config_entry_reauth",
                 "translation_placeholders": None,
                 "ignored": False,
             },
@@ -201,6 +227,7 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
         "flow_id": ANY,
         "handler": DOMAIN,
         "last_step": None,
+        "preview": None,
         "step_id": "confirm",
         "type": "form",
     }
@@ -217,6 +244,7 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": DOMAIN,
+        "minor_version": 1,
         "type": "create_entry",
         "version": 1,
     }
@@ -229,7 +257,7 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
         "issues": [
             {
                 "breaks_in_ha_version": "2023.1.1",
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -243,7 +271,7 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
             },
             {
                 "breaks_in_ha_version": None,
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -257,7 +285,7 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
             },
             {
                 "breaks_in_ha_version": None,
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -271,7 +299,7 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
             },
             {
                 "breaks_in_ha_version": None,
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "is_fixable": True,
@@ -280,6 +308,20 @@ async def test_issues_created(mock_history, hass, hass_client, hass_ws_client):
                 "learn_more_url": None,
                 "severity": "warning",
                 "translation_key": "cold_tea",
+                "translation_placeholders": None,
+                "ignored": False,
+            },
+            {
+                "breaks_in_ha_version": None,
+                "created": "2023-10-21T00:00:00+00:00",
+                "dismissed_version": None,
+                "domain": "homeassistant",
+                "is_fixable": False,
+                "issue_domain": DOMAIN,
+                "issue_id": ANY,
+                "learn_more_url": None,
+                "severity": "error",
+                "translation_key": "config_entry_reauth",
                 "translation_placeholders": None,
                 "ignored": False,
             },

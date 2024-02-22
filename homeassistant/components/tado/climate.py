@@ -44,8 +44,10 @@ from .const import (
     HA_TO_TADO_HVAC_MODE_MAP,
     HA_TO_TADO_SWING_MODE_MAP,
     ORDERED_KNOWN_TADO_MODES,
+    PRESET_AUTO,
     SIGNAL_TADO_UPDATE_RECEIVED,
-    SUPPORT_PRESET,
+    SUPPORT_PRESET_AUTO,
+    SUPPORT_PRESET_MANUAL,
     TADO_HVAC_ACTION_TO_HA_HVAC_ACTION,
     TADO_MODES_WITH_NO_TEMP_SETTING,
     TADO_SWING_OFF,
@@ -129,7 +131,10 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
     zone_type = capabilities["type"]
     support_flags = (
-        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     supported_hvac_modes = [
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_OFF],
@@ -216,6 +221,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     """Representation of a Tado climate entity."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_name = None
+    _attr_translation_key = DOMAIN
+    _available = False
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -240,19 +249,24 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self.zone_id = zone_id
         self.zone_type = zone_type
-        self._unique_id = f"{zone_type} {zone_id} {tado.home_id}"
+
+        self._attr_unique_id = f"{zone_type} {zone_id} {tado.home_id}"
+
         self._device_info = device_info
         self._device_id = self._device_info["shortSerialNo"]
 
         self._ac_device = zone_type == TYPE_AIR_CONDITIONING
-        self._supported_hvac_modes = supported_hvac_modes
-        self._supported_fan_modes = supported_fan_modes
+        self._attr_hvac_modes = supported_hvac_modes
+        self._attr_fan_modes = supported_fan_modes
         self._attr_supported_features = support_flags
-
-        self._available = False
 
         self._cur_temp = None
         self._cur_humidity = None
+        if self.supported_features & ClimateEntityFeature.SWING_MODE:
+            self._attr_swing_modes = [
+                TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_ON],
+                TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_OFF],
+            ]
 
         self._heat_min_temp = heat_min_temp
         self._heat_max_temp = heat_max_temp
@@ -270,9 +284,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_swing_mode = TADO_SWING_OFF
 
         self._tado_zone_data = None
+        self._tado_geofence_data = None
 
         self._tado_zone_temp_offset = {}
 
+        self._async_update_home_data()
         self._async_update_zone_data()
 
     async def async_added_to_hass(self) -> None:
@@ -281,22 +297,20 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self._tado.home_id, "zone", self.zone_id
-                ),
-                self._async_update_callback,
+                SIGNAL_TADO_UPDATE_RECEIVED.format(self._tado.home_id, "home", "data"),
+                self._async_update_home_callback,
             )
         )
 
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self.zone_name
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._unique_id
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_TADO_UPDATE_RECEIVED.format(
+                    self._tado.home_id, "zone", self.zone_id
+                ),
+                self._async_update_zone_callback,
+            )
+        )
 
     @property
     def current_humidity(self):
@@ -317,14 +331,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         return TADO_TO_HA_HVAC_MODE_MAP.get(self._current_tado_hvac_mode, HVACMode.OFF)
 
     @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available hvac operation modes.
-
-        Need to be a subset of HVAC_MODES.
-        """
-        return self._supported_hvac_modes
-
-    @property
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported.
 
@@ -341,18 +347,17 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             return TADO_TO_HA_FAN_MODE_MAP.get(self._current_tado_fan_speed, FAN_AUTO)
         return None
 
-    @property
-    def fan_modes(self):
-        """List of available fan modes."""
-        return self._supported_fan_modes
-
     def set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan on/off."""
         self._control_hvac(fan_mode=HA_TO_TADO_FAN_MODE_MAP[fan_mode])
 
     @property
     def preset_mode(self):
-        """Return the current preset mode (home, away)."""
+        """Return the current preset mode (home, away or auto)."""
+
+        if "presenceLocked" in self._tado_geofence_data:
+            if not self._tado_geofence_data["presenceLocked"]:
+                return PRESET_AUTO
         if self._tado_zone_data.is_away:
             return PRESET_AWAY
         return PRESET_HOME
@@ -360,7 +365,9 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def preset_modes(self):
         """Return a list of available preset modes."""
-        return SUPPORT_PRESET
+        if self._tado.get_auto_geofencing_supported():
+            return SUPPORT_PRESET_AUTO
+        return SUPPORT_PRESET_MANUAL
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
@@ -461,16 +468,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         return TADO_TO_HA_SWING_MODE_MAP[self._current_tado_swing_mode]
 
     @property
-    def swing_modes(self):
-        """Swing modes for the device."""
-        if self.supported_features & ClimateEntityFeature.SWING_MODE:
-            return [
-                TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_ON],
-                TADO_TO_HA_SWING_MODE_MAP[TADO_SWING_OFF],
-            ]
-        return None
-
-    @property
     def extra_state_attributes(self):
         """Return temperature offset."""
         state_attr = self._tado_zone_temp_offset
@@ -507,9 +504,20 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
 
     @callback
-    def _async_update_callback(self):
+    def _async_update_zone_callback(self):
         """Load tado data and update state."""
         self._async_update_zone_data()
+        self.async_write_ha_state()
+
+    @callback
+    def _async_update_home_data(self):
+        """Load tado geofencing data into zone."""
+        self._tado_geofence_data = self._tado.data["geofence"]
+
+    @callback
+    def _async_update_home_callback(self):
+        """Load tado data and update state."""
+        self._async_update_home_data()
         self.async_write_ha_state()
 
     def _normalize_target_temp_for_hvac_mode(self):

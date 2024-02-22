@@ -1,12 +1,12 @@
 {
   "issues": {
-    "deprecated_yaml": {
-      "title": "Your manually configured MQTT {platform}(s) needs attention",
-      "description": "Manually configured MQTT {platform}(s) found under platform key `{platform}`.\n\nPlease move the configuration to the `mqtt` integration key and restart Home Assistant to fix this issue. See the [documentation]({more_info_url}), for more information."
+    "deprecation_mqtt_schema_vacuum_yaml": {
+      "title": "MQTT vacuum entities with deprecated `schema` config settings found in your configuration.yaml",
+      "description": "The `schema` setting for MQTT vacuum entities is deprecated and should be removed. Please adjust your configuration.yaml and restart Home Assistant to fix this issue."
     },
-    "deprecated_yaml_broker_settings": {
-      "title": "Deprecated MQTT settings found in `configuration.yaml`",
-      "description": "The following settings found in `configuration.yaml` were migrated to MQTT config entry and will now override the settings in `configuration.yaml`:\n`{deprecated_settings}`\n\nPlease remove these settings from `configuration.yaml` and restart Home Assistant to fix this issue. See the [documentation]({more_info_url}), for more information."
+    "invalid_platform_config": {
+      "title": "Invalid config found for mqtt {domain} item",
+      "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
     }
   },
   "config": {
@@ -31,6 +31,24 @@
           "transport": "MQTT transport",
           "ws_headers": "WebSocket headers in JSON format",
           "ws_path": "WebSocket path"
+        },
+        "data_description": {
+          "broker": "The hostname or IP address of your MQTT broker.",
+          "port": "The port your MQTT broker listens to. For example 1883.",
+          "username": "The username to login to your MQTT broker.",
+          "password": "The password to login to your MQTT broker.",
+          "advanced_options": "Enable and click `next` to set advanced options.",
+          "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
+          "client_id": "The unique ID to identify the Home Assistant MQTT API as MQTT client. It is recommended to leave this option blank.",
+          "client_cert": "The client certificate to authenticate against your MQTT broker.",
+          "client_key": "The private key file that belongs to your client certificate.",
+          "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
+          "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
+          "set_ca_cert": "Select `Auto` for automatic CA validation, or `Custom` and click `next` to set a custom CA certificate, to allow validating your MQTT brokers certificate.",
+          "set_client_cert": "Enable and click `next` to set a client certifificate and private key to authenticate against your MQTT broker.",
+          "transport": "The transport to be used for the connection to your MQTT broker.",
+          "ws_headers": "The WebSocket headers to pass through the WebSocket based connection to your MQTT broker.",
+          "ws_path": "The WebSocket path to be used for the connection to your MQTT broker."
         }
       },
       "hassio_confirm": {
@@ -38,6 +56,9 @@
         "description": "Do you want to configure Home Assistant to connect to the MQTT broker provided by the add-on {addon}?",
         "data": {
           "discovery": "Enable discovery"
+        },
+        "data_description": {
+          "discovery": "Option to enable MQTT automatic discovery."
         }
       }
     },
@@ -70,8 +91,8 @@
       "button_quintuple_press": "\"{subtype}\" quintuple clicked"
     },
     "trigger_subtype": {
-      "turn_on": "Turn on",
-      "turn_off": "Turn off",
+      "turn_on": "[%key:common::action::turn_on%]",
+      "turn_off": "[%key:common::action::turn_off%]",
       "button_1": "First button",
       "button_2": "Second button",
       "button_3": "Third button",
@@ -103,6 +124,24 @@
           "transport": "[%key:component::mqtt::config::step::broker::data::transport%]",
           "ws_headers": "[%key:component::mqtt::config::step::broker::data::ws_headers%]",
           "ws_path": "[%key:component::mqtt::config::step::broker::data::ws_path%]"
+        },
+        "data_description": {
+          "broker": "[%key:component::mqtt::config::step::broker::data_description::broker%]",
+          "port": "[%key:component::mqtt::config::step::broker::data_description::port%]",
+          "username": "[%key:component::mqtt::config::step::broker::data_description::username%]",
+          "password": "[%key:component::mqtt::config::step::broker::data_description::password%]",
+          "advanced_options": "[%key:component::mqtt::config::step::broker::data_description::advanced_options%]",
+          "certificate": "[%key:component::mqtt::config::step::broker::data_description::certificate%]",
+          "client_id": "[%key:component::mqtt::config::step::broker::data_description::client_id%]",
+          "client_cert": "[%key:component::mqtt::config::step::broker::data_description::client_cert%]",
+          "client_key": "[%key:component::mqtt::config::step::broker::data_description::client_key%]",
+          "tls_insecure": "[%key:component::mqtt::config::step::broker::data_description::tls_insecure%]",
+          "protocol": "[%key:component::mqtt::config::step::broker::data_description::protocol%]",
+          "set_ca_cert": "[%key:component::mqtt::config::step::broker::data_description::set_ca_cert%]",
+          "set_client_cert": "[%key:component::mqtt::config::step::broker::data_description::set_client_cert%]",
+          "transport": "[%key:component::mqtt::config::step::broker::data_description::transport%]",
+          "ws_headers": "[%key:component::mqtt::config::step::broker::data_description::ws_headers%]",
+          "ws_path": "[%key:component::mqtt::config::step::broker::data_description::ws_path%]"
         }
       },
       "options": {
@@ -121,6 +160,20 @@
           "will_payload": "Will message payload",
           "will_qos": "Will message QoS",
           "will_retain": "Will message retain"
+        },
+        "data_description": {
+          "discovery": "Option to enable MQTT automatic discovery.",
+          "discovery_prefix": "The prefix of configuration topics the MQTT integration will subscribe to.",
+          "birth_enable": "When set, Home Assistant will publish an online message to your MQTT broker when MQTT is ready.",
+          "birth_topic": "The MQTT topic where Home Assistant will publish a `birth` message.",
+          "birth_payload": "The `birth` message that is published when MQTT is ready and connected.",
+          "birth_qos": "The quality of service of the `birth` message that is published when MQTT is ready and connected",
+          "birth_retain": "When set, Home Assistant will retain the `birth` message published to your MQTT broker.",
+          "will_enable": "When set, Home Assistant will ask your broker to publish a `will` message when MQTT is stopped or when it looses the connection to your broker.",
+          "will_topic": "The MQTT topic your MQTT broker will publish a `will` message to.",
+          "will_payload": "The message your MQTT broker `will` publish when the MQTT integration is stopped or when the connection is lost.",
+          "will_qos": "The quality of service of the `will` message that is published by your MQTT broker.",
+          "will_retain": "When set, your MQTT broker will retain the `will` message."
         }
       }
     },
@@ -140,10 +193,67 @@
   "selector": {
     "set_ca_cert": {
       "options": {
-        "off": "Off",
+        "off": "[%key:common::state::off%]",
         "auto": "Auto",
         "custom": "Custom"
       }
+    }
+  },
+  "services": {
+    "publish": {
+      "name": "Publish",
+      "description": "Publishes a message to an MQTT topic.",
+      "fields": {
+        "topic": {
+          "name": "Topic",
+          "description": "Topic to publish to."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "The payload to publish."
+        },
+        "payload_template": {
+          "name": "Payload template",
+          "description": "Template to render as a payload value. If a payload is provided, the template is ignored."
+        },
+        "qos": {
+          "name": "QoS",
+          "description": "Quality of Service to use. 0: At most once. 1: At least once. 2: Exactly once."
+        },
+        "retain": {
+          "name": "Retain",
+          "description": "If the message should have the retain flag set. If set, the broker stores the most recent message on a topic."
+        }
+      }
+    },
+    "dump": {
+      "name": "Export",
+      "description": "Writes all messages on a specific topic into the `mqtt_dump.txt` file in your configuration folder.",
+      "fields": {
+        "topic": {
+          "name": "[%key:component::mqtt::services::publish::fields::topic::name%]",
+          "description": "Topic to listen to."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "How long we should listen for messages in seconds."
+        }
+      }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads MQTT entities from the YAML-configuration."
+    }
+  },
+  "exceptions": {
+    "invalid_platform_config": {
+      "message": "Reloading YAML config for manually configured MQTT `{domain}` item failed. See logs for more details."
+    },
+    "mqtt_not_setup_cannot_subscribe": {
+      "message": "Cannot subscribe to topic '{topic}', make sure MQTT is set up correctly."
+    },
+    "mqtt_not_setup_cannot_publish": {
+      "message": "Cannot publish to topic '{topic}', make sure MQTT is set up correctly."
     }
   }
 }

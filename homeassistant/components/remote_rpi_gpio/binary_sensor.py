@@ -11,6 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .. import remote_rpi_gpio
 from . import (
     CONF_BOUNCETIME,
     CONF_INVERT_LOGIC,
@@ -19,7 +20,6 @@ from . import (
     DEFAULT_INVERT_LOGIC,
     DEFAULT_PULL_MODE,
 )
-from .. import remote_rpi_gpio
 
 CONF_PORTS = "ports"
 

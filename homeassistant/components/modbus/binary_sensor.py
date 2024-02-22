@@ -24,7 +24,12 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .base_platform import BasePlatform
-from .const import CALL_TYPE_COIL, CALL_TYPE_DISCRETE, CONF_SLAVE_COUNT
+from .const import (
+    CALL_TYPE_COIL,
+    CALL_TYPE_DISCRETE,
+    CONF_SLAVE_COUNT,
+    CONF_VIRTUAL_COUNT,
+)
 from .modbus import ModbusHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,8 +51,10 @@ async def async_setup_platform(
     sensors: list[ModbusBinarySensor | SlaveSensor] = []
     hub = get_hub(hass, discovery_info[CONF_NAME])
     for entry in discovery_info[CONF_BINARY_SENSORS]:
-        slave_count = entry.get(CONF_SLAVE_COUNT, 0)
-        sensor = ModbusBinarySensor(hub, entry, slave_count)
+        slave_count = entry.get(CONF_SLAVE_COUNT, None) or entry.get(
+            CONF_VIRTUAL_COUNT, 0
+        )
+        sensor = ModbusBinarySensor(hass, hub, entry, slave_count)
         if slave_count > 0:
             sensors.extend(await sensor.async_setup_slaves(hass, slave_count, entry))
         sensors.append(sensor)
@@ -57,12 +64,18 @@ async def async_setup_platform(
 class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
     """Modbus binary sensor."""
 
-    def __init__(self, hub: ModbusHub, entry: dict[str, Any], slave_count: int) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        hub: ModbusHub,
+        entry: dict[str, Any],
+        slave_count: int,
+    ) -> None:
         """Initialize the Modbus binary sensor."""
         self._count = slave_count + 1
         self._coordinator: DataUpdateCoordinator[list[int] | None] | None = None
         self._result: list[int] = []
-        super().__init__(hub, entry)
+        super().__init__(hass, hub, entry)
 
     async def async_setup_slaves(
         self, hass: HomeAssistant, slave_count: int, entry: dict[str, Any]
@@ -97,19 +110,14 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         if self._call_active:
             return
         self._call_active = True
-        result = await self._hub.async_pymodbus_call(
+        result = await self._hub.async_pb_call(
             self._slave, self._address, self._count, self._input_type
         )
         self._call_active = False
         if result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
-                return
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = False
             self._result = []
         else:
-            self._lazy_errors = self._lazy_error_count
             self._attr_available = True
             if self._input_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
                 self._result = result.bits

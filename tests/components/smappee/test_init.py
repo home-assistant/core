@@ -3,11 +3,12 @@ from unittest.mock import patch
 
 from homeassistant.components.smappee.const import DOMAIN
 from homeassistant.config_entries import SOURCE_ZEROCONF
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
-async def test_unload_config_entry(hass):
+async def test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test unload config entry flow."""
     with patch("pysmappee.api.SmappeeLocalApi.logon", return_value={}), patch(
         "pysmappee.api.SmappeeLocalApi.load_advanced_config",

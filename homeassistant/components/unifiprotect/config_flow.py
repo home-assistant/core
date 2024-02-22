@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
+from pathlib import Path
 from typing import Any
 
 from aiohttp import CookieJar
@@ -28,6 +29,7 @@ from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
 )
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.network import is_ip_address
@@ -248,12 +250,14 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
             verify_ssl=verify_ssl,
+            cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect_cache")),
         )
 
         errors = {}
         nvr_data = None
         try:
-            nvr_data = await protect.get_nvr()
+            bootstrap = await protect.get_bootstrap()
+            nvr_data = bootstrap.nvr
         except NotAuthorized as ex:
             _LOGGER.debug(ex)
             errors[CONF_PASSWORD] = "invalid_auth"
@@ -268,6 +272,10 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     MIN_REQUIRED_PROTECT_V,
                 )
                 errors["base"] = "protect_version"
+
+            auth_user = bootstrap.users.get(bootstrap.auth_user_id)
+            if auth_user and auth_user.cloud_account:
+                errors["base"] = "cloud_user"
 
         return nvr_data, errors
 
@@ -292,9 +300,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # validate login data
             _, errors = await self._async_get_nvr_data(form_data)
             if not errors:
-                self.hass.config_entries.async_update_entry(self.entry, data=form_data)
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(self.entry, data=form_data)
 
         self.context["title_placeholders"] = {
             "name": self.entry.title,

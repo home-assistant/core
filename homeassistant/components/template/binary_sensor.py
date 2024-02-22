@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, Self
 
 import voluptuous as vol
 
@@ -14,9 +14,9 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -138,8 +138,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 @callback
 def _async_create_template_tracking_entities(
-    async_add_entities, hass, definitions: list[dict], unique_id_prefix: str | None
-):
+    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant,
+    definitions: list[dict],
+    unique_id_prefix: str | None,
+) -> None:
     """Create the template binary sensors."""
     sensors = []
 
@@ -191,6 +194,29 @@ async def async_setup_platform(
     )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    _options = dict(config_entry.options)
+    _options.pop("template_type")
+    validated_config = BINARY_SENSOR_SCHEMA(_options)
+    async_add_entities(
+        [BinarySensorTemplate(hass, validated_config, config_entry.entry_id)]
+    )
+
+
+@callback
+def async_create_preview_binary_sensor(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> BinarySensorTemplate:
+    """Create a preview sensor."""
+    validated_config = BINARY_SENSOR_SCHEMA(config | {CONF_NAME: name})
+    return BinarySensorTemplate(hass, validated_config, None)
+
+
 class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
     """A virtual binary sensor that triggers from another sensor."""
 
@@ -209,9 +235,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
 
-        self._device_class: BinarySensorDeviceClass | None = config.get(
-            CONF_DEVICE_CLASS
-        )
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._template = config[CONF_STATE]
         self._state: bool | None = None
         self._delay_cancel = None
@@ -221,14 +245,18 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
         self._delay_off_raw = config.get(CONF_DELAY_OFF)
 
     async def async_added_to_hass(self) -> None:
-        """Restore state and register callbacks."""
+        """Restore state."""
         if (
             (self._delay_on_raw is not None or self._delay_off_raw is not None)
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
             self._state = last_state.state == STATE_ON
+        await super().async_added_to_hass()
 
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         self.add_template_attribute("_state", self._template, None, self._update_state)
 
         if self._delay_on_raw is not None:
@@ -247,7 +275,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
                     "_delay_off", self._delay_off_raw, cv.positive_time_period
                 )
 
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
     @callback
     def _update_state(self, result):
@@ -289,11 +317,6 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._state
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass | None:
-        """Return the sensor class of the binary sensor."""
-        return self._device_class
 
 
 class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity):
@@ -470,7 +493,7 @@ class AutoOffExtraStoredData(ExtraStoredData):
         }
 
     @classmethod
-    def from_dict(cls, restored: dict[str, Any]) -> AutoOffExtraStoredData | None:
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored binary sensor state from a dict."""
         try:
             auto_off_time = restored["auto_off_time"]

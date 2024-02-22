@@ -1,0 +1,111 @@
+get_items:
+  target:
+    entity:
+      domain: todo
+  fields:
+    status:
+      example: "needs_action"
+      default: needs_action
+      selector:
+        select:
+          translation_key: status
+          options:
+            - needs_action
+            - completed
+          multiple: true
+add_item:
+  target:
+    entity:
+      domain: todo
+      supported_features:
+        - todo.TodoListEntityFeature.CREATE_TODO_ITEM
+  fields:
+    item:
+      required: true
+      example: "Submit income tax return"
+      selector:
+        text:
+    due_date:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+      example: "2023-11-17"
+      selector:
+        date:
+    due_datetime:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
+      example: "2023-11-17 13:30:00"
+      selector:
+        datetime:
+    description:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+      example: "A more complete description of the to-do item than that provided by the summary."
+      selector:
+        text:
+update_item:
+  target:
+    entity:
+      domain: todo
+      supported_features:
+        - todo.TodoListEntityFeature.UPDATE_TODO_ITEM
+  fields:
+    item:
+      required: true
+      example: "Submit income tax return"
+      selector:
+        text:
+    rename:
+      example: "Something else"
+      selector:
+        text:
+    status:
+      example: "needs_action"
+      selector:
+        select:
+          translation_key: status
+          options:
+            - needs_action
+            - completed
+    due_date:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
+      example: "2023-11-17"
+      selector:
+        date:
+    due_datetime:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
+      example: "2023-11-17 13:30:00"
+      selector:
+        datetime:
+    description:
+      filter:
+        supported_features:
+          - todo.TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+      example: "A more complete description of the to-do item than that provided by the summary."
+      selector:
+        text:
+remove_item:
+  target:
+    entity:
+      domain: todo
+      supported_features:
+        - todo.TodoListEntityFeature.DELETE_TODO_ITEM
+  fields:
+    item:
+      required: true
+      selector:
+        text:
+
+remove_completed_items:
+  target:
+    entity:
+      domain: todo
+      supported_features:
+        - todo.TodoListEntityFeature.DELETE_TODO_ITEM

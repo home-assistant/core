@@ -1,9 +1,10 @@
 {
   "domain": "lastfm",
   "name": "Last.fm",
+  "codeowners": ["@joostlek"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lastfm",
-  "requirements": ["pylast==4.2.1"],
-  "codeowners": [],
   "iot_class": "cloud_polling",
-  "loggers": ["pylast"]
+  "loggers": ["pylast"],
+  "requirements": ["pylast==5.1.0"]
 }

@@ -1,6 +1,7 @@
 """The AccuWeather component."""
 from __future__ import annotations
 
+from asyncio import timeout
 from datetime import timedelta
 import logging
 from typing import Any
@@ -8,16 +9,15 @@ from typing import Any
 from accuweather import AccuWeather, ApiError, InvalidApiKeyError, RequestsExceededError
 from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import ATTR_FORECAST, CONF_FORECAST, DOMAIN, MANUFACTURER
 
@@ -49,6 +49,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Remove ozone sensors from registry if they exist
+    ent_reg = er.async_get(hass)
+    for day in range(0, 5):
+        unique_id = f"{coordinator.location_key}-ozone-{day}"
+        if entity_id := ent_reg.async_get_entity_id(SENSOR_PLATFORM, DOMAIN, unique_id):
+            _LOGGER.debug("Removing ozone sensor entity %s", entity_id)
+            ent_reg.async_remove(entity_id)
+
     return True
 
 
@@ -67,7 +75,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching AccuWeather data API."""
 
     def __init__(
@@ -112,16 +120,12 @@ class AccuWeatherDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
+        forecast: list[dict[str, Any]] = []
         try:
             async with timeout(10):
                 current = await self.accuweather.async_get_current_conditions()
-                forecast = (
-                    await self.accuweather.async_get_forecast(
-                        metric=self.hass.config.units is METRIC_SYSTEM
-                    )
-                    if self.forecast
-                    else {}
-                )
+                if self.forecast:
+                    forecast = await self.accuweather.async_get_daily_forecast()
         except (
             ApiError,
             ClientConnectorError,

@@ -48,7 +48,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error_web, error_mobile, reason",
+    ("error_web", "error_mobile", "reason"),
     [
         (APIUnavailable, None, "cannot_connect"),
         (InvalidAuthCredentials, None, "invalid_auth"),

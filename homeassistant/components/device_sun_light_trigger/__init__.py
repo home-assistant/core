@@ -214,7 +214,6 @@ async def activate_automation(  # noqa: C901
         elif start_point and start_point < now < get_astral_event_next(
             hass, SUN_EVENT_SUNSET
         ):
-
             # Check for every light if it would be on if someone was home
             # when the fading in started and turn it on if so
             for index, light_id in enumerate(light_ids):

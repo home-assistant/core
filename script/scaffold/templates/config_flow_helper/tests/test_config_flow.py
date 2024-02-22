@@ -1,5 +1,5 @@
 """Test the NEW_NAME config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -10,9 +10,13 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
 
 @pytest.mark.parametrize("platform", ("sensor",))
-async def test_config_flow(hass: HomeAssistant, platform) -> None:
+async def test_config_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, platform
+) -> None:
     """Test the config flow."""
     input_sensor_entity_id = "sensor.input"
 
@@ -22,15 +26,11 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
-    with patch(
-        "homeassistant.components.NEW_DOMAIN.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"name": "My NEW_DOMAIN", "entity_id": input_sensor_entity_id},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"name": "My NEW_DOMAIN", "entity_id": input_sensor_entity_id},
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "My NEW_DOMAIN"
@@ -52,7 +52,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
-    for k in schema.keys():
+    for k in schema:
         if k == key:
             if k.description is None or "suggested_value" not in k.description:
                 return None

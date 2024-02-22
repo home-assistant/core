@@ -1,7 +1,6 @@
 """Test the Sensibo config flow."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 from unittest.mock import patch
 
@@ -57,10 +56,10 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "error_message, p_error",
+    ("error_message", "p_error"),
     [
         (aiohttp.ClientConnectionError, "cannot_connect"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (AuthenticationError, "invalid_auth"),
         (SensiboError, "cannot_connect"),
     ],
@@ -216,10 +215,10 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "sideeffect,p_error",
+    ("sideeffect", "p_error"),
     [
         (aiohttp.ClientConnectionError, "cannot_connect"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (AuthenticationError, "invalid_auth"),
         (SensiboError, "cannot_connect"),
     ],
@@ -282,7 +281,7 @@ async def test_reauth_flow_error(
 
 
 @pytest.mark.parametrize(
-    "get_devices,get_me,p_error",
+    ("get_devices", "get_me", "p_error"),
     [
         (
             {"result": [{"id": "xyzxyz"}, {"id": "abcabc"}]},

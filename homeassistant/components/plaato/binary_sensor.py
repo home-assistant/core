@@ -39,20 +39,17 @@ async def async_setup_entry(
 class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):
     """Representation of a Binary Sensor."""
 
+    def __init__(self, data, sensor_type, coordinator=None) -> None:
+        """Initialize plaato binary sensor."""
+        super().__init__(data, sensor_type, coordinator)
+        if sensor_type is PlaatoKeg.Pins.LEAK_DETECTION:
+            self._attr_device_class = BinarySensorDeviceClass.PROBLEM
+        elif sensor_type is PlaatoKeg.Pins.POURING:
+            self._attr_device_class = BinarySensorDeviceClass.OPENING
+
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         if self._coordinator is not None:
             return self._coordinator.data.binary_sensors.get(self._sensor_type)
         return False
-
-    @property
-    def device_class(self) -> BinarySensorDeviceClass | None:
-        """Return the class of this device, from BinarySensorDeviceClass."""
-        if self._coordinator is None:
-            return None
-        if self._sensor_type is PlaatoKeg.Pins.LEAK_DETECTION:
-            return BinarySensorDeviceClass.PROBLEM
-        if self._sensor_type is PlaatoKeg.Pins.POURING:
-            return BinarySensorDeviceClass.OPENING
-        return None

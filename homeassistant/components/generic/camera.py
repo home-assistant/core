@@ -1,7 +1,9 @@
 """Support for IP Cameras."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Mapping
+from datetime import datetime, timedelta
 import logging
 from typing import Any
 
@@ -9,33 +11,26 @@ import httpx
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.camera import (
-    DEFAULT_CONTENT_TYPE,
-    PLATFORM_SCHEMA,
-    Camera,
-    CameraEntityFeature,
-)
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-    RTSP_TRANSPORTS,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 from .const import (
@@ -44,68 +39,10 @@ from .const import (
     CONF_LIMIT_REFETCH_TO_URL_CHANGE,
     CONF_STILL_IMAGE_URL,
     CONF_STREAM_SOURCE,
-    DEFAULT_NAME,
     GET_IMAGE_TIMEOUT,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(vol.Any(CONF_STILL_IMAGE_URL, CONF_STREAM_SOURCE)): cv.template,
-        vol.Optional(vol.Any(CONF_STILL_IMAGE_URL, CONF_STREAM_SOURCE)): cv.template,
-        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.In(
-            [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
-        ),
-        vol.Optional(CONF_LIMIT_REFETCH_TO_URL_CHANGE, default=False): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
-        vol.Optional(CONF_FRAMERATE, default=2): vol.Any(
-            cv.small_float, cv.positive_int
-        ),
-        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up a generic IP Camera."""
-
-    _LOGGER.warning(
-        "Loading generic IP camera via configuration.yaml is deprecated, "
-        "it will be automatically imported.  Once you have confirmed correct "
-        "operation, please remove 'generic' (IP camera) section(s) from "
-        "configuration.yaml"
-    )
-    image = config.get(CONF_STILL_IMAGE_URL)
-    stream = config.get(CONF_STREAM_SOURCE)
-    config_new = {
-        CONF_NAME: config[CONF_NAME],
-        CONF_STILL_IMAGE_URL: image.template if image is not None else None,
-        CONF_STREAM_SOURCE: stream.template if stream is not None else None,
-        CONF_AUTHENTICATION: config.get(CONF_AUTHENTICATION),
-        CONF_USERNAME: config.get(CONF_USERNAME),
-        CONF_PASSWORD: config.get(CONF_PASSWORD),
-        CONF_LIMIT_REFETCH_TO_URL_CHANGE: config.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE),
-        CONF_CONTENT_TYPE: config.get(CONF_CONTENT_TYPE),
-        CONF_FRAMERATE: config.get(CONF_FRAMERATE),
-        CONF_VERIFY_SSL: config.get(CONF_VERIFY_SSL),
-    }
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config_new
-        )
-    )
 
 
 async def async_setup_entry(
@@ -134,6 +71,8 @@ class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
     _last_image: bytes | None
+    _last_update: datetime
+    _update_lock: asyncio.Lock
 
     def __init__(
         self,
@@ -177,16 +116,24 @@ class GenericCamera(Camera):
 
         self._last_url = None
         self._last_image = None
+        self._last_update = datetime.min
+        self._update_lock = asyncio.Lock()
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, identifier)},
+            manufacturer="Generic",
+        )
+
+    @property
+    def use_stream_for_stills(self) -> bool:
+        """Whether or not to use stream to generate stills."""
+        return not self._still_image_url
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
         if not self._still_image_url:
-            if not self.stream:
-                await self.async_create_stream()
-            if self.stream:
-                return await self.stream.async_get_image(width, height)
             return None
         try:
             url = self._still_image_url.async_render(parse_result=False)
@@ -194,28 +141,51 @@ class GenericCamera(Camera):
             _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
             return self._last_image
 
+        try:
+            vol.Schema(vol.Url())(url)
+        except vol.Invalid as err:
+            _LOGGER.warning("Invalid URL '%s': %s, returning last image", url, err)
+            return self._last_image
+
         if url == self._last_url and self._limit_refetch:
             return self._last_image
 
-        try:
-            async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
-            response = await async_client.get(
-                url, auth=self._auth, timeout=GET_IMAGE_TIMEOUT
-            )
-            response.raise_for_status()
-            self._last_image = response.content
-        except httpx.TimeoutException:
-            _LOGGER.error("Timeout getting camera image from %s", self._name)
-            return self._last_image
-        except (httpx.RequestError, httpx.HTTPStatusError) as err:
-            _LOGGER.error("Error getting new camera image from %s: %s", self._name, err)
-            return self._last_image
+        async with self._update_lock:
+            if (
+                self._last_image is not None
+                and url == self._last_url
+                and self._last_update + timedelta(0, self._attr_frame_interval)
+                > datetime.now()
+            ):
+                return self._last_image
 
-        self._last_url = url
-        return self._last_image
+            try:
+                update_time = datetime.now()
+                async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
+                response = await async_client.get(
+                    url,
+                    auth=self._auth,
+                    follow_redirects=True,
+                    timeout=GET_IMAGE_TIMEOUT,
+                )
+                response.raise_for_status()
+                self._last_image = response.content
+                self._last_update = update_time
+
+            except httpx.TimeoutException:
+                _LOGGER.error("Timeout getting camera image from %s", self._name)
+                return self._last_image
+            except (httpx.RequestError, httpx.HTTPStatusError) as err:
+                _LOGGER.error(
+                    "Error getting new camera image from %s: %s", self._name, err
+                )
+                return self._last_image
+
+            self._last_url = url
+            return self._last_image
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of this device."""
         return self._name
 

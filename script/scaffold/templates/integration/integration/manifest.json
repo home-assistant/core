@@ -1,12 +1,13 @@
 {
   "domain": "NEW_DOMAIN",
   "name": "NEW_NAME",
+  "codeowners": [],
   "config_flow": false,
+  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/NEW_DOMAIN",
+  "homekit": {},
+  "iot_class": "IOT_CLASS",
   "requirements": [],
   "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
-  "dependencies": [],
-  "codeowners": []
+  "zeroconf": []
 }

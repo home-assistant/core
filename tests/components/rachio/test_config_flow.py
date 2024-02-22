@@ -1,4 +1,5 @@
 """Test the Rachio config flow."""
+from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
@@ -9,6 +10,7 @@ from homeassistant.components.rachio.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -22,7 +24,7 @@ def _mock_rachio_return_value(get=None, info=None):
     return rachio_mock
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -62,7 +64,7 @@ async def test_form(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass):
+async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -84,7 +86,7 @@ async def test_form_invalid_auth(hass):
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -106,15 +108,15 @@ async def test_form_cannot_connect(hass):
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_homekit(hass):
+async def test_form_homekit(hass: HomeAssistant) -> None:
     """Test that we abort from homekit if rachio is already setup."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
-            addresses=["mock_host"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -138,8 +140,8 @@ async def test_form_homekit(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
-            addresses=["mock_host"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -151,7 +153,7 @@ async def test_form_homekit(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_form_homekit_ignored(hass):
+async def test_form_homekit_ignored(hass: HomeAssistant) -> None:
     """Test that we abort from homekit if rachio is ignored."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -164,8 +166,8 @@ async def test_form_homekit_ignored(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="mock_host",
-            addresses=["mock_host"],
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,

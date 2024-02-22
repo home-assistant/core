@@ -7,7 +7,7 @@ import logging
 
 from pywemo.exceptions import ActionException
 
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .wemo_device import DeviceCoordinator
@@ -53,7 +53,7 @@ class WemoEntity(CoordinatorEntity[DeviceCoordinator]):
     @property
     def unique_id(self) -> str:
         """Return the id of this WeMo device."""
-        serial_number: str = self.wemo.serialnumber
+        serial_number: str = self.wemo.serial_number
         if suffix := self.unique_id_suffix:
             return f"{serial_number}_{suffix}"
         return serial_number

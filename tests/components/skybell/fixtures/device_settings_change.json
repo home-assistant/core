@@ -1,0 +1,22 @@
+{
+  "ring_tone": "0",
+  "do_not_ring": "false",
+  "do_not_disturb": "false",
+  "digital_doorbell": "false",
+  "video_profile": "1",
+  "mic_volume": "63",
+  "speaker_volume": "96",
+  "chime_level": "1",
+  "motion_threshold": "32",
+  "low_lux_threshold": "50",
+  "med_lux_threshold": "150",
+  "high_lux_threshold": "400",
+  "low_front_led_dac": "10",
+  "med_front_led_dac": "10",
+  "high_front_led_dac": "10",
+  "green_r": "10",
+  "green_g": "125",
+  "green_b": "255",
+  "led_intensity": "50",
+  "motion_policy": "disabled"
+}

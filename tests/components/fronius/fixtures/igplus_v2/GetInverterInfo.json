@@ -1,0 +1,24 @@
+{
+  "Body": {
+    "Data": {
+      "1": {
+        "CustomName": "&#73;&#71;&#32;&#80;&#108;&#117;&#115;&#32;&#55;&#48;&#32;&#86;&#45;&#50;",
+        "DT": 174,
+        "ErrorCode": 0,
+        "PVPower": 6500,
+        "Show": 1,
+        "StatusCode": 7,
+        "UniqueID": "203200"
+      }
+    }
+  },
+  "Head": {
+    "RequestArguments": {},
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2023-07-14T17:19:20+02:00"
+  }
+}

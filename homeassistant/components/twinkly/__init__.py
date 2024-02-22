@@ -1,17 +1,16 @@
 """The twinkly component."""
 
-import asyncio
 
 from aiohttp import ClientError
 from ttls.client import Twinkly
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_SW_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_HOST, DATA_CLIENT, DATA_DEVICE_INFO, DOMAIN
+from .const import ATTR_VERSION, DATA_CLIENT, DATA_DEVICE_INFO, DOMAIN
 
 PLATFORMS = [Platform.LIGHT]
 
@@ -30,12 +29,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         device_info = await client.get_details()
-    except (asyncio.TimeoutError, ClientError) as exception:
+        software_version = await client.get_firmware_version()
+    except (TimeoutError, ClientError) as exception:
         raise ConfigEntryNotReady from exception
 
-    hass.data[DOMAIN][entry.entry_id][DATA_CLIENT] = client
-    hass.data[DOMAIN][entry.entry_id][DATA_DEVICE_INFO] = device_info
-
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_CLIENT: client,
+        DATA_DEVICE_INFO: device_info,
+        ATTR_SW_VERSION: software_version.get(ATTR_VERSION),
+    }
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

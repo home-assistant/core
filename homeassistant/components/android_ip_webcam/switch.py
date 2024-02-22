@@ -9,8 +9,8 @@ from pydroid_ipcam import PyDroidIPCam
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -18,7 +18,7 @@ from .coordinator import AndroidIPCamDataUpdateCoordinator
 from .entity import AndroidIPCamBaseEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class AndroidIPWebcamSwitchEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -26,7 +26,7 @@ class AndroidIPWebcamSwitchEntityDescriptionMixin:
     off_func: Callable[[PyDroidIPCam], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AndroidIPWebcamSwitchEntityDescription(
     SwitchEntityDescription, AndroidIPWebcamSwitchEntityDescriptionMixin
 ):

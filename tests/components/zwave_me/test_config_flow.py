@@ -1,4 +1,5 @@
 """Test the zwave_me config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -10,10 +11,10 @@ from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
-    host="ws://192.168.1.14",
+    ip_address=ip_address("192.168.1.14"),
+    ip_addresses=[ip_address("192.168.1.14")],
     hostname="mock_hostname",
     name="mock_name",
-    addresses=["192.168.1.14"],
     port=1234,
     properties={
         "deviceid": "aa:bb:cc:dd:ee:ff",
@@ -57,7 +58,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf(hass: HomeAssistant):
+async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test starting a flow from zeroconf."""
     with patch(
         "homeassistant.components.zwave_me.async_setup_entry",
@@ -91,7 +92,7 @@ async def test_zeroconf(hass: HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_error_handling_zeroconf(hass: HomeAssistant):
+async def test_error_handling_zeroconf(hass: HomeAssistant) -> None:
     """Test getting proper errors from no uuid."""
     with patch("homeassistant.components.zwave_me.helpers.get_uuid", return_value=None):
         result: FlowResult = await hass.config_entries.flow.async_init(
@@ -103,7 +104,7 @@ async def test_error_handling_zeroconf(hass: HomeAssistant):
         assert result["reason"] == "no_valid_uuid_set"
 
 
-async def test_handle_error_user(hass: HomeAssistant):
+async def test_handle_error_user(hass: HomeAssistant) -> None:
     """Test getting proper errors from no uuid."""
     with patch("homeassistant.components.zwave_me.helpers.get_uuid", return_value=None):
         result = await hass.config_entries.flow.async_init(
@@ -121,7 +122,7 @@ async def test_handle_error_user(hass: HomeAssistant):
         assert result2["errors"] == {"base": "no_valid_uuid_set"}
 
 
-async def test_duplicate_user(hass: HomeAssistant):
+async def test_duplicate_user(hass: HomeAssistant) -> None:
     """Test getting proper errors from duplicate uuid."""
     entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
@@ -153,7 +154,7 @@ async def test_duplicate_user(hass: HomeAssistant):
         assert result2["reason"] == "already_configured"
 
 
-async def test_duplicate_zeroconf(hass: HomeAssistant):
+async def test_duplicate_zeroconf(hass: HomeAssistant) -> None:
     """Test getting proper errors from duplicate uuid."""
     entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN,
@@ -170,7 +171,6 @@ async def test_duplicate_zeroconf(hass: HomeAssistant):
         "homeassistant.components.zwave_me.helpers.get_uuid",
         return_value="test_uuid",
     ):
-
         result: FlowResult = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},

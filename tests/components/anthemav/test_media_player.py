@@ -19,10 +19,10 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "entity_id,entity_name",
+    ("entity_id", "entity_name"),
     [
         ("media_player.anthem_av", "Anthem AV"),
-        ("media_player.anthem_av_zone_2", "Anthem AV zone 2"),
+        ("media_player.zone_2", "Zone 2"),
     ],
 )
 async def test_zones_loaded(

@@ -6,7 +6,6 @@ from functools import partial
 import os
 from typing import Any
 
-from async_timeout import timeout
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
@@ -20,13 +19,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PROTOCOL, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     CONF_DSMR_VERSION,
-    CONF_PROTOCOL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
@@ -54,6 +52,8 @@ class DSMRConnection:
         self._protocol = protocol
         self._telegram: dict[str, DSMRObject] = {}
         self._equipment_identifier = obis_ref.EQUIPMENT_IDENTIFIER
+        if dsmr_version == "5B":
+            self._equipment_identifier = obis_ref.BELGIUM_EQUIPMENT_IDENTIFIER
         if dsmr_version == "5L":
             self._equipment_identifier = obis_ref.LUXEMBOURG_EQUIPMENT_IDENTIFIER
         if dsmr_version == "Q3D":
@@ -115,15 +115,15 @@ class DSMRConnection:
 
         try:
             transport, protocol = await asyncio.create_task(reader_factory())
-        except (serial.serialutil.SerialException, OSError):
+        except (serial.SerialException, OSError):
             LOGGER.exception("Error connecting to DSMR")
             return False
 
         if transport:
             try:
-                async with timeout(30):
+                async with asyncio.timeout(30):
                     await protocol.wait_closed()
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Timeout (no data received), close transport and return True (if telegram is empty, will result in CannotCommunicate error)
                 transport.close()
                 await protocol.wait_closed()

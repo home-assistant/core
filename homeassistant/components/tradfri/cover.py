@@ -40,6 +40,8 @@ async def async_setup_entry(
 class TradfriCover(TradfriBaseEntity, CoverEntity):
     """The platform class required by Home Assistant."""
 
+    _attr_name = None
+
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,

@@ -5,7 +5,6 @@ from datetime import timedelta
 import logging
 
 from aiohttp import client_exceptions
-import async_timeout
 from smarttub import APIError, LoginFailed, SmartTub
 from smarttub.api import Account
 
@@ -57,7 +56,7 @@ class SmartTubController:
             # credentials were changed or invalidated, we need new ones
             raise ConfigEntryAuthFailed from ex
         except (
-            asyncio.TimeoutError,
+            TimeoutError,
             client_exceptions.ClientOSError,
             client_exceptions.ServerDisconnectedError,
             client_exceptions.ContentTypeError,
@@ -85,7 +84,7 @@ class SmartTubController:
 
         data = {}
         try:
-            async with async_timeout.timeout(POLLING_TIMEOUT):
+            async with asyncio.timeout(POLLING_TIMEOUT):
                 for spa in self.spas:
                     data[spa.id] = await self._get_spa_data(spa)
         except APIError as err:

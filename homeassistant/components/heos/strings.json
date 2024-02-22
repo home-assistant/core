@@ -6,6 +6,9 @@
         "description": "Please enter the host name or IP address of a Heos device (preferably one connected via wire to the network).",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your HEOS device."
         }
       }
     },
@@ -14,6 +17,26 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    }
+  },
+  "services": {
+    "sign_in": {
+      "name": "Sign in",
+      "description": "Signs the controller in to a HEOS account.",
+      "fields": {
+        "username": {
+          "name": "[%key:common::config_flow::data::username%]",
+          "description": "The username or email of the HEOS account."
+        },
+        "password": {
+          "name": "[%key:common::config_flow::data::password%]",
+          "description": "The password of the HEOS account."
+        }
+      }
+    },
+    "sign_out": {
+      "name": "Sign out",
+      "description": "Signs the controller out of the HEOS account."
     }
   }
 }

@@ -1,5 +1,4 @@
 """Config flow for Kostal Plenticore Solar Inverter integration."""
-import asyncio
 import logging
 
 from aiohttp.client_exceptions import ClientError
@@ -12,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+from .helper import get_hostname_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,9 +32,10 @@ async def test_connection(hass: HomeAssistant, data) -> str:
     session = async_get_clientsession(hass)
     async with ApiClient(session, data["host"]) as client:
         await client.login(data["password"])
-        values = await client.get_setting_values("scb:network", "Hostname")
+        hostname_id = await get_hostname_id(client)
+        values = await client.get_setting_values("scb:network", hostname_id)
 
-    return values["scb:network"]["Hostname"]
+    return values["scb:network"][hostname_id]
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -55,7 +56,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except AuthenticationException as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
                 _LOGGER.error("Error response: %s", ex)
-            except (ClientError, asyncio.TimeoutError):
+            except (ClientError, TimeoutError):
                 errors[CONF_HOST] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")

@@ -1,47 +1,69 @@
 # Describes the format for available light services
 
 turn_on:
-  name: Turn on
-  description: >
-    Turn on one or more lights and adjust properties of the light, even when
-    they are turned on already.
   target:
     entity:
       domain: light
   fields:
     transition:
-      name: Transition
-      description: Duration it takes to get to next state.
+      filter:
+        supported_features:
+          - light.LightEntityFeature.TRANSITION
       selector:
         number:
           min: 0
           max: 300
           unit_of_measurement: seconds
     rgb_color:
-      name: Color
-      description: The color for the light (based on RGB - red, green, blue).
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       selector:
         color_rgb:
     rgbw_color:
-      name: RGBW-color
-      description: A list containing four integers between 0 and 255 representing the RGBW (red, green, blue, white) color for the light.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       example: "[255, 100, 100, 50]"
       selector:
         object:
     rgbww_color:
-      name: RGBWW-color
-      description: A list containing five integers between 0 and 255 representing the RGBWW (red, green, blue, cold white, warm white) color for the light.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       example: "[255, 100, 100, 50, 70]"
       selector:
         object:
     color_name:
-      name: Color name
-      description: A human readable color name.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       selector:
         select:
+          translation_key: color_name
           options:
             - "homeassistant"
             - "aliceblue"
@@ -193,93 +215,145 @@ turn_on:
             - "yellow"
             - "yellowgreen"
     hs_color:
-      name: Hue/Sat color
-      description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       example: "[300, 70]"
       selector:
         object:
     xy_color:
-      name: XY-color
-      description: Color for the light in XY-format.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       example: "[0.52, 0.43]"
       selector:
         object:
     color_temp:
-      name: Color temperature
-      description: Color temperature for the light in mireds.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.COLOR_TEMP
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       selector:
         color_temp:
-          min_mireds: 153
-          max_mireds: 500
+          unit: "mired"
+          min: 153
+          max: 500
     kelvin:
-      name: Color temperature (Kelvin)
-      description: Color temperature for the light in Kelvin.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.COLOR_TEMP
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       selector:
-        number:
+        color_temp:
+          unit: "kelvin"
           min: 2000
           max: 6500
-          step: 100
-          unit_of_measurement: K
     brightness:
-      name: Brightness value
-      description: Number indicating brightness, where 0 turns the light
-        off, 1 is the minimum brightness and 255 is the maximum brightness
-        supported by the light.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.BRIGHTNESS
+            - light.ColorMode.COLOR_TEMP
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       selector:
         number:
           min: 0
           max: 255
     brightness_pct:
-      name: Brightness
-      description: Number indicating percentage of full brightness, where 0
-        turns the light off, 1 is the minimum brightness and 100 is the maximum
-        brightness supported by the light.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.BRIGHTNESS
+            - light.ColorMode.COLOR_TEMP
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       selector:
         number:
           min: 0
           max: 100
           unit_of_measurement: "%"
     brightness_step:
-      name: Brightness step value
-      description: Change brightness by an amount.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.BRIGHTNESS
+            - light.ColorMode.COLOR_TEMP
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       selector:
         number:
           min: -225
           max: 255
     brightness_step_pct:
-      name: Brightness step
-      description: Change brightness by a percentage.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.BRIGHTNESS
+            - light.ColorMode.COLOR_TEMP
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       selector:
         number:
           min: -100
           max: 100
           unit_of_measurement: "%"
     white:
-      name: White
-      description:
-        Set the light to white mode and change its brightness, where 0 turns
-        the light off, 1 is the minimum brightness and 255 is the maximum
-        brightness supported by the light.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.WHITE
       advanced: true
       selector:
-        number:
-          min: 0
-          max: 255
+        constant:
+          value: true
+          label: Enabled
     profile:
-      name: Profile
-      description: Name of a light profile to use.
       advanced: true
       example: relax
       selector:
         text:
     flash:
-      name: Flash
-      description: If the light should flash.
+      filter:
+        supported_features:
+          - light.LightEntityFeature.FLASH
       advanced: true
       selector:
         select:
@@ -289,29 +363,30 @@ turn_on:
             - label: "Short"
               value: "short"
     effect:
-      name: Effect
-      description: Light effect.
+      filter:
+        supported_features:
+          - light.LightEntityFeature.EFFECT
       selector:
         text:
 
 turn_off:
-  name: Turn off
-  description: Turns off one or more lights.
   target:
     entity:
       domain: light
   fields:
     transition:
-      name: Transition
-      description: Duration it takes to get to next state.
+      filter:
+        supported_features:
+          - light.LightEntityFeature.TRANSITION
       selector:
         number:
           min: 0
           max: 300
           unit_of_measurement: seconds
     flash:
-      name: Flash
-      description: If the light should flash.
+      filter:
+        supported_features:
+          - light.LightEntityFeature.FLASH
       advanced: true
       selector:
         select:
@@ -322,35 +397,45 @@ turn_off:
               value: "short"
 
 toggle:
-  name: Toggle
-  description: >
-    Toggles one or more lights, from on to off, or, off to on, based on their
-    current state.
   target:
     entity:
       domain: light
   fields:
     transition:
-      name: Transition
-      description: Duration it takes to get to next state.
+      filter:
+        supported_features:
+          - light.LightEntityFeature.TRANSITION
       selector:
         number:
           min: 0
           max: 300
           unit_of_measurement: seconds
     rgb_color:
-      name: RGB-color
-      description: Color for the light in RGB-format.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       example: "[255, 100, 100]"
       selector:
-        object:
+        color_rgb:
     color_name:
-      name: Color name
-      description: A human readable color name.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       selector:
         select:
+          translation_key: color_name
           options:
             - "homeassistant"
             - "aliceblue"
@@ -502,65 +587,111 @@ toggle:
             - "yellow"
             - "yellowgreen"
     hs_color:
-      name: Hue/Sat color
-      description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       example: "[300, 70]"
       selector:
         object:
     xy_color:
-      name: XY-color
-      description: Color for the light in XY-format.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       example: "[0.52, 0.43]"
       selector:
         object:
     color_temp:
-      name: Color temperature (mireds)
-      description: Color temperature for the light in mireds.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.COLOR_TEMP
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       selector:
         color_temp:
     kelvin:
-      name: Color temperature (Kelvin)
-      description: Color temperature for the light in Kelvin.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.COLOR_TEMP
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       selector:
-        number:
+        color_temp:
+          unit: "kelvin"
           min: 2000
           max: 6500
-          step: 100
-          unit_of_measurement: K
     brightness:
-      name: Brightness value
-      description: Number indicating brightness, where 0 turns the light
-        off, 1 is the minimum brightness and 255 is the maximum brightness
-        supported by the light.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.BRIGHTNESS
+            - light.ColorMode.COLOR_TEMP
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       advanced: true
       selector:
         number:
           min: 0
           max: 255
     brightness_pct:
-      name: Brightness
-      description: Number indicating percentage of full brightness, where 0
-        turns the light off, 1 is the minimum brightness and 100 is the maximum
-        brightness supported by the light.
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.BRIGHTNESS
+            - light.ColorMode.COLOR_TEMP
+            - light.ColorMode.HS
+            - light.ColorMode.XY
+            - light.ColorMode.RGB
+            - light.ColorMode.RGBW
+            - light.ColorMode.RGBWW
       selector:
         number:
           min: 0
           max: 100
           unit_of_measurement: "%"
+    white:
+      filter:
+        attribute:
+          supported_color_modes:
+            - light.ColorMode.WHITE
+      advanced: true
+      selector:
+        constant:
+          value: true
+          label: Enabled
     profile:
-      name: Profile
-      description: Name of a light profile to use.
       advanced: true
       example: relax
       selector:
         text:
     flash:
-      name: Flash
-      description: If the light should flash.
+      filter:
+        supported_features:
+          - light.LightEntityFeature.FLASH
       advanced: true
       selector:
         select:
@@ -570,7 +701,8 @@ toggle:
             - label: "Short"
               value: "short"
     effect:
-      name: Effect
-      description: Light effect.
+      filter:
+        supported_features:
+          - light.LightEntityFeature.EFFECT
       selector:
         text:

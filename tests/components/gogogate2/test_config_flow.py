@@ -1,4 +1,5 @@
 """Tests for the GogoGate2 component."""
+from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 from ismartgate import GogoGate2Api, ISmartGateApi
@@ -97,15 +98,15 @@ async def test_auth_fail(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_homekit_unique_id_already_setup(hass):
+async def test_form_homekit_unique_id_already_setup(hass: HomeAssistant) -> None:
     """Test that we abort from homekit if gogogate2 is already setup."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -132,8 +133,8 @@ async def test_form_homekit_unique_id_already_setup(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -144,7 +145,7 @@ async def test_form_homekit_unique_id_already_setup(hass):
     assert result["type"] == FlowResultType.ABORT
 
 
-async def test_form_homekit_ip_address_already_setup(hass):
+async def test_form_homekit_ip_address_already_setup(hass: HomeAssistant) -> None:
     """Test that we abort from homekit if gogogate2 is already setup."""
 
     entry = MockConfigEntry(
@@ -157,8 +158,8 @@ async def test_form_homekit_ip_address_already_setup(hass):
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -169,15 +170,15 @@ async def test_form_homekit_ip_address_already_setup(hass):
     assert result["type"] == FlowResultType.ABORT
 
 
-async def test_form_homekit_ip_address(hass):
+async def test_form_homekit_ip_address(hass: HomeAssistant) -> None:
     """Test homekit includes the defaults ip address."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
@@ -200,7 +201,7 @@ async def test_form_homekit_ip_address(hass):
 @patch("homeassistant.components.gogogate2.async_setup_entry", return_value=True)
 @patch("homeassistant.components.gogogate2.common.ISmartGateApi")
 async def test_discovered_dhcp(
-    ismartgateapi_mock, async_setup_entry_mock, hass
+    ismartgateapi_mock, async_setup_entry_mock, hass: HomeAssistant
 ) -> None:
     """Test we get the form with homekit and abort for dhcp source when we get both."""
     api: ISmartGateApi = MagicMock(spec=ISmartGateApi)
@@ -252,15 +253,15 @@ async def test_discovered_dhcp(
     }
 
 
-async def test_discovered_by_homekit_and_dhcp(hass):
+async def test_discovered_by_homekit_and_dhcp(hass: HomeAssistant) -> None:
     """Test we get the form with homekit and abort for dhcp source when we get both."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
         data=zeroconf.ZeroconfServiceInfo(
-            host="1.2.3.4",
-            addresses=["1.2.3.4"],
+            ip_address=ip_address("1.2.3.4"),
+            ip_addresses=[ip_address("1.2.3.4")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,

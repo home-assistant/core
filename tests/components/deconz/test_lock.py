@@ -1,5 +1,4 @@
 """deCONZ lock platform tests."""
-
 from unittest.mock import patch
 
 from homeassistant.components.lock import (
@@ -13,6 +12,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNLOCKED,
 )
+from homeassistant.core import HomeAssistant
 
 from .test_gateway import (
     DECONZ_WEB_REQUEST,
@@ -20,14 +20,20 @@ from .test_gateway import (
     setup_deconz_integration,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_no_locks(hass, aioclient_mock):
+
+async def test_no_locks(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test that no lock entities are created."""
     await setup_deconz_integration(hass, aioclient_mock)
     assert len(hass.states.async_all()) == 0
 
 
-async def test_lock_from_light(hass, aioclient_mock, mock_deconz_websocket):
+async def test_lock_from_light(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that all supported lock entities based on lights are created."""
     data = {
         "lights": {
@@ -100,7 +106,9 @@ async def test_lock_from_light(hass, aioclient_mock, mock_deconz_websocket):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_lock_from_sensor(hass, aioclient_mock, mock_deconz_websocket):
+async def test_lock_from_sensor(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_deconz_websocket
+) -> None:
     """Test that all supported lock entities based on sensors are created."""
     data = {
         "sensors": {

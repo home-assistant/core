@@ -1,0 +1,53 @@
+{
+  "title": "Counter",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::counter::title%]",
+      "state_attributes": {
+        "editable": {
+          "name": "[%key:common::generic::ui_managed%]",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        },
+        "initial": {
+          "name": "Initial value"
+        },
+        "maximum": {
+          "name": "Maximum"
+        },
+        "minimum": {
+          "name": "Minimum"
+        },
+        "step": {
+          "name": "Step"
+        }
+      }
+    }
+  },
+  "services": {
+    "decrement": {
+      "name": "Decrement",
+      "description": "Decrements a counter."
+    },
+    "increment": {
+      "name": "Increment",
+      "description": "Increments a counter."
+    },
+    "reset": {
+      "name": "Reset",
+      "description": "Resets a counter."
+    },
+    "set_value": {
+      "name": "Set",
+      "description": "Sets the counter value.",
+      "fields": {
+        "value": {
+          "name": "Value",
+          "description": "The new counter value the entity should be set to."
+        }
+      }
+    }
+  }
+}

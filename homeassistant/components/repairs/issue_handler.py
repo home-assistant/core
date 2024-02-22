@@ -27,7 +27,7 @@ class ConfirmRepairFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
         """Handle the first step of a fix flow."""
-        return await (self.async_step_confirm())
+        return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, str] | None = None
@@ -105,7 +105,8 @@ async def async_process_repairs_platforms(hass: HomeAssistant) -> None:
     await async_process_integration_platforms(hass, DOMAIN, _register_repairs_platform)
 
 
-async def _register_repairs_platform(
+@callback
+def _register_repairs_platform(
     hass: HomeAssistant, integration_domain: str, platform: RepairsProtocol
 ) -> None:
     """Register a repairs platform."""

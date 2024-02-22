@@ -31,7 +31,9 @@ from homeassistant.setup import async_setup_component
 from tests.common import get_fixture_path
 
 
-async def test_default_state(hass):
+async def test_default_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test lock group default state."""
     hass.states.async_set("lock.front", "locked")
     await async_setup_component(
@@ -55,13 +57,12 @@ async def test_default_state(hass):
     assert state.state == STATE_LOCKED
     assert state.attributes.get(ATTR_ENTITY_ID) == ["lock.front", "lock.back"]
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("lock.door_group")
     assert entry
     assert entry.unique_id == "unique_identifier"
 
 
-async def test_state_reporting(hass):
+async def test_state_reporting(hass: HomeAssistant) -> None:
     """Test the state reporting.
 
     The group state is unavailable if all group members are unavailable.
@@ -277,7 +278,7 @@ async def test_service_calls_basic(hass: HomeAssistant) -> None:
         )
 
 
-async def test_reload(hass):
+async def test_reload(hass: HomeAssistant) -> None:
     """Test the ability to reload locks."""
     await async_setup_component(
         hass,
@@ -318,7 +319,7 @@ async def test_reload(hass):
     assert hass.states.get("lock.outside_locks_g") is not None
 
 
-async def test_reload_with_platform_not_setup(hass):
+async def test_reload_with_platform_not_setup(hass: HomeAssistant) -> None:
     """Test the ability to reload locks."""
     hass.states.async_set("lock.something", STATE_UNLOCKED)
     await async_setup_component(
@@ -356,7 +357,9 @@ async def test_reload_with_platform_not_setup(hass):
     assert hass.states.get("lock.outside_locks_g") is not None
 
 
-async def test_reload_with_base_integration_platform_not_setup(hass):
+async def test_reload_with_base_integration_platform_not_setup(
+    hass: HomeAssistant,
+) -> None:
     """Test the ability to reload locks."""
     assert await async_setup_component(
         hass,
@@ -392,7 +395,7 @@ async def test_reload_with_base_integration_platform_not_setup(hass):
 
 
 @patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)
-async def test_nested_group(hass):
+async def test_nested_group(hass: HomeAssistant) -> None:
     """Test nested lock group."""
     await async_setup_component(
         hass,

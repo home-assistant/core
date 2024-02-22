@@ -7,6 +7,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Rain Bird device."
         }
       }
     },
@@ -21,26 +24,52 @@
   "options": {
     "step": {
       "init": {
-        "title": "Configure Rain Bird",
+        "title": "[%key:component::rainbird::config::step::user::title%]",
         "data": {
           "duration": "Default irrigation time in minutes"
         }
       }
     }
   },
-  "issues": {
-    "deprecated_yaml": {
-      "title": "The Rain Bird YAML configuration is being removed",
-      "description": "Configuring Rain Bird in configuration.yaml is being removed in Home Assistant 2023.4.\n\nYour configuration has been imported into the UI automatically, however default per-zone irrigation times are no longer supported. Remove the Rain Bird YAML configuration from your configuration.yaml file and restart Home Assistant to fix this issue."
+  "entity": {
+    "binary_sensor": {
+      "rainsensor": {
+        "name": "Rainsensor"
+      }
     },
-    "deprecated_raindelay": {
-      "title": "The Rain Bird Rain Delay Service is being removed",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "The Rain Bird Rain Delay Service is being removed",
-            "description": "The Rain Bird service `rainbird.set_rain_delay` is being removed and replaced by a Number entity for managing the rain delay. Any existing automations or scripts will need to be updated to use `number.set_value` with a target of `{alternate_target}` instead."
-          }
+    "number": {
+      "rain_delay": {
+        "name": "Rain delay"
+      }
+    },
+    "sensor": {
+      "raindelay": {
+        "name": "Raindelay"
+      }
+    }
+  },
+  "services": {
+    "start_irrigation": {
+      "name": "Start irrigation",
+      "description": "Starts the irrigation.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Duration for this sprinkler to be turned on."
+        }
+      }
+    },
+    "set_rain_delay": {
+      "name": "Set rain delay",
+      "description": "Sets how long automatic irrigation is turned off.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Rainbird Controller Configuration Entry",
+          "description": "The setting will be adjusted on the specified controller."
+        },
+        "duration": {
+          "name": "Duration",
+          "description": "Duration for this system to be turned off."
         }
       }
     }

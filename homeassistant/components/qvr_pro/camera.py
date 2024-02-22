@@ -30,7 +30,6 @@ def setup_platform(
     entities = []
 
     for channel in hass.data[DOMAIN]["channels"]:
-
         stream_source = get_stream_source(channel["guid"], client)
         entities.append(
             QVRProCamera(**channel, stream_source=stream_source, client=client)

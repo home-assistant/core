@@ -1,16 +1,17 @@
 """Home Assistant trigger dispatcher."""
 import importlib
 
-from homeassistant.components.device_automation.trigger import (
-    DeviceAutomationTriggerProtocol,
-)
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import (
+    TriggerActionType,
+    TriggerInfo,
+    TriggerProtocol,
+)
 from homeassistant.helpers.typing import ConfigType
 
 
-def _get_trigger_platform(config: ConfigType) -> DeviceAutomationTriggerProtocol:
+def _get_trigger_platform(config: ConfigType) -> TriggerProtocol:
     return importlib.import_module(f"..triggers.{config[CONF_PLATFORM]}", __name__)
 
 
@@ -20,9 +21,9 @@ async def async_validate_trigger_config(
     """Validate config."""
     platform = _get_trigger_platform(config)
     if hasattr(platform, "async_validate_trigger_config"):
-        return await getattr(platform, "async_validate_trigger_config")(hass, config)
+        return await platform.async_validate_trigger_config(hass, config)
 
-    return platform.TRIGGER_SCHEMA(config)
+    return platform.TRIGGER_SCHEMA(config)  # type: ignore[no-any-return]
 
 
 async def async_attach_trigger(

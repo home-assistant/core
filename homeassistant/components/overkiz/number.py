@@ -14,9 +14,8 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
@@ -27,14 +26,14 @@ BOOST_MODE_DURATION_DELAY = 1
 OPERATING_MODE_DELAY = 3
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizNumberDescriptionMixin:
     """Define an entity description mixin for number entities."""
 
     command: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizNumberDescription(NumberEntityDescription, OverkizNumberDescriptionMixin):
     """Class to describe an Overkiz number."""
 

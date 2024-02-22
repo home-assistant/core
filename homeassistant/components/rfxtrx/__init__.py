@@ -6,10 +6,9 @@ import binascii
 from collections.abc import Callable, Mapping
 import copy
 import logging
-from typing import Any, NamedTuple, cast
+from typing import Any, NamedTuple, TypeVarTuple, cast
 
 import RFXtrx as rfxtrxmod
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,11 +24,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -49,6 +49,8 @@ from .const import (
 DEFAULT_OFF_DELAY = 2.0
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
+
+_Ts = TypeVarTuple("_Ts")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,12 +76,12 @@ def _bytearray_string(data: Any) -> bytearray:
 SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 
 PLATFORMS = [
-    Platform.SWITCH,
-    Platform.SENSOR,
-    Platform.LIGHT,
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.LIGHT,
+    Platform.SENSOR,
     Platform.SIREN,
+    Platform.SWITCH,
 ]
 
 
@@ -89,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await async_setup_internal(hass, entry)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         # Library currently doesn't support reload
         _LOGGER.error(
             "Connection timeout: failed to receive response from RFXtrx device"
@@ -145,7 +147,7 @@ def _create_rfx(config: Mapping[str, Any]) -> rfxtrxmod.Connect:
 
 
 def _get_device_lookup(
-    devices: dict[str, dict[str, Any]]
+    devices: dict[str, dict[str, Any]],
 ) -> dict[DeviceTuple, dict[str, Any]]:
     """Get a lookup structure for devices."""
     lookup = {}
@@ -164,7 +166,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     config = entry.data
 
     # Initialize library
-    async with async_timeout.timeout(30):
+    async with asyncio.timeout(30):
         rfx_object = await hass.async_add_executor_job(_create_rfx, config)
 
     # Setup some per device config
@@ -438,7 +440,7 @@ def get_device_id(
 
 
 def get_device_tuple_from_identifiers(
-    identifiers: set[tuple[str, str]]
+    identifiers: set[tuple[str, str]],
 ) -> DeviceTuple | None:
     """Calculate the device tuple from a device entry."""
     identifier = next((x for x in identifiers if x[0] == DOMAIN and len(x) == 4), None)
@@ -548,6 +550,8 @@ class RfxtrxCommandEntity(RfxtrxEntity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
+    _attr_name = None
+
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,
@@ -557,6 +561,8 @@ class RfxtrxCommandEntity(RfxtrxEntity):
         """Initialzie a switch or light device."""
         super().__init__(device, device_id, event=event)
 
-    async def _async_send(self, fun: Callable[..., None], *args: Any) -> None:
-        rfx_object = self.hass.data[DOMAIN][DATA_RFXOBJECT]
+    async def _async_send(
+        self, fun: Callable[[rfxtrxmod.PySerialTransport, *_Ts], None], *args: *_Ts
+    ) -> None:
+        rfx_object: rfxtrxmod.Connect = self.hass.data[DOMAIN][DATA_RFXOBJECT]
         await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

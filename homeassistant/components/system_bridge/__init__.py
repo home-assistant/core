@@ -4,23 +4,25 @@ from __future__ import annotations
 import asyncio
 import logging
 
-import async_timeout
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.models.keyboard_key import KeyboardKey
-from systembridgeconnector.models.keyboard_text import KeyboardText
-from systembridgeconnector.models.open_path import OpenPath
-from systembridgeconnector.models.open_url import OpenUrl
 from systembridgeconnector.version import SUPPORTED_VERSION, Version
+from systembridgemodels.keyboard_key import KeyboardKey
+from systembridgemodels.keyboard_text import KeyboardText
+from systembridgemodels.open_path import OpenPath
+from systembridgemodels.open_url import OpenUrl
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_COMMAND,
+    CONF_ENTITY_ID,
     CONF_HOST,
+    CONF_NAME,
     CONF_PATH,
     CONF_PORT,
     CONF_URL,
@@ -28,10 +30,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MODULES
 from .coordinator import SystemBridgeDataUpdateCoordinator
@@ -40,7 +44,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.MEDIA_PLAYER,
+    Platform.NOTIFY,
     Platform.SENSOR,
+    Platform.UPDATE,
 ]
 
 CONF_BRIDGE = "bridge"
@@ -48,12 +55,25 @@ CONF_KEY = "key"
 CONF_TEXT = "text"
 
 SERVICE_OPEN_PATH = "open_path"
+SERVICE_POWER_COMMAND = "power_command"
 SERVICE_OPEN_URL = "open_url"
 SERVICE_SEND_KEYPRESS = "send_keypress"
 SERVICE_SEND_TEXT = "send_text"
 
+POWER_COMMAND_MAP = {
+    "hibernate": "power_hibernate",
+    "lock": "power_lock",
+    "logout": "power_logout",
+    "restart": "power_restart",
+    "shutdown": "power_shutdown",
+    "sleep": "power_sleep",
+}
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> bool:
     """Set up System Bridge from a config entry."""
 
     # Check version before initialising
@@ -64,11 +84,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=async_get_clientsession(hass),
     )
     try:
-        if not await version.check_supported():
-            raise ConfigEntryNotReady(
-                "You are not running a supported version of System Bridge. Please"
-                f" update to {SUPPORTED_VERSION} or higher."
-            )
+        async with asyncio.timeout(10):
+            if not await version.check_supported():
+                raise ConfigEntryNotReady(
+                    "You are not running a supported version of System Bridge. Please"
+                    f" update to {SUPPORTED_VERSION} or higher."
+                )
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed from exception
@@ -76,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         raise ConfigEntryNotReady(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
@@ -87,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry=entry,
     )
     try:
-        async with async_timeout.timeout(30):
+        async with asyncio.timeout(10):
             await coordinator.async_get_data(MODULES)
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
@@ -96,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         raise ConfigEntryNotReady(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
@@ -105,15 +126,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         # Wait for initial data
-        async with async_timeout.timeout(30):
-            while not coordinator.is_ready():
+        async with asyncio.timeout(10):
+            while not coordinator.is_ready:
                 _LOGGER.debug(
                     "Waiting for initial data from %s (%s)",
                     entry.title,
                     entry.data[CONF_HOST],
                 )
                 await asyncio.sleep(1)
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         raise ConfigEntryNotReady(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
@@ -128,12 +149,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Set up all platforms except notify
+    await hass.config_entries.async_forward_entry_setups(
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+    )
+
+    # Set up notify platform
+    hass.async_create_task(
+        discovery.async_load_platform(
+            hass,
+            Platform.NOTIFY,
+            DOMAIN,
+            {
+                CONF_NAME: f"{DOMAIN}_{coordinator.data.system.hostname}",
+                CONF_ENTITY_ID: entry.entry_id,
+            },
+            hass.data[DOMAIN][entry.entry_id],
+        )
+    )
 
     if hass.services.has_service(DOMAIN, SERVICE_OPEN_URL):
         return True
 
-    def valid_device(device: str):
+    def valid_device(device: str) -> str:
         """Check device is valid."""
         device_registry = dr.async_get(hass)
         device_entry = device_registry.async_get(device)
@@ -157,6 +195,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.websocket_client.open_path(
             OpenPath(path=call.data[CONF_PATH])
         )
+
+    async def handle_power_command(call: ServiceCall) -> None:
+        """Handle the power command service call."""
+        _LOGGER.info("Power command: %s", call.data)
+        coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
+            call.data[CONF_BRIDGE]
+        ]
+        await getattr(
+            coordinator.websocket_client,
+            POWER_COMMAND_MAP[call.data[CONF_COMMAND]],
+        )()
 
     async def handle_open_url(call: ServiceCall) -> None:
         """Handle the open url service call."""
@@ -192,6 +241,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             {
                 vol.Required(CONF_BRIDGE): valid_device,
                 vol.Required(CONF_PATH): cv.string,
+            },
+        ),
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_POWER_COMMAND,
+        handle_power_command,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
+                vol.Required(CONF_COMMAND): vol.In(POWER_COMMAND_MAP),
             },
         ),
     )
@@ -240,7 +301,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
+    )
     if unload_ok:
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             entry.entry_id
@@ -265,48 +328,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the config entry when it changed."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-class SystemBridgeEntity(CoordinatorEntity[SystemBridgeDataUpdateCoordinator]):
-    """Defines a base System Bridge entity."""
-
-    def __init__(
-        self,
-        coordinator: SystemBridgeDataUpdateCoordinator,
-        api_port: int,
-        key: str,
-        name: str | None,
-    ) -> None:
-        """Initialize the System Bridge entity."""
-        super().__init__(coordinator)
-
-        self._hostname = coordinator.data.system.hostname
-        self._key = f"{self._hostname}_{key}"
-        self._name = f"{self._hostname} {name}"
-        self._configuration_url = (
-            f"http://{self._hostname}:{api_port}/app/settings.html"
-        )
-        self._mac_address = coordinator.data.system.mac_address
-        self._uuid = coordinator.data.system.uuid
-        self._version = coordinator.data.system.version
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this entity."""
-        return self._key
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this System Bridge instance."""
-        return DeviceInfo(
-            configuration_url=self._configuration_url,
-            connections={(dr.CONNECTION_NETWORK_MAC, self._mac_address)},
-            identifiers={(DOMAIN, self._uuid)},
-            name=self._hostname,
-            sw_version=self._version,
-        )

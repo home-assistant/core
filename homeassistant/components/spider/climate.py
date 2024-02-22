@@ -9,7 +9,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -40,7 +40,10 @@ async def async_setup_entry(
 class SpiderThermostat(ClimateEntity):
     """Representation of a thermostat."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, api, thermostat):
         """Initialize the thermostat."""
@@ -51,6 +54,13 @@ class SpiderThermostat(ClimateEntity):
         for operation_value in thermostat.operation_values:
             if operation_value in SPIDER_STATE_TO_HA:
                 self.support_hvac.append(SPIDER_STATE_TO_HA[operation_value])
+        self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
+        if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+            )
+        if thermostat.has_fan_mode:
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -64,23 +74,9 @@ class SpiderThermostat(ClimateEntity):
         )
 
     @property
-    def supported_features(self) -> ClimateEntityFeature:
-        """Return the list of supported features."""
-        if self.thermostat.has_fan_mode:
-            return (
-                ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-            )
-        return ClimateEntityFeature.TARGET_TEMPERATURE
-
-    @property
     def unique_id(self):
         """Return the id of the thermostat, if any."""
         return self.thermostat.id
-
-    @property
-    def name(self):
-        """Return the name of the thermostat, if any."""
-        return self.thermostat.name
 
     @property
     def current_temperature(self):

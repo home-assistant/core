@@ -8,7 +8,6 @@ from typing import Any
 import aiolifx_effects as aiolifx_effects_module
 import voluptuous as vol
 
-from homeassistant import util
 from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_TRANSITION,
@@ -24,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     _LOGGER,
@@ -112,6 +111,7 @@ class LIFXLight(LIFXEntity, LightEntity):
     """Representation of a LIFX light."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
+    _attr_name = None
 
     def __init__(
         self,
@@ -131,7 +131,6 @@ class LIFXLight(LIFXEntity, LightEntity):
         self.postponed_update: CALLBACK_TYPE | None = None
         self.entry = entry
         self._attr_unique_id = self.coordinator.serial_number
-        self._attr_name = self.bulb.label
         self._attr_min_color_temp_kelvin = bulb_features["min_kelvin"]
         self._attr_max_color_temp_kelvin = bulb_features["max_kelvin"]
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:
@@ -170,9 +169,7 @@ class LIFXLight(LIFXEntity, LightEntity):
 
     async def update_during_transition(self, when: int) -> None:
         """Update state at the start and end of a transition."""
-        if self.postponed_update:
-            self.postponed_update()
-            self.postponed_update = None
+        self._cancel_postponed_update()
 
         # Transition has started
         self.async_write_ha_state()
@@ -189,10 +186,10 @@ class LIFXLight(LIFXEntity, LightEntity):
                 """Refresh the state."""
                 await self.coordinator.async_refresh()
 
-            self.postponed_update = async_track_point_in_utc_time(
+            self.postponed_update = async_call_later(
                 self.hass,
+                timedelta(milliseconds=when),
                 _async_refresh,
-                util.dt.utcnow() + timedelta(milliseconds=when),
             )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -206,61 +203,60 @@ class LIFXLight(LIFXEntity, LightEntity):
     async def set_state(self, **kwargs: Any) -> None:
         """Set a color on the light and turn it on/off."""
         self.coordinator.async_set_updated_data(None)
-        async with self.coordinator.lock:
-            # Cancel any pending refreshes
-            bulb = self.bulb
+        # Cancel any pending refreshes
+        bulb = self.bulb
 
-            await self.effects_conductor.stop([bulb])
+        await self.effects_conductor.stop([bulb])
 
-            if ATTR_EFFECT in kwargs:
-                await self.default_effect(**kwargs)
-                return
+        if ATTR_EFFECT in kwargs:
+            await self.default_effect(**kwargs)
+            return
 
-            if ATTR_INFRARED in kwargs:
-                infrared_entity_id = self.coordinator.async_get_entity_id(
-                    Platform.SELECT, INFRARED_BRIGHTNESS
-                )
-                _LOGGER.warning(
-                    (
-                        "The 'infrared' attribute of 'lifx.set_state' is deprecated:"
-                        " call 'select.select_option' targeting '%s' instead"
-                    ),
-                    infrared_entity_id,
-                )
-                bulb.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
+        if ATTR_INFRARED in kwargs:
+            infrared_entity_id = self.coordinator.async_get_entity_id(
+                Platform.SELECT, INFRARED_BRIGHTNESS
+            )
+            _LOGGER.warning(
+                (
+                    "The 'infrared' attribute of 'lifx.set_state' is deprecated:"
+                    " call 'select.select_option' targeting '%s' instead"
+                ),
+                infrared_entity_id,
+            )
+            bulb.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
 
-            if ATTR_TRANSITION in kwargs:
-                fade = int(kwargs[ATTR_TRANSITION] * 1000)
-            else:
-                fade = 0
+        if ATTR_TRANSITION in kwargs:
+            fade = int(kwargs[ATTR_TRANSITION] * 1000)
+        else:
+            fade = 0
 
-            # These are both False if ATTR_POWER is not set
-            power_on = kwargs.get(ATTR_POWER, False)
-            power_off = not kwargs.get(ATTR_POWER, True)
+        # These are both False if ATTR_POWER is not set
+        power_on = kwargs.get(ATTR_POWER, False)
+        power_off = not kwargs.get(ATTR_POWER, True)
 
-            hsbk = find_hsbk(self.hass, **kwargs)
+        hsbk = find_hsbk(self.hass, **kwargs)
 
-            if not self.is_on:
-                if power_off:
-                    await self.set_power(False)
-                # If fading on with color, set color immediately
-                if hsbk and power_on:
-                    await self.set_color(hsbk, kwargs)
-                    await self.set_power(True, duration=fade)
-                elif hsbk:
-                    await self.set_color(hsbk, kwargs, duration=fade)
-                elif power_on:
-                    await self.set_power(True, duration=fade)
-            else:
-                if power_on:
-                    await self.set_power(True)
-                if hsbk:
-                    await self.set_color(hsbk, kwargs, duration=fade)
-                if power_off:
-                    await self.set_power(False, duration=fade)
+        if not self.is_on:
+            if power_off:
+                await self.set_power(False)
+            # If fading on with color, set color immediately
+            if hsbk and power_on:
+                await self.set_color(hsbk, kwargs)
+                await self.set_power(True, duration=fade)
+            elif hsbk:
+                await self.set_color(hsbk, kwargs, duration=fade)
+            elif power_on:
+                await self.set_power(True, duration=fade)
+        else:
+            if power_on:
+                await self.set_power(True)
+            if hsbk:
+                await self.set_color(hsbk, kwargs, duration=fade)
+            if power_off:
+                await self.set_power(False, duration=fade)
 
-            # Avoid state ping-pong by holding off updates as the state settles
-            await asyncio.sleep(LIFX_STATE_SETTLE_DELAY)
+        # Avoid state ping-pong by holding off updates as the state settles
+        await asyncio.sleep(LIFX_STATE_SETTLE_DELAY)
 
         # Update when the transition starts and ends
         await self.update_during_transition(fade)
@@ -274,9 +270,7 @@ class LIFXLight(LIFXEntity, LightEntity):
                 "This device does not support setting HEV cycle state"
             )
 
-        await self.coordinator.sensor_coordinator.async_set_hev_cycle_state(
-            power, duration or 0
-        )
+        await self.coordinator.async_set_hev_cycle_state(power, duration or 0)
         await self.update_during_transition(duration or 0)
 
     async def set_power(
@@ -287,7 +281,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         """Send a power change to the bulb."""
         try:
             await self.coordinator.async_set_power(pwr, duration)
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(f"Timeout setting power for {self.name}") from ex
 
     async def set_color(
@@ -300,7 +294,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         merged_hsbk = merge_hsbk(self.bulb.color, hsbk)
         try:
             await self.coordinator.async_set_color(merged_hsbk, duration)
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(f"Timeout setting color for {self.name}") from ex
 
     async def get_color(
@@ -309,7 +303,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         """Send a get color message to the bulb."""
         try:
             await self.coordinator.async_get_color()
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout setting getting color for {self.name}"
             ) from ex
@@ -329,6 +323,17 @@ class LIFXLight(LIFXEntity, LightEntity):
             self.manager.async_register_entity(self.entity_id, self.entry.entry_id)
         )
         return await super().async_added_to_hass()
+
+    def _cancel_postponed_update(self) -> None:
+        """Cancel postponed update, if applicable."""
+        if self.postponed_update:
+            self.postponed_update()
+            self.postponed_update = None
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        self._cancel_postponed_update()
+        return await super().async_will_remove_from_hass()
 
 
 class LIFXWhite(LIFXLight):
@@ -385,7 +390,7 @@ class LIFXMultiZone(LIFXColor):
         """Send a color change to the bulb."""
         bulb = self.bulb
         color_zones = bulb.color_zones
-        num_zones = len(color_zones)
+        num_zones = self.coordinator.get_number_of_zones()
 
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[HSBK_BRIGHTNESS] is None:
@@ -424,7 +429,7 @@ class LIFXMultiZone(LIFXColor):
                 await self.coordinator.async_set_color_zones(
                     zone, zone, zone_hsbk, duration, apply
                 )
-            except asyncio.TimeoutError as ex:
+            except TimeoutError as ex:
                 raise HomeAssistantError(
                     f"Timeout setting color zones for {self.name}"
                 ) from ex
@@ -439,7 +444,7 @@ class LIFXMultiZone(LIFXColor):
         """Send a get color zones message to the device."""
         try:
             await self.coordinator.async_get_color_zones()
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout getting color zones from {self.name}"
             ) from ex
@@ -472,7 +477,7 @@ class LIFXExtendedMultiZone(LIFXMultiZone):
             await self.coordinator.async_set_extended_color_zones(
                 color_zones, duration=duration
             )
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout setting color zones on {self.name}"
             ) from ex

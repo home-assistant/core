@@ -16,10 +16,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, PERCENTAGE
+from homeassistant.const import CONF_HOST, PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -35,14 +35,14 @@ UNIT_PAGES = "p"
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class BrotherSensorRequiredKeysMixin:
     """Class for Brother entity required keys."""
 
     value: Callable[[BrotherSensors], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BrotherSensorEntityDescription(
     SensorEntityDescription, BrotherSensorRequiredKeysMixin
 ):
@@ -52,15 +52,13 @@ class BrotherSensorEntityDescription(
 SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key="status",
-        icon="mdi:printer",
-        name="Status",
+        translation_key="status",
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.status,
     ),
     BrotherSensorEntityDescription(
         key="page_counter",
-        icon="mdi:file-document-outline",
-        name="Page counter",
+        translation_key="page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -68,8 +66,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="bw_counter",
-        icon="mdi:file-document-outline",
-        name="B/W counter",
+        translation_key="bw_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -77,8 +74,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="color_counter",
-        icon="mdi:file-document-outline",
-        name="Color counter",
+        translation_key="color_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -86,8 +82,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="duplex_unit_pages_counter",
-        icon="mdi:file-document-outline",
-        name="Duplex unit pages counter",
+        translation_key="duplex_unit_page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -95,8 +90,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="drum_remaining_life",
-        icon="mdi:chart-donut",
-        name="Drum remaining life",
+        translation_key="drum_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -104,8 +98,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="drum_remaining_pages",
-        icon="mdi:chart-donut",
-        name="Drum remaining pages",
+        translation_key="drum_remaining_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -113,8 +106,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="drum_counter",
-        icon="mdi:chart-donut",
-        name="Drum counter",
+        translation_key="drum_page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -122,8 +114,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="black_drum_remaining_life",
-        icon="mdi:chart-donut",
-        name="Black drum remaining life",
+        translation_key="black_drum_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -131,8 +122,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="black_drum_remaining_pages",
-        icon="mdi:chart-donut",
-        name="Black drum remaining pages",
+        translation_key="black_drum_remaining_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -140,8 +130,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="black_drum_counter",
-        icon="mdi:chart-donut",
-        name="Black drum counter",
+        translation_key="black_drum_page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -149,8 +138,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="cyan_drum_remaining_life",
-        icon="mdi:chart-donut",
-        name="Cyan drum remaining life",
+        translation_key="cyan_drum_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -158,8 +146,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="cyan_drum_remaining_pages",
-        icon="mdi:chart-donut",
-        name="Cyan drum remaining pages",
+        translation_key="cyan_drum_remaining_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -167,8 +154,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="cyan_drum_counter",
-        icon="mdi:chart-donut",
-        name="Cyan drum counter",
+        translation_key="cyan_drum_page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -176,8 +162,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="magenta_drum_remaining_life",
-        icon="mdi:chart-donut",
-        name="Magenta drum remaining life",
+        translation_key="magenta_drum_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -185,8 +170,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="magenta_drum_remaining_pages",
-        icon="mdi:chart-donut",
-        name="Magenta drum remaining pages",
+        translation_key="magenta_drum_remaining_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -194,8 +178,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="magenta_drum_counter",
-        icon="mdi:chart-donut",
-        name="Magenta drum counter",
+        translation_key="magenta_drum_page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -203,8 +186,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="yellow_drum_remaining_life",
-        icon="mdi:chart-donut",
-        name="Yellow drum remaining life",
+        translation_key="yellow_drum_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -212,8 +194,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="yellow_drum_remaining_pages",
-        icon="mdi:chart-donut",
-        name="Yellow drum remaining pages",
+        translation_key="yellow_drum_remaining_pages",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -221,8 +202,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="yellow_drum_counter",
-        icon="mdi:chart-donut",
-        name="Yellow drum counter",
+        translation_key="yellow_drum_page_counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -230,8 +210,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="belt_unit_remaining_life",
-        icon="mdi:current-ac",
-        name="Belt unit remaining life",
+        translation_key="belt_unit_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -239,8 +218,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="fuser_remaining_life",
-        icon="mdi:water-outline",
-        name="Fuser remaining life",
+        translation_key="fuser_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -248,8 +226,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="laser_remaining_life",
-        icon="mdi:spotlight-beam",
-        name="Laser remaining life",
+        translation_key="laser_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -257,8 +234,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="pf_kit_1_remaining_life",
-        icon="mdi:printer-3d",
-        name="PF Kit 1 remaining life",
+        translation_key="pf_kit_1_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -266,8 +242,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="pf_kit_mp_remaining_life",
-        icon="mdi:printer-3d",
-        name="PF Kit MP remaining life",
+        translation_key="pf_kit_mp_remaining_life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -275,8 +250,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="black_toner_remaining",
-        icon="mdi:printer-3d-nozzle",
-        name="Black toner remaining",
+        translation_key="black_toner_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -284,8 +258,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="cyan_toner_remaining",
-        icon="mdi:printer-3d-nozzle",
-        name="Cyan toner remaining",
+        translation_key="cyan_toner_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -293,8 +266,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="magenta_toner_remaining",
-        icon="mdi:printer-3d-nozzle",
-        name="Magenta toner remaining",
+        translation_key="magenta_toner_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -302,8 +274,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="yellow_toner_remaining",
-        icon="mdi:printer-3d-nozzle",
-        name="Yellow toner remaining",
+        translation_key="yellow_toner_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -311,8 +282,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="black_ink_remaining",
-        icon="mdi:printer-3d-nozzle",
-        name="Black ink remaining",
+        translation_key="black_ink_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -320,8 +290,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="cyan_ink_remaining",
-        icon="mdi:printer-3d-nozzle",
-        name="Cyan ink remaining",
+        translation_key="cyan_ink_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -329,8 +298,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="magenta_ink_remaining",
-        icon="mdi:printer-3d-nozzle",
-        name="Magenta ink remaining",
+        translation_key="magenta_ink_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -338,8 +306,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="yellow_ink_remaining",
-        icon="mdi:printer-3d-nozzle",
-        name="Yellow ink remaining",
+        translation_key="yellow_ink_remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -347,7 +314,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="uptime",
-        name="Uptime",
+        translation_key="last_restart",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -383,6 +350,7 @@ async def async_setup_entry(
     device_info = DeviceInfo(
         configuration_url=f"http://{entry.data[CONF_HOST]}/",
         identifiers={(DOMAIN, coordinator.data.serial)},
+        serial_number=coordinator.data.serial,
         manufacturer="Brother",
         model=coordinator.data.model,
         name=coordinator.data.model,

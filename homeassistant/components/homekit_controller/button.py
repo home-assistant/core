@@ -1,5 +1,4 @@
-"""
-Support for Homekit buttons.
+"""Support for Homekit buttons.
 
 These are mostly used where a HomeKit accessory exposes additional non-standard
 characteristics that don't map to a Home Assistant feature.
@@ -7,6 +6,7 @@ characteristics that don't map to a Home Assistant feature.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
@@ -16,9 +16,8 @@ from homeassistant.components.button import (
     ButtonEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -26,8 +25,10 @@ from . import KNOWN_DEVICES
 from .connection import HKDevice
 from .entity import CharacteristicEntity
 
+_LOGGER = logging.getLogger(__name__)
 
-@dataclass
+
+@dataclass(frozen=True)
 class HomeKitButtonEntityDescription(ButtonEntityDescription):
     """Describes Homekit button."""
 
@@ -52,6 +53,7 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
     CharacteristicsTypes.IDENTIFY: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.IDENTIFY,
         name="Identify",
+        device_class=ButtonDeviceClass.IDENTIFY,
         entity_category=EntityCategory.DIAGNOSTIC,
         write_value=True,
     ),
@@ -153,6 +155,29 @@ class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
             await self.async_put_characteristics({key: val})
 
 
+class HomeKitProvisionPreferredThreadCredentials(CharacteristicEntity, ButtonEntity):
+    """A button users can press to migrate their HomeKit BLE device to Thread."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    def get_characteristic_types(self) -> list[str]:
+        """Define the homekit characteristics the entity is tracking."""
+        return []
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        prefix = ""
+        if name := super().name:
+            prefix = name
+        return f"{prefix} Provision Preferred Thread Credentials"
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        await self._accessory.async_thread_provision()
+
+
 BUTTON_ENTITY_CLASSES: dict[str, type] = {
     CharacteristicsTypes.VENDOR_ECOBEE_CLEAR_HOLD: HomeKitEcobeeClearHoldButton,
+    CharacteristicsTypes.THREAD_CONTROL_POINT: HomeKitProvisionPreferredThreadCredentials,
 }

@@ -1,5 +1,4 @@
 """Test the Opentherm Gateway config flow."""
-import asyncio
 from unittest.mock import patch
 
 from pyotgw.vars import OTGW, OTGW_ABOUT
@@ -21,13 +20,14 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 MINIMAL_STATUS = {OTGW: {OTGW_ABOUT: "OpenTherm Gateway 4.2.5"}}
 
 
-async def test_form_user(hass):
+async def test_form_user(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -67,7 +67,7 @@ async def test_form_user(hass):
     assert len(mock_pyotgw_disconnect.mock_calls) == 1
 
 
-async def test_form_import(hass):
+async def test_form_import(hass: HomeAssistant) -> None:
     """Test import from existing config."""
 
     with patch(
@@ -102,7 +102,7 @@ async def test_form_import(hass):
     assert len(mock_pyotgw_disconnect.mock_calls) == 1
 
 
-async def test_form_duplicate_entries(hass):
+async def test_form_duplicate_entries(hass: HomeAssistant) -> None:
     """Test duplicate device or id errors."""
     flow1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -147,14 +147,14 @@ async def test_form_duplicate_entries(hass):
     assert len(mock_pyotgw_disconnect.mock_calls) == 1
 
 
-async def test_form_connection_timeout(hass):
+async def test_form_connection_timeout(hass: HomeAssistant) -> None:
     """Test we handle connection timeout."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "pyotgw.OpenThermGateway.connect", side_effect=(asyncio.TimeoutError)
+        "pyotgw.OpenThermGateway.connect", side_effect=(TimeoutError)
     ) as mock_connect, patch(
         "pyotgw.status.StatusManager._process_updates", return_value=None
     ):
@@ -168,7 +168,7 @@ async def test_form_connection_timeout(hass):
     assert len(mock_connect.mock_calls) == 1
 
 
-async def test_form_connection_error(hass):
+async def test_form_connection_error(hass: HomeAssistant) -> None:
     """Test we handle serial connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -188,7 +188,7 @@ async def test_form_connection_error(hass):
     assert len(mock_connect.mock_calls) == 1
 
 
-async def test_options_migration(hass):
+async def test_options_migration(hass: HomeAssistant) -> None:
     """Test migration of precision option after update."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -209,9 +209,11 @@ async def test_options_migration(hass):
         "homeassistant.components.opentherm_gw.OpenThermGatewayDevice.connect_and_subscribe",
         return_value=True,
     ), patch(
-        "homeassistant.components.opentherm_gw.async_setup", return_value=True
+        "homeassistant.components.opentherm_gw.async_setup",
+        return_value=True,
     ), patch(
-        "pyotgw.status.StatusManager._process_updates", return_value=None
+        "pyotgw.status.StatusManager._process_updates",
+        return_value=None,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -234,7 +236,7 @@ async def test_options_migration(hass):
         assert result["data"][CONF_FLOOR_TEMP] is True
 
 
-async def test_options_form(hass):
+async def test_options_form(hass: HomeAssistant) -> None:
     """Test the options form."""
     entry = MockConfigEntry(
         domain=DOMAIN,

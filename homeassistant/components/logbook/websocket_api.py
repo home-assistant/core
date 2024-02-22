@@ -15,18 +15,17 @@ from homeassistant.components.recorder import get_instance
 from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.json import JSON_DUMP
+from homeassistant.helpers.json import json_bytes
 import homeassistant.util.dt as dt_util
 
-from .const import LOGBOOK_ENTITIES_FILTER
+from .const import DOMAIN
 from .helpers import (
     async_determine_event_types,
     async_filter_entities,
     async_subscribe_events,
 )
-from .models import async_event_to_row
+from .models import LogbookConfig, async_event_to_row
 from .processor import EventProcessor
 
 MAX_PENDING_LOGBOOK_EVENTS = 2048
@@ -39,7 +38,7 @@ BIG_QUERY_RECENT_HOURS = 24
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(slots=True)
 class LogbookLiveStream:
     """Track a logbook live stream."""
 
@@ -71,7 +70,7 @@ def _async_send_empty_response(
     stream_end_time = end_time or dt_util.utcnow()
     empty_stream_message = _generate_stream_message([], start_time, stream_end_time)
     empty_response = messages.event_message(msg_id, empty_stream_message)
-    connection.send_message(JSON_DUMP(empty_response))
+    connection.send_message(json_bytes(empty_response))
 
 
 async def _async_send_historical_events(
@@ -166,7 +165,7 @@ async def _async_get_ws_stream_events(
     formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
     partial: bool,
-) -> tuple[str, dt | None]:
+) -> tuple[bytes, dt | None]:
     """Async wrapper around _ws_formatted_get_events."""
     return await get_instance(hass).async_add_executor_job(
         _ws_stream_get_events,
@@ -185,8 +184,8 @@ def _generate_stream_message(
     """Generate a logbook stream message response."""
     return {
         "events": events,
-        "start_time": dt_util.utc_to_timestamp(start_day),
-        "end_time": dt_util.utc_to_timestamp(end_day),
+        "start_time": start_day.timestamp(),
+        "end_time": end_day.timestamp(),
     }
 
 
@@ -197,7 +196,7 @@ def _ws_stream_get_events(
     formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
     partial: bool,
-) -> tuple[str, dt | None]:
+) -> tuple[bytes, dt | None]:
     """Fetch events and convert them to json in the executor."""
     events = event_processor.get_events(start_day, end_day)
     last_time = None
@@ -210,7 +209,7 @@ def _ws_stream_get_events(
         # data in case the UI needs to show that historical
         # data is still loading in the future
         message["partial"] = True
-    return JSON_DUMP(formatter(msg_id, message)), last_time
+    return json_bytes(formatter(msg_id, message)), last_time
 
 
 async def _async_events_consumer(
@@ -221,8 +220,6 @@ async def _async_events_consumer(
     event_processor: EventProcessor,
 ) -> None:
     """Stream events from the queue."""
-    event_processor.switch_to_live()
-
     while True:
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
@@ -241,7 +238,7 @@ async def _async_events_consumer(
             async_event_to_row(e) for e in events
         ):
             connection.send_message(
-                JSON_DUMP(
+                json_bytes(
                     messages.event_message(
                         msg_id,
                         {"events": logbook_events},
@@ -359,9 +356,10 @@ async def ws_event_stream(
             )
             _unsub()
 
-    entities_filter: EntityFilter | None = None
+    entities_filter: Callable[[str], bool] | None = None
     if not event_processor.limited_select:
-        entities_filter = hass.data[LOGBOOK_ENTITIES_FILTER]
+        logbook_config: LogbookConfig = hass.data[DOMAIN]
+        entities_filter = logbook_config.entity_filter
 
     async_subscribe_events(
         hass,
@@ -429,6 +427,7 @@ async def ws_event_stream(
         event_processor,
         partial=False,
     )
+    event_processor.switch_to_live()
 
 
 def _ws_formatted_get_events(
@@ -436,9 +435,9 @@ def _ws_formatted_get_events(
     start_time: dt,
     end_time: dt,
     event_processor: EventProcessor,
-) -> str:
+) -> bytes:
     """Fetch events and convert them to json in the executor."""
-    return JSON_DUMP(
+    return json_bytes(
         messages.result_message(
             msg_id, event_processor.get_events(start_time, end_time)
         )

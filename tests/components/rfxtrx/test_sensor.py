@@ -9,14 +9,14 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfTemperature,
 )
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
 
 from .conftest import create_rfx_test_cfg
 
 from tests.common import MockConfigEntry, mock_restore_cache
 
 
-async def test_default_config(hass, rfxtrx):
+async def test_default_config(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 0 sensor."""
     entry_data = create_rfx_test_cfg(devices={})
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -29,7 +29,7 @@ async def test_default_config(hass, rfxtrx):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_one_sensor(hass, rfxtrx):
+async def test_one_sensor(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 1 sensor."""
     entry_data = create_rfx_test_cfg(devices={"0a52080705020095220269": {}})
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -50,10 +50,10 @@ async def test_one_sensor(hass, rfxtrx):
 
 
 @pytest.mark.parametrize(
-    "state,event",
+    ("state", "event"),
     [["18.4", "0a520801070100b81b0279"], ["17.9", "0a52085e070100b31b0279"]],
 )
-async def test_state_restore(hass, rfxtrx, state, event):
+async def test_state_restore(hass: HomeAssistant, rfxtrx, state, event) -> None:
     """State restoration."""
 
     entity_id = "sensor.wt260_wt260h_wt440h_wt450_wt450h_07_01_temperature"
@@ -71,7 +71,7 @@ async def test_state_restore(hass, rfxtrx, state, event):
     assert hass.states.get(entity_id).state == state
 
 
-async def test_one_sensor_no_datatype(hass, rfxtrx):
+async def test_one_sensor_no_datatype(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 1 sensor."""
     entry_data = create_rfx_test_cfg(devices={"0a52080705020095220269": {}})
     mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
@@ -118,7 +118,7 @@ async def test_one_sensor_no_datatype(hass, rfxtrx):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
 
-async def test_several_sensors(hass, rfxtrx):
+async def test_several_sensors(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 3 sensors."""
     entry_data = create_rfx_test_cfg(
         devices={
@@ -162,7 +162,7 @@ async def test_several_sensors(hass, rfxtrx):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
 
-async def test_discover_sensor(hass, rfxtrx_automatic):
+async def test_discover_sensor(hass: HomeAssistant, rfxtrx_automatic) -> None:
     """Test with discovery of sensor."""
     rfxtrx = rfxtrx_automatic
 
@@ -265,7 +265,7 @@ async def test_discover_sensor(hass, rfxtrx_automatic):
     assert len(hass.states.async_all()) == 10
 
 
-async def test_update_of_sensors(hass, rfxtrx):
+async def test_update_of_sensors(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 3 sensors."""
     entry_data = create_rfx_test_cfg(
         devices={
@@ -309,7 +309,7 @@ async def test_update_of_sensors(hass, rfxtrx):
     assert state.state == "15"
 
 
-async def test_rssi_sensor(hass, rfxtrx):
+async def test_rssi_sensor(hass: HomeAssistant, rfxtrx) -> None:
     """Test with 1 sensor."""
     entry_data = create_rfx_test_cfg(
         devices={

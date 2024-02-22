@@ -113,7 +113,7 @@ async def async_setup_entry(
     async_add_entities([DaikinClimate(daikin_api)], update_before_add=True)
 
 
-def format_target_temperature(target_temperature):
+def format_target_temperature(target_temperature: float) -> str:
     """Format target temperature to be sent to the Daikin unit, rounding to nearest half degree."""
     return str(round(float(target_temperature) * 2, 0) / 2).rstrip("0").rstrip(".")
 
@@ -124,37 +124,43 @@ class DaikinClimate(ClimateEntity):
     _attr_name = None
     _attr_has_entity_name = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_hvac_modes = list(HA_STATE_TO_DAIKIN)
+    _attr_target_temperature_step = 1
+    _attr_fan_modes: list[str]
+    _attr_swing_modes: list[str]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, api: DaikinApi) -> None:
         """Initialize the climate device."""
 
         self._api = api
-        self._attr_hvac_modes = list(HA_STATE_TO_DAIKIN)
-        self._attr_fan_modes = self._api.device.fan_rate
-        self._attr_swing_modes = self._api.device.swing_modes
-        self._list = {
+        self._attr_fan_modes = api.device.fan_rate
+        self._attr_swing_modes = api.device.swing_modes
+        self._attr_device_info = api.device_info
+        self._list: dict[str, list[Any]] = {
             ATTR_HVAC_MODE: self._attr_hvac_modes,
             ATTR_FAN_MODE: self._attr_fan_modes,
             ATTR_SWING_MODE: self._attr_swing_modes,
         }
 
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TARGET_TEMPERATURE
+        )
 
-        if (
-            self._api.device.support_away_mode
-            or self._api.device.support_advanced_modes
-        ):
+        if api.device.support_away_mode or api.device.support_advanced_modes:
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
-        if self._api.device.support_fan_rate:
+        if api.device.support_fan_rate:
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
-        if self._api.device.support_swing_mode:
+        if api.device.support_swing_mode:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
-    async def _set(self, settings):
+    async def _set(self, settings: dict[str, Any]) -> None:
         """Set device settings using API."""
-        values = {}
+        values: dict[str, Any] = {}
 
         for attr in (ATTR_TEMPERATURE, ATTR_FAN_MODE, ATTR_SWING_MODE, ATTR_HVAC_MODE):
             if (value := settings.get(attr)) is None:
@@ -181,24 +187,19 @@ class DaikinClimate(ClimateEntity):
             await self._api.device.set(values)
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID."""
         return self._api.device.mac
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._api.device.inside_temperature
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._api.device.target_temperature
-
-    @property
-    def target_temperature_step(self):
-        """Return the supported step of target temperature."""
-        return 1
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -227,7 +228,7 @@ class DaikinClimate(ClimateEntity):
         await self._set({ATTR_HVAC_MODE: hvac_mode})
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str:
         """Return the fan setting."""
         return self._api.device.represent(HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE])[1].title()
 
@@ -236,7 +237,7 @@ class DaikinClimate(ClimateEntity):
         await self._set({ATTR_FAN_MODE: fan_mode})
 
     @property
-    def swing_mode(self):
+    def swing_mode(self) -> str:
         """Return the fan setting."""
         return self._api.device.represent(HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE])[1].title()
 
@@ -245,7 +246,7 @@ class DaikinClimate(ClimateEntity):
         await self._set({ATTR_SWING_MODE: swing_mode})
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Return the preset_mode."""
         if (
             self._api.device.represent(HA_ATTR_TO_DAIKIN[ATTR_PRESET_MODE])[1]
@@ -276,20 +277,19 @@ class DaikinClimate(ClimateEntity):
             await self._api.device.set_advanced_mode(
                 HA_PRESET_TO_DAIKIN[PRESET_ECO], ATTR_STATE_ON
             )
-        else:
-            if self.preset_mode == PRESET_AWAY:
-                await self._api.device.set_holiday(ATTR_STATE_OFF)
-            elif self.preset_mode == PRESET_BOOST:
-                await self._api.device.set_advanced_mode(
-                    HA_PRESET_TO_DAIKIN[PRESET_BOOST], ATTR_STATE_OFF
-                )
-            elif self.preset_mode == PRESET_ECO:
-                await self._api.device.set_advanced_mode(
-                    HA_PRESET_TO_DAIKIN[PRESET_ECO], ATTR_STATE_OFF
-                )
+        elif self.preset_mode == PRESET_AWAY:
+            await self._api.device.set_holiday(ATTR_STATE_OFF)
+        elif self.preset_mode == PRESET_BOOST:
+            await self._api.device.set_advanced_mode(
+                HA_PRESET_TO_DAIKIN[PRESET_BOOST], ATTR_STATE_OFF
+            )
+        elif self.preset_mode == PRESET_ECO:
+            await self._api.device.set_advanced_mode(
+                HA_PRESET_TO_DAIKIN[PRESET_ECO], ATTR_STATE_OFF
+            )
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """List of available preset modes."""
         ret = [PRESET_NONE]
         if self._api.device.support_away_mode:
@@ -311,8 +311,3 @@ class DaikinClimate(ClimateEntity):
         await self._api.device.set(
             {HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]: HA_STATE_TO_DAIKIN[HVACMode.OFF]}
         )
-
-    @property
-    def device_info(self):
-        """Return a device description for device registry."""
-        return self._api.device_info

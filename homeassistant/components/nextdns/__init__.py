@@ -7,7 +7,6 @@ import logging
 from typing import TypeVar
 
 from aiohttp.client_exceptions import ClientConnectorError
-from async_timeout import timeout
 from nextdns import (
     AnalyticsDnssec,
     AnalyticsEncryption,
@@ -27,8 +26,7 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -49,7 +47,7 @@ from .const import (
 CoordinatorDataT = TypeVar("CoordinatorDataT", bound=NextDnsData)
 
 
-class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
+class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching NextDNS data API."""
 
     def __init__(
@@ -76,7 +74,7 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
     async def _async_update_data(self) -> CoordinatorDataT:
         """Update data via internal method."""
         try:
-            async with timeout(10):
+            async with asyncio.timeout(10):
                 return await self._async_update_data_internal()
         except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
             raise UpdateFailed(err) from err
@@ -86,7 +84,7 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[CoordinatorDataT]):
         raise NotImplementedError("Update method not implemented")
 
 
-class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsStatus]):
+class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsStatus]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching NextDNS analytics status data from API."""
 
     async def _async_update_data_internal(self) -> AnalyticsStatus:
@@ -94,7 +92,7 @@ class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsStatus]):
         return await self.nextdns.get_analytics_status(self.profile_id)
 
 
-class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsDnssec]):
+class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsDnssec]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching NextDNS analytics Dnssec data from API."""
 
     async def _async_update_data_internal(self) -> AnalyticsDnssec:
@@ -102,7 +100,7 @@ class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsDnssec]):
         return await self.nextdns.get_analytics_dnssec(self.profile_id)
 
 
-class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsEncryption]):
+class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsEncryption]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching NextDNS analytics encryption data from API."""
 
     async def _async_update_data_internal(self) -> AnalyticsEncryption:
@@ -110,7 +108,7 @@ class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsEncry
         return await self.nextdns.get_analytics_encryption(self.profile_id)
 
 
-class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsIpVersions]):
+class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsIpVersions]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching NextDNS analytics IP versions data from API."""
 
     async def _async_update_data_internal(self) -> AnalyticsIpVersions:
@@ -118,7 +116,7 @@ class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsIpVer
         return await self.nextdns.get_analytics_ip_versions(self.profile_id)
 
 
-class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsProtocols]):
+class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsProtocols]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching NextDNS analytics protocols data from API."""
 
     async def _async_update_data_internal(self) -> AnalyticsProtocols:
@@ -126,7 +124,7 @@ class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsProtoc
         return await self.nextdns.get_analytics_protocols(self.profile_id)
 
 
-class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator[Settings]):
+class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator[Settings]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching NextDNS connection data from API."""
 
     async def _async_update_data_internal(self) -> Settings:
@@ -134,7 +132,7 @@ class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator[Settings]):
         return await self.nextdns.get_settings(self.profile_id)
 
 
-class NextDnsConnectionUpdateCoordinator(NextDnsUpdateCoordinator[ConnectionStatus]):
+class NextDnsConnectionUpdateCoordinator(NextDnsUpdateCoordinator[ConnectionStatus]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage fetching NextDNS connection data from API."""
 
     async def _async_update_data_internal(self) -> ConnectionStatus:
@@ -145,7 +143,7 @@ class NextDnsConnectionUpdateCoordinator(NextDnsUpdateCoordinator[ConnectionStat
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
-COORDINATORS = [
+COORDINATORS: list[tuple[str, type[NextDnsUpdateCoordinator], timedelta]] = [
     (ATTR_CONNECTION, NextDnsConnectionUpdateCoordinator, UPDATE_INTERVAL_CONNECTION),
     (ATTR_DNSSEC, NextDnsDnssecUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_ENCRYPTION, NextDnsEncryptionUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
@@ -163,28 +161,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     websession = async_get_clientsession(hass)
     try:
-        async with timeout(10):
+        async with asyncio.timeout(10):
             nextdns = await NextDns.create(websession, api_key)
-    except (ApiError, ClientConnectorError, asyncio.TimeoutError) as err:
+    except (ApiError, ClientConnectorError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
-
     tasks = []
+    coordinators = {}
 
     # Independent DataUpdateCoordinator is used for each API endpoint to avoid
     # unnecessary requests when entities using this endpoint are disabled.
     for coordinator_name, coordinator_class, update_interval in COORDINATORS:
-        hass.data[DOMAIN][entry.entry_id][coordinator_name] = coordinator_class(
-            hass, nextdns, profile_id, update_interval
-        )
-        tasks.append(
-            hass.data[DOMAIN][entry.entry_id][
-                coordinator_name
-            ].async_config_entry_first_refresh()
-        )
+        coordinator = coordinator_class(hass, nextdns, profile_id, update_interval)
+        tasks.append(coordinator.async_config_entry_first_refresh())
+        coordinators[coordinator_name] = coordinator
 
     await asyncio.gather(*tasks)
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

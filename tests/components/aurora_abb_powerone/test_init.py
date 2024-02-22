@@ -4,22 +4,19 @@ from unittest.mock import patch
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
     DOMAIN,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unloading the aurora_abb_powerone entry."""
 
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
-        "homeassistant.components.aurora_abb_powerone.sensor.AuroraSensor.update",
-        return_value=None,
-    ), patch(
         "aurorapy.client.AuroraSerialClient.serial_number",
         return_value="9876543",
     ), patch(

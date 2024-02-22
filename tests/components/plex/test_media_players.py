@@ -2,13 +2,20 @@
 from unittest.mock import patch
 
 from plexapi.exceptions import NotFound
+import requests_mock
+
+from homeassistant.core import HomeAssistant
 
 
 async def test_plex_tv_clients(
-    hass, entry, setup_plex_server, requests_mock, player_plexweb_resources
-):
+    hass: HomeAssistant,
+    entry,
+    setup_plex_server,
+    requests_mock: requests_mock.Mocker,
+    player_plexhtpc_resources,
+) -> None:
     """Test getting Plex clients from plex.tv."""
-    requests_mock.get("/resources", text=player_plexweb_resources)
+    requests_mock.get("/resources", text=player_plexhtpc_resources)
 
     with patch("plexapi.myplex.MyPlexResource.connect", side_effect=NotFound):
         await setup_plex_server()

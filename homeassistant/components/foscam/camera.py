@@ -1,19 +1,27 @@
-"""This component provides basic support for Foscam IP cameras."""
+"""Component providing basic support for Foscam IP cameras."""
 from __future__ import annotations
 
 import asyncio
 
-from libpyfoscam import FoscamCamera
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
+from .const import (
+    CONF_RTSP_PORT,
+    CONF_STREAM,
+    DOMAIN,
+    LOGGER,
+    SERVICE_PTZ,
+    SERVICE_PTZ_PRESET,
+)
+from .coordinator import FoscamCoordinator
+from .entity import FoscamEntity
 
 DIR_UP = "up"
 DIR_DOWN = "down"
@@ -80,26 +88,27 @@ async def async_setup_entry(
         "async_perform_ptz_preset",
     )
 
-    camera = FoscamCamera(
-        config_entry.data[CONF_HOST],
-        config_entry.data[CONF_PORT],
-        config_entry.data[CONF_USERNAME],
-        config_entry.data[CONF_PASSWORD],
-        verbose=False,
-    )
+    coordinator: FoscamCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    async_add_entities([HassFoscamCamera(camera, config_entry)])
+    async_add_entities([HassFoscamCamera(coordinator, config_entry)])
 
 
-class HassFoscamCamera(Camera):
+class HassFoscamCamera(FoscamEntity, Camera):
     """An implementation of a Foscam IP camera."""
 
-    def __init__(self, camera: FoscamCamera, config_entry: ConfigEntry) -> None:
-        """Initialize a Foscam camera."""
-        super().__init__()
+    _attr_has_entity_name = True
+    _attr_name = None
 
-        self._foscam_session = camera
-        self._attr_name = config_entry.title
+    def __init__(
+        self,
+        coordinator: FoscamCoordinator,
+        config_entry: ConfigEntry,
+    ) -> None:
+        """Initialize a Foscam camera."""
+        super().__init__(coordinator, config_entry.entry_id)
+        Camera.__init__(self)
+
+        self._foscam_session = coordinator.session
         self._username = config_entry.data[CONF_USERNAME]
         self._password = config_entry.data[CONF_PASSWORD]
         self._stream = config_entry.data[CONF_STREAM]
@@ -111,6 +120,9 @@ class HassFoscamCamera(Camera):
     async def async_added_to_hass(self) -> None:
         """Handle entity addition to hass."""
         # Get motion detection status
+
+        await super().async_added_to_hass()
+
         ret, response = await self.hass.async_add_executor_job(
             self._foscam_session.get_motion_detect_config
         )

@@ -1,5 +1,5 @@
 """Common Met Office Data class used by both sensor and entity."""
-
+from __future__ import annotations
 
 from dataclasses import dataclass
 

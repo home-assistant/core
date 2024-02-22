@@ -1,8 +1,13 @@
 """Test integration platform helpers."""
+from collections.abc import Callable
+from types import ModuleType
 from unittest.mock import Mock
 
+import pytest
+
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
     async_process_integration_platforms,
 )
 from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
@@ -10,7 +15,7 @@ from homeassistant.setup import ATTR_COMPONENT, EVENT_COMPONENT_LOADED
 from tests.common import mock_platform
 
 
-async def test_process_integration_platforms(hass):
+async def test_process_integration_platforms(hass: HomeAssistant) -> None:
     """Test processing integrations."""
     loaded_platform = Mock()
     mock_platform(hass, "loaded.platform_to_check", loaded_platform)
@@ -40,13 +45,106 @@ async def test_process_integration_platforms(hass):
     assert processed[1][0] == "event"
     assert processed[1][1] == event_platform
 
-    # Verify we only process the platform once if we call it manually
-    await async_process_integration_platform_for_component(hass, "event")
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "event"})
+    await hass.async_block_till_done()
+
+    # Firing again should not check again
     assert len(processed) == 2
 
 
-async def test_process_integration_platforms_none_loaded(hass):
-    """Test processing integrations with none loaded."""
-    # Verify we can call async_process_integration_platform_for_component
-    # when there are none loaded and it does not throw
-    await async_process_integration_platform_for_component(hass, "any")
+@callback
+def _process_platform_callback(
+    hass: HomeAssistant, domain: str, platform: ModuleType
+) -> None:
+    """Process platform."""
+    raise HomeAssistantError("Non-compliant platform")
+
+
+async def _process_platform_coro(
+    hass: HomeAssistant, domain: str, platform: ModuleType
+) -> None:
+    """Process platform."""
+    raise HomeAssistantError("Non-compliant platform")
+
+
+@pytest.mark.no_fail_on_log_exception
+@pytest.mark.parametrize(
+    "process_platform", (_process_platform_callback, _process_platform_coro)
+)
+async def test_process_integration_platforms_non_compliant(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, process_platform: Callable
+) -> None:
+    """Test processing integrations using with a non-compliant platform."""
+    loaded_platform = Mock()
+    mock_platform(hass, "loaded_unique_880.platform_to_check", loaded_platform)
+    hass.config.components.add("loaded_unique_880")
+
+    event_platform = Mock()
+    mock_platform(hass, "event_unique_990.platform_to_check", event_platform)
+
+    processed = []
+
+    await async_process_integration_platforms(
+        hass, "platform_to_check", process_platform
+    )
+
+    assert len(processed) == 0
+    assert "Exception in " in caplog.text
+    assert "platform_to_check" in caplog.text
+    assert "Non-compliant platform" in caplog.text
+    assert "loaded_unique_880" in caplog.text
+    caplog.clear()
+
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "event_unique_990"})
+    await hass.async_block_till_done()
+
+    assert "Exception in " in caplog.text
+    assert "platform_to_check" in caplog.text
+    assert "Non-compliant platform" in caplog.text
+    assert "event_unique_990" in caplog.text
+
+    assert len(processed) == 0
+
+
+async def test_broken_integration(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test handling an integration with a broken or missing manifest."""
+    Mock()
+    hass.config.components.add("loaded")
+
+    event_platform = Mock()
+    mock_platform(hass, "event.platform_to_check", event_platform)
+
+    processed = []
+
+    async def _process_platform(hass, domain, platform):
+        """Process platform."""
+        processed.append((domain, platform))
+
+    await async_process_integration_platforms(
+        hass, "platform_to_check", _process_platform
+    )
+
+    assert len(processed) == 0
+    assert "Error importing integration loaded for platform_to_check" in caplog.text
+
+
+async def test_process_integration_platforms_no_integrations(
+    hass: HomeAssistant,
+) -> None:
+    """Test processing integrations when no integrations are loaded."""
+    event_platform = Mock()
+    mock_platform(hass, "event.platform_to_check", event_platform)
+
+    processed = []
+
+    async def _process_platform(hass, domain, platform):
+        """Process platform."""
+        processed.append((domain, platform))
+
+    await async_process_integration_platforms(
+        hass, "platform_to_check", _process_platform
+    )
+
+    assert len(processed) == 0

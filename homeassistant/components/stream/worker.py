@@ -4,16 +4,17 @@ from __future__ import annotations
 from collections import defaultdict, deque
 from collections.abc import Callable, Generator, Iterator, Mapping
 import contextlib
+from dataclasses import fields
 import datetime
 from io import SEEK_END, BytesIO
 import logging
 from threading import Event
-from typing import Any, cast
+from typing import Any, Self, cast
 
-import attr
 import av
 
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import redact_credentials
 from .const import (
@@ -140,7 +141,7 @@ class StreamMuxer:
         self._part_has_keyframe = False
         self._stream_settings = stream_settings
         self._stream_state = stream_state
-        self._start_time = datetime.datetime.utcnow()
+        self._start_time = dt_util.utcnow()
 
     def make_new_av(
         self,
@@ -160,12 +161,16 @@ class StreamMuxer:
             format=SEGMENT_CONTAINER_FORMAT,
             container_options={
                 **{
-                    # Removed skip_sidx - see https://github.com/home-assistant/core/pull/39970
-                    # "cmaf" flag replaces several of the movflags used, but too recent to use for now
+                    # Removed skip_sidx - see:
+                    # https://github.com/home-assistant/core/pull/39970
+                    # "cmaf" flag replaces several of the movflags used,
+                    # but too recent to use for now
                     "movflags": "frag_custom+empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
-                    # Sometimes the first segment begins with negative timestamps, and this setting just
-                    # adjusts the timestamps in the output from that segment to start from 0. Helps from
-                    # having to make some adjustments in test_durations
+                    # Sometimes the first segment begins with negative timestamps,
+                    # and this setting just
+                    # adjusts the timestamps in the output from that segment to start
+                    # from 0. Helps from having to make some adjustments
+                    # in test_durations
                     "avoid_negative_ts": "make_non_negative",
                     "fragment_index": str(sequence + 1),
                     "video_track_timescale": str(int(1 / input_vstream.time_base)),
@@ -176,22 +181,31 @@ class StreamMuxer:
                 **(
                     {
                         "movflags": "empty_moov+default_base_moof+frag_discont+negative_cts_offsets+skip_trailer+delay_moov",
-                        # Create a fragment every TARGET_PART_DURATION. The data from each fragment is stored in
-                        # a "Part" that can be combined with the data from all the other "Part"s, plus an init
-                        # section, to reconstitute the data in a "Segment".
-                        # The LL-HLS spec allows for a fragment's duration to be within the range [0.85x,1.0x]
-                        # of the part target duration. We use the frag_duration option to tell ffmpeg to try to
-                        # cut the fragments when they reach frag_duration. However, the resulting fragments can
-                        # have variability in their durations and can end up being too short or too long. With a
-                        # video track with no audio, the discrete nature of frames means that the frame at the
-                        # end of a fragment will sometimes extend slightly beyond the desired frag_duration.
-                        # If there are two tracks, as in the case of a video feed with audio, there is an added
-                        # wrinkle as the fragment cut seems to be done on the first track that crosses the desired
-                        # threshold, and cutting on the audio track may also result in a shorter video fragment
-                        # than desired.
-                        # Given this, our approach is to give ffmpeg a frag_duration somewhere in the middle
-                        # of the range, hoping that the parts stay pretty well bounded, and we adjust the part
-                        # durations a bit in the hls metadata so that everything "looks" ok.
+                        # Create a fragment every TARGET_PART_DURATION. The data from
+                        # each fragment is stored in a "Part" that can be combined with
+                        # the data from all the other "Part"s, plus an init section,
+                        # to reconstitute the data in a "Segment".
+                        #
+                        # The LL-HLS spec allows for a fragment's duration to be within
+                        # the range [0.85x,1.0x] of the part target duration. We use the
+                        # frag_duration option to tell ffmpeg to try to cut the
+                        # fragments when they reach frag_duration. However,
+                        # the resulting fragments can have variability in their
+                        # durations and can end up being too short or too long. With a
+                        # video track with no audio, the discrete nature of frames means
+                        # that the frame at the end of a fragment will sometimes extend
+                        # slightly beyond the desired frag_duration.
+                        #
+                        # If there are two tracks, as in the case of a video feed with
+                        # audio, there is an added wrinkle as the fragment cut seems to
+                        # be done on the first track that crosses the desired threshold,
+                        # and cutting on the audio track may also result in a shorter
+                        # video fragment than desired.
+                        #
+                        # Given this, our approach is to give ffmpeg a frag_duration
+                        # somewhere in the middle of the range, hoping that the parts
+                        # stay pretty well bounded, and we adjust the part durations
+                        # a bit in the hls metadata so that everything "looks" ok.
                         "frag_duration": str(
                             int(self._stream_settings.part_target_duration * 9e5)
                         ),
@@ -269,7 +283,7 @@ class StreamMuxer:
             init=read_init(self._memory_file),
             # Fetch the latest StreamOutputs, which may have changed since the
             # worker started.
-            stream_outputs=self._stream_state.outputs,
+            _stream_outputs=self._stream_state.outputs,
             start_time=self._start_time,
         )
         self._memory_file_pos = self._memory_file.tell()
@@ -386,7 +400,7 @@ class PeekIterator(Iterator):
         # A pointer to either _iterator or _buffer
         self._next = self._iterator.__next__
 
-    def __iter__(self) -> Iterator:
+    def __iter__(self) -> Self:
         """Return an iterator."""
         return self
 
@@ -425,10 +439,10 @@ class TimestampValidator:
         )
         # Number of consecutive missing decompression timestamps
         self._missing_dts = 0
-        # For the bounds, just use the larger of the two values. If the error is not flagged
-        # by one stream, it should just get flagged by the other stream. Either value should
-        # result in a value which is much less than a 32 bit INT_MAX, which helps avoid the
-        # assertion error from FFmpeg.
+        # For the bounds, just use the larger of the two values. If the error
+        # is not flagged by one stream, it should just get flagged by the other
+        # stream. Either value should result in a value which is much less than
+        # a 32 bit INT_MAX, which helps avoid the assertion error from FFmpeg.
         self._max_dts_gap = MAX_TIMESTAMP_GAP * max(
             inv_video_time_base, inv_audio_time_base
         )
@@ -523,7 +537,7 @@ def stream_worker(
         audio_stream = None
     # Disable ll-hls for hls inputs
     if container.format.name == "hls":
-        for field in attr.fields(StreamSettings):
+        for field in fields(StreamSettings):
             setattr(
                 stream_settings,
                 field.name,
@@ -610,4 +624,4 @@ def stream_worker(
             muxer.mux_packet(packet)
 
             if packet.is_keyframe and is_video(packet):
-                keyframe_converter.packet = packet
+                keyframe_converter.stash_keyframe_packet(packet)

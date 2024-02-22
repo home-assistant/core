@@ -1,20 +1,14 @@
 play_media:
-  name: Play media
-  description: Downloads file from given URL.
   target:
     entity:
       domain: media_player
   fields:
     media_content_id:
-      name: Media content ID
-      description: The ID of the content to play. Platform dependent.
       required: true
       example: "https://soundcloud.com/bruttoband/brutto-11"
       selector:
         text:
     media_content_type:
-      name: Media content type
-      description: The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST MUSIC.
       required: true
       selector:
         select:

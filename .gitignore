@@ -8,6 +8,9 @@ tests/testing_config/home-assistant.log*
 data/
 .token
 
+# Translations
+homeassistant/components/*/translations
+
 # Hide sublime text stuff
 *.sublime-project
 *.sublime-workspace
@@ -64,6 +67,7 @@ htmlcov/
 test-reports/
 test-results.xml
 test-output.xml
+pytest-*.txt
 
 # Translations
 *.mo
@@ -106,9 +110,6 @@ virtualization/vagrant/config
 !.vscode/extensions.json
 !.vscode/tasks.json
 .env
-
-# Built docs
-docs/build
 
 # Windows Explorer
 desktop.ini

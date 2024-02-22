@@ -2,10 +2,12 @@
 import pytest
 
 from homeassistant.components import freedns
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 ACCESS_TOKEN = "test_token"
 UPDATE_INTERVAL = freedns.DEFAULT_INTERVAL
@@ -35,7 +37,7 @@ def setup_freedns(hass, aioclient_mock):
     )
 
 
-async def test_setup(hass, aioclient_mock):
+async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test setup works if update passes."""
     params = {}
     params[ACCESS_TOKEN] = ""
@@ -61,7 +63,9 @@ async def test_setup(hass, aioclient_mock):
     assert aioclient_mock.call_count == 2
 
 
-async def test_setup_fails_if_wrong_token(hass, aioclient_mock):
+async def test_setup_fails_if_wrong_token(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test setup fails if first update fails through wrong token."""
     params = {}
     params[ACCESS_TOKEN] = ""

@@ -1,9 +1,9 @@
 {
   "domain": "device_sun_light_trigger",
   "name": "Presence-based Lights",
-  "documentation": "https://www.home-assistant.io/integrations/device_sun_light_trigger",
   "after_dependencies": ["device_tracker", "group", "light", "person"],
   "codeowners": [],
-  "quality_scale": "internal",
-  "iot_class": "calculated"
+  "documentation": "https://www.home-assistant.io/integrations/device_sun_light_trigger",
+  "iot_class": "calculated",
+  "quality_scale": "internal"
 }

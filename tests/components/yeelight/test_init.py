@@ -1,5 +1,4 @@
 """Test Yeelight."""
-import asyncio
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -51,7 +50,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
+async def test_ip_changes_fallback_discovery(hass: HomeAssistant) -> None:
     """Test Yeelight ip changes and we fallback to discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_ID: ID, CONF_HOST: "5.5.5.5"}, unique_id=ID
@@ -96,7 +95,7 @@ async def test_ip_changes_fallback_discovery(hass: HomeAssistant):
     assert entity_registry.async_get(binary_sensor_entity_id) is not None
 
 
-async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
+async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant) -> None:
     """Test Yeelight ip changes and we fallback to discovery."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "5.5.5.5"})
     config_entry.add_to_hass(hass)
@@ -112,7 +111,7 @@ async def test_ip_changes_id_missing_cannot_fallback(hass: HomeAssistant):
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_discovery(hass: HomeAssistant):
+async def test_setup_discovery(hass: HomeAssistant) -> None:
     """Test setting up Yeelight by discovery."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, **CONFIG_ENTRY_DATA}
@@ -154,7 +153,7 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 
 async def test_setup_discovery_with_manually_configured_network_adapter(
     hass: HomeAssistant,
-):
+) -> None:
     """Test setting up Yeelight by discovery with a manually configured network adapter."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, **CONFIG_ENTRY_DATA}
@@ -209,8 +208,8 @@ _ADAPTERS_WITH_MANUAL_CONFIG_ONE_FAILING = [
 
 
 async def test_setup_discovery_with_manually_configured_network_adapter_one_fails(
-    hass: HomeAssistant, caplog
-):
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setting up Yeelight by discovery with a manually configured network adapter with one that fails to bind."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, **CONFIG_ENTRY_DATA}
@@ -244,7 +243,7 @@ async def test_setup_discovery_with_manually_configured_network_adapter_one_fail
     assert f"Failed to setup listener for ('{FAIL_TO_BIND_IP}', 0)" in caplog.text
 
 
-async def test_setup_import(hass: HomeAssistant):
+async def test_setup_import(hass: HomeAssistant) -> None:
     """Test import from yaml."""
     mocked_bulb = _mocked_bulb()
     name = "yeelight"
@@ -273,7 +272,7 @@ async def test_setup_import(hass: HomeAssistant):
     assert entry.data[CONF_ID] == "0x000000000015243f"
 
 
-async def test_unique_ids_device(hass: HomeAssistant):
+async def test_unique_ids_device(hass: HomeAssistant) -> None:
     """Test Yeelight unique IDs from yeelight device IDs."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -298,7 +297,7 @@ async def test_unique_ids_device(hass: HomeAssistant):
     assert entity_registry.async_get(ENTITY_AMBILIGHT).unique_id == f"{ID}-ambilight"
 
 
-async def test_unique_ids_entry(hass: HomeAssistant):
+async def test_unique_ids_entry(hass: HomeAssistant) -> None:
     """Test Yeelight unique IDs from entry IDs."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -329,7 +328,7 @@ async def test_unique_ids_entry(hass: HomeAssistant):
     )
 
 
-async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
+async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant) -> None:
     """Test Yeelight off while adding to ha, for example on HA start."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={**CONFIG_ENTRY_DATA, CONF_HOST: IP_ADDRESS}, unique_id=ID
@@ -356,7 +355,9 @@ async def test_bulb_off_while_adding_in_ha(hass: HomeAssistant):
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_async_listen_error_late_discovery(hass, caplog):
+async def test_async_listen_error_late_discovery(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the async listen error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
@@ -366,14 +367,14 @@ async def test_async_listen_error_late_discovery(hass, caplog):
     with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+        await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     await hass.async_block_till_done()
     assert "Waiting for 0x15243f to be discovered" in caplog.text
 
     with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-        await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
 
@@ -381,7 +382,9 @@ async def test_async_listen_error_late_discovery(hass, caplog):
     assert config_entry.data[CONF_DETECTED_MODEL] == MODEL
 
 
-async def test_fail_to_fetch_initial_state(hass, caplog):
+async def test_fail_to_fetch_initial_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test failing to fetch initial state results in a retry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: IP_ADDRESS, **CONFIG_ENTRY_DATA}
@@ -395,21 +398,23 @@ async def test_fail_to_fetch_initial_state(hass, caplog):
     with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+        await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     await hass.async_block_till_done()
     assert "Could not fetch initial state; try power cycling the device" in caplog.text
 
     with _patch_discovery(), patch(f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-        await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_unload_before_discovery(hass, caplog):
+async def test_unload_before_discovery(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test unloading before discovery."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
     config_entry.add_to_hass(hass)
@@ -429,7 +434,7 @@ async def test_unload_before_discovery(hass, caplog):
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_async_listen_error_has_host_with_id(hass: HomeAssistant):
+async def test_async_listen_error_has_host_with_id(hass: HomeAssistant) -> None:
     """Test the async listen error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_ID: ID, CONF_HOST: "127.0.0.1"}
@@ -446,7 +451,7 @@ async def test_async_listen_error_has_host_with_id(hass: HomeAssistant):
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_async_listen_error_has_host_without_id(hass: HomeAssistant):
+async def test_async_listen_error_has_host_without_id(hass: HomeAssistant) -> None:
     """Test the async listen error but no id."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "127.0.0.1"})
     config_entry.add_to_hass(hass)
@@ -461,7 +466,7 @@ async def test_async_listen_error_has_host_without_id(hass: HomeAssistant):
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_async_setup_with_missing_id(hass: HomeAssistant):
+async def test_async_setup_with_missing_id(hass: HomeAssistant) -> None:
     """Test that setting adds the missing CONF_ID from unique_id."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -478,16 +483,18 @@ async def test_async_setup_with_missing_id(hass: HomeAssistant):
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
         assert config_entry.data[CONF_ID] == ID
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+        await hass.async_block_till_done()
 
     with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
         f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=4))
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_async_setup_with_missing_unique_id(hass: HomeAssistant):
+async def test_async_setup_with_missing_unique_id(hass: HomeAssistant) -> None:
     """Test that setting adds the missing unique_id from CONF_ID."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -503,16 +510,18 @@ async def test_async_setup_with_missing_unique_id(hass: HomeAssistant):
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
         assert config_entry.unique_id == ID
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+        await hass.async_block_till_done()
 
     with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
         f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
     ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=4))
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_connection_dropped_resyncs_properties(hass: HomeAssistant):
+async def test_connection_dropped_resyncs_properties(hass: HomeAssistant) -> None:
     """Test handling a connection drop results in a property resync."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -542,7 +551,9 @@ async def test_connection_dropped_resyncs_properties(hass: HomeAssistant):
         assert len(mocked_bulb.async_get_properties.mock_calls) == 2
 
 
-async def test_oserror_on_first_update_results_in_unavailable(hass: HomeAssistant):
+async def test_oserror_on_first_update_results_in_unavailable(
+    hass: HomeAssistant,
+) -> None:
     """Test that an OSError on first update results in unavailable."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -563,10 +574,10 @@ async def test_oserror_on_first_update_results_in_unavailable(hass: HomeAssistan
     assert hass.states.get("light.test_name").state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("exception", [BulbException, asyncio.TimeoutError])
+@pytest.mark.parametrize("exception", [BulbException, TimeoutError])
 async def test_non_oserror_exception_on_first_update(
     hass: HomeAssistant, exception: Exception
-):
+) -> None:
     """Test that an exceptions other than OSError on first update do not result in unavailable.
 
     The unavailable state will come as a push update in this case
@@ -590,7 +601,7 @@ async def test_non_oserror_exception_on_first_update(
     assert hass.states.get("light.test_name").state != STATE_UNAVAILABLE
 
 
-async def test_async_setup_with_discovery_not_working(hass: HomeAssistant):
+async def test_async_setup_with_discovery_not_working(hass: HomeAssistant) -> None:
     """Test we can setup even if discovery is broken."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -610,3 +621,28 @@ async def test_async_setup_with_discovery_not_working(hass: HomeAssistant):
         assert config_entry.state is ConfigEntryState.LOADED
 
     assert hass.states.get("light.yeelight_color_0x15243f").state == STATE_ON
+
+
+async def test_async_setup_retries_with_wrong_device(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the config entry enters a retry state with the wrong device."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: IP_ADDRESS, CONF_ID: "0x0000000000999999"},
+        options={},
+        unique_id="0x0000000000999999",
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_discovery_timeout(), _patch_discovery_interval(), patch(
+        f"{MODULE}.AsyncBulb", return_value=_mocked_bulb()
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        "Unexpected device found at 192.168.1.239; expected 0x0000000000999999, "
+        "found 0x000000000015243f; Retrying in"
+    ) in caplog.text

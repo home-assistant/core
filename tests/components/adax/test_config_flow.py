@@ -41,7 +41,10 @@ async def test_form(hass: HomeAssistant) -> None:
     )
     assert result2["type"] == FlowResultType.FORM
 
-    with patch("adax.get_adax_token", return_value="test_token",), patch(
+    with patch(
+        "adax.get_adax_token",
+        return_value="test_token",
+    ), patch(
         "homeassistant.components.adax.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -124,7 +127,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
 # local API:
 
 
-async def test_local_create_entry(hass):
+async def test_local_create_entry(hass: HomeAssistant) -> None:
     """Test create entry from user input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -172,7 +175,7 @@ async def test_local_create_entry(hass):
     }
 
 
-async def test_local_flow_entry_already_exists(hass):
+async def test_local_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input for config_entry that already exists."""
 
     test_data = {
@@ -222,7 +225,7 @@ async def test_local_flow_entry_already_exists(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_local_connection_error(hass):
+async def test_local_connection_error(hass: HomeAssistant) -> None:
     """Test connection error."""
 
     result = await hass.config_entries.flow.async_init(
@@ -257,7 +260,7 @@ async def test_local_connection_error(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_local_heater_not_available(hass):
+async def test_local_heater_not_available(hass: HomeAssistant) -> None:
     """Test connection error."""
 
     result = await hass.config_entries.flow.async_init(
@@ -292,7 +295,7 @@ async def test_local_heater_not_available(hass):
     assert result["reason"] == "heater_not_available"
 
 
-async def test_local_heater_not_found(hass):
+async def test_local_heater_not_found(hass: HomeAssistant) -> None:
     """Test connection error."""
 
     result = await hass.config_entries.flow.async_init(
@@ -327,7 +330,7 @@ async def test_local_heater_not_found(hass):
     assert result["reason"] == "heater_not_found"
 
 
-async def test_local_invalid_wifi_cred(hass):
+async def test_local_invalid_wifi_cred(hass: HomeAssistant) -> None:
     """Test connection error."""
 
     result = await hass.config_entries.flow.async_init(

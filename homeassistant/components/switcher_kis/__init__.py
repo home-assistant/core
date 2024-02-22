@@ -12,7 +12,7 @@ from homeassistant.const import CONF_DEVICE_ID, EVENT_HOMEASSISTANT_STOP, Platfo
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry,
+    device_registry as dr,
     update_coordinator,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -39,7 +39,7 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-CCONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = vol.Schema(
     vol.All(
         cv.deprecated(DOMAIN),
         {
@@ -89,8 +89,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # New device - create device
         _LOGGER.info(
-            "Discovered Switcher device - id: %s, name: %s, type: %s (%s)",
+            "Discovered Switcher device - id: %s, key: %s, name: %s, type: %s (%s)",
             device.device_id,
+            device.device_key,
             device.name,
             device.device_type.value,
             device.device_type.hex_rep,
@@ -124,7 +125,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 class SwitcherDataUpdateCoordinator(
     update_coordinator.DataUpdateCoordinator[SwitcherBase]
-):
+):  # pylint: disable=hass-enforce-coordinator-module
     """Switcher device data update coordinator."""
 
     def __init__(
@@ -165,10 +166,10 @@ class SwitcherDataUpdateCoordinator(
     @callback
     def async_setup(self) -> None:
         """Set up the coordinator."""
-        dev_reg = device_registry.async_get(self.hass)
+        dev_reg = dr.async_get(self.hass)
         dev_reg.async_get_or_create(
             config_entry_id=self.entry.entry_id,
-            connections={(device_registry.CONNECTION_NETWORK_MAC, self.mac_address)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac_address)},
             identifiers={(DOMAIN, self.device_id)},
             manufacturer="Switcher",
             name=self.name,

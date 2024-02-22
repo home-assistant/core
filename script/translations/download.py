@@ -10,7 +10,7 @@ import subprocess
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
-from .util import get_lokalise_token
+from .util import get_lokalise_token, load_json_from_path
 
 FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
 DOWNLOAD_DIR = pathlib.Path("build/translations-download").absolute()
@@ -44,7 +44,8 @@ def run_download_docker():
             "json",
             "--unzip-to",
             "/opt/dest",
-        ]
+        ],
+        check=False,
     )
     print()
 
@@ -121,7 +122,7 @@ def write_integration_translations():
     """Write integration translations."""
     for lang_file in DOWNLOAD_DIR.glob("*.json"):
         lang = lang_file.stem
-        translations = json.loads(lang_file.read_text())
+        translations = load_json_from_path(lang_file)
         save_language_translations(lang, translations)
 
 

@@ -18,6 +18,12 @@ class ObsoleteImportMatch:
 
 
 _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
+    "homeassistant.backports.enum": [
+        ObsoleteImportMatch(
+            reason="We can now use the Python 3.11 provided enum.StrEnum instead",
+            constant=re.compile(r"^StrEnum$"),
+        ),
+    ],
     "homeassistant.components.alarm_control_panel": [
         ObsoleteImportMatch(
             reason="replaced by AlarmControlPanelEntityFeature enum",
@@ -215,7 +221,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     "homeassistant.components.sensor": [
         ObsoleteImportMatch(
             reason="replaced by SensorDeviceClass enum",
-            constant=re.compile(r"^DEVICE_CLASS_(\w*)$"),
+            constant=re.compile(r"^DEVICE_CLASS_(?!STATE_CLASSES)$"),
         ),
         ObsoleteImportMatch(
             reason="replaced by SensorStateClass enum",
@@ -350,6 +356,14 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^DISABLED_(\w*)$"),
         ),
     ],
+    "homeassistant.helpers.json": [
+        ObsoleteImportMatch(
+            reason="moved to homeassistant.util.json",
+            constant=re.compile(
+                r"^JSON_DECODE_EXCEPTIONS|JSON_ENCODE_EXCEPTIONS|json_loads$"
+            ),
+        ),
+    ],
     "homeassistant.util": [
         ObsoleteImportMatch(
             reason="replaced by unit_conversion.***Converter",
@@ -362,10 +376,16 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
             constant=re.compile(r"^IMPERIAL_SYSTEM$"),
         ),
     ],
+    "homeassistant.util.json": [
+        ObsoleteImportMatch(
+            reason="moved to homeassistant.helpers.json",
+            constant=re.compile(r"^save_json|find_paths_unserializable_data$"),
+        ),
+    ],
 }
 
 
-class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
+class HassImportsFormatChecker(BaseChecker):
     """Checker for imports."""
 
     name = "hass_imports"
@@ -395,7 +415,7 @@ class HassImportsFormatChecker(BaseChecker):  # type: ignore[misc]
     }
     options = ()
 
-    def __init__(self, linter: PyLinter | None = None) -> None:
+    def __init__(self, linter: PyLinter) -> None:
         """Initialize the HassImportsFormatChecker."""
         super().__init__(linter)
         self.current_package: str | None = None

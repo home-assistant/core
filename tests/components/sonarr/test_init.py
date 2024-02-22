@@ -87,7 +87,7 @@ async def test_unload_config_entry(
     assert mock_config_entry.entry_id not in hass.data[DOMAIN]
 
 
-async def test_migrate_config_entry(hass: HomeAssistant):
+async def test_migrate_config_entry(hass: HomeAssistant) -> None:
     """Test successful migration of entry data."""
     legacy_config = {
         CONF_API_KEY: "MOCK_API_KEY",
@@ -98,6 +98,7 @@ async def test_migrate_config_entry(hass: HomeAssistant):
         CONF_BASE_PATH: "/base/",
     }
     entry = MockConfigEntry(domain=DOMAIN, data=legacy_config)
+    entry.add_to_hass(hass)
 
     assert entry.data == legacy_config
     assert entry.version == 1

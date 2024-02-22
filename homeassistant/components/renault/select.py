@@ -14,11 +14,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .renault_entities import RenaultDataEntity, RenaultDataEntityDescription
+from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_hub import RenaultHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultSelectRequiredKeysMixin:
     """Mixin for required keys."""
 
@@ -26,7 +26,7 @@ class RenaultSelectRequiredKeysMixin:
     icon_lambda: Callable[[RenaultSelectEntity], str]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultSelectEntityDescription(
     SelectEntityDescription,
     RenaultDataEntityDescription,
@@ -92,7 +92,6 @@ SENSOR_TYPES: tuple[RenaultSelectEntityDescription, ...] = (
         data_key="chargeMode",
         translation_key="charge_mode",
         icon_lambda=_get_charge_mode_icon,
-        name="Charge mode",
         options=["always", "always_charging", "schedule_mode"],
     ),
 )

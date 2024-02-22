@@ -1,1 +1,66 @@
-{ "title": "Input datetime" }
+{
+  "title": "Input datetime",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::input_datetime::title%]",
+      "state_attributes": {
+        "day": {
+          "name": "Day"
+        },
+        "editable": {
+          "name": "[%key:common::generic::ui_managed%]",
+          "state": {
+            "true": "[%key:common::state::yes%]",
+            "false": "[%key:common::state::no%]"
+          }
+        },
+        "hour": {
+          "name": "Hour"
+        },
+        "minute": {
+          "name": "Minute"
+        },
+        "month": {
+          "name": "Month"
+        },
+        "second": {
+          "name": "Second"
+        },
+        "timestamp": {
+          "name": "Timestamp"
+        },
+        "year": {
+          "name": "Year"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_datetime": {
+      "name": "Set",
+      "description": "Sets the date and/or time.",
+      "fields": {
+        "date": {
+          "name": "Date",
+          "description": "The target date."
+        },
+        "time": {
+          "name": "Time",
+          "description": "The target time."
+        },
+        "datetime": {
+          "name": "Date & time",
+          "description": "The target date & time."
+        },
+        "timestamp": {
+          "name": "Timestamp",
+          "description": "The target date & time, expressed by a UNIX timestamp."
+        }
+      }
+    },
+    "reload": {
+      "name": "[%key:common::action::reload%]",
+      "description": "Reloads helpers from the YAML-configuration."
+    }
+  }
+}

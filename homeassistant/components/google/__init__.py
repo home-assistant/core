@@ -43,6 +43,7 @@ from .const import (
     EVENT_IN,
     EVENT_IN_DAYS,
     EVENT_IN_WEEKS,
+    EVENT_LOCATION,
     EVENT_START_DATE,
     EVENT_START_DATETIME,
     EVENT_SUMMARY,
@@ -116,6 +117,7 @@ ADD_EVENT_SERVICE_SCHEMA = vol.All(
         vol.Required(EVENT_CALENDAR_ID): cv.string,
         vol.Required(EVENT_SUMMARY): cv.string,
         vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
+        vol.Optional(EVENT_LOCATION, default=""): cv.string,
         vol.Inclusive(
             EVENT_START_DATE, "dates", "Start and end dates must both be specified"
         ): cv.date,
@@ -283,16 +285,18 @@ async def async_setup_add_event_service(
             raise ValueError(
                 "Missing required fields to set start or end date/datetime"
             )
-
+        event = Event(
+            summary=call.data[EVENT_SUMMARY],
+            description=call.data[EVENT_DESCRIPTION],
+            start=start,
+            end=end,
+        )
+        if location := call.data.get(EVENT_LOCATION):
+            event.location = location
         try:
             await calendar_service.async_create_event(
                 call.data[EVENT_CALENDAR_ID],
-                Event(
-                    summary=call.data[EVENT_SUMMARY],
-                    description=call.data[EVENT_DESCRIPTION],
-                    start=start,
-                    end=end,
-                ),
+                event,
             )
         except ApiException as err:
             raise HomeAssistantError(str(err)) from err

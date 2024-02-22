@@ -1,4 +1,5 @@
 """The tests for the demo select component."""
+from unittest.mock import patch
 
 import pytest
 
@@ -8,15 +9,26 @@ from homeassistant.components.select import (
     DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 ENTITY_SPEED = "select.speed"
 
 
+@pytest.fixture
+async def select_only() -> None:
+    """Enable only the select platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.SELECT],
+    ):
+        yield
+
+
 @pytest.fixture(autouse=True)
-async def setup_demo_select(hass: HomeAssistant) -> None:
+async def setup_demo_select(hass: HomeAssistant, select_only) -> None:
     """Initialize setup demo select entity."""
     assert await async_setup_component(hass, DOMAIN, {"select": {"platform": "demo"}})
     await hass.async_block_till_done()
@@ -40,7 +52,7 @@ async def test_select_option_bad_attr(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "ridiculous_speed"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_OPTION,

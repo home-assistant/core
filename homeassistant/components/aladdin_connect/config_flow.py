@@ -1,9 +1,7 @@
 """Config flow for Aladdin Connect cover integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from AIOAladdinConnect import AladdinConnectClient
@@ -19,8 +17,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CLIENT_ID, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -45,7 +41,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     )
     try:
         await acc.login()
-    except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError) as ex:
+    except (ClientError, TimeoutError, Aladdin.ConnectionError) as ex:
         raise ex
 
     except Aladdin.InvalidPasswordError as ex:
@@ -84,11 +80,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
-            except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError):
+            except (ClientError, TimeoutError, Aladdin.ConnectionError):
                 errors["base"] = "cannot_connect"
 
             else:
-
                 self.hass.config_entries.async_update_entry(
                     self.entry,
                     data={
@@ -121,7 +116,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
 
-        except (ClientError, asyncio.TimeoutError, Aladdin.ConnectionError):
+        except (ClientError, TimeoutError, Aladdin.ConnectionError):
             errors["base"] = "cannot_connect"
 
         else:
@@ -134,12 +129,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-    async def async_step_import(
-        self, import_data: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Import Aladin Connect config from configuration.yaml."""
-        return await self.async_step_user(import_data)
 
 
 class InvalidAuth(HomeAssistantError):

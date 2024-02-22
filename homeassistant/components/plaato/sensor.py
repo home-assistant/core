@@ -72,17 +72,11 @@ async def async_setup_entry(
 class PlaatoSensor(PlaatoEntity, SensorEntity):
     """Representation of a Plaato Sensor."""
 
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the class of this device, from SensorDeviceClass."""
-        if (
-            self._coordinator is not None
-            and self._sensor_type == PlaatoKeg.Pins.TEMPERATURE
-        ):
-            return SensorDeviceClass.TEMPERATURE
-        if self._sensor_type == ATTR_TEMP:
-            return SensorDeviceClass.TEMPERATURE
-        return None
+    def __init__(self, data, sensor_type, coordinator=None) -> None:
+        """Initialize plaato sensor."""
+        super().__init__(data, sensor_type, coordinator)
+        if sensor_type is PlaatoKeg.Pins.TEMPERATURE or sensor_type == ATTR_TEMP:
+            self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
     @property
     def native_value(self):

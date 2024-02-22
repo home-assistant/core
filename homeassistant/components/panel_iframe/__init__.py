@@ -20,7 +20,6 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: cv.schema_with_slug_keys(
             vol.Schema(
                 {
-                    # pylint: disable=no-value-for-parameter
                     vol.Optional(CONF_TITLE): cv.string,
                     vol.Optional(CONF_ICON): cv.icon,
                     vol.Optional(CONF_REQUIRE_ADMIN, default=False): cv.boolean,

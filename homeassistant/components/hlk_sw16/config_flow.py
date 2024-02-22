@@ -35,14 +35,15 @@ async def connect_client(hass, user_input):
         reconnect_interval=DEFAULT_RECONNECT_INTERVAL,
         keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
     )
-    return await asyncio.wait_for(client_aw, timeout=CONNECTION_TIMEOUT)
+    async with asyncio.timeout(CONNECTION_TIMEOUT):
+        return await client_aw
 
 
 async def validate_input(hass: HomeAssistant, user_input):
     """Validate the user input allows us to connect."""
     try:
         client = await connect_client(hass, user_input)
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise CannotConnect from err
 
     try:

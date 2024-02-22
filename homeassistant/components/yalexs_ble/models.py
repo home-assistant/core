@@ -12,3 +12,4 @@ class YaleXSBLEData:
 
     title: str
     lock: PushLock
+    always_connected: bool

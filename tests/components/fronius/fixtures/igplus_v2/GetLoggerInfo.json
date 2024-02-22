@@ -1,0 +1,29 @@
+{
+  "Body": {
+    "LoggerInfo": {
+      "CO2Factor": 0.52999997138977051,
+      "CO2Unit": "kg",
+      "CashCurrency": "EUR",
+      "CashFactor": 0.07700000643730164,
+      "DefaultLanguage": "en",
+      "DeliveryFactor": 0.25,
+      "HWVersion": "2.4D",
+      "PlatformID": "wilma",
+      "ProductID": "fronius-datamanager-card",
+      "SWVersion": "3.26.1-3",
+      "TimezoneLocation": "Berlin",
+      "TimezoneName": "CEST",
+      "UTCOffset": 7200,
+      "UniqueID": "123.4567890"
+    }
+  },
+  "Head": {
+    "RequestArguments": {},
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2023-07-14T17:23:22+02:00"
+  }
+}

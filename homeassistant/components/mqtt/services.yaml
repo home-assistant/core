@@ -1,32 +1,22 @@
 # Describes the format for available MQTT services
 
 publish:
-  name: Publish
-  description: Publish a message to an MQTT topic.
   fields:
     topic:
-      name: Topic
-      description: Topic to publish payload.
       required: true
       example: /homeassistant/hello
       selector:
         text:
     payload:
-      name: Payload
-      description: Payload to publish.
       example: This is great
       selector:
         text:
     payload_template:
-      name: Payload Template
-      description: Template to render as payload value. Ignored if payload given.
       advanced: true
       example: "{{ states('sensor.temperature') }}"
       selector:
-        object:
+        template:
     qos:
-      name: QoS
-      description: Quality of Service to use.
       advanced: true
       default: 0
       selector:
@@ -36,27 +26,17 @@ publish:
             - "1"
             - "2"
     retain:
-      name: Retain
-      description: If message should have the retain flag set.
       default: false
       selector:
         boolean:
 
 dump:
-  name: Dump
-  description:
-    Dump messages on a topic selector to the 'mqtt_dump.txt' file in your
-    configuration folder.
   fields:
     topic:
-      name: Topic
-      description: topic to listen to
       example: "OpenZWave/#"
       selector:
         text:
     duration:
-      name: Duration
-      description: how long we should listen for messages in seconds
       default: 5
       selector:
         number:
@@ -65,5 +45,3 @@ dump:
           unit_of_measurement: "seconds"
 
 reload:
-  name: Reload
-  description: Reload all MQTT entities from YAML.

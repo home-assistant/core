@@ -1,12 +1,16 @@
 """The tests for the Ring button platform."""
+import requests_mock
 
 from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
 
 
-async def test_entity_registry(hass, requests_mock):
+async def test_entity_registry(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, Platform.SIREN)
     entity_registry = er.async_get(hass)
@@ -15,7 +19,9 @@ async def test_entity_registry(hass, requests_mock):
     assert entry.unique_id == "123456-siren"
 
 
-async def test_sirens_report_correctly(hass, requests_mock):
+async def test_sirens_report_correctly(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Tests that the initial state of a device that should be on is correct."""
     await setup_platform(hass, Platform.SIREN)
 
@@ -24,7 +30,9 @@ async def test_sirens_report_correctly(hass, requests_mock):
     assert state.state == "unknown"
 
 
-async def test_default_ding_chime_can_be_played(hass, requests_mock):
+async def test_default_ding_chime_can_be_played(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Tests the play chime request is sent correctly."""
     await setup_platform(hass, Platform.SIREN)
 
@@ -51,8 +59,10 @@ async def test_default_ding_chime_can_be_played(hass, requests_mock):
     assert state.state == "unknown"
 
 
-async def test_toggle_plays_default_chime(hass, requests_mock):
-    """Tests the play chime request is sent correctly when toggled."""
+async def test_turn_on_plays_default_chime(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
+    """Tests the play chime request is sent correctly when turned on."""
     await setup_platform(hass, Platform.SIREN)
 
     # Mocks the response for playing a test sound
@@ -62,7 +72,7 @@ async def test_toggle_plays_default_chime(hass, requests_mock):
     )
     await hass.services.async_call(
         "siren",
-        "toggle",
+        "turn_on",
         {"entity_id": "siren.downstairs_siren"},
         blocking=True,
     )
@@ -78,7 +88,9 @@ async def test_toggle_plays_default_chime(hass, requests_mock):
     assert state.state == "unknown"
 
 
-async def test_explicit_ding_chime_can_be_played(hass, requests_mock):
+async def test_explicit_ding_chime_can_be_played(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Tests the play chime request is sent correctly."""
     await setup_platform(hass, Platform.SIREN)
 
@@ -105,7 +117,9 @@ async def test_explicit_ding_chime_can_be_played(hass, requests_mock):
     assert state.state == "unknown"
 
 
-async def test_motion_chime_can_be_played(hass, requests_mock):
+async def test_motion_chime_can_be_played(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Tests the play chime request is sent correctly."""
     await setup_platform(hass, Platform.SIREN)
 

@@ -4,10 +4,15 @@ from http import HTTPStatus
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.startca.sensor import StartcaData
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfInformation
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from tests.test_util.aiohttp import AiohttpClientMocker
 
-async def test_capped_setup(hass, aioclient_mock):
+
+async def test_capped_setup(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the default setup."""
     config = {
         "platform": "startca",
@@ -103,7 +108,9 @@ async def test_capped_setup(hass, aioclient_mock):
     assert state.state == "95.05"
 
 
-async def test_unlimited_setup(hass, aioclient_mock):
+async def test_unlimited_setup(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test the default setup."""
     config = {
         "platform": "startca",
@@ -150,17 +157,14 @@ async def test_unlimited_setup(hass, aioclient_mock):
     await async_setup_component(hass, "sensor", {"sensor": config})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.start_ca_usage_ratio")
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-    assert state.state == "0"
+    # These sensors should not be created for unlimited setups
+    assert hass.states.get("sensor.start_ca_usage_ratio") is None
+    assert hass.states.get("sensor.start_ca_data_limit") is None
+    assert hass.states.get("sensor.start_ca_remaining") is None
 
     state = hass.states.get("sensor.start_ca_usage")
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
     assert state.state == "0.0"
-
-    state = hass.states.get("sensor.start_ca_data_limit")
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
-    assert state.state == "inf"
 
     state = hass.states.get("sensor.start_ca_used_download")
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
@@ -194,12 +198,10 @@ async def test_unlimited_setup(hass, aioclient_mock):
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
     assert state.state == "6.48"
 
-    state = hass.states.get("sensor.start_ca_remaining")
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.GIGABYTES
-    assert state.state == "inf"
 
-
-async def test_bad_return_code(hass, aioclient_mock):
+async def test_bad_return_code(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test handling a return code that isn't HTTP OK."""
     aioclient_mock.get(
         "https://www.start.ca/support/usage/api?key=NOTAKEY",
@@ -212,7 +214,9 @@ async def test_bad_return_code(hass, aioclient_mock):
     assert result is False
 
 
-async def test_bad_json_decode(hass, aioclient_mock):
+async def test_bad_json_decode(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test decoding invalid json result."""
     aioclient_mock.get(
         "https://www.start.ca/support/usage/api?key=NOTAKEY", text="this is not xml"

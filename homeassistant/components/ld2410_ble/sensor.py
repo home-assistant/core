@@ -8,10 +8,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfLength
+from homeassistant.const import EntityCategory, UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -21,84 +21,76 @@ from .models import LD2410BLEData
 
 MOVING_TARGET_DISTANCE_DESCRIPTION = SensorEntityDescription(
     key="moving_target_distance",
+    translation_key="moving_target_distance",
     device_class=SensorDeviceClass.DISTANCE,
     entity_registry_enabled_default=False,
     entity_registry_visible_default=True,
-    has_entity_name=True,
-    name="Moving Target Distance",
     native_unit_of_measurement=UnitOfLength.CENTIMETERS,
     state_class=SensorStateClass.MEASUREMENT,
 )
 
 STATIC_TARGET_DISTANCE_DESCRIPTION = SensorEntityDescription(
     key="static_target_distance",
+    translation_key="static_target_distance",
     device_class=SensorDeviceClass.DISTANCE,
     entity_registry_enabled_default=False,
     entity_registry_visible_default=True,
-    has_entity_name=True,
-    name="Static Target Distance",
     native_unit_of_measurement=UnitOfLength.CENTIMETERS,
     state_class=SensorStateClass.MEASUREMENT,
 )
 
 DETECTION_DISTANCE_DESCRIPTION = SensorEntityDescription(
     key="detection_distance",
+    translation_key="detection_distance",
     device_class=SensorDeviceClass.DISTANCE,
     entity_registry_enabled_default=False,
     entity_registry_visible_default=True,
-    has_entity_name=True,
-    name="Detection Distance",
     native_unit_of_measurement=UnitOfLength.CENTIMETERS,
     state_class=SensorStateClass.MEASUREMENT,
 )
 
 MOVING_TARGET_ENERGY_DESCRIPTION = SensorEntityDescription(
     key="moving_target_energy",
+    translation_key="moving_target_energy",
     device_class=None,
     entity_registry_enabled_default=False,
     entity_registry_visible_default=True,
-    has_entity_name=True,
-    name="Moving Target Energy",
     native_unit_of_measurement="Target Energy",
     state_class=SensorStateClass.MEASUREMENT,
 )
 
 STATIC_TARGET_ENERGY_DESCRIPTION = SensorEntityDescription(
     key="static_target_energy",
+    translation_key="static_target_energy",
     device_class=None,
     entity_registry_enabled_default=False,
     entity_registry_visible_default=True,
-    has_entity_name=True,
-    name="Static Target Energy",
     native_unit_of_measurement="Target Energy",
     state_class=SensorStateClass.MEASUREMENT,
 )
 
 MAX_MOTION_GATES_DESCRIPTION = SensorEntityDescription(
     key="max_motion_gates",
+    translation_key="max_motion_gates",
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
-    has_entity_name=True,
-    name="Max Motion Gates",
     native_unit_of_measurement="Gates",
 )
 
 MAX_STATIC_GATES_DESCRIPTION = SensorEntityDescription(
     key="max_static_gates",
+    translation_key="max_static_gates",
     entity_category=EntityCategory.DIAGNOSTIC,
     entity_registry_enabled_default=False,
-    has_entity_name=True,
-    name="Max Static Gates",
     native_unit_of_measurement="Gates",
 )
 
 MOTION_ENERGY_GATES = [
     SensorEntityDescription(
         key=f"motion_energy_gate_{i}",
+        translation_key=f"motion_energy_gate_{i}",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        has_entity_name=True,
-        name=f"Motion Energy Gate {i}",
         native_unit_of_measurement="Target Energy",
     )
     for i in range(0, 9)
@@ -107,10 +99,9 @@ MOTION_ENERGY_GATES = [
 STATIC_ENERGY_GATES = [
     SensorEntityDescription(
         key=f"static_energy_gate_{i}",
+        translation_key=f"static_energy_gate_{i}",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        has_entity_name=True,
-        name=f"Static Energy Gate {i}",
         native_unit_of_measurement="Target Energy",
     )
     for i in range(0, 9)
@@ -151,6 +142,8 @@ async def async_setup_entry(
 
 class LD2410BLESensor(CoordinatorEntity[LD2410BLECoordinator], SensorEntity):
     """Generic sensor for LD2410BLE."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,

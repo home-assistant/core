@@ -1,9 +1,10 @@
 """Support for Tuya Alarm."""
 from __future__ import annotations
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from enum import StrEnum
 
-from homeassistant.backports.enum import StrEnum
+from tuya_sharing import CustomerDevice, Manager
+
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityDescription,
@@ -67,18 +68,16 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya siren."""
         entities: list[TuyaAlarmEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if descriptions := ALARM.get(device.category):
                 for description in descriptions:
                     if description.key in device.status:
                         entities.append(
-                            TuyaAlarmEntity(
-                                device, hass_data.device_manager, description
-                            )
+                            TuyaAlarmEntity(device, hass_data.manager, description)
                         )
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -89,11 +88,12 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
     """Tuya Alarm Entity."""
 
     _attr_icon = "mdi:security"
+    _attr_name = None
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
         description: AlarmControlPanelEntityDescription,
     ) -> None:
         """Init Tuya Alarm."""

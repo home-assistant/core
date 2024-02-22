@@ -9,10 +9,10 @@ import logging
 from typing import Any, Generic, TypeVar
 
 from bleak import BleakError
+from bluetooth_data_tools import monotonic_time_coarse
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.util.dt import monotonic_time_coarse
 
 from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .passive_update_processor import PassiveBluetoothProcessorCoordinator
@@ -99,9 +99,11 @@ class ActiveBluetoothProcessorCoordinator(
 
     def needs_poll(self, service_info: BluetoothServiceInfoBleak) -> bool:
         """Return true if time to try and poll."""
+        if self.hass.is_stopping:
+            return False
         poll_age: float | None = None
         if self._last_poll:
-            poll_age = monotonic_time_coarse() - self._last_poll
+            poll_age = service_info.time - self._last_poll
         return self._needs_poll_method(service_info, poll_age)
 
     async def _async_poll_data(
@@ -134,7 +136,7 @@ class ActiveBluetoothProcessorCoordinator(
             self._last_poll = monotonic_time_coarse()
 
         if not self.last_poll_successful:
-            self.logger.debug("%s: Polling recovered")
+            self.logger.debug("%s: Polling recovered", self.address)
             self.last_poll_successful = True
 
         for processor in self._processors:
@@ -155,4 +157,10 @@ class ActiveBluetoothProcessorCoordinator(
         # We use bluetooth events to trigger the poll so that we scan as soon as
         # possible after a device comes online or back in range, if a poll is due
         if self.needs_poll(service_info):
-            self.hass.async_create_task(self._debounced_poll.async_call())
+            self._debounced_poll.async_schedule_call()
+
+    @callback
+    def _async_stop(self) -> None:
+        """Cancel debouncer and stop the callbacks."""
+        self._debounced_poll.async_cancel()
+        super()._async_stop()

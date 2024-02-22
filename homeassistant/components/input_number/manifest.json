@@ -1,8 +1,8 @@
 {
   "domain": "input_number",
-  "integration_type": "helper",
   "name": "Input Number",
-  "documentation": "https://www.home-assistant.io/integrations/input_number",
   "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/input_number",
+  "integration_type": "helper",
   "quality_scale": "internal"
 }

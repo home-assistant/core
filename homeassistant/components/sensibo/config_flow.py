@@ -57,15 +57,13 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 assert self.entry is not None
 
                 if username == self.entry.unique_id:
-                    self.hass.config_entries.async_update_entry(
+                    return self.async_update_reload_and_abort(
                         self.entry,
                         data={
                             **self.entry.data,
                             CONF_API_KEY: api_key,
                         },
                     )
-                    await self.hass.config_entries.async_reload(self.entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
                 errors["base"] = "incorrect_api_key"
 
         return self.async_show_form(
@@ -82,7 +80,6 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-
             api_key = user_input[CONF_API_KEY]
             try:
                 username = await async_validate_api(self.hass, api_key)

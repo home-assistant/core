@@ -1,1 +1,45 @@
-{ "title": "Notifications" }
+{
+  "title": "Notifications",
+  "services": {
+    "notify": {
+      "name": "Send a notification",
+      "description": "Sends a notification message to selected targets.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Message body of the notification."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title for your notification."
+        },
+        "target": {
+          "name": "Target",
+          "description": "Some integrations allow you to specify the targets that receive the notification. For more information, refer to the integration documentation."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Some integrations provide extended functionality. For information on how to use _data_, refer to the integration documentation."
+        }
+      }
+    },
+    "persistent_notification": {
+      "name": "Send a persistent notification",
+      "description": "Sends a notification that is visible in the **Notifications** panel.",
+      "fields": {
+        "message": {
+          "name": "Message",
+          "description": "Message body of the notification."
+        },
+        "title": {
+          "name": "Title",
+          "description": "Title of the notification."
+        },
+        "data": {
+          "name": "Data",
+          "description": "Some integrations provide extended functionality. For information on how to use _data_, refer to the integration documentation.."
+        }
+      }
+    }
+  }
+}

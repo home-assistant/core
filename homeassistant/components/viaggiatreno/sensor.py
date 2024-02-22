@@ -7,7 +7,6 @@ import logging
 import time
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
@@ -79,13 +78,13 @@ async def async_http_request(hass, uri):
     """Perform actual request."""
     try:
         session = async_get_clientsession(hass)
-        async with async_timeout.timeout(REQUEST_TIMEOUT):
+        async with asyncio.timeout(REQUEST_TIMEOUT):
             req = await session.get(uri)
         if req.status != HTTPStatus.OK:
             return {"error": req.status}
         json_response = await req.json()
         return json_response
-    except (asyncio.TimeoutError, aiohttp.ClientError) as exc:
+    except (TimeoutError, aiohttp.ClientError) as exc:
         _LOGGER.error("Cannot connect to ViaggiaTreno API endpoint: %s", exc)
     except ValueError:
         _LOGGER.error("Received non-JSON data from ViaggiaTreno API endpoint")

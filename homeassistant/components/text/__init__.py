@@ -3,13 +3,13 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 from datetime import timedelta
+from enum import StrEnum
 import logging
 import re
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import voluptuous as vol
 
-from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -32,6 +32,11 @@ from .const import (
     DOMAIN,
     SERVICE_SET_VALUE,
 )
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -65,16 +70,16 @@ async def _async_set_value(entity: TextEntity, service_call: ServiceCall) -> Non
     value = service_call.data[ATTR_VALUE]
     if len(value) < entity.min:
         raise ValueError(
-            f"Value {value} for {entity.name} is too short (minimum length"
+            f"Value {value} for {entity.entity_id} is too short (minimum length"
             f" {entity.min})"
         )
     if len(value) > entity.max:
         raise ValueError(
-            f"Value {value} for {entity.name} is too long (maximum length {entity.max})"
+            f"Value {value} for {entity.entity_id} is too long (maximum length {entity.max})"
         )
     if entity.pattern_cmp and not entity.pattern_cmp.match(value):
         raise ValueError(
-            f"Value {value} for {entity.name} doesn't match pattern {entity.pattern}"
+            f"Value {value} for {entity.entity_id} doesn't match pattern {entity.pattern}"
         )
     await entity.async_set_value(value)
 
@@ -98,8 +103,7 @@ class TextMode(StrEnum):
     TEXT = "text"
 
 
-@dataclass
-class TextEntityDescription(EntityDescription):
+class TextEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes text entities."""
 
     native_min: int = 0
@@ -108,8 +112,21 @@ class TextEntityDescription(EntityDescription):
     pattern: str | None = None
 
 
-class TextEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "mode",
+    "native_value",
+    "native_min",
+    "native_max",
+    "pattern",
+}
+
+
+class TextEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Text entity."""
+
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_MAX, ATTR_MIN, ATTR_MODE, ATTR_PATTERN}
+    )
 
     entity_description: TextEntityDescription
     _attr_mode: TextMode
@@ -153,7 +170,7 @@ class TextEntity(Entity):
             )
         return self.native_value
 
-    @property
+    @cached_property
     def mode(self) -> TextMode:
         """Return the mode of the entity."""
         if hasattr(self, "_attr_mode"):
@@ -162,7 +179,7 @@ class TextEntity(Entity):
             return self.entity_description.mode
         return TextMode.TEXT
 
-    @property
+    @cached_property
     def native_min(self) -> int:
         """Return the minimum length of the value."""
         if hasattr(self, "_attr_native_min"):
@@ -177,7 +194,7 @@ class TextEntity(Entity):
         """Return the minimum length of the value."""
         return max(self.native_min, 0)
 
-    @property
+    @cached_property
     def native_max(self) -> int:
         """Return the maximum length of the value."""
         if hasattr(self, "_attr_native_max"):
@@ -203,7 +220,7 @@ class TextEntity(Entity):
             self.__pattern_cmp = re.compile(self.pattern)
         return self.__pattern_cmp
 
-    @property
+    @cached_property
     def pattern(self) -> str | None:
         """Return the regex pattern that the value must match."""
         if hasattr(self, "_attr_pattern"):
@@ -212,7 +229,7 @@ class TextEntity(Entity):
             return self.entity_description.pattern
         return None
 
-    @property
+    @cached_property
     def native_value(self) -> str | None:
         """Return the value reported by the text."""
         return self._attr_native_value

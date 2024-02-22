@@ -5,7 +5,8 @@ from unittest.mock import Mock
 from homeassistant.components import media_player
 from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -17,6 +18,7 @@ async def test_resource_lifecycle(
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dmr_device_mock: Mock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that resources are acquired/released as the entity is setup/unloaded."""
     # Set up the config entry
@@ -25,11 +27,15 @@ async def test_resource_lifecycle(
     await hass.async_block_till_done()
 
     # Check the entity is created and working
-    entries = entity_registry.async_entries_for_config_entry(
-        entity_registry.async_get(hass), config_entry_mock.entry_id
+    entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry_mock.entry_id
     )
     assert len(entries) == 1
     entity_id = entries[0].entity_id
+
+    await async_update_entity(hass, entity_id)
+    await hass.async_block_till_done()
+
     mock_state = hass.states.get(entity_id)
     assert mock_state is not None
     assert mock_state.state == media_player.STATE_IDLE

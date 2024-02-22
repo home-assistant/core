@@ -1,58 +1,41 @@
 add_item:
-  name: Add item
-  description: Add an item to the shopping list.
   fields:
     name:
-      name: Name
-      description: The name of the item to add.
       required: true
       example: Beer
       selector:
         text:
 
 remove_item:
-  name: Remove item
-  description: Remove the first item with matching name from the shopping list.
   fields:
     name:
-      name: Name
-      description: The name of the item to remove.
       required: true
       example: Beer
       selector:
         text:
 
 complete_item:
-  name: Complete item
-  description: Mark the first item with matching name as completed in the shopping list.
   fields:
     name:
-      name: Name
-      description: The name of the item to mark as completed (without removing).
       required: true
       example: Beer
       selector:
         text:
 
 incomplete_item:
-  name: Incomplete item
-  description: Mark the first item with matching name as incomplete in the shopping list.
   fields:
     name:
-      description: The name of the item to mark as incomplete.
       example: Beer
       required: true
       selector:
         text:
 
 complete_all:
-  name: Complete all
-  description: Mark all items as completed in the shopping list (without removing them from the list).
-
 incomplete_all:
-  name: Incomplete all
-  description: Mark all items as incomplete in the shopping list.
-
 clear_completed_items:
-  name: Clear completed items
-  description: Clear completed items from the shopping list.
+sort:
+  fields:
+    reverse:
+      default: false
+      selector:
+        boolean:

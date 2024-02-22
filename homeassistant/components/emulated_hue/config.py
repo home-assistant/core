@@ -15,13 +15,14 @@ from homeassistant.components import (
     script,
 )
 from homeassistant.const import CONF_ENTITIES, CONF_TYPE
-from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers import storage
 from homeassistant.helpers.event import (
+    EventStateChangedData,
     async_track_state_added_domain,
     async_track_state_removed_domain,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, EventType
 
 SUPPORTED_DOMAINS = {
     climate.DOMAIN,
@@ -203,28 +204,28 @@ class Config:
         ):
             return self.entities[state.entity_id][CONF_ENTITY_NAME]
 
-        return state.attributes.get(ATTR_EMULATED_HUE_NAME, state.name)
+        return state.attributes.get(ATTR_EMULATED_HUE_NAME, state.name)  # type: ignore[no-any-return]
 
     @cache  # pylint: disable=method-cache-max-size-none
-    def get_exposed_states(self) -> list[State]:
+    def get_exposed_entity_ids(self) -> list[str]:
         """Return a list of exposed states."""
         state_machine = self.hass.states
         if self.expose_by_default:
             return [
-                state
+                state.entity_id
                 for state in state_machine.async_all()
                 if self.is_state_exposed(state)
             ]
-        states: list[State] = []
-        for entity_id in self.entities:
-            if (state := state_machine.get(entity_id)) and self.is_state_exposed(state):
-                states.append(state)
-        return states
+        return [
+            entity_id
+            for entity_id in self.entities
+            if (state := state_machine.get(entity_id)) and self.is_state_exposed(state)
+        ]
 
     @callback
-    def _clear_exposed_cache(self, event: Event) -> None:
-        """Clear the cache of exposed states."""
-        self.get_exposed_states.cache_clear()  # pylint: disable=no-member
+    def _clear_exposed_cache(self, event: EventType[EventStateChangedData]) -> None:
+        """Clear the cache of exposed entity ids."""
+        self.get_exposed_entity_ids.cache_clear()
 
     def is_state_exposed(self, state: State) -> bool:
         """Cache determine if an entity should be exposed on the emulated bridge."""

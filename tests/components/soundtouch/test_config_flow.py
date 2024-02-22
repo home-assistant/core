@@ -1,7 +1,9 @@
 """Test config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from requests import RequestException
+import requests_mock
 from requests_mock import ANY, Mocker
 
 from homeassistant.components.soundtouch.const import DOMAIN
@@ -49,7 +51,7 @@ async def test_user_flow_create_entry(
 
 
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, requests_mock: Mocker
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
 ) -> None:
     """Test a manual user flow with an invalid host."""
     requests_mock.get(ANY, exc=RequestException())
@@ -74,8 +76,8 @@ async def test_zeroconf_flow_create_entry(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            host=DEVICE_1_IP,
-            addresses=[DEVICE_1_IP],
+            ip_address=ip_address(DEVICE_1_IP),
+            ip_addresses=[ip_address(DEVICE_1_IP)],
             port=8090,
             hostname="Bose-SM2-060000000001.local.",
             type="_soundtouch._tcp.local.",

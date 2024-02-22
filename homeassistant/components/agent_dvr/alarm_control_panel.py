@@ -13,12 +13,10 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONNECTION, DOMAIN as AGENT_DOMAIN
-
-ICON = "mdi:security"
 
 CONF_HOME_MODE_NAME = "home"
 CONF_AWAY_MODE_NAME = "away"
@@ -41,20 +39,21 @@ async def async_setup_entry(
 class AgentBaseStation(AlarmControlPanelEntity):
     """Representation of an Agent DVR Alarm Control Panel."""
 
-    _attr_icon = ICON
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, client):
         """Initialize the alarm control panel."""
         self._client = client
-        self._attr_name = f"{client.name} {CONST_ALARM_CONTROL_PANEL_NAME}"
         self._attr_unique_id = f"{client.unique}_CP"
         self._attr_device_info = DeviceInfo(
             identifiers={(AGENT_DOMAIN, client.unique)},
+            name=f"{client.name} {CONST_ALARM_CONTROL_PANEL_NAME}",
             manufacturer="Agent",
             model=CONST_ALARM_CONTROL_PANEL_NAME,
             sw_version=client.version,

@@ -1,12 +1,12 @@
 """Test the my init."""
-
 from unittest import mock
 
 from homeassistant.components.my import URL_PATH
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test setup."""
     with mock.patch(
         "homeassistant.components.frontend.async_register_built_in_panel"

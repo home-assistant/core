@@ -3,12 +3,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from pyoverkiz.enums import OverkizCommand
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
@@ -16,7 +17,7 @@ from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class OverkizButtonDescription(ButtonEntityDescription):
     """Class to describe an Overkiz button."""
 
@@ -64,6 +65,11 @@ BUTTON_DESCRIPTIONS: list[OverkizButtonDescription] = [
         press_args="1",
         name="My position",
         icon="mdi:star",
+    ),
+    OverkizButtonDescription(
+        key=OverkizCommand.CYCLE,
+        name="Toggle",
+        icon="mdi:sync",
     ),
 ]
 

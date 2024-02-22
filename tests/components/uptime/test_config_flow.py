@@ -1,5 +1,7 @@
 """Tests for the Uptime config flow."""
-from unittest.mock import MagicMock
+
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.uptime.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -9,9 +11,10 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_user_flow(
     hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -19,7 +22,7 @@ async def test_full_user_flow(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -27,8 +30,7 @@ async def test_full_user_flow(
     )
 
     assert result2.get("type") == FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "Uptime"
-    assert result2.get("data") == {}
+    assert result2 == snapshot
 
 
 async def test_single_instance_allowed(

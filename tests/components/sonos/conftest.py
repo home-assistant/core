@@ -1,5 +1,6 @@
 """Configuration for Sonos tests."""
 from copy import copy
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -13,13 +14,33 @@ from homeassistant.const import CONF_HOSTS
 from tests.common import MockConfigEntry, load_fixture
 
 
+class SonosMockEventListener:
+    """Mock the event listener."""
+
+    def __init__(self, ip_address: str) -> None:
+        """Initialize the mock event listener."""
+        self.address = [ip_address, "8080"]
+
+
+class SonosMockSubscribe:
+    """Mock the subscription."""
+
+    def __init__(self, ip_address: str, *args, **kwargs) -> None:
+        """Initialize the mock subscriber."""
+        self.event_listener = SonosMockEventListener(ip_address)
+        self.service = Mock()
+
+    async def unsubscribe(self) -> None:
+        """Unsubscribe mock."""
+
+
 class SonosMockService:
     """Mock a Sonos Service used in callbacks."""
 
-    def __init__(self, service_type):
+    def __init__(self, service_type, ip_address="192.168.42.2") -> None:
         """Initialize the instance."""
         self.service_type = service_type
-        self.subscribe = AsyncMock()
+        self.subscribe = AsyncMock(return_value=SonosMockSubscribe(ip_address))
 
 
 class SonosMockEvent:
@@ -49,8 +70,8 @@ class SonosMockEvent:
 def zeroconf_payload():
     """Return a default zeroconf payload."""
     return zeroconf.ZeroconfServiceInfo(
-        host="192.168.4.2",
-        addresses=["192.168.4.2"],
+        ip_address=ip_address("192.168.4.2"),
+        ip_addresses=[ip_address("192.168.4.2")],
         hostname="Sonos-aaa",
         name="Sonos-aaa@Living Room._sonos._tcp.local.",
         port=None,
@@ -84,49 +105,119 @@ def config_entry_fixture():
     return MockConfigEntry(domain=DOMAIN, title="Sonos")
 
 
-@pytest.fixture(name="soco")
-def soco_fixture(
+class MockSoCo(MagicMock):
+    """Mock the Soco Object."""
+
+    uid = "RINCON_test"
+    play_mode = "NORMAL"
+    mute = False
+    night_mode = True
+    dialog_level = True
+    loudness = True
+    volume = 19
+    audio_delay = 2
+    balance = (61, 100)
+    bass = 1
+    treble = -1
+    mic_enabled = False
+    sub_crossover = None  # Default to None for non-Amp devices
+    sub_enabled = False
+    sub_gain = 5
+    surround_enabled = True
+    surround_mode = True
+    surround_level = 3
+    music_surround_level = 4
+    soundbar_audio_input_format = "Dolby 5.1"
+
+    @property
+    def visible_zones(self):
+        """Return visible zones and allow property to be overridden by device classes."""
+        return {self}
+
+
+class SoCoMockFactory:
+    """Factory for creating SoCo Mocks."""
+
+    def __init__(
+        self,
+        music_library,
+        speaker_info,
+        current_track_info_empty,
+        battery_info,
+        alarm_clock,
+    ) -> None:
+        """Initialize the mock factory."""
+        self.mock_list: dict[str, MockSoCo] = {}
+        self.music_library = music_library
+        self.speaker_info = speaker_info
+        self.current_track_info = current_track_info_empty
+        self.battery_info = battery_info
+        self.alarm_clock = alarm_clock
+
+    def cache_mock(
+        self, mock_soco: MockSoCo, ip_address: str, name: str = "Zone A"
+    ) -> MockSoCo:
+        """Put a user created mock into the cache."""
+        mock_soco.mock_add_spec(SoCo)
+        mock_soco.ip_address = ip_address
+        if ip_address != "192.168.42.2":
+            mock_soco.uid += f"_{ip_address}"
+        mock_soco.music_library = self.music_library
+        mock_soco.get_current_track_info.return_value = self.current_track_info
+        mock_soco.music_source_from_uri = SoCo.music_source_from_uri
+        my_speaker_info = self.speaker_info.copy()
+        my_speaker_info["zone_name"] = name
+        my_speaker_info["uid"] = mock_soco.uid
+        mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
+
+        mock_soco.avTransport = SonosMockService("AVTransport", ip_address)
+        mock_soco.renderingControl = SonosMockService("RenderingControl", ip_address)
+        mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology", ip_address)
+        mock_soco.contentDirectory = SonosMockService("ContentDirectory", ip_address)
+        mock_soco.deviceProperties = SonosMockService("DeviceProperties", ip_address)
+        mock_soco.alarmClock = self.alarm_clock
+        mock_soco.get_battery_info.return_value = self.battery_info
+        mock_soco.all_zones = {mock_soco}
+        mock_soco.group.coordinator = mock_soco
+        self.mock_list[ip_address] = mock_soco
+        return mock_soco
+
+    def get_mock(self, *args) -> SoCo:
+        """Return a mock."""
+        if len(args) > 0:
+            ip_address = args[0]
+        else:
+            ip_address = "192.168.42.2"
+        if ip_address in self.mock_list:
+            return self.mock_list[ip_address]
+        mock_soco = MockSoCo(name=f"Soco Mock {ip_address}")
+        self.cache_mock(mock_soco, ip_address)
+        return mock_soco
+
+
+def patch_gethostbyname(host: str) -> str:
+    """Mock to return host name as ip address for testing."""
+    return host
+
+
+@pytest.fixture(name="soco_factory")
+def soco_factory(
     music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
 ):
-    """Create a mock soco SoCo fixture."""
-    with patch("homeassistant.components.sonos.SoCo", autospec=True) as mock, patch(
-        "socket.gethostbyname", return_value="192.168.42.2"
-    ):
-        mock_soco = mock.return_value
-        mock_soco.ip_address = "192.168.42.2"
-        mock_soco.uid = "RINCON_test"
-        mock_soco.play_mode = "NORMAL"
-        mock_soco.music_library = music_library
-        mock_soco.get_current_track_info.return_value = current_track_info_empty
-        mock_soco.music_source_from_uri = SoCo.music_source_from_uri
-        mock_soco.get_speaker_info.return_value = speaker_info
-        mock_soco.avTransport = SonosMockService("AVTransport")
-        mock_soco.renderingControl = SonosMockService("RenderingControl")
-        mock_soco.zoneGroupTopology = SonosMockService("ZoneGroupTopology")
-        mock_soco.contentDirectory = SonosMockService("ContentDirectory")
-        mock_soco.deviceProperties = SonosMockService("DeviceProperties")
-        mock_soco.alarmClock = alarm_clock
-        mock_soco.mute = False
-        mock_soco.night_mode = True
-        mock_soco.dialog_level = True
-        mock_soco.loudness = True
-        mock_soco.volume = 19
-        mock_soco.audio_delay = 2
-        mock_soco.bass = 1
-        mock_soco.treble = -1
-        mock_soco.mic_enabled = False
-        mock_soco.sub_enabled = False
-        mock_soco.sub_gain = 5
-        mock_soco.surround_enabled = True
-        mock_soco.surround_mode = True
-        mock_soco.surround_level = 3
-        mock_soco.music_surround_level = 4
-        mock_soco.soundbar_audio_input_format = "Dolby 5.1"
-        mock_soco.get_battery_info.return_value = battery_info
-        mock_soco.all_zones = {mock_soco}
-        mock_soco.visible_zones = {mock_soco}
-        mock_soco.group.coordinator = mock_soco
-        yield mock_soco
+    """Create factory for instantiating SoCo mocks."""
+    factory = SoCoMockFactory(
+        music_library, speaker_info, current_track_info_empty, battery_info, alarm_clock
+    )
+    with patch("homeassistant.components.sonos.SoCo", new=factory.get_mock), patch(
+        "socket.gethostbyname", side_effect=patch_gethostbyname
+    ), patch("homeassistant.components.sonos.ZGS_SUBSCRIPTION_TIMEOUT", 0):
+        yield factory
+
+
+@pytest.fixture(name="soco")
+def soco_fixture(soco_factory):
+    """Create a default mock soco SoCo fixture."""
+    return soco_factory.get_mock()
 
 
 @pytest.fixture(autouse=True)
@@ -137,9 +228,9 @@ async def silent_ssdp_scanner(hass):
     ), patch("homeassistant.components.ssdp.Scanner._async_stop_ssdp_listeners"), patch(
         "homeassistant.components.ssdp.Scanner.async_scan"
     ), patch(
-        "homeassistant.components.ssdp.Server._async_start_upnp_servers"
+        "homeassistant.components.ssdp.Server._async_start_upnp_servers",
     ), patch(
-        "homeassistant.components.ssdp.Server._async_stop_upnp_servers"
+        "homeassistant.components.ssdp.Server._async_stop_upnp_servers",
     ):
         yield
 
@@ -171,7 +262,7 @@ def discover_fixture(soco):
 @pytest.fixture(name="config")
 def config_fixture():
     """Create hass config fixture."""
-    return {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: ["192.168.42.1"]}}}
+    return {DOMAIN: {MP_DOMAIN: {CONF_HOSTS: ["192.168.42.2"]}}}
 
 
 @pytest.fixture(name="music_library")

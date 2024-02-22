@@ -49,7 +49,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     tracker_interfaces = conf[CONF_TRACKER_INTERFACE]
 
     interfaces_client = diagnostics.InterfaceClient(
-        api_key, api_secret, url, verify_ssl
+        api_key, api_secret, url, verify_ssl, timeout=20
     )
     try:
         interfaces_client.get_arp()
@@ -60,7 +60,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if tracker_interfaces:
         # Verify that specified tracker interfaces are valid
         netinsight_client = diagnostics.NetworkInsightClient(
-            api_key, api_secret, url, verify_ssl
+            api_key, api_secret, url, verify_ssl, timeout=20
         )
         interfaces = list(netinsight_client.get_interfaces().values())
         for interface in tracker_interfaces:

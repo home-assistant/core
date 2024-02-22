@@ -4,12 +4,14 @@ from __future__ import annotations
 from homeassistant.components import frontend
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
 from .const import DOMAIN
 from .data import async_get_manager
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def is_configured(hass: HomeAssistant) -> bool:

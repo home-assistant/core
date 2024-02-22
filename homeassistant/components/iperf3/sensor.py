@@ -35,13 +35,14 @@ async def async_setup_platform(
     async_add_entities(entities, True)
 
 
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Iperf3Sensor(RestoreEntity, SensorEntity):
     """A Iperf3 sensor implementation."""
 
     _attr_attribution = "Data retrieved using Iperf3"
     _attr_should_poll = False
 
-    def __init__(self, iperf3_data, description: SensorEntityDescription):
+    def __init__(self, iperf3_data, description: SensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._iperf3_data = iperf3_data

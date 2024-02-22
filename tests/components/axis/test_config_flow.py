@@ -1,4 +1,5 @@
 """Test Axis config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
@@ -29,23 +30,28 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from .const import DEFAULT_HOST, MAC, MODEL, NAME
 
 from tests.common import MockConfigEntry
 
+DHCP_FORMATTED_MAC = dr.format_mac(MAC).replace(":", "")
+
 
 @pytest.fixture(name="mock_config_entry")
-async def mock_config_entry_fixture(hass, config_entry):
+async def mock_config_entry_fixture(hass, config_entry, mock_setup_entry):
     """Mock config entry and setup entry."""
-    with patch("homeassistant.components.axis.async_setup_entry", return_value=True):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-        yield config_entry
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry
 
 
-async def test_flow_manual_configuration(hass, setup_default_vapix_requests):
+async def test_flow_manual_configuration(
+    hass: HomeAssistant, setup_default_vapix_requests, mock_setup_entry
+) -> None:
     """Test that config flow works."""
     MockConfigEntry(domain=AXIS_DOMAIN, source=SOURCE_IGNORE).add_to_hass(hass)
 
@@ -54,7 +60,7 @@ async def test_flow_manual_configuration(hass, setup_default_vapix_requests):
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -79,8 +85,8 @@ async def test_flow_manual_configuration(hass, setup_default_vapix_requests):
 
 
 async def test_manual_configuration_update_configuration(
-    hass, mock_config_entry, mock_vapix_requests
-):
+    hass: HomeAssistant, mock_config_entry, mock_vapix_requests
+) -> None:
     """Test that config flow fails on already configured device."""
     assert mock_config_entry.data[CONF_HOST] == "1.2.3.4"
 
@@ -89,7 +95,7 @@ async def test_manual_configuration_update_configuration(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     mock_vapix_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_configure(
@@ -108,14 +114,14 @@ async def test_manual_configuration_update_configuration(
     assert mock_config_entry.data[CONF_HOST] == "2.3.4.5"
 
 
-async def test_flow_fails_faulty_credentials(hass):
+async def test_flow_fails_faulty_credentials(hass: HomeAssistant) -> None:
     """Test that config flow fails on faulty credentials."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.axis.config_flow.get_axis_device",
@@ -134,14 +140,14 @@ async def test_flow_fails_faulty_credentials(hass):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_flow_fails_cannot_connect(hass):
+async def test_flow_fails_cannot_connect(hass: HomeAssistant) -> None:
     """Test that config flow fails on cannot connect."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     with patch(
         "homeassistant.components.axis.config_flow.get_axis_device",
@@ -161,8 +167,8 @@ async def test_flow_fails_cannot_connect(hass):
 
 
 async def test_flow_create_entry_multiple_existing_entries_of_same_model(
-    hass, setup_default_vapix_requests
-):
+    hass: HomeAssistant, setup_default_vapix_requests, mock_setup_entry
+) -> None:
     """Test that create entry can generate a name with other entries."""
     entry = MockConfigEntry(
         domain=AXIS_DOMAIN,
@@ -180,7 +186,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -207,8 +213,8 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
 
 
 async def test_reauth_flow_update_configuration(
-    hass, mock_config_entry, mock_vapix_requests
-):
+    hass: HomeAssistant, mock_config_entry, mock_vapix_requests
+) -> None:
     """Test that config flow fails on already configured device."""
     assert mock_config_entry.data[CONF_HOST] == "1.2.3.4"
     assert mock_config_entry.data[CONF_USERNAME] == "root"
@@ -221,7 +227,7 @@ async def test_reauth_flow_update_configuration(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     mock_vapix_requests("2.3.4.5")
     result = await hass.config_entries.flow.async_configure(
@@ -243,14 +249,14 @@ async def test_reauth_flow_update_configuration(
 
 
 @pytest.mark.parametrize(
-    "source,discovery_info",
+    ("source", "discovery_info"),
     [
         (
             SOURCE_DHCP,
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip=DEFAULT_HOST,
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
         ),
         (
@@ -292,8 +298,8 @@ async def test_reauth_flow_update_configuration(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host=DEFAULT_HOST,
-                addresses=[DEFAULT_HOST],
+                ip_address=ip_address(DEFAULT_HOST),
+                ip_addresses=[ip_address(DEFAULT_HOST)],
                 port=80,
                 hostname=f"axis-{MAC.lower()}.local.",
                 type="_axis-video._tcp.local.",
@@ -307,15 +313,19 @@ async def test_reauth_flow_update_configuration(
     ],
 )
 async def test_discovery_flow(
-    hass, setup_default_vapix_requests, source: str, discovery_info: dict
-):
+    hass: HomeAssistant,
+    setup_default_vapix_requests,
+    source: str,
+    discovery_info: dict,
+    mock_setup_entry,
+) -> None:
     """Test the different discovery flows for new devices work."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == SOURCE_USER
+    assert result["step_id"] == "user"
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -346,14 +356,14 @@ async def test_discovery_flow(
 
 
 @pytest.mark.parametrize(
-    "source,discovery_info",
+    ("source", "discovery_info"),
     [
         (
             SOURCE_DHCP,
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip=DEFAULT_HOST,
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
         ),
         (
@@ -371,8 +381,8 @@ async def test_discovery_flow(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host=DEFAULT_HOST,
-                addresses=[DEFAULT_HOST],
+                ip_address=ip_address(DEFAULT_HOST),
+                ip_addresses=[ip_address(DEFAULT_HOST)],
                 hostname="mock_hostname",
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
                 port=80,
@@ -383,8 +393,8 @@ async def test_discovery_flow(
     ],
 )
 async def test_discovered_device_already_configured(
-    hass, mock_config_entry, source: str, discovery_info: dict
-):
+    hass: HomeAssistant, mock_config_entry, source: str, discovery_info: dict
+) -> None:
     """Test that discovery doesn't setup already configured devices."""
     assert mock_config_entry.data[CONF_HOST] == DEFAULT_HOST
 
@@ -398,14 +408,14 @@ async def test_discovered_device_already_configured(
 
 
 @pytest.mark.parametrize(
-    "source,discovery_info,expected_port",
+    ("source", "discovery_info", "expected_port"),
     [
         (
             SOURCE_DHCP,
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip="2.3.4.5",
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
             80,
         ),
@@ -425,8 +435,8 @@ async def test_discovered_device_already_configured(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host="2.3.4.5",
-                addresses=["2.3.4.5"],
+                ip_address=ip_address("2.3.4.5"),
+                ip_addresses=[ip_address("2.3.4.5")],
                 hostname="mock_hostname",
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
                 port=8080,
@@ -438,13 +448,13 @@ async def test_discovered_device_already_configured(
     ],
 )
 async def test_discovery_flow_updated_configuration(
-    hass,
+    hass: HomeAssistant,
     mock_config_entry,
     mock_vapix_requests,
     source: str,
     discovery_info: dict,
     expected_port: int,
-):
+) -> None:
     """Test that discovery flow update configuration with new parameters."""
     assert mock_config_entry.data == {
         CONF_HOST: DEFAULT_HOST,
@@ -474,14 +484,14 @@ async def test_discovery_flow_updated_configuration(
 
 
 @pytest.mark.parametrize(
-    "source,discovery_info",
+    ("source", "discovery_info"),
     [
         (
             SOURCE_DHCP,
             dhcp.DhcpServiceInfo(
                 hostname="",
                 ip="",
-                macaddress="01234567890",
+                macaddress=dr.format_mac("01234567890").replace(":", ""),
             ),
         ),
         (
@@ -499,8 +509,8 @@ async def test_discovery_flow_updated_configuration(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host="",
-                addresses=[""],
+                ip_address=None,
+                ip_addresses=[],
                 hostname="mock_hostname",
                 name="",
                 port=0,
@@ -511,8 +521,8 @@ async def test_discovery_flow_updated_configuration(
     ],
 )
 async def test_discovery_flow_ignore_non_axis_device(
-    hass, source: str, discovery_info: dict
-):
+    hass: HomeAssistant, source: str, discovery_info: dict
+) -> None:
     """Test that discovery flow ignores devices with non Axis OUI."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
@@ -523,14 +533,14 @@ async def test_discovery_flow_ignore_non_axis_device(
 
 
 @pytest.mark.parametrize(
-    "source,discovery_info",
+    ("source", "discovery_info"),
     [
         (
             SOURCE_DHCP,
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip="169.254.3.4",
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
         ),
         (
@@ -548,8 +558,8 @@ async def test_discovery_flow_ignore_non_axis_device(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host="169.254.3.4",
-                addresses=["169.254.3.4"],
+                ip_address=ip_address("169.254.3.4"),
+                ip_addresses=[ip_address("169.254.3.4")],
                 hostname="mock_hostname",
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
                 port=80,
@@ -560,8 +570,8 @@ async def test_discovery_flow_ignore_non_axis_device(
     ],
 )
 async def test_discovery_flow_ignore_link_local_address(
-    hass, source: str, discovery_info: dict
-):
+    hass: HomeAssistant, source: str, discovery_info: dict
+) -> None:
     """Test that discovery flow ignores devices with link local addresses."""
     result = await hass.config_entries.flow.async_init(
         AXIS_DOMAIN, data=discovery_info, context={"source": source}
@@ -571,7 +581,7 @@ async def test_discovery_flow_ignore_link_local_address(
     assert result["reason"] == "link_local_address"
 
 
-async def test_option_flow(hass, setup_config_entry):
+async def test_option_flow(hass: HomeAssistant, setup_config_entry) -> None:
     """Test config flow options."""
     assert CONF_STREAM_PROFILE not in setup_config_entry.options
     assert CONF_VIDEO_SOURCE not in setup_config_entry.options

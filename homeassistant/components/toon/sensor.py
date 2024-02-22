@@ -114,14 +114,14 @@ class ToonDisplayDeviceSensor(ToonSensor, ToonDisplayDeviceEntity):
     """Defines a Display sensor."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonSensorRequiredKeysMixin(ToonRequiredKeysMixin):
     """Mixin for sensor required keys."""
 
     cls: type[ToonSensor]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ToonSensorEntityDescription(SensorEntityDescription, ToonSensorRequiredKeysMixin):
     """Describes Toon sensor entity."""
 
@@ -183,7 +183,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         section="gas_usage",
         measurement="day_cost",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EUR,
         icon="mdi:gas-cylinder",
         cls=ToonGasMeterDeviceSensor,
@@ -233,7 +233,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         section="power_usage",
         measurement="day_cost",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EUR,
         icon="mdi:power-plug",
         cls=ToonElectricityMeterDeviceSensor,
@@ -358,7 +358,7 @@ SENSOR_ENTITIES: tuple[ToonSensorEntityDescription, ...] = (
         section="water_usage",
         measurement="day_cost",
         device_class=SensorDeviceClass.MONETARY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_EUR,
         icon="mdi:water-pump",
         entity_registry_enabled_default=False,

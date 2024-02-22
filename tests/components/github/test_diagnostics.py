@@ -3,7 +3,7 @@
 import json
 
 from aiogithubapi import GitHubException
-from aiohttp import ClientSession
+import pytest
 
 from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
 from homeassistant.core import HomeAssistant
@@ -13,16 +13,23 @@ from .common import setup_github_integration
 from tests.common import MockConfigEntry, load_fixture
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_entry_diagnostics(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     mock_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test config entry diagnostics."""
-    mock_config_entry.options = {CONF_REPOSITORIES: ["home-assistant/core"]}
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_REPOSITORIES: ["home-assistant/core"]},
+    )
     response_json = json.loads(load_fixture("graphql.json", DOMAIN))
     response_json["data"]["repository"]["full_name"] = "home-assistant/core"
 
@@ -37,7 +44,9 @@ async def test_entry_diagnostics(
         headers={"Content-Type": "application/json"},
     )
 
-    await setup_github_integration(hass, mock_config_entry, aioclient_mock)
+    await setup_github_integration(
+        hass, mock_config_entry, aioclient_mock, add_entry_to_hass=False
+    )
     result = await get_diagnostics_for_config_entry(
         hass,
         hass_client,
@@ -54,9 +63,11 @@ async def test_entry_diagnostics(
     )
 
 
+# This tests needs to be adjusted to remove lingering tasks
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_entry_diagnostics_exception(
     hass: HomeAssistant,
-    hass_client: ClientSession,
+    hass_client: ClientSessionGenerator,
     init_integration: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:

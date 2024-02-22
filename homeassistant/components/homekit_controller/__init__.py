@@ -16,15 +16,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_IDENTIFIERS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import normalize_hkid
 from .connection import HKDevice
-from .const import KNOWN_DEVICES
+from .const import DOMAIN, KNOWN_DEVICES
 from .utils import async_get_controller
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -41,13 +43,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await conn.async_setup()
     except (
-        asyncio.TimeoutError,
+        TimeoutError,
         AccessoryNotFoundError,
         EncryptionError,
         AccessoryDisconnectedError,
     ) as ex:
         del hass.data[KNOWN_DEVICES][conn.unique_id]
-        with contextlib.suppress(asyncio.TimeoutError):
+        with contextlib.suppress(TimeoutError):
             await conn.pairing.close()
         raise ConfigEntryNotReady from ex
 

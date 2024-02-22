@@ -1,5 +1,5 @@
 """Test Home Assistant config flow for BleBox devices."""
-
+from ipaddress import ip_address
 from unittest.mock import DEFAULT, AsyncMock, PropertyMock, patch
 
 import blebox_uniapi
@@ -9,11 +9,13 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.blebox import config_flow
 from homeassistant.const import CONF_IP_ADDRESS
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
-from ...common import MockConfigEntry
 from .conftest import mock_config, mock_feature, mock_only_feature, setup_product_mock
+
+from tests.common import MockConfigEntry
 
 
 def create_valid_feature_mock(path="homeassistant.components.blebox.Products"):
@@ -54,7 +56,9 @@ def flow_feature_mock_fixture():
     )
 
 
-async def test_flow_works(hass, valid_feature_mock, flow_feature_mock):
+async def test_flow_works(
+    hass: HomeAssistant, valid_feature_mock, flow_feature_mock
+) -> None:
     """Test that config flow works."""
 
     result = await hass.config_entries.flow.async_init(
@@ -83,10 +87,12 @@ def product_class_mock_fixture():
     """Return a mocked feature."""
     path = "homeassistant.components.blebox.config_flow.Box"
     patcher = patch(path, DEFAULT, blebox_uniapi.box.Box, True, True)
-    yield patcher
+    return patcher
 
 
-async def test_flow_with_connection_failure(hass, product_class_mock):
+async def test_flow_with_connection_failure(
+    hass: HomeAssistant, product_class_mock
+) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(
@@ -101,7 +107,7 @@ async def test_flow_with_connection_failure(hass, product_class_mock):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_flow_with_api_failure(hass, product_class_mock):
+async def test_flow_with_api_failure(hass: HomeAssistant, product_class_mock) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(
@@ -116,7 +122,9 @@ async def test_flow_with_api_failure(hass, product_class_mock):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_flow_with_unknown_failure(hass, product_class_mock):
+async def test_flow_with_unknown_failure(
+    hass: HomeAssistant, product_class_mock
+) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(side_effect=RuntimeError)
@@ -128,7 +136,9 @@ async def test_flow_with_unknown_failure(hass, product_class_mock):
         assert result["errors"] == {"base": "unknown"}
 
 
-async def test_flow_with_unsupported_version(hass, product_class_mock):
+async def test_flow_with_unsupported_version(
+    hass: HomeAssistant, product_class_mock
+) -> None:
     """Test that config flow works."""
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(
@@ -143,13 +153,28 @@ async def test_flow_with_unsupported_version(hass, product_class_mock):
         assert result["errors"] == {"base": "unsupported_version"}
 
 
-async def test_async_setup(hass):
+async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -> None:
+    """Test that config flow works."""
+    with product_class_mock as products_class:
+        products_class.async_from_host = AsyncMock(
+            side_effect=blebox_uniapi.error.UnauthorizedRequest
+        )
+
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
+        )
+        assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_async_setup(hass: HomeAssistant) -> None:
     """Test async_setup (for coverage)."""
     assert await async_setup_component(hass, "blebox", {"host": "172.2.3.4"})
     await hass.async_block_till_done()
 
 
-async def test_already_configured(hass, valid_feature_mock):
+async def test_already_configured(hass: HomeAssistant, valid_feature_mock) -> None:
     """Test that same device cannot be added twice."""
 
     config = mock_config("172.2.3.4")
@@ -167,7 +192,7 @@ async def test_already_configured(hass, valid_feature_mock):
     assert result["reason"] == "address_already_configured"
 
 
-async def test_async_setup_entry(hass, valid_feature_mock):
+async def test_async_setup_entry(hass: HomeAssistant, valid_feature_mock) -> None:
     """Test async_setup_entry (for coverage)."""
 
     config = mock_config()
@@ -180,7 +205,7 @@ async def test_async_setup_entry(hass, valid_feature_mock):
     assert config.state is config_entries.ConfigEntryState.LOADED
 
 
-async def test_async_remove_entry(hass, valid_feature_mock):
+async def test_async_remove_entry(hass: HomeAssistant, valid_feature_mock) -> None:
     """Test async_setup_entry (for coverage)."""
 
     config = mock_config()
@@ -196,14 +221,14 @@ async def test_async_remove_entry(hass, valid_feature_mock):
     assert config.state is config_entries.ConfigEntryState.NOT_LOADED
 
 
-async def test_flow_with_zeroconf(hass):
+async def test_flow_with_zeroconf(hass: HomeAssistant) -> None:
     """Test setup from zeroconf discovery."""
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
-            host="172.100.123.4",
-            addresses=["172.100.123.4"],
+            ip_address=ip_address("172.100.123.4"),
+            ip_addresses=[ip_address("172.100.123.4")],
             port=80,
             hostname="bbx-bbtest123456.local.",
             type="_bbxsrv._tcp.local.",
@@ -222,7 +247,7 @@ async def test_flow_with_zeroconf(hass):
     assert result2["data"] == {"host": "172.100.123.4", "port": 80}
 
 
-async def test_flow_with_zeroconf_when_already_configured(hass):
+async def test_flow_with_zeroconf_when_already_configured(hass: HomeAssistant) -> None:
     """Test behaviour if device already configured."""
     entry = MockConfigEntry(
         domain=config_flow.DOMAIN,
@@ -242,8 +267,8 @@ async def test_flow_with_zeroconf_when_already_configured(hass):
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="172.100.123.4",
-                addresses=["172.100.123.4"],
+                ip_address=ip_address("172.100.123.4"),
+                ip_addresses=[ip_address("172.100.123.4")],
                 port=80,
                 hostname="bbx-bbtest123456.local.",
                 type="_bbxsrv._tcp.local.",
@@ -256,7 +281,7 @@ async def test_flow_with_zeroconf_when_already_configured(hass):
         assert result2["reason"] == "already_configured"
 
 
-async def test_flow_with_zeroconf_when_device_unsupported(hass):
+async def test_flow_with_zeroconf_when_device_unsupported(hass: HomeAssistant) -> None:
     """Test behaviour when device is not supported."""
     with patch(
         "homeassistant.components.blebox.config_flow.Box.async_from_host",
@@ -266,8 +291,8 @@ async def test_flow_with_zeroconf_when_device_unsupported(hass):
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="172.100.123.4",
-                addresses=["172.100.123.4"],
+                ip_address=ip_address("172.100.123.4"),
+                ip_addresses=[ip_address("172.100.123.4")],
                 port=80,
                 hostname="bbx-bbtest123456.local.",
                 type="_bbxsrv._tcp.local.",
@@ -279,7 +304,9 @@ async def test_flow_with_zeroconf_when_device_unsupported(hass):
         assert result["reason"] == "unsupported_device_version"
 
 
-async def test_flow_with_zeroconf_when_device_response_unsupported(hass):
+async def test_flow_with_zeroconf_when_device_response_unsupported(
+    hass: HomeAssistant,
+) -> None:
     """Test behaviour when device returned unsupported response."""
 
     with patch(
@@ -290,8 +317,8 @@ async def test_flow_with_zeroconf_when_device_response_unsupported(hass):
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="172.100.123.4",
-                addresses=["172.100.123.4"],
+                ip_address=ip_address("172.100.123.4"),
+                ip_addresses=[ip_address("172.100.123.4")],
                 port=80,
                 hostname="bbx-bbtest123456.local.",
                 type="_bbxsrv._tcp.local.",

@@ -1,8 +1,8 @@
 """Test the Evil Genius Labs config flow."""
-import asyncio
 from unittest.mock import patch
 
 import aiohttp
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.evil_genius_labs.const import DOMAIN
@@ -49,7 +49,9 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, caplog) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -79,7 +81,7 @@ async def test_form_timeout(hass: HomeAssistant) -> None:
 
     with patch(
         "pyevilgenius.EvilGeniusDevice.get_all",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

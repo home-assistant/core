@@ -1,8 +1,10 @@
-"""This component provides number entities for UniFi Protect."""
+"""Component providing number entities for UniFi Protect."""
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
+from typing import Any
 
 from pyunifiprotect.data import (
     Camera,
@@ -14,10 +16,9 @@ from pyunifiprotect.data import (
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DISPATCH_ADOPT, DOMAIN
@@ -26,21 +27,18 @@ from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
 from .utils import async_dispatch_id as _ufpd
 
+_LOGGER = logging.getLogger(__name__)
 
-@dataclass
-class NumberKeysMixin:
-    """Mixin for required keys."""
+
+@dataclass(frozen=True, kw_only=True)
+class ProtectNumberEntityDescription(
+    ProtectSetableKeysMixin[T], NumberEntityDescription
+):
+    """Describes UniFi Protect Number entity."""
 
     ufp_max: int | float
     ufp_min: int | float
     ufp_step: int | float
-
-
-@dataclass
-class ProtectNumberEntityDescription(
-    ProtectSetableKeysMixin[T], NumberEntityDescription, NumberKeysMixin
-):
-    """Describes UniFi Protect Number entity."""
 
 
 def _get_pir_duration(obj: Light) -> int:
@@ -213,7 +211,8 @@ async def async_setup_entry(
     """Set up number entities for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectNumbers,
@@ -269,3 +268,13 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.ufp_set(self.device, value)
+
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (self._attr_available, self._attr_native_value)

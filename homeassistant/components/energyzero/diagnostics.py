@@ -21,6 +21,7 @@ def get_gas_price(data: EnergyZeroData, hours: int) -> float | None:
 
     Returns:
         The gas market price value.
+
     """
     if not data.gas_today:
         return None
@@ -50,6 +51,7 @@ async def async_get_config_entry_diagnostics(
             "highest_price_time": coordinator.data.energy_today.highest_price_time,
             "lowest_price_time": coordinator.data.energy_today.lowest_price_time,
             "percentage_of_max": coordinator.data.energy_today.pct_of_max_price,
+            "hours_priced_equal_or_lower": coordinator.data.energy_today.hours_priced_equal_or_lower,
         },
         "gas": {
             "current_hour_price": get_gas_price(coordinator.data, 0),

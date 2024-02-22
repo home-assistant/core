@@ -17,7 +17,7 @@
         }
       },
       "reauth_confirm": {
-        "title": "PI-Hole [%key:common::config_flow::title::reauth%]",
+        "title": "Reauthenticate PI-Hole",
         "description": "Please enter a new api key for PI-Hole at {host}/{location}",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
@@ -31,6 +31,65 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
+    "sensor": {
+      "ads_blocked_today": {
+        "name": "Ads blocked today"
+      },
+      "ads_percentage_today": {
+        "name": "Ads percentage blocked today"
+      },
+      "clients_ever_seen": {
+        "name": "Seen clients"
+      },
+      "dns_queries_today": {
+        "name": "DNS queries today"
+      },
+      "domains_being_blocked": {
+        "name": "Domains blocked"
+      },
+      "queries_cached": {
+        "name": "DNS queries cached"
+      },
+      "queries_forwarded": {
+        "name": "DNS queries forwarded"
+      },
+      "unique_clients": {
+        "name": "DNS unique clients"
+      },
+      "unique_domains": {
+        "name": "DNS unique domains"
+      }
+    },
+    "update": {
+      "core_update_available": {
+        "name": "Core update available"
+      },
+      "ftl_update_available": {
+        "name": "FTL update available"
+      },
+      "web_update_available": {
+        "name": "Web update available"
+      }
+    }
+  },
+  "services": {
+    "disable": {
+      "name": "[%key:common::action::disable%]",
+      "description": "Disables configured Pi-hole(s) for an amount of time.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Time that the Pi-hole should be disabled for."
+        }
+      }
     }
   }
 }

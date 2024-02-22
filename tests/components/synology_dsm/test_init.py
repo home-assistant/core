@@ -1,7 +1,6 @@
 """Tests for the Synology DSM component."""
 from unittest.mock import MagicMock, patch
 
-import pytest
 from synology_dsm.exceptions import SynologyDSMLoginInvalidException
 
 from homeassistant import data_entry_flow
@@ -21,8 +20,7 @@ from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.no_bypass_setup
-async def test_services_registered(hass: HomeAssistant, mock_dsm: MagicMock):
+async def test_services_registered(hass: HomeAssistant, mock_dsm: MagicMock) -> None:
     """Test if all services are registered."""
     with patch(
         "homeassistant.components.synology_dsm.common.SynologyDSM",
@@ -45,15 +43,18 @@ async def test_services_registered(hass: HomeAssistant, mock_dsm: MagicMock):
             assert hass.services.has_service(DOMAIN, service)
 
 
-@pytest.mark.no_bypass_setup
-async def test_reauth_triggered(hass: HomeAssistant):
+async def test_reauth_triggered(hass: HomeAssistant) -> None:
     """Test if reauthentication flow is triggered."""
     with patch(
         "homeassistant.components.synology_dsm.SynoApi.async_setup",
         side_effect=SynologyDSMLoginInvalidException(USERNAME),
     ), patch(
         "homeassistant.components.synology_dsm.config_flow.SynologyDSMFlowHandler.async_step_reauth",
-        return_value={"type": data_entry_flow.FlowResultType.FORM},
+        return_value={
+            "type": data_entry_flow.FlowResultType.FORM,
+            "flow_id": "mock_flow",
+            "step_id": "reauth_confirm",
+        },
     ) as mock_async_step_reauth:
         entry = MockConfigEntry(
             domain=DOMAIN,

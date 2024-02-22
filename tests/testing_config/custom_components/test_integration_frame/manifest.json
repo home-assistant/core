@@ -1,0 +1,9 @@
+{
+  "domain": "test_integration_frame",
+  "name": "Test Integration Frame",
+  "documentation": "http://example.com",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [],
+  "version": "1.2.3"
+}

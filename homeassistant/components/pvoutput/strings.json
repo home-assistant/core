@@ -23,5 +23,24 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "energy_consumption": {
+        "name": "Energy consumed"
+      },
+      "energy_generation": {
+        "name": "Energy generated"
+      },
+      "efficiency": {
+        "name": "Efficiency"
+      },
+      "power_consumption": {
+        "name": "Power consumed"
+      },
+      "power_generation": {
+        "name": "Power generated"
+      }
+    }
   }
 }

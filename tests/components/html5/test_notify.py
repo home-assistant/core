@@ -6,8 +6,11 @@ from unittest.mock import MagicMock, mock_open, patch
 from aiohttp.hdrs import AUTHORIZATION
 
 import homeassistant.components.html5.notify as html5
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 CONFIG_FILE = "file.conf"
 
@@ -239,7 +242,9 @@ class TestHtml5Notify:
         assert mock_wp.mock_calls[3][2]["headers"]["priority"] == "normal"
 
 
-async def test_registering_new_device_view(hass, hass_client):
+async def test_registering_new_device_view(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the HTML view works."""
     client = await mock_client(hass, hass_client)
 
@@ -251,7 +256,9 @@ async def test_registering_new_device_view(hass, hass_client):
     assert mock_save.mock_calls[0][1][1] == {"unnamed device": SUBSCRIPTION_1}
 
 
-async def test_registering_new_device_view_with_name(hass, hass_client):
+async def test_registering_new_device_view_with_name(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the HTML view works with name attribute."""
     client = await mock_client(hass, hass_client)
 
@@ -266,7 +273,9 @@ async def test_registering_new_device_view_with_name(hass, hass_client):
     assert mock_save.mock_calls[0][1][1] == {"test device": SUBSCRIPTION_1}
 
 
-async def test_registering_new_device_expiration_view(hass, hass_client):
+async def test_registering_new_device_expiration_view(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the HTML view works."""
     client = await mock_client(hass, hass_client)
 
@@ -277,7 +286,9 @@ async def test_registering_new_device_expiration_view(hass, hass_client):
     assert mock_save.mock_calls[0][1][1] == {"unnamed device": SUBSCRIPTION_4}
 
 
-async def test_registering_new_device_fails_view(hass, hass_client):
+async def test_registering_new_device_fails_view(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test subs. are not altered when registering a new device fails."""
     registrations = {}
     client = await mock_client(hass, hass_client, registrations)
@@ -292,7 +303,9 @@ async def test_registering_new_device_fails_view(hass, hass_client):
     assert registrations == {}
 
 
-async def test_registering_existing_device_view(hass, hass_client):
+async def test_registering_existing_device_view(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test subscription is updated when registering existing device."""
     registrations = {}
     client = await mock_client(hass, hass_client, registrations)
@@ -306,7 +319,9 @@ async def test_registering_existing_device_view(hass, hass_client):
     assert registrations == {"unnamed device": SUBSCRIPTION_4}
 
 
-async def test_registering_existing_device_view_with_name(hass, hass_client):
+async def test_registering_existing_device_view_with_name(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test subscription is updated when reg'ing existing device with name."""
     registrations = {}
     client = await mock_client(hass, hass_client, registrations)
@@ -323,7 +338,9 @@ async def test_registering_existing_device_view_with_name(hass, hass_client):
     assert registrations == {"test device": SUBSCRIPTION_4}
 
 
-async def test_registering_existing_device_fails_view(hass, hass_client):
+async def test_registering_existing_device_fails_view(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test sub. is not updated when registering existing device fails."""
     registrations = {}
     client = await mock_client(hass, hass_client, registrations)
@@ -337,7 +354,9 @@ async def test_registering_existing_device_fails_view(hass, hass_client):
     assert registrations == {"unnamed device": SUBSCRIPTION_1}
 
 
-async def test_registering_new_device_validation(hass, hass_client):
+async def test_registering_new_device_validation(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test various errors when registering a new device."""
     client = await mock_client(hass, hass_client)
 
@@ -358,7 +377,9 @@ async def test_registering_new_device_validation(hass, hass_client):
     assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_unregistering_device_view(hass, hass_client):
+async def test_unregistering_device_view(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the HTML unregister view works."""
     registrations = {"some device": SUBSCRIPTION_1, "other device": SUBSCRIPTION_2}
     client = await mock_client(hass, hass_client, registrations)
@@ -374,7 +395,9 @@ async def test_unregistering_device_view(hass, hass_client):
     assert registrations == {"other device": SUBSCRIPTION_2}
 
 
-async def test_unregister_device_view_handle_unknown_subscription(hass, hass_client):
+async def test_unregister_device_view_handle_unknown_subscription(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the HTML unregister view handles unknown subscriptions."""
     registrations = {}
     client = await mock_client(hass, hass_client, registrations)
@@ -390,7 +413,9 @@ async def test_unregister_device_view_handle_unknown_subscription(hass, hass_cli
     assert len(mock_save.mock_calls) == 0
 
 
-async def test_unregistering_device_view_handles_save_error(hass, hass_client):
+async def test_unregistering_device_view_handles_save_error(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the HTML unregister view handles save errors."""
     registrations = {"some device": SUBSCRIPTION_1, "other device": SUBSCRIPTION_2}
     client = await mock_client(hass, hass_client, registrations)
@@ -411,7 +436,9 @@ async def test_unregistering_device_view_handles_save_error(hass, hass_client):
     }
 
 
-async def test_callback_view_no_jwt(hass, hass_client):
+async def test_callback_view_no_jwt(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the notification callback view works without JWT."""
     client = await mock_client(hass, hass_client)
     resp = await client.post(
@@ -424,7 +451,9 @@ async def test_callback_view_no_jwt(hass, hass_client):
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_callback_view_with_jwt(hass, hass_client):
+async def test_callback_view_with_jwt(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the notification callback view works with JWT."""
     registrations = {"device": SUBSCRIPTION_1}
     client = await mock_client(hass, hass_client, registrations)
@@ -460,7 +489,9 @@ async def test_callback_view_with_jwt(hass, hass_client):
     assert body == {"event": "push", "status": "ok"}
 
 
-async def test_send_fcm_without_targets(hass, hass_client):
+async def test_send_fcm_without_targets(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the notification is send with FCM without targets."""
     registrations = {"device": SUBSCRIPTION_5}
     await mock_client(hass, hass_client, registrations)
@@ -479,7 +510,9 @@ async def test_send_fcm_without_targets(hass, hass_client):
     assert mock_wp.mock_calls[2][1][0] == SUBSCRIPTION_5["subscription"]
 
 
-async def test_send_fcm_expired(hass, hass_client):
+async def test_send_fcm_expired(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the FCM target is removed when expired."""
     registrations = {"device": SUBSCRIPTION_5}
     await mock_client(hass, hass_client, registrations)
@@ -499,7 +532,9 @@ async def test_send_fcm_expired(hass, hass_client):
     assert "device" not in registrations
 
 
-async def test_send_fcm_expired_save_fails(hass, hass_client):
+async def test_send_fcm_expired_save_fails(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test that the FCM target remains after expiry if save_json fails."""
     registrations = {"device": SUBSCRIPTION_5}
     await mock_client(hass, hass_client, registrations)

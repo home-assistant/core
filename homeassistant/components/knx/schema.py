@@ -3,15 +3,12 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
-from collections.abc import Callable
-import ipaddress
-from typing import Any, ClassVar, Final
+from typing import ClassVar, Final
 
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
-from xknx.dpt import DPTBase, DPTNumeric, DPTString
-from xknx.exceptions import ConversionError, CouldNotParseAddress
-from xknx.telegram.address import IndividualAddress, parse_device_group_address
+from xknx.dpt import DPTBase, DPTNumeric
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -37,6 +34,7 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_MODE,
     CONF_NAME,
+    CONF_PAYLOAD,
     CONF_TYPE,
     Platform,
 )
@@ -46,7 +44,6 @@ from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from .const import (
     CONF_INVERT,
     CONF_KNX_EXPOSE,
-    CONF_PAYLOAD,
     CONF_PAYLOAD_LENGTH,
     CONF_RESET_AFTER,
     CONF_RESPOND_TO_READ,
@@ -57,80 +54,19 @@ from .const import (
     PRESET_MODES,
     ColorTempModes,
 )
-
-##################
-# KNX VALIDATORS
-##################
-
-
-def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str | int]:
-    """Validate that value is parsable as given sensor type."""
-
-    def dpt_value_validator(value: Any) -> str | int:
-        """Validate that value is parsable as sensor type."""
-        if (
-            isinstance(value, (str, int))
-            and dpt_base_class.parse_transcoder(value) is not None
-        ):
-            return value
-        raise vol.Invalid(
-            f"type '{value}' is not a valid DPT identifier for"
-            f" {dpt_base_class.__name__}."
-        )
-
-    return dpt_value_validator
-
-
-numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[type-abstract]
-sensor_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
-string_type_validator = dpt_subclass_validator(DPTString)
-
-
-def ga_validator(value: Any) -> str | int:
-    """Validate that value is parsable as GroupAddress or InternalGroupAddress."""
-    if isinstance(value, (str, int)):
-        try:
-            parse_device_group_address(value)
-            return value
-        except CouldNotParseAddress:
-            pass
-    raise vol.Invalid(
-        f"value '{value}' is not a valid KNX group address '<main>/<middle>/<sub>',"
-        " '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123'), nor xknx internal"
-        " address 'i-<string>'."
-    )
-
-
-ga_list_validator = vol.All(cv.ensure_list, [ga_validator])
-
-ia_validator = vol.Any(
-    vol.All(str, str.strip, cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern)),
-    vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
-    msg=(
-        "value does not match pattern for KNX individual address"
-        " '<area>.<line>.<device>' (eg.'1.1.100')"
-    ),
+from .validation import (
+    ga_list_validator,
+    ga_validator,
+    numeric_type_validator,
+    sensor_type_validator,
+    string_type_validator,
+    sync_state_validator,
 )
 
 
-def ip_v4_validator(value: Any, multicast: bool | None = None) -> str:
-    """
-    Validate that value is parsable as IPv4 address.
-
-    Optionally check if address is in a reserved multicast block or is explicitly not.
-    """
-    try:
-        address = ipaddress.IPv4Address(value)
-    except ipaddress.AddressValueError as ex:
-        raise vol.Invalid(f"value '{value}' is not a valid IPv4 address: {ex}") from ex
-    if multicast is not None and address.is_multicast != multicast:
-        raise vol.Invalid(
-            f"value '{value}' is not a valid IPv4"
-            f" {'multicast' if multicast else 'unicast'} address"
-        )
-    return str(address)
-
-
+##################
+# KNX SUB VALIDATORS
+##################
 def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     """Validate a number entity configurations dependent on configured value type."""
     value_type = entity_config[CONF_TYPE]
@@ -182,13 +118,13 @@ def button_payload_sub_validator(entity_config: OrderedDict) -> OrderedDict:
             raise vol.Invalid(f"'type: {_type}' is not a valid sensor type.")
         entity_config[CONF_PAYLOAD_LENGTH] = transcoder.payload_length
         try:
-            entity_config[CONF_PAYLOAD] = int.from_bytes(
-                transcoder.to_knx(_payload), byteorder="big"
-            )
-        except ConversionError as ex:
+            _dpt_payload = transcoder.to_knx(_payload)
+            _raw_payload = transcoder.validate_payload(_dpt_payload)
+        except (ConversionError, CouldNotParseTelegram) as ex:
             raise vol.Invalid(
                 f"'payload: {_payload}' not valid for 'type: {_type}'"
             ) from ex
+        entity_config[CONF_PAYLOAD] = int.from_bytes(_raw_payload, byteorder="big")
         return entity_config
 
     _payload = entity_config[CONF_PAYLOAD]
@@ -223,12 +159,6 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
         payloads_seen.add(payload)
     return entity_config
 
-
-sync_state_validator = vol.Any(
-    vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
-    cv.boolean,
-    cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
-)
 
 #########
 # EVENT
@@ -550,6 +480,44 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
             }
         ),
+    )
+
+
+class DateSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX date."""
+
+    PLATFORM = Platform.DATE
+
+    DEFAULT_NAME = "KNX Date"
+
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        }
+    )
+
+
+class DateTimeSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX date."""
+
+    PLATFORM = Platform.DATETIME
+
+    DEFAULT_NAME = "KNX DateTime"
+
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        }
     )
 
 
@@ -926,6 +894,25 @@ class TextSchema(KNXPlatformSchema):
             vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
             vol.Optional(CONF_TYPE, default="latin_1"): string_type_validator,
             vol.Optional(CONF_MODE, default=TextMode.TEXT): vol.Coerce(TextMode),
+            vol.Required(KNX_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+        }
+    )
+
+
+class TimeSchema(KNXPlatformSchema):
+    """Voluptuous schema for KNX time."""
+
+    PLATFORM = Platform.TIME
+
+    DEFAULT_NAME = "KNX Time"
+
+    ENTITY_SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,

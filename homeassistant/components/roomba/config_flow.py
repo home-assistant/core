@@ -10,7 +10,7 @@ from roombapy.getpassword import RoombaPassword
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.components import dhcp
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
@@ -85,17 +85,31 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle zeroconf discovery."""
+        return await self._async_step_discovery(
+            discovery_info.host, discovery_info.hostname.lower().rstrip(".local.")
+        )
+
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
+        return await self._async_step_discovery(
+            discovery_info.ip, discovery_info.hostname
+        )
 
-        if not discovery_info.hostname.startswith(("irobot-", "roomba-")):
+    async def _async_step_discovery(self, ip_address: str, hostname: str) -> FlowResult:
+        """Handle any discovery."""
+        self._async_abort_entries_match({CONF_HOST: ip_address})
+
+        if not hostname.startswith(("irobot-", "roomba-")):
             return self.async_abort(reason="not_irobot_device")
 
-        self.host = discovery_info.ip
-        self.blid = _async_blid_from_hostname(discovery_info.hostname)
+        self.host = ip_address
+        self.blid = _async_blid_from_hostname(hostname)
         await self.async_set_unique_id(self.blid)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: ip_address})
 
         # Because the hostname is so long some sources may
         # truncate the hostname since it will be longer than
@@ -103,7 +117,7 @@ class RoombaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # going for a longer hostname we abort so the user
         # does not see two flows if discovery fails.
         for progress in self._async_in_progress():
-            flow_unique_id = progress["context"]["unique_id"]
+            flow_unique_id: str = progress["context"]["unique_id"]
             if flow_unique_id.startswith(self.blid):
                 return self.async_abort(reason="short_blid")
             if self.blid.startswith(flow_unique_id):

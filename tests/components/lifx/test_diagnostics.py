@@ -7,7 +7,7 @@ from homeassistant.setup import async_setup_component
 from . import (
     DEFAULT_ENTRY_TITLE,
     IP_ADDRESS,
-    MAC_ADDRESS,
+    SERIAL,
     _mocked_bulb,
     _mocked_clean_bulb,
     _mocked_infrared_bulb,
@@ -19,15 +19,18 @@ from . import (
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
+from tests.typing import ClientSessionGenerator
 
 
-async def test_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
+async def test_bulb_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test diagnostics for a standard bulb."""
     config_entry = MockConfigEntry(
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -66,13 +69,15 @@ async def test_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
     }
 
 
-async def test_clean_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
+async def test_clean_bulb_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test diagnostics for a standard bulb."""
     config_entry = MockConfigEntry(
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_clean_bulb()
@@ -116,13 +121,15 @@ async def test_clean_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
     }
 
 
-async def test_infrared_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
+async def test_infrared_bulb_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test diagnostics for a standard bulb."""
     config_entry = MockConfigEntry(
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_infrared_bulb()
@@ -163,14 +170,14 @@ async def test_infrared_bulb_diagnostics(hass: HomeAssistant, hass_client) -> No
 
 
 async def test_legacy_multizone_bulb_diagnostics(
-    hass: HomeAssistant, hass_client
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test diagnostics for a standard bulb."""
     config_entry = MockConfigEntry(
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_light_strip()
@@ -273,13 +280,15 @@ async def test_legacy_multizone_bulb_diagnostics(
     }
 
 
-async def test_multizone_bulb_diagnostics(hass: HomeAssistant, hass_client) -> None:
+async def test_multizone_bulb_diagnostics(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
     """Test diagnostics for a standard bulb."""
     config_entry = MockConfigEntry(
         domain=lifx.DOMAIN,
         title=DEFAULT_ENTRY_TITLE,
         data={CONF_HOST: IP_ADDRESS},
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
     )
     config_entry.add_to_hass(hass)
     bulb = _mocked_light_strip()

@@ -1,14 +1,19 @@
 """Test the air-Q config flow."""
 from unittest.mock import patch
 
-from aioairq.core import DeviceInfo, InvalidAuth, InvalidInput
+from aioairq import DeviceInfo, InvalidAuth
 from aiohttp.client_exceptions import ClientConnectionError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.airq.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
+
+pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 TEST_USER_DATA = {
     CONF_IP_ADDRESS: "192.168.0.0",
@@ -21,9 +26,6 @@ TEST_DEVICE_INFO = DeviceInfo(
     sw_version="sw",
     hw_version="hw",
 )
-TEST_DATA_OUT = TEST_USER_DATA | {
-    "device_info": {k: v for k, v in TEST_DEVICE_INFO.items() if k != "id"}
-}
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -45,7 +47,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_DEVICE_INFO["name"]
-    assert result2["data"] == TEST_DATA_OUT
+    assert result2["data"] == TEST_USER_DATA
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -78,16 +80,23 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_form_invalid_input(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+async def test_duplicate_error(hass: HomeAssistant) -> None:
+    """Test that errors are shown when duplicates are added."""
+    MockConfigEntry(
+        data=TEST_USER_DATA,
+        domain=DOMAIN,
+        unique_id=TEST_DEVICE_INFO["id"],
+    ).add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioairq.AirQ.validate", side_effect=InvalidInput):
+    with patch("aioairq.AirQ.validate"), patch(
+        "aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO
+    ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_USER_DATA | {CONF_IP_ADDRESS: "invalid_ip"}
+            result["flow_id"], TEST_USER_DATA
         )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_input"}
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"

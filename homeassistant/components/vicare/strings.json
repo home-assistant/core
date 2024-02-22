@@ -3,12 +3,19 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "description": "Set up ViCare integration. To generate API key go to https://developer.viessmann.com",
+        "description": "Set up ViCare integration. To generate client ID go to https://app.developer.viessmann.com",
         "data": {
           "username": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "client_id": "[%key:common::config_flow::data::api_key%]",
+          "client_id": "Client ID",
           "heating_type": "Heating type"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Please verify credentials.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "client_id": "[%key:component::vicare::config::step::user::data::client_id%]"
         }
       }
     },
@@ -17,7 +24,312 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "circulation_pump": {
+        "name": "Circulation pump"
+      },
+      "frost_protection": {
+        "name": "Frost protection"
+      },
+      "burner": {
+        "name": "Burner"
+      },
+      "compressor": {
+        "name": "Compressor"
+      },
+      "solar_pump": {
+        "name": "Solar pump"
+      },
+      "domestic_hot_water_charging": {
+        "name": "DHW charging"
+      },
+      "domestic_hot_water_circulation_pump": {
+        "name": "DHW circulation pump"
+      },
+      "domestic_hot_water_pump": {
+        "name": "DHW pump"
+      }
+    },
+    "button": {
+      "activate_onetimecharge": {
+        "name": "Activate one-time charge"
+      }
+    },
+    "climate": {
+      "heating": {
+        "name": "Heating"
+      }
+    },
+    "number": {
+      "heating_curve_shift": {
+        "name": "Heating curve shift"
+      },
+      "heating_curve_slope": {
+        "name": "Heating curve slope"
+      },
+      "normal_temperature": {
+        "name": "Normal temperature"
+      },
+      "reduced_temperature": {
+        "name": "Reduced temperature"
+      },
+      "comfort_temperature": {
+        "name": "Comfort temperature"
+      }
+    },
+    "sensor": {
+      "outside_temperature": {
+        "name": "Outside temperature"
+      },
+      "return_temperature": {
+        "name": "Return temperature"
+      },
+      "boiler_temperature": {
+        "name": "Boiler temperature"
+      },
+      "boiler_supply_temperature": {
+        "name": "Boiler supply temperature"
+      },
+      "primary_circuit_supply_temperature": {
+        "name": "Primary circuit supply temperature"
+      },
+      "primary_circuit_return_temperature": {
+        "name": "Primary circuit return temperature"
+      },
+      "secondary_circuit_supply_temperature": {
+        "name": "Secondary circuit supply temperature"
+      },
+      "secondary_circuit_return_temperature": {
+        "name": "Secondary circuit return temperature"
+      },
+      "hotwater_out_temperature": {
+        "name": "DHW out temperature"
+      },
+      "hotwater_max_temperature": {
+        "name": "DHW max temperature"
+      },
+      "hotwater_min_temperature": {
+        "name": "DHW min temperature"
+      },
+      "hotwater_gas_consumption_today": {
+        "name": "DHW gas consumption today"
+      },
+      "hotwater_gas_consumption_heating_this_week": {
+        "name": "DHW gas consumption this week"
+      },
+      "hotwater_gas_consumption_heating_this_month": {
+        "name": "DHW gas consumption this month"
+      },
+      "hotwater_gas_consumption_heating_this_year": {
+        "name": "DHW gas consumption this year"
+      },
+      "gas_consumption_heating_today": {
+        "name": "Heating gas consumption today"
+      },
+      "gas_consumption_heating_this_week": {
+        "name": "Heating gas consumption this week"
+      },
+      "gas_consumption_heating_this_month": {
+        "name": "Heating gas consumption this month"
+      },
+      "gas_consumption_heating_this_year": {
+        "name": "Heating gas consumption this year"
+      },
+      "gas_consumption_fuelcell_today": {
+        "name": "Fuel cell gas consumption today"
+      },
+      "gas_consumption_fuelcell_this_week": {
+        "name": "Fuel cell gas consumption this week"
+      },
+      "gas_consumption_fuelcell_this_month": {
+        "name": "Fuel cell gas consumption this month"
+      },
+      "gas_consumption_fuelcell_this_year": {
+        "name": "Fuel cell gas consumption this year"
+      },
+      "gas_consumption_total_today": {
+        "name": "Gas consumption today"
+      },
+      "gas_consumption_total_this_week": {
+        "name": "Gas consumption this week"
+      },
+      "gas_consumption_total_this_month": {
+        "name": "Gas consumption this month"
+      },
+      "gas_consumption_total_this_year": {
+        "name": "Gas consumption this year"
+      },
+      "gas_summary_consumption_heating_currentday": {
+        "name": "Heating gas consumption today"
+      },
+      "gas_summary_consumption_heating_currentmonth": {
+        "name": "Heating gas consumption this month"
+      },
+      "gas_summary_consumption_heating_currentyear": {
+        "name": "Heating gas consumption this year"
+      },
+      "gas_summary_consumption_heating_lastsevendays": {
+        "name": "Heating gas consumption last seven days"
+      },
+      "hotwater_gas_summary_consumption_heating_currentday": {
+        "name": "DHW gas consumption today"
+      },
+      "hotwater_gas_summary_consumption_heating_currentmonth": {
+        "name": "DHW gas consumption this month"
+      },
+      "hotwater_gas_summary_consumption_heating_currentyear": {
+        "name": "DHW gas consumption this year"
+      },
+      "hotwater_gas_summary_consumption_heating_lastsevendays": {
+        "name": "DHW gas consumption last seven days"
+      },
+      "energy_summary_consumption_heating_currentday": {
+        "name": "Heating energy consumption today"
+      },
+      "energy_summary_consumption_heating_currentmonth": {
+        "name": "Heating energy consumption this month"
+      },
+      "energy_summary_consumption_heating_currentyear": {
+        "name": "Heating energy consumption this year"
+      },
+      "energy_summary_consumption_heating_lastsevendays": {
+        "name": "Heating energy consumption last seven days"
+      },
+      "energy_dhw_summary_consumption_heating_currentday": {
+        "name": "DHW energy consumption today"
+      },
+      "energy_dhw_summary_consumption_heating_currentmonth": {
+        "name": "DHW energy consumption this month"
+      },
+      "energy_dhw_summary_consumption_heating_currentyear": {
+        "name": "DHW energy consumption this year"
+      },
+      "energy_summary_dhw_consumption_heating_lastsevendays": {
+        "name": "DHW energy consumption last seven days"
+      },
+      "power_production_current": {
+        "name": "Power production current"
+      },
+      "power_production_today": {
+        "name": "Energy production today"
+      },
+      "power_production_this_week": {
+        "name": "Energy production this week"
+      },
+      "power_production_this_month": {
+        "name": "Energy production this month"
+      },
+      "power_production_this_year": {
+        "name": "Energy production this year"
+      },
+      "solar_storage_temperature": {
+        "name": "Solar storage temperature"
+      },
+      "collector_temperature": {
+        "name": "Solar collector temperature"
+      },
+      "solar_power_production_today": {
+        "name": "Solar energy production today"
+      },
+      "solar_power_production_this_week": {
+        "name": "Solar energy production this week"
+      },
+      "solar_power_production_this_month": {
+        "name": "Solar energy production this month"
+      },
+      "solar_power_production_this_year": {
+        "name": "Solar energy production this year"
+      },
+      "power_consumption_today": {
+        "name": "Energy consumption today"
+      },
+      "power_consumption_this_week": {
+        "name": "Power consumption this week"
+      },
+      "power_consumption_this_month": {
+        "name": "Energy consumption this month"
+      },
+      "power_consumption_this_year": {
+        "name": "Energy consumption this year"
+      },
+      "buffer_top_temperature": {
+        "name": "Buffer top temperature"
+      },
+      "buffer_main_temperature": {
+        "name": "Buffer main temperature"
+      },
+      "volumetric_flow": {
+        "name": "Volumetric flow"
+      },
+      "supply_temperature": {
+        "name": "Supply temperature"
+      },
+      "burner_starts": {
+        "name": "Burner starts"
+      },
+      "burner_hours": {
+        "name": "Burner hours"
+      },
+      "burner_modulation": {
+        "name": "Burner modulation"
+      },
+      "compressor_starts": {
+        "name": "Compressor starts"
+      },
+      "compressor_hours": {
+        "name": "Compressor hours"
+      },
+      "compressor_hours_loadclass1": {
+        "name": "Compressor hours load class 1"
+      },
+      "compressor_hours_loadclass2": {
+        "name": "Compressor hours load class 2"
+      },
+      "compressor_hours_loadclass3": {
+        "name": "Compressor hours load class 3"
+      },
+      "compressor_hours_loadclass4": {
+        "name": "Compressor hours load class 4"
+      },
+      "compressor_hours_loadclass5": {
+        "name": "Compressor hours load class 5"
+      },
+      "compressor_phase": {
+        "name": "Compressor phase"
+      }
+    },
+    "water_heater": {
+      "domestic_hot_water": {
+        "name": "Domestic hot water"
+      }
+    }
+  },
+  "exceptions": {
+    "program_unknown": {
+      "message": "Cannot translate preset {preset} into a valid ViCare program"
+    },
+    "program_not_activated": {
+      "message": "Unable to activate ViCare program {program}"
+    },
+    "program_not_deactivated": {
+      "message": "Unable to deactivate ViCare program {program}"
+    }
+  },
+  "services": {
+    "set_vicare_mode": {
+      "name": "Set ViCare mode",
+      "description": "Set a ViCare mode.",
+      "fields": {
+        "vicare_mode": {
+          "name": "ViCare mode",
+          "description": "ViCare mode."
+        }
+      }
     }
   }
 }

@@ -16,5 +16,15 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "total_consumption": {
+        "name": "Total consumption"
+      },
+      "monthly_forecast": {
+        "name": "Monthly forecast"
+      }
+    }
   }
 }

@@ -19,8 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class EntityMapStorage:
-    """
-    Holds a cache of entity structure data from a paired HomeKit device.
+    """Holds a cache of entity structure data from a paired HomeKit device.
 
     HomeKit has a cacheable entity map that describes how an IP or BLE
     endpoint is structured. This object holds the latest copy of that data.

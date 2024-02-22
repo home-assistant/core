@@ -16,7 +16,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:rss"
 
 SENSOR_NAME = "Pocketcasts unlistened episodes"
 
@@ -48,6 +47,8 @@ def setup_platform(
 class PocketCastsSensor(SensorEntity):
     """Representation of a pocket casts sensor."""
 
+    _attr_icon = "mdi:rss"
+
     def __init__(self, api):
         """Initialize the sensor."""
         self._api = api
@@ -62,11 +63,6 @@ class PocketCastsSensor(SensorEntity):
     def native_value(self):
         """Return the sensor state."""
         return self._state
-
-    @property
-    def icon(self):
-        """Return the icon for the sensor."""
-        return ICON
 
     def update(self) -> None:
         """Update sensor values."""

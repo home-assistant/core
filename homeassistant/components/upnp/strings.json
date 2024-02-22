@@ -7,7 +7,7 @@
       },
       "user": {
         "data": {
-          "unique_id": "Device"
+          "unique_id": "[%key:common::config_flow::data::device%]"
         }
       }
     },
@@ -23,6 +23,48 @@
         "data": {
           "scan_interval": "Update interval (seconds, minimal 30)"
         }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "wan_status": {
+        "name": "[%key:component::upnp::entity::sensor::wan_status::name%]"
+      }
+    },
+    "sensor": {
+      "data_received": {
+        "name": "Data received"
+      },
+      "data_sent": {
+        "name": "Data sent"
+      },
+      "packets_received": {
+        "name": "Packets received"
+      },
+      "packets_sent": {
+        "name": "Packets sent"
+      },
+      "external_ip": {
+        "name": "External IP"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "packet_download_speed": {
+        "name": "Packet download speed"
+      },
+      "packet_upload_speed": {
+        "name": "Packet upload speed"
+      },
+      "download_speed": {
+        "name": "Download speed"
+      },
+      "upload_speed": {
+        "name": "Upload speed"
+      },
+      "wan_status": {
+        "name": "WAN status"
       }
     }
   }

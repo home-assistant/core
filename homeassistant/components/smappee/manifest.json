@@ -1,11 +1,13 @@
 {
   "domain": "smappee",
   "name": "Smappee",
-  "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/smappee",
-  "dependencies": ["auth"],
-  "requirements": ["pysmappee==0.2.29"],
   "codeowners": ["@bsmappee"],
+  "config_flow": true,
+  "dependencies": ["auth"],
+  "documentation": "https://www.home-assistant.io/integrations/smappee",
+  "iot_class": "cloud_polling",
+  "loggers": ["paho_mqtt", "pysmappee"],
+  "requirements": ["pysmappee==0.2.29"],
   "zeroconf": [
     {
       "type": "_ssh._tcp.local.",
@@ -19,7 +21,5 @@
       "type": "_ssh._tcp.local.",
       "name": "smappee50*"
     }
-  ],
-  "iot_class": "cloud_polling",
-  "loggers": ["paho_mqtt", "pysmappee"]
+  ]
 }

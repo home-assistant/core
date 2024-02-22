@@ -1,11 +1,14 @@
 """Support for August lock."""
+from __future__ import annotations
+
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-from yalexs.activity import SOURCE_PUBNUB, ActivityType
-from yalexs.lock import LockStatus
-from yalexs.util import update_lock_detail_from_activity
+from yalexs.activity import SOURCE_PUBNUB, ActivityType, ActivityTypes
+from yalexs.lock import Lock, LockStatus
+from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
 from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity
 from homeassistant.config_entries import ConfigEntry
@@ -37,16 +40,18 @@ async def async_setup_entry(
 class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
     """Representation of an August lock."""
 
-    def __init__(self, data, device):
+    _attr_name = None
+
+    def __init__(self, data: AugustData, device: Lock) -> None:
         """Initialize the lock."""
         super().__init__(data, device)
         self._lock_status = None
-        self._attr_name = device.device_name
         self._attr_unique_id = f"{self._device_id:s}_lock"
         self._update_from_data()
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
+        assert self._data.activity_stream is not None
         if self._data.activity_stream.pubnub.connected:
             await self._data.async_lock_async(self._device_id, self._hyper_bridge)
             return
@@ -54,12 +59,15 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
+        assert self._data.activity_stream is not None
         if self._data.activity_stream.pubnub.connected:
             await self._data.async_unlock_async(self._device_id, self._hyper_bridge)
             return
         await self._call_lock_operation(self._data.async_unlock)
 
-    async def _call_lock_operation(self, lock_operation):
+    async def _call_lock_operation(
+        self, lock_operation: Callable[[str], Coroutine[Any, Any, list[ActivityTypes]]]
+    ) -> None:
         try:
             activities = await lock_operation(self._device_id)
         except ClientResponseError as err:
@@ -79,7 +87,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
             )
             self._data.async_signal_device_id_update(self._device_id)
 
-    def _update_lock_status_from_detail(self):
+    def _update_lock_status_from_detail(self) -> bool:
         self._attr_available = self._detail.bridge_is_online
 
         if self._lock_status != self._detail.lock_status:
@@ -88,19 +96,28 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
         return False
 
     @callback
-    def _update_from_data(self):
+    def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
-        lock_activity = self._data.activity_stream.get_latest_device_activity(
-            self._device_id,
-            {ActivityType.LOCK_OPERATION, ActivityType.LOCK_OPERATION_WITHOUT_OPERATOR},
+        activity_stream = self._data.activity_stream
+        device_id = self._device_id
+        if lock_activity := activity_stream.get_latest_device_activity(
+            device_id,
+            {ActivityType.LOCK_OPERATION},
+        ):
+            self._attr_changed_by = lock_activity.operated_by
+
+        lock_activity_without_operator = activity_stream.get_latest_device_activity(
+            device_id,
+            {ActivityType.LOCK_OPERATION_WITHOUT_OPERATOR},
         )
 
-        if lock_activity is not None:
-            self._attr_changed_by = lock_activity.operated_by
-            update_lock_detail_from_activity(self._detail, lock_activity)
-            # If the source is pubnub the lock must be online since its a live update
-            if lock_activity.source == SOURCE_PUBNUB:
+        if latest_activity := get_latest_activity(
+            lock_activity_without_operator, lock_activity
+        ):
+            if latest_activity.source == SOURCE_PUBNUB:
+                # If the source is pubnub the lock must be online since its a live update
                 self._detail.set_online(True)
+            update_lock_detail_from_activity(self._detail, latest_activity)
 
         bridge_activity = self._data.activity_stream.get_latest_device_activity(
             self._device_id, {ActivityType.BRIDGE_OPERATION}

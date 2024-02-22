@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event as event_helper
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -75,6 +75,10 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_preset_modes = PRESET_MODES
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, thermostat, temperature_unit):
         """Initialize the thermostat."""
@@ -83,11 +87,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         self._temperature_unit = temperature_unit
         self._schedule_mode = None
         self._target_temperature = None
-
-    @property
-    def name(self):
-        """Return the name of the thermostat."""
-        return self._thermostat.room
+        self._attr_unique_id = thermostat.serial_number
 
     @property
     def temperature_unit(self) -> str:
@@ -104,11 +104,6 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
             return self._thermostat.celsius
 
         return self._thermostat.fahrenheit
-
-    @property
-    def unique_id(self):
-        """Return the unique id."""
-        return self._thermostat.serial_number
 
     @property
     def available(self) -> bool:
@@ -162,11 +157,6 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
     def preset_mode(self):
         """Return current preset mode."""
         return SCHEDULE_MODE_TO_PRESET_MODE_MAP.get(self._schedule_mode, PRESET_RUN)
-
-    @property
-    def preset_modes(self):
-        """Return available preset modes."""
-        return PRESET_MODES
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Update the hold mode of the thermostat."""
@@ -262,6 +252,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         """Return the device_info of the device."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._thermostat.serial_number)},
+            serial_number=self._thermostat.serial_number,
             name=self._thermostat.room,
             model="nVent Signature",
             manufacturer=MANUFACTURER,

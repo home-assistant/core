@@ -16,6 +16,7 @@ TO_REDACT = {
     "deviceArea",
     "name",
     "time",
+    "reportTime",
     "userString",
 }
 

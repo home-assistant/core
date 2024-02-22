@@ -2,7 +2,6 @@
 import asyncio
 
 from aiohttp.client_exceptions import ClientResponseError
-import async_timeout
 from logi_circle import LogiCircle
 from logi_circle.exception import AuthorizationFailed
 import voluptuous as vol
@@ -35,11 +34,11 @@ from .const import (
     DOMAIN,
     LED_MODE_KEY,
     RECORDING_MODE_KEY,
-    SENSOR_TYPES,
     SIGNAL_LOGI_CIRCLE_RECONFIGURE,
     SIGNAL_LOGI_CIRCLE_RECORD,
     SIGNAL_LOGI_CIRCLE_SNAPSHOT,
 )
+from .sensor import SENSOR_TYPES
 
 NOTIFICATION_ID = "logi_circle_notification"
 NOTIFICATION_TITLE = "Logi Circle Setup"
@@ -154,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     try:
-        async with async_timeout.timeout(_TIMEOUT):
+        async with asyncio.timeout(_TIMEOUT):
             # Ensure the cameras property returns the same Camera objects for
             # all devices. Performs implicit login and session validation.
             await logi_circle.synchronize_cameras()
@@ -171,7 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             notification_id=NOTIFICATION_ID,
         )
         return False
-    except asyncio.TimeoutError:
+    except TimeoutError:
         # The TimeoutError exception object returns nothing when casted to a
         # string, so we'll handle it separately.
         err = f"{_TIMEOUT}s timeout exceeded when connecting to Logi Circle API"

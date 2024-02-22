@@ -5,7 +5,7 @@
       "user": {
         "description": "[%key:component::bluetooth::config::step::user::description%]",
         "data": {
-          "address": "[%key:component::bluetooth::config::step::user::data::address%]"
+          "address": "[%key:common::config_flow::data::device%]"
         }
       },
       "bluetooth_confirm": {
@@ -27,6 +27,50 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "press": "Press",
+      "double_press": "Double Press",
+      "triple_press": "Triple Press",
+      "long_press": "Long Press",
+      "long_double_press": "Long Double Press",
+      "long_triple_press": "Long Triple Press",
+      "rotate_right": "Rotate Right",
+      "rotate_left": "Rotate Left"
+    },
+    "trigger_type": {
+      "button": "Button \"{subtype}\"",
+      "dimmer": "Dimmer \"{subtype}\""
+    }
+  },
+  "entity": {
+    "event": {
+      "button": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "press": "Press",
+              "double_press": "Double press",
+              "triple_press": "Triple press",
+              "long_press": "Long press",
+              "long_double_press": "Long double press",
+              "long_triple_press": "Long triple press"
+            }
+          }
+        }
+      },
+      "dimmer": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "rotate_left": "Rotate left",
+              "rotate_right": "Rotate right"
+            }
+          }
+        }
+      }
     }
   }
 }

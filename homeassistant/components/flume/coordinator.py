@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 import pyflume
-from pyflume import FlumeDeviceList
+from pyflume import FlumeAuth, FlumeData, FlumeDeviceList
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -21,7 +21,7 @@ from .const import (
 class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for an individual flume device."""
 
-    def __init__(self, hass: HomeAssistant, flume_device) -> None:
+    def __init__(self, hass: HomeAssistant, flume_device: FlumeData) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
@@ -79,7 +79,7 @@ class FlumeDeviceConnectionUpdateCoordinator(DataUpdateCoordinator[None]):
 class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for flume notifications."""
 
-    def __init__(self, hass: HomeAssistant, auth) -> None:
+    def __init__(self, hass: HomeAssistant, auth: FlumeAuth) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
@@ -88,13 +88,16 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=NOTIFICATION_SCAN_INTERVAL,
         )
         self.auth = auth
-        self.active_notifications_by_device: dict = {}
-        self.notifications: list[dict[str, Any]]
+        self.active_notifications_by_device: dict[str, set[str]] = {}
+        self.notifications: list[dict[str, Any]] = []
 
-    def _update_lists(self):
+    def _update_lists(self) -> None:
         """Query flume for notification list."""
-        self.notifications: list[dict[str, Any]] = pyflume.FlumeNotificationList(
-            self.auth, read="true"
+        # Get notifications (read or unread).
+        # The related binary sensors (leak detected, high flow, low battery)
+        # will be active until the notification is deleted in the Flume app.
+        self.notifications = pyflume.FlumeNotificationList(
+            self.auth, read=None
         ).notification_list
         _LOGGER.debug("Notifications %s", self.notifications)
 

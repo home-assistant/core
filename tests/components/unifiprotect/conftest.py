@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 from functools import partial
 from ipaddress import IPv4Address
 import json
+from pathlib import Path
+from tempfile import gettempdir
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -17,6 +19,7 @@ from pyunifiprotect.data import (
     Bootstrap,
     Camera,
     Chime,
+    CloudAccount,
     Doorlock,
     Light,
     Liveview,
@@ -105,6 +108,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.bootstrap = bootstrap
     client._bootstrap = bootstrap
     client.api_path = "/api"
+    client.cache_dir = Path(gettempdir()) / "ufp_cache"
     # functionality from API client tests actually need
     client._stream_response = partial(ProtectApiClient._stream_response, client)
     client.get_camera_video = partial(ProtectApiClient.get_camera_video, client)
@@ -116,6 +120,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     client.base_url = "https://127.0.0.1"
     client.connection_host = IPv4Address("127.0.0.1")
     client.get_nvr = AsyncMock(return_value=nvr)
+    client.get_bootstrap = AsyncMock(return_value=bootstrap)
     client.update = AsyncMock(return_value=bootstrap)
     client.async_disconnect_ws = AsyncMock()
     return client
@@ -342,3 +347,19 @@ def chime():
 def fixed_now_fixture():
     """Return datetime object that will be consistent throughout test."""
     return dt_util.utcnow()
+
+
+@pytest.fixture(name="cloud_account")
+def cloud_account() -> CloudAccount:
+    """Return UI Cloud Account."""
+
+    return CloudAccount(
+        id="42",
+        first_name="Test",
+        last_name="User",
+        email="test@example.com",
+        user_id="42",
+        name="Test User",
+        location=None,
+        profile_img=None,
+    )

@@ -6,6 +6,7 @@ import re
 
 from .const import CORE_PROJECT_ID, FRONTEND_PROJECT_ID, INTEGRATIONS_DIR
 from .lokalise import get_api
+from .util import load_json_from_path
 
 FRONTEND_REPO = pathlib.Path("../frontend/")
 
@@ -164,7 +165,7 @@ def find_and_rename_keys():
         if not strings_file.is_file():
             continue
 
-        strings = json.loads(strings_file.read_text())
+        strings = load_json_from_path(strings_file)
 
         if "title" in strings.get("config", {}):
             from_key = f"component::{integration.name}::config::title"
@@ -194,12 +195,12 @@ def interactive_update():
         if not strings_file.is_file():
             continue
 
-        strings = json.loads(strings_file.read_text())
+        strings = load_json_from_path(strings_file)
 
         if "title" not in strings:
             continue
 
-        manifest = json.loads((integration / "manifest.json").read_text())
+        manifest = load_json_from_path(integration / "manifest.json")
 
         print("Processing", manifest["name"])
         print("Translation title", strings["title"])
@@ -247,9 +248,8 @@ def find_frontend_states():
     Source key -> target key
     Add key to integrations strings.json
     """
-    frontend_states = json.loads(
-        (FRONTEND_REPO / "src/translations/en.json").read_text()
-    )["state"]
+    path = FRONTEND_REPO / "src/translations/en.json"
+    frontend_states = load_json_from_path(path)["state"]
 
     # domain => state object
     to_write = {}
@@ -263,7 +263,6 @@ def find_frontend_states():
         from_key_base = f"state::{domain}"
 
         if domain in STATES_WITH_DEV_CLASS:
-
             domain_to_write = dict(states)
 
             for device_class, dev_class_states in domain_to_write.items():
@@ -308,7 +307,7 @@ def find_frontend_states():
     for domain, state in to_write.items():
         strings = INTEGRATIONS_DIR / domain / "strings.json"
         if strings.is_file():
-            content = json.loads(strings.read_text())
+            content = load_json_from_path(strings)
         else:
             content = {}
 
@@ -327,7 +326,7 @@ def find_frontend_states():
 def apply_data_references(to_migrate):
     """Apply references."""
     for strings_file in INTEGRATIONS_DIR.glob("*/strings.json"):
-        strings = json.loads(strings_file.read_text())
+        strings = load_json_from_path(strings_file)
         steps = strings.get("config", {}).get("step")
 
         if not steps:
@@ -338,7 +337,6 @@ def apply_data_references(to_migrate):
         for step_data in steps.values():
             step_data = step_data.get("data", {})
             for key, value in step_data.items():
-
                 if key in to_migrate and value != to_migrate[key]:
                     if key.split("_")[0].lower() in value.lower():
                         step_data[key] = to_migrate[key]

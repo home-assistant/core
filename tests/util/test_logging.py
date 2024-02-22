@@ -7,24 +7,16 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.core import callback, is_callback
+from homeassistant.core import (
+    HomeAssistant,
+    callback,
+    is_callback,
+    is_callback_check_partial,
+)
 import homeassistant.util.logging as logging_util
 
 
-def test_sensitive_data_filter():
-    """Test the logging sensitive data filter."""
-    log_filter = logging_util.HideSensitiveDataFilter("mock_sensitive")
-
-    clean_record = logging.makeLogRecord({"msg": "clean log data"})
-    log_filter.filter(clean_record)
-    assert clean_record.msg == "clean log data"
-
-    sensitive_record = logging.makeLogRecord({"msg": "mock_sensitive log"})
-    log_filter.filter(sensitive_record)
-    assert sensitive_record.msg == "******* log"
-
-
-async def test_logging_with_queue_handler():
+async def test_logging_with_queue_handler() -> None:
     """Test logging with HomeAssistantQueueHandler."""
 
     simple_queue = queue.SimpleQueue()  # type: ignore
@@ -62,7 +54,7 @@ async def test_logging_with_queue_handler():
     assert simple_queue.empty()
 
 
-async def test_migrate_log_handler(hass):
+async def test_migrate_log_handler(hass: HomeAssistant) -> None:
     """Test migrating log handlers."""
 
     logging_util.async_activate_log_queue_handler(hass)
@@ -78,7 +70,9 @@ async def test_migrate_log_handler(hass):
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_async_create_catching_coro(hass, caplog):
+async def test_async_create_catching_coro(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test exception logging of wrapped coroutine."""
 
     async def job():
@@ -90,7 +84,7 @@ async def test_async_create_catching_coro(hass, caplog):
     assert "in test_async_create_catching_coro" in caplog.text
 
 
-def test_catch_log_exception():
+def test_catch_log_exception() -> None:
     """Test it is still a callback after wrapping including partial."""
 
     async def async_meth():
@@ -104,7 +98,7 @@ def test_catch_log_exception():
     def callback_meth():
         pass
 
-    assert is_callback(
+    assert is_callback_check_partial(
         logging_util.catch_log_exception(partial(callback_meth), lambda: None)
     )
 
@@ -115,3 +109,39 @@ def test_catch_log_exception():
 
     assert not is_callback(wrapped)
     assert not asyncio.iscoroutinefunction(wrapped)
+
+
+@pytest.mark.no_fail_on_log_exception
+async def test_catch_log_exception_catches_and_logs() -> None:
+    """Test it is still a callback after wrapping including partial."""
+    saved_args = []
+
+    def save_args(*args):
+        saved_args.append(args)
+
+    async def async_meth():
+        raise ValueError("failure async")
+
+    func = logging_util.catch_log_exception(async_meth, save_args)
+    await func("failure async passed")
+
+    assert saved_args == [("failure async passed",)]
+    saved_args.clear()
+
+    @callback
+    def callback_meth():
+        raise ValueError("failure callback")
+
+    func = logging_util.catch_log_exception(callback_meth, save_args)
+    func("failure callback passed")
+
+    assert saved_args == [("failure callback passed",)]
+    saved_args.clear()
+
+    def sync_meth():
+        raise ValueError("failure sync")
+
+    func = logging_util.catch_log_exception(sync_meth, save_args)
+    func("failure sync passed")
+
+    assert saved_args == [("failure sync passed",)]

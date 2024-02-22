@@ -1,9 +1,9 @@
 {
   "domain": "linode",
   "name": "Linode",
-  "documentation": "https://www.home-assistant.io/integrations/linode",
-  "requirements": ["linode-api==4.1.9b1"],
   "codeowners": [],
+  "documentation": "https://www.home-assistant.io/integrations/linode",
   "iot_class": "cloud_polling",
-  "loggers": ["linode"]
+  "loggers": ["linode"],
+  "requirements": ["linode-api==4.1.9b1"]
 }

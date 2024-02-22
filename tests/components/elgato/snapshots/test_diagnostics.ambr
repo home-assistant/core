@@ -1,0 +1,21 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'info': dict({
+      'displayName': 'Frenck',
+      'features': list([
+        'lights',
+      ]),
+      'firmwareBuildNumber': 192,
+      'firmwareVersion': '1.0.3',
+      'hardwareBoardType': 53,
+      'productName': 'Elgato Key Light',
+      'serialNumber': 'CN11A1A00001',
+    }),
+    'state': dict({
+      'brightness': 21,
+      'on': 1,
+      'temperature': 297,
+    }),
+  })
+# ---

@@ -1,7 +1,7 @@
 """Support for Adax wifi-enabled home heaters."""
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from adax import Adax
 from adax_local import Adax as AdaxLocal
@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ACCOUNT_ID, CONNECTION_TYPE, DOMAIN, LOCAL
@@ -67,9 +67,14 @@ class AdaxDevice(ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_max_temp = 35
     _attr_min_temp = 5
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, heater_data: dict[str, Any], adax_data_handler: Adax) -> None:
         """Initialize the heater."""
@@ -79,7 +84,10 @@ class AdaxDevice(ClimateEntity):
         self._attr_unique_id = f"{heater_data['homeId']}_{heater_data['id']}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater_data["id"])},
-            name=self.name,
+            # Instead of setting the device name to the entity name, adax
+            # should be updated to set has_entity_name = True, and set the entity
+            # name to None
+            name=cast(str | None, self.name),
             manufacturer="Adax",
         )
 
@@ -134,7 +142,7 @@ class LocalAdaxDevice(ClimateEntity):
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, adax_data_handler, unique_id):
+    def __init__(self, adax_data_handler: AdaxLocal, unique_id: str) -> None:
         """Initialize the heater."""
         self._adax_data_handler = adax_data_handler
         self._attr_unique_id = unique_id

@@ -17,6 +17,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -27,12 +28,14 @@ from tests.common import async_fire_time_changed
 uid = "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*TWMYQKL3UVED4HSIIB9GXJWJZBQCXG-9VE-N2IUAIWI"
 
 
-async def test_climate_get_state(hass, init_integration):
+async def test_climate_get_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    init_integration,
+) -> None:
     """Test states of the climate."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
-    device = device_registry.async_get_device({("freedompro", uid)})
+    device = device_registry.async_get_device(identifiers={("freedompro", uid)})
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"
@@ -65,7 +68,7 @@ async def test_climate_get_state(hass, init_integration):
     states_response[0]["state"]["currentTemperature"] = 20
     states_response[0]["state"]["targetTemperature"] = 21
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -83,10 +86,11 @@ async def test_climate_get_state(hass, init_integration):
         assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20
 
 
-async def test_climate_set_off(hass, init_integration):
+async def test_climate_set_off(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, init_integration
+) -> None:
     """Test set off climate."""
     init_integration
-    entity_registry = er.async_get(hass)
 
     entity_id = "climate.thermostat"
     state = hass.states.get(entity_id)
@@ -100,7 +104,7 @@ async def test_climate_set_off(hass, init_integration):
     with patch(
         "homeassistant.components.freedompro.climate.put_state"
     ) as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
             {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.OFF},
@@ -113,10 +117,11 @@ async def test_climate_set_off(hass, init_integration):
     assert state.state == HVACMode.HEAT
 
 
-async def test_climate_set_unsupported_hvac_mode(hass, init_integration):
+async def test_climate_set_unsupported_hvac_mode(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, init_integration
+) -> None:
     """Test set unsupported hvac mode climate."""
     init_integration
-    entity_registry = er.async_get(hass)
 
     entity_id = "climate.thermostat"
     state = hass.states.get(entity_id)
@@ -136,10 +141,11 @@ async def test_climate_set_unsupported_hvac_mode(hass, init_integration):
         )
 
 
-async def test_climate_set_temperature(hass, init_integration):
+async def test_climate_set_temperature(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, init_integration
+) -> None:
     """Test set temperature climate."""
     init_integration
-    entity_registry = er.async_get(hass)
 
     entity_id = "climate.thermostat"
     state = hass.states.get(entity_id)
@@ -153,7 +159,7 @@ async def test_climate_set_temperature(hass, init_integration):
     with patch(
         "homeassistant.components.freedompro.climate.put_state"
     ) as mock_put_state:
-        assert await hass.services.async_call(
+        await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
@@ -171,7 +177,7 @@ async def test_climate_set_temperature(hass, init_integration):
     states_response[0]["state"]["currentTemperature"] = 20
     states_response[0]["state"]["targetTemperature"] = 21
     with patch(
-        "homeassistant.components.freedompro.get_states",
+        "homeassistant.components.freedompro.coordinator.get_states",
         return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
@@ -181,10 +187,11 @@ async def test_climate_set_temperature(hass, init_integration):
     assert state.attributes[ATTR_TEMPERATURE] == 21
 
 
-async def test_climate_set_temperature_unsupported_hvac_mode(hass, init_integration):
+async def test_climate_set_temperature_unsupported_hvac_mode(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, init_integration
+) -> None:
     """Test set temperature climate unsupported hvac mode."""
     init_integration
-    entity_registry = er.async_get(hass)
 
     entity_id = "climate.thermostat"
     state = hass.states.get(entity_id)
@@ -195,7 +202,7 @@ async def test_climate_set_temperature_unsupported_hvac_mode(hass, init_integrat
     assert entry
     assert entry.unique_id == uid
 
-    assert await hass.services.async_call(
+    await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {

@@ -106,7 +106,9 @@ class DiscogsSensor(SensorEntity):
 
     _attr_attribution = "Data provided by Discogs"
 
-    def __init__(self, discogs_data, name, description: SensorEntityDescription):
+    def __init__(
+        self, discogs_data, name, description: SensorEntityDescription
+    ) -> None:
         """Initialize the Discogs sensor."""
         self.entity_description = description
         self._discogs_data = discogs_data

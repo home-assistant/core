@@ -17,9 +17,6 @@ from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.components.nest import DOMAIN
-from homeassistant.components.nest.const import SDM_SCOPES
-
-from tests.common import MockConfigEntry
 
 # Typing helpers
 PlatformSetup = Callable[[], Awaitable[None]]
@@ -36,98 +33,28 @@ CLOUD_PROJECT_ID = "cloud-id-9876"
 SUBSCRIBER_ID = "projects/cloud-id-9876/subscriptions/subscriber-id-9876"
 
 
-CONFIG = {
-    "nest": {
-        "client_id": CLIENT_ID,
-        "client_secret": CLIENT_SECRET,
-        "project_id": PROJECT_ID,
-        "subscriber_id": SUBSCRIBER_ID,
-    },
-}
-
-FAKE_TOKEN = "some-token"
-FAKE_REFRESH_TOKEN = "some-refresh-token"
-
-
-def create_token_entry(token_expiration_time=None):
-    """Create OAuth 'token' data for a ConfigEntry."""
-    if token_expiration_time is None:
-        token_expiration_time = time.time() + 86400
-    return {
-        "access_token": FAKE_TOKEN,
-        "refresh_token": FAKE_REFRESH_TOKEN,
-        "scope": " ".join(SDM_SCOPES),
-        "token_type": "Bearer",
-        "expires_at": token_expiration_time,
-    }
-
-
-def create_config_entry(token_expiration_time=None) -> MockConfigEntry:
-    """Create a ConfigEntry and add it to Home Assistant."""
-    config_entry_data = {
-        "sdm": {},  # Indicates new SDM API, not legacy API
-        "auth_implementation": "nest",
-        "token": create_token_entry(token_expiration_time),
-    }
-    return MockConfigEntry(domain=DOMAIN, data=config_entry_data)
-
-
 @dataclass
 class NestTestConfig:
     """Holder for integration configuration."""
 
     config: dict[str, Any] = field(default_factory=dict)
     config_entry_data: dict[str, Any] | None = None
-    auth_implementation: str = WEB_AUTH_DOMAIN
     credential: ClientCredential | None = None
 
-
-# Exercises mode where all configuration is in configuration.yaml
-TEST_CONFIG_YAML_ONLY = NestTestConfig(
-    config=CONFIG,
-    config_entry_data={
-        "sdm": {},
-        "token": create_token_entry(),
-    },
-)
-TEST_CONFIGFLOW_YAML_ONLY = NestTestConfig(
-    config=TEST_CONFIG_YAML_ONLY.config,
-)
-
-# Exercises mode where subscriber id is created in the config flow, but
-# all authentication is defined in configuration.yaml
-TEST_CONFIG_HYBRID = NestTestConfig(
-    config={
-        "nest": {
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-            "project_id": PROJECT_ID,
-        },
-    },
-    config_entry_data={
-        "sdm": {},
-        "token": create_token_entry(),
-        "cloud_project_id": CLOUD_PROJECT_ID,
-        "subscriber_id": SUBSCRIBER_ID,
-    },
-)
-TEST_CONFIGFLOW_HYBRID = NestTestConfig(TEST_CONFIG_HYBRID.config)
 
 # Exercises mode where all configuration is from the config flow
 TEST_CONFIG_APP_CREDS = NestTestConfig(
     config_entry_data={
         "sdm": {},
-        "token": create_token_entry(),
         "project_id": PROJECT_ID,
         "cloud_project_id": CLOUD_PROJECT_ID,
         "subscriber_id": SUBSCRIBER_ID,
+        "auth_implementation": "imported-cred",
     },
-    auth_implementation="imported-cred",
     credential=ClientCredential(CLIENT_ID, CLIENT_SECRET),
 )
 TEST_CONFIGFLOW_APP_CREDS = NestTestConfig(
     config=TEST_CONFIG_APP_CREDS.config,
-    auth_implementation="imported-cred",
     credential=ClientCredential(CLIENT_ID, CLIENT_SECRET),
 )
 

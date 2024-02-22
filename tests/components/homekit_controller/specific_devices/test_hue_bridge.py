@@ -1,8 +1,7 @@
 """Tests for handling accessories on a Hue bridge via HomeKit."""
-
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import PERCENTAGE
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.core import HomeAssistant
 
 from ..common import (
     HUB_TEST_ACCESSORY_ID,
@@ -15,7 +14,7 @@ from ..common import (
 )
 
 
-async def test_hue_bridge_setup(hass):
+async def test_hue_bridge_setup(hass: HomeAssistant) -> None:
     """Test that a Hue hub can be correctly setup in HA via HomeKit."""
     accessories = await setup_accessories_from_file(hass, "hue_bridge.json")
     await setup_test_accessories(hass, accessories)

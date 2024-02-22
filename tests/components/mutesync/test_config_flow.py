@@ -1,5 +1,4 @@
 """Test the mütesync config flow."""
-import asyncio
 from unittest.mock import patch
 
 import aiohttp
@@ -19,7 +18,10 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch("mutesync.authenticate", return_value="bla",), patch(
+    with patch(
+        "mutesync.authenticate",
+        return_value="bla",
+    ), patch(
         "homeassistant.components.mutesync.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -41,12 +43,12 @@ async def test_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    "side_effect,error",
+    ("side_effect", "error"),
     [
         (Exception, "unknown"),
         (aiohttp.ClientResponseError(None, None, status=403), "invalid_auth"),
         (aiohttp.ClientResponseError(None, None, status=500), "cannot_connect"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
     ],
 )
 async def test_form_error(

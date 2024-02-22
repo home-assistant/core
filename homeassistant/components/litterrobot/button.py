@@ -10,8 +10,8 @@ from pylitterbot import FeederRobot, LitterRobot3
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -46,28 +46,28 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT]):
     """A class that describes robot button entity required keys."""
 
     press_fn: Callable[[_RobotT], Coroutine[Any, Any, bool]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RobotButtonEntityDescription(ButtonEntityDescription, RequiredKeysMixin[_RobotT]):
     """A class that describes robot button entities."""
 
 
 LITTER_ROBOT_BUTTON = RobotButtonEntityDescription[LitterRobot3](
     key="reset_waste_drawer",
-    name="Reset waste drawer",
+    translation_key="reset_waste_drawer",
     icon="mdi:delete-variant",
     entity_category=EntityCategory.CONFIG,
     press_fn=lambda robot: robot.reset_waste_drawer(),
 )
 FEEDER_ROBOT_BUTTON = RobotButtonEntityDescription[FeederRobot](
     key="give_snack",
-    name="Give snack",
+    translation_key="give_snack",
     icon="mdi:candy-outline",
     press_fn=lambda robot: robot.give_snack(),
 )

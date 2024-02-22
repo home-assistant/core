@@ -1,22 +1,21 @@
 """Test the Aurora config flow."""
-
 from unittest.mock import patch
 
 from aiohttp import ClientError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.aurora.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 DATA = {
-    "name": "Home",
     "latitude": -10,
     "longitude": 10.2,
 }
 
 
-async def test_form(hass):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -39,12 +38,12 @@ async def test_form(hass):
         await hass.async_block_till_done()
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Aurora - Home"
+    assert result2["title"] == "Aurora visibility"
     assert result2["data"] == DATA
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(hass):
+async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test if invalid response or no connection returned from the API."""
 
     result = await hass.config_entries.flow.async_init(
@@ -65,7 +64,7 @@ async def test_form_cannot_connect(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_with_unknown_error(hass):
+async def test_with_unknown_error(hass: HomeAssistant) -> None:
     """Test with unknown error response from the API."""
 
     result = await hass.config_entries.flow.async_init(
@@ -86,7 +85,7 @@ async def test_with_unknown_error(hass):
     assert result["errors"] == {"base": "unknown"}
 
 
-async def test_option_flow(hass):
+async def test_option_flow(hass: HomeAssistant) -> None:
     """Test option flow."""
     entry = MockConfigEntry(domain=DOMAIN, data=DATA)
     entry.add_to_hass(hass)

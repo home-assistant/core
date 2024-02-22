@@ -1,4 +1,4 @@
-"""This platform allows several fans to be grouped into one fan."""
+"""Platform allowing several fans to be grouped into one fan."""
 from __future__ import annotations
 
 from functools import reduce
@@ -25,7 +25,6 @@ from homeassistant.components.fan import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITIES,
@@ -35,19 +34,13 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import GroupEntity
-from .util import (
-    attribute_equal,
-    most_frequent_attribute,
-    reduce_attribute,
-    states_equal,
-)
+from .util import attribute_equal, most_frequent_attribute, reduce_attribute
 
 SUPPORTED_FLAGS = {
     FanEntityFeature.SET_SPEED,
@@ -97,15 +90,26 @@ async def async_setup_entry(
     async_add_entities([FanGroup(config_entry.entry_id, config_entry.title, entities)])
 
 
+@callback
+def async_create_preview_fan(
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
+) -> FanGroup:
+    """Create a preview sensor."""
+    return FanGroup(
+        None,
+        name,
+        validated_config[CONF_ENTITIES],
+    )
+
+
 class FanGroup(GroupEntity, FanEntity):
     """Representation of a FanGroup."""
 
     _attr_available: bool = False
-    _attr_assumed_state: bool = True
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a FanGroup entity."""
-        self._entities = entities
+        self._entity_ids = entities
         self._fans: dict[int, set[str]] = {flag: set() for flag in SUPPORTED_FLAGS}
         self._percentage = None
         self._oscillating = None
@@ -142,17 +146,10 @@ class FanGroup(GroupEntity, FanEntity):
         return self._oscillating
 
     @callback
-    def _update_supported_features_event(self, event: Event) -> None:
-        self.async_set_context(event.context)
-        if (entity := event.data.get("entity_id")) is not None:
-            self.async_update_supported_features(entity, event.data.get("new_state"))
-
-    @callback
     def async_update_supported_features(
         self,
         entity_id: str,
         new_state: State | None,
-        update_state: bool = True,
     ) -> None:
         """Update dictionaries with supported features."""
         if not new_state:
@@ -165,25 +162,6 @@ class FanGroup(GroupEntity, FanEntity):
                     self._fans[feature].add(entity_id)
                 else:
                     self._fans[feature].discard(entity_id)
-
-        if update_state:
-            self.async_defer_or_update_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register listeners."""
-        for entity_id in self._entities:
-            if (new_state := self.hass.states.get(entity_id)) is None:
-                continue
-            self.async_update_supported_features(
-                entity_id, new_state, update_state=False
-            )
-        self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entities, self._update_supported_features_event
-            )
-        )
-
-        await super().async_added_to_hass()
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
@@ -244,7 +222,7 @@ class FanGroup(GroupEntity, FanEntity):
         await self.hass.services.async_call(
             DOMAIN,
             service,
-            {ATTR_ENTITY_ID: self._entities},
+            {ATTR_ENTITY_ID: self._entity_ids},
             blocking=True,
             context=self._context,
         )
@@ -260,19 +238,16 @@ class FanGroup(GroupEntity, FanEntity):
         """Set an attribute based on most frequent supported entities attributes."""
         states = self._async_states_by_support_flag(flag)
         setattr(self, attr, most_frequent_attribute(states, entity_attr))
-        self._attr_assumed_state |= not attribute_equal(states, entity_attr)
 
     @callback
     def async_update_group_state(self) -> None:
         """Update state and attributes."""
-        self._attr_assumed_state = False
 
         states = [
             state
-            for entity_id in self._entities
+            for entity_id in self._entity_ids
             if (state := self.hass.states.get(entity_id)) is not None
         ]
-        self._attr_assumed_state |= not states_equal(states)
 
         # Set group as unavailable if all members are unavailable or missing
         self._attr_available = any(state.state != STATE_UNAVAILABLE for state in states)
@@ -291,9 +266,6 @@ class FanGroup(GroupEntity, FanEntity):
             FanEntityFeature.SET_SPEED
         )
         self._percentage = reduce_attribute(percentage_states, ATTR_PERCENTAGE)
-        self._attr_assumed_state |= not attribute_equal(
-            percentage_states, ATTR_PERCENTAGE
-        )
         if (
             percentage_states
             and percentage_states[0].attributes.get(ATTR_PERCENTAGE_STEP)
@@ -317,7 +289,4 @@ class FanGroup(GroupEntity, FanEntity):
             reduce(
                 ior, [feature for feature in SUPPORTED_FLAGS if self._fans[feature]], 0
             )
-        )
-        self._attr_assumed_state |= any(
-            state.attributes.get(ATTR_ASSUMED_STATE) for state in states
         )

@@ -9,8 +9,8 @@ from yarl import URL
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -19,7 +19,7 @@ from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 from .models import SynologyDSMData
 
 
-@dataclass
+@dataclass(frozen=True)
 class SynologyDSMUpdateEntityEntityDescription(
     UpdateEntityDescription, SynologyDSMEntityDescription
 ):
@@ -30,7 +30,7 @@ UPDATE_ENTITIES: Final = [
     SynologyDSMUpdateEntityEntityDescription(
         api_key=SynoCoreUpgrade.API_KEY,
         key="update",
-        name="DSM Update",
+        translation_key="update",
         entity_category=EntityCategory.DIAGNOSTIC,
     )
 ]

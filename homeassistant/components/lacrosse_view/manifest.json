@@ -1,9 +1,10 @@
 {
   "domain": "lacrosse_view",
   "name": "LaCrosse View",
+  "codeowners": ["@IceBotYT"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lacrosse_view",
-  "requirements": ["lacrosse-view==0.0.9"],
-  "codeowners": ["@IceBotYT"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["lacrosse_view"],
+  "requirements": ["lacrosse-view==1.0.1"]
 }

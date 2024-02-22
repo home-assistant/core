@@ -7,7 +7,6 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-import async_timeout
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -60,7 +59,6 @@ def push_registrations(hass):
     return targets
 
 
-# pylint: disable=invalid-name
 def log_rate_limits(hass, device_name, resp, level=logging.INFO):
     """Output rate limit log line at given level."""
     if ATTR_PUSH_RATE_LIMITS not in resp:
@@ -166,7 +164,7 @@ class MobileAppNotificationService(BaseNotificationService):
         target_data["registration_info"] = reg_info
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 response = await async_get_clientsession(self._hass).post(
                     push_url, json=target_data
                 )
@@ -199,7 +197,7 @@ class MobileAppNotificationService(BaseNotificationService):
             else:
                 _LOGGER.error(message)
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error("Timeout sending notification to %s", push_url)
         except aiohttp.ClientError as err:
             _LOGGER.error("Error sending notification to %s: %r", push_url, err)

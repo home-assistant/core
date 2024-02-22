@@ -1,0 +1,98 @@
+{
+  "services": {
+    "update_dsp": {
+      "name": "Update DSP",
+      "description": "Updates all DSP settings."
+    },
+    "set_mode": {
+      "name": "Set mode",
+      "description": "Sets the mode of the speaker.",
+      "fields": {
+        "desk_mode": {
+          "name": "Desk mode",
+          "description": "Desk mode."
+        },
+        "wall_mode": {
+          "name": "Wall mode",
+          "description": "Wall mode."
+        },
+        "phase_correction": {
+          "name": "Phase correction",
+          "description": "Phase correction."
+        },
+        "high_pass": {
+          "name": "High pass",
+          "description": "High-pass mode\"."
+        },
+        "sub_polarity": {
+          "name": "Subwoofer polarity",
+          "description": "Sub polarity."
+        },
+        "bass_extension": {
+          "name": "Base extension",
+          "description": "Bass extension."
+        }
+      }
+    },
+    "set_desk_db": {
+      "name": "Set desk dB",
+      "description": "Sets the \"Desk mode\" slider of the speaker in dB.",
+      "fields": {
+        "db_value": {
+          "name": "DB value",
+          "description": "Value of the slider."
+        }
+      }
+    },
+    "set_wall_db": {
+      "name": "Set wall dB",
+      "description": "Sets the \"Wall mode\" slider of the speaker in dB.",
+      "fields": {
+        "db_value": {
+          "name": "[%key:component::kef::services::set_desk_db::fields::db_value::name%]",
+          "description": "[%key:component::kef::services::set_desk_db::fields::db_value::description%]"
+        }
+      }
+    },
+    "set_treble_db": {
+      "name": "Set treble dB",
+      "description": "Sets desk the \"Treble trim\" slider of the speaker in dB.",
+      "fields": {
+        "db_value": {
+          "name": "[%key:component::kef::services::set_desk_db::fields::db_value::name%]",
+          "description": "[%key:component::kef::services::set_desk_db::fields::db_value::description%]"
+        }
+      }
+    },
+    "set_high_hz": {
+      "name": "Set high hertz",
+      "description": "Sets the \"High-pass mode\" slider of the speaker in Hz.",
+      "fields": {
+        "hz_value": {
+          "name": "Hertz value",
+          "description": "[%key:component::kef::services::set_desk_db::fields::db_value::description%]"
+        }
+      }
+    },
+    "set_low_hz": {
+      "name": "Sets low Hertz",
+      "description": "Set the \"Sub out low-pass frequency\" slider of the speaker in Hz.",
+      "fields": {
+        "hz_value": {
+          "name": "[%key:component::kef::services::set_high_hz::fields::hz_value::name%]",
+          "description": "[%key:component::kef::services::set_desk_db::fields::db_value::description%]"
+        }
+      }
+    },
+    "set_sub_db": {
+      "name": "Sets subwoofer dB",
+      "description": "Set the \"Sub gain\" slider of the speaker in dB.",
+      "fields": {
+        "db_value": {
+          "name": "[%key:component::kef::services::set_desk_db::fields::db_value::name%]",
+          "description": "[%key:component::kef::services::set_desk_db::fields::db_value::description%]"
+        }
+      }
+    }
+  }
+}

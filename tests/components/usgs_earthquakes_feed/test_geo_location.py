@@ -32,6 +32,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     UnitOfLength,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -91,7 +92,7 @@ def _generate_mock_feed_entry(
     return feed_entry
 
 
-async def test_setup(hass):
+async def test_setup(hass: HomeAssistant) -> None:
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -101,8 +102,8 @@ async def test_setup(hass):
         (-31.0, 150.0),
         place="Location 1",
         attribution="Attribution 1",
-        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc),
-        updated=datetime.datetime(2018, 9, 22, 9, 0, tzinfo=datetime.timezone.utc),
+        time=datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+        updated=datetime.datetime(2018, 9, 22, 9, 0, tzinfo=datetime.UTC),
         magnitude=5.7,
         status="Status 1",
         entry_type="Type 1",
@@ -142,12 +143,8 @@ async def test_setup(hass):
                 ATTR_FRIENDLY_NAME: "Title 1",
                 ATTR_PLACE: "Location 1",
                 ATTR_ATTRIBUTION: "Attribution 1",
-                ATTR_TIME: datetime.datetime(
-                    2018, 9, 22, 8, 0, tzinfo=datetime.timezone.utc
-                ),
-                ATTR_UPDATED: datetime.datetime(
-                    2018, 9, 22, 9, 0, tzinfo=datetime.timezone.utc
-                ),
+                ATTR_TIME: datetime.datetime(2018, 9, 22, 8, 0, tzinfo=datetime.UTC),
+                ATTR_UPDATED: datetime.datetime(2018, 9, 22, 9, 0, tzinfo=datetime.UTC),
                 ATTR_STATUS: "Status 1",
                 ATTR_TYPE: "Type 1",
                 ATTR_ALERT: "Alert 1",
@@ -216,7 +213,7 @@ async def test_setup(hass):
             assert len(all_states) == 0
 
 
-async def test_setup_with_custom_location(hass):
+async def test_setup_with_custom_location(hass: HomeAssistant) -> None:
     """Test the setup with a custom location."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (-31.1, 150.1))

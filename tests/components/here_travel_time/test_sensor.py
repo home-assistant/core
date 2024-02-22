@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from here_routing import (
     HERERoutingError,
     HERERoutingTooManyRequestsError,
@@ -64,7 +65,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
 
 from .conftest import RESPONSE, TRANSIT_RESPONSE
 from .const import (
@@ -84,7 +84,7 @@ from tests.common import (
 
 
 @pytest.mark.parametrize(
-    "mode,icon,arrival_time,departure_time",
+    ("mode", "icon", "arrival_time", "departure_time"),
     [
         (
             TRAVEL_MODE_CAR,
@@ -119,7 +119,7 @@ async def test_sensor(
     icon,
     arrival_time,
     departure_time,
-):
+) -> None:
     """Test that sensor works."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -174,7 +174,9 @@ async def test_sensor(
 
 
 @pytest.mark.usefixtures("valid_response")
-async def test_circular_ref(hass: HomeAssistant, caplog):
+async def test_circular_ref(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that a circular ref is handled."""
     hass.states.async_set(
         "test.first",
@@ -205,7 +207,7 @@ async def test_circular_ref(hass: HomeAssistant, caplog):
 
 
 @pytest.mark.usefixtures("valid_response")
-async def test_public_transport(hass: HomeAssistant):
+async def test_public_transport(hass: HomeAssistant) -> None:
     """Test that public transport mode is handled."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -240,7 +242,7 @@ async def test_public_transport(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("no_attribution_response")
-async def test_no_attribution_response(hass: HomeAssistant):
+async def test_no_attribution_response(hass: HomeAssistant) -> None:
     """Test that no_attribution is handled."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -268,7 +270,7 @@ async def test_no_attribution_response(hass: HomeAssistant):
     )
 
 
-async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock):
+async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock) -> None:
     """Test that origin/destination supplied by entities works."""
     zone_config = {
         "zone": [
@@ -324,7 +326,9 @@ async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock):
 
 
 @pytest.mark.usefixtures("valid_response")
-async def test_destination_entity_not_found(hass: HomeAssistant, caplog):
+async def test_destination_entity_not_found(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that a not existing destination_entity_id is caught."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -350,7 +354,9 @@ async def test_destination_entity_not_found(hass: HomeAssistant, caplog):
 
 
 @pytest.mark.usefixtures("valid_response")
-async def test_origin_entity_not_found(hass: HomeAssistant, caplog):
+async def test_origin_entity_not_found(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that a not existing origin_entity_id is caught."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -376,7 +382,9 @@ async def test_origin_entity_not_found(hass: HomeAssistant, caplog):
 
 
 @pytest.mark.usefixtures("valid_response")
-async def test_invalid_destination_entity_state(hass: HomeAssistant, caplog):
+async def test_invalid_destination_entity_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that an invalid state of the destination_entity_id is caught."""
     hass.states.async_set(
         "device_tracker.test",
@@ -408,7 +416,9 @@ async def test_invalid_destination_entity_state(hass: HomeAssistant, caplog):
 
 
 @pytest.mark.usefixtures("valid_response")
-async def test_invalid_origin_entity_state(hass: HomeAssistant, caplog):
+async def test_invalid_origin_entity_state(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that an invalid state of the origin_entity_id is caught."""
     hass.states.async_set(
         "device_tracker.test",
@@ -439,7 +449,9 @@ async def test_invalid_origin_entity_state(hass: HomeAssistant, caplog):
     )
 
 
-async def test_route_not_found(hass: HomeAssistant, caplog):
+async def test_route_not_found(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that route not found error is correctly handled."""
     with patch(
         "here_routing.HERERoutingApi.route",
@@ -471,10 +483,10 @@ async def test_route_not_found(hass: HomeAssistant, caplog):
 
 
 @pytest.mark.usefixtures("valid_response")
-async def test_restore_state(hass):
+async def test_restore_state(hass: HomeAssistant) -> None:
     """Test sensor restore state."""
     # Home assistant is not running yet
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     last_reset = "2022-11-29T00:00:00.000000+00:00"
     mock_restore_cache_with_extra_data(
         hass,
@@ -602,7 +614,7 @@ async def test_restore_state(hass):
 
 
 @pytest.mark.parametrize(
-    "exception,expected_message",
+    ("exception", "expected_message"),
     [
         (
             HERETransitNoRouteFoundError,
@@ -618,7 +630,9 @@ async def test_restore_state(hass):
         ),
     ],
 )
-async def test_transit_errors(hass: HomeAssistant, caplog, exception, expected_message):
+async def test_transit_errors(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, exception, expected_message
+) -> None:
     """Test that transit errors are correctly handled."""
     with patch(
         "here_transit.HERETransitApi.route",
@@ -647,7 +661,11 @@ async def test_transit_errors(hass: HomeAssistant, caplog, exception, expected_m
         assert expected_message in caplog.text
 
 
-async def test_routing_rate_limit(hass: HomeAssistant, caplog):
+async def test_routing_rate_limit(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test that rate limiting is applied when encountering HTTP 429."""
     with patch(
         "here_routing.HERERoutingApi.route",
@@ -673,9 +691,8 @@ async def test_routing_rate_limit(hass: HomeAssistant, caplog):
             "Rate limit for this service has been reached"
         ),
     ):
-        async_fire_time_changed(
-            hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
-        )
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert hass.states.get("sensor.test_distance").state == "unavailable"
@@ -685,17 +702,18 @@ async def test_routing_rate_limit(hass: HomeAssistant, caplog):
         "here_routing.HERERoutingApi.route",
         return_value=RESPONSE,
     ):
-        async_fire_time_changed(
-            hass,
-            utcnow()
-            + timedelta(seconds=DEFAULT_SCAN_INTERVAL * BACKOFF_MULTIPLIER + 1),
-        )
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * BACKOFF_MULTIPLIER + 1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert hass.states.get("sensor.test_distance").state == "13.682"
         assert "Resetting update interval to" in caplog.text
 
 
-async def test_transit_rate_limit(hass: HomeAssistant, caplog):
+async def test_transit_rate_limit(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test that rate limiting is applied when encountering HTTP 429."""
     with patch(
         "here_transit.HERETransitApi.route",
@@ -729,9 +747,8 @@ async def test_transit_rate_limit(hass: HomeAssistant, caplog):
             "Rate limit for this service has been reached"
         ),
     ):
-        async_fire_time_changed(
-            hass, utcnow() + timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1)
-        )
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL + 1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         assert hass.states.get("sensor.test_distance").state == "unavailable"
@@ -741,11 +758,8 @@ async def test_transit_rate_limit(hass: HomeAssistant, caplog):
         "here_transit.HERETransitApi.route",
         return_value=TRANSIT_RESPONSE,
     ):
-        async_fire_time_changed(
-            hass,
-            utcnow()
-            + timedelta(seconds=DEFAULT_SCAN_INTERVAL * BACKOFF_MULTIPLIER + 1),
-        )
+        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL * BACKOFF_MULTIPLIER + 1))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert hass.states.get("sensor.test_distance").state == "1.883"
         assert "Resetting update interval to" in caplog.text
@@ -754,7 +768,7 @@ async def test_transit_rate_limit(hass: HomeAssistant, caplog):
 @pytest.mark.usefixtures("bike_response")
 async def test_multiple_sections(
     hass: HomeAssistant,
-):
+) -> None:
     """Test that multiple sections are handled correctly."""
     entry = MockConfigEntry(
         domain=DOMAIN,

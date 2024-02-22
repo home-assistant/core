@@ -6,15 +6,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import async_timeout
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.models.get_data import GetData
-from systembridgeconnector.models.system import System
 from systembridgeconnector.websocket_client import WebSocketClient
+from systembridgemodels.get_data import GetData
+from systembridgemodels.system import System
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -55,7 +54,7 @@ async def _validate_input(
         data[CONF_API_KEY],
     )
     try:
-        async with async_timeout.timeout(30):
+        async with asyncio.timeout(15):
             await websocket_client.connect(session=async_get_clientsession(hass))
             hass.async_create_task(websocket_client.listen())
             response = await websocket_client.get_data(GetData(modules=["system"]))
@@ -76,7 +75,7 @@ async def _validate_input(
             "Connection error when connecting to %s: %s", data[CONF_HOST], exception
         )
         raise CannotConnect from exception
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
         raise CannotConnect from exception
     except ValueError as exception:
@@ -116,7 +115,7 @@ class ConfigFlow(
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
         self._name: str | None = None
         self._input: dict[str, Any] = {}

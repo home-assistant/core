@@ -81,7 +81,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_station(self, user_input=None):
         """Handle the step where the user inputs his/her station."""
         if user_input is not None:
-
             errors = {}
 
             check_name = await self.hub.gti.checkName(
@@ -145,14 +144,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the options."""
         errors = {}
         if not self.departure_filters:
-
             departure_list = {}
             hub: GTIHub = self.hass.data[DOMAIN][self.config_entry.entry_id]
 
             try:
                 departure_list = await hub.gti.departureList(
                     {
-                        "station": self.config_entry.data[CONF_STATION],
+                        "station": {
+                            "type": "STATION",
+                            "id": self.config_entry.data[CONF_STATION].get("id"),
+                        },
                         "time": {"date": "heute", "time": "jetzt"},
                         "maxList": 5,
                         "maxTimeOffset": 200,
@@ -172,7 +173,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
 
         if user_input is not None and not errors:
-
             options = {
                 CONF_FILTER: [
                     self.departure_filters[x] for x in user_input[CONF_FILTER]

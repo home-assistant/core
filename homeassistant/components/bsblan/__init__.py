@@ -1,7 +1,7 @@
 """The BSB-Lan integration."""
 import dataclasses
 
-from bsblan import BSBLAN, Device, Info, State, StaticState
+from bsblan import BSBLAN, Device, Info, StaticState
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -13,9 +13,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_PASSKEY, DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import CONF_PASSKEY, DOMAIN
+from .coordinator import BSBLanUpdateCoordinator
 
 PLATFORMS = [Platform.CLIMATE]
 
@@ -24,7 +24,7 @@ PLATFORMS = [Platform.CLIMATE]
 class HomeAssistantBSBLANData:
     """BSBLan data stored in the Home Assistant data object."""
 
-    coordinator: DataUpdateCoordinator[State]
+    coordinator: BSBLanUpdateCoordinator
     client: BSBLAN
     device: Device
     info: Info
@@ -44,13 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=session,
     )
 
-    coordinator: DataUpdateCoordinator[State] = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name=f"{DOMAIN}_{entry.data[CONF_HOST]}",
-        update_interval=SCAN_INTERVAL,
-        update_method=bsblan.state,
-    )
+    coordinator = BSBLanUpdateCoordinator(hass, entry, bsblan)
     await coordinator.async_config_entry_first_refresh()
 
     device = await bsblan.device()

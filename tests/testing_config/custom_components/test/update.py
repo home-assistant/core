@@ -1,5 +1,4 @@
-"""
-Provide a mock update platform.
+"""Provide a mock update platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
@@ -62,7 +61,7 @@ class MockUpdateEntity(MockEntity, UpdateEntity):
 
         if version is not None:
             self._values["installed_version"] = version
-            _LOGGER.info(f"Installed update with version: {version}")
+            _LOGGER.info("Installed update with version: %s", version)
         else:
             self._values["installed_version"] = self.latest_version
             _LOGGER.info("Installed latest update")

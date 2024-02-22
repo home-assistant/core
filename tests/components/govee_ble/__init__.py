@@ -37,6 +37,31 @@ GVH5177_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+GVH5178_REMOTE_SERVICE_INFO = BluetoothServiceInfo(
+    name="B51782BC8",
+    address="A4:C1:38:75:2B:C8",
+    rssi=-66,
+    manufacturer_data={
+        1: b"\x01\x01\x01\x00\x2a\xf7\x64\x00\x03",
+        76: b"\x02\x15INTELLI_ROCKS_HWPu\xf2\xff\xc2",
+    },
+    service_data={},
+    service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)
+GVH5178_PRIMARY_SERVICE_INFO = BluetoothServiceInfo(
+    name="B51782BC8",
+    address="A4:C1:38:75:2B:C8",
+    rssi=-66,
+    manufacturer_data={
+        1: b"\x01\x01\x00\x00\x2a\xf7\x64\x00\x03",
+        76: b"\x02\x15INTELLI_ROCKS_HWPu\xf2\xff\xc2",
+    },
+    service_data={},
+    service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)
+
 GVH5178_SERVICE_INFO_ERROR = BluetoothServiceInfo(
     name="B51782BC8",
     address="A4:C1:38:75:2B:C8",
@@ -47,5 +72,15 @@ GVH5178_SERVICE_INFO_ERROR = BluetoothServiceInfo(
     },
     service_data={},
     service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
+    source="local",
+)
+
+GVH5106_SERVICE_INFO = BluetoothServiceInfo(
+    name="GVH5106_4E05",
+    address="CC:32:37:35:4E:05",
+    rssi=-66,
+    manufacturer_data={1: b"\x01\x01\x0e\xd12\x98"},
+    service_uuids=["0000ec88-0000-1000-8000-00805f9b34fb"],
+    service_data={},
     source="local",
 )

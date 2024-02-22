@@ -6,8 +6,8 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -34,7 +34,7 @@ class WLEDUpdateBinarySensor(WLEDEntity, BinarySensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = BinarySensorDeviceClass.UPDATE
-    _attr_name = "Firmware"
+    _attr_translation_key = "firmware"
 
     # Disabled by default, as this entity is deprecated.
     _attr_entity_registry_enabled_default = False

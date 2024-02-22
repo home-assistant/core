@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 import aiohttp
-import async_timeout
 import pyevilgenius
 import voluptuous as vol
 
@@ -31,7 +30,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     )
 
     try:
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             data = await hub.get_all()
             info = await hub.get_info()
     except aiohttp.ClientError as err:
@@ -64,7 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             errors["base"] = "timeout"
         except CannotConnect:
             errors["base"] = "cannot_connect"

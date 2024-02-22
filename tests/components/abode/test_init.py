@@ -77,7 +77,11 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
         ),
     ), patch(
         "homeassistant.components.abode.config_flow.AbodeFlowHandler.async_step_reauth",
-        return_value={"type": data_entry_flow.FlowResultType.FORM},
+        return_value={
+            "type": data_entry_flow.FlowResultType.FORM,
+            "flow_id": "mock_flow",
+            "step_id": "reauth_confirm",
+        },
     ) as mock_async_step_reauth:
         await setup_platform(hass, ALARM_DOMAIN)
 

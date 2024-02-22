@@ -14,10 +14,11 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_platform
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, SENSOR_DOMAIN)
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get("sensor.environment_sensor_humidity")
     assert entry.unique_id == "13545b21f4bdcd33d9abd461f8443e65-humidity"
@@ -37,9 +38,9 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Environment Sensor Humidity"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY
 
-    state = hass.states.get("sensor.environment_sensor_lux")
+    state = hass.states.get("sensor.environment_sensor_illuminance")
     assert state.state == "1.0"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "lux"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "lx"
 
     state = hass.states.get("sensor.environment_sensor_temperature")
     # Abodepy device JSON reports 19.5, but Home Assistant shows 19.4

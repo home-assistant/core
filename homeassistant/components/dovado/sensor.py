@@ -30,14 +30,14 @@ SENSOR_NETWORK = "network"
 SENSOR_SMS_UNREAD = "sms"
 
 
-@dataclass
+@dataclass(frozen=True)
 class DovadoRequiredKeysMixin:
     """Mixin for required keys."""
 
     identifier: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class DovadoSensorEntityDescription(SensorEntityDescription, DovadoRequiredKeysMixin):
     """Describes Dovado sensor entity."""
 
@@ -110,7 +110,7 @@ class DovadoSensor(SensorEntity):
 
     entity_description: DovadoSensorEntityDescription
 
-    def __init__(self, data, description: DovadoSensorEntityDescription):
+    def __init__(self, data, description: DovadoSensorEntityDescription) -> None:
         """Initialize the sensor."""
         self.entity_description = description
         self._data = data

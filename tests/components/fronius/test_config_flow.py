@@ -14,6 +14,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from . import mock_responses
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -38,7 +39,7 @@ LOGGER_INFO_RETURN_VALUE = {"unique_identifier": {"value": "123.4567"}}
 MOCK_DHCP_DATA = DhcpServiceInfo(
     hostname="fronius",
     ip="10.2.3.4",
-    macaddress="00:03:ac:11:22:33",
+    macaddress="0003ac112233",
 )
 
 
@@ -206,7 +207,9 @@ async def test_form_already_existing(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
-async def test_form_updates_host(hass, aioclient_mock):
+async def test_form_updates_host(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test existing entry gets updated."""
     old_host = "http://10.1.0.1"
     new_host = "http://10.1.0.2"
@@ -254,7 +257,7 @@ async def test_form_updates_host(hass, aioclient_mock):
     }
 
 
-async def test_dhcp(hass, aioclient_mock):
+async def test_dhcp(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test starting a flow from discovery."""
     with patch(
         "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
@@ -279,7 +282,9 @@ async def test_dhcp(hass, aioclient_mock):
     }
 
 
-async def test_dhcp_already_configured(hass, aioclient_mock):
+async def test_dhcp_already_configured(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test starting a flow from discovery."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -298,11 +303,16 @@ async def test_dhcp_already_configured(hass, aioclient_mock):
     assert result["reason"] == "already_configured"
 
 
-async def test_dhcp_invalid(hass, aioclient_mock):
+async def test_dhcp_invalid(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test starting a flow from discovery."""
     with patch(
         "homeassistant.components.fronius.config_flow.DHCP_REQUEST_DELAY", 0
-    ), patch("pyfronius.Fronius.current_logger_info", side_effect=FroniusError,), patch(
+    ), patch(
+        "pyfronius.Fronius.current_logger_info",
+        side_effect=FroniusError,
+    ), patch(
         "pyfronius.Fronius.inverter_info",
         side_effect=FroniusError,
     ):

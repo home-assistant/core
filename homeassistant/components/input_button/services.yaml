@@ -1,6 +1,6 @@
 press:
-  name: Press
-  description: Press the input button entity.
   target:
     entity:
       domain: input_button
+
+reload:

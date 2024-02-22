@@ -1,9 +1,12 @@
 {
   "domain": "keenetic_ndms2",
   "name": "Keenetic NDMS2 Router",
+  "codeowners": ["@foxel"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/keenetic_ndms2",
-  "requirements": ["ndms2_client==0.1.2"],
+  "iot_class": "local_polling",
+  "loggers": ["ndms2_client"],
+  "requirements": ["ndms2-client==0.1.2"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
@@ -13,8 +16,5 @@
       "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
       "manufacturer": "ZyXEL Communications Corp."
     }
-  ],
-  "codeowners": ["@foxel"],
-  "iot_class": "local_polling",
-  "loggers": ["ndms2_client"]
+  ]
 }

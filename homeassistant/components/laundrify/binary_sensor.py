@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -42,6 +42,8 @@ class LaundrifyPowerPlug(
     _attr_device_class = BinarySensorDeviceClass.RUNNING
     _attr_icon = "mdi:washing-machine"
     _attr_unique_id: str
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, coordinator: LaundrifyUpdateCoordinator, device: LaundrifyDevice
@@ -49,17 +51,14 @@ class LaundrifyPowerPlug(
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._device = device
-        self._attr_unique_id = device["_id"]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Configure the Device of this Entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._device["_id"])},
-            name=self.name,
+        unique_id = device["_id"]
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=device["name"],
             manufacturer=MANUFACTURER,
             model=MODEL,
-            sw_version=self._device["firmwareVersion"],
+            sw_version=device["firmwareVersion"],
         )
 
     @property
@@ -69,11 +68,6 @@ class LaundrifyPowerPlug(
             self._attr_unique_id in self.coordinator.data
             and self.coordinator.last_update_success
         )
-
-    @property
-    def name(self) -> str:
-        """Name of the entity."""
-        return self._device["name"]
 
     @property
     def is_on(self) -> bool:

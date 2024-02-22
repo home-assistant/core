@@ -5,14 +5,19 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "token": "[%key:common::config_flow::data::access_token%]"
+          "token": "[%key:common::config_flow::data::access_token%]",
+          "encrypt_token": "Use an encrypted token for authentication."
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Nuki bridge. For example: 192.168.1.25."
         }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Nuki integration needs to re-authenticate with your bridge.",
         "data": {
-          "token": "[%key:common::config_flow::data::access_token%]"
+          "token": "[%key:common::config_flow::data::access_token%]",
+          "encrypt_token": "[%key:component::nuki::config::step::user::data::encrypt_token%]"
         }
       }
     },
@@ -24,6 +29,53 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  },
+  "issues": {
+    "https_webhook": {
+      "title": "Nuki webhook URL uses HTTPS (SSL)",
+      "description": "The Nuki bridge can not push events to an HTTPS address (SSL), please configure a (local) HTTP address under \"Home Assistant URL\" in the [network settings]({network_link}). The current (local) address is: `{base_url}`, a valid address could, for example, be `http://192.168.1.10:8123` where `192.168.1.10` is the IP of the Home Assistant device"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ring_action": {
+        "name": "Ring Action"
+      }
+    },
+    "lock": {
+      "nuki_lock": {
+        "state_attributes": {
+          "battery_critical": {
+            "state": {
+              "on": "[%key:component::binary_sensor::entity_component::battery::state::on%]",
+              "off": "[%key:component::binary_sensor::entity_component::battery::state::off%]"
+            }
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "lock_n_go": {
+      "name": "Lock 'n' go",
+      "description": "Nuki Lock 'n' Go.",
+      "fields": {
+        "unlatch": {
+          "name": "Unlatch",
+          "description": "Whether to unlatch the lock."
+        }
+      }
+    },
+    "set_continuous_mode": {
+      "name": "Set continuous mode",
+      "description": "Enables or disables continuous mode on Nuki Opener.",
+      "fields": {
+        "enable": {
+          "name": "[%key:common::action::enable%]",
+          "description": "Whether to enable or disable the feature."
+        }
+      }
     }
   }
 }

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from ipaddress import ip_address
+from ipaddress import ip_address as ip
 import logging
 from typing import Any, cast
 from urllib.parse import urlparse
@@ -38,6 +38,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.util.network import is_ip_address as is_ip
 
 from .const import (
     CONF_DEVICE_TOKEN,
@@ -83,7 +84,7 @@ def _user_schema_with_defaults(user_input: dict[str, Any]) -> vol.Schema:
 
 
 def _ordered_shared_schema(
-    schema_input: dict[str, Any]
+    schema_input: dict[str, Any],
 ) -> dict[vol.Required | vol.Optional, Any]:
     return {
         vol.Required(CONF_USERNAME, default=schema_input.get(CONF_USERNAME, "")): str,
@@ -97,14 +98,6 @@ def _ordered_shared_schema(
             default=schema_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
         ): bool,
     }
-
-
-def _is_valid_ip(text: str) -> bool:
-    try:
-        ip_address(text)
-    except ValueError:
-        return False
-    return True
 
 
 def format_synology_mac(mac: str) -> str:
@@ -227,13 +220,12 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             config_data[CONF_VOLUMES] = user_input[CONF_VOLUMES]
 
         if existing_entry:
-            self.hass.config_entries.async_update_entry(
-                existing_entry, data=config_data
+            reason = (
+                "reauth_successful" if self.reauth_conf else "reconfigure_successful"
             )
-            await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            if self.reauth_conf:
-                return self.async_abort(reason="reauth_successful")
-            return self.async_abort(reason="reconfigure_successful")
+            return self.async_update_reload_and_abort(
+                existing_entry, data=config_data, reason=reason
+            )
 
         return self.async_create_entry(title=friendly_name or host, data=config_data)
 
@@ -284,16 +276,12 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                 break
             self._abort_if_unique_id_configured()
 
-        fqdn_with_ssl_verification = (
-            existing_entry
-            and not _is_valid_ip(existing_entry.data[CONF_HOST])
-            and existing_entry.data[CONF_VERIFY_SSL]
-        )
-
         if (
             existing_entry
+            and is_ip(existing_entry.data[CONF_HOST])
+            and is_ip(host)
             and existing_entry.data[CONF_HOST] != host
-            and not fqdn_with_ssl_verification
+            and ip(existing_entry.data[CONF_HOST]).version == ip(host).version
         ):
             _LOGGER.info(
                 "Update host from '%s' to '%s' for NAS '%s' via discovery",

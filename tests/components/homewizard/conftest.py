@@ -1,9 +1,8 @@
 """Fixtures for HomeWizard integration tests."""
 from collections.abc import Generator
-import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homewizard_energy.features import Features
+from homewizard_energy.errors import NotFoundError
 from homewizard_energy.models import Data, Device, State, System
 import pytest
 
@@ -11,61 +10,76 @@ from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, get_fixture_path, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_config_entry_data():
-    """Return the default mocked config entry data."""
-    return {
-        "product_name": "Product Name",
-        "product_type": "product_type",
-        "serial": "aabbccddeeff",
-        "name": "Product Name",
-        CONF_IP_ADDRESS: "1.2.3.4",
-    }
+def device_fixture() -> str:
+    """Return the device fixtures for a specific device."""
+    return "HWE-P1"
+
+
+@pytest.fixture
+def mock_homewizardenergy(
+    device_fixture: str,
+) -> MagicMock:
+    """Return a mock bridge."""
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        autospec=True,
+    ) as homewizard, patch(
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+        new=homewizard,
+    ):
+        client = homewizard.return_value
+
+        client.device.return_value = Device.from_dict(
+            load_json_object_fixture(f"{device_fixture}/device.json", DOMAIN)
+        )
+        client.data.return_value = Data.from_dict(
+            load_json_object_fixture(f"{device_fixture}/data.json", DOMAIN)
+        )
+
+        if get_fixture_path(f"{device_fixture}/state.json", DOMAIN).exists():
+            client.state.return_value = State.from_dict(
+                load_json_object_fixture(f"{device_fixture}/state.json", DOMAIN)
+            )
+        else:
+            client.state.side_effect = NotFoundError
+
+        if get_fixture_path(f"{device_fixture}/system.json", DOMAIN).exists():
+            client.system.return_value = System.from_dict(
+                load_json_object_fixture(f"{device_fixture}/system.json", DOMAIN)
+            )
+        else:
+            client.system.side_effect = NotFoundError
+
+        yield client
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.homewizard.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
 
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        title="Product Name (aabbccddeeff)",
+        title="Device",
         domain=DOMAIN,
-        data={CONF_IP_ADDRESS: "1.2.3.4"},
+        data={
+            "product_name": "Product name",
+            "product_type": "product_type",
+            "serial": "aabbccddeeff",
+            CONF_IP_ADDRESS: "127.0.0.1",
+        },
         unique_id="aabbccddeeff",
     )
-
-
-@pytest.fixture
-def mock_homewizardenergy():
-    """Return a mocked all-feature device."""
-    with patch(
-        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
-    ) as device:
-        client = device.return_value
-        client.features = AsyncMock(return_value=Features("HWE-SKT", "3.01"))
-        client.device = AsyncMock(
-            side_effect=lambda: Device.from_dict(
-                json.loads(load_fixture("homewizard/device.json"))
-            )
-        )
-        client.data = AsyncMock(
-            side_effect=lambda: Data.from_dict(
-                json.loads(load_fixture("homewizard/data.json"))
-            )
-        )
-        client.state = AsyncMock(
-            side_effect=lambda: State.from_dict(
-                json.loads(load_fixture("homewizard/state.json"))
-            )
-        )
-        client.system = AsyncMock(
-            side_effect=lambda: System.from_dict(
-                json.loads(load_fixture("homewizard/system.json"))
-            )
-        )
-        yield device
 
 
 @pytest.fixture

@@ -1,5 +1,4 @@
 """Support for Nexia / Trane XL Thermostats."""
-import asyncio
 import logging
 
 import aiohttp
@@ -45,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await nexia_home.login()
-    except asyncio.TimeoutError as ex:
+    except TimeoutError as ex:
         raise ConfigEntryNotReady(
             f"Timed out trying to connect to Nexia service: {ex}"
         ) from ex
@@ -56,6 +55,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             return False
         raise ConfigEntryNotReady(f"Error from Nexia service: {http_ex}") from http_ex
+    except aiohttp.ClientOSError as os_error:
+        raise ConfigEntryNotReady(
+            f"Error connecting to Nexia service: {os_error}"
+        ) from os_error
 
     coordinator = NexiaDataUpdateCoordinator(hass, nexia_home)
     await coordinator.async_config_entry_first_refresh()

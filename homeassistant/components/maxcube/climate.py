@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import socket
 from typing import Any
 
 from maxcube.device import (
@@ -68,8 +67,12 @@ class MaxCubeClimate(ClimateEntity):
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.AUTO, HVACMode.HEAT]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, handler, device):
         """Initialize MAX! Cube ClimateEntity."""
@@ -134,8 +137,7 @@ class MaxCubeClimate(ClimateEntity):
             raise ValueError(f"unsupported HVAC mode {hvac_mode}")
 
     def _set_target(self, mode: int | None, temp: float | None) -> None:
-        """
-        Set the mode and/or temperature of the thermostat.
+        """Set the mode and/or temperature of the thermostat.
 
         @param mode: this is the mode to change to.
         @param temp: the temperature to target.
@@ -149,7 +151,7 @@ class MaxCubeClimate(ClimateEntity):
         with self._cubehandle.mutex:
             try:
                 self._cubehandle.cube.set_temperature_mode(self._device, temp, mode)
-            except (socket.timeout, OSError):
+            except (TimeoutError, OSError):
                 _LOGGER.error("Setting HVAC mode failed")
 
     @property

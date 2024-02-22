@@ -138,7 +138,7 @@ class BondBaseLight(BondEntity, LightEntity):
         except ClientResponseError as ex:
             raise HomeAssistantError(
                 "The bond API returned an error calling set_brightness_belief for"
-                f" {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                f" {self.entity_id}.  Code: {ex.status}  Message: {ex.message}"
             ) from ex
 
     async def async_set_power_belief(self, power_state: bool) -> None:
@@ -150,7 +150,7 @@ class BondBaseLight(BondEntity, LightEntity):
         except ClientResponseError as ex:
             raise HomeAssistantError(
                 "The bond API returned an error calling set_light_state_belief for"
-                f" {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                f" {self.entity_id}.  Code: {ex.status}  Message: {ex.message}"
             ) from ex
 
 
@@ -313,7 +313,7 @@ class BondFireplace(BondEntity, LightEntity):
         except ClientResponseError as ex:
             raise HomeAssistantError(
                 "The bond API returned an error calling set_brightness_belief for"
-                f" {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                f" {self.entity_id}.  Code: {ex.status}  Message: {ex.message}"
             ) from ex
 
     async def async_set_power_belief(self, power_state: bool) -> None:
@@ -325,5 +325,5 @@ class BondFireplace(BondEntity, LightEntity):
         except ClientResponseError as ex:
             raise HomeAssistantError(
                 "The bond API returned an error calling set_power_state_belief for"
-                f" {self.entity_id}.  Code: {ex.code}  Message: {ex.message}"
+                f" {self.entity_id}.  Code: {ex.status}  Message: {ex.message}"
             ) from ex

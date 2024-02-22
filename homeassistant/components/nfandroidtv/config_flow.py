@@ -26,7 +26,6 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-
             self._async_abort_entries_match(
                 {CONF_HOST: user_input[CONF_HOST], CONF_NAME: user_input[CONF_NAME]}
             )

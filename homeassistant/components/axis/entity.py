@@ -5,8 +5,9 @@ from abc import abstractmethod
 from axis.models.event import Event, EventTopic
 
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as AXIS_DOMAIN
 from .device import AxisNetworkDevice
@@ -41,7 +42,8 @@ class AxisEntity(Entity):
         self.device = device
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(AXIS_DOMAIN, device.unique_id)}
+            identifiers={(AXIS_DOMAIN, device.unique_id)},  # type: ignore[arg-type]
+            serial_number=device.unique_id,
         )
 
     async def async_added_to_hass(self) -> None:

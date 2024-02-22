@@ -1,0 +1,57 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "To identify the desired region, the warncell ID / name is required.",
+        "data": {
+          "region_identifier": "Warncell ID or name"
+        }
+      }
+    },
+    "error": {
+      "invalid_identifier": "The specified region identifier is invalid."
+    },
+    "abort": {
+      "already_configured": "Warncell ID / name is already configured.",
+      "invalid_identifier": "[%key:component::dwd_weather_warnings::config::error::invalid_identifier%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_warning_level": {
+        "name": "Current warning level",
+        "state_attributes": {
+          "region_name": {
+            "name": "Region name"
+          },
+          "region_id": {
+            "name": "Region ID"
+          },
+          "last_update": {
+            "name": "Last update"
+          },
+          "warning_count": {
+            "name": "Warning count"
+          }
+        }
+      },
+      "advance_warning_level": {
+        "name": "Advance warning level",
+        "state_attributes": {
+          "region_name": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::region_name::name%]"
+          },
+          "region_id": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::region_id::name%]"
+          },
+          "last_update": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::last_update::name%]"
+          },
+          "warning_count": {
+            "name": "[%key:component::dwd_weather_warnings::entity::sensor::current_warning_level::state_attributes::warning_count::name%]"
+          }
+        }
+      }
+    }
+  }
+}

@@ -80,11 +80,10 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
                 self._state = 1
             else:
                 self._state = 0
+        elif self._device_number in self._satel.violated_zones:
+            self._state = 1
         else:
-            if self._device_number in self._satel.violated_zones:
-                self._state = 1
-            else:
-                self._state = 0
+            self._state = 0
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, self._react_to_signal, self._devices_updated

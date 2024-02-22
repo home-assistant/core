@@ -1,5 +1,5 @@
 """Test the Litter-Robot binary sensor entity."""
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -17,7 +17,7 @@ from .conftest import setup_integration
 async def test_binary_sensors(
     hass: HomeAssistant,
     mock_account: MagicMock,
-    entity_registry_enabled_by_default: AsyncMock,
+    entity_registry_enabled_by_default: None,
 ) -> None:
     """Tests binary sensors."""
     await setup_integration(hass, mock_account, PLATFORM_DOMAIN)

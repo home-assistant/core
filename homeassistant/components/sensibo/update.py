@@ -12,8 +12,8 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -23,7 +23,7 @@ from .entity import SensiboDeviceBaseEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
@@ -31,7 +31,7 @@ class DeviceBaseEntityDescriptionMixin:
     value_available: Callable[[SensiboDevice], str | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboDeviceUpdateEntityDescription(
     UpdateEntityDescription, DeviceBaseEntityDescriptionMixin
 ):
@@ -43,7 +43,6 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceUpdateEntityDescription, ...] = (
         key="fw_ver_available",
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        name="Update available",
         icon="mdi:rocket-launch",
         value_version=lambda data: data.fw_ver,
         value_available=lambda data: data.fw_ver_available,

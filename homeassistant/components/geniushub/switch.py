@@ -42,7 +42,7 @@ async def async_setup_platform(
         [
             GeniusSwitch(broker, z)
             for z in broker.client.zone_objs
-            if z.data["type"] == GH_ON_OFF_ZONE
+            if z.data.get("type") == GH_ON_OFF_ZONE
         ]
     )
 
@@ -68,9 +68,12 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
     def is_on(self) -> bool:
         """Return the current state of the on/off zone.
 
-        The zone is considered 'on' if & only if it is override/on (e.g. timer/on is 'off').
+        The zone is considered 'on' if the mode is either 'override' or 'timer'.
         """
-        return self._zone.data["mode"] == "override" and self._zone.data["setpoint"]
+        return (
+            self._zone.data["mode"] in ["override", "timer"]
+            and self._zone.data["setpoint"]
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the zone to Timer mode.

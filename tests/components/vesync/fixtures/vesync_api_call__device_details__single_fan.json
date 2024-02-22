@@ -1,0 +1,15 @@
+{
+  "traceId": "0000000000",
+  "code": 0,
+  "msg": "request success",
+  "module": null,
+  "stacktrace": null,
+  "result": {
+    "traceId": "0000000000",
+    "code": 0,
+    "result": {
+      "enabled": false,
+      "mode": "humidity"
+    }
+  }
+}

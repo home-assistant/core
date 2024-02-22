@@ -43,6 +43,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
@@ -63,7 +64,7 @@ async def update_ac_state(
 
 async def test_no_appliances(
     hass: HomeAssistant, mock_appliances_manager_api: MagicMock
-):
+) -> None:
     """Test the setup of the climate entities when there are no appliances available."""
     mock_appliances_manager_api.return_value.aircons = []
     await init_integration(hass)
@@ -74,7 +75,7 @@ async def test_static_attributes(
     hass: HomeAssistant,
     mock_aircon1_api: MagicMock,
     mock_aircon_api_instances: MagicMock,
-):
+) -> None:
     """Test static climate attributes."""
     await init_integration(hass)
 
@@ -96,6 +97,8 @@ async def test_static_attributes(
             == ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         assert attributes[ATTR_HVAC_MODES] == [
             HVACMode.COOL,
@@ -121,7 +124,7 @@ async def test_dynamic_attributes(
     mock_aircon_api_instances: MagicMock,
     mock_aircon1_api: MagicMock,
     mock_aircon2_api: MagicMock,
-):
+) -> None:
     """Test dynamic attributes."""
     await init_integration(hass)
 
@@ -210,7 +213,7 @@ async def test_service_calls(
     mock_aircon_api_instances: MagicMock,
     mock_aircon1_api: MagicMock,
     mock_aircon2_api: MagicMock,
-):
+) -> None:
     """Test controlling the entity through service calls."""
     await init_integration(hass)
 
@@ -337,7 +340,7 @@ async def test_service_calls(
 
         mock_instance.set_fanspeed.reset_mock()
         # FAN_MIDDLE is not supported
-        with pytest.raises(ValueError):
+        with pytest.raises(ServiceValidationError):
             await hass.services.async_call(
                 CLIMATE_DOMAIN,
                 SERVICE_SET_FAN_MODE,

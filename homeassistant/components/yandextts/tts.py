@@ -4,7 +4,6 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
@@ -114,14 +113,13 @@ class YandexSpeechKitProvider(Provider):
         """Return list of supported options."""
         return SUPPORTED_OPTIONS
 
-    async def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options):
         """Load TTS from yandex."""
         websession = async_get_clientsession(self.hass)
         actual_language = language
-        options = options or {}
 
         try:
-            async with async_timeout.timeout(10):
+            async with asyncio.timeout(10):
                 url_param = {
                     "text": message,
                     "lang": actual_language,
@@ -141,7 +139,7 @@ class YandexSpeechKitProvider(Provider):
                     return (None, None)
                 data = await request.read()
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for yandex speech kit API")
             return (None, None)
 

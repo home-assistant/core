@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.enum import try_parse_enum
 
 from . import DOMAIN, AtagEntity
 
@@ -45,6 +46,7 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, atag_id):
         """Initialize an Atag climate device."""
@@ -52,14 +54,12 @@ class AtagThermostat(AtagEntity, ClimateEntity):
         self._attr_temperature_unit = coordinator.data.climate.temp_unit
 
     @property
-    def hvac_mode(self) -> str | None:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac operation ie. heat, cool mode."""
-        if self.coordinator.data.climate.hvac_mode in HVAC_MODES:
-            return self.coordinator.data.climate.hvac_mode
-        return None
+        return try_parse_enum(HVACMode, self.coordinator.data.climate.hvac_mode)
 
     @property
-    def hvac_action(self) -> str | None:
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
         is_active = self.coordinator.data.climate.status
         return HVACAction.HEATING if is_active else HVACAction.IDLE

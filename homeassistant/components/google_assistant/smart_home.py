@@ -1,9 +1,12 @@
 """Support for Google Assistant Smart Home API."""
 import asyncio
+from collections.abc import Callable, Coroutine
 from itertools import product
 import logging
+from typing import Any
 
 from homeassistant.const import ATTR_ENTITY_ID, __version__
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import instance_id
 from homeassistant.util.decorator import Registry
 
@@ -15,12 +18,23 @@ from .const import (
     EVENT_QUERY_RECEIVED,
     EVENT_SYNC_RECEIVED,
 )
+from .data_redaction import (
+    async_redact_request_msg,
+    async_redact_response_msg,
+    async_redact_sync_msg,
+)
 from .error import SmartHomeError
 from .helpers import GoogleEntity, RequestData, async_get_entities
 
 EXECUTE_LIMIT = 2  # Wait 2 seconds for execute to finish
 
-HANDLERS = Registry()  # type: ignore[var-annotated]
+HANDLERS: Registry[
+    str,
+    Callable[
+        [HomeAssistant, RequestData, dict[str, Any]],
+        Coroutine[Any, Any, dict[str, Any] | None],
+    ],
+] = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -33,7 +47,11 @@ async def async_handle_message(hass, config, user_id, message, source):
     response = await _process(hass, data, message)
 
     if response and "errorCode" in response["payload"]:
-        _LOGGER.error("Error handling message %s: %s", message, response["payload"])
+        _LOGGER.error(
+            "Error handling message %s: %s",
+            async_redact_request_msg(message),
+            async_redact_response_msg(response["payload"]),
+        )
 
     return response
 
@@ -90,7 +108,9 @@ async def async_devices_sync_response(hass, config, agent_user_id):
 
 
 @HANDLERS.register("action.devices.SYNC")
-async def async_devices_sync(hass, data, payload):
+async def async_devices_sync(
+    hass: HomeAssistant, data: RequestData, payload: dict[str, Any]
+) -> dict[str, Any]:
     """Handle action.devices.SYNC request.
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#SYNC
@@ -107,13 +127,15 @@ async def async_devices_sync(hass, data, payload):
     devices = await async_devices_sync_response(hass, data.config, agent_user_id)
     response = create_sync_response(agent_user_id, devices)
 
-    _LOGGER.debug("Syncing entities response: %s", response)
+    _LOGGER.debug("Syncing entities response: %s", async_redact_sync_msg(response))
 
     return response
 
 
 @HANDLERS.register("action.devices.QUERY")
-async def async_devices_query(hass, data, payload):
+async def async_devices_query(
+    hass: HomeAssistant, data: RequestData, payload: dict[str, Any]
+) -> dict[str, Any]:
     """Handle action.devices.QUERY request.
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#QUERY
@@ -173,14 +195,16 @@ async def _entity_execute(entity, data, executions):
 
 
 @HANDLERS.register("action.devices.EXECUTE")
-async def handle_devices_execute(hass, data, payload):
+async def handle_devices_execute(
+    hass: HomeAssistant, data: RequestData, payload: dict[str, Any]
+) -> dict[str, Any]:
     """Handle action.devices.EXECUTE request.
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#EXECUTE
     """
-    entities = {}
-    executions = {}
-    results = {}
+    entities: dict[str, GoogleEntity] = {}
+    executions: dict[str, list[Any]] = {}
+    results: dict[str, dict[str, Any]] = {}
 
     for command in payload["commands"]:
         hass.bus.async_fire(
@@ -231,7 +255,7 @@ async def handle_devices_execute(hass, data, payload):
         for entity_id, result in zip(executions, execute_results):
             if result is not None:
                 results[entity_id] = result
-    except asyncio.TimeoutError:
+    except TimeoutError:
         pass
 
     final_results = list(results.values())
@@ -254,18 +278,21 @@ async def handle_devices_execute(hass, data, payload):
 
 
 @HANDLERS.register("action.devices.DISCONNECT")
-async def async_devices_disconnect(hass, data: RequestData, payload):
+async def async_devices_disconnect(
+    hass: HomeAssistant, data: RequestData, payload: dict[str, Any]
+) -> None:
     """Handle action.devices.DISCONNECT request.
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#DISCONNECT
     """
     assert data.context.user_id is not None
     await data.config.async_disconnect_agent_user(data.context.user_id)
-    return None
 
 
 @HANDLERS.register("action.devices.IDENTIFY")
-async def async_devices_identify(hass, data: RequestData, payload):
+async def async_devices_identify(
+    hass: HomeAssistant, data: RequestData, payload: dict[str, Any]
+) -> dict[str, Any]:
     """Handle action.devices.IDENTIFY request.
 
     https://developers.google.com/assistant/smarthome/develop/local#implement_the_identify_handler
@@ -286,7 +313,9 @@ async def async_devices_identify(hass, data: RequestData, payload):
 
 
 @HANDLERS.register("action.devices.REACHABLE_DEVICES")
-async def async_devices_reachable(hass, data: RequestData, payload):
+async def async_devices_reachable(
+    hass: HomeAssistant, data: RequestData, payload: dict[str, Any]
+) -> dict[str, Any]:
     """Handle action.devices.REACHABLE_DEVICES request.
 
     https://developers.google.com/assistant/smarthome/develop/local#implement_the_reachable_devices_handler_hub_integrations_only
@@ -303,7 +332,9 @@ async def async_devices_reachable(hass, data: RequestData, payload):
 
 
 @HANDLERS.register("action.devices.PROXY_SELECTED")
-async def async_devices_proxy_selected(hass, data: RequestData, payload):
+async def async_devices_proxy_selected(
+    hass: HomeAssistant, data: RequestData, payload: dict[str, Any]
+) -> dict[str, Any]:
     """Handle action.devices.PROXY_SELECTED request.
 
     When selected for local SDK.

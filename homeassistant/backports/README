@@ -1,0 +1,5 @@
+This package contains backports of Python functionality from future Python
+versions.
+
+Some of the backports have been copied directly from the CPython project,
+and are subject to license agreement as detailed in LICENSE.Python.

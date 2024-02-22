@@ -36,7 +36,7 @@ def get_scanner(hass: HomeAssistant, config: ConfigType) -> XiaomiDeviceScanner 
 
 
 class XiaomiDeviceScanner(DeviceScanner):
-    """This class queries a Xiaomi Mi router.
+    """Class which queries a Xiaomi Mi router.
 
     Adapted from Luci scanner.
     """

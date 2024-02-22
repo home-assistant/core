@@ -64,7 +64,7 @@ def async_cleanup_device_registry(
     )
     for device in devices:
         for item in device.identifiers:
-            if DOMAIN == item[0] and item[1] not in entry.options[CONF_REPOSITORIES]:
+            if item[0] == DOMAIN and item[1] not in entry.options[CONF_REPOSITORIES]:
                 LOGGER.debug(
                     (
                         "Unlinking device %s for untracked repository %s from config"

@@ -19,5 +19,12 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "power_price": {
+        "name": "Flick power price"
+      }
+    }
   }
 }

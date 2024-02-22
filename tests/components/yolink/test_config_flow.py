@@ -1,5 +1,4 @@
 """Test yolink config flow."""
-import asyncio
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -11,13 +10,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "12345"
 CLIENT_SECRET = "6789"
 DOMAIN = "yolink"
 
 
-async def test_abort_if_no_configuration(hass):
+async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     """Check flow abort when no configuration."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -26,7 +27,7 @@ async def test_abort_if_no_configuration(hass):
     assert result["reason"] == "missing_credentials"
 
 
-async def test_abort_if_existing_entry(hass: HomeAssistant):
+async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
     """Check flow abort when an entry already exist."""
     MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN).add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -37,8 +38,11 @@ async def test_abort_if_existing_entry(hass: HomeAssistant):
 
 
 async def test_full_flow(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(
         hass,
@@ -105,7 +109,9 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_abort_if_authorization_timeout(hass, current_request_with_host):
+async def test_abort_if_authorization_timeout(
+    hass: HomeAssistant, current_request_with_host: None
+) -> None:
     """Check yolink authorization timeout."""
     assert await setup.async_setup_component(
         hass,
@@ -120,7 +126,7 @@ async def test_abort_if_authorization_timeout(hass, current_request_with_host):
     with patch(
         "homeassistant.components.yolink.config_entry_oauth2_flow."
         "LocalOAuth2Implementation.async_generate_authorize_url",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -131,8 +137,11 @@ async def test_abort_if_authorization_timeout(hass, current_request_with_host):
 
 
 async def test_reauthentication(
-    hass, hass_client_no_auth, aioclient_mock, current_request_with_host
-):
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    current_request_with_host: None,
+) -> None:
     """Test yolink reauthentication."""
     await setup.async_setup_component(
         hass,

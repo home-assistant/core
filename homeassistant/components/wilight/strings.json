@@ -11,5 +11,51 @@
       "not_supported_device": "This WiLight is currently not supported",
       "not_wilight_device": "This Device is not WiLight"
     }
+  },
+  "entity": {
+    "switch": {
+      "watering": {
+        "name": "Watering"
+      },
+      "pause": {
+        "name": "Pause"
+      }
+    }
+  },
+  "services": {
+    "set_watering_time": {
+      "name": "Set watering time",
+      "description": "Sets time for watering.",
+      "fields": {
+        "watering_time": {
+          "name": "Duration",
+          "description": "Duration for this irrigation to be turned on."
+        }
+      }
+    },
+    "set_pause_time": {
+      "name": "Set pause time",
+      "description": "Sets time to pause.",
+      "fields": {
+        "pause_time": {
+          "name": "Duration",
+          "description": "Duration for this irrigation to be paused."
+        }
+      }
+    },
+    "set_trigger": {
+      "name": "Set trigger",
+      "description": "Sets the trigger to use.",
+      "fields": {
+        "trigger_index": {
+          "name": "Trigger index",
+          "description": "Index of Trigger from 1 to 4."
+        },
+        "trigger": {
+          "name": "Trigger rules",
+          "description": "Configuration of trigger."
+        }
+      }
+    }
   }
 }

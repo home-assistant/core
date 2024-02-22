@@ -22,6 +22,7 @@ from .const import (
     ATTR_ENDPOINT,
     ATTR_METHOD,
     ATTR_RESULT,
+    ATTR_SESSION_DATA_USER_ID,
     ATTR_TIMEOUT,
     ATTR_WS_EVENT,
     DOMAIN,
@@ -40,17 +41,20 @@ SCHEMA_WEBSOCKET_EVENT = vol.Schema(
 )
 
 # Endpoints needed for ingress can't require admin because addons can set `panel_admin: false`
-# pylint: disable=implicit-str-concat
+# fmt: off
 WS_NO_ADMIN_ENDPOINTS = re.compile(
-    r"^(?:" r"|/ingress/(session|validate_session)" r"|/addons/[^/]+/info" r")$"
+    r"^(?:"
+    r"|/ingress/(session|validate_session)"
+    r"|/addons/[^/]+/info"
+    r")$" # noqa: ISC001
 )
-# pylint: enable=implicit-str-concat
+# fmt: on
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 @callback
-def async_load_websocket_api(hass: HomeAssistant):
+def async_load_websocket_api(hass: HomeAssistant) -> None:
     """Set up the websocket API."""
     websocket_api.async_register_command(hass, websocket_supervisor_event)
     websocket_api.async_register_command(hass, websocket_supervisor_api)
@@ -62,11 +66,11 @@ def async_load_websocket_api(hass: HomeAssistant):
 @websocket_api.async_response
 async def websocket_subscribe(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-):
+) -> None:
     """Subscribe to supervisor events."""
 
     @callback
-    def forward_messages(data):
+    def forward_messages(data: dict[str, str]) -> None:
         """Forward events to websocket."""
         connection.send_message(websocket_api.event_message(msg[WS_ID], data))
 
@@ -85,7 +89,7 @@ async def websocket_subscribe(
 @websocket_api.async_response
 async def websocket_supervisor_event(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-):
+) -> None:
     """Publish events from the Supervisor."""
     connection.send_result(msg[WS_ID])
     async_dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, msg[ATTR_DATA])
@@ -103,19 +107,29 @@ async def websocket_supervisor_event(
 @websocket_api.async_response
 async def websocket_supervisor_api(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-):
+) -> None:
     """Websocket handler to call Supervisor API."""
     if not connection.user.is_admin and not WS_NO_ADMIN_ENDPOINTS.match(
         msg[ATTR_ENDPOINT]
     ):
         raise Unauthorized()
     supervisor: HassIO = hass.data[DOMAIN]
+
+    command = msg[ATTR_ENDPOINT]
+    payload = msg.get(ATTR_DATA, {})
+
+    if command == "/ingress/session":
+        # Send user ID on session creation, so the supervisor can correlate session tokens with users
+        # for every request that is authenticated with the given ingress session token.
+        payload[ATTR_SESSION_DATA_USER_ID] = connection.user.id
+
     try:
         result = await supervisor.send_command(
-            msg[ATTR_ENDPOINT],
+            command,
             method=msg[ATTR_METHOD],
             timeout=msg.get(ATTR_TIMEOUT, 10),
-            payload=msg.get(ATTR_DATA, {}),
+            payload=payload,
+            source="core.websocket_api",
         )
 
         if result.get(ATTR_RESULT) == "error":

@@ -20,4 +20,4 @@ async def mock_connected_snooz(hass: HomeAssistant):
     device = await create_mock_snooz()
     entry = await create_mock_snooz_config_entry(hass, device)
 
-    yield SnoozFixture(entry, device)
+    return SnoozFixture(entry, device)

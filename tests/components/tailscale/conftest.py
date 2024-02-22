@@ -41,7 +41,7 @@ def mock_tailscale_config_flow() -> Generator[None, MagicMock, None]:
         "homeassistant.components.tailscale.config_flow.Tailscale", autospec=True
     ) as tailscale_mock:
         tailscale = tailscale_mock.return_value
-        tailscale.devices.return_value = Devices.parse_raw(
+        tailscale.devices.return_value = Devices.from_json(
             load_fixture("tailscale/devices.json")
         ).devices
         yield tailscale
@@ -54,7 +54,7 @@ def mock_tailscale(request: pytest.FixtureRequest) -> Generator[None, MagicMock,
     if hasattr(request, "param") and request.param:
         fixture = request.param
 
-    devices = Devices.parse_raw(load_fixture(fixture)).devices
+    devices = Devices.from_json(load_fixture(fixture)).devices
     with patch(
         "homeassistant.components.tailscale.coordinator.Tailscale", autospec=True
     ) as tailscale_mock:

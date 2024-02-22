@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED, STATE_UNLOCKING
+from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -17,7 +17,7 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Demo sensors."""
+    """Set up the Demo locks."""
     async_add_entities(
         [
             DemoLock(
@@ -70,6 +70,8 @@ class DemoLock(LockEntity):
         self._attr_unique_id = unique_id
         self._attr_supported_features = features
         self._state = state
+        self._attr_is_locking = False
+        self._attr_is_unlocking = False
 
     @property
     def is_locked(self) -> bool:
@@ -78,12 +80,18 @@ class DemoLock(LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
+        self._attr_is_locking = True
+        self.async_write_ha_state()
+        self._attr_is_locking = False
         self._state = STATE_LOCKED
         self.async_write_ha_state()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        self._state = STATE_UNLOCKING
+        self._attr_is_unlocking = True
+        self.async_write_ha_state()
+        self._attr_is_unlocking = False
+        self._state = STATE_UNLOCKED
         self.async_write_ha_state()
 
     async def async_open(self, **kwargs: Any) -> None:

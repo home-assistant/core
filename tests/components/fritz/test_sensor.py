@@ -23,7 +23,6 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from .const import MOCK_USER_DATA
@@ -39,7 +38,7 @@ SENSOR_STATES: dict[str, dict[str, Any]] = {
         ATTR_STATE: "fec0::1",
         ATTR_ICON: "mdi:earth",
     },
-    "sensor.mock_title_device_uptime": {
+    "sensor.mock_title_last_restart": {
         # ATTR_STATE: "2022-02-05T17:46:04+00:00",
         ATTR_DEVICE_CLASS: SensorDeviceClass.TIMESTAMP,
     },
@@ -114,13 +113,13 @@ SENSOR_STATES: dict[str, dict[str, Any]] = {
 }
 
 
-async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock):
+async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock) -> None:
     """Test setup of Fritz!Tools sesnors."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
 
@@ -136,13 +135,15 @@ async def test_sensor_setup(hass: HomeAssistant, fc_class_mock, fh_class_mock):
                 assert sensor.attributes.get(key) == val
 
 
-async def test_sensor_update_fail(hass: HomeAssistant, fc_class_mock, fh_class_mock):
+async def test_sensor_update_fail(
+    hass: HomeAssistant, fc_class_mock, fh_class_mock
+) -> None:
     """Test failed update of Fritz!Tools sesnors."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     fc_class_mock().call_action_side_effect(FritzConnectionException)

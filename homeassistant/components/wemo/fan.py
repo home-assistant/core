@@ -1,7 +1,6 @@
 """Support for WeMo humidifier."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import math
 from typing import Any
@@ -13,19 +12,15 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
-from .const import (
-    DOMAIN as WEMO_DOMAIN,
-    SERVICE_RESET_FILTER_LIFE,
-    SERVICE_SET_HUMIDITY,
-)
+from . import async_wemo_dispatcher_connect
+from .const import SERVICE_RESET_FILTER_LIFE, SERVICE_SET_HUMIDITY
 from .entity import WemoBinaryStateEntity
 from .wemo_device import DeviceCoordinator
 
@@ -50,7 +45,7 @@ SET_HUMIDITY_SCHEMA = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    _config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up WeMo binary sensors."""
@@ -59,14 +54,7 @@ async def async_setup_entry(
         """Handle a discovered Wemo device."""
         async_add_entities([WemoHumidifier(coordinator)])
 
-    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
-
-    await asyncio.gather(
-        *(
-            _discovered_wemo(coordinator)
-            for coordinator in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
-        )
-    )
+    await async_wemo_dispatcher_connect(hass, _discovered_wemo)
 
     platform = entity_platform.async_get_current_platform()
 
@@ -86,6 +74,7 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
 
     _attr_supported_features = FanEntityFeature.SET_SPEED
     wemo: Humidifier
+    _last_fan_on_mode: FanMode
 
     def __init__(self, coordinator: DeviceCoordinator) -> None:
         """Initialize the WeMo switch."""

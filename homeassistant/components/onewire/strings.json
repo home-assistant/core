@@ -12,7 +12,84 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
+        "data_description": {
+          "host": "The hostname or IP address of your 1-Wire device."
+        },
         "title": "Set server details"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "sensed_id": {
+        "name": "Sensed {id}"
+      },
+      "hub_short_id": {
+        "name": "Hub short on branch {id}"
+      }
+    },
+    "sensor": {
+      "counter_id": {
+        "name": "Counter {id}"
+      },
+      "humidity_hih3600": {
+        "name": "HIH3600 humidity"
+      },
+      "humidity_hih4000": {
+        "name": "HIH4000 humidity"
+      },
+      "humidity_hih5030": {
+        "name": "HIH5030 humidity"
+      },
+      "humidity_htm1735": {
+        "name": "HTM1735 humidity"
+      },
+      "humidity_raw": {
+        "name": "Raw humidity"
+      },
+      "moisture_id": {
+        "name": "Moisture {id}"
+      },
+      "thermocouple_temperature_k": {
+        "name": "Thermocouple K temperature"
+      },
+      "voltage_vad": {
+        "name": "VAD voltage"
+      },
+      "voltage_vdd": {
+        "name": "VDD voltage"
+      },
+      "voltage_vis": {
+        "name": "VIS voltage difference"
+      },
+      "voltage_vis_gradient": {
+        "name": "VIS voltage gradient"
+      },
+      "wetness_id": {
+        "name": "Wetness {id}"
+      }
+    },
+    "switch": {
+      "hub_branch_id": {
+        "name": "Hub branch {id}"
+      },
+      "iad": {
+        "name": "Current A/D control"
+      },
+      "latch_id": {
+        "name": "Latch {id}"
+      },
+      "leaf_sensor_id": {
+        "name": "Leaf sensor {id}"
+      },
+      "moisture_sensor_id": {
+        "name": "Moisture sensor {id}"
+      },
+      "pio": {
+        "name": "Programmed input-output"
+      },
+      "pio_id": {
+        "name": "Programmed input-output {id}"
       }
     }
   },
@@ -24,7 +101,7 @@
       "device_selection": {
         "data": {
           "clear_device_options": "Clear all device configurations",
-          "device_selection": "Select devices to configure"
+          "device_selection": "[%key:component::onewire::options::error::device_not_selected%]"
         },
         "description": "Select what configuration steps to process",
         "title": "OneWire Device Options"

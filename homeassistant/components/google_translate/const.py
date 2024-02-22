@@ -1,5 +1,10 @@
-"""Constant for google_translate integration."""
+"""Constants for the Google Translate text-to-speech integration."""
 from dataclasses import dataclass
+
+CONF_TLD = "tld"
+DEFAULT_LANG = "en"
+DEFAULT_TLD = "com"
+DOMAIN = "google_translate"
 
 SUPPORT_LANGUAGES = [
     "af",
@@ -35,6 +40,7 @@ SUPPORT_LANGUAGES = [
     "ko",
     "la",
     "lv",
+    "lt",
     "mk",
     "ml",
     "mr",

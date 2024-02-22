@@ -324,7 +324,7 @@ class IcloudAccount:
             if slugify(device.name.replace(" ", "", 99)) == name_slug:
                 result.append(device)
         if not result:
-            raise Exception(f"No device with name {name}")
+            raise ValueError(f"No device with name {name}")
         return result
 
     @property

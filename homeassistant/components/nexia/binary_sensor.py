@@ -23,7 +23,7 @@ async def async_setup_entry(
         thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
         entities.append(
             NexiaBinarySensor(
-                coordinator, thermostat, "is_blower_active", "Blower Active"
+                coordinator, thermostat, "is_blower_active", "blower_active"
             )
         )
         if thermostat.has_emergency_heat():
@@ -32,7 +32,7 @@ async def async_setup_entry(
                     coordinator,
                     thermostat,
                     "is_emergency_heat_active",
-                    "Emergency Heat Active",
+                    "emergency_heat_active",
                 )
             )
 
@@ -42,16 +42,16 @@ async def async_setup_entry(
 class NexiaBinarySensor(NexiaThermostatEntity, BinarySensorEntity):
     """Provices Nexia BinarySensor support."""
 
-    def __init__(self, coordinator, thermostat, sensor_call, sensor_name):
+    def __init__(self, coordinator, thermostat, sensor_call, translation_key):
         """Initialize the nexia sensor."""
         super().__init__(
             coordinator,
             thermostat,
-            name=f"{thermostat.get_name()} {sensor_name}",
             unique_id=f"{thermostat.thermostat_id}_{sensor_call}",
         )
         self._call = sensor_call
         self._state = None
+        self._attr_translation_key = translation_key
 
     @property
     def is_on(self):

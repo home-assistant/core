@@ -24,9 +24,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["type"] == "form"
     assert result["errors"] is None
 
-    with patch(
-        "aiotractive.api.API.user_id", return_value={"user_id": "user_id"}
-    ), patch(
+    with patch("aiotractive.api.API.user_id", return_value="user_id"), patch(
         "homeassistant.components.tractive.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -98,7 +96,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_reauthentication(hass):
+async def test_reauthentication(hass: HomeAssistant) -> None:
     """Test Tractive reauthentication."""
     old_entry = MockConfigEntry(
         domain="tractive",
@@ -136,7 +134,7 @@ async def test_reauthentication(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_reauthentication_failure(hass):
+async def test_reauthentication_failure(hass: HomeAssistant) -> None:
     """Test Tractive reauthentication failure."""
     old_entry = MockConfigEntry(
         domain="tractive",
@@ -174,7 +172,7 @@ async def test_reauthentication_failure(hass):
     assert result2["errors"]["base"] == "invalid_auth"
 
 
-async def test_reauthentication_unknown_failure(hass):
+async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
     """Test Tractive reauthentication failure."""
     old_entry = MockConfigEntry(
         domain="tractive",
@@ -212,7 +210,7 @@ async def test_reauthentication_unknown_failure(hass):
     assert result2["errors"]["base"] == "unknown"
 
 
-async def test_reauthentication_failure_no_existing_entry(hass):
+async def test_reauthentication_failure_no_existing_entry(hass: HomeAssistant) -> None:
     """Test Tractive reauthentication with no existing entry."""
     old_entry = MockConfigEntry(
         domain="tractive",

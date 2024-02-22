@@ -46,9 +46,14 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
     """Representation of a Vera Thermostat."""
 
     _attr_hvac_modes = SUPPORT_HVAC
+    _attr_fan_modes = FAN_OPERATION_LIST
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, vera_device: veraApi.VeraThermostat, controller_data: ControllerData
@@ -78,11 +83,6 @@ class VeraThermostat(VeraDevice[veraApi.VeraThermostat], ClimateEntity):
         if self.vera_device.get_fan_mode() == "ContinuousOn":
             return FAN_ON
         return FAN_AUTO
-
-    @property
-    def fan_modes(self) -> list[str] | None:
-        """Return a list of available fan modes."""
-        return FAN_OPERATION_LIST
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target temperature."""

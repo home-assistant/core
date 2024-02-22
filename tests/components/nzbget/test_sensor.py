@@ -8,13 +8,14 @@ from homeassistant.const import (
     UnitOfDataRate,
     UnitOfInformation,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
 
 
-async def test_sensors(hass, nzbget_api) -> None:
+async def test_sensors(hass: HomeAssistant, nzbget_api) -> None:
     """Test the creation and values of the sensors."""
     now = dt_util.utcnow().replace(microsecond=0)
     with patch("homeassistant.components.nzbget.sensor.utcnow", return_value=now):
@@ -33,14 +34,14 @@ async def test_sensors(hass, nzbget_api) -> None:
         ),
         "average_speed": (
             "AverageDownloadRate",
-            "1.19",
+            "1.250000",
             UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
         "download_paused": ("DownloadPaused", "False", None, None),
         "speed": (
             "DownloadRate",
-            "2.38",
+            "2.500000",
             UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
@@ -67,13 +68,13 @@ async def test_sensors(hass, nzbget_api) -> None:
         "uptime": ("UpTimeSec", uptime.isoformat(), None, SensorDeviceClass.TIMESTAMP),
         "speed_limit": (
             "DownloadLimit",
-            "0.95",
+            "1.000000",
             UnitOfDataRate.MEGABYTES_PER_SECOND,
             SensorDeviceClass.DATA_RATE,
         ),
     }
 
-    for (sensor_id, data) in sensors.items():
+    for sensor_id, data in sensors.items():
         entity_entry = registry.async_get(f"sensor.nzbgettest_{sensor_id}")
         assert entity_entry
         assert entity_entry.original_device_class == data[3]

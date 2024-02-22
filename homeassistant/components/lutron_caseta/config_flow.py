@@ -6,7 +6,6 @@ import logging
 import os
 import ssl
 
-import async_timeout
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
@@ -118,7 +117,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             assets = None
             try:
                 assets = await async_pair(self.data[CONF_HOST])
-            except (asyncio.TimeoutError, OSError):
+            except (TimeoutError, OSError):
                 errors["base"] = "cannot_connect"
 
             if not errors:
@@ -226,9 +225,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return None
 
         try:
-            async with async_timeout.timeout(BRIDGE_TIMEOUT):
+            async with asyncio.timeout(BRIDGE_TIMEOUT):
                 await bridge.connect()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error(
                 "Timeout while trying to connect to bridge at %s",
                 self.data[CONF_HOST],

@@ -5,9 +5,11 @@ import logging
 from typing import Any, cast
 
 from pyatmo.modules import NATherm1
+from pyatmo.modules.device_types import DeviceType
 import voluptuous as vol
 
 from homeassistant.components.climate import (
+    ATTR_PRESET_MODE,
     DEFAULT_MIN_TEMP,
     PRESET_AWAY,
     PRESET_BOOST,
@@ -27,14 +29,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import (
+    ATTR_END_DATETIME,
     ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
+    ATTR_TARGET_TEMPERATURE,
+    ATTR_TIME_PERIOD,
     CONF_URL_ENERGY,
     DATA_SCHEDULES,
     DOMAIN,
@@ -43,10 +49,14 @@ from .const import (
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
     NETATMO_CREATE_CLIMATE,
+    SERVICE_CLEAR_TEMPERATURE_SETTING,
+    SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
+    SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
+    SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoRoom
-from .netatmo_entity_base import NetatmoBase
+from .entity import NetatmoBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,9 +65,14 @@ PRESET_SCHEDULE = "Schedule"
 PRESET_MANUAL = "Manual"
 
 SUPPORT_FLAGS = (
-    ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
 )
 SUPPORT_PRESET = [PRESET_AWAY, PRESET_BOOST, PRESET_FROST_GUARD, PRESET_SCHEDULE]
+
+THERM_MODES = (PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY)
 
 STATE_NETATMO_SCHEDULE = "schedule"
 STATE_NETATMO_HG = "hg"
@@ -100,8 +115,8 @@ CURRENT_HVAC_MAP_NETATMO = {True: HVACAction.HEATING, False: HVACAction.IDLE}
 
 DEFAULT_MAX_TEMP = 30
 
-NA_THERM = "NATherm1"
-NA_VALVE = "NRV"
+NA_THERM = DeviceType.NATherm1
+NA_VALVE = DeviceType.NRV
 
 
 async def async_setup_entry(
@@ -111,6 +126,10 @@ async def async_setup_entry(
 
     @callback
     def _create_entity(netatmo_device: NetatmoRoom) -> None:
+        if not netatmo_device.room.climate_type:
+            msg = f"No climate type found for this room: {netatmo_device.room.name}"
+            _LOGGER.debug(msg)
+            return
         entity = NetatmoThermostat(netatmo_device)
         async_add_entities([entity])
 
@@ -124,9 +143,45 @@ async def async_setup_entry(
         {vol.Required(ATTR_SCHEDULE_NAME): cv.string},
         "_async_service_set_schedule",
     )
+    platform.async_register_entity_service(
+        SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+        {
+            vol.Required(ATTR_PRESET_MODE): vol.In(THERM_MODES),
+            vol.Required(ATTR_END_DATETIME): cv.datetime,
+        },
+        "_async_service_set_preset_mode_with_end_datetime",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
+        {
+            vol.Required(ATTR_TARGET_TEMPERATURE): vol.All(
+                vol.Coerce(float), vol.Range(min=7, max=30)
+            ),
+            vol.Required(ATTR_END_DATETIME): cv.datetime,
+        },
+        "_async_service_set_temperature_with_end_datetime",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
+        {
+            vol.Required(ATTR_TARGET_TEMPERATURE): vol.All(
+                vol.Coerce(float), vol.Range(min=7, max=30)
+            ),
+            vol.Required(ATTR_TIME_PERIOD): vol.All(
+                cv.time_period,
+                cv.positive_timedelta,
+            ),
+        },
+        "_async_service_set_temperature_with_time_period",
+    )
+    platform.async_register_entity_service(
+        SERVICE_CLEAR_TEMPERATURE_SETTING,
+        {},
+        "_async_service_clear_temperature_setting",
+    )
 
 
-class NetatmoThermostat(NetatmoBase, ClimateEntity):
+class NetatmoThermostat(NetatmoBaseEntity, ClimateEntity):
     """Representation a Netatmo thermostat."""
 
     _attr_hvac_mode = HVACMode.AUTO
@@ -135,6 +190,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
     _attr_supported_features = SUPPORT_FLAGS
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, netatmo_device: NetatmoRoom) -> None:
         """Initialize the sensor."""
@@ -156,7 +212,8 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             ]
         )
 
-        self._model: str = f"{self._room.climate_type}"
+        assert self._room.climate_type
+        self._model: DeviceType = self._room.climate_type
 
         self._config_url = CONF_URL_ENERGY
 
@@ -170,7 +227,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
         self._selected_schedule = None
 
         self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.HEAT]
-        if self._model == NA_THERM:
+        if self._model is NA_THERM:
             self._attr_hvac_modes.append(HVACMode.OFF)
 
         self._attr_unique_id = f"{self._room.entity_id}-{self._model}"
@@ -314,7 +371,7 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             await self._room.async_therm_set(STATE_NETATMO_HOME)
         elif preset_mode in (PRESET_BOOST, STATE_NETATMO_MAX):
             await self._room.async_therm_set(PRESET_MAP_NETATMO[preset_mode])
-        elif preset_mode in (PRESET_SCHEDULE, PRESET_FROST_GUARD, PRESET_AWAY):
+        elif preset_mode in THERM_MODES:
             await self._room.home.async_set_thermmode(PRESET_MAP_NETATMO[preset_mode])
         else:
             _LOGGER.error("Preset mode '%s' not available", preset_mode)
@@ -409,6 +466,59 @@ class NetatmoThermostat(NetatmoBase, ClimateEntity):
             kwargs.get(ATTR_SCHEDULE_NAME),
             schedule_id,
         )
+
+    async def _async_service_set_preset_mode_with_end_datetime(
+        self, **kwargs: Any
+    ) -> None:
+        preset_mode = kwargs[ATTR_PRESET_MODE]
+        end_datetime = kwargs[ATTR_END_DATETIME]
+        end_timestamp = int(dt_util.as_timestamp(end_datetime))
+
+        await self._room.home.async_set_thermmode(
+            mode=PRESET_MAP_NETATMO[preset_mode], end_time=end_timestamp
+        )
+        _LOGGER.debug(
+            "Setting %s preset to %s with end datetime %s",
+            self._room.home.entity_id,
+            preset_mode,
+            end_timestamp,
+        )
+
+    async def _async_service_set_temperature_with_end_datetime(
+        self, **kwargs: Any
+    ) -> None:
+        target_temperature = kwargs[ATTR_TARGET_TEMPERATURE]
+        end_datetime = kwargs[ATTR_END_DATETIME]
+        end_timestamp = int(dt_util.as_timestamp(end_datetime))
+
+        _LOGGER.debug(
+            "Setting %s to target temperature %s with end datetime %s",
+            self._room.entity_id,
+            target_temperature,
+            end_timestamp,
+        )
+        await self._room.async_therm_manual(target_temperature, end_timestamp)
+
+    async def _async_service_set_temperature_with_time_period(
+        self, **kwargs: Any
+    ) -> None:
+        target_temperature = kwargs[ATTR_TARGET_TEMPERATURE]
+        time_period = kwargs[ATTR_TIME_PERIOD]
+
+        _LOGGER.debug(
+            "Setting %s to target temperature %s with time period %s",
+            self._room.entity_id,
+            target_temperature,
+            time_period,
+        )
+
+        now_timestamp = dt_util.as_timestamp(dt_util.utcnow())
+        end_timestamp = int(now_timestamp + time_period.seconds)
+        await self._room.async_therm_manual(target_temperature, end_timestamp)
+
+    async def _async_service_clear_temperature_setting(self, **kwargs: Any) -> None:
+        _LOGGER.debug("Clearing %s temperature setting", self._room.entity_id)
+        await self._room.async_therm_home()
 
     @property
     def device_info(self) -> DeviceInfo:

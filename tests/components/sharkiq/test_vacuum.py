@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from copy import deepcopy
+from datetime import datetime, timedelta
 import enum
 from typing import Any
 from unittest.mock import patch
@@ -63,7 +64,6 @@ EXPECTED_FEATURES = (
     | VacuumEntityFeature.RETURN_HOME
     | VacuumEntityFeature.START
     | VacuumEntityFeature.STATE
-    | VacuumEntityFeature.STATUS
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.LOCATE
 )
@@ -72,8 +72,16 @@ EXPECTED_FEATURES = (
 class MockAyla(AylaApi):
     """Mocked AylaApi that doesn't do anything."""
 
+    desired_expiry = False
+
     async def async_sign_in(self):
         """Instead of signing in, just return."""
+
+    async def async_refresh_auth(self):
+        """Instead of refreshing auth, just return."""
+
+    async def async_sign_out(self):
+        """Instead of signing out, just return."""
 
     async def async_list_devices(self) -> list[dict]:
         """Return the device list."""
@@ -88,6 +96,18 @@ class MockAyla(AylaApi):
 
     async def async_request(self, http_method: str, url: str, **kwargs):
         """Don't make an HTTP request."""
+
+    @property
+    def token_expiring_soon(self) -> bool:
+        """Toggling Property for Token Expiration Flag."""
+        # Alternate expiry flag for each test
+        self.desired_expiry = not self.desired_expiry
+        return self.desired_expiry
+
+    @property
+    def auth_expiration(self) -> datetime:
+        """Sample expiration timestamp that is always 1200 seconds behind now()."""
+        return datetime.now() - timedelta(seconds=1200)
 
 
 class MockShark(SharkIqVacuum):
@@ -121,7 +141,7 @@ async def setup_integration(hass):
     await hass.async_block_till_done()
 
 
-async def test_simple_properties(hass: HomeAssistant):
+async def test_simple_properties(hass: HomeAssistant) -> None:
     """Test that simple properties work as intended."""
     state = hass.states.get(VAC_ENTITY_ID)
     registry = er.async_get(hass)
@@ -134,7 +154,7 @@ async def test_simple_properties(hass: HomeAssistant):
 
 
 @pytest.mark.parametrize(
-    "attribute,target_value",
+    ("attribute", "target_value"),
     [
         (ATTR_SUPPORTED_FEATURES, EXPECTED_FEATURES),
         (ATTR_BATTERY_LEVEL, 50),
@@ -148,14 +168,14 @@ async def test_simple_properties(hass: HomeAssistant):
 )
 async def test_initial_attributes(
     hass: HomeAssistant, attribute: str, target_value: Any
-):
+) -> None:
     """Test initial config attributes."""
     state = hass.states.get(VAC_ENTITY_ID)
     assert state.attributes.get(attribute) == target_value
 
 
 @pytest.mark.parametrize(
-    "service,target_state",
+    ("service", "target_state"),
     [
         (SERVICE_STOP, STATE_IDLE),
         (SERVICE_PAUSE, STATE_PAUSED),
@@ -163,7 +183,9 @@ async def test_initial_attributes(
         (SERVICE_START, STATE_CLEANING),
     ],
 )
-async def test_cleaning_states(hass: HomeAssistant, service: str, target_state: str):
+async def test_cleaning_states(
+    hass: HomeAssistant, service: str, target_state: str
+) -> None:
     """Test cleaning states."""
     service_data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
     await hass.services.async_call("vacuum", service, service_data, blocking=True)
@@ -183,7 +205,7 @@ async def test_fan_speed(hass: HomeAssistant, fan_speed: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "device_property,target_value",
+    ("device_property", "target_value"),
     [
         ("manufacturer", "Shark"),
         ("model", "RV1001AE"),
@@ -193,14 +215,14 @@ async def test_fan_speed(hass: HomeAssistant, fan_speed: str) -> None:
 )
 async def test_device_properties(
     hass: HomeAssistant, device_property: str, target_value: str
-):
+) -> None:
     """Test device properties."""
     registry = dr.async_get(hass)
-    device = registry.async_get_device({(DOMAIN, "AC000Wxxxxxxxxx")})
+    device = registry.async_get_device(identifiers={(DOMAIN, "AC000Wxxxxxxxxx")})
     assert getattr(device, device_property) == target_value
 
 
-async def test_locate(hass):
+async def test_locate(hass: HomeAssistant) -> None:
     """Test that the locate command works."""
     with patch.object(SharkIqVacuum, "async_find_device") as mock_locate:
         data = {ATTR_ENTITY_ID: VAC_ENTITY_ID}
@@ -209,7 +231,7 @@ async def test_locate(hass):
 
 
 @pytest.mark.parametrize(
-    "side_effect,success",
+    ("side_effect", "success"),
     [
         (None, True),
         (SharkIqAuthError, False),

@@ -148,7 +148,7 @@ def test_bad_import(
 
 
 @pytest.mark.parametrize(
-    "import_node,module_name",
+    ("import_node", "module_name"),
     [
         (
             "from homeassistant.components import climate",
@@ -194,7 +194,7 @@ def test_good_root_import(
 
 
 @pytest.mark.parametrize(
-    "import_node,module_name",
+    ("import_node", "module_name"),
     [
         (
             "import homeassistant.components.climate.const as climate",

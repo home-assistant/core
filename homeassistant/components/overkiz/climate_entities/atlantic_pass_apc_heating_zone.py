@@ -17,10 +17,11 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
+from ..const import DOMAIN
 from ..coordinator import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 
-OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
+OVERKIZ_TO_HVAC_MODE: dict[str, HVACMode] = {
     OverkizCommandParam.AUTO: HVACMode.AUTO,
     OverkizCommandParam.ECO: HVACMode.AUTO,
     OverkizCommandParam.MANU: HVACMode.HEAT,
@@ -75,9 +76,14 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
     _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -99,7 +105,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         return None
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         return OVERKIZ_TO_HVAC_MODE[
             cast(str, self.executor.select_state(OverkizState.IO_PASS_APC_HEATING_MODE))
@@ -133,7 +139,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
             OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE
         )
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.async_set_heating_mode(HVAC_MODE_TO_OVERKIZ[hvac_mode])
 

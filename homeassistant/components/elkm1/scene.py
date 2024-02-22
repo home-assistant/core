@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .const import DOMAIN
+from .models import ELKM1Data
 
 
 async def async_setup_entry(
@@ -20,9 +21,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the Elk-M1 scene platform."""
-    elk_data = hass.data[DOMAIN][config_entry.entry_id]
+    elk_data: ELKM1Data = hass.data[DOMAIN][config_entry.entry_id]
+    elk = elk_data.elk
     entities: list[ElkEntity] = []
-    elk = elk_data["elk"]
     create_elk_entities(elk_data, elk.tasks, "task", ElkTask, entities)
     async_add_entities(entities)
 

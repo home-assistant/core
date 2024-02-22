@@ -3,13 +3,14 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
+import py
 import pytest
 
 from homeassistant.util.file import WriteError, write_utf8_file, write_utf8_file_atomic
 
 
 @pytest.mark.parametrize("func", [write_utf8_file, write_utf8_file_atomic])
-def test_write_utf8_file_atomic_private(tmpdir, func):
+def test_write_utf8_file_atomic_private(tmpdir: py.path.local, func) -> None:
     """Test files can be written as 0o600 or 0o644."""
     test_dir = tmpdir.mkdir("files")
     test_file = Path(test_dir / "test.json")
@@ -24,8 +25,13 @@ def test_write_utf8_file_atomic_private(tmpdir, func):
         assert fh.read() == '{"some":"data"}'
     assert os.stat(test_file).st_mode & 0o777 == 0o600
 
+    func(test_file, b'{"some":"data"}', True, mode="wb")
+    with open(test_file) as fh:
+        assert fh.read() == '{"some":"data"}'
+    assert os.stat(test_file).st_mode & 0o777 == 0o600
 
-def test_write_utf8_file_fails_at_creation(tmpdir):
+
+def test_write_utf8_file_fails_at_creation(tmpdir: py.path.local) -> None:
     """Test that failed creation of the temp file does not create an empty file."""
     test_dir = tmpdir.mkdir("files")
     test_file = Path(test_dir / "test.json")
@@ -38,7 +44,9 @@ def test_write_utf8_file_fails_at_creation(tmpdir):
     assert not os.path.exists(test_file)
 
 
-def test_write_utf8_file_fails_at_rename(tmpdir, caplog):
+def test_write_utf8_file_fails_at_rename(
+    tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that if rename fails not not remove, we do not log the failed cleanup."""
     test_dir = tmpdir.mkdir("files")
     test_file = Path(test_dir / "test.json")
@@ -53,7 +61,9 @@ def test_write_utf8_file_fails_at_rename(tmpdir, caplog):
     assert "File replacement cleanup failed" not in caplog.text
 
 
-def test_write_utf8_file_fails_at_rename_and_remove(tmpdir, caplog):
+def test_write_utf8_file_fails_at_rename_and_remove(
+    tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test that if rename and remove both fail, we log the failed cleanup."""
     test_dir = tmpdir.mkdir("files")
     test_file = Path(test_dir / "test.json")
@@ -66,7 +76,7 @@ def test_write_utf8_file_fails_at_rename_and_remove(tmpdir, caplog):
     assert "File replacement cleanup failed" in caplog.text
 
 
-def test_write_utf8_file_atomic_fails(tmpdir):
+def test_write_utf8_file_atomic_fails(tmpdir: py.path.local) -> None:
     """Test OSError from write_utf8_file_atomic is rethrown as WriteError."""
     test_dir = tmpdir.mkdir("files")
     test_file = Path(test_dir / "test.json")

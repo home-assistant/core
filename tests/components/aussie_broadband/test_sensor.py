@@ -1,6 +1,7 @@
 """Aussie Broadband sensor platform tests."""
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 
 from .common import setup_platform
 
@@ -39,7 +40,7 @@ MOCK_VOIP_USAGE = {
 }
 
 
-async def test_nbn_sensor_states(hass):
+async def test_nbn_sensor_states(hass: HomeAssistant) -> None:
     """Tests that the sensors are correct."""
 
     await setup_platform(hass, [SENSOR_DOMAIN], usage=MOCK_NBN_USAGE)
@@ -57,7 +58,7 @@ async def test_nbn_sensor_states(hass):
     )
 
 
-async def test_phone_sensor_states(hass):
+async def test_phone_sensor_states(hass: HomeAssistant) -> None:
     """Tests that the sensors are correct."""
 
     await setup_platform(hass, [SENSOR_DOMAIN], usage=MOCK_MOBILE_USAGE)
@@ -76,7 +77,7 @@ async def test_phone_sensor_states(hass):
     )
 
 
-async def test_voip_sensor_states(hass):
+async def test_voip_sensor_states(hass: HomeAssistant) -> None:
     """Tests that the sensors are correct."""
 
     await setup_platform(hass, [SENSOR_DOMAIN], usage=MOCK_VOIP_USAGE)

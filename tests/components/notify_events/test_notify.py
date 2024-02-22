@@ -5,11 +5,12 @@ from homeassistant.components.notify_events.notify import (
     ATTR_PRIORITY,
     ATTR_TOKEN,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import async_mock_service
 
 
-async def test_send_msg(hass):
+async def test_send_msg(hass: HomeAssistant) -> None:
     """Test notify.events service."""
     notify_calls = async_mock_service(hass, DOMAIN, "events")
 

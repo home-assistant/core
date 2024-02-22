@@ -1,7 +1,6 @@
 """Tests for the steamist component."""
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from discovery30303 import AIODiscovery30303
@@ -60,7 +59,7 @@ async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.steamist.Steamist.async_get_status",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done()
@@ -105,7 +104,7 @@ async def test_config_entry_fills_unique_id_with_directed_discovery(
 
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, FORMATTED_MAC_ADDRESS)}, identifiers={}
+        connections={(dr.CONNECTION_NETWORK_MAC, FORMATTED_MAC_ADDRESS)}
     )
     assert isinstance(device_entry, dr.DeviceEntry)
     assert device_entry.name == DEVICE_NAME

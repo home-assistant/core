@@ -1,7 +1,7 @@
 """The tests for the Media group platform."""
+import asyncio
 from unittest.mock import Mock, patch
 
-import async_timeout
 import pytest
 
 from homeassistant.components.group import DOMAIN
@@ -58,7 +58,9 @@ def media_player_media_seek_fixture():
         yield seek
 
 
-async def test_default_state(hass: HomeAssistant) -> None:
+async def test_default_state(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test media group default state."""
     hass.states.async_set("media_player.player_1", "on")
     await async_setup_component(
@@ -86,7 +88,6 @@ async def test_default_state(hass: HomeAssistant) -> None:
         "media_player.player_2",
     ]
 
-    entity_registry = er.async_get(hass)
     entry = entity_registry.async_get("media_player.media_group")
     assert entry
     assert entry.unique_id == "unique_identifier"
@@ -191,7 +192,11 @@ async def test_supported_features(hass: HomeAssistant) -> None:
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.STOP
     )
-    play_media = MediaPlayerEntityFeature.PLAY_MEDIA
+    play_media = (
+        MediaPlayerEntityFeature.PLAY_MEDIA
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+    )
     volume = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
@@ -579,7 +584,7 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert state.attributes.get(ATTR_ENTITY_ID) == ["media_player.group_1"]
 
     # Test controlling the nested group
-    async with async_timeout.timeout(0.5):
+    async with asyncio.timeout(0.5):
         await hass.services.async_call(
             MEDIA_DOMAIN,
             SERVICE_TURN_OFF,

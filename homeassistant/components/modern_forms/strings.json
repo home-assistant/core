@@ -6,6 +6,9 @@
         "description": "Set up your Modern Forms fan to integrate with Home Assistant.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Modern Forms fan."
         }
       },
       "zeroconf_confirm": {
@@ -19,6 +22,72 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "light_sleep_timer_active": {
+        "name": "Light sleep timer active"
+      },
+      "fan_sleep_timer_active": {
+        "name": "Fan sleep timer active"
+      }
+    },
+    "fan": {
+      "fan": {
+        "name": "[%key:component::fan::title%]"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "sensor": {
+      "light_timer_remaining_time": {
+        "name": "Light sleep time"
+      },
+      "fan_timer_remaining_time": {
+        "name": "Fan sleep time"
+      }
+    },
+    "switch": {
+      "away_mode": {
+        "name": "Away mode"
+      },
+      "adaptive_learning": {
+        "name": "Adaptive learning"
+      }
+    }
+  },
+  "services": {
+    "set_light_sleep_timer": {
+      "name": "Set light sleep timer",
+      "description": "Sets a sleep timer on a Modern Forms light.",
+      "fields": {
+        "sleep_time": {
+          "name": "Sleep time",
+          "description": "Number of minutes to set the timer."
+        }
+      }
+    },
+    "clear_light_sleep_timer": {
+      "name": "Clear light sleep timer",
+      "description": "Clears the sleep timer on a Modern Forms light."
+    },
+    "set_fan_sleep_timer": {
+      "name": "Set fan sleep timer",
+      "description": "Sets a sleep timer on a Modern Forms fan.",
+      "fields": {
+        "sleep_time": {
+          "name": "[%key:component::modern_forms::services::set_light_sleep_timer::fields::sleep_time::name%]",
+          "description": "[%key:component::modern_forms::services::set_light_sleep_timer::fields::sleep_time::description%]"
+        }
+      }
+    },
+    "clear_fan_sleep_timer": {
+      "name": "Clear fan sleep timer",
+      "description": "Clears the sleep timer on a Modern Forms fan."
     }
   }
 }

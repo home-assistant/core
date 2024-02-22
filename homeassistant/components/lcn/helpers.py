@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_RESOURCE,
     CONF_SENSORS,
     CONF_SOURCE,
     CONF_SWITCHES,
@@ -42,7 +43,6 @@ from .const import (
     CONF_HARDWARE_SERIAL,
     CONF_HARDWARE_TYPE,
     CONF_OUTPUT,
-    CONF_RESOURCE,
     CONF_SCENES,
     CONF_SK_NUM_TRIES,
     CONF_SOFTWARE_SERIAL,
@@ -286,12 +286,13 @@ def purge_device_registry(
 
     # Find all devices that are referenced in the entity registry.
     references_entities = {
-        entry.device_id for entry in entity_registry.entities.values()
+        entry.device_id
+        for entry in entity_registry.entities.get_entries_for_config_entry_id(entry_id)
     }
 
     # Find device that references the host.
     references_host = set()
-    host_device = device_registry.async_get_device({(DOMAIN, entry_id)})
+    host_device = device_registry.async_get_device(identifiers={(DOMAIN, entry_id)})
     if host_device is not None:
         references_host.add(host_device.id)
 
@@ -299,7 +300,9 @@ def purge_device_registry(
     references_entry_data = set()
     for device_data in imported_entry_data[CONF_DEVICES]:
         device_unique_id = generate_unique_id(entry_id, device_data[CONF_ADDRESS])
-        device = device_registry.async_get_device({(DOMAIN, device_unique_id)})
+        device = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_unique_id)}
+        )
         if device is not None:
             references_entry_data.add(device.id)
 

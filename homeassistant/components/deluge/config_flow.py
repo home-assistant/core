@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import socket
 from ssl import SSLError
 from typing import Any
 
@@ -87,15 +86,11 @@ class DelugeFlowHandler(ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         api = DelugeRPCClient(
-            host=host, port=port, username=username, password=password
+            host=host, port=port, username=username, password=password, decode_utf8=True
         )
         try:
             await self.hass.async_add_executor_job(api.connect)
-        except (
-            ConnectionRefusedError,
-            socket.timeout,
-            SSLError,
-        ):
+        except (ConnectionRefusedError, TimeoutError, SSLError):
             return "cannot_connect"
         except Exception as ex:  # pylint:disable=broad-except
             if type(ex).__name__ == "BadLoginError":

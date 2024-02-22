@@ -1,33 +1,21 @@
 set_datetime:
-  name: Set
-  description: This can be used to dynamically set the date and/or time.
   target:
     entity:
       domain: input_datetime
   fields:
     date:
-      name: Date
-      description: The target date the entity should be set to.
       example: '"2019-04-20"'
       selector:
         text:
     time:
-      name: Time
-      description: The target time the entity should be set to.
       example: '"05:04:20"'
       selector:
         time:
     datetime:
-      name: Date & Time
-      description: The target date & time the entity should be set to.
       example: '"2019-04-20 05:04:20"'
       selector:
         text:
     timestamp:
-      name: Timestamp
-      description:
-        The target date & time the entity should be set to as expressed by a
-        UNIX timestamp.
       selector:
         number:
           min: 0
@@ -35,5 +23,3 @@ set_datetime:
           mode: box
 
 reload:
-  name: Reload
-  description: Reload the input_datetime configuration.

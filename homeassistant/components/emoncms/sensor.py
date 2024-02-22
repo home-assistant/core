@@ -106,7 +106,6 @@ def setup_platform(
     sensors = []
 
     for elem in data.data:
-
         if exclude_feeds is not None and int(elem["id"]) in exclude_feeds:
             continue
 

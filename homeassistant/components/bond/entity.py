@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from asyncio import Lock, TimeoutError as AsyncIOTimeoutError
-from datetime import datetime, timedelta
+from asyncio import Lock
+from datetime import datetime
 import logging
 
 from aiohttp import ClientError
@@ -17,16 +17,18 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     ATTR_VIA_DEVICE,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.core import CALLBACK_TYPE, HassJob, callback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
 from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
 
-_FALLBACK_SCAN_INTERVAL = timedelta(seconds=10)
+_FALLBACK_SCAN_INTERVAL = 10
+_BPUP_ALIVE_SCAN_INTERVAL = 60
 
 
 class BondEntity(Entity):
@@ -65,6 +67,10 @@ class BondEntity(Entity):
             self._attr_name = device.name
         self._attr_assumed_state = self._hub.is_bridge and not self._device.trust_state
         self._apply_state()
+        self._bpup_polling_fallback: CALLBACK_TYPE | None = None
+        self._async_update_if_bpup_not_alive_job = HassJob(
+            self._async_update_if_bpup_not_alive
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -100,12 +106,13 @@ class BondEntity(Entity):
         return device_info
 
     async def async_update(self) -> None:
-        """Fetch assumed state of the cover from the hub using API."""
+        """Perform a manual update from API."""
         await self._async_update_from_api()
 
     @callback
     def _async_update_if_bpup_not_alive(self, now: datetime) -> None:
         """Fetch via the API if BPUP is not alive."""
+        self._async_schedule_bpup_alive_or_poll()
         if (
             self.hass.is_stopping
             or self._bpup_subs.alive
@@ -132,7 +139,7 @@ class BondEntity(Entity):
         """Fetch via the API."""
         try:
             state: dict = await self._hub.bond.device_state(self._device_id)
-        except (ClientError, AsyncIOTimeoutError, OSError) as error:
+        except (ClientError, TimeoutError, OSError) as error:
             if self.available:
                 _LOGGER.warning(
                     "Entity %s has become unavailable", self.entity_id, exc_info=error
@@ -172,13 +179,22 @@ class BondEntity(Entity):
         """Subscribe to BPUP and start polling."""
         await super().async_added_to_hass()
         self._bpup_subs.subscribe(self._device_id, self._async_bpup_callback)
-        self.async_on_remove(
-            async_track_time_interval(
-                self.hass, self._async_update_if_bpup_not_alive, _FALLBACK_SCAN_INTERVAL
-            )
+        self._async_schedule_bpup_alive_or_poll()
+
+    @callback
+    def _async_schedule_bpup_alive_or_poll(self) -> None:
+        """Schedule the BPUP alive or poll."""
+        alive = self._bpup_subs.alive
+        self._bpup_polling_fallback = async_call_later(
+            self.hass,
+            _BPUP_ALIVE_SCAN_INTERVAL if alive else _FALLBACK_SCAN_INTERVAL,
+            self._async_update_if_bpup_not_alive_job,
         )
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from BPUP data on remove."""
         await super().async_will_remove_from_hass()
         self._bpup_subs.unsubscribe(self._device_id, self._async_bpup_callback)
+        if self._bpup_polling_fallback:
+            self._bpup_polling_fallback()
+            self._bpup_polling_fallback = None

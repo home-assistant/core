@@ -1,44 +1,8 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "title": "Configure Life360 Account",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
-    },
-    "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Account Options",
-        "data": {
-          "limit_gps_acc": "Limit GPS accuracy",
-          "max_gps_accuracy": "Max GPS accuracy (meters)",
-          "set_drive_speed": "Set driving speed threshold",
-          "driving_speed": "Driving speed",
-          "driving": "Show driving as state"
-        }
-      }
+  "issues": {
+    "integration_removed": {
+      "title": "The Life360 integration has been removed",
+      "description": "The Life360 integration has been removed from Home Assistant.\n\nLife360 has blocked all third-party integrations.\n\nTo resolve this issue, please remove the (now defunct) integration entries from your Home Assistant setup. [Click here to see your existing Life360 integration entries]({entries})."
     }
   }
 }

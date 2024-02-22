@@ -3,9 +3,8 @@ from __future__ import annotations
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -26,7 +25,6 @@ async def async_setup_entry(
                 FluxPairedRemotes(
                     coordinator,
                     entry.unique_id or entry.entry_id,
-                    f"{entry.data.get(CONF_NAME, entry.title)} Paired Remotes",
                     "paired_remotes",
                 )
             ]
@@ -37,7 +35,8 @@ class FluxPairedRemotes(FluxEntity, SensorEntity):
     """Representation of a Magic Home paired remotes sensor."""
 
     _attr_icon = "mdi:remote"
-    _attr_entity_category = EntityCategory.CONFIG
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_translation_key = "paired_remotes"
 
     @property
     def native_value(self) -> int:

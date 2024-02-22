@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 async def test_full_user_flow(
     hass: HomeAssistant,
-    mock_pvoutput_config_flow: MagicMock,
+    mock_pvoutput: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the full user configuration flow."""
@@ -24,7 +24,7 @@ async def test_full_user_flow(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -42,12 +42,12 @@ async def test_full_user_flow(
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_pvoutput_config_flow.system.mock_calls) == 1
+    assert len(mock_pvoutput.system.mock_calls) == 1
 
 
 async def test_full_flow_with_authentication_error(
     hass: HomeAssistant,
-    mock_pvoutput_config_flow: MagicMock,
+    mock_pvoutput: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the full user configuration flow with incorrect API key.
@@ -60,9 +60,9 @@ async def test_full_flow_with_authentication_error(
     )
 
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == SOURCE_USER
+    assert result.get("step_id") == "user"
 
-    mock_pvoutput_config_flow.system.side_effect = PVOutputAuthenticationError
+    mock_pvoutput.system.side_effect = PVOutputAuthenticationError
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -72,13 +72,13 @@ async def test_full_flow_with_authentication_error(
     )
 
     assert result2.get("type") == FlowResultType.FORM
-    assert result2.get("step_id") == SOURCE_USER
+    assert result2.get("step_id") == "user"
     assert result2.get("errors") == {"base": "invalid_auth"}
 
     assert len(mock_setup_entry.mock_calls) == 0
-    assert len(mock_pvoutput_config_flow.system.mock_calls) == 1
+    assert len(mock_pvoutput.system.mock_calls) == 1
 
-    mock_pvoutput_config_flow.system.side_effect = None
+    mock_pvoutput.system.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         user_input={
@@ -95,14 +95,12 @@ async def test_full_flow_with_authentication_error(
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_pvoutput_config_flow.system.mock_calls) == 2
+    assert len(mock_pvoutput.system.mock_calls) == 2
 
 
-async def test_connection_error(
-    hass: HomeAssistant, mock_pvoutput_config_flow: MagicMock
-) -> None:
+async def test_connection_error(hass: HomeAssistant, mock_pvoutput: MagicMock) -> None:
     """Test API connection error."""
-    mock_pvoutput_config_flow.system.side_effect = PVOutputConnectionError
+    mock_pvoutput.system.side_effect = PVOutputConnectionError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -116,13 +114,13 @@ async def test_connection_error(
     assert result.get("type") == FlowResultType.FORM
     assert result.get("errors") == {"base": "cannot_connect"}
 
-    assert len(mock_pvoutput_config_flow.system.mock_calls) == 1
+    assert len(mock_pvoutput.system.mock_calls) == 1
 
 
 async def test_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pvoutput_config_flow: MagicMock,
+    mock_pvoutput: MagicMock,
 ) -> None:
     """Test we abort if the PVOutput system is already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -146,7 +144,7 @@ async def test_already_configured(
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pvoutput_config_flow: MagicMock,
+    mock_pvoutput: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the reauthentication configuration flow."""
@@ -178,13 +176,13 @@ async def test_reauth_flow(
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_pvoutput_config_flow.system.mock_calls) == 1
+    assert len(mock_pvoutput.system.mock_calls) == 1
 
 
 async def test_reauth_with_authentication_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pvoutput_config_flow: MagicMock,
+    mock_pvoutput: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the reauthentication configuration flow with an authentication error.
@@ -206,7 +204,7 @@ async def test_reauth_with_authentication_error(
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
 
-    mock_pvoutput_config_flow.system.side_effect = PVOutputAuthenticationError
+    mock_pvoutput.system.side_effect = PVOutputAuthenticationError
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_API_KEY: "invalid_key"},
@@ -218,9 +216,9 @@ async def test_reauth_with_authentication_error(
     assert result2.get("errors") == {"base": "invalid_auth"}
 
     assert len(mock_setup_entry.mock_calls) == 0
-    assert len(mock_pvoutput_config_flow.system.mock_calls) == 1
+    assert len(mock_pvoutput.system.mock_calls) == 1
 
-    mock_pvoutput_config_flow.system.side_effect = None
+    mock_pvoutput.system.side_effect = None
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
         user_input={CONF_API_KEY: "valid_key"},
@@ -235,12 +233,12 @@ async def test_reauth_with_authentication_error(
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_pvoutput_config_flow.system.mock_calls) == 2
+    assert len(mock_pvoutput.system.mock_calls) == 2
 
 
 async def test_reauth_api_error(
     hass: HomeAssistant,
-    mock_pvoutput_config_flow: MagicMock,
+    mock_pvoutput: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test API error during reauthentication."""
@@ -258,7 +256,7 @@ async def test_reauth_api_error(
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "reauth_confirm"
 
-    mock_pvoutput_config_flow.system.side_effect = PVOutputConnectionError
+    mock_pvoutput.system.side_effect = PVOutputConnectionError
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_API_KEY: "some_new_key"},

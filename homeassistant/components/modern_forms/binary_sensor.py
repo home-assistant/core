@@ -40,14 +40,11 @@ class ModernFormsBinarySensor(ModernFormsDeviceEntity, BinarySensorEntity):
         *,
         entry_id: str,
         coordinator: ModernFormsDataUpdateCoordinator,
-        name: str,
         icon: str,
         key: str,
     ) -> None:
         """Initialize Modern Forms switch."""
-        super().__init__(
-            entry_id=entry_id, coordinator=coordinator, name=name, icon=icon
-        )
+        super().__init__(entry_id=entry_id, coordinator=coordinator, icon=icon)
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_{key}"
 
@@ -56,6 +53,7 @@ class ModernFormsLightSleepTimerActive(ModernFormsBinarySensor):
     """Defines a Modern Forms Light Sleep Timer Active sensor."""
 
     _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "light_sleep_timer_active"
 
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
@@ -66,7 +64,6 @@ class ModernFormsLightSleepTimerActive(ModernFormsBinarySensor):
             entry_id=entry_id,
             icon="mdi:av-timer",
             key="light_sleep_timer_active",
-            name=f"{coordinator.data.info.device_name} Light Sleep Timer Active",
         )
 
     @property
@@ -88,6 +85,7 @@ class ModernFormsFanSleepTimerActive(ModernFormsBinarySensor):
     """Defines a Modern Forms Fan Sleep Timer Active sensor."""
 
     _attr_entity_registry_enabled_default = False
+    _attr_translation_key = "fan_sleep_timer_active"
 
     def __init__(
         self, entry_id: str, coordinator: ModernFormsDataUpdateCoordinator
@@ -98,7 +96,6 @@ class ModernFormsFanSleepTimerActive(ModernFormsBinarySensor):
             entry_id=entry_id,
             icon="mdi:av-timer",
             key="fan_sleep_timer_active",
-            name=f"{coordinator.data.info.device_name} Fan Sleep Timer Active",
         )
 
     @property

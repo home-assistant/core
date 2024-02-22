@@ -23,6 +23,13 @@ from .const import DOMAIN, MFCT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_UUIDS = [
+    "b42e1f6e-ade7-11e4-89d3-123b93f75cba",
+    "b42e4a8e-ade7-11e4-89d3-123b93f75cba",
+    "b42e1c08-ade7-11e4-89d3-123b93f75cba",
+    "b42e3882-ade7-11e4-89d3-123b93f75cba",
+]
+
 
 @dataclasses.dataclass
 class Discovery:
@@ -34,8 +41,12 @@ class Discovery:
 
 
 def get_name(device: AirthingsDevice) -> str:
-    """Generate name with identifier for device."""
-    return f"{device.name} ({device.identifier})"
+    """Generate name with model and identifier for device."""
+
+    name = device.friendly_name()
+    if identifier := device.identifier:
+        name += f" ({identifier})"
+    return name
 
 
 class AirthingsDeviceUpdateError(Exception):
@@ -143,6 +154,9 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             if MFCT_ID not in discovery_info.manufacturer_data:
                 continue
 
+            if not any(uuid in SERVICE_UUIDS for uuid in discovery_info.service_uuids):
+                continue
+
             try:
                 device = await self._get_device_data(discovery_info)
             except AirthingsDeviceUpdateError:
@@ -156,7 +170,7 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="no_devices_found")
 
         titles = {
-            address: get_name(discovery.device)
+            address: discovery.device.name
             for (address, discovery) in self._discovered_devices.items()
         }
         return self.async_show_form(

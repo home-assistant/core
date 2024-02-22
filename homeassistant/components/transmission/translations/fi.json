@@ -1,7 +1,0 @@
-{
-    "config": {
-        "error": {
-            "cannot_connect": "Yhteyden muodostaminen palvelimeen ei onnistu"
-        }
-    }
-}
