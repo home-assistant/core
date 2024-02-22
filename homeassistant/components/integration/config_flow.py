@@ -101,7 +101,7 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
                 min=0, max=6, mode=selector.NumberSelectorMode.BOX
             ),
         ),
-        vol.Optional(CONF_MAX_DT, default=60): selector.NumberSelector(
+        vol.Optional(CONF_MAX_DT, default=0): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
                 max=1000000000,
