@@ -42,6 +42,8 @@
             ]),
           ]),
           'is_new': False,
+          'labels': list([
+          ]),
           'manufacturer': 'Enphase',
           'model': 'Envoy, phases: 3, phase mode: three, net-consumption CT, production CT',
           'name': 'Envoy <<envoyserial>>',
@@ -68,6 +70,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -116,6 +120,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -162,6 +168,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -209,6 +217,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -257,6 +267,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -305,6 +317,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -351,6 +365,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -398,6 +414,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -446,6 +464,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -494,6 +514,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -540,6 +562,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -587,6 +611,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -635,6 +661,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -683,6 +711,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -729,6 +759,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -776,6 +808,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -824,6 +858,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -872,6 +908,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -918,6 +956,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -965,6 +1005,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1013,6 +1055,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1061,6 +1105,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1107,6 +1153,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1154,6 +1202,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1202,6 +1252,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1250,6 +1302,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1296,6 +1350,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1343,6 +1399,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1391,6 +1449,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1439,6 +1499,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1485,6 +1547,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1532,6 +1596,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
                 'sensor': dict({
@@ -1584,6 +1650,8 @@
             ]),
           ]),
           'is_new': False,
+          'labels': list([
+          ]),
           'manufacturer': 'Enphase',
           'model': 'Inverter',
           'name': 'Inverter 1',
@@ -1610,6 +1678,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
               }),
@@ -1650,6 +1720,8 @@
               'has_entity_name': True,
               'hidden_by': None,
               'icon': None,
+              'labels': list([
+              ]),
               'name': None,
               'options': dict({
               }),
