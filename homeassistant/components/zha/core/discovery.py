@@ -122,6 +122,11 @@ class ProbeEndpoint:
     @callback
     def discover_coordinator_device_entities(self, device: ZHADevice) -> None:
         """Discover entities for the coordinator device."""
+        _LOGGER.debug(
+            "Discovering coordinator entities for device: %s-%s",
+            str(device.ieee),
+            device.name,
+        )
         state: State = device.gateway.application_controller.state
         platforms: dict[Platform, list] = get_zha_data(device.hass).platforms
 
