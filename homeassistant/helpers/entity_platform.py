@@ -284,7 +284,8 @@ class EntityPlatform:
 
         await self._async_setup_platform(async_create_setup_task)
 
-    async def async_shutdown(self) -> None:
+    @callback
+    def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
         self.async_cancel_retry_setup()
         self.async_unsub_polling()
@@ -791,9 +792,17 @@ class EntityPlatform:
         if not self.entities:
             return
 
-        tasks = [entity.async_remove() for entity in self.entities.values()]
-
-        await asyncio.gather(*tasks)
+        # Removals are awaited in series since in most
+        # cases calling async_remove will not yield control
+        # to the event loop and we want to avoid scheduling
+        # one task per entity.
+        for entity in list(self.entities.values()):
+            try:
+                await entity.async_remove()
+            except Exception:  # pylint: disable=broad-except
+                self.logger.exception(
+                    "Error while removing entity %s", entity.entity_id
+                )
 
         self.async_unsub_polling()
         self._setup_complete = False

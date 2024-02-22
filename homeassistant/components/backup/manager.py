@@ -15,7 +15,7 @@ from typing import Any, Protocol, cast
 from securetar import SecureTarFile, atomic_contents_add
 
 from homeassistant.const import __version__ as HAVERSION
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import integration_platform
 from homeassistant.helpers.json import json_bytes
@@ -65,7 +65,8 @@ class BackupManager:
         self.loaded_backups = False
         self.loaded_platforms = False
 
-    async def _add_platform(
+    @callback
+    def _add_platform(
         self,
         hass: HomeAssistant,
         integration_domain: str,

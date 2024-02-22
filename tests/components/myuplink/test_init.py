@@ -38,7 +38,7 @@ async def test_load_unload_entry(
         (
             time.time() - 3600,
             http.HTTPStatus.UNAUTHORIZED,
-            ConfigEntryState.SETUP_RETRY,  # Will trigger reauth in the future
+            ConfigEntryState.SETUP_ERROR,
         ),
         (
             time.time() - 3600,

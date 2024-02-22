@@ -34,7 +34,8 @@ async def async_setup_entry(
     """Set up locks on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         if isinstance(device, Doorlock):
             async_add_entities([ProtectLock(data, device)])
 
