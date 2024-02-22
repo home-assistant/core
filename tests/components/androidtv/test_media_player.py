@@ -1034,26 +1034,6 @@ async def _test_service(
         assert service_call.called
 
 
-async def _test_service_mp(
-    hass: HomeAssistant,
-    entity_id,
-    ha_service_name,
-    androidtv_method,
-    additional_service_data=None,
-    return_value=None,
-) -> None:
-    """Test generic Android media player entity service."""
-    await _test_service(
-        hass,
-        MP_DOMAIN,
-        entity_id,
-        ha_service_name,
-        androidtv_method,
-        additional_service_data,
-        return_value,
-    )
-
-
 async def test_services_androidtv(hass: HomeAssistant) -> None:
     """Test media player services for an Android device."""
     patch_key, entity_id, config_entry = _setup(CONFIG_ANDROID_DEFAULT)
@@ -1067,33 +1047,56 @@ async def test_services_androidtv(hass: HomeAssistant) -> None:
         with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[
             patch_key
         ], patchers.PATCH_SCREENCAP:
-            await _test_service_mp(
-                hass, entity_id, SERVICE_MEDIA_NEXT_TRACK, "media_next_track"
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_MEDIA_NEXT_TRACK, "media_next_track"
             )
-            await _test_service_mp(hass, entity_id, SERVICE_MEDIA_PAUSE, "media_pause")
-            await _test_service_mp(hass, entity_id, SERVICE_MEDIA_PLAY, "media_play")
-            await _test_service_mp(
-                hass, entity_id, SERVICE_MEDIA_PLAY_PAUSE, "media_play_pause"
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_MEDIA_PAUSE, "media_pause"
             )
-            await _test_service_mp(
-                hass, entity_id, SERVICE_MEDIA_PREVIOUS_TRACK, "media_previous_track"
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_MEDIA_PLAY, "media_play"
             )
-            await _test_service_mp(hass, entity_id, SERVICE_MEDIA_STOP, "media_stop")
-            await _test_service_mp(hass, entity_id, SERVICE_TURN_OFF, "turn_off")
-            await _test_service_mp(hass, entity_id, SERVICE_TURN_ON, "turn_on")
-            await _test_service_mp(
-                hass, entity_id, SERVICE_VOLUME_DOWN, "volume_down", return_value=0.1
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_MEDIA_PLAY_PAUSE, "media_play_pause"
             )
-            await _test_service_mp(
+            await _test_service(
                 hass,
+                MP_DOMAIN,
+                entity_id,
+                SERVICE_MEDIA_PREVIOUS_TRACK,
+                "media_previous_track",
+            )
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_MEDIA_STOP, "media_stop"
+            )
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_TURN_OFF, "turn_off"
+            )
+            await _test_service(hass, MP_DOMAIN, entity_id, SERVICE_TURN_ON, "turn_on")
+            await _test_service(
+                hass,
+                MP_DOMAIN,
+                entity_id,
+                SERVICE_VOLUME_DOWN,
+                "volume_down",
+                return_value=0.1,
+            )
+            await _test_service(
+                hass,
+                MP_DOMAIN,
                 entity_id,
                 SERVICE_VOLUME_SET,
                 "set_volume_level",
                 {ATTR_MEDIA_VOLUME_LEVEL: 0.5},
                 0.5,
             )
-            await _test_service_mp(
-                hass, entity_id, SERVICE_VOLUME_UP, "volume_up", return_value=0.2
+            await _test_service(
+                hass,
+                MP_DOMAIN,
+                entity_id,
+                SERVICE_VOLUME_UP,
+                "volume_up",
+                return_value=0.2,
             )
 
 
@@ -1117,9 +1120,13 @@ async def test_services_firetv(hass: HomeAssistant) -> None:
         with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[
             patch_key
         ], patchers.PATCH_SCREENCAP:
-            await _test_service_mp(hass, entity_id, SERVICE_MEDIA_STOP, "back")
-            await _test_service_mp(hass, entity_id, SERVICE_TURN_OFF, "adb_shell")
-            await _test_service_mp(hass, entity_id, SERVICE_TURN_ON, "adb_shell")
+            await _test_service(hass, MP_DOMAIN, entity_id, SERVICE_MEDIA_STOP, "back")
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_TURN_OFF, "adb_shell"
+            )
+            await _test_service(
+                hass, MP_DOMAIN, entity_id, SERVICE_TURN_ON, "adb_shell"
+            )
 
 
 async def test_volume_mute(hass: HomeAssistant) -> None:
@@ -1252,26 +1259,6 @@ async def test_options_reload(hass: HomeAssistant) -> None:
             assert config_entry.state is ConfigEntryState.LOADED
 
 
-async def _test_service_remote(
-    hass: HomeAssistant,
-    entity_id,
-    ha_service_name,
-    androidtv_method,
-    additional_service_data=None,
-    return_value=None,
-) -> None:
-    """Test generic Android remote entity service."""
-    await _test_service(
-        hass,
-        REMOTE_DOMAIN,
-        entity_id,
-        ha_service_name,
-        androidtv_method,
-        additional_service_data,
-        return_value,
-    )
-
-
 @pytest.mark.parametrize("config", [CONFIG_ANDROID_DEFAULT, CONFIG_FIRETV_DEFAULT])
 async def test_services_remote(hass: HomeAssistant, config) -> None:
     """Test services for remote entity."""
@@ -1286,10 +1273,15 @@ async def test_services_remote(hass: HomeAssistant, config) -> None:
         with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[
             patch_key
         ], patchers.PATCH_SCREENCAP:
-            await _test_service_remote(hass, entity_id, SERVICE_TURN_OFF, "turn_off")
-            await _test_service_remote(hass, entity_id, SERVICE_TURN_ON, "turn_on")
-            await _test_service_remote(
+            await _test_service(
+                hass, REMOTE_DOMAIN, entity_id, SERVICE_TURN_OFF, "turn_off"
+            )
+            await _test_service(
+                hass, REMOTE_DOMAIN, entity_id, SERVICE_TURN_ON, "turn_on"
+            )
+            await _test_service(
                 hass,
+                REMOTE_DOMAIN,
                 entity_id,
                 SERVICE_SEND_COMMAND,
                 "adb_shell",
@@ -1318,8 +1310,12 @@ async def test_services_remote_custom(hass: HomeAssistant, config) -> None:
         with patchers.patch_shell(SHELL_RESPONSE_STANDBY)[
             patch_key
         ], patchers.PATCH_SCREENCAP:
-            await _test_service_remote(hass, entity_id, SERVICE_TURN_OFF, "adb_shell")
-            await _test_service_remote(hass, entity_id, SERVICE_TURN_ON, "adb_shell")
+            await _test_service(
+                hass, REMOTE_DOMAIN, entity_id, SERVICE_TURN_OFF, "adb_shell"
+            )
+            await _test_service(
+                hass, REMOTE_DOMAIN, entity_id, SERVICE_TURN_ON, "adb_shell"
+            )
 
 
 async def test_remote_unicode_decode_error(hass: HomeAssistant) -> None:
