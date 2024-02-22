@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_VOLTAGE,
+    PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -25,6 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import legacy_device_id
 from .const import (
+    ATTR_AMBIENT_LIGHT,
     ATTR_CURRENT_A,
     ATTR_CURRENT_POWER_W,
     ATTR_TODAY_ENERGY_KWH,
@@ -43,6 +45,15 @@ class TPLinkSensorEntityDescription(SensorEntityDescription):
     emeter_attr: str | None = None
     precision: int | None = None
 
+
+AMBIENT_LIGHT_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
+    TPLinkSensorEntityDescription(
+        key=ATTR_AMBIENT_LIGHT,
+        translation_key="current_ambient_light",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
 
 ENERGY_SENSORS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
@@ -107,6 +118,19 @@ def async_emeter_from_device(
     return None if device.is_bulb else 0.0
 
 
+async def async_ambientlight_from_device(
+    device: SmartDevice, description: TPLinkSensorEntityDescription
+) -> float | None:
+    """Retrieve current ambient light value from device."""
+    brightness = await device.protocol.query(
+        {"smartlife.iot.LAS": {"get_current_brt": None}}
+    )
+    try:
+        return float(brightness["smartlife.iot.LAS"]["get_current_brt"]["value"])
+    except (AttributeError, KeyError):
+        return None
+
+
 def _async_sensors_for_device(
     device: SmartDevice,
     coordinator: TPLinkDataUpdateCoordinator,
@@ -131,7 +155,17 @@ async def async_setup_entry(
     children_coordinators = data.children_coordinators
     entities: list[SmartPlugSensor] = []
     parent = parent_coordinator.device
+
+    if "ambient" in parent.supported_modules:
+        entities.extend(
+            [
+                SmartPlugSensor(parent, parent_coordinator, description, False)
+                for description in AMBIENT_LIGHT_SENSORS
+            ]
+        )
+
     if not parent.has_emeter:
+        async_add_entities(entities)
         return
 
     if parent.is_strip:
@@ -161,6 +195,8 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         """Initialize the switch."""
         super().__init__(device, coordinator)
         self.entity_description = description
+        self._attr_available = False
+        self._state: float | None = 0
         self._attr_unique_id = f"{legacy_device_id(device)}_{description.key}"
         if has_parent:
             assert device.alias
@@ -172,6 +208,27 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
                 self._attr_translation_key = f"{description.device_class.value}_child"
 
     @property
+    def should_poll(self) -> bool:
+        """Indicate that this entity should be polled for new values."""
+        return True
+
+    async def async_update(self) -> None:
+        """Update device state."""
+        if self.entity_description.key == ATTR_AMBIENT_LIGHT:
+            value = await async_ambientlight_from_device(
+                self.device, self.entity_description
+            )
+        else:
+            value = async_emeter_from_device(self.device, self.entity_description)
+
+        if not value:
+            self._attr_available = False
+        else:
+            self._attr_available = True
+
+        self._state = value
+
+    @property
     def native_value(self) -> float | None:
         """Return the sensors state."""
-        return async_emeter_from_device(self.device, self.entity_description)
+        return self._state

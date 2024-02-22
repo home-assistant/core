@@ -82,6 +82,9 @@
       },
       "voltage_child": {
         "name": "{device_name} voltage"
+      },
+      "current_ambient_light": {
+        "name": "Ambient light"
       }
     },
     "switch": {

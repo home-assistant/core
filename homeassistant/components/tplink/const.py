@@ -14,6 +14,7 @@ ATTR_CURRENT_A: Final = "current_a"
 ATTR_CURRENT_POWER_W: Final = "current_power_w"
 ATTR_TODAY_ENERGY_KWH: Final = "today_energy_kwh"
 ATTR_TOTAL_ENERGY_KWH: Final = "total_energy_kwh"
+ATTR_AMBIENT_LIGHT: Final = "current_ambient_light"
 
 CONF_DEVICE_CONFIG: Final = "device_config"
 
