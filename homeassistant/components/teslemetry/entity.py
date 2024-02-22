@@ -58,8 +58,6 @@ class TeslemetryVehicleEntity(CoordinatorEntity[TeslemetryVehicleDataCoordinator
                     state = cmd["response"]["state"]
                 except TeslaFleetError as e:
                     raise HomeAssistantError(str(e)) from e
-                except TypeError as e:
-                    raise HomeAssistantError("Invalid response from Teslemetry") from e
                 self.coordinator.data["state"] = state
                 if state != TeslemetryState.ONLINE:
                     times += 1
