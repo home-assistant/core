@@ -197,13 +197,10 @@ class NetdataAlarms(SensorEntity):
         _LOGGER.debug("Host %s has %s alarms", self.name, number_of_alarms)
 
         for alarm in alarms:
-            if (
-                alarms[alarm]["recipient"] == "silent"
-                or alarms[alarm]["status"] == "CLEAR"
-                or (
-                    alarms[alarm]["status"] == "UNDEFINED"
-                    or alarms[alarm]["status"] == "UNINITIALIZED"
-                )
+            if alarms[alarm]["recipient"] == "silent" or alarms[alarm]["status"] in (
+                "CLEAR",
+                "UNDEFINED",
+                "UNINITIALIZED",
             ):
                 number_of_relevant_alarms = number_of_relevant_alarms - 1
             elif alarms[alarm]["status"] == "CRITICAL":
