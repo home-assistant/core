@@ -457,9 +457,9 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         super().__init__()
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
-        self._config_entry_id_index: dict[str, list[RegistryEntry]] = {}
-        self._device_id_index: dict[str, list[RegistryEntry]] = {}
-        self._area_id_index: dict[str, list[RegistryEntry]] = {}
+        self._config_entry_id_index: dict[str, list[str]] = {}
+        self._device_id_index: dict[str, list[str]] = {}
+        self._area_id_index: dict[str, list[str]] = {}
 
     def values(self) -> ValuesView[RegistryEntry]:
         """Return the underlying values to avoid __iter__ overhead."""
@@ -474,23 +474,23 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
         if (config_entry_id := entry.config_entry_id) is not None:
-            self._config_entry_id_index.setdefault(config_entry_id, []).append(entry)
+            self._config_entry_id_index.setdefault(config_entry_id, []).append(key)
         if (device_id := entry.device_id) is not None:
-            self._device_id_index.setdefault(device_id, []).append(entry)
+            self._device_id_index.setdefault(device_id, []).append(key)
         if (area_id := entry.area_id) is not None:
-            self._area_id_index.setdefault(area_id, []).append(entry)
+            self._area_id_index.setdefault(area_id, []).append(key)
 
     def _unindex_entry_value(
-        self, entry: RegistryEntry, value: str, index: dict[str, list[RegistryEntry]]
+        self, key: str, value: str, index: dict[str, list[str]]
     ) -> None:
         """Unindex an entry value.
 
-        entry is the entry
+        key is the entry key
         value is the value to unindex such as config_entry_id or device_id.
         index is the index to unindex from.
         """
         entries = index[value]
-        entries.remove(entry)
+        entries.remove(key)
         if not entries:
             del index[value]
 
@@ -500,13 +500,11 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         del self._entry_ids[entry.id]
         del self._index[(entry.domain, entry.platform, entry.unique_id)]
         if config_entry_id := entry.config_entry_id:
-            self._unindex_entry_value(
-                entry, config_entry_id, self._config_entry_id_index
-            )
+            self._unindex_entry_value(key, config_entry_id, self._config_entry_id_index)
         if device_id := entry.device_id:
-            self._unindex_entry_value(entry, device_id, self._device_id_index)
+            self._unindex_entry_value(key, device_id, self._device_id_index)
         if area_id := entry.area_id:
-            self._unindex_entry_value(entry, area_id, self._area_id_index)
+            self._unindex_entry_value(key, area_id, self._area_id_index)
 
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
@@ -525,21 +523,26 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         self, device_id: str, include_disabled_entities: bool = False
     ) -> list[RegistryEntry]:
         """Get entries for device."""
+        data = self.data
         return [
             entry
-            for entry in self._device_id_index.get(device_id, ())
-            if not entry.disabled_by or include_disabled_entities
+            for key in self._device_id_index.get(device_id, ())
+            if not (entry := data[key]).disabled_by or include_disabled_entities
         ]
 
     def get_entries_for_config_entry_id(
         self, config_entry_id: str
     ) -> list[RegistryEntry]:
         """Get entries for config entry."""
-        return list(self._config_entry_id_index.get(config_entry_id, ()))
+        data = self.data
+        return [
+            data[key] for key in self._config_entry_id_index.get(config_entry_id, ())
+        ]
 
     def get_entries_for_area_id(self, area_id: str) -> list[RegistryEntry]:
         """Get entries for area."""
-        return list(self._area_id_index.get(area_id, ()))
+        data = self.data
+        return [data[key] for key in self._area_id_index.get(area_id, ())]
 
 
 class EntityRegistry:
