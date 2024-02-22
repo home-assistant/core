@@ -119,11 +119,12 @@ async def test_create_cloud_hook_on_setup(
     await _test_create_cloud_hook(hass, hass_admin_user, {}, True, additional_steps)
 
 
-@pytest.mark.parametrize("exception", (None, CloudNotAvailable, ValueError))
+@pytest.mark.parametrize("exception", (CloudNotAvailable, ValueError))
 async def test_remove_cloudhook(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
-    exception: Exception | None,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
 ) -> None:
     """Test removing a cloud hook when config entry is removed."""
 
@@ -139,6 +140,7 @@ async def test_remove_cloudhook(
             await hass.config_entries.async_remove(config_entry.entry_id)
             await hass.async_block_till_done()
             delete_cloudhook.assert_called_once_with(hass, webhook_id)
+            assert str(exception) not in caplog.text
 
     await _test_create_cloud_hook(hass, hass_admin_user, {}, True, additional_steps)
 
