@@ -159,8 +159,8 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
             raise HomeAssistantError(f"Update was not successful: {result}")
 
         # Clear the state
-        self._latest_firmware = None
         self._attr_installed_version = f"0x{self._latest_firmware.version:08x}"
+        self._latest_firmware = None
         self._reset_progress()
 
     async def async_added_to_hass(self) -> None:
