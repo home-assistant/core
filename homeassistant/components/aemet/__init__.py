@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     longitude = entry.data[CONF_LONGITUDE]
     station_updates = entry.options.get(CONF_STATION_UPDATES, True)
 
-    options = ConnectionOptions(api_key, station_updates, True)
+    options = ConnectionOptions(api_key, station_updates)
     aemet = AEMET(aiohttp_client.async_get_clientsession(hass), options)
     try:
         await aemet.select_coordinates(latitude, longitude)
