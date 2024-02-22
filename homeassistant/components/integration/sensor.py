@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
@@ -446,7 +447,8 @@ class IntegrationSensor(RestoreSensor):
             self._unit_of_measurement = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if self._max_dt is not None:
-            self._schedule_max_dt_exceeded()
+            source_state = self.hass.states.get(self._sensor_source_id)
+            self._schedule_max_dt_exceeded_if_state_is_numeric(source_state)
             self.async_on_remove(self._cancel_max_dt_exceeded_callback)
 
         self.async_on_remove(
@@ -455,7 +457,7 @@ class IntegrationSensor(RestoreSensor):
                 [self._sensor_source_id],
                 self._integrate_on_state_change_and_max_dt
                 if self._max_dt is not None
-                else self._integrate_on_state_change,
+                else self._integrate_on_state_change_callback,
             )
         )
 
@@ -463,20 +465,29 @@ class IntegrationSensor(RestoreSensor):
     def _integrate_on_state_change_and_max_dt(
         self, event: Event[EventStateChangedData]
     ) -> None:
+        self._cancel_max_dt_exceeded_callback()
+        old_state = event.data["old_state"]
+        new_state = event.data["new_state"]
         try:
-            self._cancel_max_dt_exceeded_callback()
-            self._integrate_on_state_change(event)
+            self._integrate_on_state_change(old_state, new_state)
             self._last_integration_trigger = _IntegrationTrigger.StateChange
             self._last_integration_time = datetime.now(tz=UTC)
         finally:
-            self._schedule_max_dt_exceeded()
+            # if max_dt exceeds, by construction there was no state change, the source is assumed constant new_state over max_dt
+            self._schedule_max_dt_exceeded_if_state_is_numeric(new_state)
 
     @callback
-    def _integrate_on_state_change(self, event: Event[EventStateChangedData]) -> None:
+    def _integrate_on_state_change_callback(
+        self, event: Event[EventStateChangedData]
+    ) -> None:
         """Handle the sensor state changes."""
         old_state = event.data["old_state"]
         new_state = event.data["new_state"]
+        return self._integrate_on_state_change(old_state, new_state)
 
+    def _integrate_on_state_change(
+        self, old_state: State | None, new_state: State | None
+    ) -> None:
         if old_state is None or new_state is None:
             return
 
@@ -503,12 +514,16 @@ class IntegrationSensor(RestoreSensor):
         self._update_integral(area)
         self.async_write_ha_state()
 
-    @callback
-    def _integrate_on_max_dt_exceeded(self, now: datetime) -> None:
-        source_state = self.hass.states.get(self._sensor_source_id)
-
-        if source_state_dec := _decimal_state(source_state.state):
-            elapsed_seconds = Decimal((now - self._last_integration_time).total_seconds())
+    def _create_on_max_dt_exceeded_callback(
+        self,
+        source_state: State,
+        source_state_dec: Decimal,
+    ) -> Callable[[datetime], None]:
+        @callback
+        def _integrate_on_max_dt_exceeded_callback(now: datetime) -> None:
+            elapsed_seconds = Decimal(
+                (now - self._last_integration_time).total_seconds()
+            )
             self._derive_and_set_attributes_from_state(source_state)
             area = self._method.calculate_area_with_one_state(
                 elapsed_seconds, source_state_dec
@@ -518,21 +533,26 @@ class IntegrationSensor(RestoreSensor):
 
             self._last_integration_time = datetime.now(tz=UTC)
             self._last_integration_trigger = _IntegrationTrigger.TimeElapsed
-        else:
-            _LOGGER.warning(
-                "Cannot integrate because the source state is not numeric %s",
-                source_state,
-            )
 
-        self._schedule_max_dt_exceeded()
+            self._schedule_max_dt_exceeded_if_state_is_numeric(source_state)
 
-    def _schedule_max_dt_exceeded(self) -> None:
-        if self._max_dt is not None:
+        return _integrate_on_max_dt_exceeded_callback
+
+    def _schedule_max_dt_exceeded_if_state_is_numeric(
+        self, source_state: State | None
+    ) -> None:
+        if (
+            self._max_dt is not None
+            and source_state is not None
+            and (source_state_dec := _decimal_state(source_state.state))
+        ):
             self._max_dt_exceeded_callback = async_call_later(
-                self.hass, self._max_dt, self._integrate_on_max_dt_exceeded
+                self.hass,
+                self._max_dt,
+                self._create_on_max_dt_exceeded_callback(
+                    source_state, source_state_dec
+                ),
             )
-        else:
-            _LOGGER.error("Config max_dt must be set when scheduling this")
 
     def _cancel_max_dt_exceeded_callback(self) -> None:
         return self._max_dt_exceeded_callback()
