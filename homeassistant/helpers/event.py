@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine, Iterable, Mapping, Sequence
 import copy
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import functools as ft
 import logging
@@ -89,7 +89,7 @@ class _KeyedEventTracker:
         bool,
     ]
     run_immediately: bool
-    callbacks: dict[str, list[HassJob[[Event], Any]]] = field(default_factory=dict)
+    callbacks: dict[str, list[HassJob[[Event], Any]]]
 
 
 @dataclass(slots=True)
@@ -330,6 +330,7 @@ _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
     dispatcher_callable=_async_dispatch_entity_id_event,  # type: ignore[arg-type]
     filter_callable=_async_state_change_filter,  # type: ignore[arg-type]
     run_immediately=False,
+    callbacks={},
 )
 
 
@@ -453,6 +454,7 @@ _KEYED_TRACK_ENTITY_REGISTRY_UPDATED = _KeyedEventTracker(
     dispatcher_callable=_async_dispatch_old_entity_id_or_entity_id_event,  # type: ignore[arg-type]
     filter_callable=_async_entity_registry_updated_filter,  # type: ignore[arg-type]
     run_immediately=True,
+    callbacks={},
 )
 
 
@@ -517,6 +519,7 @@ _KEYED_TRACK_DEVICE_REGISTRY_UPDATED = _KeyedEventTracker(
     dispatcher_callable=_async_dispatch_device_id_event,  # type: ignore[arg-type]
     filter_callable=_async_device_registry_updated_filter,  # type: ignore[arg-type]
     run_immediately=True,
+    callbacks={},
 )
 
 
@@ -586,6 +589,7 @@ _KEYED_TRACK_STATE_ADDED_DOMAIN = _KeyedEventTracker(
     dispatcher_callable=_async_dispatch_domain_event,  # type: ignore[arg-type]
     filter_callable=_async_domain_added_filter,  # type: ignore[arg-type]
     run_immediately=False,
+    callbacks={},
 )
 
 
@@ -618,6 +622,7 @@ _KEYED_TRACK_STATE_REMOVED_DOMAIN = _KeyedEventTracker(
     dispatcher_callable=_async_dispatch_domain_event,  # type: ignore[arg-type]
     filter_callable=_async_domain_removed_filter,  # type: ignore[arg-type]
     run_immediately=False,
+    callbacks={},
 )
 
 
