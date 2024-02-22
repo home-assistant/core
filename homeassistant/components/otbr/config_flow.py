@@ -157,7 +157,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     continue
                 # Update URL with the new port
                 self.hass.config_entries.async_update_entry(
-                    current_entry, data=config_entry_data, unique_id=discovery_info.uuid
+                    current_entry, data=config_entry_data
                 )
             return self.async_abort(reason="single_instance_allowed")
 
