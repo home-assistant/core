@@ -4,7 +4,7 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.9
+AEMET-OpenData==0.5.0
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -600,13 +600,13 @@ boschshcpy==0.2.75
 boto3==1.33.13
 
 # homeassistant.components.bring
-bring-api==0.3.1
+bring-api==0.4.1
 
 # homeassistant.components.broadlink
 broadlink==0.18.3
 
 # homeassistant.components.brother
-brother==3.0.0
+brother==4.0.0
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -923,7 +923,7 @@ georss-generic-client==0.8
 georss-ign-sismologia-client==0.8
 
 # homeassistant.components.qld_bushfire
-georss-qld-bushfire-alert-client==0.5
+georss-qld-bushfire-alert-client==0.7
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.kef
@@ -1304,7 +1304,7 @@ mficlient==0.3.0
 micloud==0.5
 
 # homeassistant.components.microbees
-microBeesPy==0.2.9
+microBeesPy==0.3.2
 
 # homeassistant.components.mill
 mill-local==0.3.0
@@ -1772,7 +1772,7 @@ pydiscovergy==2.0.5
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2024.1.0
+pydrawise==2024.2.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -2339,7 +2339,7 @@ pytrydan==0.4.0
 pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.23.2
+pyunifiprotect==4.23.3
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2462,13 +2462,13 @@ rokuecp==0.19.1
 romy==0.0.7
 
 # homeassistant.components.roomba
-roombapy==1.6.10
+roombapy==1.6.12
 
 # homeassistant.components.roon
 roonapi==0.1.6
 
 # homeassistant.components.rova
-rova==0.3.0
+rova==0.4.0
 
 # homeassistant.components.rpi_power
 rpi-bad-power==0.1.0
