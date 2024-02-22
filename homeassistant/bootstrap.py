@@ -35,6 +35,7 @@ from .helpers import (
     entity_registry,
     floor_registry,
     issue_registry,
+    label_registry,
     recorder,
     restore_state,
     template,
@@ -114,6 +115,7 @@ DEFAULT_INTEGRATIONS = {
     #
     # Integrations providing core functionality:
     "application_credentials",
+    "backup",
     "frontend",
     "hardware",
     "logger",
@@ -146,10 +148,6 @@ DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
 DEFAULT_INTEGRATIONS_SUPERVISOR = {
     # These integrations are set up if using the Supervisor
     "hassio",
-}
-DEFAULT_INTEGRATIONS_NON_SUPERVISOR = {
-    # These integrations are set up if not using the Supervisor
-    "backup",
 }
 CRITICAL_INTEGRATIONS = {
     # Recovery mode is activated if these integrations fail to set up
@@ -304,6 +302,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         entity_registry.async_load(hass),
         floor_registry.async_load(hass),
         issue_registry.async_load(hass),
+        label_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
         template.async_load_custom_templates(hass),
         restore_state.async_load(hass),
@@ -539,8 +538,6 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     # Add domains depending on if the Supervisor is used or not
     if "SUPERVISOR" in os.environ:
         domains.update(DEFAULT_INTEGRATIONS_SUPERVISOR)
-    else:
-        domains.update(DEFAULT_INTEGRATIONS_NON_SUPERVISOR)
 
     return domains
 

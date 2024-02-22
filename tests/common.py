@@ -17,7 +17,7 @@ import pathlib
 import threading
 import time
 from types import ModuleType
-from typing import Any, NoReturn
+from typing import Any, NoReturn, TypeVar
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
@@ -66,6 +66,7 @@ from homeassistant.helpers import (
     floor_registry as fr,
     intent,
     issue_registry as ir,
+    label_registry as lr,
     recorder as recorder_helper,
     restore_state,
     restore_state as rs,
@@ -193,13 +194,36 @@ def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     loop.close()
 
 
+_T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
+
+
+class StoreWithoutWriteLoad(storage.Store[_T]):
+    """Fake store that does not write or load. Used for testing."""
+
+    async def async_save(self, *args: Any, **kwargs: Any) -> None:
+        """Save the data.
+
+        This function is mocked out in tests.
+        """
+
+    @callback
+    def async_save_delay(self, *args: Any, **kwargs: Any) -> None:
+        """Save data with an optional delay.
+
+        This function is mocked out in tests.
+        """
+
+
 @asynccontextmanager
 async def async_test_home_assistant(
     event_loop: asyncio.AbstractEventLoop | None = None,
     load_registries: bool = True,
+    storage_dir: str | None = None,
 ) -> AsyncGenerator[HomeAssistant, None]:
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(get_test_config_dir())
+    if storage_dir:
+        hass.config.config_dir = storage_dir
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
@@ -283,22 +307,36 @@ async def async_test_home_assistant(
         hass
     )
     if load_registries:
-        with patch(
-            "homeassistant.helpers.storage.Store.async_load", return_value=None
+        with patch.object(
+            StoreWithoutWriteLoad, "async_load", return_value=None
+        ), patch(
+            "homeassistant.helpers.area_registry.AreaRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.device_registry.DeviceRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.entity_registry.EntityRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.storage.Store",  # Floor & label registry are different
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.issue_registry.IssueRegistryStore",
+            StoreWithoutWriteLoad,
         ), patch(
             "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
             return_value=None,
         ), patch(
             "homeassistant.helpers.restore_state.start.async_at_start",
         ):
-            await asyncio.gather(
-                ar.async_load(hass),
-                dr.async_load(hass),
-                er.async_load(hass),
-                fr.async_load(hass),
-                ir.async_load(hass),
-                rs.async_load(hass),
-            )
+            await ar.async_load(hass)
+            await dr.async_load(hass)
+            await er.async_load(hass)
+            await fr.async_load(hass)
+            await ir.async_load(hass)
+            await lr.async_load(hass)
+            await rs.async_load(hass)
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
     hass.set_state(CoreState.running)
@@ -857,8 +895,9 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
             entity_namespace=entity_namespace,
         )
 
-        async def _async_on_stop(_: Event) -> None:
-            await self.async_shutdown()
+        @callback
+        def _async_on_stop(_: Event) -> None:
+            self.async_shutdown()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
 
