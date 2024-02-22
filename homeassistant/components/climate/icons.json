@@ -1,0 +1,62 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:thermostat",
+      "state_attributes": {
+        "fan_mode": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "diffuse": "mdi:weather-windy",
+            "focus": "mdi:target",
+            "high": "mdi:speedometer",
+            "low": "mdi:speedometer-slow",
+            "medium": "mdi:speedometer-medium",
+            "middle": "mdi:speedometer-medium",
+            "off": "mdi:fan-off",
+            "on": "mdi:fan"
+          }
+        },
+        "hvac_action": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "cooling": "mdi:snowflake",
+            "drying": "mdi:water-percent",
+            "fan": "mdi:fan",
+            "heating": "mdi:fire",
+            "idle": "mdi:clock-outline",
+            "off": "mdi:power",
+            "preheating": "mdi:heat-wave"
+          }
+        },
+        "preset_mode": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "activity": "mdi:motion-sensor",
+            "away": "mdi:account-arrow-right",
+            "boost": "mdi:rocket-launch",
+            "comfort": "mdi:sofa",
+            "eco": "mdi:leaf",
+            "home": "mdi:home",
+            "sleep": "mdi:bed"
+          }
+        },
+        "swing_mode": {
+          "default": "mdi:circle-medium",
+          "state": {
+            "both": "mdi:arrow-all",
+            "horizontal": "mdi:arrow-left-right",
+            "off": "mdi:arrow-oscillating-off",
+            "on": "mdi:arrow-oscillating",
+            "vertical": "mdi:arrow-up-down"
+          }
+        }
+      }
+    }
+  },
+  "services": {
+    "set_fan_mode": "mdi:fan",
+    "set_humidity": "mdi:water-percent",
+    "set_swing_mode": "mdi:arrow-oscillating",
+    "set_temperature": "mdi:thermometer"
+  }
+}

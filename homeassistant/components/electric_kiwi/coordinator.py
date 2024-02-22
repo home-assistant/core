@@ -18,7 +18,7 @@ ACCOUNT_SCAN_INTERVAL = timedelta(hours=6)
 HOP_SCAN_INTERVAL = timedelta(minutes=20)
 
 
-class ElectricKiwiAccountDataCoordinator(DataUpdateCoordinator):
+class ElectricKiwiAccountDataCoordinator(DataUpdateCoordinator[AccountBalance]):
     """ElectricKiwi Account Data object."""
 
     def __init__(self, hass: HomeAssistant, ek_api: ElectricKiwiApi) -> None:

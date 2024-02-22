@@ -17,7 +17,8 @@ from homeassistant.helpers.device_registry import (
 )
 
 
-async def async_setup(hass):
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Device Registry views."""
 
     websocket_api.async_register_command(hass, websocket_list_devices)
@@ -45,17 +46,16 @@ def websocket_list_devices(
     msg_json_prefix = (
         f'{{"id":{msg["id"]},"type": "{websocket_api.const.TYPE_RESULT}",'
         f'"success":true,"result": ['
-    )
+    ).encode()
     # Concatenate cached entity registry item JSON serializations
-    msg_json = (
-        msg_json_prefix
-        + ",".join(
+    inner = b",".join(
+        [
             entry.json_repr
             for entry in registry.devices.values()
             if entry.json_repr is not None
-        )
-        + "]}"
+        ]
     )
+    msg_json = b"".join((msg_json_prefix, inner, b"]}"))
     connection.send_message(msg_json)
 
 

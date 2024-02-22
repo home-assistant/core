@@ -344,7 +344,7 @@ async def async_setup(hass: ha.HomeAssistant, config: ConfigType) -> bool:  # no
                 f"configuration is not valid: {errors}"
             )
 
-        services = hass.services.async_services()
+        services = hass.services.async_services_internal()
         tasks = [
             hass.services.async_call(
                 domain, SERVICE_RELOAD, context=call.context, blocking=True

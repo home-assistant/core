@@ -34,7 +34,7 @@ class WLEDUpdateBinarySensor(WLEDEntity, BinarySensorEntity):
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_device_class = BinarySensorDeviceClass.UPDATE
-    _attr_name = "Firmware"
+    _attr_translation_key = "firmware"
 
     # Disabled by default, as this entity is deprecated.
     _attr_entity_registry_enabled_default = False

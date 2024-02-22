@@ -325,7 +325,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     initial = datetime.datetime(2017, 1, 1, 23, 42)
     default = datetime.datetime.combine(datetime.date.today(), DEFAULT_TIME)

@@ -15,9 +15,20 @@ import jwt
 import pytest
 
 from homeassistant.components.cloud import CloudClient, const, prefs
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import mock_cloud, mock_cloud_prefs
+
+
+@pytest.fixture(autouse=True)
+async def load_homeassistant(hass: HomeAssistant) -> None:
+    """Load the homeassistant integration.
+
+    This is needed for the cloud integration to work.
+    """
+    assert await async_setup_component(hass, "homeassistant", {})
 
 
 @pytest.fixture(name="cloud")
@@ -103,6 +114,13 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock, None]:
         is_connected = PropertyMock(side_effect=mock_is_connected)
         type(mock_cloud).is_connected = is_connected
         type(mock_cloud.iot).connected = is_connected
+
+        def mock_username() -> bool:
+            """Return the subscription username."""
+            return "abcdefghjkl"
+
+        username = PropertyMock(side_effect=mock_username)
+        type(mock_cloud).username = username
 
         # Properties that we mock as attributes.
         mock_cloud.expiration_date = utcnow()

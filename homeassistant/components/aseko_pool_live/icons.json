@@ -1,0 +1,17 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "water_flow": {
+        "default": "mdi:waves-arrow-right"
+      }
+    },
+    "sensor": {
+      "free_chlorine": {
+        "default": "mdi:flask"
+      },
+      "water_temperature": {
+        "default": "mdi:coolant-temperature"
+      }
+    }
+  }
+}

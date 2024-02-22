@@ -259,7 +259,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
 
                     if self.processing_tone_enabled:
                         await self._play_processing_tone()
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     # Expected after caller hangs up
                     _LOGGER.debug("Audio timeout")
                     self._session_id = None
@@ -304,7 +304,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             _LOGGER.debug("Pipeline finished")
         except PipelineNotFound:
             _LOGGER.warning("Pipeline not found")
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # Expected after caller hangs up
             _LOGGER.debug("Pipeline timeout")
             self._session_id = None
@@ -444,7 +444,7 @@ class PipelineRtpDatagramProtocol(RtpDatagramProtocol):
             async with asyncio.timeout(tts_seconds + self.tts_extra_timeout):
                 # TTS audio is 16Khz 16-bit mono
                 await self._async_send_audio(audio_bytes)
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             _LOGGER.warning("TTS timeout")
             raise err
         finally:

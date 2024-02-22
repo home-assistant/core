@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.components import climate, mqtt
 from homeassistant.components.climate import (
-    ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -30,6 +29,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.mqtt.climate import (
     DEFAULT_INITIAL_TEMPERATURE,
     MQTT_CLIMATE_ATTRIBUTES_BLOCKED,
+    VALUE_TEMPLATE_KEYS,
 )
 from homeassistant.const import ATTR_TEMPERATURE, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -121,6 +121,17 @@ async def test_setup_params(
     assert state.attributes.get("max_temp") == DEFAULT_MAX_TEMP
     assert state.attributes.get("min_humidity") == DEFAULT_MIN_HUMIDITY
     assert state.attributes.get("max_humidity") == DEFAULT_MAX_HUMIDITY
+    assert (
+        state.attributes.get("supported_features")
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
 
 
 @pytest.mark.parametrize(
@@ -226,6 +237,8 @@ async def test_supported_features(
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TARGET_HUMIDITY
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
 
     assert state.attributes.get("supported_features") == support
@@ -491,10 +504,10 @@ async def test_turn_on_and_off_without_power_command(
     assert state.state == "cool"
     mqtt_mock.async_publish.reset_mock()
 
-    await common.async_turn_off(hass, ENTITY_CLIMATE)
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert climate_off is None or state.state == climate_off
     if climate_off:
+        await common.async_turn_off(hass, ENTITY_CLIMATE)
+        state = hass.states.get(ENTITY_CLIMATE)
+        assert climate_off is None or state.state == climate_off
         assert state.state == "off"
         mqtt_mock.async_publish.assert_has_calls([call("mode-topic", "off", 0, False)])
     else:
@@ -1249,89 +1262,6 @@ async def test_set_preset_mode_pessimistic(
     assert state.attributes.get("preset_mode") == "home"
 
 
-# Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
-# and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-# Support will be removed in HA Core 2024.3
-@pytest.mark.parametrize(
-    "hass_config",
-    [
-        help_custom_config(
-            climate.DOMAIN,
-            DEFAULT_CONFIG,
-            ({"aux_command_topic": "aux-topic", "aux_state_topic": "aux-state"},),
-        )
-    ],
-)
-async def test_set_aux_pessimistic(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test setting of the aux heating in pessimistic mode."""
-    await mqtt_mock_entry()
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("aux_heat") == "off"
-
-    await common.async_set_aux_heat(hass, True, ENTITY_CLIMATE)
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("aux_heat") == "off"
-
-    async_fire_mqtt_message(hass, "aux-state", "ON")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("aux_heat") == "on"
-
-    async_fire_mqtt_message(hass, "aux-state", "OFF")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("aux_heat") == "off"
-
-    async_fire_mqtt_message(hass, "aux-state", "nonsense")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("aux_heat") == "off"
-
-
-# Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
-# and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-# Support will be removed in HA Core 2024.3
-# "aux_command_topic": "aux-topic"
-@pytest.mark.parametrize(
-    "hass_config",
-    [
-        help_custom_config(
-            climate.DOMAIN, DEFAULT_CONFIG, ({"aux_command_topic": "aux-topic"},)
-        )
-    ],
-)
-async def test_set_aux(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test setting of the aux heating."""
-    mqtt_mock = await mqtt_mock_entry()
-
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("aux_heat") == "off"
-    await common.async_set_aux_heat(hass, True, ENTITY_CLIMATE)
-    mqtt_mock.async_publish.assert_called_once_with("aux-topic", "ON", 0, False)
-    mqtt_mock.async_publish.reset_mock()
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("aux_heat") == "on"
-
-    await common.async_set_aux_heat(hass, False, ENTITY_CLIMATE)
-    mqtt_mock.async_publish.assert_called_once_with("aux-topic", "OFF", 0, False)
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("aux_heat") == "off"
-
-    support = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.AUX_HEAT
-        | ClimateEntityFeature.SWING_MODE
-        | ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        | ClimateEntityFeature.TARGET_HUMIDITY
-    )
-
-    assert state.attributes.get("supported_features") == support
-
-
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
 async def test_availability_when_connection_lost(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
@@ -1461,7 +1391,6 @@ async def test_get_target_temperature_low_high_with_templates(
                     "temperature_high_command_topic": "temperature-high-topic",
                     "fan_mode_command_topic": "fan-mode-topic",
                     "swing_mode_command_topic": "swing-mode-topic",
-                    "aux_command_topic": "aux-topic",
                     "preset_mode_command_topic": "preset-mode-topic",
                     "preset_modes": [
                         "eco",
@@ -1478,8 +1407,6 @@ async def test_get_target_temperature_low_high_with_templates(
                     "current_humidity_template": "{{ value_json }}",
                     "current_temperature_template": "{{ value_json }}",
                     "temperature_state_template": "{{ value_json }}",
-                    # Rendering to a bool for aux heat
-                    "aux_state_template": "{{ value == 'switchmeon' }}",
                     # Rendering preset_mode
                     "preset_mode_value_template": "{{ value_json.attribute }}",
                     "action_topic": "action",
@@ -1488,7 +1415,6 @@ async def test_get_target_temperature_low_high_with_templates(
                     "swing_mode_state_topic": "swing-state",
                     "temperature_state_topic": "temperature-state",
                     "target_humidity_state_topic": "humidity-state",
-                    "aux_state_topic": "aux-state",
                     "current_temperature_topic": "current-temperature",
                     "current_humidity_topic": "current-humidity",
                     "preset_mode_state_topic": "current-preset-mode",
@@ -1575,21 +1501,6 @@ async def test_get_with_templates(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("preset_mode") == "eco"
 
-    # Aux mode
-
-    # Options CONF_AUX_COMMAND_TOPIC, CONF_AUX_STATE_TOPIC
-    # and CONF_AUX_STATE_TEMPLATE were deprecated in HA Core 2023.9
-    # Support will be removed in HA Core 2024.3
-    assert state.attributes.get("aux_heat") == "off"
-    async_fire_mqtt_message(hass, "aux-state", "switchmeon")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("aux_heat") == "on"
-
-    # anything other than 'switchmeon' should turn Aux mode off
-    async_fire_mqtt_message(hass, "aux-state", "somerandomstring")
-    state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get("aux_heat") == "off"
-
     # Current temperature
     async_fire_mqtt_message(hass, "current-temperature", '"74656"')
     state = hass.states.get(ENTITY_CLIMATE)
@@ -1633,7 +1544,6 @@ async def test_get_with_templates(
                     "temperature_high_command_topic": "temperature-high-topic",
                     "fan_mode_command_topic": "fan-mode-topic",
                     "swing_mode_command_topic": "swing-mode-topic",
-                    "aux_command_topic": "aux-topic",
                     "preset_mode_command_topic": "preset-mode-topic",
                     "preset_modes": [
                         "eco",
@@ -2089,7 +1999,6 @@ async def test_unique_id(
     [
         ("action_topic", "heating", ATTR_HVAC_ACTION, "heating"),
         ("action_topic", "cooling", ATTR_HVAC_ACTION, "cooling"),
-        ("aux_state_topic", "ON", ATTR_AUX_HEAT, "on"),
         ("current_temperature_topic", "22.1", ATTR_CURRENT_TEMPERATURE, 22.1),
         ("current_humidity_topic", "60.4", ATTR_CURRENT_HUMIDITY, 60.4),
         ("fan_mode_state_topic", "low", ATTR_FAN_MODE, "low"),
@@ -2372,13 +2281,6 @@ async def test_precision_whole(
             "swing_mode_command_template",
         ),
         (
-            climate.SERVICE_SET_AUX_HEAT,
-            "aux_command_topic",
-            {"aux_heat": "on"},
-            "ON",
-            None,
-        ),
-        (
             climate.SERVICE_SET_TEMPERATURE,
             "temperature_command_topic",
             {"temperature": "20.1"},
@@ -2613,3 +2515,36 @@ async def test_skipped_async_ha_write_state(
     """Test a write state command is only called when there is change."""
     await mqtt_mock_entry()
     await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            climate.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    value_template.replace("_value", "_state").replace(
+                        "_template", "_topic"
+                    ): "test-topic",
+                    value_template: "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+        for value_template in VALUE_TEMPLATE_KEYS
+    ],
+    ids=VALUE_TEMPLATE_KEYS,
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

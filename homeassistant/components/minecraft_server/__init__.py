@@ -86,9 +86,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
         # Migrate config entry.
         _LOGGER.debug("Migrating config entry. Resetting unique ID: %s", old_unique_id)
-        config_entry.unique_id = None
-        config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry)
+        hass.config_entries.async_update_entry(config_entry, unique_id=None, version=2)
 
         # Migrate device.
         await _async_migrate_device_identifiers(hass, config_entry, old_unique_id)
@@ -142,8 +140,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         new_data[CONF_ADDRESS] = address
         del new_data[CONF_HOST]
         del new_data[CONF_PORT]
-        config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry, data=new_data)
+        hass.config_entries.async_update_entry(config_entry, data=new_data, version=3)
 
         _LOGGER.debug("Migration to version 3 successful")
 

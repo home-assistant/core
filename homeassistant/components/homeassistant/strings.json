@@ -46,6 +46,10 @@
           }
         }
       }
+    },
+    "config_entry_reauth": {
+      "title": "[%key:common::config_flow::title::reauth%]",
+      "description": "Reauthentication is needed"
     }
   },
   "system_health": {

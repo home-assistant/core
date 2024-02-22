@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 import httpx
+import voluptuous as vol
 import yarl
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
@@ -140,6 +141,12 @@ class GenericCamera(Camera):
             _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
             return self._last_image
 
+        try:
+            vol.Schema(vol.Url())(url)
+        except vol.Invalid as err:
+            _LOGGER.warning("Invalid URL '%s': %s, returning last image", url, err)
+            return self._last_image
+
         if url == self._last_url and self._limit_refetch:
             return self._last_image
 
@@ -178,7 +185,7 @@ class GenericCamera(Camera):
             return self._last_image
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of this device."""
         return self._name
 

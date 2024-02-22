@@ -1,0 +1,73 @@
+{
+  "entity": {
+    "button": {
+      "ping": {
+        "default": "mdi:crosshairs-gps"
+      }
+    },
+    "sensor": {
+      "can": {
+        "default": "mdi:car-brake-alert"
+      },
+      "commands_dropped": {
+        "default": "mdi:trash-can"
+      },
+      "controller_status": {
+        "default": "mdi:help-rhombus",
+        "state": {
+          "jammed": "mdi:lock",
+          "ready": "mdi:check",
+          "unresponsive": "mdi:bell-off"
+        }
+      },
+      "last_seen": {
+        "default": "mdi:timer-sync"
+      },
+      "messages_dropped": {
+        "default": "mdi:trash-can"
+      },
+      "nak": {
+        "default": "mdi:hand-back-left-off"
+      },
+      "node_status": {
+        "default": "mdi:help-rhombus",
+        "state": {
+          "alive": "mdi:heart-pulse",
+          "asleep": "mdi:sleep",
+          "awake": "mdi:eye",
+          "dead": "mdi:robot-dead",
+          "unknown": "mdi:help-rhombus"
+        }
+      },
+      "successful_commands": {
+        "default": "mdi:check"
+      },
+      "successful_messages": {
+        "default": "mdi:check"
+      },
+      "timeout_ack": {
+        "default": "mdi:ear-hearing-off"
+      },
+      "timeout_callback": {
+        "default": "mdi:timer-sand-empty"
+      },
+      "timeout_response": {
+        "default": "mdi:timer-sand-empty"
+      }
+    }
+  },
+  "services": {
+    "bulk_set_partial_config_parameters": "mdi:cogs",
+    "clear_lock_usercode": "mdi:eraser",
+    "invoke_cc_api": "mdi:api",
+    "multicast_set_value": "mdi:list-box",
+    "ping": "mdi:crosshairs-gps",
+    "refresh_notifications": "mdi:bell",
+    "refresh_value": "mdi:refresh",
+    "reset_meter": "mdi:meter-electric",
+    "set_config_parameter": "mdi:cog",
+    "set_lock_configuration": "mdi:shield-lock",
+    "set_lock_usercode": "mdi:lock-smart",
+    "set_value": "mdi:form-textbox"
+  }
+}
