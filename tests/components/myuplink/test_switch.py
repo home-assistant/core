@@ -51,29 +51,23 @@ async def test_attributes(
     }
 
 
-async def test_switch_on(
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        (SERVICE_TURN_ON),
+        (SERVICE_TURN_OFF),
+    ],
+)
+async def test_switching(
     hass: HomeAssistant,
     mock_myuplink_client: MagicMock,
     setup_platform: None,
+    service: str,
 ) -> None:
-    """Test the switch can be turned on."""
+    """Test the switch can be turned on/off."""
 
     await hass.services.async_call(
-        TEST_PLATFORM, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
-    )
-    await hass.async_block_till_done()
-    mock_myuplink_client.async_set_device_points.assert_called_once()
-
-
-async def test_switch_off(
-    hass: HomeAssistant,
-    mock_myuplink_client: MagicMock,
-    setup_platform: None,
-) -> None:
-    """Test the switch can be turned on."""
-
-    await hass.services.async_call(
-        TEST_PLATFORM, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
     await hass.async_block_till_done()
     mock_myuplink_client.async_set_device_points.assert_called_once()
