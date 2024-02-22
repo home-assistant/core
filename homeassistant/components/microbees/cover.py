@@ -51,7 +51,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
             CoverEntityFeature.CLOSE,
         }
         self.attr_device_class = CoverDeviceClass.SHUTTER
-        self._attr_is_closed = False
+        self._attr_is_closed = None
 
     @property
     def name(self) -> str:
