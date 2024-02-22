@@ -51,11 +51,7 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import (
-    get_device_entry_gen,
-    get_device_uptime,
-    is_rpc_wifi_stations_disabled,
-)
+from .utils import get_device_entry_gen, get_device_uptime
 
 
 @dataclass(frozen=True)
@@ -911,7 +907,9 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        removal_condition=is_rpc_wifi_stations_disabled,
+        removal_condition=lambda config, _status, key: (
+            config[key]["sta"]["enable"] is False
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
