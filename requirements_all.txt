@@ -191,7 +191,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.3.8
 
 # homeassistant.components.airzone
-aioairzone==0.7.2
+aioairzone==0.7.4
 
 # homeassistant.components.ambient_station
 aioambient==2024.01.0
@@ -377,7 +377,7 @@ aioswitcher==3.4.1
 aiosyncthing==0.5.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.3.0
+aiotankerkoenig==0.4.1
 
 # homeassistant.components.tractive
 aiotractive==0.5.6
@@ -687,7 +687,7 @@ debugpy==1.8.0
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==5.2.1
+deebot-client==5.2.2
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -695,7 +695,7 @@ deebot-client==5.2.1
 defusedxml==0.7.1
 
 # homeassistant.components.deluge
-deluge-client==1.7.1
+deluge-client==1.10.2
 
 # homeassistant.components.lametric
 demetriek==0.4.0
@@ -967,7 +967,7 @@ gotailwind==0.2.2
 govee-ble==0.31.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==1.4.1
+govee-local-api==1.4.4
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1059,7 +1059,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.42
+holidays==0.43
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240207.1
@@ -1313,7 +1313,7 @@ moehlenhoff-alpha2==1.3.0
 mopeka-iot-ble==0.5.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.20
+motionblinds==0.6.21
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -2360,7 +2360,7 @@ pywaze==0.5.1
 pyweatherflowudp==1.4.5
 
 # homeassistant.components.html5
-pywebpush==1.9.2
+pywebpush==1.14.1
 
 # homeassistant.components.wemo
 pywemo==1.4.0
@@ -2423,7 +2423,7 @@ renault-api==0.2.1
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.7
+reolink-aio==0.8.8
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2444,13 +2444,13 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.19.0
+rokuecp==0.19.1
 
 # homeassistant.components.romy
 romy==0.0.7
 
 # homeassistant.components.roomba
-roombapy==1.6.10
+roombapy==1.6.12
 
 # homeassistant.components.roon
 roonapi==0.1.6

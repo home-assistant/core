@@ -78,7 +78,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         is a change.
         """
 
-        return (self._attr_available, self._attr_brightness)
+        return (self._attr_available, self._attr_is_on, self._attr_brightness)
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
