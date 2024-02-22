@@ -87,49 +87,6 @@ async def test_weather_without_forecast(
     assert entry.unique_id == "0123456"
 
 
-async def test_weather_with_forecast(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test states of the weather with forecast."""
-    await init_integration(hass, forecast=True)
-
-    state = hass.states.get("weather.home")
-    assert state
-    assert state.state == "sunny"
-    assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 67
-    assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1012.0
-    assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == 22.6
-    assert state.attributes.get(ATTR_WEATHER_VISIBILITY) == 16.1
-    assert state.attributes.get(ATTR_WEATHER_WIND_BEARING) == 180
-    assert state.attributes.get(ATTR_WEATHER_WIND_SPEED) == 14.5  # 4.03 m/s -> km/h
-    assert state.attributes.get(ATTR_WEATHER_APPARENT_TEMPERATURE) == 22.8
-    assert state.attributes.get(ATTR_WEATHER_DEW_POINT) == 16.2
-    assert state.attributes.get(ATTR_WEATHER_CLOUD_COVERAGE) == 10
-    assert state.attributes.get(ATTR_WEATHER_WIND_GUST_SPEED) == 20.3
-    assert state.attributes.get(ATTR_WEATHER_UV_INDEX) == 6
-    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES] == WeatherEntityFeature.FORECAST_DAILY
-    )
-    forecast = state.attributes.get(ATTR_FORECAST)[0]
-    assert forecast.get(ATTR_FORECAST_CONDITION) == "lightning-rainy"
-    assert forecast.get(ATTR_FORECAST_PRECIPITATION) == 2.5
-    assert forecast.get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 60
-    assert forecast.get(ATTR_FORECAST_TEMP) == 29.5
-    assert forecast.get(ATTR_FORECAST_TEMP_LOW) == 15.4
-    assert forecast.get(ATTR_FORECAST_TIME) == "2020-07-26T05:00:00+00:00"
-    assert forecast.get(ATTR_FORECAST_WIND_BEARING) == 166
-    assert forecast.get(ATTR_FORECAST_WIND_SPEED) == 13.0  # 3.61 m/s -> km/h
-    assert forecast.get(ATTR_FORECAST_CLOUD_COVERAGE) == 58
-    assert forecast.get(ATTR_FORECAST_APPARENT_TEMP) == 29.8
-    assert forecast.get(ATTR_FORECAST_WIND_GUST_SPEED) == 29.6
-    assert forecast.get(ATTR_WEATHER_UV_INDEX) == 5
-
-    entry = entity_registry.async_get("weather.home")
-    assert entry
-    assert entry.unique_id == "0123456"
-
-
 async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service is offline."""
     await init_integration(hass)

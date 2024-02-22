@@ -147,7 +147,7 @@ class AccuWeatherEntity(
         return cast(float, self.coordinator.data["UVIndex"])
 
     @property
-    def forecast(self) -> list[Forecast] | None:
+    def _forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
         if not self.coordinator.forecast:
             return None
@@ -181,4 +181,4 @@ class AccuWeatherEntity(
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self.forecast
+        return self._forecast
