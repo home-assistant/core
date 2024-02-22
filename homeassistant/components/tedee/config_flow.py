@@ -1,4 +1,5 @@
 """Config flow for Tedee integration."""
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -6,6 +7,7 @@ from pytedee_async import (
     TedeeAuthException,
     TedeeClient,
     TedeeClientException,
+    TedeeDataUpdateException,
     TedeeLocalAuthException,
 )
 import voluptuous as vol
@@ -13,6 +15,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN, NAME
 
@@ -34,13 +37,19 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 host = user_input[CONF_HOST]
             local_access_token = user_input[CONF_LOCAL_ACCESS_TOKEN]
-            tedee_client = TedeeClient(local_token=local_access_token, local_ip=host)
+            tedee_client = TedeeClient(
+                local_token=local_access_token,
+                local_ip=host,
+                session=async_get_clientsession(self.hass),
+            )
             try:
                 local_bridge = await tedee_client.get_local_bridge()
             except (TedeeAuthException, TedeeLocalAuthException):
                 errors[CONF_LOCAL_ACCESS_TOKEN] = "invalid_api_key"
             except TedeeClientException:
                 errors[CONF_HOST] = "invalid_host"
+            except TedeeDataUpdateException:
+                errors["base"] = "cannot_connect"
             else:
                 if self.reauth_entry:
                     self.hass.config_entries.async_update_entry(
@@ -75,14 +84,24 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_LOCAL_ACCESS_TOKEN,
-                        default=entry_data[CONF_LOCAL_ACCESS_TOKEN],
-                    ): str,
-                }
-            ),
-        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        assert self.reauth_entry
+
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_LOCAL_ACCESS_TOKEN,
+                            default=self.reauth_entry.data[CONF_LOCAL_ACCESS_TOKEN],
+                        ): str,
+                    }
+                ),
+            )
+        return await self.async_step_user(user_input)

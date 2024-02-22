@@ -179,7 +179,7 @@ class NmapDeviceScanner:
                 seconds=cv.positive_float(config[CONF_CONSIDER_HOME])
             )
         self._scan_lock = asyncio.Lock()
-        if self._hass.state == CoreState.running:
+        if self._hass.state is CoreState.running:
             await self._async_start_scanner()
             return
 
@@ -191,8 +191,9 @@ class NmapDeviceScanner:
         registry = er.async_get(self._hass)
         self._known_mac_addresses = {
             entry.unique_id: entry.original_name
-            for entry in registry.entities.values()
-            if entry.config_entry_id == self._entry_id
+            for entry in registry.entities.get_entries_for_config_entry_id(
+                self._entry_id
+            )
         }
 
     @property
@@ -227,7 +228,7 @@ class NmapDeviceScanner:
             )
         )
         self._mac_vendor_lookup = AsyncMacLookup()
-        with contextlib.suppress((asyncio.TimeoutError, aiohttp.ClientError)):
+        with contextlib.suppress((TimeoutError, aiohttp.ClientError)):
             # We don't care if this fails since it only
             # improves the data when we don't have it from nmap
             await self._mac_vendor_lookup.load_vendors()

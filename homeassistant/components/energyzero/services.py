@@ -109,7 +109,8 @@ def __get_coordinator(
             },
         )
 
-    return hass.data[DOMAIN][entry_id]
+    coordinator: EnergyZeroDataUpdateCoordinator = hass.data[DOMAIN][entry_id]
+    return coordinator
 
 
 async def __get_prices(

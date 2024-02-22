@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -40,7 +40,7 @@ from .const import (
     LOGGER,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
-from .util import GuardianDataUpdateCoordinator
+from .coordinator import GuardianDataUpdateCoordinator
 
 DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
 
@@ -76,7 +76,13 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
     },
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VALVE,
+]
 
 
 @dataclass
@@ -302,9 +308,7 @@ class PairedSensorManager:
             entry=self._entry,
             client=self._client,
             api_name=f"{API_SENSOR_PAIRED_SENSOR_STATUS}_{uid}",
-            api_coro=lambda: cast(
-                Awaitable, self._client.sensor.paired_sensor_status(uid)
-            ),
+            api_coro=lambda: self._client.sensor.paired_sensor_status(uid),
             api_lock=self._api_lock,
             valve_controller_uid=self._entry.data[CONF_UID],
         )
@@ -392,17 +396,10 @@ class PairedSensorEntity(GuardianEntity):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ValveControllerEntityDescriptionMixin:
-    """Define an entity description mixin for valve controller entities."""
+class ValveControllerEntityDescription(EntityDescription):
+    """Describe a Guardian valve controller entity."""
 
     api_category: str
-
-
-@dataclass(frozen=True, kw_only=True)
-class ValveControllerEntityDescription(
-    EntityDescription, ValveControllerEntityDescriptionMixin
-):
-    """Describe a Guardian valve controller entity."""
 
 
 class ValveControllerEntity(GuardianEntity):

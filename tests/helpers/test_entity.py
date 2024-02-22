@@ -655,9 +655,7 @@ async def test_set_context_expired(hass: HomeAssistant) -> None:
     """Test setting context."""
     context = Context()
 
-    with patch(
-        "homeassistant.helpers.entity.CONTEXT_RECENT_TIME", timedelta(seconds=-5)
-    ):
+    with patch("homeassistant.helpers.entity.CONTEXT_RECENT_TIME_SECONDS", -5):
         ent = entity.Entity()
         ent.hass = hass
         ent.entity_id = "hello.world"
@@ -2406,6 +2404,47 @@ async def test_cached_entity_property_class_attribute(hass: HomeAssistant) -> No
         assert getattr(ent[1], property) == values[0]
 
 
+async def test_cached_entity_property_override(hass: HomeAssistant) -> None:
+    """Test overriding cached _attr_ raises."""
+
+    class EntityWithClassAttribute1(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution: str
+
+    class EntityWithClassAttribute2(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution = "blabla"
+
+    class EntityWithClassAttribute3(entity.Entity):
+        """A derived class which overrides an _attr_ from a parent."""
+
+        _attr_attribution: str = "blabla"
+
+    class EntityWithClassAttribute4(entity.Entity):
+        @property
+        def _attr_not_cached(self):
+            return "blabla"
+
+    class EntityWithClassAttribute5(entity.Entity):
+        def _attr_not_cached(self):
+            return "blabla"
+
+    with pytest.raises(TypeError):
+
+        class EntityWithClassAttribute6(entity.Entity):
+            @property
+            def _attr_attribution(self):
+                return "🤡"
+
+    with pytest.raises(TypeError):
+
+        class EntityWithClassAttribute7(entity.Entity):
+            def _attr_attribution(self):
+                return "🤡"
+
+
 async def test_entity_report_deprecated_supported_features_values(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -2429,3 +2468,91 @@ async def test_entity_report_deprecated_supported_features_values(
         "is using deprecated supported features values which will be removed"
         not in caplog.text
     )
+
+
+async def test_remove_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test removing an entity from the registry."""
+    result = []
+
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        def __init__(self) -> None:
+            self.added_calls = []
+            self.remove_calls = []
+
+        async def async_added_to_hass(self):
+            self.added_calls.append(None)
+            self.async_on_remove(lambda: result.append(1))
+
+        async def async_will_remove_from_hass(self):
+            self.remove_calls.append(None)
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.test").state == STATE_UNKNOWN
+    assert len(ent.added_calls) == 1
+
+    entry = entity_registry.async_remove(entry.entity_id)
+    await hass.async_block_till_done()
+
+    assert len(result) == 1
+    assert len(ent.added_calls) == 1
+    assert len(ent.remove_calls) == 1
+
+    assert hass.states.get("test.test") is None
+
+
+async def test_reset_right_after_remove_entity_registry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test resetting the platform right after removing an entity from the registry.
+
+    A reset commonly happens during a reload.
+    """
+    result = []
+
+    entry = entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    assert entry.entity_id == "test.test"
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        def __init__(self) -> None:
+            self.added_calls = []
+            self.remove_calls = []
+
+        async def async_added_to_hass(self):
+            self.added_calls.append(None)
+            self.async_on_remove(lambda: result.append(1))
+
+        async def async_will_remove_from_hass(self):
+            self.remove_calls.append(None)
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+    assert hass.states.get("test.test").state == STATE_UNKNOWN
+    assert len(ent.added_calls) == 1
+
+    entry = entity_registry.async_remove(entry.entity_id)
+
+    # Reset the platform immediately after removing the entity from the registry
+    await platform.async_reset()
+    await hass.async_block_till_done()
+
+    assert len(result) == 1
+    assert len(ent.added_calls) == 1
+    assert len(ent.remove_calls) == 1
+
+    assert hass.states.get("test.test") is None

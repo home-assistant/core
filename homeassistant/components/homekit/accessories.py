@@ -36,6 +36,7 @@ from homeassistant.const import (
     PERCENTAGE,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     UnitOfTemperature,
     __version__,
 )
@@ -425,7 +426,9 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         """Return if accessory is available."""
         return self._available
 
-    async def run(self) -> None:
+    @ha_callback
+    @pyhap_callback  # type: ignore[misc]
+    def run(self) -> None:
         """Handle accessory driver started event."""
         if state := self.hass.states.get(self.entity_id):
             self.async_update_state_callback(state)
@@ -506,7 +509,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         _LOGGER.debug("New_state: %s", new_state)
         # HomeKit handles unavailable state via the available property
         # so we should not propagate it here
-        if new_state is None or new_state.state == STATE_UNAVAILABLE:
+        if new_state is None or new_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
             return
         battery_state = None
         battery_charging_state = None

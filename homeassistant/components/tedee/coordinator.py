@@ -17,6 +17,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_LOCAL_ACCESS_TOKEN, DOMAIN
@@ -45,9 +47,12 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         self.tedee_client = TedeeClient(
             local_token=self.config_entry.data[CONF_LOCAL_ACCESS_TOKEN],
             local_ip=self.config_entry.data[CONF_HOST],
+            session=async_get_clientsession(hass),
         )
 
         self._next_get_locks = time.time()
+        self._locks_last_update: set[int] = set()
+        self.new_lock_callbacks: list[Callable[[int], None]] = []
 
     @property
     def bridge(self) -> TedeeBridge:
@@ -80,6 +85,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             ", ".join(map(str, self.tedee_client.locks_dict.keys())),
         )
 
+        self._async_add_remove_locks()
         return self.tedee_client.locks_dict
 
     async def _async_update(self, update_fn: Callable[[], Awaitable[None]]) -> None:
@@ -96,3 +102,35 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             raise UpdateFailed("Error while updating data: %s" % str(ex)) from ex
         except (TedeeClientException, TimeoutError) as ex:
             raise UpdateFailed("Querying API failed. Error: %s" % str(ex)) from ex
+
+    def _async_add_remove_locks(self) -> None:
+        """Add new locks, remove non-existing locks."""
+        if not self._locks_last_update:
+            self._locks_last_update = set(self.tedee_client.locks_dict)
+
+        if (
+            current_locks := set(self.tedee_client.locks_dict)
+        ) == self._locks_last_update:
+            return
+
+        # remove old locks
+        if removed_locks := self._locks_last_update - current_locks:
+            _LOGGER.debug("Removed locks: %s", ", ".join(map(str, removed_locks)))
+            device_registry = dr.async_get(self.hass)
+            for lock_id in removed_locks:
+                if device := device_registry.async_get_device(
+                    identifiers={(DOMAIN, str(lock_id))}
+                ):
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+
+        # add new locks
+        if new_locks := current_locks - self._locks_last_update:
+            _LOGGER.debug("New locks found: %s", ", ".join(map(str, new_locks)))
+            for lock_id in new_locks:
+                for callback in self.new_lock_callbacks:
+                    callback(lock_id)
+
+        self._locks_last_update = current_locks

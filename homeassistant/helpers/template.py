@@ -5,7 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Collection, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable
 from contextlib import AbstractContextManager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -80,6 +80,7 @@ from homeassistant.util.thread import ThreadWithException
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
 from .singleton import singleton
+from .translation import async_translate_state
 from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -97,7 +98,12 @@ _RE_JINJA_DELIMITERS = re.compile(r"\{%|\{\{|\{#")
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 
-_RESERVED_NAMES = {"contextfunction", "evalcontextfunction", "environmentfunction"}
+_RESERVED_NAMES = {
+    "contextfunction",
+    "evalcontextfunction",
+    "environmentfunction",
+    "jinja_pass_arg",
+}
 
 _GROUP_DOMAIN_PREFIX = "group."
 _ZONE_DOMAIN_PREFIX = "zone."
@@ -660,7 +666,7 @@ class Template:
                 await finish_event.wait()
             if self._exc_info:
                 raise TemplateError(self._exc_info[1].with_traceback(self._exc_info[2]))
-        except asyncio.TimeoutError:
+        except TimeoutError:
             template_render_thread.raise_exc(TimeoutError)
             return True
         finally:
@@ -722,6 +728,7 @@ class Template:
         value: Any,
         error_value: Any = _SENTINEL,
         variables: dict[str, Any] | None = None,
+        parse_result: bool = False,
     ) -> Any:
         """Render template with value exposed.
 
@@ -743,7 +750,9 @@ class Template:
             variables["value_json"] = json_loads(value)
 
         try:
-            return _render_with_context(self.template, compiled, **variables).strip()
+            render_result = _render_with_context(
+                self.template, compiled, **variables
+            ).strip()
         except jinja2.TemplateError as ex:
             if error_value is _SENTINEL:
                 _LOGGER.error(
@@ -753,6 +762,11 @@ class Template:
                     self.template,
                 )
             return value if error_value is _SENTINEL else error_value
+
+        if not parse_result or self.hass and self.hass.config.legacy_templates:
+            return render_result
+
+        return self._parse_result(render_result)
 
     def _ensure_compiled(
         self,
@@ -881,6 +895,36 @@ class AllStates:
         return "<template AllStates>"
 
 
+class StateTranslated:
+    """Class to represent a translated state in a template."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize all states."""
+        self._hass = hass
+
+    def __call__(self, entity_id: str) -> str | None:
+        """Retrieve translated state if available."""
+        state = _get_state_if_valid(self._hass, entity_id)
+
+        if state is None:
+            return STATE_UNKNOWN
+
+        state_value = state.state
+        domain = state.domain
+        device_class = state.attributes.get("device_class")
+        entry = entity_registry.async_get(self._hass).async_get(entity_id)
+        platform = None if entry is None else entry.platform
+        translation_key = None if entry is None else entry.translation_key
+
+        return async_translate_state(
+            self._hass, state_value, domain, platform, translation_key, device_class
+        )
+
+    def __repr__(self) -> str:
+        """Representation of Translated state."""
+        return "<template StateTranslated>"
+
+
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
@@ -940,7 +984,6 @@ class TemplateStateBase(State):
         self._hass = hass
         self._collect = collect
         self._entity_id = entity_id
-        self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
     def _collect_state(self) -> None:
         if self._collect and (render_info := _render_info.get()):
@@ -1824,14 +1867,24 @@ def forgiving_as_timestamp(value, default=_SENTINEL):
         return default
 
 
-def as_datetime(value):
+def as_datetime(value: Any, default: Any = _SENTINEL) -> Any:
     """Filter and to convert a time string or UNIX timestamp to datetime object."""
     try:
         # Check for a valid UNIX timestamp string, int or float
         timestamp = float(value)
         return dt_util.utc_from_timestamp(timestamp)
-    except ValueError:
-        return dt_util.parse_datetime(value)
+    except (ValueError, TypeError):
+        # Try to parse datetime string to datetime object
+        try:
+            return dt_util.parse_datetime(value, raise_on_error=True)
+        except (ValueError, TypeError):
+            if default is _SENTINEL:
+                # Return None on string input
+                # to ensure backwards compatibility with HA Core 2024.1 and before.
+                if isinstance(value, str):
+                    return None
+                raise_no_default("as_datetime", value)
+            return default
 
 
 def as_timedelta(value: str) -> timedelta | None:
@@ -2100,6 +2153,11 @@ def bitwise_or(first_value, second_value):
     return first_value | second_value
 
 
+def bitwise_xor(first_value, second_value):
+    """Perform a bitwise xor operation."""
+    return first_value ^ second_value
+
+
 def struct_pack(value: Any | None, format_string: str) -> bytes | None:
     """Pack an object into a bytes object."""
     try:
@@ -2268,6 +2326,7 @@ def iif(
         {{ is_state("device_tracker.frenck", "home") | iif("yes", "no") }}
         {{ iif(1==2, "yes", "no") }}
         {{ (1 == 1) | iif("yes", "no") }}
+
     """
     if value is None and if_none is not _SENTINEL:
         return if_none
@@ -2463,6 +2522,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["regex_findall_index"] = regex_findall_index
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
+        self.filters["bitwise_xor"] = bitwise_xor
         self.filters["pack"] = struct_pack
         self.filters["unpack"] = struct_unpack
         self.filters["ord"] = ord
@@ -2474,8 +2534,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["bool"] = forgiving_boolean
         self.filters["version"] = version
         self.filters["contains"] = contains
-        self.filters["median"] = median
-        self.filters["statistical_mode"] = statistical_mode
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2511,8 +2569,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["iif"] = iif
         self.globals["bool"] = forgiving_boolean
         self.globals["version"] = version
-        self.globals["median"] = median
-        self.globals["statistical_mode"] = statistical_mode
         self.tests["is_number"] = is_number
         self.tests["list"] = _is_list
         self.tests["set"] = _is_set
@@ -2601,6 +2657,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
                 "is_state_attr",
                 "state_attr",
                 "states",
+                "state_translated",
                 "has_value",
                 "utcnow",
                 "now",
@@ -2651,6 +2708,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["state_attr"] = self.globals["state_attr"]
         self.globals["states"] = AllStates(hass)
         self.filters["states"] = self.globals["states"]
+        self.globals["state_translated"] = StateTranslated(hass)
+        self.filters["state_translated"] = self.globals["state_translated"]
         self.globals["has_value"] = hassfunction(has_value)
         self.filters["has_value"] = self.globals["has_value"]
         self.tests["has_value"] = hassfunction(has_value, pass_eval_context)
@@ -2663,7 +2722,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
     def is_safe_callable(self, obj):
         """Test if callback is safe."""
-        return isinstance(obj, AllStates) or super().is_safe_callable(obj)
+        return isinstance(
+            obj, (AllStates, StateTranslated)
+        ) or super().is_safe_callable(obj)
 
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""

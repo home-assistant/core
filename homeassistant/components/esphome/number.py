@@ -54,7 +54,7 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
         super()._on_static_info_update(static_info)
         static_info = self._static_info
         self._attr_device_class = try_parse_enum(
-            NumberDeviceClass, self._static_info.device_class
+            NumberDeviceClass, static_info.device_class
         )
         self._attr_native_min_value = static_info.min_value
         self._attr_native_max_value = static_info.max_value
@@ -79,4 +79,4 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        await self._client.number_command(self._key, value)
+        self._client.number_command(self._key, value)

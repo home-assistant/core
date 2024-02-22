@@ -525,7 +525,7 @@ async def test_restore_state(hass: HomeAssistant) -> None:
         ),
     )
 
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     mock_component(hass, "recorder")
 
     await async_setup_component(

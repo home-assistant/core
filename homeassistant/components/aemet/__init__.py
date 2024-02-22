@@ -18,7 +18,7 @@ from .const import (
     ENTRY_WEATHER_COORDINATOR,
     PLATFORMS,
 )
-from .weather_update_coordinator import WeatherUpdateCoordinator
+from .coordinator import WeatherUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

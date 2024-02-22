@@ -38,8 +38,8 @@ from .const import (
     ENTRY_WEATHER_COORDINATOR,
     WEATHER_FORECAST_MODES,
 )
+from .coordinator import WeatherUpdateCoordinator
 from .entity import AemetEntity
-from .weather_update_coordinator import WeatherUpdateCoordinator
 
 
 async def async_setup_entry(
