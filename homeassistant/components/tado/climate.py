@@ -587,6 +587,13 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             overlay_mode=overlay_mode,
             zone_id=self.zone_id,
         )
+        # If we ended up with a timer but no duration, set a default duration
+        if overlay_mode == CONST_OVERLAY_TIMER and duration is None:
+            duration = (
+                self._tado_zone_data.default_overlay_termination_duration
+                if self._tado_zone_data.default_overlay_termination_duration is not None
+                else "3600"
+            )
 
         _LOGGER.debug(
             (
