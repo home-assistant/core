@@ -20,6 +20,7 @@ from zigpy.const import SIG_ENDPOINTS, SIG_MANUFACTURER, SIG_MODEL, SIG_NODE_DES
 import zigpy.profiles.zha
 import zigpy.quirks
 from zigpy.quirks.v2 import EntityType, add_to_registry_v2
+from zigpy.quirks.v2.homeassistant import UnitOfTime
 import zigpy.types
 from zigpy.zcl import ClusterType
 import zigpy.zcl.clusters.closures
@@ -514,6 +515,11 @@ async def test_quirks_v2_entity_discovery(
         .number(
             zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
             zigpy.zcl.clusters.general.OnOff.cluster_id,
+            min_value=1,
+            max_value=100,
+            step=1,
+            unit=UnitOfTime.SECONDS,
+            multiplier=1,
         )
     )
 
