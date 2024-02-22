@@ -348,7 +348,7 @@ def _async_track_state_change_event(
     action: Callable[[EventType[EventStateChangedData]], Any],
 ) -> CALLBACK_TYPE:
     """async_track_state_change_event without lowercasing."""
-    return _async_track_event(hass, entity_ids, _KEYED_TRACK_STATE_CHANGE, action)
+    return _async_track_event(_KEYED_TRACK_STATE_CHANGE, hass, entity_ids, action)
 
 
 @callback
@@ -375,10 +375,12 @@ def _remove_listener(
         del hass.data[listeners_key]
 
 
+# tracker is intentionally the first argument here since its
+# constant and may be used in a partial in the future
 def _async_track_event(
+    tracker: _KeyedEventTracker[_TypedDictT],
     hass: HomeAssistant,
     keys: str | Iterable[str],
-    tracker: _KeyedEventTracker[_TypedDictT],
     action: Callable[[EventType[_TypedDictT]], None],
 ) -> CALLBACK_TYPE:
     """Track an event by a specific key.
@@ -485,9 +487,9 @@ def async_track_entity_registry_updated_event(
     Similar to async_track_state_change_event.
     """
     return _async_track_event(
+        _KEYED_TRACK_ENTITY_REGISTRY_UPDATED,
         hass,
         entity_ids,
-        _KEYED_TRACK_ENTITY_REGISTRY_UPDATED,
         action,
     )
 
@@ -547,9 +549,9 @@ def async_track_device_registry_updated_event(
     Similar to async_track_entity_registry_updated_event.
     """
     return _async_track_event(
+        _KEYED_TRACK_DEVICE_REGISTRY_UPDATED,
         hass,
         device_ids,
-        _KEYED_TRACK_DEVICE_REGISTRY_UPDATED,
         action,
     )
 
@@ -613,7 +615,7 @@ def _async_track_state_added_domain(
     action: Callable[[EventType[EventStateChangedData]], Any],
 ) -> CALLBACK_TYPE:
     """Track state change events when an entity is added to domains."""
-    return _async_track_event(hass, domains, _KEYED_TRACK_STATE_ADDED_DOMAIN, action)
+    return _async_track_event(_KEYED_TRACK_STATE_ADDED_DOMAIN, hass, domains, action)
 
 
 @callback
@@ -646,7 +648,7 @@ def async_track_state_removed_domain(
     action: Callable[[EventType[EventStateChangedData]], Any],
 ) -> CALLBACK_TYPE:
     """Track state change events when an entity is removed from domains."""
-    return _async_track_event(hass, domains, _KEYED_TRACK_STATE_REMOVED_DOMAIN, action)
+    return _async_track_event(_KEYED_TRACK_STATE_REMOVED_DOMAIN, hass, domains, action)
 
 
 @callback
