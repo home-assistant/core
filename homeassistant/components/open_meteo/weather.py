@@ -89,7 +89,7 @@ class OpenMeteoWeatherEntity(
         return self.coordinator.data.current_weather.wind_direction
 
     @property
-    def forecast(self) -> list[Forecast] | None:
+    def _forecast(self) -> list[Forecast] | None:
         """Return the forecast in native units."""
         if self.coordinator.data.daily is None:
             return None
@@ -128,4 +128,4 @@ class OpenMeteoWeatherEntity(
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self.forecast
+        return self._forecast

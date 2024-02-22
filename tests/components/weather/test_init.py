@@ -82,14 +82,6 @@ class MockWeatherEntity(WeatherEntity):
         self._attr_native_wind_gust_speed = 10
         self._attr_native_wind_speed = 3
         self._attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
-        self._attr_forecast = [
-            Forecast(
-                datetime=datetime(2022, 6, 20, 00, 00, 00, tzinfo=dt_util.UTC),
-                native_precipitation=1,
-                native_temperature=20,
-                native_dew_point=2,
-            )
-        ]
         self._attr_forecast_twice_daily = [
             Forecast(
                 datetime=datetime(2022, 6, 20, 8, 00, 00, tzinfo=dt_util.UTC),
@@ -582,14 +574,6 @@ async def test_forecast_twice_daily_missing_is_daytime(
 ) -> None:
     """Test forecast_twice_daily missing mandatory attribute is_daytime."""
 
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        @property
-        def forecast(self) -> list[Forecast] | None:
-            """Return the forecast."""
-            return self.forecast_list
-
     kwargs = {
         "native_temperature": 38,
         "native_temperature_unit": UnitOfTemperature.CELSIUS,
@@ -597,7 +581,7 @@ async def test_forecast_twice_daily_missing_is_daytime(
         "supported_features": WeatherEntityFeature.FORECAST_TWICE_DAILY,
     }
 
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
+    entity0 = await create_entity(hass, MockWeatherTest, None, **kwargs)
 
     client = await hass_ws_client(hass)
 
