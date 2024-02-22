@@ -10,17 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.accuweather.const import ATTRIBUTION
 from homeassistant.components.weather import (
     ATTR_FORECAST,
-    ATTR_FORECAST_APPARENT_TEMP,
-    ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
-    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_GUST_SPEED,
-    ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
     ATTR_WEATHER_DEW_POINT,
@@ -35,7 +25,6 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
-    WeatherEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
