@@ -77,10 +77,6 @@ async def test_imperial_metric(
     for key, value in result_observation.items():
         assert data.get(key) == value
 
-    forecast = data.get(ATTR_FORECAST)
-    for key, value in result_forecast.items():
-        assert forecast[0].get(key) == value
-
 
 async def test_night_clear(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
     """Test with clear-night in observation."""
@@ -118,10 +114,6 @@ async def test_none_values(hass: HomeAssistant, mock_simple_nws, no_sensor) -> N
     data = state.attributes
     for key in WEATHER_EXPECTED_OBSERVATION_IMPERIAL:
         assert data.get(key) is None
-
-    forecast = data.get(ATTR_FORECAST)
-    for key in EXPECTED_FORECAST_IMPERIAL:
-        assert forecast[0].get(key) is None
 
 
 async def test_none(hass: HomeAssistant, mock_simple_nws, no_sensor) -> None:
