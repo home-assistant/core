@@ -6,7 +6,6 @@ from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from kasa import SmartDevice
 
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -35,14 +34,20 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(
-        self, device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator
+        self,
+        device: SmartDevice,
+        coordinator: TPLinkDataUpdateCoordinator,
+        parent: SmartDevice = None,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize the entity."""
         super().__init__(coordinator)
         self.device: SmartDevice = device
         self._attr_unique_id = device.device_id
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
+            # TODO: find out if connections have any use and/or if it should
+            #  still be set for the main device. if set for child devices, all
+            #  devices will be presented by a single device
+            # connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
             identifiers={(DOMAIN, str(device.device_id))},
             manufacturer="TP-Link",
             model=device.model,
@@ -50,3 +55,6 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
             sw_version=device.hw_info["sw_ver"],
             hw_version=device.hw_info["hw_ver"],
         )
+
+        if parent is not None:
+            self._attr_device_info["via_device"] = (DOMAIN, parent.device_id)
