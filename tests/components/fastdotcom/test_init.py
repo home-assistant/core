@@ -64,11 +64,12 @@ async def test_delayed_speedtest_during_startup(
     )
     config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.fastdotcom.coordinator.fast_com"
-    ), patch.object(hass, "state", CoreState.starting):
+    original_state = hass.state
+    hass.set_state(CoreState.starting)
+    with patch("homeassistant.components.fastdotcom.coordinator.fast_com"):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+    hass.set_state(original_state)
 
     assert config_entry.state == config_entries.ConfigEntryState.LOADED
     state = hass.states.get("sensor.fast_com_download")

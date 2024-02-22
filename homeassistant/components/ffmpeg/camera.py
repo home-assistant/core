@@ -60,7 +60,7 @@ class FFmpegCamera(Camera):
         self._input: str = config[CONF_INPUT]
         self._extra_arguments: str = config[CONF_EXTRA_ARGUMENTS]
 
-    async def stream_source(self):
+    async def stream_source(self) -> str:
         """Return the stream source."""
         return self._input.split(" ")[-1]
 
@@ -95,6 +95,6 @@ class FFmpegCamera(Camera):
             await stream.close()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of this camera."""
         return self._name

@@ -1,0 +1,101 @@
+# serializer version: 1
+# name: test_diagnostics[username@cloud]
+  dict({
+    'config': dict({
+      'data': dict({
+        'country': 'IT',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'ecovacs',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'devices': list([
+      dict({
+        'UILogicId': 'DX_9G',
+        'class': 'yna5xi',
+        'company': 'eco-ng',
+        'deviceName': 'DEEBOT OZMO 950 Series',
+        'did': '**REDACTED**',
+        'homeSort': 9999,
+        'icon': 'https://portal-ww.ecouser.net/api/pim/file/get/606278df4a84d700082b39f1',
+        'materialNo': '110-1820-0101',
+        'model': 'DX9G',
+        'name': '**REDACTED**',
+        'nick': 'Ozmo 950',
+        'otaUpgrade': dict({
+        }),
+        'pid': '5c19a91ca1e6ee000178224a',
+        'product_category': 'DEEBOT',
+        'resource': 'upQ6',
+        'service': dict({
+          'jmq': 'jmq-ngiot-eu.dc.ww.ecouser.net',
+          'mqs': 'api-ngiot.dc-as.ww.ecouser.net',
+        }),
+        'status': 1,
+      }),
+    ]),
+    'legacy_devices': list([
+    ]),
+  })
+# ---
+# name: test_diagnostics[username@self-hosted]
+  dict({
+    'config': dict({
+      'data': dict({
+        'country': 'IT',
+        'override_mqtt_url': '**REDACTED**',
+        'override_rest_url': '**REDACTED**',
+        'password': '**REDACTED**',
+        'username': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'domain': 'ecovacs',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': '**REDACTED**',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'devices': list([
+      dict({
+        'UILogicId': 'DX_9G',
+        'class': 'yna5xi',
+        'company': 'eco-ng',
+        'deviceName': 'DEEBOT OZMO 950 Series',
+        'did': '**REDACTED**',
+        'homeSort': 9999,
+        'icon': 'https://portal-ww.ecouser.net/api/pim/file/get/606278df4a84d700082b39f1',
+        'materialNo': '110-1820-0101',
+        'model': 'DX9G',
+        'name': '**REDACTED**',
+        'nick': 'Ozmo 950',
+        'otaUpgrade': dict({
+        }),
+        'pid': '5c19a91ca1e6ee000178224a',
+        'product_category': 'DEEBOT',
+        'resource': 'upQ6',
+        'service': dict({
+          'jmq': 'jmq-ngiot-eu.dc.ww.ecouser.net',
+          'mqs': 'api-ngiot.dc-as.ww.ecouser.net',
+        }),
+        'status': 1,
+      }),
+    ]),
+    'legacy_devices': list([
+    ]),
+  })
+# ---

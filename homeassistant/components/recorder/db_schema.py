@@ -40,7 +40,6 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State
-from homeassistant.helpers.entity import EntityInfo
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
 import homeassistant.util.dt as dt_util
 from homeassistant.util.json import (
@@ -563,7 +562,6 @@ class StateAttributes(Base):
     @staticmethod
     def shared_attrs_bytes_from_event(
         event: Event,
-        entity_sources: dict[str, EntityInfo],
         dialect: SupportedDialect | None,
     ) -> bytes:
         """Create shared_attrs from a state_changed event."""
@@ -571,9 +569,13 @@ class StateAttributes(Base):
         # None state means the state was removed from the state machine
         if state is None:
             return b"{}"
-        exclude_attrs = set(ALL_DOMAIN_EXCLUDE_ATTRS)
         if state_info := state.state_info:
-            exclude_attrs |= state_info["unrecorded_attributes"]
+            exclude_attrs = {
+                *ALL_DOMAIN_EXCLUDE_ATTRS,
+                *state_info["unrecorded_attributes"],
+            }
+        else:
+            exclude_attrs = ALL_DOMAIN_EXCLUDE_ATTRS
         encoder = json_bytes_strip_null if dialect == PSQL_DIALECT else json_bytes
         bytes_result = encoder(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}

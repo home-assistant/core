@@ -241,7 +241,7 @@ async def websocket_run(
         # Task contains a timeout
         async with asyncio.timeout(timeout):
             await run_task
-    except asyncio.TimeoutError:
+    except TimeoutError:
         pipeline_input.run.process_event(
             PipelineEvent(
                 PipelineEventType.ERROR,
@@ -487,7 +487,7 @@ async def websocket_device_capture(
     )
 
     try:
-        with contextlib.suppress(asyncio.TimeoutError):
+        with contextlib.suppress(TimeoutError):
             async with asyncio.timeout(timeout_seconds):
                 while True:
                     # Send audio chunks encoded as base64
