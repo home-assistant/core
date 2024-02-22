@@ -457,9 +457,9 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         super().__init__()
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
-        self._config_entry_id_index: dict[str, list[str]] = {}
-        self._device_id_index: dict[str, list[str]] = {}
-        self._area_id_index: dict[str, list[str]] = {}
+        self._config_entry_id_index: dict[str, dict[str, Literal[True]]] = {}
+        self._device_id_index: dict[str, dict[str, Literal[True]]] = {}
+        self._area_id_index: dict[str, dict[str, Literal[True]]] = {}
 
     def values(self) -> ValuesView[RegistryEntry]:
         """Return the underlying values to avoid __iter__ overhead."""
@@ -473,15 +473,17 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         data[key] = entry
         self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
+        # python has no ordered set, so we use a dict with True values
+        # https://discuss.python.org/t/add-orderedset-to-stdlib/12730
         if (config_entry_id := entry.config_entry_id) is not None:
-            self._config_entry_id_index.setdefault(config_entry_id, []).append(key)
+            self._config_entry_id_index.setdefault(config_entry_id, {})[key] = True
         if (device_id := entry.device_id) is not None:
-            self._device_id_index.setdefault(device_id, []).append(key)
+            self._device_id_index.setdefault(device_id, {})[key] = True
         if (area_id := entry.area_id) is not None:
-            self._area_id_index.setdefault(area_id, []).append(key)
+            self._area_id_index.setdefault(area_id, {})[key] = True
 
     def _unindex_entry_value(
-        self, key: str, value: str, index: dict[str, list[str]]
+        self, key: str, value: str, index: dict[str, dict[str, Literal[True]]]
     ) -> None:
         """Unindex an entry value.
 
@@ -490,7 +492,7 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         index is the index to unindex from.
         """
         entries = index[value]
-        entries.remove(key)
+        del entries[key]
         if not entries:
             del index[value]
 
