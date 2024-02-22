@@ -923,7 +923,7 @@ georss-generic-client==0.8
 georss-ign-sismologia-client==0.8
 
 # homeassistant.components.qld_bushfire
-georss-qld-bushfire-alert-client==0.5
+georss-qld-bushfire-alert-client==0.7
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.kef
@@ -1304,7 +1304,7 @@ mficlient==0.3.0
 micloud==0.5
 
 # homeassistant.components.microbees
-microBeesPy==0.2.9
+microBeesPy==0.3.2
 
 # homeassistant.components.mill
 mill-local==0.3.0
@@ -1772,7 +1772,7 @@ pydiscovergy==2.0.5
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2024.1.0
+pydrawise==2024.2.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
