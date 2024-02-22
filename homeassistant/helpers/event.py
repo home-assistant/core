@@ -49,12 +49,6 @@ from .sun import get_astral_event_next
 from .template import RenderInfo, Template, result_as_boolean
 from .typing import EventType, TemplateVarsType
 
-TRACK_STATE_CHANGE_LISTENER = "track_state_change_listener"
-TRACK_STATE_ADDED_DOMAIN_LISTENER = "track_state_added_domain_listener"
-TRACK_STATE_REMOVED_DOMAIN_LISTENER = "track_state_removed_domain_listener"
-TRACK_ENTITY_REGISTRY_UPDATED_LISTENER = "track_entity_registry_updated_listener"
-TRACK_DEVICE_REGISTRY_UPDATED_LISTENER = "track_device_registry_updated_listener"
-
 _ALL_LISTENER = "all"
 _DOMAINS_LISTENER = "domains"
 _ENTITIES_LISTENER = "entities"
@@ -331,7 +325,7 @@ def _async_state_change_filter(
 
 
 _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
-    listeners_key=TRACK_STATE_CHANGE_LISTENER,
+    listeners_key="track_state_change_listener",
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_entity_id_event,  # type: ignore[arg-type]
     filter_callable=_async_state_change_filter,  # type: ignore[arg-type]
@@ -454,7 +448,7 @@ def _async_entity_registry_updated_filter(
 
 
 _KEYED_TRACK_ENTITY_REGISTRY_UPDATED = _KeyedEventTracker(
-    listeners_key=TRACK_ENTITY_REGISTRY_UPDATED_LISTENER,
+    listeners_key="track_entity_registry_updated_listener",
     event_type=EVENT_ENTITY_REGISTRY_UPDATED,
     dispatcher_callable=_async_dispatch_old_entity_id_or_entity_id_event,  # type: ignore[arg-type]
     filter_callable=_async_entity_registry_updated_filter,  # type: ignore[arg-type]
@@ -518,7 +512,7 @@ def _async_dispatch_device_id_event(
 
 
 _KEYED_TRACK_DEVICE_REGISTRY_UPDATED = _KeyedEventTracker(
-    listeners_key=TRACK_DEVICE_REGISTRY_UPDATED_LISTENER,
+    listeners_key="track_device_registry_updated_listener",
     event_type=EVENT_DEVICE_REGISTRY_UPDATED,
     dispatcher_callable=_async_dispatch_device_id_event,  # type: ignore[arg-type]
     filter_callable=_async_device_registry_updated_filter,  # type: ignore[arg-type]
@@ -587,7 +581,7 @@ def async_track_state_added_domain(
 
 
 _KEYED_TRACK_STATE_ADDED_DOMAIN = _KeyedEventTracker(
-    listeners_key=TRACK_STATE_ADDED_DOMAIN_LISTENER,
+    listeners_key="track_state_added_domain_listener",
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_domain_event,  # type: ignore[arg-type]
     filter_callable=_async_domain_added_filter,  # type: ignore[arg-type]
@@ -619,7 +613,7 @@ def _async_domain_removed_filter(
 
 
 _KEYED_TRACK_STATE_REMOVED_DOMAIN = _KeyedEventTracker(
-    listeners_key=TRACK_STATE_REMOVED_DOMAIN_LISTENER,
+    listeners_key="track_state_removed_domain_listener",
     event_type=EVENT_STATE_CHANGED,
     dispatcher_callable=_async_dispatch_domain_event,  # type: ignore[arg-type]
     filter_callable=_async_domain_removed_filter,  # type: ignore[arg-type]
