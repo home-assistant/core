@@ -431,6 +431,19 @@ def icon(value: Any) -> str:
     raise vol.Invalid('Icons should be specified in the form "prefix:name"')
 
 
+_COLOR_HEX = re.compile(r"^#[0-9A-F]{6}$", re.IGNORECASE)
+
+
+def color_hex(value: Any) -> str:
+    """Validate a hex color code."""
+    str_value = str(value)
+
+    if not _COLOR_HEX.match(str_value):
+        raise vol.Invalid("Color should be in the format #RRGGBB")
+
+    return str_value
+
+
 _TIME_PERIOD_DICT_KEYS = ("days", "hours", "minutes", "seconds", "milliseconds")
 
 time_period_dict = vol.All(

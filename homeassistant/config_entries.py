@@ -12,6 +12,7 @@ from collections.abc import (
     Mapping,
     ValuesView,
 )
+import contextlib
 from contextvars import ContextVar
 from copy import deepcopy
 from enum import Enum, StrEnum
@@ -20,6 +21,8 @@ import logging
 from random import randint
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
+
+from async_interrupt import interrupt
 
 from . import data_entry_flow, loader
 from .components import persistent_notification
@@ -49,6 +52,7 @@ from .helpers.event import (
     async_call_later,
 )
 from .helpers.frame import report
+from .helpers.json import json_bytes, json_fragment
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .loader import async_suggest_report_issue
 from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
@@ -56,6 +60,8 @@ from .util import uuid as uuid_util
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
+    from functools import cached_property
+
     from .components.bluetooth import BluetoothServiceInfoBleak
     from .components.dhcp import DhcpServiceInfo
     from .components.hassio import HassioServiceInfo
@@ -63,6 +69,8 @@ if TYPE_CHECKING:
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
+else:
+    from .backports.functools import cached_property
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -233,37 +241,6 @@ UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
 class ConfigEntry:
     """Hold a configuration entry."""
 
-    __slots__ = (
-        "entry_id",
-        "version",
-        "minor_version",
-        "domain",
-        "title",
-        "data",
-        "options",
-        "unique_id",
-        "supports_unload",
-        "supports_remove_device",
-        "pref_disable_new_entities",
-        "pref_disable_polling",
-        "source",
-        "state",
-        "disabled_by",
-        "_setup_lock",
-        "update_listeners",
-        "reason",
-        "_async_cancel_retry_setup",
-        "_on_unload",
-        "reload_lock",
-        "_reauth_lock",
-        "_tasks",
-        "_background_tasks",
-        "_integration_for_domain",
-        "_tries",
-        "_setup_again_job",
-        "_supports_options",
-    )
-
     entry_id: str
     domain: str
     title: str
@@ -418,14 +395,41 @@ class ConfigEntry:
             raise AttributeError(f"{key} cannot be changed")
 
         super().__setattr__(key, value)
+        self.clear_cache()
 
     @property
     def supports_options(self) -> bool:
         """Return if entry supports config options."""
         if self._supports_options is None and (handler := HANDLERS.get(self.domain)):
             # work out if handler has support for options flow
-            self._supports_options = handler.async_supports_options_flow(self)
+            object.__setattr__(
+                self, "_supports_options", handler.async_supports_options_flow(self)
+            )
         return self._supports_options or False
+
+    def clear_cache(self) -> None:
+        """Clear cached properties."""
+        with contextlib.suppress(AttributeError):
+            delattr(self, "as_json_fragment")
+
+    @cached_property
+    def as_json_fragment(self) -> json_fragment:
+        """Return JSON fragment of a config entry."""
+        json_repr = {
+            "entry_id": self.entry_id,
+            "domain": self.domain,
+            "title": self.title,
+            "source": self.source,
+            "state": self.state.value,
+            "supports_options": self.supports_options,
+            "supports_remove_device": self.supports_remove_device or False,
+            "supports_unload": self.supports_unload or False,
+            "pref_disable_new_entities": self.pref_disable_new_entities,
+            "pref_disable_polling": self.pref_disable_polling,
+            "disabled_by": self.disabled_by,
+            "reason": self.reason,
+        }
+        return json_fragment(json_bytes(json_repr))
 
     async def async_setup(
         self,
@@ -601,7 +605,8 @@ class ConfigEntry:
             )
         return self._setup_again_job
 
-    async def async_shutdown(self) -> None:
+    @callback
+    def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
         self.async_cancel_retry_setup()
 
@@ -716,6 +721,7 @@ class ConfigEntry:
         _setter = object.__setattr__
         _setter(self, "state", state)
         _setter(self, "reason", reason)
+        self.clear_cache()
         async_dispatcher_send(
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
         )
@@ -944,6 +950,10 @@ current_entry: ContextVar[ConfigEntry | None] = ContextVar(
 )
 
 
+class FlowCancelledError(Exception):
+    """Error to indicate that a flow has been cancelled."""
+
+
 class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
     """Manage all the config entry flows that are in progress."""
 
@@ -958,8 +968,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         self.config_entries = config_entries
         self._hass_config = hass_config
         self._pending_import_flows: dict[str, dict[str, asyncio.Future[None]]] = {}
-        self._initialize_tasks: dict[str, list[asyncio.Task]] = {}
-        self._discovery_debouncer = Debouncer(
+        self._initialize_futures: dict[str, list[asyncio.Future[None]]] = {}
+        self._discovery_debouncer = Debouncer[None](
             hass,
             _LOGGER,
             cooldown=DISCOVERY_COOLDOWN,
@@ -990,20 +1000,26 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             raise KeyError("Context not set or doesn't have a source set")
 
         flow_id = uuid_util.random_uuid_hex()
+        loop = self.hass.loop
+
         if context["source"] == SOURCE_IMPORT:
-            init_done: asyncio.Future[None] = self.hass.loop.create_future()
-            self._pending_import_flows.setdefault(handler, {})[flow_id] = init_done
+            self._pending_import_flows.setdefault(handler, {})[
+                flow_id
+            ] = loop.create_future()
 
-        task = asyncio.create_task(
-            self._async_init(flow_id, handler, context, data),
-            name=f"config entry flow {handler} {flow_id}",
-        )
-        self._initialize_tasks.setdefault(handler, []).append(task)
-
+        cancel_init_future = loop.create_future()
+        self._initialize_futures.setdefault(handler, []).append(cancel_init_future)
         try:
-            flow, result = await task
+            async with interrupt(
+                cancel_init_future,
+                FlowCancelledError,
+                "Config entry initialize canceled: Home Assistant is shutting down",
+            ):
+                flow, result = await self._async_init(flow_id, handler, context, data)
+        except FlowCancelledError as ex:
+            raise asyncio.CancelledError from ex
         finally:
-            self._initialize_tasks[handler].remove(task)
+            self._initialize_futures[handler].remove(cancel_init_future)
             self._pending_import_flows.get(handler, {}).pop(flow_id, None)
 
         if result["type"] != data_entry_flow.FlowResultType.ABORT:
@@ -1038,11 +1054,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
     async def async_shutdown(self) -> None:
         """Cancel any initializing flows."""
-        for task_list in self._initialize_tasks.values():
-            for task in task_list:
-                task.cancel(
-                    "Config entry initialize canceled: Home Assistant is shutting down"
-                )
+        for future_list in self._initialize_futures.values():
+            for future in future_list:
+                future.set_result(None)
         await self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
@@ -1261,6 +1275,7 @@ class ConfigEntryItems(UserDict[str, ConfigEntry]):
         self._unindex_entry(entry_id)
         object.__setattr__(entry, "unique_id", new_unique_id)
         self._index_entry(entry)
+        entry.clear_cache()
 
     def get_entries_for_domain(self, domain: str) -> list[ConfigEntry]:
         """Get entries for a domain."""
@@ -1405,15 +1420,8 @@ class ConfigEntries:
 
     async def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
-        await asyncio.gather(
-            *(
-                asyncio.create_task(
-                    entry.async_shutdown(),
-                    name=f"config entry shutdown {entry.title} {entry.domain} {entry.entry_id}",
-                )
-                for entry in self._entries.values()
-            )
-        )
+        for entry in self._entries.values():
+            entry.async_shutdown()
         await self.flow.async_shutdown()
 
     async def async_initialize(self) -> None:
@@ -1514,6 +1522,17 @@ class ConfigEntries:
             )
 
         return await entry.async_unload(self.hass)
+
+    @callback
+    def async_schedule_reload(self, entry_id: str) -> None:
+        """Schedule a config entry to be reloaded."""
+        if (entry := self.async_get_entry(entry_id)) is None:
+            raise UnknownEntry
+        entry.async_cancel_retry_setup()
+        self.hass.async_create_task(
+            self.async_reload(entry_id),
+            f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
+        )
 
     async def async_reload(self, entry_id: str) -> bool:
         """Reload an entry.
@@ -1642,6 +1661,7 @@ class ConfigEntries:
             )
 
         self._async_schedule_save()
+        entry.clear_cache()
         self._async_dispatch(ConfigEntryChange.UPDATED, entry)
         return True
 
@@ -1736,8 +1756,8 @@ class ConfigEntries:
         Config entries which are created after Home Assistant is started can't be waited
         for, the function will just return if the config entry is loaded or not.
         """
-        if setup_event := self.hass.data.get(DATA_SETUP_DONE, {}).get(entry.domain):
-            await setup_event.wait()
+        if setup_future := self.hass.data.get(DATA_SETUP_DONE, {}).get(entry.domain):
+            await setup_future
         # The component was not loaded.
         if entry.domain not in self.hass.config.components:
             return False
@@ -1856,10 +1876,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if entry.source == SOURCE_IGNORE and self.source == SOURCE_USER:
             return
         if should_reload:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id),
-                f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
-            )
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
         raise data_entry_flow.AbortFlow(error)
 
     async def async_set_unique_id(
@@ -2118,10 +2135,7 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             options=options,
         )
         if result:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_reload(entry.entry_id),
-                f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
-            )
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return self.async_abort(reason=reason)
 
 
@@ -2246,7 +2260,8 @@ class EntityRegistryDisabledHandler:
             event_filter=_handle_entry_updated_filter,
         )
 
-    async def _handle_entry_updated(self, event: Event) -> None:
+    @callback
+    def _handle_entry_updated(self, event: Event) -> None:
         """Handle entity registry entry update."""
         if self.registry is None:
             self.registry = entity_registry.async_get(self.hass)

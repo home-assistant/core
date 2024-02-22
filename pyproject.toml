@@ -28,6 +28,7 @@ dependencies    = [
     "aiohttp-fast-url-dispatcher==0.3.0",
     "aiohttp-zlib-ng==0.3.1",
     "astral==2.2",
+    "async-interrupt==1.1.1",
     "attrs==23.2.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==24.2.0",
@@ -691,7 +692,9 @@ voluptuous = "vol"
 "homeassistant.helpers.config_validation" = "cv"
 "homeassistant.helpers.device_registry" = "dr"
 "homeassistant.helpers.entity_registry" = "er"
+"homeassistant.helpers.floor_registry" = "fr"
 "homeassistant.helpers.issue_registry" = "ir"
+"homeassistant.helpers.label_registry" = "lr"
 "homeassistant.util.dt" = "dt_util"
 
 [tool.ruff.lint.flake8-pytest-style]

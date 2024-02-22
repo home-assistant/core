@@ -13,14 +13,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_integration
+from .const import TEST_MOWER_ID
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     load_json_value_fixture,
 )
-
-TEST_MOWER_ID = "c7233734-b219-4287-a173-08e3643f89f0"
 
 
 async def test_lawn_mower_states(

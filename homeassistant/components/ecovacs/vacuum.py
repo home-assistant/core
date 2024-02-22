@@ -95,7 +95,7 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         This will not change the entity's state. If the error caused the state
         to change, that will come through as a separate on_status event
         """
-        if error == "no_error":
+        if error in ["no_error", sucks.ERROR_CODES["100"]]:
             self.error = None
         else:
             self.error = error

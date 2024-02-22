@@ -32,7 +32,7 @@ async def validate_host(hass: HomeAssistant, host: str) -> None:
         raise InvalidHost(f"Invalid IP address: {host}")
 
     client = Vallox(host)
-    await client.get_info()
+    await client.fetch_metric_data()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

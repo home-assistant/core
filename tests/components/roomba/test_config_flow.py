@@ -98,12 +98,12 @@ def _mocked_discovery(*_):
 
     roomba = RoombaInfo(
         hostname="irobot-BLID",
-        robot_name="robot_name",
+        robotname="robot_name",
         ip=MOCK_IP,
         mac="mac",
-        firmware="firmware",
+        sw="firmware",
         sku="sku",
-        capabilities="capabilities",
+        cap={"cap": 1},
     )
 
     roomba_discovery.get_all = MagicMock(return_value=[roomba])

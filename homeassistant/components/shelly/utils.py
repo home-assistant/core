@@ -452,3 +452,13 @@ def async_create_issue_unsupported_firmware(
             "ip_address": entry.data["host"],
         },
     )
+
+
+def is_rpc_wifi_stations_disabled(
+    config: dict[str, Any], _status: dict[str, Any], key: str
+) -> bool:
+    """Return true if rpc all WiFi stations are disabled."""
+    if config[key]["sta"]["enable"] is True or config[key]["sta1"]["enable"] is True:
+        return False
+
+    return True

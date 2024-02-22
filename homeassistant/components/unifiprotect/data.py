@@ -27,6 +27,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    AUTH_RETRIES,
     CONF_DISABLE_RTSP,
     CONF_MAX_MEDIA,
     DEFAULT_MAX_MEDIA,
@@ -133,7 +134,7 @@ class ProtectData:
         try:
             updates = await self.api.update(force=force)
         except NotAuthorized:
-            if self._auth_failures < 10:
+            if self._auth_failures < AUTH_RETRIES:
                 _LOGGER.exception("Auth error while updating")
                 self._auth_failures += 1
             else:

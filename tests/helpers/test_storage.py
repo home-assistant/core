@@ -560,10 +560,10 @@ async def test_loading_corrupt_core_file(
     tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we handle unrecoverable corruption in a core file."""
-    async with async_test_home_assistant() as hass:
-        tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
-        hass.config.config_dir = tmp_storage
+    loop = asyncio.get_running_loop()
+    tmp_storage = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
 
+    async with async_test_home_assistant(storage_dir=tmp_storage) as hass:
         storage_key = "core.anything"
         store = storage.Store(
             hass, MOCK_VERSION_2, storage_key, minor_version=MOCK_MINOR_VERSION_1
@@ -618,12 +618,13 @@ async def test_loading_corrupt_file_known_domain(
     tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we handle unrecoverable corruption for a known domain."""
-    async with async_test_home_assistant() as hass:
+
+    loop = asyncio.get_running_loop()
+    tmp_storage = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
+
+    async with async_test_home_assistant(storage_dir=tmp_storage) as hass:
         hass.config.components.add("testdomain")
         storage_key = "testdomain.testkey"
-
-        tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
-        hass.config.config_dir = tmp_storage
 
         store = storage.Store(
             hass, MOCK_VERSION_2, storage_key, minor_version=MOCK_MINOR_VERSION_1

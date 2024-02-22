@@ -53,6 +53,12 @@ DHCP_DISCOVERY_GEN2 = dhcp.DhcpServiceInfo(
     macaddress="aabbccddeeff",
 )
 
+DHCP_DISCOVERY_GEN2_NO_NAME = dhcp.DhcpServiceInfo(
+    hostname="",
+    ip="1.2.3.4",
+    macaddress="aabbccddeeff",
+)
+
 DHCP_DISCOVERY_GEN3 = dhcp.DhcpServiceInfo(
     hostname="Powerview Generation 3",
     ip="1.2.3.4",
@@ -81,6 +87,11 @@ DHCP_DATA = [
         config_entries.SOURCE_DHCP,
         DHCP_DISCOVERY_GEN3,
         3,
+    ),
+    (
+        config_entries.SOURCE_DHCP,
+        DHCP_DISCOVERY_GEN2_NO_NAME,
+        2,
     ),
 ]
 ZEROCONF_DATA = [

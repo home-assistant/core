@@ -1,7 +1,6 @@
 """Tests for WebSocket API commands."""
 import asyncio
 from copy import deepcopy
-import datetime
 import logging
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
@@ -2494,8 +2493,8 @@ async def test_integration_setup_info(
 ) -> None:
     """Test subscribe/unsubscribe bootstrap_integrations."""
     hass.data[DATA_SETUP_TIME] = {
-        "august": datetime.timedelta(seconds=12.5),
-        "isy994": datetime.timedelta(seconds=12.8),
+        "august": 12.5,
+        "isy994": 12.8,
     }
     await websocket_client.send_json({"id": 7, "type": "integration/setup_info"})
 

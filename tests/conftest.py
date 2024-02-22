@@ -55,7 +55,9 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     issue_registry as ir,
+    label_registry as lr,
     recorder as recorder_helper,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -1602,9 +1604,21 @@ def entity_registry(hass: HomeAssistant) -> er.EntityRegistry:
 
 
 @pytest.fixture
+def floor_registry(hass: HomeAssistant) -> fr.FloorRegistry:
+    """Return the floor registry from the current hass instance."""
+    return fr.async_get(hass)
+
+
+@pytest.fixture
 def issue_registry(hass: HomeAssistant) -> ir.IssueRegistry:
     """Return the issue registry from the current hass instance."""
     return ir.async_get(hass)
+
+
+@pytest.fixture
+def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
+    """Return the label registry from the current hass instance."""
+    return lr.async_get(hass)
 
 
 @pytest.fixture

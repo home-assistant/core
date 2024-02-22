@@ -36,6 +36,8 @@ SECTIONS = (
     "core",
     "device_registry",
     "entity_registry",
+    "floor_registry",
+    "label_registry",
     "script",
     "scene",
 )

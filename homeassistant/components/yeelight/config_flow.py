@@ -102,9 +102,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ConfigEntryState.LOADED,
                 )
             if reload:
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
             return self.async_abort(reason="already_configured")
         return await self._async_handle_discovery()
 

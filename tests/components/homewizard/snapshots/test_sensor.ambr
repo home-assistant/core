@@ -202,6 +202,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -238,6 +240,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH1',
     'name': 'Device',
@@ -267,6 +271,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -318,6 +324,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH1',
     'name': 'Device',
@@ -347,6 +355,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -398,6 +408,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH1',
     'name': 'Device',
@@ -427,6 +439,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -478,6 +492,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH1',
     'name': 'Device',
@@ -507,6 +523,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -558,6 +576,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH1',
     'name': 'Device',
@@ -587,6 +607,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -638,6 +660,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH1',
     'name': 'Device',
@@ -667,6 +691,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -721,6 +747,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH1',
     'name': 'Device',
@@ -750,6 +778,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -801,6 +831,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH1',
     'name': 'Device',
@@ -830,6 +862,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -881,6 +915,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH1',
     'name': 'Device',
@@ -910,6 +946,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -961,6 +999,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH1',
     'name': 'Device',
@@ -988,6 +1028,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1036,6 +1078,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH1',
     'name': 'Device',
@@ -1065,6 +1109,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1115,6 +1161,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -1144,6 +1192,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1195,6 +1245,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -1224,6 +1276,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1275,6 +1329,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -1304,6 +1360,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1355,6 +1413,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -1384,6 +1444,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1435,6 +1497,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -1464,6 +1528,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1515,6 +1581,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -1544,6 +1612,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1595,6 +1665,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -1624,6 +1696,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1675,6 +1749,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -1704,6 +1780,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1755,6 +1833,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -1784,6 +1864,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1835,6 +1917,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -1864,6 +1948,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1915,6 +2001,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -1944,6 +2032,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1995,6 +2085,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2024,6 +2116,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -2078,6 +2172,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2107,6 +2203,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2158,6 +2256,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2187,6 +2287,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2238,6 +2340,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2267,6 +2371,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2318,6 +2424,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2347,6 +2455,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -2401,6 +2511,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2430,6 +2542,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -2484,6 +2598,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2513,6 +2629,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -2567,6 +2685,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2596,6 +2716,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2647,6 +2769,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2676,6 +2800,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2727,6 +2853,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2756,6 +2884,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2807,6 +2937,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2836,6 +2968,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2887,6 +3021,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2916,6 +3052,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -2967,6 +3105,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -2996,6 +3136,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -3047,6 +3189,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -3076,6 +3220,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -3127,6 +3273,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -3154,6 +3302,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -3202,6 +3352,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-KWH3',
     'name': 'Device',
@@ -3231,6 +3383,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -4418,6 +4572,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -4445,6 +4601,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -4495,6 +4653,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -4524,6 +4684,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -4575,6 +4737,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -4604,6 +4768,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -4655,6 +4821,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -4684,6 +4852,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -4735,6 +4905,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -4762,6 +4934,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -4810,6 +4984,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -4839,6 +5015,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -4890,6 +5068,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -4919,6 +5099,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -4970,6 +5152,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -4999,6 +5183,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -5050,6 +5236,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -5079,6 +5267,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -5130,6 +5320,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -5159,6 +5351,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -5210,6 +5404,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -5239,6 +5435,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -5290,6 +5488,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -5319,6 +5519,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -5370,6 +5572,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -5399,6 +5603,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -5450,6 +5656,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -5479,6 +5687,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -5530,6 +5740,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -5559,6 +5771,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -5610,6 +5824,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -5639,6 +5855,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -5765,6 +5983,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -5792,6 +6012,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -5840,6 +6062,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -5867,6 +6091,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -5917,6 +6143,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -5946,6 +6174,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -6000,6 +6230,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -6027,6 +6259,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -6075,6 +6309,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -6104,6 +6340,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -6158,6 +6396,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -6187,6 +6427,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -6241,6 +6483,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -6270,6 +6514,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -6324,6 +6570,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -6351,6 +6599,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -6399,6 +6649,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -6426,6 +6678,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -6474,6 +6728,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -6508,6 +6764,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -7443,6 +7701,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -7472,6 +7732,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -7523,6 +7785,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -7552,6 +7816,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -7603,6 +7869,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -7632,6 +7900,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -7683,6 +7953,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -7712,6 +7984,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -7763,6 +8037,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -7790,6 +8066,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -7838,6 +8116,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -7865,6 +8145,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -7913,6 +8195,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -7940,6 +8224,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -7988,6 +8274,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -8015,6 +8303,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -8063,6 +8353,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -8090,6 +8382,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -8138,6 +8432,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -8165,6 +8461,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -8213,6 +8511,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -8242,6 +8542,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -8292,6 +8594,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -8319,6 +8623,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -8367,6 +8673,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -8396,6 +8704,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -8514,6 +8824,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Gas meter',
@@ -8543,6 +8855,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -8738,6 +9052,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Heat meter',
@@ -8767,6 +9083,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -8962,6 +9280,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Inlet heat meter',
@@ -8991,6 +9311,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -9260,6 +9582,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Warm water meter',
@@ -9289,6 +9613,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -9484,6 +9810,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Water meter',
@@ -9513,6 +9841,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -10612,6 +10942,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -10639,6 +10971,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -10689,6 +11023,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -10718,6 +11054,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -10769,6 +11107,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -10798,6 +11138,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -10849,6 +11191,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -10878,6 +11222,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -10929,6 +11275,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -10958,6 +11306,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -11009,6 +11359,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -11038,6 +11390,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -11089,6 +11443,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -11118,6 +11474,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -11169,6 +11527,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -11198,6 +11558,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -11249,6 +11611,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -11278,6 +11642,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -11329,6 +11695,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -11358,6 +11726,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -11409,6 +11779,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -11438,6 +11810,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -11489,6 +11863,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -11518,6 +11894,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -11569,6 +11947,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -11598,6 +11978,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -11649,6 +12031,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -11678,6 +12062,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -11729,6 +12115,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -11758,6 +12146,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -11809,6 +12199,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -11836,6 +12228,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -11961,6 +12355,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -11990,6 +12386,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -12044,6 +12442,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -12071,6 +12471,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -12119,6 +12521,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -12148,6 +12552,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -12202,6 +12608,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -12231,6 +12639,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -12285,6 +12695,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -12314,6 +12726,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -13248,6 +13662,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -13277,6 +13693,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -13328,6 +13746,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -13357,6 +13777,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -13408,6 +13830,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -13437,6 +13861,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -13488,6 +13914,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -13517,6 +13945,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -13568,6 +13998,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -13595,6 +14027,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -13643,6 +14077,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -13670,6 +14106,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -13718,6 +14156,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -13745,6 +14185,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -13793,6 +14235,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -13820,6 +14264,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -13868,6 +14314,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -13895,6 +14343,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -13943,6 +14393,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -13970,6 +14422,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -14018,6 +14472,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-P1',
     'name': 'Device',
@@ -14047,6 +14503,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -14263,6 +14721,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-SKT',
     'name': 'Device',
@@ -14292,6 +14752,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -14343,6 +14805,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-SKT',
     'name': 'Device',
@@ -14372,6 +14836,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -14423,6 +14889,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-SKT',
     'name': 'Device',
@@ -14452,6 +14920,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -14506,6 +14976,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-SKT',
     'name': 'Device',
@@ -14535,6 +15007,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -14749,6 +15223,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-SKT',
     'name': 'Device',
@@ -14776,6 +15252,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -14824,6 +15302,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-SKT',
     'name': 'Device',
@@ -14853,6 +15333,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -14982,6 +15464,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-WTR',
     'name': 'Device',
@@ -15011,6 +15495,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -15062,6 +15548,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-WTR',
     'name': 'Device',
@@ -15091,6 +15579,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -15141,6 +15631,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-WTR',
     'name': 'Device',
@@ -15168,6 +15660,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -15216,6 +15710,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'HWE-WTR',
     'name': 'Device',
@@ -15245,6 +15741,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -15942,6 +16440,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM230-wifi',
     'name': 'Device',
@@ -15971,6 +16471,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -16022,6 +16524,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM230-wifi',
     'name': 'Device',
@@ -16051,6 +16555,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -16102,6 +16608,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM230-wifi',
     'name': 'Device',
@@ -16131,6 +16639,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -16182,6 +16692,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM230-wifi',
     'name': 'Device',
@@ -16211,6 +16723,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -16262,6 +16776,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM230-wifi',
     'name': 'Device',
@@ -16291,6 +16807,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -16342,6 +16860,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM230-wifi',
     'name': 'Device',
@@ -16371,6 +16891,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -16425,6 +16947,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM230-wifi',
     'name': 'Device',
@@ -16454,6 +16978,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -16588,6 +17114,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM230-wifi',
     'name': 'Device',
@@ -16617,6 +17145,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -16828,6 +17358,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM230-wifi',
     'name': 'Device',
@@ -16857,6 +17389,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -16908,6 +17442,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM230-wifi',
     'name': 'Device',
@@ -16935,6 +17471,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -16983,6 +17521,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM230-wifi',
     'name': 'Device',
@@ -17012,6 +17552,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -18917,6 +19459,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -18946,6 +19490,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -18997,6 +19543,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19026,6 +19574,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -19077,6 +19627,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19106,6 +19658,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -19157,6 +19711,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19186,6 +19742,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -19237,6 +19795,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19266,6 +19826,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -19317,6 +19879,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19346,6 +19910,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -19397,6 +19963,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19426,6 +19994,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -19477,6 +20047,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19506,6 +20078,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -19557,6 +20131,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19586,6 +20162,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -19637,6 +20215,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19666,6 +20246,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -19717,6 +20299,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19746,6 +20330,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -19797,6 +20383,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19826,6 +20414,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -19880,6 +20470,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19909,6 +20501,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -19960,6 +20554,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -19989,6 +20585,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -20040,6 +20638,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -20069,6 +20669,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -20120,6 +20722,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -20149,6 +20753,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -20203,6 +20809,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -20232,6 +20840,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -20286,6 +20896,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -20315,6 +20927,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -20369,6 +20983,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -20398,6 +21014,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -20449,6 +21067,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -20478,6 +21098,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -20529,6 +21151,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -20558,6 +21182,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -20609,6 +21235,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -20638,6 +21266,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -20849,6 +21479,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -20878,6 +21510,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -20929,6 +21563,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -20958,6 +21594,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -21009,6 +21647,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -21038,6 +21678,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -21089,6 +21731,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -21116,6 +21760,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -21164,6 +21810,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'HomeWizard',
     'model': 'SDM630-wifi',
     'name': 'Device',
@@ -21193,6 +21841,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),

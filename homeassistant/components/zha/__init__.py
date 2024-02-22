@@ -3,7 +3,6 @@ import asyncio
 import contextlib
 import copy
 import logging
-import os
 import re
 
 import voluptuous as vol
@@ -18,7 +17,6 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
 from . import repairs, websocket_api
@@ -128,15 +126,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         setup_quirks(
             custom_quirks_path=zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH)
         )
-
-    # temporary code to remove the ZHA storage file from disk.
-    # this will be removed in 2022.10.0
-    storage_path = hass.config.path(STORAGE_DIR, "zha.storage")
-    if os.path.isfile(storage_path):
-        _LOGGER.debug("removing ZHA storage file")
-        await hass.async_add_executor_job(os.remove, storage_path)
-    else:
-        _LOGGER.debug("ZHA storage file does not exist or was already removed")
 
     # Load and cache device trigger information early
     device_registry = dr.async_get(hass)

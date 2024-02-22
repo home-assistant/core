@@ -216,6 +216,7 @@ async def test_browse_media_root_multiple_consoles(
     api2.api_path = "/api"
     api2.base_url = "https://127.0.0.2"
     api2.connection_host = IPv4Address("127.0.0.2")
+    api2.get_bootstrap = AsyncMock(return_value=bootstrap2)
     api2.get_nvr = AsyncMock(return_value=bootstrap2.nvr)
     api2.update = AsyncMock(return_value=bootstrap2)
     api2.async_disconnect_ws = AsyncMock()

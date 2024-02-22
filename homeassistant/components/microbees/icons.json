@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "switch": {
+      "socket_eu": {
+        "default": "mdi:power-socket-eu"
+      },
+      "socket_it": {
+        "default": "mdi:power-socket-it"
+      }
+    }
+  }
+}

@@ -48,7 +48,8 @@ async def test_programmable_switch_button_fires_on_trigger(
         device_id=device_id,
         device_triggers=device_triggers,
     )
-    await acc.run()
+    acc.run()
+    await acc.async_attach()
     await hass.async_block_till_done()
 
     assert acc.entity_id is None

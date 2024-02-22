@@ -54,7 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await bring.login()
-                await bring.loadLists()
+                await bring.load_lists()
             except BringRequestException:
                 errors["base"] = "cannot_connect"
             except BringAuthException:

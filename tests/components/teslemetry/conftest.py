@@ -38,6 +38,16 @@ def mock_wake_up():
 
 
 @pytest.fixture(autouse=True)
+def mock_vehicle():
+    """Mock Tesla Fleet API Vehicle Specific vehicle method."""
+    with patch(
+        "homeassistant.components.teslemetry.VehicleSpecific.vehicle",
+        return_value=WAKE_UP_ONLINE,
+    ) as mock_vehicle:
+        yield mock_vehicle
+
+
+@pytest.fixture(autouse=True)
 def mock_request():
     """Mock Tesla Fleet API Vehicle Specific class."""
     with patch(

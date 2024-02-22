@@ -694,7 +694,11 @@ def _coerce_none(value: str) -> None:
 
 @dataclasses.dataclass
 class Profile:
-    """Representation of a profile."""
+    """Representation of a profile.
+
+    The light profiles feature is in a frozen development state
+    until otherwise decided in an architecture discussion.
+    """
 
     name: str
     color_x: float | None = dataclasses.field(repr=False)
@@ -742,7 +746,11 @@ class Profile:
 
 
 class Profiles:
-    """Representation of available color profiles."""
+    """Representation of available color profiles.
+
+    The light profiles feature is in a frozen development state
+    until otherwise decided in an architecture discussion.
+    """
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize profiles."""

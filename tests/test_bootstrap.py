@@ -95,15 +95,6 @@ async def test_load_hassio(hass: HomeAssistant) -> None:
         assert "hassio" in bootstrap._get_domains(hass, {})
 
 
-async def test_load_backup(hass: HomeAssistant) -> None:
-    """Test that we load the backup integration when not using Supervisor."""
-    with patch.dict(os.environ, {}, clear=True):
-        assert "backup" in bootstrap._get_domains(hass, {})
-
-    with patch.dict(os.environ, {"SUPERVISOR": "1"}):
-        assert "backup" not in bootstrap._get_domains(hass, {})
-
-
 @pytest.mark.parametrize("load_registries", [False])
 async def test_empty_setup(hass: HomeAssistant) -> None:
     """Test an empty set up loads the core."""

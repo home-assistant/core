@@ -1067,6 +1067,7 @@ async def test_mdns_update_to_paired_during_pairing(
         "source": config_entries.SOURCE_ZEROCONF,
     }
 
+    finish_pairing_started = asyncio.Event()
     mdns_update_to_paired = asyncio.Event()
 
     original_async_start_pairing = device.async_start_pairing
@@ -1075,6 +1076,7 @@ async def test_mdns_update_to_paired_during_pairing(
         finish_pairing = await original_async_start_pairing(*args, **kwargs)
 
         async def _finish_pairing(*args, **kwargs):
+            finish_pairing_started.set()
             # Insert an event wait to make sure
             # we trigger the mdns update in the middle of the pairing
             await mdns_update_to_paired.wait()
@@ -1098,6 +1100,8 @@ async def test_mdns_update_to_paired_during_pairing(
             result["flow_id"], user_input={"pairing_code": "111-22-333"}
         )
     )
+    # Ensure the task starts
+    await finish_pairing_started.wait()
     # Make sure when the device is discovered as paired via mdns
     # it does not abort pairing if it happens before pairing is finished
     result2 = await hass.config_entries.flow.async_init(

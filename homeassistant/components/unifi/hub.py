@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
 from datetime import datetime, timedelta
+from functools import partial
 import ssl
 from types import MappingProxyType
 from typing import Any, Literal
@@ -78,7 +80,7 @@ CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
 CHECK_WEBSOCKET_INTERVAL = timedelta(minutes=1)
 
 
-class UniFiController:
+class UnifiHub:
     """Manages a single UniFi Network instance."""
 
     def __init__(
@@ -163,7 +165,7 @@ class UniFiController:
 
     @property
     def host(self) -> str:
-        """Return the host of this controller."""
+        """Return the host of this hub."""
         host: str = self.config_entry.data[CONF_HOST]
         return host
 
@@ -178,11 +180,22 @@ class UniFiController:
         requires_admin: bool = False,
     ) -> None:
         """Register platform for UniFi entity management."""
-        controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-        if requires_admin and not controller.is_admin:
+        hub: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        if requires_admin and not hub.is_admin:
             return
-        controller.register_platform_add_entities(
+        hub.register_platform_add_entities(
             entity_class, descriptions, async_add_entities
+        )
+
+    @callback
+    def _async_should_add_entity(
+        self, description: UnifiEntityDescription, obj_id: str
+    ) -> bool:
+        """Check if entity should be added."""
+        return bool(
+            (description.key, obj_id) not in self.known_objects
+            and description.allowed_fn(self, obj_id)
+            and description.supported_fn(self, obj_id)
         )
 
     @callback
@@ -195,45 +208,47 @@ class UniFiController:
         """Subscribe to UniFi API handlers and create entities."""
 
         @callback
-        def async_load_entities(description: UnifiEntityDescription) -> None:
+        def async_load_entities(descriptions: Iterable[UnifiEntityDescription]) -> None:
             """Load and subscribe to UniFi endpoints."""
-            api_handler = description.api_handler_fn(self.api)
 
             @callback
-            def async_add_unifi_entity(obj_ids: list[str]) -> None:
+            def async_add_unifi_entities() -> None:
                 """Add UniFi entity."""
                 async_add_entities(
                     [
                         unifi_platform_entity(obj_id, self, description)
-                        for obj_id in obj_ids
-                        if (description.key, obj_id) not in self.known_objects
-                        if description.allowed_fn(self, obj_id)
-                        if description.supported_fn(self, obj_id)
+                        for description in descriptions
+                        for obj_id in description.api_handler_fn(self.api)
+                        if self._async_should_add_entity(description, obj_id)
                     ]
                 )
 
-            async_add_unifi_entity(list(api_handler))
+            async_add_unifi_entities()
 
             @callback
-            def async_create_entity(event: ItemEvent, obj_id: str) -> None:
+            def async_create_entity(
+                description: UnifiEntityDescription, event: ItemEvent, obj_id: str
+            ) -> None:
                 """Create new UniFi entity on event."""
-                async_add_unifi_entity([obj_id])
+                if self._async_should_add_entity(description, obj_id):
+                    async_add_entities(
+                        [unifi_platform_entity(obj_id, self, description)]
+                    )
 
-            api_handler.subscribe(async_create_entity, ItemEvent.ADDED)
-
-            @callback
-            def async_options_updated() -> None:
-                """Load new entities based on changed options."""
-                async_add_unifi_entity(list(api_handler))
+            for description in descriptions:
+                description.api_handler_fn(self.api).subscribe(
+                    partial(async_create_entity, description), ItemEvent.ADDED
+                )
 
             self.config_entry.async_on_unload(
                 async_dispatcher_connect(
-                    self.hass, self.signal_options_update, async_options_updated
+                    self.hass,
+                    self.signal_options_update,
+                    async_add_unifi_entities,
                 )
             )
 
-        for description in descriptions:
-            async_load_entities(description)
+        async_load_entities(descriptions)
 
     @property
     def signal_reachable(self) -> str:
@@ -336,7 +351,7 @@ class UniFiController:
 
     @property
     def device_info(self) -> DeviceInfo:
-        """UniFi controller device info."""
+        """UniFi Network device info."""
         assert self.config_entry.unique_id is not None
 
         version: str | None = None
@@ -369,10 +384,10 @@ class UniFiController:
         If config entry is updated due to reauth flow
         the entry might already have been reset and thus is not available.
         """
-        if not (controller := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
+        if not (hub := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
             return
-        controller.load_config_entry_options()
-        async_dispatcher_send(hass, controller.signal_options_update)
+        hub.load_config_entry_options()
+        async_dispatcher_send(hass, hub.signal_options_update)
 
     @callback
     def start_websocket(self) -> None:
@@ -434,7 +449,7 @@ class UniFiController:
             self.ws_task.cancel()
 
     async def async_reset(self) -> bool:
-        """Reset this controller to default state.
+        """Reset this hub to default state.
 
         Will cancel any scheduled setup retry and will unload
         the config entry.
@@ -474,11 +489,11 @@ class UniFiController:
         return True
 
 
-async def get_unifi_controller(
+async def get_unifi_api(
     hass: HomeAssistant,
     config: MappingProxyType[str, Any],
 ) -> aiounifi.Controller:
-    """Create a controller object and verify authentication."""
+    """Create a aiounifi object and verify authentication."""
     ssl_context: ssl.SSLContext | Literal[False] = False
 
     if verify_ssl := config.get(CONF_VERIFY_SSL):
@@ -490,7 +505,7 @@ async def get_unifi_controller(
             hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
         )
 
-    controller = aiounifi.Controller(
+    api = aiounifi.Controller(
         Configuration(
             session,
             host=config[CONF_HOST],
@@ -504,8 +519,8 @@ async def get_unifi_controller(
 
     try:
         async with asyncio.timeout(10):
-            await controller.login()
-        return controller
+            await api.login()
+        return api
 
     except aiounifi.Unauthorized as err:
         LOGGER.warning(

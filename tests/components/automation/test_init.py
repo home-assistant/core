@@ -1623,6 +1623,9 @@ async def test_extraction_functions(
 
     await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "calendar", {"calendar": {"platform": "demo"}})
+    # Ensure the calendar entities are setup before attaching triggers
+    await hass.async_block_till_done()
+
     assert await async_setup_component(
         hass,
         DOMAIN,

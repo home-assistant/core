@@ -8,6 +8,7 @@ aiohttp_cors==0.7.0
 aiohttp-fast-url-dispatcher==0.3.0
 aiohttp-zlib-ng==0.3.1
 astral==2.2
+async-interrupt==1.1.1
 attrs==23.2.0
 atomicwrites-homeassistant==1.4.1
 awesomeversion==24.2.0

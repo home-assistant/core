@@ -1,5 +1,5 @@
 """Test helpers for myuplink."""
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 import time
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -167,3 +167,23 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture for platforms."""
+    return []
+
+
+@pytest.fixture
+async def setup_platform(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    platforms,
+) -> AsyncGenerator[None, None]:
+    """Set up one or all platforms."""
+
+    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        yield

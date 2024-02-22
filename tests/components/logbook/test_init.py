@@ -2654,7 +2654,7 @@ async def test_get_events_with_device_ids(
 
             async_describe_event("test", "mock_event", async_describe_test_event)
 
-    await logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
+    logbook._process_logbook_platform(hass, "test", MockLogbookPlatform)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire("mock_event", {"device_id": device.id})
