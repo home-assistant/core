@@ -117,10 +117,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
         # No whitelist defined, put data on event bus
-        if not whitelist:
-            hass.bus.fire(EVENT, data)
-        # Check if data matches the defined whitelist
-        elif all(str(data[key]) in whitelist[key] for key in whitelist):
+        if not whitelist or all(str(data[key]) in whitelist[key] for key in whitelist):
             hass.bus.fire(EVENT, data)
 
     pilight_client.set_callback(handle_received_code)

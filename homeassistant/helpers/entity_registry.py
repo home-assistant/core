@@ -221,9 +221,7 @@ class RegistryEntry:
         if not self.name and self.has_entity_name:
             display_dict["en"] = self.original_name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
-            if (precision := sensor_options.get("display_precision")) is not None:
-                display_dict["dp"] = precision
-            elif (
+            if (precision := sensor_options.get("display_precision")) is not None or (
                 precision := sensor_options.get("suggested_display_precision")
             ) is not None:
                 display_dict["dp"] = precision
