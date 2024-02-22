@@ -462,11 +462,12 @@ class IntegrationSensor(RestoreSensor):
             self.async_write_ha_state()
             return
 
-        if not self._method.validate_states(self.hass, old_state, new_state):
-            return
-
         self._attr_available = True
         self._derive_and_set_attributes_from_state(new_state)
+
+        if not self._method.validate_states(self.hass, old_state, new_state):
+            self.async_write_ha_state()
+            return
 
         elapsed_seconds = (
             (new_state.last_updated - old_state.last_updated).total_seconds()
