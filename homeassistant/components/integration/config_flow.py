@@ -88,7 +88,7 @@ CONFIG_SCHEMA = vol.Schema(
                 translation_key=CONF_UNIT_TIME,
             ),
         ),
-        vol.Optional(CONF_MAX_DT, default=60): selector.NumberSelector(
+        vol.Optional(CONF_MAX_DT, default=0): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
                 max=1000000000,
