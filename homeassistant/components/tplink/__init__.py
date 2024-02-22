@@ -190,6 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     child_coordinators: list[TPLinkDataUpdateCoordinator] = []
 
     if device.is_strip:
+        # TODO: child_coordinators should only be necessary for iotdevices
         child_coordinators = [
             # The child coordinators only update energy data so we can
             # set a longer update interval to avoid flooding the device

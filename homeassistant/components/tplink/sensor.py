@@ -111,18 +111,18 @@ def async_emeter_from_device(
 def _async_sensors_for_device(
     device: SmartDevice,
     coordinator: TPLinkDataUpdateCoordinator,
-    has_parent: bool = False,
+    parent: SmartDevice = None,
 ) -> list[SmartPlugSensor]:
     """Generate the sensors for the device."""
     sensors = []
     if device.has_emeter:
         sensors = [
-            SmartPlugSensor(device, coordinator, description, has_parent)
+            SmartPlugSensor(device, coordinator, description, parent=parent)
             for description in ENERGY_SENSORS
             if async_emeter_from_device(device, description) is not None
         ]
     new_sensors = [
-        Sensor(device, coordinator, id_, desc)
+        Sensor(device, coordinator, id_, desc, parent=parent)
         for id_, desc in device.features.items()
         if desc.type == FeatureType.Sensor
     ]
@@ -139,20 +139,14 @@ async def async_setup_entry(
     parent_coordinator = data.parent_coordinator
     children_coordinators = data.children_coordinators
     entities: list[SmartPlugSensor] = []
-    parent = parent_coordinator.device
+    device = parent_coordinator.device
 
-    # TODO: the logic for emeter creation needs to be fixed, as we previously
-    #  bailed out here after checking has_emeter
-    # TODO: this also currently does not create any sensors for strip devices.
+    for idx, child in enumerate(device.children):
+        entities.extend(
+            _async_sensors_for_device(child, children_coordinators[idx], parent=device)
+        )
 
-    if parent.children:
-        # Historically we only add the children if the device is a strip
-        for idx, child in enumerate(parent.children):
-            entities.extend(
-                _async_sensors_for_device(child, children_coordinators[idx], True)
-            )
-
-    entities.extend(_async_sensors_for_device(parent, parent_coordinator))
+    entities.extend(_async_sensors_for_device(device, parent_coordinator))
 
     async_add_entities(entities)
 
@@ -166,9 +160,10 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
         coordinator: TPLinkDataUpdateCoordinator,
         id_: str,
         feature: Feature,
+        parent: SmartDevice = None,
     ):
         """Initialize the sensor."""
-        super().__init__(device, coordinator)
+        super().__init__(device, coordinator, parent=parent)
         self._device = device
         self._feature = feature
         self._attr_unique_id = f"{legacy_device_id(device)}_new_{id_}"
@@ -192,13 +187,13 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
         device: SmartDevice,
         coordinator: TPLinkDataUpdateCoordinator,
         description: TPLinkSensorEntityDescription,
-        has_parent: bool = False,
+        parent: SmartDevice = None,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(device, coordinator)
+        super().__init__(device, coordinator, parent=parent)
         self.entity_description = description
         self._attr_unique_id = f"{legacy_device_id(device)}_{description.key}"
-        if has_parent:
+        if parent is not None:
             assert device.alias
             self._attr_translation_placeholders = {"device_name": device.alias}
             if description.translation_key:

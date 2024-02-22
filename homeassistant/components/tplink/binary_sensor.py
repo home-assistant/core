@@ -22,11 +22,11 @@ from .models import TPLinkData
 def _async_sensors_for_device(
     device: SmartDevice,
     coordinator: TPLinkDataUpdateCoordinator,
-    has_parent: bool = False,
+    parent: SmartDevice = None,
 ) -> list[BinarySensor]:
     """Generate the sensors for the device."""
     sensors = [
-        BinarySensor(device, coordinator, id_, feat)
+        BinarySensor(device, coordinator, id_, feat, parent=parent)
         for id_, feat in device.features.items()
         if feat.type == FeatureType.BinarySensor
     ]
@@ -43,16 +43,14 @@ async def async_setup_entry(
     parent_coordinator = data.parent_coordinator
     children_coordinators = data.children_coordinators
     entities: list[BinarySensor] = []
-    parent = parent_coordinator.device
+    device = parent_coordinator.device
 
-    if parent.is_strip:
-        # Historically we only add the children if the device is a strip
-        for idx, child in enumerate(parent.children):
-            entities.extend(
-                _async_sensors_for_device(child, children_coordinators[idx], True)
-            )
-    else:
-        entities.extend(_async_sensors_for_device(parent, parent_coordinator))
+    entities.extend(_async_sensors_for_device(device, parent_coordinator))
+
+    for idx, child in enumerate(device.children):
+        entities.extend(
+            _async_sensors_for_device(child, children_coordinators[idx], parent=device)
+        )
 
     async_add_entities(entities)
 
@@ -66,10 +64,11 @@ class BinarySensor(CoordinatedTPLinkEntity, BinarySensorEntity):
         coordinator: TPLinkDataUpdateCoordinator,
         id_: str,
         feature: Feature,
+        parent: SmartDevice = None,
     ) -> None:
         """Initialize the sensor."""
         # TODO: feature-based entities could be generalized
-        super().__init__(device, coordinator)
+        super().__init__(device, coordinator, parent=parent)
         self._device = device
         self._feature = feature
         self._attr_unique_id = f"{legacy_device_id(device)}_new_{id_}"
