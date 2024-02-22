@@ -375,7 +375,7 @@ def _remove_listener(
         del hass.data[listeners_key]
 
 
-# tracker is intentionally the first argument here since its
+# tracker, not hass is intentionally the first argument here since its
 # constant and may be used in a partial in the future
 def _async_track_event(
     tracker: _KeyedEventTracker[_TypedDictT],
