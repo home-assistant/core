@@ -34,12 +34,26 @@ _LOGGER = logging.getLogger(__name__)
 _TOKEN_FILENAME = "vicare_token.save"
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1:
+        _LOGGER.debug("Migrating from version %s", entry.version)
+        entry.version = 2
+        hass.config_entries.async_update_entry(
+            entry, options={**entry.options, CONF_EXTENDED_API: False}
+        )
+        _LOGGER.debug("Migration to version %s successful", entry.version)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = {}
+
+    await async_migrate_entry(hass, entry)
 
     try:
         await hass.async_add_executor_job(setup_vicare_api, hass, entry)
