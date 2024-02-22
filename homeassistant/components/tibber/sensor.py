@@ -388,6 +388,17 @@ class TibberSensorElPrice(TibberSensor):
         self._attr_native_value, price_level, self._last_updated = res
         self._attr_extra_state_attributes["price_level"] = price_level
 
+        price_info = self._tibber_home.price_total
+        prices = []
+        for time, total in price_info.items():
+            item = {
+                "start": time,
+                "total": total,
+            }
+            prices.append(item)
+
+        self._attr_extra_state_attributes["prices"] = prices
+
         attrs = self._tibber_home.current_attributes()
         self._attr_extra_state_attributes.update(attrs)
         self._attr_available = self._attr_native_value is not None
