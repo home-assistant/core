@@ -5,6 +5,7 @@ DOMAIN = "microbees"
 OAUTH2_AUTHORIZE = "https://dev.microbees.com/oauth/authorize"
 OAUTH2_TOKEN = "https://dev.microbees.com/oauth/token"
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
