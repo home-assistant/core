@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.4.8
+AEMET-OpenData==0.4.9
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -170,7 +170,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.3.8
 
 # homeassistant.components.airzone
-aioairzone==0.7.2
+aioairzone==0.7.4
 
 # homeassistant.components.ambient_station
 aioambient==2024.01.0
@@ -571,7 +571,7 @@ dbus-fast==2.21.1
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==5.2.1
+deebot-client==5.2.2
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1628,7 +1628,7 @@ pyrympro==0.0.7
 pysabnzbd==1.1.1
 
 # homeassistant.components.schlage
-pyschlage==2023.12.1
+pyschlage==2024.2.0
 
 # homeassistant.components.sensibo
 pysensibo==1.0.36
@@ -1824,7 +1824,7 @@ pywaze==0.5.1
 pyweatherflowudp==1.4.5
 
 # homeassistant.components.html5
-pywebpush==1.9.2
+pywebpush==1.14.1
 
 # homeassistant.components.wemo
 pywemo==1.4.0
