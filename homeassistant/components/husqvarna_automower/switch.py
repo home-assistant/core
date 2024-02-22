@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerBaseEntity
+from .entity import AutomowerControlEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ async def async_setup_entry(
     )
 
 
-class AutomowerSwitchEntity(AutomowerBaseEntity, SwitchEntity):
+class AutomowerSwitchEntity(AutomowerControlEntity, SwitchEntity):
     """Defining the Automower switch."""
 
     _attr_translation_key = "enable_schedule"

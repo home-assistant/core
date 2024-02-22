@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerBaseEntity
+from .entity import AutomowerControlEntity
 
 SUPPORT_STATE_SERVICES = (
     LawnMowerEntityFeature.DOCK
@@ -64,7 +64,7 @@ async def async_setup_entry(
     )
 
 
-class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
+class AutomowerLawnMowerEntity(AutomowerControlEntity, LawnMowerEntity):
     """Defining each mower Entity."""
 
     _attr_name = None
@@ -78,11 +78,6 @@ class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
         """Set up HusqvarnaAutomowerEntity."""
         super().__init__(mower_id, coordinator)
         self._attr_unique_id = mower_id
-
-    @property
-    def available(self) -> bool:
-        """Return True if the device is available."""
-        return super().available and self.mower_attributes.metadata.connected
 
     @property
     def activity(self) -> LawnMowerActivity:
