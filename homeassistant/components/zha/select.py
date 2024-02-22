@@ -10,7 +10,7 @@ from zhaquirks.quirk_ids import TUYA_PLUG_MANUFACTURER, TUYA_PLUG_ONOFF
 from zhaquirks.xiaomi.aqara.magnet_ac01 import OppleCluster as MagnetAC01OppleCluster
 from zhaquirks.xiaomi.aqara.switch_acn047 import OppleCluster as T2RelayOppleCluster
 from zigpy import types
-from zigpy.quirks.v2 import EntityMetadata, EnumMetadata, ZCLEnumMetadata
+from zigpy.quirks.v2 import EntityMetadata, ZCLEnumMetadata
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
 
@@ -85,22 +85,9 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     ) -> None:
         """Init this select entity."""
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        if QUIRK_METADATA in kwargs:
-            self._init_from_quirks_metadata(kwargs[QUIRK_METADATA])
-
         self._attribute_name = self._enum.__name__
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-
-    def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
-        """Init this entity from the quirks metadata."""
-        super()._init_from_quirks_metadata(entity_metadata)
-        enum_metadata: EnumMetadata = entity_metadata.entity_metadata
-        self._enum = enum_metadata.enum
-        if not entity_metadata.translation_key:
-            # standardize the unique id suffix and translation key to be the enum name
-            self._attr_translation_key = self._enum.__name__
-            self._unique_id_suffix = self._enum.__name__
 
     @property
     def current_option(self) -> str | None:
