@@ -21,7 +21,7 @@ async def test_overlay_mode_duration_set(hass: HomeAssistant) -> None:
         duration="01:00:00",
         zone_id=1,
     )
-    #
+    # Must select TIMER overlay
     assert overlay_mode == CONST_OVERLAY_TIMER
 
 
