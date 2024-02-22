@@ -109,7 +109,11 @@ async def test_errors(
 
 
 async def test_asleep_or_offline(
-    hass: HomeAssistant, mock_vehicle_data, mock_wake_up, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_vehicle_data,
+    mock_wake_up,
+    mock_vehicle,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Tests asleep is handled."""
 
@@ -136,12 +140,14 @@ async def test_asleep_or_offline(
             blocking=True,
         )
         assert error
-    mock_wake_up.side_effect = None
     mock_wake_up.assert_called_once()
+
+    mock_wake_up.side_effect = None
     mock_wake_up.reset_mock()
 
     # Run a command but timeout trying to wake up the vehicle
     mock_wake_up.return_value = WAKE_UP_ASLEEP
+    mock_vehicle.return_value = WAKE_UP_ASLEEP
     with patch(
         "homeassistant.components.teslemetry.entity.asyncio.sleep"
     ), pytest.raises(HomeAssistantError) as error:
@@ -152,9 +158,13 @@ async def test_asleep_or_offline(
             blocking=True,
         )
         assert error
-    mock_wake_up.assert_called()
+    mock_wake_up.assert_called_once()
+    mock_vehicle.assert_called()
+
     mock_wake_up.reset_mock()
+    mock_vehicle.reset_mock()
     mock_wake_up.return_value = WAKE_UP_ONLINE
+    mock_vehicle.return_value = WAKE_UP_ONLINE
 
     # Run a command and wake up the vehicle immediately
     await hass.services.async_call(
