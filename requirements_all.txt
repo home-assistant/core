@@ -1576,6 +1576,7 @@ proxmoxer==2.0.1
 
 # homeassistant.components.hardware
 # homeassistant.components.recorder
+# homeassistant.components.systemmonitor
 psutil-home-assistant==0.0.1
 
 # homeassistant.components.systemmonitor
@@ -2238,7 +2239,7 @@ python-homeassistant-analytics==0.6.0
 python-homewizard-energy==4.3.0
 
 # homeassistant.components.hp_ilo
-python-hpilo==4.3
+python-hpilo==4.4.3
 
 # homeassistant.components.izone
 python-izone==1.2.9
