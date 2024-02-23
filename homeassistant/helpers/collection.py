@@ -152,7 +152,7 @@ class ObservableCollection(ABC, Generic[_ItemT]):
         Will be called with (change_type, item_id, updated_config).
         """
         self.listeners.append(listener)
-        return lambda: self.listeners.remove(listener)
+        return partial(self.listeners.remove, listener)
 
     @callback
     def async_add_change_set_listener(
@@ -163,7 +163,7 @@ class ObservableCollection(ABC, Generic[_ItemT]):
         Will be called with [(change_type, item_id, updated_config), ...]
         """
         self.change_set_listeners.append(listener)
-        return lambda: self.change_set_listeners.remove(listener)
+        return partial(self.change_set_listeners.remove, listener)
 
     async def notify_changes(self, change_sets: Iterable[CollectionChangeSet]) -> None:
         """Notify listeners of a change."""
