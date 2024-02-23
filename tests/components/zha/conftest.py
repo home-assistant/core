@@ -38,6 +38,7 @@ from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
+COUNTER_NAMES = ["counter_1", "counter_2", "counter_3"]
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -173,6 +174,10 @@ async def zigpy_app_controller():
     app.state.network_info.extended_pan_id = app.state.node_info.ieee
     app.state.network_info.channel = 15
     app.state.network_info.network_key.key = zigpy.types.KeyData(range(16))
+    app.state.counters = zigpy.state.CounterGroups()
+    app.state.counters["ezsp_counters"] = zigpy.state.CounterGroup("ezsp_counters")
+    for name in COUNTER_NAMES:
+        app.state.counters["ezsp_counters"][name].increment()
 
     # Create a fake coordinator device
     dev = app.add_device(nwk=app.state.node_info.nwk, ieee=app.state.node_info.ieee)
