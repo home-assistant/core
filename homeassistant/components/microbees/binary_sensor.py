@@ -42,13 +42,11 @@ async def async_setup_entry(
         entry.entry_id
     ].coordinator
     async_add_entities(
-        [
-            MBBinarySensor(coordinator, entity_description, bee_id, binary_sensor.id)
-            for bee_id, bee in coordinator.data.bees.items()
-            for binary_sensor in bee.sensors
-            if (entity_description := BINARYSENSOR_TYPES.get(binary_sensor.device_type))
-            is not None
-        ]
+        MBBinarySensor(coordinator, entity_description, bee_id, binary_sensor.id)
+        for bee_id, bee in coordinator.data.bees.items()
+        for binary_sensor in bee.sensors
+        if (entity_description := BINARYSENSOR_TYPES.get(binary_sensor.device_type))
+        is not None
     )
 
 
