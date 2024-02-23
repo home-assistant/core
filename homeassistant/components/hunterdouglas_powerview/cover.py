@@ -88,7 +88,7 @@ async def async_setup_entry(
     # background the fetching of state for initial launch
     entry.async_create_background_task(
         hass,
-        _async_refresh_after_import(pv_entry),
+        _async_refresh_after_import(),
         "powerview.shade-refresh",
     )
 
