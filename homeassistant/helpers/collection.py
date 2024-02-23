@@ -473,16 +473,17 @@ class _CollectionLifeCycle:
     async def _remove_entity(self, change_set: CollectionChangeSet) -> None:
         item_id = change_set.item_id
         ent_reg = self._ent_reg
+        entities = self._entities
         ent_to_remove = ent_reg.async_get_entity_id(
             self._domain, self._platform, item_id
         )
         if ent_to_remove is not None:
             ent_reg.async_remove(ent_to_remove)
-        elif entity := self._entities.get(item_id):
+        elif entity := entities.get(item_id):
             await entity.async_remove(force_remove=True)
         # Unconditionally pop the entity from the entity list to avoid racing against
         # the entity registry event handled by Entity._async_registry_updated
-        self._entities.pop(item_id, None)
+        entities.pop(item_id, None)
 
     async def _update_entity(self, change_set: CollectionChangeSet) -> None:
         if entity := self._entities.get(change_set.item_id):
