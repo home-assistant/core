@@ -68,12 +68,10 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
 
     async_add_entities(
-        [
-            MBSensor(coordinator, desc, bee_id, sensor.id)
-            for bee_id, bee in coordinator.data.bees.items()
-            for sensor in bee.sensors
-            if (desc := SENSOR_TYPES.get(sensor.device_type)) is not None
-        ]
+        MBSensor(coordinator, desc, bee_id, sensor.id)
+        for bee_id, bee in coordinator.data.bees.items()
+        for sensor in bee.sensors
+        if (desc := SENSOR_TYPES.get(sensor.device_type)) is not None
     )
 
 

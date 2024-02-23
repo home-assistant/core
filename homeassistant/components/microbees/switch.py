@@ -21,12 +21,10 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id].coordinator
 
     async_add_entities(
-        [
-            MBSwitch(coordinator, bee_id, switch.id)
-            for bee_id, bee in coordinator.data.bees.items()
-            if bee.productID in (25, 26, 27, 35, 38, 46, 63, 64, 65, 86)
-            for switch in bee.actuators
-        ]
+        MBSwitch(coordinator, bee_id, switch.id)
+        for bee_id, bee in coordinator.data.bees.items()
+        if bee.productID in (25, 26, 27, 35, 38, 46, 63, 64, 65, 86)
+        for switch in bee.actuators
     )
 
 
