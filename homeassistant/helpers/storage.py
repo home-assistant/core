@@ -314,7 +314,7 @@ class Store(Generic[_T]):
         """Schedule the delayed write in a task."""
         if self.hass.loop.time() < self._next_write_time:
             # Timer fired too early because there were multiple
-            # calls to async_delay_save before the first one.
+            # calls to async_delay_save before the first one
             # wrote. Reschedule the timer to the next write time.
             self._async_reschedule_delayed_write(self._next_write_time)
             return
