@@ -37,6 +37,10 @@ _LOG_EXCEPTION = logging.ERROR + 1
 TIMEOUT = 3000  # millisecond
 TIME_MILLISECOND = 1000
 
+SHORT_COMMAND = 1000  # millisecond
+MID_COMMAND = 3000
+LONG_COMMAND = 5000
+
 CONF_END_VIRTUAL_NODE = "end_virtual_node"
 
 
@@ -48,7 +52,7 @@ class BaseRoutineEntity:
         name: str | None,
         routine_id: str | None,
         actions: dict[str, ActionEntity],
-        scheduling_policy: str
+        scheduling_policy: str,
         # timeout: float,
     ) -> None:
         """Initialize a routine entity."""
@@ -215,6 +219,7 @@ class ActionEntity:
         action_state: str | None,
         routine_id: str | None,
         scheduling_policy: str,
+        # duration: timedelta,
         delay: timedelta | None = None,
         variables: dict[str, Any] | None = None,
         context: Context | None = None,
@@ -229,6 +234,7 @@ class ActionEntity:
         self.parents: list[ActionEntity] = []
         self.children: list[ActionEntity] = []
         self._scheduling_policy = scheduling_policy
+        # self.duration = duration
         self.delay = delay
         self.variables = variables
         self.context = context
@@ -322,6 +328,21 @@ class ActionEntity:
             await device_action.async_call_action_from_config(
                 self.hass, self.action, self.variables, self.context
             )
+
+    # async def asnyc_duration_step(self)->None:
+    #     """Handle duration."""
+    #     await self._async_duration_step
+
+    # async def _async_duration_step(self)->None:
+    #     """Handle duration."""
+    #     duration = self.duration
+    #     self._step_log(f"duration {duration}")
+
+    #     try:
+    #         async with asyncio.timeout(duration.total_seconds()):
+    #             await self._stop.wait()
+    #     except asyncio.TimeoutError:
+    #         self._step_log("action's duration completed")
 
     async def async_delay_step(self) -> None:
         """Handle delay."""

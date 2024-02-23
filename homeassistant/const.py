@@ -1234,4 +1234,5 @@ LOCK_STATE_LEASED: Final = "leased"
 
 FCFS: Final = "fcfs"
 FCFS_POST_LEASE: Final = "fcfs_post_lease"
-SCHEDULING_POLICY: Final = "fcfs_post_lease"
+JIT: Final = "just_in_time"
+SCHEDULING_POLICY: Final = "fcfs"
