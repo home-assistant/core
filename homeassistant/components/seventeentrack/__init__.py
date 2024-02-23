@@ -50,8 +50,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up 17Track from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})
-
     session = async_get_clientsession(hass)
     client = SeventeenTrackClient(session=session)
 
@@ -60,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SeventeenTrackError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN][entry.entry_id] = client
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
