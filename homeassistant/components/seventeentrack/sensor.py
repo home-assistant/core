@@ -15,7 +15,6 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_LOCATION,
     CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
@@ -25,7 +24,6 @@ from homeassistant.helpers import (
     entity,
     entity_registry as er,
 )
-from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -44,6 +42,7 @@ from .const import (
     ATTRIBUTION,
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     ENTITY_ID_TEMPLATE,
     NOTIFICATION_DELIVERED_MESSAGE,
@@ -61,6 +60,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SHOW_ARCHIVED, default=False): cv.boolean,
         vol.Optional(CONF_SHOW_DELIVERED, default=False): cv.boolean,
     }
+)
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): str,
+                vol.Required(CONF_PASSWORD): str,
+                vol.Optional(CONF_SHOW_ARCHIVED, default=False): bool,
+                vol.Optional(CONF_SHOW_DELIVERED, default=False): bool,
+            },
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 
@@ -104,12 +117,10 @@ async def async_setup_entry(
 
     client = hass.data[DOMAIN][config_entry.entry_id]
 
-    scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-
     data = SeventeenTrackData(
         client,
         async_add_entities,
-        scan_interval,
+        DEFAULT_SCAN_INTERVAL,
         config_entry.options.get(CONF_SHOW_ARCHIVED, False),
         config_entry.options.get(CONF_SHOW_DELIVERED, False),
         str(hass.config.time_zone),

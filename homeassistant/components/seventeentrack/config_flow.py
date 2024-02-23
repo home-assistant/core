@@ -59,27 +59,6 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
-    async def _async_validate_input(self, user_input):
-        """Validate the user input allows us to connect."""
-
-        session = aiohttp_client.async_get_clientsession(self.hass)
-
-        client = SeventeenTrackClient(session=session)
-
-        try:
-            login_result = await client.profile.login(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-            )
-
-            if not login_result:
-                _LOGGER.error("Invalid username and password provided")
-                return {"base": "invalid_credentials"}
-        except SeventeenTrackError as err:
-            _LOGGER.error("There was an error while logging in: %s", err)
-            return {"base": "cannot_connect"}
-
-        return {}
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -87,9 +66,26 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input:
-            errors = await self._async_validate_input(user_input)
+            client = await self._get_client()
+
+            login_result = False
+            try:
+                login_result = await client.profile.login(
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                )
+            except SeventeenTrackError as err:
+                _LOGGER.error("There was an error while logging in: %s", err)
+                errors = {"base": "cannot_connect"}
+
+            if not login_result:
+                _LOGGER.error("Invalid username and password provided")
+                errors = {"base": "invalid_credentials"}
 
             if not errors:
+                account_id = client.profile.account_id
+                await self.async_set_unique_id(account_id)
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
@@ -102,4 +98,27 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data) -> FlowResult:
         """Import 17Track config from configuration.yaml."""
-        return await self.async_step_user(import_data)
+
+        client = await self._get_client()
+
+        try:
+            login_result = await client.profile.login(
+                import_data[CONF_USERNAME], import_data[CONF_PASSWORD]
+            )
+        except SeventeenTrackError as err:
+            _LOGGER.error("There was an error while logging in: %s", err)
+            return self.async_abort(reason="cannot_connect")
+
+        if not login_result:
+            _LOGGER.error("Invalid username and password provided")
+            return self.async_abort(reason="invalid_credentials")
+
+        account_id = client.profile.account_id
+
+        await self.async_set_unique_id(account_id)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title="17Track", data=import_data)
+
+    async def _get_client(self):
+        session = aiohttp_client.async_get_clientsession(self.hass)
+        return SeventeenTrackClient(session=session)
