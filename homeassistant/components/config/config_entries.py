@@ -160,7 +160,6 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
             {
                 vol.Required("handler"): vol.Any(str, list),
                 vol.Optional("show_advanced_options", default=False): cv.boolean,
-                vol.Optional("source", default=config_entries.SOURCE_USER): cv.string,
                 vol.Optional("entry_id"): cv.string,
             },
             extra=vol.ALLOW_EXTRA,
@@ -186,12 +185,9 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
         """Return context."""
         context = super().get_context(data)
         data = self._data
-        context["source"] = data["source"]
-        if (entry_id := data.get("entry_id")) is None and data[
-            "source"
-        ] == config_entries.SOURCE_RECONFIGURE:
-            raise data_entry_flow.FlowError("Reconfigure step requires an entry_id")
-        if entry_id:
+        context["source"] = config_entries.SOURCE_USER
+        if entry_id := data.get("entry_id"):
+            context["source"] = config_entries.SOURCE_RECONFIGURE
             context["entry_id"] = entry_id
         return context
 
