@@ -175,11 +175,6 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
                 text=f"Failed dependencies {', '.join(exc.failed_dependencies)}",
                 status=HTTPStatus.BAD_REQUEST,
             )
-        except data_entry_flow.FlowError:
-            return web.Response(
-                text="Can not run reconfigure step without an entry_id",
-                status=HTTPStatus.BAD_REQUEST,
-            )
 
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
