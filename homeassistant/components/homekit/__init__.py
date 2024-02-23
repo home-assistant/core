@@ -798,10 +798,11 @@ class HomeKit:
             }
         )
 
-        entity_states = []
+        entity_states: list[State] = []
+        entity_filter = self._filter.get_filter()
         for state in self.hass.states.async_all():
             entity_id = state.entity_id
-            if not self._filter(entity_id):
+            if not entity_filter(entity_id):
                 continue
 
             if ent_reg_ent := ent_reg.async_get(entity_id):

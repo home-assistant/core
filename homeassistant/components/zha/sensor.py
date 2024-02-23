@@ -1,6 +1,7 @@
 """Sensors on Zigbee Home Automation networks."""
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import enum
@@ -10,6 +11,7 @@ import random
 from typing import TYPE_CHECKING, Any, Self
 
 from zigpy import types
+from zigpy.state import Counter, State
 from zigpy.zcl.clusters.closures import WindowCovering
 from zigpy.zcl.clusters.general import Basic
 
@@ -71,7 +73,7 @@ from .core.const import (
 )
 from .core.helpers import get_zha_data
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
-from .entity import ZhaEntity
+from .entity import BaseZhaEntity, ZhaEntity
 
 if TYPE_CHECKING:
     from .core.cluster_handlers import ClusterHandler
@@ -242,6 +244,83 @@ class PollableSensor(Sensor):
                 self._zha_device.available,
                 self.hass.data[DATA_ZHA].allow_polling,
             )
+
+
+class DeviceCounterSensor(BaseZhaEntity, SensorEntity):
+    """Device counter sensor."""
+
+    _attr_should_poll = True
+    _attr_state_class: SensorStateClass = SensorStateClass.TOTAL
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZHADevice,
+        counter_groups: str,
+        counter_group: str,
+        counter: str,
+        **kwargs: Any,
+    ) -> Self | None:
+        """Entity Factory.
+
+        Return entity if it is a supported configuration, otherwise return None
+        """
+        return cls(
+            unique_id, zha_device, counter_groups, counter_group, counter, **kwargs
+        )
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        counter_groups: str,
+        counter_group: str,
+        counter: str,
+        **kwargs: Any,
+    ) -> None:
+        """Init this sensor."""
+        super().__init__(unique_id, zha_device, **kwargs)
+        state: State = self._zha_device.gateway.application_controller.state
+        self._zigpy_counter: Counter = (
+            getattr(state, counter_groups).get(counter_group, {}).get(counter, None)
+        )
+        self._attr_name: str = self._zigpy_counter.name
+        self.remove_future: asyncio.Future
+
+    @property
+    def available(self) -> bool:
+        """Return entity availability."""
+        return self._zha_device.available
+
+    async def async_added_to_hass(self) -> None:
+        """Run when about to be added to hass."""
+        self.remove_future = self.hass.loop.create_future()
+        self._zha_device.gateway.register_entity_reference(
+            self._zha_device.ieee,
+            self.entity_id,
+            self._zha_device,
+            {},
+            self.device_info,
+            self.remove_future,
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect entity object when removed."""
+        await super().async_will_remove_from_hass()
+        self.zha_device.gateway.remove_entity_reference(self)
+        self.remove_future.set_result(True)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        return self._zigpy_counter.value
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        self.async_write_ha_state()
 
 
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
