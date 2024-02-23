@@ -9,6 +9,7 @@ from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smart
 from zigpy.zcl.clusters.hvac import Thermostat
 
 from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.zha.core import ZHADevice
 from homeassistant.components.zha.core.const import ZHA_CLUSTER_HANDLER_READS_PER_REQ
 import homeassistant.config as config_util
 from homeassistant.const import (
@@ -32,7 +33,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import restore_state
+from homeassistant.helpers import entity_registry as er, restore_state
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
@@ -47,6 +48,7 @@ from .common import (
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import (
+    MockConfigEntry,
     async_fire_time_changed,
     async_mock_load_restore_state_from_storage,
 )
@@ -1183,3 +1185,60 @@ async def test_elec_measurement_skip_unsupported_attribute(
         a for call in cluster.read_attributes.call_args_list for a in call[0][0]
     }
     assert read_attrs == supported_attributes
+
+
+@pytest.fixture
+async def coordinator(hass: HomeAssistant, zigpy_device_mock, zha_device_joined):
+    """Test ZHA fan platform."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.Groups.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.CONTROL_BRIDGE,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+            }
+        },
+        ieee="00:15:8d:00:02:32:4f:32",
+        nwk=0x0000,
+        node_descriptor=b"\xf8\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff",
+    )
+    zha_device = await zha_device_joined(zigpy_device)
+    zha_device.available = True
+    return zha_device
+
+
+async def test_device_counter_sensors(
+    hass: HomeAssistant,
+    coordinator: ZHADevice,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test quirks defined sensor."""
+
+    entity_id = "sensor.coordinator_manufacturer_coordinator_model_counter_1"
+    state = hass.states.get(entity_id)
+    assert state is None
+
+    # Enable the entity.
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "1"
+
+    # simulate counter increment on application
+    coordinator.device.application.state.counters["ezsp_counters"][
+        "counter_1"
+    ].increment()
+
+    next_update = dt_util.utcnow() + timedelta(seconds=60)
+    async_fire_time_changed(hass, next_update)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "2"

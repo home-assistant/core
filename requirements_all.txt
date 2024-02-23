@@ -4,7 +4,7 @@
 -r requirements.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.5.0
+AEMET-OpenData==0.5.1
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -535,7 +535,7 @@ batinfo==0.4.2
 # beacontools[scan]==2.1.0
 
 # homeassistant.components.scrape
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
 
 # homeassistant.components.beewi_smartclim
 # beewi-smartclim==0.0.10
@@ -2324,7 +2324,7 @@ pytouchline==0.7
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
-pytraccar==2.1.0
+pytraccar==2.1.1
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
