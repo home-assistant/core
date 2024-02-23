@@ -57,7 +57,7 @@ async def async_setup_entry(
     pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
     coordinator: PowerviewShadeUpdateCoordinator = pv_entry.coordinator
 
-    async def _async_refresh_after_import() -> None:
+    async def _async_initial_refresh() -> None:
         """Force position refresh shortly after adding.
 
         Legacy shades can become out of sync with hub when moved
@@ -88,7 +88,7 @@ async def async_setup_entry(
     # background the fetching of state for initial launch
     entry.async_create_background_task(
         hass,
-        _async_refresh_after_import(),
+        _async_initial_refresh(),
         f"powerview {entry.title} initial shade refresh",
     )
 
