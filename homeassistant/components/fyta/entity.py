@@ -57,6 +57,7 @@ class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):
             model="Plant",
             identifiers={(DOMAIN, f"{entry.entry_id}-{plant_id}")},
             name=self.plant.get("name"),
+
             via_device=(DOMAIN, entry.entry_id),
             sw_version=self.plant.get("sw_version"),
         )
