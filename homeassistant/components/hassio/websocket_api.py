@@ -61,6 +61,7 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_subscribe)
 
 
+@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
 def websocket_subscribe(
@@ -79,6 +80,7 @@ def websocket_subscribe(
     connection.send_message(websocket_api.result_message(msg[WS_ID]))
 
 
+@callback
 @websocket_api.websocket_command(
     {
         vol.Required(WS_TYPE): WS_TYPE_EVENT,
