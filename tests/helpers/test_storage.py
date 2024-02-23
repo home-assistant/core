@@ -170,7 +170,6 @@ async def test_saving_with_delay_churn_reduction(
     async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
     assert store.key not in hass_storage
-    # This call should not cause a reschedule since we are within ~80% of the delay
     store.async_delay_save(lambda: MOCK_DATA, 1)
 
     freezer.tick(1)
@@ -179,15 +178,20 @@ async def test_saving_with_delay_churn_reduction(
     assert store.key in hass_storage
 
     del hass_storage[store.key]
-    store.async_delay_save(lambda: MOCK_DATA, 1)
 
+    store.async_delay_save(lambda: MOCK_DATA, 1)
     freezer.tick(0.5)
     async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
     assert store.key not in hass_storage
-    # This call should cause a reschedule since we are not within ~80% of the delay
-    store.async_delay_save(lambda: MOCK_DATA, 1)
 
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    freezer.tick(0.8)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    store.async_delay_save(lambda: MOCK_DATA, 1)
     freezer.tick(0.8)
     async_fire_time_changed_exact(hass)
     await hass.async_block_till_done()
