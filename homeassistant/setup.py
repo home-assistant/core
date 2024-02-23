@@ -17,7 +17,13 @@ from .const import (
     PLATFORM_FORMAT,
     Platform,
 )
-from .core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from .core import (
+    CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Event,
+    HomeAssistant,
+    callback,
+)
 from .exceptions import DependencyError, HomeAssistantError
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType, EventType
@@ -29,7 +35,7 @@ ATTR_COMPONENT: Final = "component"
 
 BASE_PLATFORMS = {platform.value for platform in Platform}
 
-# DATA_SETUP is a dict[str, asyncio.Task[bool]], indicating domains which are currently
+# DATA_SETUP is a dict[str, asyncio.Future[bool]], indicating domains which are currently
 # being setup or which failed to setup:
 # - Tasks are added to DATA_SETUP by `async_setup_component`, the key is the domain
 #   being setup and the Task is the `_async_setup_component` helper.
@@ -37,7 +43,7 @@ BASE_PLATFORMS = {platform.value for platform in Platform}
 #   the task returned True.
 DATA_SETUP = "setup_tasks"
 
-# DATA_SETUP_DONE is a dict [str, asyncio.Event], indicating components which
+# DATA_SETUP_DONE is a dict [str, asyncio.Future[bool]], indicating components which
 # will be setup:
 # - Events are added to DATA_SETUP_DONE during bootstrap by
 #   async_set_domains_to_be_loaded, the key is the domain which will be loaded.
@@ -45,7 +51,7 @@ DATA_SETUP = "setup_tasks"
 #   is finished, regardless of if the setup was successful or not.
 DATA_SETUP_DONE = "setup_done"
 
-# DATA_SETUP_DONE is a dict [str, datetime], indicating when an attempt
+# DATA_SETUP_STARTED is a dict [str, float], indicating when an attempt
 # to setup a component started.
 DATA_SETUP_STARTED = "setup_started"
 
@@ -110,8 +116,10 @@ def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) 
      - Properly handle after_dependencies.
      - Keep track of domains which will load but have not yet finished loading
     """
-    hass.data.setdefault(DATA_SETUP_DONE, {})
-    hass.data[DATA_SETUP_DONE].update({domain: asyncio.Event() for domain in domains})
+    setup_done_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
+        DATA_SETUP_DONE, {}
+    )
+    setup_done_futures.update({domain: hass.loop.create_future() for domain in domains})
 
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
@@ -131,20 +139,43 @@ async def async_setup_component(
     if domain in hass.config.components:
         return True
 
-    setup_tasks: dict[str, asyncio.Task[bool]] = hass.data.setdefault(DATA_SETUP, {})
-
-    if domain in setup_tasks:
-        return await setup_tasks[domain]
-
-    task = setup_tasks[domain] = hass.async_create_task(
-        _async_setup_component(hass, domain, config), f"setup component {domain}"
+    setup_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
+        DATA_SETUP, {}
+    )
+    setup_done_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
+        DATA_SETUP_DONE, {}
     )
 
+    if existing_setup_future := setup_futures.get(domain):
+        return await existing_setup_future
+
+    setup_future = hass.loop.create_future()
+    setup_futures[domain] = setup_future
+
     try:
-        return await task
-    finally:
-        if domain in hass.data.get(DATA_SETUP_DONE, {}):
-            hass.data[DATA_SETUP_DONE].pop(domain).set()
+        result = await _async_setup_component(hass, domain, config)
+        setup_future.set_result(result)
+        if setup_done_future := setup_done_futures.pop(domain, None):
+            setup_done_future.set_result(result)
+        return result
+    except BaseException as err:  # pylint: disable=broad-except
+        futures = [setup_future]
+        if setup_done_future := setup_done_futures.pop(domain, None):
+            futures.append(setup_done_future)
+        for future in futures:
+            # If the setup call is cancelled it likely means
+            # Home Assistant is shutting down so the future might
+            # already be done which will cause this to raise
+            # an InvalidStateError which is appropriate because
+            # the component setup was cancelled and is in an
+            # indeterminate state.
+            future.set_exception(err)
+            with contextlib.suppress(BaseException):
+                # Clear the flag as its normal that nothing
+                # will wait for this future to be resolved
+                # if there are no concurrent setup attempts
+                await future
+        raise
 
 
 async def _async_process_dependencies(
@@ -154,23 +185,29 @@ async def _async_process_dependencies(
 
     Returns a list of dependencies which failed to set up.
     """
+    setup_futures: dict[str, asyncio.Future[bool]] = hass.data.setdefault(
+        DATA_SETUP, {}
+    )
+
     dependencies_tasks = {
-        dep: hass.loop.create_task(async_setup_component(hass, dep, config))
+        dep: setup_futures.get(dep)
+        or hass.loop.create_task(
+            async_setup_component(hass, dep, config),
+            name=f"setup {dep} as dependency of {integration.domain}",
+        )
         for dep in integration.dependencies
         if dep not in hass.config.components
     }
 
-    after_dependencies_tasks = {}
-    to_be_loaded = hass.data.get(DATA_SETUP_DONE, {})
+    after_dependencies_tasks: dict[str, asyncio.Future[bool]] = {}
+    to_be_loaded: dict[str, asyncio.Future[bool]] = hass.data.get(DATA_SETUP_DONE, {})
     for dep in integration.after_dependencies:
         if (
             dep not in dependencies_tasks
             and dep in to_be_loaded
             and dep not in hass.config.components
         ):
-            after_dependencies_tasks[dep] = hass.loop.create_task(
-                to_be_loaded[dep].wait()
-            )
+            after_dependencies_tasks[dep] = to_be_loaded[dep]
 
     if not dependencies_tasks and not after_dependencies_tasks:
         return []
@@ -179,13 +216,13 @@ async def _async_process_dependencies(
         _LOGGER.debug(
             "Dependency %s will wait for dependencies %s",
             integration.domain,
-            list(dependencies_tasks),
+            dependencies_tasks.keys(),
         )
     if after_dependencies_tasks:
         _LOGGER.debug(
             "Dependency %s will wait for after dependencies %s",
             integration.domain,
-            list(after_dependencies_tasks),
+            after_dependencies_tasks.keys(),
         )
 
     async with hass.timeout.async_freeze(integration.domain):
@@ -201,7 +238,7 @@ async def _async_process_dependencies(
         _LOGGER.error(
             "Unable to set up dependencies of '%s'. Setup failed for dependencies: %s",
             integration.domain,
-            ", ".join(failed),
+            failed,
         )
 
     return failed
@@ -522,7 +559,7 @@ def _async_when_setup(
 
     listeners: list[CALLBACK_TYPE] = []
 
-    async def _matched_event(event: EventType[EventComponentLoaded]) -> None:
+    async def _matched_event(event: Event) -> None:
         """Call the callback when we matched an event."""
         for listener in listeners:
             listener()
@@ -536,13 +573,13 @@ def _async_when_setup(
     listeners.append(
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
-            _matched_event,  # type: ignore[arg-type]
+            _matched_event,
             event_filter=_async_is_component_filter,  # type: ignore[arg-type]
         )
     )
     if start_event:
         listeners.append(
-            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)  # type: ignore[arg-type]
+            hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _matched_event)
         )
 
 

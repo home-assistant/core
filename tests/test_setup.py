@@ -319,6 +319,7 @@ async def test_component_failing_setup(hass: HomeAssistant) -> None:
 
 async def test_component_exception_setup(hass: HomeAssistant) -> None:
     """Test component that raises exception during setup."""
+    setup.async_set_domains_to_be_loaded(hass, {"comp"})
 
     def exception_setup(hass, config):
         """Raise exception."""
@@ -327,6 +328,22 @@ async def test_component_exception_setup(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule("comp", setup=exception_setup))
 
     assert not await setup.async_setup_component(hass, "comp", {})
+    assert "comp" not in hass.config.components
+
+
+async def test_component_base_exception_setup(hass: HomeAssistant) -> None:
+    """Test component that raises exception during setup."""
+    setup.async_set_domains_to_be_loaded(hass, {"comp"})
+
+    def exception_setup(hass, config):
+        """Raise exception."""
+        raise BaseException("fail!")
+
+    mock_integration(hass, MockModule("comp", setup=exception_setup))
+
+    with pytest.raises(BaseException):
+        await setup.async_setup_component(hass, "comp", {})
+
     assert "comp" not in hass.config.components
 
 

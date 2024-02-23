@@ -769,6 +769,14 @@ omit =
     homeassistant/components/meteoclimatic/__init__.py
     homeassistant/components/meteoclimatic/sensor.py
     homeassistant/components/meteoclimatic/weather.py
+    homeassistant/components/microbees/__init__.py
+    homeassistant/components/microbees/api.py
+    homeassistant/components/microbees/application_credentials.py
+    homeassistant/components/microbees/const.py
+    homeassistant/components/microbees/coordinator.py
+    homeassistant/components/microbees/entity.py
+    homeassistant/components/microbees/sensor.py
+    homeassistant/components/microbees/switch.py
     homeassistant/components/microsoft/tts.py
     homeassistant/components/mikrotik/hub.py
     homeassistant/components/mill/climate.py
@@ -1700,7 +1708,6 @@ omit =
     homeassistant/components/myuplink/__init__.py
     homeassistant/components/myuplink/api.py
     homeassistant/components/myuplink/application_credentials.py
-    homeassistant/components/myuplink/binary_sensor.py
     homeassistant/components/myuplink/coordinator.py
     homeassistant/components/myuplink/entity.py
     homeassistant/components/myuplink/helpers.py

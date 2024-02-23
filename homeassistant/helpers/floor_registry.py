@@ -5,18 +5,28 @@ from collections import UserDict
 from collections.abc import Iterable, ValuesView
 import dataclasses
 from dataclasses import dataclass
-from typing import cast
+from typing import Literal, TypedDict, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
-from .typing import UNDEFINED, UndefinedType
+from .typing import UNDEFINED, EventType, UndefinedType
 
 DATA_REGISTRY = "floor_registry"
 EVENT_FLOOR_REGISTRY_UPDATED = "floor_registry_updated"
 STORAGE_KEY = "core.floor_registry"
 STORAGE_VERSION_MAJOR = 1
 SAVE_DELAY = 10
+
+
+class EventFloorRegistryUpdatedData(TypedDict):
+    """Event data for when the floor registry is updated."""
+
+    action: Literal["create", "remove", "update"]
+    floor_id: str
+
+
+EventFloorRegistryUpdated = EventType[EventFloorRegistryUpdatedData]
 
 
 @dataclass(slots=True, kw_only=True, frozen=True)
@@ -151,7 +161,10 @@ class FloorRegistry:
         self.async_schedule_save()
         self.hass.bus.async_fire(
             EVENT_FLOOR_REGISTRY_UPDATED,
-            {"action": "create", "floor_id": floor_id},
+            EventFloorRegistryUpdatedData(
+                action="create",
+                floor_id=floor_id,
+            ),
         )
         return floor
 
@@ -160,7 +173,11 @@ class FloorRegistry:
         """Delete floor."""
         del self.floors[floor_id]
         self.hass.bus.async_fire(
-            EVENT_FLOOR_REGISTRY_UPDATED, {"action": "remove", "floor_id": floor_id}
+            EVENT_FLOOR_REGISTRY_UPDATED,
+            EventFloorRegistryUpdatedData(
+                action="remove",
+                floor_id=floor_id,
+            ),
         )
         self.async_schedule_save()
 
@@ -196,7 +213,11 @@ class FloorRegistry:
 
         self.async_schedule_save()
         self.hass.bus.async_fire(
-            EVENT_FLOOR_REGISTRY_UPDATED, {"action": "update", "floor_id": floor_id}
+            EVENT_FLOOR_REGISTRY_UPDATED,
+            EventFloorRegistryUpdatedData(
+                action="update",
+                floor_id=floor_id,
+            ),
         )
 
         return new
