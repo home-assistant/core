@@ -50,30 +50,35 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
         translation_key="plant_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
+        value_fn=lambda value: PLANT_STATUS[value],
     ),
     FytaSensorEntityDescription(
         key="temperature_status",
         translation_key="temperature_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
+        value_fn=lambda value: PLANT_STATUS[value],
     ),
     FytaSensorEntityDescription(
         key="light_status",
         translation_key="light_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
+        value_fn=lambda value: PLANT_STATUS[value],
     ),
     FytaSensorEntityDescription(
         key="moisture_status",
         translation_key="moisture_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
+        value_fn=lambda value: PLANT_STATUS[value],
     ),
     FytaSensorEntityDescription(
         key="salinity_status",
         translation_key="salinity_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
+        value_fn=lambda value: PLANT_STATUS[value],
     ),
     FytaSensorEntityDescription(
         key="temperature",
@@ -170,10 +175,6 @@ class FytaPlantSensor(FytaPlantEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | float | datetime:
         """Return the state for this sensor."""
-        if "status" in self.entity_description.key:
-            val = PLANT_STATUS[
-                self.coordinator.data[self.plant_id][self.entity_description.key]
-            ]
-        else:
-            val = self.coordinator.data[self.plant_id][self.entity_description.key]
+
+        val = self.coordinator.data[self.plant_id][self.entity_description.key]
         return self.entity_description.value_fn(val)

@@ -28,7 +28,7 @@ class FytaCoordinatorEntity(CoordinatorEntity[FytaCoordinator]):
             manufacturer="Fyta",
             model="Controller",
             identifiers={(DOMAIN, entry.entry_id)},
-            name="Fyta Coordinator ({})".format(coordinator.data.get("email")),
+            name=f"Fyta Coordinator ({self.coordinator.fyta.email})",
         )
 
         self.entity_description = description
@@ -54,7 +54,7 @@ class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):
         self._attr_device_info = DeviceInfo(
             manufacturer="Fyta",
             model="Plant",
-            identifiers={(DOMAIN, str(plant_id))},
+            identifiers={(DOMAIN, f"{entry.entry_id}-{plant_id}")},
             name=coordinator.data.get(plant_id).get("name"),
             via_device=(DOMAIN, entry.entry_id),
             sw_version=coordinator.data.get(plant_id).get("sw_version"),
