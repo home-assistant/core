@@ -47,7 +47,6 @@ class FytaCoordinator(DataUpdateCoordinator):
         data = await self.fyta.update_all_plants()
 
         self.plant_list = self.fyta.plant_list
-        data |= {"email": self.fyta.email}
 
         self._attr_last_update_success = datetime.now()
         return data

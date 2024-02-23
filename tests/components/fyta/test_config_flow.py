@@ -43,8 +43,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.fyta.config_flow.FytaConfigFlow.validate_input",
-        return_value={"title": USERNAME},
+        "homeassistant.components.fyta.config_flow.FytaConnector",
+        return_value=AsyncMock(),
     ), patch(
         "homeassistant.components.fyta.async_setup_entry",
         return_value=True,
@@ -77,9 +77,12 @@ async def test_user(hass: HomeAssistant) -> None:
 
     # tests with connection error
     with patch(
-        "homeassistant.components.fyta.config_flow.FytaConfigFlow.validate_input",
-        side_effect=FytaConnectionError,
-    ):
+        "homeassistant.components.fyta.config_flow.FytaConnector",
+        return_value=AsyncMock(),
+    ) as mock:
+        fyta = mock.return_value
+        fyta.login.side_effect = FytaConnectionError
+
         result = await flow.async_step_user(
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
         )
@@ -89,9 +92,12 @@ async def test_user(hass: HomeAssistant) -> None:
 
     # tests with authentication error
     with patch(
-        "homeassistant.components.fyta.config_flow.FytaConfigFlow.validate_input",
-        side_effect=FytaAuthentificationError,
-    ):
+        "homeassistant.components.fyta.config_flow.FytaConnector",
+        return_value=AsyncMock(),
+    ) as mock:
+        fyta = mock.return_value
+        fyta.login.side_effect = FytaAuthentificationError
+
         result = await flow.async_step_user(
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
         )
@@ -101,9 +107,12 @@ async def test_user(hass: HomeAssistant) -> None:
 
     # tests with password error
     with patch(
-        "homeassistant.components.fyta.config_flow.FytaConfigFlow.validate_input",
-        side_effect=FytaPasswordError,
-    ):
+        "homeassistant.components.fyta.config_flow.FytaConnector",
+        return_value=AsyncMock(),
+    ) as mock:
+        fyta = mock.return_value
+        fyta.login.side_effect = FytaPasswordError
+
         result = await flow.async_step_user(
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
         )
@@ -113,9 +122,12 @@ async def test_user(hass: HomeAssistant) -> None:
 
     # tests with other error
     with patch(
-        "homeassistant.components.fyta.config_flow.FytaConfigFlow.validate_input",
-        side_effect=Exception,
-    ):
+        "homeassistant.components.fyta.config_flow.FytaConnector",
+        return_value=AsyncMock(),
+    ) as mock:
+        fyta = mock.return_value
+        fyta.login.side_effect = Exception
+
         result = await flow.async_step_user(
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
         )
@@ -124,23 +136,6 @@ async def test_user(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "unknown"}
 
     # tests with all information provided
-    with patch(
-        "homeassistant.components.fyta.config_flow.FytaConfigFlow.validate_input",
-        return_value={"title": USERNAME},
-    ):
-        result = await flow.async_step_user(
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-        )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result["title"] == USERNAME
-    assert result["data"][CONF_USERNAME] == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-
-
-async def test_validate_input(hass: HomeAssistant) -> None:
-    """Test validate_input."""
-    flow = init_config_flow(hass)
-
     with patch(
         "homeassistant.components.fyta.config_flow.FytaConnector",
         return_value=AsyncMock(),
@@ -151,8 +146,10 @@ async def test_validate_input(hass: HomeAssistant) -> None:
             "expiration": EXPIRATION,
         }
 
-        result = await flow.validate_input(
-            hass, {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        result = await flow.async_step_user(
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
         )
-
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == USERNAME
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
