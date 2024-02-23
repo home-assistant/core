@@ -4,9 +4,10 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Coroutine
 import contextlib
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 import logging.handlers
+from operator import itemgetter
 import os
 import platform
 import sys
@@ -32,7 +33,9 @@ from .helpers import (
     device_registry,
     entity,
     entity_registry,
+    floor_registry,
     issue_registry,
+    label_registry,
     recorder,
     restore_state,
     template,
@@ -48,7 +51,6 @@ from .setup import (
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
-from .util import dt as dt_util
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_virtual_env
 
@@ -301,7 +303,9 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
         area_registry.async_load(hass),
         device_registry.async_load(hass),
         entity_registry.async_load(hass),
+        floor_registry.async_load(hass),
         issue_registry.async_load(hass),
+        label_registry.async_load(hass),
         hass.async_add_executor_job(_cache_uname_processor),
         template.async_load_custom_templates(hass),
         restore_state.async_load(hass),
@@ -543,36 +547,69 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     return domains
 
 
-async def _async_watch_pending_setups(hass: core.HomeAssistant) -> None:
-    """Periodic log of setups that are pending.
+class _WatchPendingSetups:
+    """Periodic log and dispatch of setups that are pending."""
 
-    Pending for longer than LOG_SLOW_STARTUP_INTERVAL.
-    """
-    loop_count = 0
-    setup_started: dict[str, datetime] = hass.data[DATA_SETUP_STARTED]
-    previous_was_empty = True
-    while True:
-        now = dt_util.utcnow()
+    def __init__(
+        self, hass: core.HomeAssistant, setup_started: dict[str, float]
+    ) -> None:
+        """Initialize the WatchPendingSetups class."""
+        self._hass = hass
+        self._setup_started = setup_started
+        self._duration_count = 0
+        self._handle: asyncio.TimerHandle | None = None
+        self._previous_was_empty = True
+        self._loop = hass.loop
+
+    def _async_watch(self) -> None:
+        """Periodic log of setups that are pending."""
+        now = monotonic()
+        self._duration_count += SLOW_STARTUP_CHECK_INTERVAL
+
         remaining_with_setup_started = {
-            domain: (now - setup_started[domain]).total_seconds()
-            for domain in setup_started
+            domain: (now - start_time)
+            for domain, start_time in self._setup_started.items()
         }
         _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
-        if remaining_with_setup_started or not previous_was_empty:
-            async_dispatcher_send(
-                hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
-            )
-        previous_was_empty = not remaining_with_setup_started
-        await asyncio.sleep(SLOW_STARTUP_CHECK_INTERVAL)
-        loop_count += SLOW_STARTUP_CHECK_INTERVAL
-
-        if loop_count >= LOG_SLOW_STARTUP_INTERVAL and setup_started:
+        self._async_dispatch(remaining_with_setup_started)
+        if (
+            self._setup_started
+            and self._duration_count % LOG_SLOW_STARTUP_INTERVAL == 0
+        ):
+            # We log every LOG_SLOW_STARTUP_INTERVAL until all integrations are done
+            # once we take over LOG_SLOW_STARTUP_INTERVAL (60s) to start up
             _LOGGER.warning(
                 "Waiting on integrations to complete setup: %s",
-                ", ".join(setup_started),
+                ", ".join(self._setup_started),
             )
-            loop_count = 0
-        _LOGGER.debug("Running timeout Zones: %s", hass.timeout.zones)
+
+        _LOGGER.debug("Running timeout Zones: %s", self._hass.timeout.zones)
+        self._async_schedule_next()
+
+    def _async_dispatch(self, remaining_with_setup_started: dict[str, float]) -> None:
+        """Dispatch the signal."""
+        if remaining_with_setup_started or not self._previous_was_empty:
+            async_dispatcher_send(
+                self._hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, remaining_with_setup_started
+            )
+        self._previous_was_empty = not remaining_with_setup_started
+
+    def _async_schedule_next(self) -> None:
+        """Schedule the next call."""
+        self._handle = self._loop.call_later(
+            SLOW_STARTUP_CHECK_INTERVAL, self._async_watch
+        )
+
+    def async_start(self) -> None:
+        """Start watching."""
+        self._async_schedule_next()
+
+    def async_stop(self) -> None:
+        """Stop watching."""
+        self._async_dispatch({})
+        if self._handle:
+            self._handle.cancel()
+            self._handle = None
 
 
 async def async_setup_multi_components(
@@ -674,6 +711,21 @@ async def _async_resolve_domains_to_setup(
         requirements.async_load_installed_versions(hass, needed_requirements),
         "check installed requirements",
     )
+    # Start loading translations for all integrations we are going to set up
+    # in the background so they are ready when we need them. This avoids a
+    # lot of waiting for the translation load lock and a thundering herd of
+    # tasks trying to load the same translations at the same time as each
+    # integration is loaded.
+    #
+    # We do not wait for this since as soon as the task runs it will
+    # hold the translation load lock and if anything is fast enough to
+    # wait for the translation load lock, loading will be done by the
+    # time it gets to it.
+    hass.async_create_background_task(
+        translation.async_load_integrations(hass, {*BASE_PLATFORMS, *domains_to_setup}),
+        "load translations",
+    )
+
     return domains_to_setup, integration_cache
 
 
@@ -681,10 +733,12 @@ async def _async_set_up_integrations(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> None:
     """Set up all the integrations."""
-    hass.data[DATA_SETUP_STARTED] = {}
+    setup_started: dict[str, float] = {}
+    hass.data[DATA_SETUP_STARTED] = setup_started
     setup_time: dict[str, timedelta] = hass.data.setdefault(DATA_SETUP_TIME, {})
 
-    watch_task = asyncio.create_task(_async_watch_pending_setups(hass))
+    watcher = _WatchPendingSetups(hass, setup_started)
+    watcher.async_start()
 
     domains_to_setup, integration_cache = await _async_resolve_domains_to_setup(
         hass, config
@@ -780,15 +834,9 @@ async def _async_set_up_integrations(
     except TimeoutError:
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
 
-    watch_task.cancel()
-    async_dispatcher_send(hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, {})
+    watcher.async_stop()
 
     _LOGGER.debug(
         "Integration setup times: %s",
-        {
-            integration: timedelta.total_seconds()
-            for integration, timedelta in sorted(
-                setup_time.items(), key=lambda item: item[1].total_seconds()
-            )
-        },
+        dict(sorted(setup_time.items(), key=itemgetter(1))),
     )
