@@ -302,6 +302,7 @@ async def test_form_host_already_exists(
             "password": "changed-password",
         },
     )
+    await hass.async_block_till_done()
     assert result3["type"] == "abort"
     assert result3["reason"] == "reauth_successful"
 

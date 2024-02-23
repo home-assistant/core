@@ -24,6 +24,11 @@
     }
   },
   "entity": {
+    "switch": {
+      "enable_schedule": {
+        "name": "Enable schedule"
+      }
+    },
     "sensor": {
       "number_of_charging_cycles": {
         "name": "Number of charging cycles"
