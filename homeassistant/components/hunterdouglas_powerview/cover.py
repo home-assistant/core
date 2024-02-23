@@ -70,7 +70,7 @@ async def async_setup_entry(
             with suppress(asyncio.TimeoutError):
                 # hold off to avoid spamming the hub
                 async with asyncio.timeout(10):
-                    _LOGGER.warning("Initial refresh of shade: %s", shade.name)
+                    _LOGGER.debug("Initial refresh of shade: %s", shade.name)
                     await shade.refresh()
 
     entities: list[ShadeEntity] = []
