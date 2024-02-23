@@ -102,9 +102,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a 17Track sensor entry."""
 
-    entry_id = config_entry.entry_id
-
-    client = hass.data[DOMAIN][entry_id]
+    client = hass.data[DOMAIN][config_entry.entry_id]
 
     scan_interval = config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
