@@ -122,7 +122,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
             try:
                 await self.tedee_client.delete_webhook(self.tedee_webhook_id)
             except TedeeWebhookException as ex:
-                _LOGGER.warning(
+                _LOGGER.exception(
                     "Failed to unregister Tedee webhook from bridge: %s", ex
                 )
             else:
