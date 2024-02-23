@@ -31,7 +31,7 @@ async def async_get_service(
 class SIPCallNotificationService(BaseNotificationService):
     """Implement the notification service for SIP Call."""
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: dict[str, Any]) -> None:
         """Initialize the service."""
 
         self.config = config
@@ -42,7 +42,7 @@ class SIPCallNotificationService(BaseNotificationService):
         )
 
     @staticmethod
-    async def make_call(config: dict, callee: str, duration: int):
+    async def make_call(config: dict[str, Any], callee: str, duration: int):
         """Make a SIP call to the given callee hanging up after duration seconds."""
 
         auth_creds = SIPAuthCreds(
@@ -51,12 +51,14 @@ class SIPCallNotificationService(BaseNotificationService):
 
         inv = Invite(
             uri_from=f"sip:{config[CONF_USERNAME]}@{config[CONF_SIP_DOMAIN]}",
-            uri_to=f"sip:{callee}@{config[CONF_SIP_SERVER]}",
+            uri_to=f"sip:{callee}@{config[CONF_SIP_DOMAIN]}",
             uri_via=config[CONF_SIP_SERVER],
             auth_creds=auth_creds,
         )
 
-        return await async_call_and_cancel(inv, duration)
+        return await async_call_and_cancel(
+            inv, duration, sip_server=config[CONF_SIP_SERVER]
+        )
 
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Make a short call and hang up."""

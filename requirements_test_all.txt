@@ -1030,7 +1030,7 @@ mutesync==0.0.1
 mypermobil==0.1.6
 
 # homeassistant.components.sipcall
-nanosip==0.0.6
+nanosip==0.0.7
 
 # homeassistant.components.keenetic_ndms2
 ndms2-client==0.1.2
