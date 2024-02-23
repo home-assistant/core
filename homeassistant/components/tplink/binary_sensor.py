@@ -81,9 +81,3 @@ class BinarySensor(CoordinatedTPLinkEntity, BinarySensorEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         self._attr_is_on = self._feature.value
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()

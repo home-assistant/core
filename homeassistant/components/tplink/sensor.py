@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import legacy_device_id
@@ -180,6 +180,11 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
             key=id_, name=feature.name, icon=feature.icon
         )
 
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        self._attr_native_value = self._feature.value
+
     @property
     def native_value(self):
         """Return the sensors state."""
@@ -211,7 +216,9 @@ class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
                 assert description.device_class
                 self._attr_translation_key = f"{description.device_class.value}_child"
 
-    @property
-    def native_value(self) -> float | None:
-        """Return the sensors state."""
-        return async_emeter_from_device(self.device, self.entity_description)
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        self._attr_native_value = async_emeter_from_device(
+            self.device, self.entity_description
+        )

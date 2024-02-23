@@ -100,9 +100,3 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
         if icon and "{state}" in icon:
             icon = icon.replace("{state}", "on" if is_on else "off")
         self._attr_icon = icon
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()

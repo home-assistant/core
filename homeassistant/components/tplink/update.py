@@ -92,12 +92,6 @@ class Update(CoordinatedTPLinkEntity, UpdateEntity):
         )
         self._attr_is_on = self._update_module.update_available
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
-
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
