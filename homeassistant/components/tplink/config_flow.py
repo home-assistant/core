@@ -413,6 +413,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
         reauth_entry = self.reauth_entry
         assert reauth_entry is not None
         entry_data = reauth_entry.data
@@ -428,10 +429,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     credentials=credentials,
                     raise_on_progress=True,
                 )
-            except AuthenticationException:
+            except AuthenticationException as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except SmartDeviceException:
+                placeholders["error"] = str(ex)
+            except SmartDeviceException as ex:
                 errors["base"] = "cannot_connect"
+                placeholders["error"] = str(ex)
             else:
                 await set_credentials(self.hass, username, password)
                 self.hass.async_create_task(self._async_reload_requires_auth_entries())
@@ -441,7 +444,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         alias = entry_data.get(CONF_ALIAS) or "unknown"
         model = entry_data.get(CONF_MODEL) or "unknown"
 
-        placeholders = {"name": alias, "model": model, "host": host}
+        placeholders.update({"name": alias, "model": model, "host": host})
+
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="reauth_confirm",
