@@ -252,6 +252,7 @@ class DeviceCounterSensor(BaseZhaEntity, SensorEntity):
     _attr_should_poll = True
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
 
     @classmethod
     def create_entity(

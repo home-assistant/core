@@ -33,7 +33,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import restore_state
+from homeassistant.helpers import entity_registry as er, restore_state
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
@@ -48,6 +48,7 @@ from .common import (
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import (
+    MockConfigEntry,
     async_fire_time_changed,
     async_mock_load_restore_state_from_storage,
 )
@@ -1209,14 +1210,21 @@ async def coordinator(hass: HomeAssistant, zigpy_device_mock, zha_device_joined)
 
 
 async def test_device_counter_sensors(
-    hass: HomeAssistant, coordinator: ZHADevice
+    hass: HomeAssistant,
+    coordinator: ZHADevice,
+    entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test quirks defined sensor."""
 
-    entity_id = find_entity_id(
-        Platform.SENSOR, coordinator, hass, qualifier="counter_1"
-    )
-    assert entity_id is not None
+    entity_id = "sensor.coordinator_manufacturer_coordinator_model_counter_1"
+    state = hass.states.get(entity_id)
+    assert state is None
+
+    # Enable the entity.
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
