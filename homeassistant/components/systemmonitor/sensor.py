@@ -494,7 +494,10 @@ async def async_setup_entry(  # noqa: C901
         """Return startup information."""
         disk_arguments = get_all_disk_mounts(hass)
         network_arguments = get_all_network_interfaces(hass)
-        cpu_temperature = read_cpu_temperature(hass)
+        try:
+            cpu_temperature = read_cpu_temperature(hass)
+        except AttributeError:
+            cpu_temperature = 0.0
         return {
             "disk_arguments": disk_arguments,
             "network_arguments": network_arguments,
