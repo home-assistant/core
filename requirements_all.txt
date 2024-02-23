@@ -535,7 +535,7 @@ batinfo==0.4.2
 # beacontools[scan]==2.1.0
 
 # homeassistant.components.scrape
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
 
 # homeassistant.components.beewi_smartclim
 # beewi-smartclim==0.0.10
