@@ -44,7 +44,7 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
         (
             "yna5x1",
             [
-                "select.ozmo_950_water_amount",
+                "select.ozmo_950_water_flow_level",
             ],
         ),
     ],
@@ -58,7 +58,7 @@ async def test_selects(
     entity_ids: list[str],
 ) -> None:
     """Test that select entity snapshots match."""
-    assert entity_ids == sorted(hass.states.async_entity_ids())
+    assert entity_ids == hass.states.async_entity_ids()
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
@@ -83,7 +83,7 @@ async def test_selects(
     [
         (
             "yna5x1",
-            "select.ozmo_950_water_amount",
+            "select.ozmo_950_water_flow_level",
             "ultrahigh",
             "low",
             SetWaterInfo(WaterAmount.LOW),

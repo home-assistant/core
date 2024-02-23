@@ -22,6 +22,17 @@
         "default": "mdi:broom"
       }
     },
+    "number": {
+      "clean_count": {
+        "default": "mdi:counter"
+      },
+      "volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      }
+    },
     "sensor": {
       "error": {
         "default": "mdi:alert-circle"
@@ -66,6 +77,23 @@
       },
       "work_mode": {
         "default": "mdi:cog"
+      }
+    },
+    "switch": {
+      "advanced_mode": {
+        "default": "mdi:tune"
+      },
+      "carpet_auto_fan_boost": {
+        "default": "mdi:fan-auto"
+      },
+      "clean_preference": {
+        "default": "mdi:broom"
+      },
+      "continuous_cleaning": {
+        "default": "mdi:refresh-auto"
+      },
+      "true_detect": {
+        "default": "mdi:laser-pointer"
       }
     }
   }

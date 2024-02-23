@@ -28,6 +28,7 @@ from homeassistant.components.flux_led.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import format_mac
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +51,7 @@ DEFAULT_ENTRY_TITLE = f"{MODEL_DESCRIPTION} {SHORT_MAC_ADDRESS}"
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
     hostname=MODEL,
     ip=IP_ADDRESS,
-    macaddress=MAC_ADDRESS,
+    macaddress=format_mac(MAC_ADDRESS).replace(":", ""),
 )
 FLUX_DISCOVERY_PARTIAL = FluxLEDDiscovery(
     ipaddr=IP_ADDRESS,

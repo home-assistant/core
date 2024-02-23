@@ -838,6 +838,27 @@ class SmartEnergySummationReceived(PolledSmartEnergySummation):
     _unique_id_suffix = "summation_received"
     _attr_translation_key: str = "summation_received"
 
+    @classmethod
+    def create_entity(
+        cls,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> Self | None:
+        """Entity Factory.
+
+        This attribute only started to be initialized in HA 2024.2.0,
+        so the entity would be created on the first HA start after the
+        upgrade for existing devices, as the initialization to see if
+        an attribute is unsupported happens later in the background.
+        To avoid creating unnecessary entities for existing devices,
+        wait until the attribute was properly initialized once for now.
+        """
+        if cluster_handlers[0].cluster.get(cls._attribute_name) is None:
+            return None
+        return super().create_entity(unique_id, zha_device, cluster_handlers, **kwargs)
+
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_PRESSURE)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
@@ -1190,17 +1211,14 @@ class AqaraFeedingSource(types.enum8):
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class AqaraPetFeederLastFeedingSource(Sensor):
+class AqaraPetFeederLastFeedingSource(EnumSensor):
     """Sensor that displays the last feeding source of pet feeder."""
 
     _attribute_name = "last_feeding_source"
     _unique_id_suffix = "last_feeding_source"
     _attr_translation_key: str = "last_feeding_source"
     _attr_icon = "mdi:devices"
-
-    def formatter(self, value: int) -> int | float | None:
-        """Numeric pass-through formatter."""
-        return AqaraFeedingSource(value).name
+    _enum = AqaraFeedingSource
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"})
@@ -1262,17 +1280,14 @@ class SonoffIlluminationStates(types.enum8):
 
 @MULTI_MATCH(cluster_handler_names="sonoff_manufacturer", models={"SNZB-06P"})
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
-class SonoffPresenceSenorIlluminationStatus(Sensor):
+class SonoffPresenceSenorIlluminationStatus(EnumSensor):
     """Sensor that displays the illumination status the last time peresence was detected."""
 
     _attribute_name = "last_illumination_state"
     _unique_id_suffix = "last_illumination"
     _attr_translation_key: str = "last_illumination_state"
     _attr_icon: str = "mdi:theme-light-dark"
-
-    def formatter(self, value: int) -> int | float | None:
-        """Numeric pass-through formatter."""
-        return SonoffIlluminationStates(value).name
+    _enum = SonoffIlluminationStates
 
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)

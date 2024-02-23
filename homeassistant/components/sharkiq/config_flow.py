@@ -53,7 +53,7 @@ async def _validate_input(
         async with asyncio.timeout(10):
             LOGGER.debug("Initialize connection to Ayla networks API")
             await ayla_api.async_sign_in()
-    except (asyncio.TimeoutError, aiohttp.ClientError, TypeError) as error:
+    except (TimeoutError, aiohttp.ClientError, TypeError) as error:
         LOGGER.error(error)
         raise CannotConnect(
             "Unable to connect to SharkIQ services.  Check your region settings."

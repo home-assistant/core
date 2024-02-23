@@ -1,12 +1,11 @@
 """Support for climates."""
 from __future__ import annotations
 
-import asyncio
 from enum import StrEnum
 from typing import Any
 
 from aiocomelit import ComelitSerialBridgeObject
-from aiocomelit.const import CLIMATE, SLEEP_BETWEEN_CALLS
+from aiocomelit.const import CLIMATE
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -91,11 +90,16 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
     _attr_max_temp = 30
     _attr_min_temp = 5
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_target_temperature_step = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -186,7 +190,6 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         await self.coordinator.api.set_clima_status(
             self._device.index, ClimaAction.MANUAL
         )
-        await asyncio.sleep(SLEEP_BETWEEN_CALLS)
         await self.coordinator.api.set_clima_status(
             self._device.index, ClimaAction.SET, target_temp
         )
@@ -198,7 +201,6 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
             await self.coordinator.api.set_clima_status(
                 self._device.index, ClimaAction.ON
             )
-            await asyncio.sleep(SLEEP_BETWEEN_CALLS)
         await self.coordinator.api.set_clima_status(
             self._device.index, MODE_TO_ACTION[hvac_mode]
         )

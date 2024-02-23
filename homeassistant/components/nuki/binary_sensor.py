@@ -22,19 +22,20 @@ async def async_setup_entry(
     """Set up the Nuki binary sensors."""
     entry_data: NukiEntryData = hass.data[NUKI_DOMAIN][entry.entry_id]
 
-    lock_entities = []
-    opener_entities = []
+    entities: list[NukiEntity] = []
 
     for lock in entry_data.locks:
         if lock.is_door_sensor_activated:
-            lock_entities.extend([NukiDoorsensorEntity(entry_data.coordinator, lock)])
+            entities.append(NukiDoorsensorEntity(entry_data.coordinator, lock))
 
-    async_add_entities(lock_entities)
+    entities.extend(
+        [
+            NukiRingactionEntity(entry_data.coordinator, opener)
+            for opener in entry_data.openers
+        ]
+    )
 
-    for opener in entry_data.openers:
-        opener_entities.extend([NukiRingactionEntity(entry_data.coordinator, opener)])
-
-    async_add_entities(opener_entities)
+    async_add_entities(entities)
 
 
 class NukiDoorsensorEntity(NukiEntity[NukiDevice], BinarySensorEntity):

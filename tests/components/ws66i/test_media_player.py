@@ -260,13 +260,13 @@ async def test_supported_features(hass: HomeAssistant) -> None:
 
     state = hass.states.get(ZONE_1_ID)
     assert (
-        MediaPlayerEntityFeature.VOLUME_MUTE
+        state.attributes["supported_features"]
+        == MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
-        == state.attributes["supported_features"]
     )
 
 

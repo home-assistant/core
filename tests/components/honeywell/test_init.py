@@ -33,6 +33,22 @@ async def test_setup_entry(hass: HomeAssistant, config_entry: MockConfigEntry) -
     )  # 1 climate entity; 2 sensor entities
 
 
+@patch("homeassistant.components.honeywell.UPDATE_LOOP_SLEEP_TIME", 0)
+async def test_setup_multiple_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry, config_entry2: MockConfigEntry
+) -> None:
+    """Initialize the config entry."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    config_entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry2.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry2.state is ConfigEntryState.LOADED
+
+
 async def test_setup_multiple_thermostats(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

@@ -474,7 +474,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         content = None
 
         websession = async_get_clientsession(self.hass)
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with asyncio.timeout(10):
                 response = await websession.get(url, ssl=False)
                 if response.status == HTTPStatus.OK:

@@ -16,10 +16,12 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto seat climate left',
     'platform': 'tessie',
@@ -33,7 +35,6 @@
 # name: test_binary_sensors[binary_sensor.test_auto_seat_climate_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
       'friendly_name': 'Test Auto seat climate left',
     }),
     'context': <ANY>,
@@ -60,10 +61,12 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Auto seat climate right',
     'platform': 'tessie',
@@ -77,11 +80,55 @@
 # name: test_binary_sensors[binary_sensor.test_auto_seat_climate_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'heat',
       'friendly_name': 'Test Auto seat climate right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_auto_seat_climate_right',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.test_auto_steering_wheel_heater-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.test_auto_steering_wheel_heater',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto steering wheel heater',
+    'platform': 'tessie',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_auto_steering_wheel_heat',
+    'unique_id': 'VINVINVIN-climate_state_auto_steering_wheel_heat',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.test_auto_steering_wheel_heater-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Auto steering wheel heater',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.test_auto_steering_wheel_heater',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
@@ -104,6 +151,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -148,6 +197,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -192,6 +243,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -236,6 +289,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -280,6 +335,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -324,6 +381,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -368,6 +427,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -412,6 +473,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -456,6 +519,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -500,6 +565,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -527,50 +594,6 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensors[binary_sensor.test_heat-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.test_heat',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.HEAT: 'heat'>,
-    'original_icon': None,
-    'original_name': 'Heat',
-    'platform': 'tessie',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'climate_state_auto_steering_wheel_heat',
-    'unique_id': 'VINVINVIN-climate_state_auto_steering_wheel_heat',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensors[binary_sensor.test_heat-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'heat',
-      'friendly_name': 'Test Heat',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.test_heat',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
 # name: test_binary_sensors[binary_sensor.test_preconditioning_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -588,6 +611,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -631,6 +656,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -675,6 +702,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -719,6 +748,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -763,6 +794,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -807,6 +840,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -850,6 +885,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -894,6 +931,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -938,6 +977,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -982,6 +1023,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1026,6 +1069,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1070,6 +1115,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -1113,10 +1160,12 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
     'original_name': 'User present',
     'platform': 'tessie',
@@ -1130,7 +1179,7 @@
 # name: test_binary_sensors[binary_sensor.test_user_present-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'presence',
+      'device_class': 'occupancy',
       'friendly_name': 'Test User present',
     }),
     'context': <ANY>,

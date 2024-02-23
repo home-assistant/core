@@ -108,12 +108,18 @@ async def setup_test_data(
     return zha_device, cluster, fw_image, installed_fw_version
 
 
+@pytest.mark.parametrize("initial_version_unknown", (False, True))
 async def test_firmware_update_notification_from_zigpy(
-    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+    hass: HomeAssistant,
+    zha_device_joined_restored,
+    zigpy_device,
+    initial_version_unknown,
 ) -> None:
     """Test ZHA update platform - firmware update notification."""
     zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
-        zha_device_joined_restored, zigpy_device
+        zha_device_joined_restored,
+        zigpy_device,
+        skip_attribute_plugs=initial_version_unknown,
     )
 
     entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
@@ -199,7 +205,7 @@ def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
         command_id=cluster.commands_by_name[cmd_name].id,
         schema=cluster.commands_by_name[cmd_name].schema,
         disable_default_response=False,
-        direction=foundation.Direction.Server_to_Client,
+        direction=foundation.Direction.Client_to_Server,
         args=(),
         kwargs=kwargs,
     )

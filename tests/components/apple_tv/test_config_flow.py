@@ -1,6 +1,6 @@
 """Test config flow."""
 from ipaddress import IPv4Address, ip_address
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 
 from pyatv import exceptions
 from pyatv.const import PairingRequirement, Protocol
@@ -125,7 +125,7 @@ async def test_user_adds_full_device(hass: HomeAssistant, full_device, pairing) 
         result["flow_id"], {"pin": 1111}
     )
     assert result4["type"] == data_entry_flow.FlowResultType.FORM
-    assert result4["description_placeholders"] == {"protocol": "DMAP", "pin": 1111}
+    assert result4["description_placeholders"] == {"protocol": "DMAP", "pin": "1111"}
 
     result5 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result5["type"] == data_entry_flow.FlowResultType.FORM
@@ -167,7 +167,7 @@ async def test_user_adds_dmap_device(
 
     result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result3["type"] == data_entry_flow.FlowResultType.FORM
-    assert result3["description_placeholders"] == {"pin": 1111, "protocol": "DMAP"}
+    assert result3["description_placeholders"] == {"pin": "1111", "protocol": "DMAP"}
 
     result6 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": 1234}
@@ -646,7 +646,7 @@ async def test_zeroconf_add_dmap_device(
         {},
     )
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["description_placeholders"] == {"protocol": "DMAP", "pin": 1111}
+    assert result2["description_placeholders"] == {"protocol": "DMAP", "pin": "1111"}
 
     result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result3["type"] == "create_entry"
@@ -1128,6 +1128,43 @@ async def test_zeroconf_pair_additionally_found_protocols(
         {"pin": 1234},
     )
     assert result5["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+
+async def test_zeroconf_mismatch(
+    hass: HomeAssistant, mock_scan, pairing, mock_zeroconf: None
+) -> None:
+    """Test the technically possible case where a protocol has no service.
+
+    This could happen in case of mDNS issues.
+    """
+    mock_scan.result = [
+        create_conf(IPv4Address("127.0.0.1"), "Device", airplay_service())
+    ]
+    mock_scan.result[0].get_service = Mock(return_value=None)
+
+    # Find device with AirPlay service and set up flow for it
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            port=None,
+            type="_airplay._tcp.local.",
+            name="Kitchen",
+            properties={"deviceid": "airplayid"},
+        ),
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "setup_failed"
 
 
 # Re-configuration
