@@ -18,22 +18,18 @@ BINARYSENSOR_TYPES = {
     12: BinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.MOTION,
         key="motion_sensor",
-        name="Motion sensor",
     ),
     13: BinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.DOOR,
         key="door_sensor",
-        name="Door sensor",
     ),
     19: BinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.MOISTURE,
         key="moisture_sensor",
-        name="Moisture sensor",
     ),
     20: BinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.SMOKE,
         key="smoke_sensor",
-        name="Smoke sensor",
     ),
 }
 
@@ -45,19 +41,15 @@ async def async_setup_entry(
     coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ].coordinator
-    binary_sensors = []
-    for bee_id, bee in coordinator.data.bees.items():
-        for binary_sensor in bee.sensors:
-            if (
-                entity_description := BINARYSENSOR_TYPES.get(binary_sensor.device_type)
-            ) is not None:
-                binary_sensors.append(
-                    MBBinarySensor(
-                        coordinator, entity_description, bee_id, binary_sensor.id
-                    )
-                )
-
-    async_add_entities(binary_sensors)
+    async_add_entities(
+        [
+            MBBinarySensor(coordinator, entity_description, bee_id, binary_sensor.id)
+            for bee_id, bee in coordinator.data.bees.items()
+            for binary_sensor in bee.sensors
+            if (entity_description := BINARYSENSOR_TYPES.get(binary_sensor.device_type))
+            is not None
+        ]
+    )
 
 
 class MBBinarySensor(MicroBeesEntity, BinarySensorEntity):
