@@ -420,6 +420,8 @@ class IDLessCollection(YamlCollection):
 
 
 class _CollectionLifeCycle:
+    """Life cycle for a collection of entities."""
+
     __slots__ = (
         "_domain",
         "_platform",
