@@ -60,7 +60,7 @@ def get_thumbnail_url_full(
             media_content_id,
             media_content_type,
         )
-        return urllib.parse.unquote(getattr(item, "album_art_uri", None))
+        return urllib.parse.unquote(str(getattr(item, "album_art_uri", None)))
 
     return urllib.parse.unquote(str(get_browse_image_url(
         media_content_type,
@@ -167,7 +167,7 @@ def build_item_response(
             payload["idstring"].split("/")[2:]
         )
     
-    payload["idstring"] = urllib.parse.unquote(payload["idstring"])
+    payload["idstring"] = urllib.parse.unquote(str(payload["idstring"]))
 
     try:
         search_type = MEDIA_TYPES_TO_SONOS[payload["search_type"]]
@@ -498,7 +498,7 @@ def get_media(
     if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
         item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])
 
-    search_term = urllib.parse.unquote(item_id.split("/")[-1])
+    search_term = urllib.parse.unquote(str(item_id.split("/")[-1]))
     matches = media_library.get_music_library_information(
         search_type, search_term=search_term, full_album_art_uri=True
     )
