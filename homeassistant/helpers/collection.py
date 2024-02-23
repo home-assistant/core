@@ -501,12 +501,11 @@ class _CollectionLifeCycle:
         grouped: Iterable[CollectionChangeSet]
         for _, grouped in groupby(change_sets, groupby_key):
             for change_set in grouped:
-                if change_set.change_type == CHANGE_ADDED:
+                change_type = change_set.change_type
+                if change_type == CHANGE_ADDED:
                     new_entities.append(self._add_entity(change_set))
                 else:
-                    coros.append(
-                        self._func_map[change_set.change_type](self, change_set)
-                    )
+                    coros.append(self._func_map[change_type](self, change_set))
 
         if coros:
             await asyncio.gather(*coros)
