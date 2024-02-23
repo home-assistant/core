@@ -30,6 +30,8 @@ async def async_setup_entry(
 class MBLight(MicroBeesActuatorEntity, LightEntity):
     """Representation of a microBees light."""
 
+    _attr_supported_color_modes = {ColorMode.RGBW}
+
     def __init__(
         self,
         coordinator: MicroBeesUpdateCoordinator,
@@ -39,8 +41,6 @@ class MBLight(MicroBeesActuatorEntity, LightEntity):
         """Initialize the microBees light."""
         super().__init__(coordinator, bee_id, actuator_id)
         self._attr_rgbw_color = self.actuator.configuration.color
-
-    _attr_supported_color_modes = {ColorMode.RGBW}
 
     @property
     def name(self) -> str:
