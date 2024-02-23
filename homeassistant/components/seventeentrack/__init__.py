@@ -31,7 +31,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the 17Track component."""
-    hass.data.setdefault(DOMAIN, {})
 
     if hass.config_entries.async_entries(DOMAIN):
         return True
