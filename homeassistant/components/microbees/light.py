@@ -19,12 +19,12 @@ async def async_setup_entry(
     coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ].coordinator
-    lights = []
-    for bee_id, bee in coordinator.data.bees.items():
-        if bee.productID in (31, 79):
-            for light in bee.actuators:
-                lights.append(MBLight(coordinator, bee_id, light.id))
-    async_add_entities(lights)
+    async_add_entities(
+        MBLight(coordinator, bee_id, light.id)
+        for bee_id, bee in coordinator.data.bees.items()
+        if bee.productID in (31, 79)
+        for light in bee.actuators
+    )
 
 
 class MBLight(MicroBeesActuatorEntity, LightEntity):
