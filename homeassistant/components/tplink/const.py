@@ -23,4 +23,5 @@ PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.BINARY_SENSOR,
+    Platform.UPDATE,
 ]
