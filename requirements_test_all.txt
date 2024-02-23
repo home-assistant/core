@@ -460,7 +460,7 @@ babel==2.13.1
 base36==0.1.1
 
 # homeassistant.components.scrape
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
 
 # homeassistant.components.zha
 bellows==0.38.0
