@@ -7,9 +7,8 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.accuweather.const import ATTRIBUTION
+from homeassistant.components.accuweather.const import ATTR_FORECAST, ATTRIBUTION
 from homeassistant.components.weather import (
-    ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
