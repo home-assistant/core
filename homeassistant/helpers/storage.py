@@ -117,6 +117,7 @@ class Store(Generic[_T]):
         self._encoder = encoder
         self._atomic_writes = atomic_writes
         self._read_only = read_only
+        self._next_write_time = 0.0
 
     @cached_property
     def path(self):
@@ -288,40 +289,36 @@ class Store(Generic[_T]):
             "data_func": data_func,
         }
 
-        now = self.hass.loop.time()
-
-        if (
-            delay
-            and (handle := self._delay_handle)
-            and (
-                handle.when() - now / delay > MIN_PERCENT_DELAY_REMAINING_TO_RESCHEDULE
-            )
-        ):
-            # Debounce logic:
-            #
-            # If we still have more than 80% of the delay
-            # remaining we avoid rescheduling to reduce the
-            # amount of timer handles being churned on the
-            # event loop. This means that if multiple calls
-            # are made in quick succession, only the first
-            # one will actually be scheduled to ensure
-            # we still honor the first requested delay.
+        next_when = self.hass.loop.time() + delay
+        if self._delay_handle:
+            self._next_write_time = next_when
             return
 
         self._async_cleanup_delay_listener()
+        self._async_ensure_final_write_listener()
 
         if self.hass.state is CoreState.stopping:
             return
 
         # We use call_later directly here to avoid a circular import
+        self._async_reschedule_delayed_write(next_when)
+
+    @callback
+    def _async_reschedule_delayed_write(self, when: float) -> None:
+        """Reschedule a delayed write."""
         self._delay_handle = self.hass.loop.call_at(
-            now + delay, self._async_schedule_callback_delayed_write
+            when, self._async_schedule_callback_delayed_write
         )
-        self._async_ensure_final_write_listener()
 
     @callback
     def _async_schedule_callback_delayed_write(self) -> None:
         """Schedule the delayed write in a task."""
+        if self.hass.loop.time() < self._next_write_time:
+            # Timer fired too early because there were multiple
+            # calls to async_delay_save before the first one.
+            # wrote. Reschedule the timer to the next write time.
+            self._async_reschedule_delayed_write(self._next_write_time)
+            return
         self.hass.async_create_task(self._async_callback_delayed_write())
 
     @callback
