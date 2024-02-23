@@ -431,41 +431,40 @@ def sync_entity_lifecycle(
     entities: dict[str, CollectionEntity] = {}
     ent_reg = entity_registry.async_get(hass)
 
-    async def _add_entity(change_set: CollectionChangeSet) -> CollectionEntity:
+    @callback
+    def _add_entity(change_set: CollectionChangeSet) -> CollectionEntity:
+        item_id = change_set.item_id
+
         def entity_removed() -> None:
             """Remove entity from entities if it's removed or not added."""
-            if change_set.item_id in entities:
-                entities.pop(change_set.item_id)
+            entities.pop(item_id, None)
 
-        entities[change_set.item_id] = collection.create_entity(
-            entity_class, change_set.item
-        )
-        entities[change_set.item_id].async_on_remove(entity_removed)
-        return entities[change_set.item_id]
+        entity = collection.create_entity(entity_class, change_set.item)
+        entities[item_id] = entity
+        entity.async_on_remove(entity_removed)
+        return entity
 
     async def _remove_entity(change_set: CollectionChangeSet) -> None:
-        ent_to_remove = ent_reg.async_get_entity_id(
-            domain, platform, change_set.item_id
-        )
+        item_id = change_set.item_id
+        ent_to_remove = ent_reg.async_get_entity_id(domain, platform, item_id)
         if ent_to_remove is not None:
             ent_reg.async_remove(ent_to_remove)
-        elif change_set.item_id in entities:
-            await entities[change_set.item_id].async_remove(force_remove=True)
+        elif item_id in entities:
+            await entities[item_id].async_remove(force_remove=True)
         # Unconditionally pop the entity from the entity list to avoid racing against
         # the entity registry event handled by Entity._async_registry_updated
-        if change_set.item_id in entities:
-            entities.pop(change_set.item_id)
+        entities.pop(item_id, None)
 
     async def _update_entity(change_set: CollectionChangeSet) -> None:
-        if change_set.item_id not in entities:
+        item_id = change_set.item_id
+        if item_id not in entities:
             return
-        await entities[change_set.item_id].async_update_config(change_set.item)
+        await entities[item_id].async_update_config(change_set.item)
 
     _func_map: dict[
         str,
         Callable[[CollectionChangeSet], Coroutine[Any, Any, CollectionEntity | None]],
     ] = {
-        CHANGE_ADDED: _add_entity,
         CHANGE_REMOVED: _remove_entity,
         CHANGE_UPDATED: _update_entity,
     }
@@ -476,19 +475,21 @@ def sync_entity_lifecycle(
         # to ensure operations happen in order. We only group
         # the same change type.
         groupby_key = attrgetter("change_type")
+        new_entities: list[CollectionEntity] = []
+        coros: list[Coroutine[Any, Any, CollectionEntity | None]] = []
+        grouped: Iterable[CollectionChangeSet]
         for _, grouped in groupby(change_sets, groupby_key):
-            new_entities = [
-                entity
-                for entity in await asyncio.gather(
-                    *(
-                        _func_map[change_set.change_type](change_set)
-                        for change_set in grouped
-                    )
-                )
-                if entity is not None
-            ]
-            if new_entities:
-                await entity_component.async_add_entities(new_entities)
+            for change_set in grouped:
+                if change_set.change_type == CHANGE_ADDED:
+                    new_entities.append(_add_entity(change_set))
+                else:
+                    coros.append(_func_map[change_set.change_type](change_set))
+
+        if coros:
+            await asyncio.gather(*coros)
+
+        if new_entities:
+            await entity_component.async_add_entities(new_entities)
 
     collection.async_add_change_set_listener(_collection_changed)
 
