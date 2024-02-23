@@ -67,7 +67,7 @@ async def async_setup_entry(
         """
 
         for shade in pv_entry.shade_data.values():
-            with suppress(asyncio.TimeoutError):
+            with suppress(TimeoutError):
                 # hold off to avoid spamming the hub
                 async with asyncio.timeout(10):
                     _LOGGER.debug("Initial refresh of shade: %s", shade.name)
