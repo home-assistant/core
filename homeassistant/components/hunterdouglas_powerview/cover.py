@@ -323,7 +323,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
             # error if are already have one in flight
             return
         # suppress timeouts caused by hub nightly reboot
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with asyncio.timeout(10):
                 await self._shade.refresh()
         _LOGGER.debug("Process update %s: %s", self.name, self._shade.current_position)
