@@ -20,8 +20,8 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_SHOW_ARCHIVED, default=False): bool,
-                vol.Optional(CONF_SHOW_DELIVERED, default=False): bool,
+                vol.Optional(CONF_SHOW_ARCHIVED, default=DEFAULT_SHOW_ARCHIVED): bool,
+                vol.Optional(CONF_SHOW_DELIVERED, default=DEFAULT_SHOW_DELIVERED): bool,
             },
         )
     },
