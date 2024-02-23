@@ -42,7 +42,6 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_SEMAPHORE = "storage_semaphore"
 
-MIN_PERCENT_DELAY_REMAINING_TO_RESCHEDULE = 0.80
 
 _T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
 
