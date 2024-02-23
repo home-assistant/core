@@ -419,6 +419,9 @@ class IDLessCollection(YamlCollection):
         )
 
 
+_GROUP_BY_KEY = attrgetter("change_type")
+
+
 class _CollectionLifeCycle:
     """Life cycle for a collection of entities."""
 
@@ -497,11 +500,10 @@ class _CollectionLifeCycle:
         # Create a new bucket every time we have a different change type
         # to ensure operations happen in order. We only group
         # the same change type.
-        groupby_key = attrgetter("change_type")
         new_entities: list[CollectionEntity] = []
         coros: list[Coroutine[Any, Any, CollectionEntity | None]] = []
         grouped: Iterable[CollectionChangeSet]
-        for _, grouped in groupby(change_sets, groupby_key):
+        for _, grouped in groupby(change_sets, _GROUP_BY_KEY):
             for change_set in grouped:
                 change_type = change_set.change_type
                 if change_type == CHANGE_ADDED:
