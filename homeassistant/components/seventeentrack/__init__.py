@@ -13,7 +13,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, CONF_SHOW_ARCHIVED, CONF_SHOW_DELIVERED
+from .const import (
+    CONF_SHOW_ARCHIVED,
+    CONF_SHOW_DELIVERED,
+    DEFAULT_SHOW_ARCHIVED,
+    DEFAULT_SHOW_DELIVERED,
+    DOMAIN,
+)
 
 PLATFORMS = [Platform.SENSOR]
 
