@@ -181,6 +181,11 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
             key=id_, name=feature.name, icon=feature.icon
         )
 
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Update the entity's attributes."""
+        self._attr_native_value = self._feature.value
+
     @property
     def native_value(self):
         """Return the sensors state."""

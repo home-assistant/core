@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
@@ -12,7 +13,7 @@ from kasa import (
     TimeoutException,
 )
 
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -64,7 +65,7 @@ def async_refresh_after(
     return _async_wrap
 
 
-class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
+class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], ABC):
     """Common base class for all coordinated tplink entities."""
 
     _attr_has_entity_name = True
@@ -94,3 +95,14 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
 
         if parent is not None:
             self._attr_device_info["via_device"] = (DOMAIN, parent.device_id)
+
+    @abstractmethod
+    def _async_update_attrs(self):
+        """Callback to update the entity internals."""
+        raise NotImplementedError()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()

@@ -302,12 +302,6 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             hue, saturation, _ = device.hsv
             self._attr_hs_color = hue, saturation
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._async_update_attrs()
-        super()._handle_coordinator_update()
-
 
 class TPLinkSmartLightStrip(TPLinkSmartBulb):
     """Representation of a TPLink Smart Light Strip."""
