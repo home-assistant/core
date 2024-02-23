@@ -1775,6 +1775,43 @@ async def test_setup_entry_with_entities_that_block_forever(
     assert "test" in caplog.text
 
 
+class MockCancellingEntity(MockEntity):
+    """Class to mock an entity get cancelled while adding."""
+
+    async def async_added_to_hass(self):
+        """Mock cancellation."""
+        raise asyncio.CancelledError
+
+
+@pytest.mark.parametrize("update_before_add", (True, False))
+async def test_cancellation_is_not_blocked(
+    hass: HomeAssistant,
+    update_before_add: bool,
+) -> None:
+    """Test cancellation is not blocked while adding entities."""
+
+    async def async_setup_entry(hass, config_entry, async_add_entities):
+        """Mock setup entry method."""
+        async_add_entities(
+            [MockCancellingEntity(name="test1", unique_id="unique")],
+            update_before_add=update_before_add,
+        )
+        return True
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    with pytest.raises(asyncio.CancelledError):
+        assert await platform.async_setup_entry(config_entry)
+        await hass.async_block_till_done()
+
+    full_name = f"{config_entry.domain}.{platform.domain}"
+    assert full_name not in hass.config.components
+
+
 @pytest.mark.parametrize("update_before_add", (True, False))
 async def test_two_platforms_add_same_entity(
     hass: HomeAssistant, update_before_add: bool

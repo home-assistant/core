@@ -346,11 +346,11 @@ class EntityPlatform:
 
                 # Block till all entities are done
                 while self._tasks:
-                    pending = [task for task in self._tasks if not task.done()]
+                    # Await all tasks even if they are done
+                    # to ensure exceptions are propagated
+                    pending = self._tasks.copy()
                     self._tasks.clear()
-
-                    if pending:
-                        await asyncio.gather(*pending)
+                    await asyncio.gather(*pending)
 
                 hass.config.components.add(full_name)
                 self._setup_complete = True
