@@ -704,8 +704,8 @@ class DanfossExerciseDayOfTheWeek(ZCLEnumSelectEntity):
 class DanfossOrientationEnum(types.enum8):
     """Vertical or Horizontal."""
 
-    horizontal = 0x00
-    vertical = 0x01
+    Horizontal = 0x00
+    Vertical = 0x01
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
