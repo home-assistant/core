@@ -465,9 +465,8 @@ class _CollectionLifeCycle:
     @callback
     def _add_entity(self, change_set: CollectionChangeSet) -> CollectionEntity:
         item_id = change_set.item_id
-        entities = self._entities
         entity = self._collection.create_entity(self._entity_class, change_set.item)
-        entities[item_id] = entity
+        self._entities[item_id] = entity
         entity.async_on_remove(partial(self._entity_removed, item_id))
         return entity
 
@@ -487,11 +486,8 @@ class _CollectionLifeCycle:
         entities.pop(item_id, None)
 
     async def _update_entity(self, change_set: CollectionChangeSet) -> None:
-        item_id = change_set.item_id
-        entities = self._entities
-        if item_id not in entities:
-            return
-        await entities[item_id].async_update_config(change_set.item)
+        if entity := self._entities.get(change_set.item_id):
+            await entity.async_update_config(change_set.item)
 
     async def _collection_changed(
         self, change_sets: Iterable[CollectionChangeSet]
