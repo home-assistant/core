@@ -66,6 +66,19 @@ class MockViCareService:
 
 
 @pytest.fixture
+def mock_v1_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="ViCare",
+        entry_id="1234",
+        data=ENTRY_CONFIG,
+        options={},
+        version=1,
+    )
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
