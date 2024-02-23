@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from aiohttp import ClientError
 import pytest
 
+from homeassistant.components.number import SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -59,7 +60,7 @@ async def test_set_value(
 
     await hass.services.async_call(
         TEST_PLATFORM,
-        "set_value",
+        SERVICE_SET_VALUE,
         {ATTR_ENTITY_ID: ENTITY_ID, "value": -125},
         blocking=True,
     )
@@ -78,7 +79,7 @@ async def test_api_failure(
         mock_myuplink_client.async_set_device_points.side_effect = ClientError
         await hass.services.async_call(
             TEST_PLATFORM,
-            "set_value",
+            SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: ENTITY_ID, "value": -125},
             blocking=True,
         )
