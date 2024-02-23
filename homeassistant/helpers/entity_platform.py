@@ -543,6 +543,8 @@ class EntityPlatform:
                     self.platform_name,
                     exc_info=result,
                 )
+            elif isinstance(result, BaseException):
+                raise result
 
     async def _async_add_entities(
         self,
