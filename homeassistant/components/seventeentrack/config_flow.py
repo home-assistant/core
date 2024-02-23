@@ -86,7 +86,7 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
 
         errors = {}
-        if user_input is not None:
+        if user_input:
             errors = await self._async_validate_input(user_input)
 
             if not errors:
