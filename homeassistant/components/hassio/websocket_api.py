@@ -63,8 +63,7 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required(WS_TYPE): WS_TYPE_SUBSCRIBE})
-@websocket_api.async_response
-async def websocket_subscribe(
+def websocket_subscribe(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Subscribe to supervisor events."""
@@ -86,8 +85,7 @@ async def websocket_subscribe(
         vol.Required(ATTR_DATA): SCHEMA_WEBSOCKET_EVENT,
     }
 )
-@websocket_api.async_response
-async def websocket_supervisor_event(
+def websocket_supervisor_event(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Publish events from the Supervisor."""
