@@ -38,11 +38,9 @@ from .const import (
     NETATMO_CREATE_COVER,
     NETATMO_CREATE_FAN,
     NETATMO_CREATE_LIGHT,
-    NETATMO_CREATE_OPENING_SENSOR,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SELECT,
     NETATMO_CREATE_SENSOR,
-    NETATMO_CREATE_SIREN_SENSOR,
     NETATMO_CREATE_SWITCH,
     NETATMO_CREATE_WEATHER_SENSOR,
     PLATFORMS,
@@ -359,8 +357,6 @@ class NetatmoDataHandler:
             ],
             NetatmoDeviceCategory.meter: [NETATMO_CREATE_SENSOR],
             NetatmoDeviceCategory.fan: [NETATMO_CREATE_FAN],
-            NetatmoDeviceCategory.siren: [NETATMO_CREATE_SIREN_SENSOR],
-            NetatmoDeviceCategory.opening: [NETATMO_CREATE_OPENING_SENSOR],
         }
         for module in home.modules.values():
             if not module.device_category:
