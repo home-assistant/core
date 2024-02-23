@@ -395,9 +395,9 @@ def ws_get_entity_config(
     knx: KNXModule = hass.data[DOMAIN]
     try:
         config_info = knx.config_store.get_entity_config(msg["entity_id"])
-    except KeyError:
+    except ConfigStoreException as err:
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, "Entity not found."
+            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
         )
         return
     connection.send_result(msg["id"], config_info)
