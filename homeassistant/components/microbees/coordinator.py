@@ -53,15 +53,10 @@ class MicroBeesUpdateCoordinator(DataUpdateCoordinator[MicroBeesCoordinatorData]
             except MicroBeesException as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-            actuators = {}
-            sensors = {}
-
-            for bee in bees:
-                actuators.update({actuator.id: actuator for actuator in bee.actuators})
-                sensors.update({sensor.id: sensor for sensor in bee.sensors})
-
             return MicroBeesCoordinatorData(
                 bees={bee.id: bee for bee in bees},
-                actuators=actuators,
-                sensors=sensors,
+                actuators={
+                    actuator.id: actuator for bee in bees for actuator in bee.actuators
+                },
+                sensors={sensor.id: sensor for bee in bees for sensor in bee.sensors},
             )
