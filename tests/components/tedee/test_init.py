@@ -203,7 +203,7 @@ async def test_migration(
             CONF_HOST: "192.168.1.42",
         },
         version=1,
-        minor_version=0,
+        minor_version=1,
         unique_id="0000-0000",
     )
 
@@ -216,6 +216,6 @@ async def test_migration(
         await hass.async_block_till_done()
 
     assert mock_config_entry.version == 1
-    assert mock_config_entry.minor_version == 1
+    assert mock_config_entry.minor_version == 2
     assert mock_config_entry.data[CONF_WEBHOOK_ID] == WEBHOOK_ID
     assert mock_config_entry.state is ConfigEntryState.LOADED

@@ -25,7 +25,7 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tedee."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     reauth_entry: ConfigEntry | None = None
 
