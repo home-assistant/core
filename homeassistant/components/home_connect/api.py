@@ -242,7 +242,7 @@ class DeviceWithCoolingLight(HomeConnectDevice):
 
     def get_coolinglight_entity(self):
         """Get a dictionary with info about the cooling appliance lighting."""
-        return {ATTR_DEVICE: self, ATTR_DESC: "CoolingLight", ATTR_AMBIENT: False}
+        return {ATTR_DEVICE: self, ATTR_DESC: "CoolingLight", ATTR_AMBIENT: None}
 
 
 class DeviceWithRemoteControl(HomeConnectDevice):
