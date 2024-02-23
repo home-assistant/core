@@ -471,15 +471,9 @@ def _handle_scalar_tag(
     loader: LoaderType, node: yaml.nodes.ScalarNode
 ) -> str | int | float | None:
     """Add line number and file name to Load YAML sequence."""
-    if type(node) is yaml.nodes.ScalarNode:
-        # Fast path for non-subclassed, non mapping nodes
-        obj = node.value
-    else:
-        obj = loader.construct_scalar(node)
-
+    obj = node.value
     if not isinstance(obj, str):
         return obj
-
     return _add_reference(obj, loader, node)
 
 
