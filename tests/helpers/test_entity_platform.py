@@ -1710,13 +1710,14 @@ async def test_register_entity_service_limited_to_matching_platforms(
     }
 
 
+@pytest.mark.parametrize("update_before_add", (True, False))
 async def test_invalid_entity_id(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, update_before_add: bool
 ) -> None:
     """Test specifying an invalid entity id."""
     platform = MockEntityPlatform(hass)
     entity = MockEntity(entity_id="invalid_entity_id")
-    await platform.async_add_entities([entity])
+    await platform.async_add_entities([entity], update_before_add=update_before_add)
     assert entity.hass is None
     assert entity.platform is None
     assert "Invalid entity ID: invalid_entity_id" in caplog.text
