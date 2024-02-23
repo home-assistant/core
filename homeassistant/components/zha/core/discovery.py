@@ -110,20 +110,19 @@ class ProbeEndpoint:
     def discover_device_entities(self, device: ZHADevice) -> None:
         """Discover entities for a ZHA device."""
         _LOGGER.debug(
-            "Discovering coordinator entities for device: %s-%s",
+            "Discovering entities for device: %s-%s",
             str(device.ieee),
             device.name,
         )
 
         if device.is_coordinator:
             self.discover_coordinator_device_entities(device)
-            return
 
     @callback
     def discover_coordinator_device_entities(self, device: ZHADevice) -> None:
         """Discover entities for the coordinator device."""
         _LOGGER.debug(
-            "Discovering coordinator entities for device: %s-%s",
+            "Discovering entities for coordinator device: %s-%s",
             str(device.ieee),
             device.name,
         )
