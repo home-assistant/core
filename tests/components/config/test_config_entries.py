@@ -2180,7 +2180,7 @@ async def test_supports_reconfigure(
     with patch.dict(HANDLERS, {"test": TestFlow}):
         resp = await client.post(
             "/api/config/config_entries/flow",
-            json={"handler": "test", "source": "reconfigure", "entry_id": "1"},
+            json={"handler": "test", "entry_id": "1"},
         )
 
     assert resp.status == HTTPStatus.OK
@@ -2259,47 +2259,12 @@ async def test_does_not_support_reconfigure(
     with patch.dict(HANDLERS, {"test": TestFlow}):
         resp = await client.post(
             "/api/config/config_entries/flow",
-            json={"handler": "test", "source": "reconfigure", "entry_id": "1"},
+            json={"handler": "test", "entry_id": "1"},
         )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
     response = await resp.text()
-    assert response == '{"message":"Handler does not support step"}'
-
-
-async def test_support_reconfigure_no_entry_id(
-    hass: HomeAssistant, client: TestClient, enable_custom_integrations: None
-) -> None:
-    """Test a flow that does not support reconfigure step."""
-    mock_platform(hass, "test.config_flow", None)
-
-    mock_integration(
-        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    assert (
+        response
+        == '{"message":"Handler ConfigEntriesFlowManager doesn\'t support step reconfigure"}'
     )
-
-    class TestFlow(core_ce.ConfigFlow):
-        VERSION = 1
-
-        async def async_step_user(self, user_input=None):
-            return self.async_create_entry(
-                title="Test Entry", data={"secret": "account_token"}
-            )
-
-        async def async_step_reconfigure(self, user_input=None):
-            if user_input is None:
-                return self.async_show_form(
-                    step_id="reconfigure", data_schema=vol.Schema({})
-                )
-            return self.async_create_entry(
-                title="Test Entry", data={"secret": "account_token"}
-            )
-
-    with patch.dict(HANDLERS, {"test": TestFlow}):
-        resp = await client.post(
-            "/api/config/config_entries/flow",
-            json={"handler": "test", "source": "reconfigure"},
-        )
-
-    assert resp.status == HTTPStatus.BAD_REQUEST
-    response = await resp.text()
-    assert response == "Can not run reconfigure step without an entry_id"
