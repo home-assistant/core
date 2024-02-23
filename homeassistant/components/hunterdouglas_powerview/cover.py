@@ -89,7 +89,7 @@ async def async_setup_entry(
     entry.async_create_background_task(
         hass,
         _async_refresh_after_import(),
-        "powerview.shade-refresh",
+        f"powerview {entry.title} initial shade refresh",
     )
 
 
