@@ -4707,13 +4707,14 @@
       'entry_id': '1234',
       'minor_version': 1,
       'options': dict({
+        'extended_api': True,
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
       'title': 'Mock Title',
       'unique_id': 'ViCare',
-      'version': 1,
+      'version': 2,
     }),
   })
 # ---
