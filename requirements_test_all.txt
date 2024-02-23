@@ -4,7 +4,7 @@
 -r requirements_test.txt
 
 # homeassistant.components.aemet
-AEMET-OpenData==0.5.0
+AEMET-OpenData==0.5.1
 
 # homeassistant.components.aladdin_connect
 AIOAladdinConnect==0.1.58
@@ -39,7 +39,7 @@ HATasmota==0.8.0
 Pillow==10.2.0
 
 # homeassistant.components.plex
-PlexAPI==4.15.9
+PlexAPI==4.15.10
 
 # homeassistant.components.progettihwsw
 ProgettiHWSW==0.1.3
@@ -460,7 +460,7 @@ babel==2.13.1
 base36==0.1.1
 
 # homeassistant.components.scrape
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
 
 # homeassistant.components.zha
 bellows==0.38.0
@@ -1779,7 +1779,7 @@ pytomorrowio==0.3.6
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
-pytraccar==2.1.0
+pytraccar==2.1.1
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.1
@@ -1887,7 +1887,7 @@ rokuecp==0.19.1
 romy==0.0.7
 
 # homeassistant.components.roomba
-roombapy==1.6.12
+roombapy==1.6.13
 
 # homeassistant.components.roon
 roonapi==0.1.6
