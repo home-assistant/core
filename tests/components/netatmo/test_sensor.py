@@ -5,11 +5,11 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.netatmo import sensor
-from homeassistant.const import Platform
+from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import selected_platforms, snapshot_platform_entities
+from .common import selected_platforms, simulate_webhook, snapshot_platform_entities
 
 from tests.common import MockConfigEntry
 
@@ -247,3 +247,80 @@ async def test_climate_battery_sensor(
     prefix = "sensor.livingroom_"
 
     assert hass.states.get(f"{prefix}battery_percent").state == "75"
+
+
+async def test_window_sensor(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test weather sensor setup."""
+    with selected_platforms([Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    prefix = "sensor.window_hall_"
+    assert hass.states.get(f"{prefix}status").state == "no_news"
+    assert hass.states.get(f"{prefix}battery_percent").state == "75"
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+
+    # Fake backend response changing schedule
+    response = {
+        "event_type": "tag_big_move",
+        "push_type": "NACamera-tag_big_move",
+        "home_id": "3d3e344f491763b24c424e8b",
+        "event_id": "601dce1560abca1ebad9b723",
+        "camera_id": "12:34:56:00:f1:62",
+        "device_id": "12:34:56:00:f1:62",
+        "module_id": "12:34:56:00:86:99",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+    assert hass.states.get(f"{prefix}status").state == "no_news"
+    assert hass.states.get(f"{prefix}battery_percent").state == "75"
+
+    response = {
+        "event_type": "tag_open",
+        "push_type": "NACamera-tag_open",
+        "home_id": "3d3e344f491763b24c424e8b",
+        "event_id": "601dce1560abca1ebad9b723",
+        "camera_id": "12:34:56:00:f1:62",
+        "device_id": "12:34:56:00:f1:62",
+        "module_id": "12:34:56:00:86:99",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+    assert hass.states.get(f"{prefix}status").state == "open"
+    assert hass.states.get(f"{prefix}battery_percent").state == "75"
+
+
+async def test_siren_sensor(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test weather sensor setup."""
+    with selected_platforms([Platform.SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    prefix = "sensor.sirene_in_hall_"
+    assert hass.states.get(f"{prefix}status").state == "no_sound"
+    assert hass.states.get(f"{prefix}battery_percent").state == "25"
+    assert hass.states.get(f"{prefix}monitoring").state == "False"
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+
+    # Fake backend response changing schedule
+    response = {
+        "event_type": "home_alarm",
+        "push_type": "NACamera-home_alarm",
+        "home_id": "3d3e344f491763b24c424e8b",
+        "event_id": "601dce1560abca1ebad9b723",
+        "camera_id": "12:34:56:00:f1:62",
+        "device_id": "12:34:56:00:e3:9b",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+    assert hass.states.get(f"{prefix}status").state == "no_sound"
+    assert hass.states.get(f"{prefix}battery_percent").state == "25"
+    assert hass.states.get(f"{prefix}monitoring").state == "False"
