@@ -52,6 +52,16 @@
           }
         }
       }
+    },
+    "fan": {
+      "pump": {
+        "name": "Pump {index}"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "Light {index}"
+      }
     }
   }
 }
