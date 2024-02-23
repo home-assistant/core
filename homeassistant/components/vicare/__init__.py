@@ -53,8 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = {}
 
-    await async_migrate_entry(hass, entry)
-
     try:
         await hass.async_add_executor_job(setup_vicare_api, hass, entry)
     except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError) as err:
