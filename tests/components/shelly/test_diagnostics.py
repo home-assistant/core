@@ -146,7 +146,8 @@ async def test_rpc_config_entry_diagnostics(
                 "available_updates": {
                     "beta": {"version": "some_beta_version"},
                     "stable": {"version": "some_beta_version"},
-                }
+                },
+                "relay_in_thermostat": True,
             },
             "wifi": {"rssi": -63},
         },

@@ -7,7 +7,6 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
-import jinja2
 import voluptuous as vol
 
 from homeassistant import config as conf_util
@@ -27,7 +26,6 @@ from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import (
     ConfigValidationError,
     ServiceValidationError,
-    TemplateError,
     Unauthorized,
 )
 from homeassistant.helpers import config_validation as cv, event as ev, template
@@ -87,11 +85,13 @@ from .const import (  # noqa: F401
     MQTT_DISCONNECTED,
     PLATFORMS,
     RELOADABLE_PLATFORMS,
+    TEMPLATE_ERRORS,
 )
 from .models import (  # noqa: F401
     MqttCommandTemplate,
     MqttData,
     MqttValueTemplate,
+    PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
     ReceivePayloadType,
@@ -325,7 +325,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     msg_topic_template, hass
                 ).async_render(parse_result=False)
                 msg_topic = valid_publish_topic(rendered_topic)
-            except (jinja2.TemplateError, TemplateError) as exc:
+            except TEMPLATE_ERRORS as exc:
                 _LOGGER.error(
                     (
                         "Unable to publish: rendering topic template of %s "
@@ -352,7 +352,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 payload = MqttCommandTemplate(
                     template.Template(payload_template), hass=hass
                 ).async_render()
-            except (jinja2.TemplateError, TemplateError) as exc:
+            except TEMPLATE_ERRORS as exc:
                 _LOGGER.error(
                     (
                         "Unable to publish to %s: rendering payload template of "
