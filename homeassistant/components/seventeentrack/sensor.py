@@ -112,8 +112,8 @@ async def async_setup_entry(
         client,
         async_add_entities,
         scan_interval,
-        False,
-        False,
+        config_entry.options.get(CONF_SHOW_ARCHIVED, False),
+        config_entry.options.get(CONF_SHOW_DELIVERED, False),
         str(hass.config.time_zone),
     )
     await data.async_update()
