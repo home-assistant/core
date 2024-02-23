@@ -27,24 +27,24 @@ from .const import (
     DOMAIN,
 )
 
+CONF_CREDS = {
+    vol.Required(CONF_USERNAME): str,
+    vol.Required(CONF_PASSWORD): str,
+}
+
+CONF_SHOW = {
+    vol.Optional(CONF_SHOW_ARCHIVED, default=DEFAULT_SHOW_ARCHIVED): bool,
+    vol.Optional(CONF_SHOW_DELIVERED, default=DEFAULT_SHOW_DELIVERED): bool,
+}
+
 _LOGGER = logging.getLogger(__name__)
 
-OPTIONS_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_SHOW_ARCHIVED, default=DEFAULT_SHOW_ARCHIVED): bool,
-        vol.Optional(CONF_SHOW_DELIVERED, default=DEFAULT_SHOW_DELIVERED): bool,
-    }
-)
+OPTIONS_SCHEMA = vol.Schema(CONF_SHOW)
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
 }
 
-USER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
+USER_SCHEMA = vol.Schema(CONF_CREDS)
 
 
 class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

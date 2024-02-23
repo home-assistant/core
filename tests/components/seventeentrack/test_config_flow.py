@@ -6,10 +6,10 @@ from py17track.errors import SeventeenTrackError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.seventeentrack import (
+from homeassistant.components.seventeentrack import DOMAIN
+from homeassistant.components.seventeentrack.const import (
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
-    DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME

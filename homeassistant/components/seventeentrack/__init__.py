@@ -11,25 +11,15 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_SHOW_ARCHIVED,
-    CONF_SHOW_DELIVERED,
-    DEFAULT_SHOW_ARCHIVED,
-    DEFAULT_SHOW_DELIVERED,
-    DOMAIN,
-)
+from .config_flow import CONF_CREDS, CONF_SHOW
+from .const import DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Optional(CONF_SHOW_ARCHIVED, default=DEFAULT_SHOW_ARCHIVED): bool,
-                vol.Optional(CONF_SHOW_DELIVERED, default=DEFAULT_SHOW_DELIVERED): bool,
-            },
+            CONF_CREDS.update(CONF_SHOW),
         )
     },
     extra=vol.ALLOW_EXTRA,
