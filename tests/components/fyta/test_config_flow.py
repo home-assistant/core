@@ -103,7 +103,7 @@ async def test_user(hass: HomeAssistant) -> None:
         )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": "auth_error"}
 
     # tests with password error
     with patch(
@@ -118,7 +118,7 @@ async def test_user(hass: HomeAssistant) -> None:
         )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth", CONF_PASSWORD: "password_error"}
+    assert result["errors"] == {"base": "auth_error", CONF_PASSWORD: "password_error"}
 
     # tests with other error
     with patch(
