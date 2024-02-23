@@ -220,7 +220,7 @@ async def _async_process_dependencies(
     return failed
 
 
-async def _async_setup_component(
+async def _async_setup_component(  # noqa: C901
     hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
     """Set up a component for Home Assistant.
@@ -321,6 +321,16 @@ async def _async_setup_component(
     _LOGGER.info("Setting up %s", domain)
     integration_set = {domain}
 
+    load_translations_task: asyncio.Task[None] | None = None
+    if not translation.async_translations_loaded(hass, integration_set):
+        # For most cases we expect the translations are already
+        # loaded since we try to load them in bootstrap ahead of time.
+        # If for some reason the background task in bootstrap was too slow
+        # or the integration was added after bootstrap, we will load them here.
+        load_translations_task = asyncio.create_task(
+            translation.async_load_integrations(hass, integration_set)
+        )
+
     with async_start_setup(hass, integration_set):
         if hasattr(component, "PLATFORM_SCHEMA"):
             # Entity components have their own warning
@@ -383,13 +393,12 @@ async def _async_setup_component(
             )
             return False
 
-        if not translation.async_translations_loaded(hass, integration_set):
-            await translation.async_load_integrations(hass, integration_set)
-
         # Flush out async_setup calling create_task. Fragile but covered by test.
         await asyncio.sleep(0)
         await hass.config_entries.flow.async_wait_import_flow_initialized(domain)
 
+        if load_translations_task:
+            await load_translations_task
         # Add to components before the entry.async_setup
         # call to avoid a deadlock when forwarding platforms
         hass.config.components.add(domain)
