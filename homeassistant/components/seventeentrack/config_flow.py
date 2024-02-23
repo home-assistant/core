@@ -91,7 +91,7 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 return self.async_create_entry(
-                    title=f"17Track {user_input[CONF_USERNAME]}", data=user_input
+                    title=user_input[CONF_USERNAME], data=user_input
                 )
 
         return self.async_show_form(
