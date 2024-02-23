@@ -1,4 +1,5 @@
 """Define tests for the 17Track config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from py17track.errors import SeventeenTrackError
@@ -49,7 +50,7 @@ async def test_create_entry(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         await hass.async_block_till_done()
 
         assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result2["title"] == "17Track someemail@gmail.com"
+        assert result2["title"] == "someemail@gmail.com"
         assert result2["data"] == {
             CONF_PASSWORD: "edc3eee7330e4fdda04489e3fbc283d0",
             CONF_USERNAME: "someemail@gmail.com",
@@ -99,9 +100,39 @@ async def test_import_flow(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result["title"] == "17Track someemail@gmail.com"
+        assert result["title"] == "someemail@gmail.com"
         assert result["data"][CONF_USERNAME] == "someemail@gmail.com"
         assert result["data"][CONF_PASSWORD] == "edc3eee7330e4fdda04489e3fbc283d0"
+
+
+async def test_import_flow_cannot_connect_error(hass: HomeAssistant) -> None:
+    """Test the import configuration flow with cannot_connect error."""
+    with patch(
+        "py17track.profile.Profile.login",
+        side_effect=SeventeenTrackError(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=VALID_CONFIG_OLD,
+        )
+
+        assert result["reason"] == "cannot_connect"
+
+
+async def test_import_flow_invalid_cred_error(hass: HomeAssistant) -> None:
+    """Test the import configuration flow with cannot_connect error."""
+    with patch(
+        "py17track.profile.Profile.login",
+        return_value=False,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=VALID_CONFIG_OLD,
+        )
+
+        assert result["reason"] == "invalid_credentials"
 
 
 async def test_option_flow(hass: HomeAssistant) -> None:

@@ -1,16 +1,14 @@
 """The seventeentrack component."""
+
 from py17track import Client as SeventeenTrackClient
 from py17track.errors import SeventeenTrackError
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (

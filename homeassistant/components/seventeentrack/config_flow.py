@@ -1,4 +1,5 @@
 """Adds config flow for 17track.net."""
+
 from __future__ import annotations
 
 import logging
@@ -68,18 +69,15 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input:
             client = await self._get_client()
 
-            login_result = False
             try:
-                login_result = await client.profile.login(
+                if not await client.profile.login(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                )
+                ):
+                    _LOGGER.error("Invalid username and password provided")
+                    errors = {"base": "invalid_credentials"}
             except SeventeenTrackError as err:
                 _LOGGER.error("There was an error while logging in: %s", err)
                 errors = {"base": "cannot_connect"}
-
-            if not login_result:
-                _LOGGER.error("Invalid username and password provided")
-                errors = {"base": "invalid_credentials"}
 
             if not errors:
                 account_id = client.profile.account_id

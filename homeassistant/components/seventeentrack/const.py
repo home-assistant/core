@@ -1,4 +1,5 @@
 """Constants for the 17track.net component."""
+
 from datetime import timedelta
 
 ATTR_DESTINATION_COUNTRY = "destination_country"
