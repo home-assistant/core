@@ -41,15 +41,14 @@ async def async_setup_entry(
     """Set up sensors."""
     data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
     parent_coordinator = data.parent_coordinator
-    children_coordinators = data.children_coordinators
     entities: list[BinarySensor] = []
     device = parent_coordinator.device
 
     entities.extend(_async_sensors_for_device(device, parent_coordinator))
 
-    for idx, child in enumerate(device.children):
+    for child in device.children:
         entities.extend(
-            _async_sensors_for_device(child, children_coordinators[idx], parent=device)
+            _async_sensors_for_device(child, parent_coordinator, parent=device)
         )
 
     async_add_entities(entities)
