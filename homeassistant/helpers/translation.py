@@ -71,23 +71,27 @@ def component_translation_path(
     return str(translation_path / filename)
 
 
-def load_translations_files(
-    translation_files: dict[str, str],
+def _load_translations_files_by_language(
+    translation_files: dict[str, dict[str, str]],
 ) -> dict[str, dict[str, Any]]:
     """Load and parse translation.json files."""
-    loaded = {}
-    for component, translation_file in translation_files.items():
-        loaded_json = load_json(translation_file)
+    loaded: dict[str, dict[str, Any]] = {}
+    for language, component_translation_file in translation_files.items():
+        loaded_for_language: dict[str, Any] = {}
+        loaded[language] = loaded_for_language
 
-        if not isinstance(loaded_json, dict):
-            _LOGGER.warning(
-                "Translation file is unexpected type %s. Expected dict for %s",
-                type(loaded_json),
-                translation_file,
-            )
-            continue
+        for component, translation_file in component_translation_file.items():
+            loaded_json = load_json(translation_file)
 
-        loaded[component] = loaded_json
+            if not isinstance(loaded_json, dict):
+                _LOGGER.warning(
+                    "Translation file is unexpected type %s. Expected dict for %s",
+                    type(loaded_json),
+                    translation_file,
+                )
+                continue
+
+            loaded_for_language[component] = loaded_json
 
     return loaded
 
@@ -150,47 +154,53 @@ def build_resources(
 
 async def _async_get_component_strings(
     hass: HomeAssistant,
-    language: str,
+    languages: Iterable[str],
     components: set[str],
     integrations: dict[str, Integration],
-) -> dict[str, Any]:
+) -> dict[str, dict[str, Any]]:
     """Load translations."""
-    translations: dict[str, Any] = {}
+    translations_by_language: dict[str, dict[str, Any]] = {}
     # Determine paths of missing components/platforms
-    files_to_load: dict[str, str] = {}
-    for loaded in components:
-        domain = loaded.partition(".")[0]
-        if not (integration := integrations.get(domain)):
-            continue
+    files_to_load_by_language: dict[str, dict[str, str]] = {}
+    for language in languages:
+        files_to_load: dict[str, str] = {}
+        files_to_load_by_language[language] = files_to_load
 
-        path = component_translation_path(loaded, language, integration)
-        # No translation available
-        if path is None:
-            translations[loaded] = {}
-        else:
-            files_to_load[loaded] = path
+        loaded_translations: dict[str, Any] = {}
+        translations_by_language[language] = loaded_translations
+
+        for loaded in components:
+            domain = loaded.partition(".")[0]
+            if not (integration := integrations.get(domain)):
+                continue
+
+            path = component_translation_path(loaded, language, integration)
+            # No translation available
+            if path is None:
+                loaded_translations[loaded] = {}
+            else:
+                files_to_load[loaded] = path
 
     if not files_to_load:
-        return translations
+        return translations_by_language
 
     # Load files
-    load_translations_job = hass.async_add_executor_job(
-        load_translations_files, files_to_load
+    loaded_translations_by_language = await hass.async_add_executor_job(
+        _load_translations_files_by_language, files_to_load_by_language
     )
-    assert load_translations_job is not None
-    loaded_translations = await load_translations_job
 
     # Translations that miss "title" will get integration put in.
-    for loaded, loaded_translation in loaded_translations.items():
-        if "." in loaded:
-            continue
+    for language, loaded_translations in loaded_translations_by_language.items():
+        for loaded, loaded_translation in loaded_translations.items():
+            if "." in loaded:
+                continue
 
-        if "title" not in loaded_translation:
-            loaded_translation["title"] = integrations[loaded].name
+            if "title" not in loaded_translation:
+                loaded_translation["title"] = integrations[loaded].name
 
-    translations.update(loaded_translations)
+        translations_by_language[language].update(loaded_translations)
 
-    return translations
+    return translations_by_language
 
 
 class _TranslationCache:
@@ -279,13 +289,29 @@ class _TranslationCache:
                 continue
             integrations[domain] = int_or_exc
 
-        for translation_strings in await asyncio.gather(
-            *(
-                _async_get_component_strings(self.hass, lang, components, integrations)
-                for lang in languages
+        translation_by_language_strings = await _async_get_component_strings(
+            self.hass, languages, components, integrations
+        )
+
+        # English is always the fallback language so we load them first
+        self._build_category_cache(
+            language, components, translation_by_language_strings[LOCALE_EN]
+        )
+
+        if language != LOCALE_EN:
+            # Now overlay the requested language on top of the English
+            self._build_category_cache(
+                language, components, translation_by_language_strings[language]
             )
-        ):
-            self._build_category_cache(language, components, translation_strings)
+
+            loaded_english_components = self.loaded.setdefault(LOCALE_EN, set())
+            # Since we just loaded english anyway we can avoid loading
+            # again if they switch back to english.
+            if loaded_english_components.isdisjoint(components):
+                self._build_category_cache(
+                    LOCALE_EN, components, translation_by_language_strings[LOCALE_EN]
+                )
+                loaded_english_components.update(components)
 
         self.loaded[language].update(components)
 

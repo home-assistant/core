@@ -74,13 +74,24 @@ class BringTodoListEntity(
     def todo_items(self) -> list[TodoItem]:
         """Return the todo items."""
         return [
-            TodoItem(
-                uid=item["itemId"],
-                summary=item["itemId"],
-                description=item["specification"] or "",
-                status=TodoItemStatus.NEEDS_ACTION,
-            )
-            for item in self.bring_list["items"]
+            *(
+                TodoItem(
+                    uid=item["itemId"],
+                    summary=item["itemId"],
+                    description=item["specification"] or "",
+                    status=TodoItemStatus.NEEDS_ACTION,
+                )
+                for item in self.bring_list["purchase_items"]
+            ),
+            *(
+                TodoItem(
+                    uid=item["itemId"],
+                    summary=item["itemId"],
+                    description=item["specification"] or "",
+                    status=TodoItemStatus.COMPLETED,
+                )
+                for item in self.bring_list["recently_items"]
+            ),
         ]
 
     @property
@@ -103,27 +114,42 @@ class BringTodoListEntity(
         """Update an item to the To-do list.
 
         Bring has an internal 'recent' list which we want to use instead of a todo list
-        status, therefore completed todo list items will directly be deleted
+        status, therefore completed todo list items are matched to the recent list and pending items to the purchase list
 
         This results in following behaviour:
 
         - Completed items will move to the "completed" section in home assistant todo
-            list and get deleted in bring, which will remove them from the home
-            assistant todo list completely after a short delay
+            list and get moved to the recently list in bring
         - Bring items do not have unique identifiers and are using the
             name/summery/title. Therefore the name is not to be changed! Should a name
             be changed anyway, a new item will be created instead and no update for
             this item is performed and on the next cloud pull update, it will get
-            cleared
+            cleared and replaced seamlessly
         """
 
         bring_list = self.bring_list
 
+        bring_purchase_item = next(
+            (i for i in bring_list["purchase_items"] if i["itemId"] == item.uid),
+            None,
+        )
+
+        bring_recently_item = next(
+            (i for i in bring_list["recently_items"] if i["itemId"] == item.uid),
+            None,
+        )
+
         if TYPE_CHECKING:
             assert item.uid
 
-        if item.status == TodoItemStatus.COMPLETED:
-            await self.coordinator.bring.remove_item(
+        if item.status == TodoItemStatus.COMPLETED and bring_purchase_item:
+            await self.coordinator.bring.complete_item(
+                bring_list["listUuid"],
+                item.uid,
+            )
+
+        elif item.status == TodoItemStatus.NEEDS_ACTION and bring_recently_item:
+            await self.coordinator.bring.save_item(
                 bring_list["listUuid"],
                 item.uid,
             )

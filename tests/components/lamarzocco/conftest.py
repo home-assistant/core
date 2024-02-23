@@ -101,6 +101,7 @@ def mock_lamarzocco(
         )
         lamarzocco.config = load_json_object_fixture("config.json", DOMAIN)
         lamarzocco.statistics = load_json_array_fixture("statistics.json", DOMAIN)
+        lamarzocco.schedule = load_json_array_fixture("schedule.json", DOMAIN)
 
         lamarzocco.get_all_machines.return_value = [
             (serial_number, model_name),
