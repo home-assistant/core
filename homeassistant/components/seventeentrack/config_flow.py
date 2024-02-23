@@ -27,11 +27,6 @@ from .const import (
     DOMAIN,
 )
 
-CONF_CREDS = {
-    vol.Required(CONF_USERNAME): str,
-    vol.Required(CONF_PASSWORD): str,
-}
-
 CONF_SHOW = {
     vol.Optional(CONF_SHOW_ARCHIVED, default=DEFAULT_SHOW_ARCHIVED): bool,
     vol.Optional(CONF_SHOW_DELIVERED, default=DEFAULT_SHOW_DELIVERED): bool,
@@ -44,7 +39,12 @@ OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
 }
 
-USER_SCHEMA = vol.Schema(CONF_CREDS)
+USER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
 class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

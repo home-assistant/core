@@ -11,16 +11,14 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import CONF_CREDS, CONF_SHOW
+from .config_flow import USER_SCHEMA
 from .const import DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            CONF_CREDS.update(CONF_SHOW),
-        )
+        DOMAIN: USER_SCHEMA,
     },
     extra=vol.ALLOW_EXTRA,
 )
