@@ -66,6 +66,7 @@ async def ws_info(
     connection.send_result(msg["id"], {"hardware": hardware_info})
 
 
+@callback
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "hardware/subscribe_system_status",
