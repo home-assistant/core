@@ -289,7 +289,7 @@ class Store(Generic[_T]):
         }
 
         next_when = self.hass.loop.time() + delay
-        if self._delay_handle:
+        if self._delay_handle and self._delay_handle.when() < next_when:
             self._next_write_time = next_when
             return
 
