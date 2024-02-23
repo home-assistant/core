@@ -422,61 +422,40 @@ class IDLessCollection(YamlCollection):
 _GROUP_BY_KEY = attrgetter("change_type")
 
 
-class _CollectionLifeCycle:
+@dataclass(slots=True, frozen=True)
+class _CollectionLifeCycle(Generic[_EntityT]):
     """Life cycle for a collection of entities."""
 
-    __slots__ = (
-        "_domain",
-        "_platform",
-        "_collection",
-        "_entity_component",
-        "_entity_class",
-        "_entities",
-        "_ent_reg",
-    )
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        domain: str,
-        platform: str,
-        entity_component: EntityComponent[_EntityT],
-        collection: StorageCollection | YamlCollection,
-        entity_class: type[CollectionEntity],
-    ) -> None:
-        """Initialize the collection life cycle."""
-        self._domain = domain
-        self._platform = platform
-        self._collection = collection
-        self._entity_component = entity_component
-        self._entity_class = entity_class
-        self._entities: dict[str, CollectionEntity] = {}
-        self._ent_reg = entity_registry.async_get(hass)
+    domain: str
+    platform: str
+    entity_component: EntityComponent[_EntityT]
+    collection: StorageCollection | YamlCollection
+    entity_class: type[CollectionEntity]
+    ent_reg: entity_registry.EntityRegistry
+    entities: dict[str, CollectionEntity]
 
     @callback
     def async_setup(self) -> None:
         """Set up the collection life cycle."""
-        self._collection.async_add_change_set_listener(self._collection_changed)
+        self.collection.async_add_change_set_listener(self._collection_changed)
 
     def _entity_removed(self, item_id: str) -> None:
         """Remove entity from entities if it's removed or not added."""
-        self._entities.pop(item_id, None)
+        self.entities.pop(item_id, None)
 
     @callback
     def _add_entity(self, change_set: CollectionChangeSet) -> CollectionEntity:
         item_id = change_set.item_id
-        entity = self._collection.create_entity(self._entity_class, change_set.item)
-        self._entities[item_id] = entity
+        entity = self.collection.create_entity(self.entity_class, change_set.item)
+        self.entities[item_id] = entity
         entity.async_on_remove(partial(self._entity_removed, item_id))
         return entity
 
     async def _remove_entity(self, change_set: CollectionChangeSet) -> None:
         item_id = change_set.item_id
-        ent_reg = self._ent_reg
-        entities = self._entities
-        ent_to_remove = ent_reg.async_get_entity_id(
-            self._domain, self._platform, item_id
-        )
+        ent_reg = self.ent_reg
+        entities = self.entities
+        ent_to_remove = ent_reg.async_get_entity_id(self.domain, self.platform, item_id)
         if ent_to_remove is not None:
             ent_reg.async_remove(ent_to_remove)
         elif entity := entities.get(item_id):
@@ -486,7 +465,7 @@ class _CollectionLifeCycle:
         entities.pop(item_id, None)
 
     async def _update_entity(self, change_set: CollectionChangeSet) -> None:
-        if entity := self._entities.get(change_set.item_id):
+        if entity := self.entities.get(change_set.item_id):
             await entity.async_update_config(change_set.item)
 
     async def _collection_changed(
@@ -504,25 +483,16 @@ class _CollectionLifeCycle:
                 change_type = change_set.change_type
                 if change_type == CHANGE_ADDED:
                     new_entities.append(self._add_entity(change_set))
-                else:
-                    coros.append(self._func_map[change_type](self, change_set))
+                elif change_type == CHANGE_REMOVED:
+                    coros.append(self._remove_entity(change_set))
+                elif change_type == CHANGE_UPDATED:
+                    coros.append(self._update_entity(change_set))
 
         if coros:
             await asyncio.gather(*coros)
 
         if new_entities:
-            await self._entity_component.async_add_entities(new_entities)
-
-    _func_map: dict[
-        str,
-        Callable[
-            [_CollectionLifeCycle, CollectionChangeSet],
-            Coroutine[Any, Any, CollectionEntity | None],
-        ],
-    ] = {
-        CHANGE_REMOVED: _remove_entity,
-        CHANGE_UPDATED: _update_entity,
-    }
+            await self.entity_component.async_add_entities(new_entities)
 
 
 @callback
@@ -535,8 +505,9 @@ def sync_entity_lifecycle(
     entity_class: type[CollectionEntity],
 ) -> None:
     """Map a collection to an entity component."""
+    ent_reg = entity_registry.async_get(hass)
     _CollectionLifeCycle(
-        hass, domain, platform, entity_component, collection, entity_class
+        domain, platform, entity_component, collection, entity_class, ent_reg, {}
     ).async_setup()
 
 
