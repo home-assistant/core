@@ -6,6 +6,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
+from zhaquirks.danfoss import thermostat
 from zhaquirks.quirk_ids import (
     DANFOSS_ALLY_THERMOSTAT,
     TUYA_PLUG_MANUFACTURER,
@@ -686,19 +687,6 @@ class KeypadLockout(ZCLEnumSelectEntity):
     _attr_icon: str = "mdi:lock"
 
 
-class DanfossExerciseDayOfTheWeekEnum(types.enum8):
-    """Day of the week."""
-
-    sunday = 0
-    monday = 1
-    tuesday = 2
-    wednesday = 3
-    thursday = 4
-    friday = 5
-    saturday = 6
-    undefined = 7
-
-
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
@@ -709,7 +697,7 @@ class DanfossExerciseDayOfTheWeek(ZCLEnumSelectEntity):
     _unique_id_suffix = "exercise_day_of_week"
     _attribute_name = "exercise_day_of_week"
     _attr_translation_key: str = "exercise_day_of_week"
-    _enum = DanfossExerciseDayOfTheWeekEnum
+    _enum = thermostat.DanfossExerciseDayOfTheWeekEnum
     _attr_icon: str = "mdi:wrench-clock"
 
 
@@ -737,14 +725,6 @@ class DanfossOrientation(ZCLEnumSelectEntity):
     _enum = DanfossOrientationEnum
 
 
-class DanfossAdaptationRunControlEnum(types.enum8):
-    """Initiate or Cancel Adaptation Run."""
-
-    nothing = 0x00
-    initiate = 0x01
-    cancel = 0x02
-
-
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
@@ -755,32 +735,7 @@ class DanfossAdaptationRunControl(ZCLEnumSelectEntity):
     _unique_id_suffix = "adaptation_run_control"
     _attribute_name = "adaptation_run_control"
     _attr_translation_key: str = "adaptation_run_command"
-    _enum = DanfossAdaptationRunControlEnum
-
-
-class DanfossControlAlgorithmScaleFactorEnum(types.enum8):
-    """The time scale factor for changing the opening of the valve.
-
-    Not all values were given, therefore there are some extrapolated values with a margin of error of about 5 minutes.
-    This is implemented as an enum here, but is a number on the device.
-    """
-
-    quick_5min = 0x01
-
-    quick_10min = 0x02  # extrapolated
-    quick_15min = 0x03  # extrapolated
-    quick_25min = 0x04  # extrapolated
-
-    moderate_30min = 0x05
-
-    moderate_40min = 0x06  # extrapolated
-    moderate_50min = 0x07  # extrapolated
-    moderate_60min = 0x08  # extrapolated
-    moderate_70min = 0x09  # extrapolated
-
-    slow_80min = 0x0A
-
-    quick_open_disabled = 0x11  # not sure what it does; also requires lower 4 bits to be in [1, 10] I assume
+    _enum = thermostat.DanfossAdaptationRunControlEnum
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -793,14 +748,7 @@ class DanfossControlAlgorithmScaleFactor(ZCLEnumSelectEntity):
     _unique_id_suffix = "control_algorithm_scale_factor"
     _attribute_name = "control_algorithm_scale_factor"
     _attr_translation_key: str = "setpoint_response_time"
-    _enum = DanfossControlAlgorithmScaleFactorEnum
-
-
-class DanfossViewingDirectionEnum(types.enum8):
-    """Default (button above screen when looking at it) or Inverted (button below screen when looking at it)."""
-
-    default = 0x00
-    inverted = 0x01
+    _enum = thermostat.DanfossControlAlgorithmScaleFactorEnum
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -813,4 +761,4 @@ class DanfossViewingDirection(ZCLEnumSelectEntity):
     _unique_id_suffix = "viewing_direction"
     _attribute_name = "viewing_direction"
     _attr_translation_key: str = "viewing_direction"
-    _enum = DanfossViewingDirectionEnum
+    _enum = thermostat.DanfossViewingDirectionEnum

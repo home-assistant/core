@@ -9,6 +9,7 @@ import numbers
 import random
 from typing import TYPE_CHECKING, Any, Self
 
+from zhaquirks.danfoss import thermostat
 from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT
 from zigpy import types
 from zigpy.zcl.clusters.closures import WindowCovering
@@ -1415,16 +1416,6 @@ class BitMapSensor(Sensor):
         return state_attr
 
 
-class DanfossOpenWindowDetectionEnum(types.enum8):
-    """Danfoss open window detection judgments."""
-
-    quarantine = 0x00
-    closed = 0x01
-    maybe = 0x02
-    open = 0x03
-    external = 0x04
-
-
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
@@ -1440,7 +1431,7 @@ class DanfossOpenWindowDetection(EnumSensor):
     _attribute_name = "open_window_detection"
     _attr_translation_key: str = "open_window_detected"
     _attr_icon: str = "mdi:window-open"
-    _enum = DanfossOpenWindowDetectionEnum
+    _enum = thermostat.DanfossOpenWindowDetectionEnum
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -1458,14 +1449,6 @@ class DanfossLoadEstimate(Sensor):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
-class DanfossAdaptationRunStatusBitmap(types.bitmap8):
-    """Danfoss Adaptation run status bitmap."""
-
-    in_progress = 0x0001
-    valve_characteristic_found = 0x0002
-    valve_characteristic_lost = 0x0004
-
-
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
@@ -1478,7 +1461,7 @@ class DanfossAdaptationRunStatus(BitMapSensor):
     _attribute_name = "adaptation_run_status"
     _attr_translation_key: str = "adaptation_run_status"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _bitmap = DanfossAdaptationRunStatusBitmap
+    _bitmap = thermostat.DanfossAdaptationRunStatusBitmap
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
@@ -1497,27 +1480,6 @@ class DanfossPreheatTime(Sensor):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
-class DanfossSoftwareErrorCodeBitmap(types.bitmap16):
-    """Danfoss software error code bitmap."""
-
-    top_pcb_sensor_error = 0x0001
-    side_pcb_sensor_error = 0x0002
-    non_volatile_memory_error = 0x0004
-    unknown_hw_error = 0x0008
-    # 0x0010 = N/A
-    motor_error = 0x0020
-    # 0x0040 = N/A
-    invalid_internal_communication = 0x0080
-    # 0x0100 = N/A
-    invalid_clock_information = 0x0200
-    # 0x0400 = N/A
-    radio_communication_error = 0x0800
-    encoder_jammed = 0x1000
-    low_battery = 0x2000
-    critical_low_battery = 0x4000
-    # 0x8000 = Reserved
-
-
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="diagnostic",
     quirk_ids={DANFOSS_ALLY_THERMOSTAT},
@@ -1530,7 +1492,7 @@ class DanfossSoftwareErrorCode(BitMapSensor):
     _attribute_name = "sw_error_code"
     _attr_translation_key: str = "software_error"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _bitmap = DanfossSoftwareErrorCodeBitmap
+    _bitmap = thermostat.DanfossSoftwareErrorCodeBitmap
 
 
 @CONFIG_DIAGNOSTIC_MATCH(

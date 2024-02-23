@@ -833,54 +833,19 @@
         "name": "Keypad lockout"
       },
       "exercise_day_of_week": {
-        "name": "Exercise day of the week",
-        "state": {
-          "sunday": "[%key:common::time::sunday%]",
-          "monday": "[%key:common::time::monday%]",
-          "tuesday": "[%key:common::time::tuesday%]",
-          "wednesday": "[%key:common::time::wednesday%]",
-          "thursday": "[%key:common::time::thursday%]",
-          "friday": "[%key:common::time::friday%]",
-          "saturday": "[%key:common::time::saturday%]"
-        }
+        "name": "Exercise day of the week"
       },
       "valve_orientation": {
-        "name": "Valve orientation",
-        "state": {
-          "horizontal": "Horizontal",
-          "vertical": "Vertical"
-        }
+        "name": "Valve orientation"
       },
       "adaptation_run_command": {
-        "name": "Adaptation run command",
-        "state": {
-          "nothing": "Nothing",
-          "initiate": "Initiate",
-          "cancel": "Cancel"
-        }
+        "name": "Adaptation run command"
       },
       "viewing_direction": {
-        "name": "Viewing direction",
-        "state": {
-          "default": "Default",
-          "inverted": "Inverted"
-        }
+        "name": "Viewing direction"
       },
       "setpoint_response_time": {
-        "name": "Setpoint response time",
-        "state": {
-          "quick_5min": "5 minutes",
-          "quick_10min": "10 minutes",
-          "quick_15min": "15 minutes",
-          "quick_25min": "25 minutes",
-          "moderate_30min": "30 minutes",
-          "moderate_40min": "40 minutes",
-          "moderate_50min": "50 minutes",
-          "moderate_60min": "60 minutes",
-          "moderate_70min": "70 minutes",
-          "slow_80min": "80 minutes",
-          "quick_open_disabled": "Disabled"
-        }
+        "name": "Setpoint response time"
       }
     },
     "sensor": {
@@ -981,14 +946,7 @@
         "name": "Hooks state"
       },
       "open_window_detected": {
-        "name": "Open window detected",
-        "state": {
-          "quarantine": "Quarantine",
-          "closed": "Closed",
-          "maybe": "Maybe",
-          "open": "Open",
-          "external": "External"
-        }
+        "name": "Open window detected"
       },
       "load_estimate": {
         "name": "Load estimate"
