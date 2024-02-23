@@ -37,7 +37,7 @@ from homeassistant.const import (
     UnitOfInformation,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -416,25 +416,6 @@ def check_legacy_resource(resource: str, resources: set[str]) -> bool:
     return False
 
 
-async def clean_obsolete_entities(
-    hass: HomeAssistant, entry_id: str, loaded_resources: set[str]
-) -> None:
-    """Remove entities which are disabled and not supported from setup."""
-    entity_registry = er.async_get(hass)
-    entities = entity_registry.entities.get_entries_for_config_entry_id(entry_id)
-    for entity in entities:
-        if (
-            entity.unique_id not in loaded_resources
-            and entity.disabled is True
-            and (
-                entity_id := entity_registry.async_get_entity_id(
-                    SENSOR_DOMAIN, DOMAIN, entity.unique_id
-                )
-            )
-        ):
-            entity_registry.async_remove(entity_id)
-
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_RESOURCES, default={CONF_TYPE: "disk_use"}): vol.All(
@@ -785,7 +766,26 @@ async def async_setup_entry(  # noqa: C901
     for coordinator in hass.data[DOMAIN_COORDINATORS].values():
         await coordinator.async_request_refresh()
 
-    await clean_obsolete_entities(hass, entry.entry_id, loaded_resources)
+    @callback
+    def clean_obsolete_entities() -> None:
+        """Remove entities which are disabled and not supported from setup."""
+        entity_registry = er.async_get(hass)
+        entities = entity_registry.entities.get_entries_for_config_entry_id(
+            entry.entry_id
+        )
+        for entity in entities:
+            if (
+                entity.unique_id not in loaded_resources
+                and entity.disabled is True
+                and (
+                    entity_id := entity_registry.async_get_entity_id(
+                        SENSOR_DOMAIN, DOMAIN, entity.unique_id
+                    )
+                )
+            ):
+                entity_registry.async_remove(entity_id)
+
+    clean_obsolete_entities()
 
     async_add_entities(entities)
 
