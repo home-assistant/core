@@ -410,13 +410,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
     @callback
     def _calculate_color_support(self) -> None:
         """Calculate light colors."""
-        (
-            red,
-            green,
-            blue,
-            warm_white,
-            cool_white,
-        ) = self._get_color_values()
+        (red, green, blue, warm_white, cool_white) = self._get_color_values()
         # RGB support
         if red and green and blue:
             self._supports_color = True
