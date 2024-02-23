@@ -1,4 +1,5 @@
 """Entities for FYTA integration."""
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -10,7 +11,7 @@ from .coordinator import FytaCoordinator
 
 
 class FytaCoordinatorEntity(CoordinatorEntity[FytaCoordinator]):
-    """Base Fyta entity."""
+    """Base Fyta Coordinator entity."""
 
     _attr_has_entity_name = True
 
@@ -35,10 +36,9 @@ class FytaCoordinatorEntity(CoordinatorEntity[FytaCoordinator]):
 
 
 class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):
-    """Base Fyta entity."""
+    """Base Fyta Plant entity."""
 
     _attr_has_entity_name = True
-    plant_id: int
 
     def __init__(
         self,
@@ -50,14 +50,25 @@ class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):
         """Initialize the Fyta sensor."""
         super().__init__(coordinator)
 
+        self.plant_id = plant_id
         self._attr_unique_id = f"{entry.entry_id}-{plant_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             manufacturer="Fyta",
             model="Plant",
             identifiers={(DOMAIN, f"{entry.entry_id}-{plant_id}")},
-            name=coordinator.data.get(plant_id).get("name"),
+            name=self.plant.get("name"),
+
             via_device=(DOMAIN, entry.entry_id),
-            sw_version=coordinator.data.get(plant_id).get("sw_version"),
+            sw_version=self.plant.get("sw_version"),
         )
         self.entity_description = description
-        self.plant_id = plant_id
+
+    @property
+    def plant(self) -> dict[str, Any]:
+        """Get plant data."""
+        return self.coordinator.data[self.plant_id]
+
+    @property
+    def available(self) -> bool:
+        """Test if entity is available."""
+        return super().available and (self.plant_id in self.coordinator.data)

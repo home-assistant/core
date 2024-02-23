@@ -46,9 +46,9 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except FytaConnectionError:
                 errors["base"] = "cannot_connect"
             except FytaAuthentificationError:
-                errors["base"] = "invalid_auth"
+                errors["base"] = "auth_error"
             except FytaPasswordError:
-                errors["base"] = "invalid_auth"
+                errors["base"] = "auth_error"
                 errors[CONF_PASSWORD] = "password_error"
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
@@ -57,7 +57,6 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_USERNAME], data=user_input
                 )
 
-        # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
