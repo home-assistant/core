@@ -7,7 +7,6 @@ from typing import Any
 from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
-from aiohttp import ClientConnectorSSLError
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
@@ -65,7 +64,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         """Listen with the client."""
         try:
             await automower_client.start_listening(init_ready)
-        except ClientConnectorSSLError as err:
+        except ApiException as err:
             if entry.state != ConfigEntryState.LOADED:
                 raise
             _LOGGER.error("Failed to listen: %s", err)

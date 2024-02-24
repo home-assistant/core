@@ -95,3 +95,12 @@ def mock_automower_client() -> Generator[AsyncMock, None, None]:
         client.start_listening = AsyncMock(side_effect=listen)
 
         yield client
+
+
+@pytest.fixture(name="listen_ready_timeout")
+def listen_ready_timeout_fixture() -> Generator[int, None, None]:
+    """Mock the listen ready timeout."""
+    with patch(
+        "homeassistant.components.husqvarna_automower.LISTEN_READY_TIMEOUT", new=0
+    ) as timeout:
+        yield timeout
