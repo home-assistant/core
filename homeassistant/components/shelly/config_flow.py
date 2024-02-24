@@ -205,7 +205,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if device_info["model"]:
-                    host, port = await parse_host(user_input[CONF_HOST])
+                    host, port = await parse_host(self.host)
                     return self.async_create_entry(
                         title=device_info["title"],
                         data={
