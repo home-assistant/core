@@ -102,7 +102,6 @@ SWITCH_TYPES: tuple[AndroidIPWebcamSwitchEntityDescription, ...] = (
         key="whitebalance_lock",
         translation_key="whitebalance_lock",
         name="White balance lock",
-        icon="mdi:white-balance-auto",
         entity_category=EntityCategory.CONFIG,
         on_func=lambda ipcam: ipcam.change_setting("whitebalance_lock", True),
         off_func=lambda ipcam: ipcam.change_setting("whitebalance_lock", False),

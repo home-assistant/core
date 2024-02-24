@@ -1,6 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {},
     "sensor": {
       "audio_connections": {
         "default": "mdi:speaker"
