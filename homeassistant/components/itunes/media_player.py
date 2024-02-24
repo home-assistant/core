@@ -65,9 +65,7 @@ class Itunes:
         try:
             if method == "GET":
                 response = requests.get(url, timeout=DEFAULT_TIMEOUT)
-            elif method == "POST":
-                response = requests.put(url, params, timeout=DEFAULT_TIMEOUT)
-            elif method == "PUT":
+            elif method in ("POST", "PUT"):
                 response = requests.put(url, params, timeout=DEFAULT_TIMEOUT)
             elif method == "DELETE":
                 response = requests.delete(url, timeout=DEFAULT_TIMEOUT)

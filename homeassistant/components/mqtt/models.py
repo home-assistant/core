@@ -29,6 +29,8 @@ if TYPE_CHECKING:
     from .discovery import MQTTDiscoveryPayload
     from .tag import MQTTTagScanner
 
+from .const import TEMPLATE_ERRORS
+
 
 class PayloadSentinel(StrEnum):
     """Sentinel for `async_render_with_possible_json_value`."""
@@ -247,7 +249,7 @@ class MqttValueTemplate:
                         payload, variables=values
                     )
                 )
-            except Exception as exc:
+            except TEMPLATE_ERRORS as exc:
                 _LOGGER.error(
                     "%s: %s rendering template for entity '%s', template: '%s'",
                     type(exc).__name__,
@@ -255,7 +257,7 @@ class MqttValueTemplate:
                     self._entity.entity_id if self._entity else "n/a",
                     self._value_template.template,
                 )
-                raise exc
+                raise
             return rendered_payload
 
         _LOGGER.debug(
@@ -274,18 +276,18 @@ class MqttValueTemplate:
                     payload, default, variables=values
                 )
             )
-        except Exception as ex:
+        except TEMPLATE_ERRORS as exc:
             _LOGGER.error(
                 "%s: %s rendering template for entity '%s', template: "
                 "'%s', default value: %s and payload: %s",
-                type(ex).__name__,
-                ex,
+                type(exc).__name__,
+                exc,
                 self._entity.entity_id if self._entity else "n/a",
                 self._value_template.template,
                 default,
                 payload,
             )
-            raise ex
+            raise
         return rendered_payload
 
 

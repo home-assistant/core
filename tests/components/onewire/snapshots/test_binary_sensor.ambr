@@ -30,6 +30,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2405',
       'name': '05.111111111111',
@@ -68,6 +70,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18S20',
       'name': '10.111111111111',
@@ -106,6 +110,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2406',
       'name': '12.111111111111',
@@ -135,6 +141,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -144,7 +152,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_a',
+      'translation_key': 'sensed_id',
       'unique_id': '/12.111111111111/sensed.A',
       'unit_of_measurement': None,
     }),
@@ -164,6 +172,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -173,7 +183,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_b',
+      'translation_key': 'sensed_id',
       'unique_id': '/12.111111111111/sensed.B',
       'unit_of_measurement': None,
     }),
@@ -226,6 +236,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2423',
       'name': '1D.111111111111',
@@ -264,6 +276,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2409',
       'name': '1F.111111111111',
@@ -290,6 +304,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2423',
       'name': '1D.111111111111',
@@ -328,6 +344,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS1822',
       'name': '22.111111111111',
@@ -366,6 +384,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2438',
       'name': '26.111111111111',
@@ -404,6 +424,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
       'name': '28.111111111111',
@@ -442,6 +464,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
       'name': '28.222222222222',
@@ -480,6 +504,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
       'name': '28.222222222223',
@@ -518,6 +544,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2408',
       'name': '29.111111111111',
@@ -547,6 +575,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -556,7 +586,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_0',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.0',
       'unit_of_measurement': None,
     }),
@@ -576,6 +606,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -585,7 +617,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_1',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.1',
       'unit_of_measurement': None,
     }),
@@ -605,6 +637,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -614,7 +648,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_2',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.2',
       'unit_of_measurement': None,
     }),
@@ -634,6 +668,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -643,7 +679,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_3',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.3',
       'unit_of_measurement': None,
     }),
@@ -663,6 +699,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -672,7 +710,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_4',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.4',
       'unit_of_measurement': None,
     }),
@@ -692,6 +730,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -701,7 +741,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_5',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.5',
       'unit_of_measurement': None,
     }),
@@ -721,6 +761,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -730,7 +772,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_6',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.6',
       'unit_of_measurement': None,
     }),
@@ -750,6 +792,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -759,7 +803,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_7',
+      'translation_key': 'sensed_id',
       'unique_id': '/29.111111111111/sensed.7',
       'unit_of_measurement': None,
     }),
@@ -884,6 +928,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2760',
       'name': '30.111111111111',
@@ -922,6 +968,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2413',
       'name': '3A.111111111111',
@@ -951,6 +999,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -960,7 +1010,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_a',
+      'translation_key': 'sensed_id',
       'unique_id': '/3A.111111111111/sensed.A',
       'unit_of_measurement': None,
     }),
@@ -980,6 +1030,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -989,7 +1041,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'sensed_b',
+      'translation_key': 'sensed_id',
       'unique_id': '/3A.111111111111/sensed.B',
       'unit_of_measurement': None,
     }),
@@ -1042,6 +1094,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS1825',
       'name': '3B.111111111111',
@@ -1080,6 +1134,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS28EA00',
       'name': '42.111111111111',
@@ -1118,6 +1174,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Embedded Data Systems',
       'model': 'EDS0068',
       'name': '7E.111111111111',
@@ -1156,6 +1214,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Embedded Data Systems',
       'model': 'EDS0066',
       'name': '7E.222222222222',
@@ -1194,6 +1254,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HobbyBoards_EF',
       'name': 'EF.111111111111',
@@ -1232,6 +1294,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HB_MOISTURE_METER',
       'name': 'EF.111111111112',
@@ -1270,6 +1334,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HB_HUB',
       'name': 'EF.111111111113',
@@ -1299,6 +1365,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1308,7 +1376,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'hub_short_0',
+      'translation_key': 'hub_short_id',
       'unique_id': '/EF.111111111113/hub/short.0',
       'unit_of_measurement': None,
     }),
@@ -1328,6 +1396,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1337,7 +1407,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'hub_short_1',
+      'translation_key': 'hub_short_id',
       'unique_id': '/EF.111111111113/hub/short.1',
       'unit_of_measurement': None,
     }),
@@ -1357,6 +1427,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1366,7 +1438,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'hub_short_2',
+      'translation_key': 'hub_short_id',
       'unique_id': '/EF.111111111113/hub/short.2',
       'unit_of_measurement': None,
     }),
@@ -1386,6 +1458,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1395,7 +1469,7 @@
       'platform': 'onewire',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'hub_short_3',
+      'translation_key': 'hub_short_id',
       'unique_id': '/EF.111111111113/hub/short.3',
       'unit_of_measurement': None,
     }),

@@ -312,7 +312,7 @@ async def test_if_fires_on_mqtt_message(
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
         '  "payload": "long_press",'
-        '  "topic": "foobar/triggers/button1",'
+        '  "topic": "foobar/triggers/button2",'
         '  "type": "button_long_press",'
         '  "subtype": "button_2" }'
     )
@@ -346,8 +346,8 @@ async def test_if_fires_on_mqtt_message(
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
                         "discovery_id": "bla2",
-                        "type": "button_1",
-                        "subtype": "button_long_press",
+                        "type": "button_long_press",
+                        "subtype": "button_2",
                     },
                     "action": {
                         "service": "test.automation",
@@ -365,7 +365,7 @@ async def test_if_fires_on_mqtt_message(
     assert calls[0].data["some"] == "short_press"
 
     # Fake long press.
-    async_fire_mqtt_message(hass, "foobar/triggers/button1", "long_press")
+    async_fire_mqtt_message(hass, "foobar/triggers/button2", "long_press")
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "long_press"
@@ -569,7 +569,7 @@ async def test_if_fires_on_mqtt_message_template(
     calls: list[ServiceCall],
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> None:
-    """Test triggers firing."""
+    """Test triggers firing with a message template and a shared topic."""
     await mqtt_mock_entry()
     data1 = (
         '{ "automation_type":"trigger",'
@@ -619,8 +619,8 @@ async def test_if_fires_on_mqtt_message_template(
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
                         "discovery_id": "bla2",
-                        "type": "button_1",
-                        "subtype": "button_long_press",
+                        "type": "button_long_press",
+                        "subtype": "button_2",
                     },
                     "action": {
                         "service": "test.automation",
@@ -669,7 +669,7 @@ async def test_if_fires_on_mqtt_message_late_discover(
         '{ "automation_type":"trigger",'
         '  "device":{"identifiers":["0AFFD2"]},'
         '  "payload": "long_press",'
-        '  "topic": "foobar/triggers/button1",'
+        '  "topic": "foobar/triggers/button2",'
         '  "type": "button_long_press",'
         '  "subtype": "button_2" }'
     )
@@ -702,8 +702,8 @@ async def test_if_fires_on_mqtt_message_late_discover(
                         "domain": DOMAIN,
                         "device_id": device_entry.id,
                         "discovery_id": "bla2",
-                        "type": "button_1",
-                        "subtype": "button_long_press",
+                        "type": "button_long_press",
+                        "subtype": "button_2",
                     },
                     "action": {
                         "service": "test.automation",
@@ -725,7 +725,7 @@ async def test_if_fires_on_mqtt_message_late_discover(
     assert calls[0].data["some"] == "short_press"
 
     # Fake long press.
-    async_fire_mqtt_message(hass, "foobar/triggers/button1", "long_press")
+    async_fire_mqtt_message(hass, "foobar/triggers/button2", "long_press")
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "long_press"

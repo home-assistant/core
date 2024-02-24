@@ -1001,12 +1001,18 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
         raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
-        if not scheduled:
+        if not scheduled and not raise_on_auth_failed:
             # Force refreshing updates for non-scheduled updates
+            # If `raise_on_auth_failed` is set, it means this is
+            # the first refresh and we do not want to delay
+            # startup or cause a timeout so we only refresh the
+            # updates if this is not a scheduled refresh and
+            # we are not doing the first refresh.
             try:
                 await self.hassio.refresh_updates()
             except HassioAPIError as err:
                 _LOGGER.warning("Error on Supervisor API: %s", err)
+
         await super()._async_refresh(
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )

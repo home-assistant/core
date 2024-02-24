@@ -51,7 +51,11 @@ from .entity import (
     async_setup_entry_rest,
     async_setup_entry_rpc,
 )
-from .utils import get_device_entry_gen, get_device_uptime
+from .utils import (
+    get_device_entry_gen,
+    get_device_uptime,
+    is_rpc_wifi_stations_disabled,
+)
 
 
 @dataclass(frozen=True)
@@ -235,7 +239,7 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         key="sensor|concentration",
         name="Gas concentration",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        icon="mdi:gauge",
+        translation_key="gas_concentration",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("sensor", "temp"): BlockSensorDescription(
@@ -279,14 +283,14 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         key="sensor|tilt",
         name="Tilt",
         native_unit_of_measurement=DEGREE,
-        icon="mdi:angle-acute",
+        translation_key="tilt",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ("relay", "totalWorkTime"): BlockSensorDescription(
         key="relay|totalWorkTime",
         name="Lamp life",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:progress-wrench",
+        translation_key="lamp_life",
         value=lambda value: 100 - (value / 3600 / SHAIR_MAX_WORK_HOURS),
         suggested_display_precision=1,
         extra_state_attributes=lambda block: {
@@ -308,7 +312,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         device_class=SensorDeviceClass.ENUM,
         options=["unknown", "warmup", "normal", "fault"],
         translation_key="operation",
-        icon="mdi:cog-transfer",
         value=lambda value: value,
         extra_state_attributes=lambda block: {"self_test": block.selfTest},
     ),
@@ -316,7 +319,6 @@ SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
         key="valve|valve",
         name="Valve status",
         translation_key="valve_status",
-        icon="mdi:valve",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "checking",
@@ -907,9 +909,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
-        removal_condition=lambda config, _status, key: (
-            config[key]["sta"]["enable"] is False
-        ),
+        removal_condition=is_rpc_wifi_stations_disabled,
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
@@ -959,6 +959,34 @@ RPC_SENSORS: Final = {
         name="Analog input",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        removal_condition=lambda config, _status, key: (config[key]["enable"] is False),
+    ),
+    "analoginput_xpercent": RpcSensorDescription(
+        key="input",
+        sub_key="xpercent",
+        name="Analog value",
+        removal_condition=lambda config, status, key: (
+            config[key]["enable"] is False or status[key].get("xpercent") is None
+        ),
+    ),
+    "pulse_counter": RpcSensorDescription(
+        key="input",
+        sub_key="counts",
+        name="Pulse counter",
+        native_unit_of_measurement="pulse",
+        state_class=SensorStateClass.TOTAL,
+        value=lambda status, _: status["total"],
+        removal_condition=lambda config, _status, key: (config[key]["enable"] is False),
+    ),
+    "counter_value": RpcSensorDescription(
+        key="input",
+        sub_key="counts",
+        name="Counter value",
+        value=lambda status, _: status["xtotal"],
+        removal_condition=lambda config, status, key: (
+            config[key]["enable"] is False
+            or status[key]["counts"].get("xtotal") is None
+        ),
     ),
 }
 

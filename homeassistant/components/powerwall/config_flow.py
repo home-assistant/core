@@ -125,18 +125,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if self.hass.config_entries.async_update_entry(
                         entry, unique_id=gateway_din
                     ):
-                        self.hass.async_create_task(
-                            self.hass.config_entries.async_reload(entry.entry_id)
-                        )
+                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
             if entry.unique_id == gateway_din:
                 if await self._async_powerwall_is_offline(entry):
                     if self.hass.config_entries.async_update_entry(
                         entry, data={**entry.data, CONF_IP_ADDRESS: self.ip_address}
                     ):
-                        self.hass.async_create_task(
-                            self.hass.config_entries.async_reload(entry.entry_id)
-                        )
+                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
         # Still need to abort for ignored entries
         self._abort_if_unique_id_configured()
@@ -166,7 +162,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str] = {}
         try:
             info = await validate_input(self.hass, user_input)
-        except (PowerwallUnreachableError, asyncio.TimeoutError) as ex:
+        except (PowerwallUnreachableError, TimeoutError) as ex:
             errors[CONF_IP_ADDRESS] = "cannot_connect"
             description_placeholders = {"error": str(ex)}
         except WrongVersion as ex:

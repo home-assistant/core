@@ -179,8 +179,8 @@ def _generate_stream_message(
     """Generate a history stream message response."""
     return {
         "states": states,
-        "start_time": dt_util.utc_to_timestamp(start_day),
-        "end_time": dt_util.utc_to_timestamp(end_day),
+        "start_time": start_day.timestamp(),
+        "end_time": end_day.timestamp(),
     }
 
 

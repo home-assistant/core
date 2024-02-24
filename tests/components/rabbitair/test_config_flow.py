@@ -1,7 +1,6 @@
 """Test the RabbitAir config flow."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Generator
 from ipaddress import ip_address
 from unittest.mock import Mock, patch
@@ -115,7 +114,7 @@ async def test_form(hass: HomeAssistant) -> None:
     [
         (ValueError, "invalid_access_token"),
         (OSError, "invalid_host"),
-        (asyncio.TimeoutError, "timeout_connect"),
+        (TimeoutError, "timeout_connect"),
         (Exception, "cannot_connect"),
     ],
 )

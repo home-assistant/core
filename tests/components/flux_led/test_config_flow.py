@@ -402,7 +402,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="any",
                 ip=IP_ADDRESS,
-                macaddress="00:00:00:00:00:00",
+                macaddress="000000000000",
             ),
         )
         await hass.async_block_till_done()

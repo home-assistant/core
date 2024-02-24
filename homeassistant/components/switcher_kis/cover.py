@@ -1,7 +1,6 @@
 """Switcher integration Cover platform."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -103,7 +102,7 @@ class SwitcherCoverEntity(
                 self.coordinator.data.device_key,
             ) as swapi:
                 response = await getattr(swapi, api)(*args)
-        except (asyncio.TimeoutError, OSError, RuntimeError) as err:
+        except (TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 
         if error or not response or not response.successful:

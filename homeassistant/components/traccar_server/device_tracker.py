@@ -51,12 +51,13 @@ class TraccarServerDeviceTracker(TraccarServerEntity, TrackerEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific attributes."""
+        geofence_name = self.traccar_geofence["name"] if self.traccar_geofence else None
         return {
             **self.traccar_attributes,
             ATTR_ADDRESS: self.traccar_position["address"],
             ATTR_ALTITUDE: self.traccar_position["altitude"],
             ATTR_CATEGORY: self.traccar_device["category"],
-            ATTR_GEOFENCE: getattr(self.traccar_geofence, "name", None),
+            ATTR_GEOFENCE: geofence_name,
             ATTR_MOTION: self.traccar_position["attributes"].get("motion", False),
             ATTR_SPEED: self.traccar_position["speed"],
             ATTR_STATUS: self.traccar_device["status"],

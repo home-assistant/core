@@ -1,7 +1,6 @@
 """Tests for WebSocket API commands."""
 import asyncio
 from copy import deepcopy
-import datetime
 import logging
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
@@ -2435,7 +2434,7 @@ async def test_execute_script_with_dynamically_validated_action(
     )
 
     config_entry = MockConfigEntry(domain="fake_integration", data={})
-    config_entry.state = config_entries.ConfigEntryState.LOADED
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -2494,8 +2493,8 @@ async def test_integration_setup_info(
 ) -> None:
     """Test subscribe/unsubscribe bootstrap_integrations."""
     hass.data[DATA_SETUP_TIME] = {
-        "august": datetime.timedelta(seconds=12.5),
-        "isy994": datetime.timedelta(seconds=12.8),
+        "august": 12.5,
+        "isy994": 12.8,
     }
     await websocket_client.send_json({"id": 7, "type": "integration/setup_info"})
 

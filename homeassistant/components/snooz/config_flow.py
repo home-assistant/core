@@ -144,7 +144,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._pairing_task
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return self.async_show_progress_done(next_step_id="pairing_timeout")
         finally:
             self._pairing_task = None

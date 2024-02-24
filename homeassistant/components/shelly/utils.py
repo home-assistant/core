@@ -367,6 +367,11 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     return cast(str, con_types[channel]).lower().startswith("light")
 
 
+def is_rpc_thermostat_internal_actuator(status: dict[str, Any]) -> bool:
+    """Return true if the thermostat uses an internal relay."""
+    return cast(bool, status["sys"].get("relay_in_thermostat", False))
+
+
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
     """Return list of input triggers for RPC device."""
     triggers = []
@@ -447,3 +452,13 @@ def async_create_issue_unsupported_firmware(
             "ip_address": entry.data["host"],
         },
     )
+
+
+def is_rpc_wifi_stations_disabled(
+    config: dict[str, Any], _status: dict[str, Any], key: str
+) -> bool:
+    """Return true if rpc all WiFi stations are disabled."""
+    if config[key]["sta"]["enable"] is True or config[key]["sta1"]["enable"] is True:
+        return False
+
+    return True

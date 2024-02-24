@@ -1,5 +1,4 @@
 """Test the nexia config flow."""
-import asyncio
 from unittest.mock import MagicMock, patch
 
 import aiohttp
@@ -81,7 +80,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.nexia.config_flow.NexiaHome.login",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

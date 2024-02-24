@@ -18,6 +18,8 @@ from . import format_discovered_event_class, format_event_dispatcher_name
 from .const import (
     DOMAIN,
     EVENT_CLASS_BUTTON,
+    EVENT_CLASS_CUBE,
+    EVENT_CLASS_DIMMER,
     EVENT_CLASS_MOTION,
     EVENT_PROPERTIES,
     EVENT_TYPE,
@@ -36,10 +38,31 @@ DESCRIPTIONS_BY_EVENT_CLASS = {
         ],
         device_class=EventDeviceClass.BUTTON,
     ),
+    EVENT_CLASS_CUBE: EventEntityDescription(
+        key=EVENT_CLASS_CUBE,
+        translation_key="cube",
+        event_types=[
+            "rotate_left",
+            "rotate_right",
+        ],
+    ),
+    EVENT_CLASS_DIMMER: EventEntityDescription(
+        key=EVENT_CLASS_DIMMER,
+        translation_key="dimmer",
+        event_types=[
+            "press",
+            "long_press",
+            "rotate_left",
+            "rotate_right",
+            "rotate_left_pressed",
+            "rotate_right_pressed",
+        ],
+    ),
     EVENT_CLASS_MOTION: EventEntityDescription(
         key=EVENT_CLASS_MOTION,
         translation_key="motion",
         event_types=["motion_detected"],
+        device_class=EventDeviceClass.MOTION,
     ),
 }
 

@@ -1,4 +1,5 @@
 """Support for monitoring the local system."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,8 +12,9 @@ import sys
 import time
 from typing import Any, Generic, Literal
 
-import psutil
+from psutil import NoSuchProcess, Process
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
+import psutil_home_assistant as ha_psutil
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -39,6 +41,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
@@ -87,10 +90,10 @@ def get_processor_temperature(
     entity: SystemMonitorSensor[dict[str, list[shwtemp]]],
 ) -> float | None:
     """Return processor temperature."""
-    return read_cpu_temperature(entity.coordinator.data)
+    return read_cpu_temperature(entity.hass, entity.coordinator.data)
 
 
-def get_process(entity: SystemMonitorSensor[list[psutil.Process]]) -> str:
+def get_process(entity: SystemMonitorSensor[list[Process]]) -> str:
     """Return process."""
     state = STATE_OFF
     for proc in entity.coordinator.data:
@@ -99,7 +102,7 @@ def get_process(entity: SystemMonitorSensor[list[psutil.Process]]) -> str:
             if entity.argument == proc.name():
                 state = STATE_ON
                 break
-        except psutil.NoSuchProcess as err:
+        except NoSuchProcess as err:
             _LOGGER.warning(
                 "Failed to load process with ID: %s, old name: %s",
                 err.pid,
@@ -330,7 +333,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription[Any]] = {
         mandatory_arg=True,
         value_fn=get_throughput,
     ),
-    "process": SysMonitorSensorEntityDescription[list[psutil.Process]](
+    "process": SysMonitorSensorEntityDescription[list[Process]](
         key="process",
         translation_key="process",
         placeholder="process",
@@ -344,7 +347,9 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription[Any]] = {
         native_unit_of_measurement=PERCENTAGE,
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda entity: round(entity.coordinator.data),
+        value_fn=lambda entity: (
+            round(entity.coordinator.data) if entity.coordinator.data else None
+        ),
     ),
     "processor_temperature": SysMonitorSensorEntityDescription[
         dict[str, list[shwtemp]]
@@ -483,12 +488,16 @@ async def async_setup_entry(  # noqa: C901
     entities: list[SystemMonitorSensor] = []
     legacy_resources: set[str] = set(entry.options.get("resources", []))
     loaded_resources: set[str] = set()
+    psutil_wrapper: ha_psutil.PsutilWrapper = hass.data[DOMAIN]
 
     def get_arguments() -> dict[str, Any]:
         """Return startup information."""
-        disk_arguments = get_all_disk_mounts()
-        network_arguments = get_all_network_interfaces()
-        cpu_temperature = read_cpu_temperature()
+        disk_arguments = get_all_disk_mounts(hass)
+        network_arguments = get_all_network_interfaces(hass)
+        try:
+            cpu_temperature = read_cpu_temperature(hass)
+        except AttributeError:
+            cpu_temperature = 0.0
         return {
             "disk_arguments": disk_arguments,
             "network_arguments": network_arguments,
@@ -500,31 +509,39 @@ async def async_setup_entry(  # noqa: C901
     disk_coordinators: dict[str, SystemMonitorDiskCoordinator] = {}
     for argument in startup_arguments["disk_arguments"]:
         disk_coordinators[argument] = SystemMonitorDiskCoordinator(
-            hass, f"Disk {argument} coordinator", argument
+            hass, psutil_wrapper, f"Disk {argument} coordinator", argument
         )
-    swap_coordinator = SystemMonitorSwapCoordinator(hass, "Swap coordinator")
-    memory_coordinator = SystemMonitorMemoryCoordinator(hass, "Memory coordinator")
-    net_io_coordinator = SystemMonitorNetIOCoordinator(hass, "Net IO coordnator")
+    swap_coordinator = SystemMonitorSwapCoordinator(
+        hass, psutil_wrapper, "Swap coordinator"
+    )
+    memory_coordinator = SystemMonitorMemoryCoordinator(
+        hass, psutil_wrapper, "Memory coordinator"
+    )
+    net_io_coordinator = SystemMonitorNetIOCoordinator(
+        hass, psutil_wrapper, "Net IO coordnator"
+    )
     net_addr_coordinator = SystemMonitorNetAddrCoordinator(
-        hass, "Net address coordinator"
+        hass, psutil_wrapper, "Net address coordinator"
     )
     system_load_coordinator = SystemMonitorLoadCoordinator(
-        hass, "System load coordinator"
+        hass, psutil_wrapper, "System load coordinator"
     )
     processor_coordinator = SystemMonitorProcessorCoordinator(
-        hass, "Processor coordinator"
+        hass, psutil_wrapper, "Processor coordinator"
     )
     boot_time_coordinator = SystemMonitorBootTimeCoordinator(
-        hass, "Boot time coordinator"
+        hass, psutil_wrapper, "Boot time coordinator"
     )
-    process_coordinator = SystemMonitorProcessCoordinator(hass, "Process coordinator")
+    process_coordinator = SystemMonitorProcessCoordinator(
+        hass, psutil_wrapper, "Process coordinator"
+    )
     cpu_temp_coordinator = SystemMonitorCPUtempCoordinator(
-        hass, "CPU temperature coordinator"
+        hass, psutil_wrapper, "CPU temperature coordinator"
     )
 
     for argument in startup_arguments["disk_arguments"]:
         disk_coordinators[argument] = SystemMonitorDiskCoordinator(
-            hass, f"Disk {argument} coordinator", argument
+            hass, psutil_wrapper, f"Disk {argument} coordinator", argument
         )
 
     _LOGGER.debug("Setup from options %s", entry.options)
@@ -638,6 +655,20 @@ async def async_setup_entry(  # noqa: C901
                         True,
                     )
                 )
+                async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "process_sensor",
+                    breaks_in_ha_version="2024.9.0",
+                    is_fixable=True,
+                    is_persistent=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="process_sensor",
+                    data={
+                        "entry_id": entry.entry_id,
+                        "processes": _entry[CONF_PROCESS],
+                    },
+                )
             continue
 
         if _type == "processor_use":
@@ -704,7 +735,7 @@ async def async_setup_entry(  # noqa: C901
                 _LOGGER.debug("Loading legacy %s with argument %s", _type, argument)
                 if not disk_coordinators.get(argument):
                     disk_coordinators[argument] = SystemMonitorDiskCoordinator(
-                        hass, f"Disk {argument} coordinator", argument
+                        hass, psutil_wrapper, f"Disk {argument} coordinator", argument
                     )
                 entities.append(
                     SystemMonitorSensor(

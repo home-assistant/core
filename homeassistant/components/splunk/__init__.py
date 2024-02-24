@@ -1,5 +1,4 @@
 """Support to send data to a Splunk instance."""
-import asyncio
 from http import HTTPStatus
 import json
 import logging
@@ -120,7 +119,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 _LOGGER.warning(err)
         except ClientConnectionError as err:
             _LOGGER.warning(err)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning("Connection to %s:%s timed out", host, port)
         except ClientResponseError as err:
             _LOGGER.error(err.message)

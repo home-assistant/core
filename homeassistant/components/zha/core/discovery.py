@@ -6,6 +6,8 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, cast
 
+from slugify import slugify
+from zigpy.state import State
 from zigpy.zcl.clusters.general import Ota
 
 from homeassistant.const import CONF_TYPE, Platform
@@ -102,6 +104,52 @@ class ProbeEndpoint:
         self.discover_multi_entities(endpoint)
         self.discover_by_cluster_id(endpoint)
         self.discover_multi_entities(endpoint, config_diagnostic_entities=True)
+        zha_regs.ZHA_ENTITIES.clean_up()
+
+    @callback
+    def discover_device_entities(self, device: ZHADevice) -> None:
+        """Discover entities for a ZHA device."""
+        _LOGGER.debug(
+            "Discovering entities for device: %s-%s",
+            str(device.ieee),
+            device.name,
+        )
+
+        if device.is_coordinator:
+            self.discover_coordinator_device_entities(device)
+
+    @callback
+    def discover_coordinator_device_entities(self, device: ZHADevice) -> None:
+        """Discover entities for the coordinator device."""
+        _LOGGER.debug(
+            "Discovering entities for coordinator device: %s-%s",
+            str(device.ieee),
+            device.name,
+        )
+        state: State = device.gateway.application_controller.state
+        platforms: dict[Platform, list] = get_zha_data(device.hass).platforms
+
+        @callback
+        def process_counters(counter_groups: str) -> None:
+            for counter_group, counters in getattr(state, counter_groups).items():
+                for counter in counters:
+                    platforms[Platform.SENSOR].append(
+                        (
+                            sensor.DeviceCounterSensor,
+                            (
+                                f"{slugify(str(device.ieee))}_{counter_groups}_{counter_group}_{counter}",
+                                device,
+                                counter_groups,
+                                counter_group,
+                                counter,
+                            ),
+                        )
+                    )
+
+        process_counters("counters")
+        process_counters("broadcast_counters")
+        process_counters("device_counters")
+        process_counters("group_counters")
         zha_regs.ZHA_ENTITIES.clean_up()
 
     @callback

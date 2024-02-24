@@ -58,7 +58,9 @@ async def test_entity_lifecycle(
         (-31.0, 150.0),
         {ATTR_NAME: "Properties 1"},
     )
-    mock_entry_2 = _generate_mock_feed_entry("2345", "Title 2", 20.5, (-31.1, 150.1))
+    mock_entry_2 = _generate_mock_feed_entry(
+        "2345", "271310188", 20.5, (-31.1, 150.1), {ATTR_NAME: 271310188}
+    )
     mock_entry_3 = _generate_mock_feed_entry("3456", "Title 3", 25.5, (-31.2, 150.2))
     mock_entry_4 = _generate_mock_feed_entry("4567", "Title 4", 12.5, (-31.3, 150.3))
 
@@ -89,14 +91,14 @@ async def test_entity_lifecycle(
         }
         assert round(abs(float(state.state) - 15.5), 7) == 0
 
-        state = hass.states.get(f"{GEO_LOCATION_DOMAIN}.title_2")
+        state = hass.states.get(f"{GEO_LOCATION_DOMAIN}.271310188")
         assert state is not None
-        assert state.name == "Title 2"
+        assert state.name == "271310188"
         assert state.attributes == {
             ATTR_EXTERNAL_ID: "2345",
             ATTR_LATITUDE: -31.1,
             ATTR_LONGITUDE: 150.1,
-            ATTR_FRIENDLY_NAME: "Title 2",
+            ATTR_FRIENDLY_NAME: "271310188",
             ATTR_UNIT_OF_MEASUREMENT: UnitOfLength.KILOMETERS,
             ATTR_SOURCE: "geo_json_events",
         }

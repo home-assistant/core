@@ -29,14 +29,14 @@ SCAN_INTERVAL = timedelta(seconds=2)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up an alarm control panel for a Lupusec device."""
     data = hass.data[DOMAIN][config_entry.entry_id]
 
-    alarm_devices = [LupusecAlarm(data, data.get_alarm(), config_entry.entry_id)]
+    alarm = await hass.async_add_executor_job(data.get_alarm)
 
-    async_add_devices(alarm_devices)
+    async_add_entities([LupusecAlarm(data, alarm, config_entry.entry_id)])
 
 
 class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):

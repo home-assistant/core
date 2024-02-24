@@ -24,7 +24,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_ALWAYS_CONNECTED, CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
@@ -113,13 +113,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 local_name_is_unique(lock_cfg.local_name)
                 and entry.data.get(CONF_LOCAL_NAME) == lock_cfg.local_name
             ):
-                if hass.config_entries.async_update_entry(
-                    entry, data={**entry.data, **new_data}
-                ):
-                    hass.async_create_task(
-                        hass.config_entries.async_reload(entry.entry_id)
-                    )
-                raise AbortFlow(reason="already_configured")
+                return self.async_update_reload_and_abort(
+                    entry, data={**entry.data, **new_data}, reason="already_configured"
+                )
 
         self._discovery_info = async_find_existing_service_info(
             hass, local_name, address

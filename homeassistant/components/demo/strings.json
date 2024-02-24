@@ -46,6 +46,20 @@
         }
       }
     },
+    "fan": {
+      "demo": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]",
+              "sleep": "[%key:component::climate::entity_component::_::state_attributes::preset_mode::state::sleep%]",
+              "smart": "Smart",
+              "on": "[%key:common::state::on%]"
+            }
+          }
+        }
+      }
+    },
     "event": {
       "push": {
         "state_attributes": {

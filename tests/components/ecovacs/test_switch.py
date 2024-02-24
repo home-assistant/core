@@ -69,7 +69,7 @@ class SwitchTestCase:
                     SetContinuousCleaning,
                 ),
                 SwitchTestCase(
-                    "switch.ozmo_950_carpet_auto_fan_speed_boost",
+                    "switch.ozmo_950_carpet_auto_boost_suction",
                     CarpetAutoFanBoostEvent(True),
                     SetCarpetAutoFanBoost,
                 ),
@@ -90,9 +90,7 @@ async def test_switch_entities(
     device = controller.devices[0]
     event_bus = device.events
 
-    assert sorted(hass.states.async_entity_ids()) == sorted(
-        test.entity_id for test in tests
-    )
+    assert hass.states.async_entity_ids() == [test.entity_id for test in tests]
     for test_case in tests:
         entity_id = test_case.entity_id
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
@@ -139,7 +137,7 @@ async def test_switch_entities(
             [
                 "switch.ozmo_950_advanced_mode",
                 "switch.ozmo_950_continuous_cleaning",
-                "switch.ozmo_950_carpet_auto_fan_speed_boost",
+                "switch.ozmo_950_carpet_auto_boost_suction",
             ],
         ),
     ],

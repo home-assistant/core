@@ -1,5 +1,4 @@
 """Test the Yeelight light."""
-import asyncio
 from datetime import timedelta
 import logging
 import socket
@@ -504,7 +503,7 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         )
     assert hass.states.get(ENTITY_LIGHT).state == STATE_OFF
 
-    mocked_bulb.async_set_brightness = AsyncMock(side_effect=asyncio.TimeoutError)
+    mocked_bulb.async_set_brightness = AsyncMock(side_effect=TimeoutError)
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light",
@@ -553,7 +552,7 @@ async def test_update_errors(
 
     # Timeout usually means the bulb is overloaded with commands
     # but will still respond eventually.
-    mocked_bulb.async_turn_off = AsyncMock(side_effect=asyncio.TimeoutError)
+    mocked_bulb.async_turn_off = AsyncMock(side_effect=TimeoutError)
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "light",

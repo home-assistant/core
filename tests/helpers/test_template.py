@@ -38,6 +38,7 @@ from homeassistant.helpers import (
     entity,
     entity_registry as er,
     template,
+    translation,
 )
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
@@ -1953,6 +1954,129 @@ def test_states_function(hass: HomeAssistant) -> None:
         hass,
     )
     assert tpl.async_render() == "available"
+
+
+async def test_state_translated(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+):
+    """Test state_translated method."""
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "group",
+                "name": "Grouped",
+                "entities": ["binary_sensor.first", "binary_sensor.second"],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await translation._async_get_translations_cache(hass).async_load("en", set())
+
+    hass.states.async_set("switch.without_translations", "on", attributes={})
+    hass.states.async_set("binary_sensor.without_device_class", "on", attributes={})
+    hass.states.async_set(
+        "binary_sensor.with_device_class", "on", attributes={"device_class": "motion"}
+    )
+    hass.states.async_set(
+        "binary_sensor.with_unknown_device_class",
+        "on",
+        attributes={"device_class": "unknown_class"},
+    )
+    hass.states.async_set(
+        "some_domain.with_device_class_1",
+        "off",
+        attributes={"device_class": "some_device_class"},
+    )
+    hass.states.async_set(
+        "some_domain.with_device_class_2",
+        "foo",
+        attributes={"device_class": "some_device_class"},
+    )
+    hass.states.async_set("domain.is_unavailable", "unavailable", attributes={})
+    hass.states.async_set("domain.is_unknown", "unknown", attributes={})
+
+    config_entry = MockConfigEntry(domain="light")
+    entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        config_entry=config_entry,
+        translation_key="translation_key",
+    )
+    hass.states.async_set("light.hue_5678", "on", attributes={})
+
+    tpl = template.Template(
+        '{{ state_translated("switch.without_translations") }}', hass
+    )
+    assert tpl.async_render() == "on"
+
+    tp2 = template.Template(
+        '{{ state_translated("binary_sensor.without_device_class") }}', hass
+    )
+    assert tp2.async_render() == "On"
+
+    tpl3 = template.Template(
+        '{{ state_translated("binary_sensor.with_device_class") }}', hass
+    )
+    assert tpl3.async_render() == "Detected"
+
+    tpl4 = template.Template(
+        '{{ state_translated("binary_sensor.with_unknown_device_class") }}', hass
+    )
+    assert tpl4.async_render() == "On"
+
+    with pytest.raises(TemplateError):
+        template.Template(
+            '{{ state_translated("contextfunction") }}', hass
+        ).async_render()
+
+    tpl6 = template.Template('{{ state_translated("switch.invalid") }}', hass)
+    assert tpl6.async_render() == "unknown"
+
+    with pytest.raises(TemplateError):
+        template.Template('{{ state_translated("-invalid") }}', hass).async_render()
+
+    def mock_get_cached_translations(
+        _hass: HomeAssistant,
+        _language: str,
+        category: str,
+        _integrations: Iterable[str] | None = None,
+    ):
+        if category == "entity":
+            return {
+                "component.hue.entity.light.translation_key.state.on": "state_is_on"
+            }
+        if category == "state":
+            return {
+                "component.some_domain.state.some_device_class.off": "state_is_off",
+                "component.some_domain.state._.foo": "state_is_foo",
+            }
+        return {}
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_cached_translations",
+        side_effect=mock_get_cached_translations,
+    ):
+        tpl8 = template.Template('{{ state_translated("light.hue_5678") }}', hass)
+        assert tpl8.async_render() == "state_is_on"
+
+        tpl9 = template.Template(
+            '{{ state_translated("some_domain.with_device_class_1") }}', hass
+        )
+        assert tpl9.async_render() == "state_is_off"
+
+        tpl10 = template.Template(
+            '{{ state_translated("some_domain.with_device_class_2") }}', hass
+        )
+        assert tpl10.async_render() == "state_is_foo"
+
+    tpl11 = template.Template('{{ state_translated("domain.is_unavailable") }}', hass)
+    assert tpl11.async_render() == "unavailable"
+
+    tpl12 = template.Template('{{ state_translated("domain.is_unknown") }}', hass)
+    assert tpl12.async_render() == "unknown"
 
 
 def test_has_value(hass: HomeAssistant) -> None:

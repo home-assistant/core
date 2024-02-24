@@ -40,6 +40,8 @@ async def test_async_setup_user_config_flow(hass: HomeAssistant, mock_bridge) ->
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        await hass.async_block_till_done()
+
     await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
 

@@ -40,7 +40,7 @@ class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
 NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
-        icon="mdi:pipe-valve",
+        translation_key="valve_position",
         name="Valve position",
         native_unit_of_measurement=PERCENTAGE,
         available=lambda block: cast(int, block.valveError) != 1,

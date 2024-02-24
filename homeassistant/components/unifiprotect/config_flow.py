@@ -256,7 +256,8 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         nvr_data = None
         try:
-            nvr_data = await protect.get_nvr()
+            bootstrap = await protect.get_bootstrap()
+            nvr_data = bootstrap.nvr
         except NotAuthorized as ex:
             _LOGGER.debug(ex)
             errors[CONF_PASSWORD] = "invalid_auth"
@@ -271,6 +272,10 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     MIN_REQUIRED_PROTECT_V,
                 )
                 errors["base"] = "protect_version"
+
+            auth_user = bootstrap.users.get(bootstrap.auth_user_id)
+            if auth_user and auth_user.cloud_account:
+                errors["base"] = "cloud_user"
 
         return nvr_data, errors
 

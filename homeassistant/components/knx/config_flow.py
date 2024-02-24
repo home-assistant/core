@@ -57,7 +57,7 @@ from .const import (
     KNXConfigEntryData,
 )
 from .helpers.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
-from .schema import ia_validator, ip_v4_validator
+from .validation import ia_validator, ip_v4_validator
 
 CONF_KNX_GATEWAY: Final = "gateway"
 CONF_MAX_RATE_LIMIT: Final = 60
@@ -292,9 +292,7 @@ class KNXCommonFlow(ABC, FlowHandler):
                 else:
                     if bool(self._selected_tunnel.tunnelling_requires_secure) is not (
                         selected_tunnelling_type == CONF_KNX_TUNNELING_TCP_SECURE
-                    ):
-                        errors[CONF_KNX_TUNNELING_TYPE] = "unsupported_tunnel_type"
-                    elif (
+                    ) or (
                         selected_tunnelling_type == CONF_KNX_TUNNELING_TCP
                         and not self._selected_tunnel.supports_tunnelling_tcp
                     ):

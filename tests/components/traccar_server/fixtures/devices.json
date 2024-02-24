@@ -1,0 +1,17 @@
+[
+  {
+    "id": 0,
+    "name": "X-Wing",
+    "uniqueId": "abc123",
+    "status": "unknown",
+    "disabled": false,
+    "lastUpdate": "1970-01-01T00:00:00Z",
+    "positionId": 0,
+    "groupId": 0,
+    "phone": null,
+    "model": "1337",
+    "contact": null,
+    "category": "starfighter",
+    "attributes": {}
+  }
+]

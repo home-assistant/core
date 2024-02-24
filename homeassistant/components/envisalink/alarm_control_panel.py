@@ -160,9 +160,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
             state = STATE_ALARM_ARMED_AWAY
         elif self._info["status"]["armed_stay"]:
             state = STATE_ALARM_ARMED_HOME
-        elif self._info["status"]["exit_delay"]:
-            state = STATE_ALARM_PENDING
-        elif self._info["status"]["entry_delay"]:
+        elif self._info["status"]["exit_delay"] or self._info["status"]["entry_delay"]:
             state = STATE_ALARM_PENDING
         elif self._info["status"]["alpha"]:
             state = STATE_ALARM_DISARMED

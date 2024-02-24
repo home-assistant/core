@@ -1,4 +1,5 @@
 """Tests for Intent component."""
+
 import pytest
 
 from homeassistant.components.cover import SERVICE_OPEN_COVER
@@ -223,6 +224,30 @@ async def test_turn_on_multiple_intent(hass: HomeAssistant) -> None:
     assert call.domain == "light"
     assert call.service == "turn_on"
     assert call.data == {"entity_id": ["light.test_lights_2"]}
+
+
+async def test_turn_on_all(hass: HomeAssistant) -> None:
+    """Test HassTurnOn intent with "all" name."""
+    result = await async_setup_component(hass, "homeassistant", {})
+    result = await async_setup_component(hass, "intent", {})
+    assert result
+
+    hass.states.async_set("light.test_light", "off")
+    hass.states.async_set("light.test_light_2", "off")
+    calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
+
+    await intent.async_handle(hass, "test", "HassTurnOn", {"name": {"value": "all"}})
+    await hass.async_block_till_done()
+
+    # All lights should be on now
+    assert len(calls) == 2
+    entity_ids = set()
+    for call in calls:
+        assert call.domain == "light"
+        assert call.service == "turn_on"
+        entity_ids.update(call.data.get("entity_id", []))
+
+    assert entity_ids == {"light.test_light", "light.test_light_2"}
 
 
 async def test_get_state_intent(

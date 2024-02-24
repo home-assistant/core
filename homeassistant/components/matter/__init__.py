@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(CONNECT_TIMEOUT):
             await matter_client.connect()
-    except (CannotConnect, asyncio.TimeoutError) as err:
+    except (CannotConnect, TimeoutError) as err:
         raise ConfigEntryNotReady("Failed to connect to matter server") from err
     except InvalidServerVersion as err:
         if use_addon:
@@ -109,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(LISTEN_READY_TIMEOUT):
             await init_ready.wait()
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         listen_task.cancel()
         raise ConfigEntryNotReady("Matter client not ready") from err
 

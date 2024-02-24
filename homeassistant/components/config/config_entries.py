@@ -21,16 +21,18 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerResourceView,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.json import json_fragment
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
     async_get_config_flows,
-    async_get_integration,
     async_get_integrations,
+    async_get_loaded_integration,
 )
 
 
-async def async_setup(hass: HomeAssistant) -> bool:
+@callback
+def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Home Assistant views."""
     hass.http.register_view(ConfigManagerEntryIndexView)
     hass.http.register_view(ConfigManagerEntryResourceView)
@@ -68,7 +70,10 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
         type_filter = None
         if "type" in request.query:
             type_filter = [request.query["type"]]
-        return self.json(await async_matching_config_entries(hass, type_filter, domain))
+        fragments = await _async_matching_config_entries_json_fragments(
+            hass, type_filter, domain
+        )
+        return self.json(fragments)
 
 
 class ConfigManagerEntryResourceView(HomeAssistantView):
@@ -128,7 +133,8 @@ def _prepare_config_flow_result_json(
         return prepare_result_json(result)
 
     data = result.copy()
-    data["result"] = entry_json(result["result"])
+    entry: config_entries.ConfigEntry = data["result"]
+    data["result"] = entry.as_json_fragment
     data.pop("data")
     data.pop("context")
     return data
@@ -156,6 +162,12 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
                 text=f"Failed dependencies {', '.join(exc.failed_dependencies)}",
                 status=HTTPStatus.BAD_REQUEST,
             )
+
+    def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Return context."""
+        context = super().get_context(data)
+        context["source"] = config_entries.SOURCE_USER
+        return context
 
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
@@ -305,7 +317,7 @@ async def config_entry_get_single(
     if entry is None:
         return
 
-    result = {"config_entry": entry_json(entry)}
+    result = {"config_entry": entry.as_json_fragment}
     connection.send_result(msg["id"], result)
 
 
@@ -340,7 +352,7 @@ async def config_entry_update(
     hass.config_entries.async_update_entry(entry, **changes)
 
     result = {
-        "config_entry": entry_json(entry),
+        "config_entry": entry.as_json_fragment,
         "require_restart": False,
     }
 
@@ -446,12 +458,10 @@ async def config_entries_get(
     msg: dict[str, Any],
 ) -> None:
     """Return matching config entries by type and/or domain."""
-    connection.send_result(
-        msg["id"],
-        await async_matching_config_entries(
-            hass, msg.get("type_filter"), msg.get("domain")
-        ),
+    fragments = await _async_matching_config_entries_json_fragments(
+        hass, msg.get("type_filter"), msg.get("domain")
     )
+    connection.send_result(msg["id"], fragments)
 
 
 @websocket_api.websocket_command(
@@ -469,12 +479,13 @@ async def config_entries_subscribe(
     """Subscribe to config entry updates."""
     type_filter = msg.get("type_filter")
 
-    async def async_forward_config_entry_changes(
+    @callback
+    def async_forward_config_entry_changes(
         change: config_entries.ConfigEntryChange, entry: config_entries.ConfigEntry
     ) -> None:
         """Forward config entry state events to websocket."""
         if type_filter:
-            integration = await async_get_integration(hass, entry.domain)
+            integration = async_get_loaded_integration(hass, entry.domain)
             if integration.integration_type not in type_filter:
                 return
 
@@ -484,13 +495,15 @@ async def config_entries_subscribe(
                 [
                     {
                         "type": change,
-                        "entry": entry_json(entry),
+                        "entry": entry.as_json_fragment,
                     }
                 ],
             )
         )
 
-    current_entries = await async_matching_config_entries(hass, type_filter, None)
+    current_entries = await _async_matching_config_entries_json_fragments(
+        hass, type_filter, None
+    )
     connection.subscriptions[msg["id"]] = async_dispatcher_connect(
         hass,
         config_entries.SIGNAL_CONFIG_ENTRY_CHANGED,
@@ -504,17 +517,17 @@ async def config_entries_subscribe(
     )
 
 
-async def async_matching_config_entries(
+async def _async_matching_config_entries_json_fragments(
     hass: HomeAssistant, type_filter: list[str] | None, domain: str | None
-) -> list[dict[str, Any]]:
+) -> list[json_fragment]:
     """Return matching config entries by type and/or domain."""
-    kwargs = {}
     if domain:
-        kwargs["domain"] = domain
-    entries = hass.config_entries.async_entries(**kwargs)
+        entries = hass.config_entries.async_entries(domain)
+    else:
+        entries = hass.config_entries.async_entries()
 
     if not type_filter:
-        return [entry_json(entry) for entry in entries]
+        return [entry.as_json_fragment for entry in entries]
 
     integrations: dict[str, Integration] = {}
     # Fetch all the integrations so we can check their type
@@ -534,7 +547,7 @@ async def async_matching_config_entries(
     filter_is_not_helper = type_filter != ["helper"]
     filter_set = set(type_filter)
     return [
-        entry_json(entry)
+        entry.as_json_fragment
         for entry in entries
         # If the filter is not 'helper', we still include the integration
         # even if its not returned from async_get_integrations for backwards
@@ -545,22 +558,3 @@ async def async_matching_config_entries(
         )
         or (filter_is_not_helper and entry.domain not in integrations)
     ]
-
-
-@callback
-def entry_json(entry: config_entries.ConfigEntry) -> dict[str, Any]:
-    """Return JSON value of a config entry."""
-    return {
-        "entry_id": entry.entry_id,
-        "domain": entry.domain,
-        "title": entry.title,
-        "source": entry.source,
-        "state": entry.state.value,
-        "supports_options": entry.supports_options,
-        "supports_remove_device": entry.supports_remove_device or False,
-        "supports_unload": entry.supports_unload or False,
-        "pref_disable_new_entities": entry.pref_disable_new_entities,
-        "pref_disable_polling": entry.pref_disable_polling,
-        "disabled_by": entry.disabled_by,
-        "reason": entry.reason,
-    }

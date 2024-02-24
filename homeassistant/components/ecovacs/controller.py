@@ -49,7 +49,7 @@ class EcovacsController:
             create_rest_config(
                 aiohttp_client.async_get_clientsession(self._hass),
                 device_id=self._device_id,
-                country=country,
+                alpha_2_country=country,
                 override_rest_url=config.get(CONF_OVERRIDE_REST_URL),
             ),
             config[CONF_USERNAME],

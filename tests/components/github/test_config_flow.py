@@ -61,6 +61,8 @@ async def test_full_user_flow_implementation(
     assert result["step_id"] == "device"
     assert result["type"] == FlowResultType.SHOW_PROGRESS
 
+    # Wait for the task to start before configuring
+    await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     result = await hass.config_entries.flow.async_configure(
@@ -260,10 +262,13 @@ async def test_options_flow(
     mock_setup_entry: None,
 ) -> None:
     """Test options flow."""
-    mock_config_entry.options = {
-        CONF_REPOSITORIES: ["homeassistant/core", "homeassistant/architecture"]
-    }
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={
+            CONF_REPOSITORIES: ["homeassistant/core", "homeassistant/architecture"]
+        },
+    )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

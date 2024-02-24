@@ -33,7 +33,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import const
+from . import const, discovery
 from .cluster_handlers import ClusterHandler, ZDOClusterHandler
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
@@ -432,6 +432,7 @@ class ZHADevice(LogMixin):
                 zha_dev.async_update_sw_build_id,
             )
         )
+        discovery.PROBE.discover_device_entities(zha_dev)
         return zha_dev
 
     @callback
@@ -870,7 +871,7 @@ class ZHADevice(LogMixin):
             # store it, so we cannot rely on it existing after being written. This is
             # only done to make the ZCL command valid.
             await self._zigpy_device.add_to_group(group_id, name=f"0x{group_id:04X}")
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 "Failed to add device '%s' to group: 0x%04x ex: %s",
                 self._zigpy_device.ieee,
@@ -882,7 +883,7 @@ class ZHADevice(LogMixin):
         """Remove this device from the provided zigbee group."""
         try:
             await self._zigpy_device.remove_from_group(group_id)
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 "Failed to remove device '%s' from group: 0x%04x ex: %s",
                 self._zigpy_device.ieee,
@@ -898,7 +899,7 @@ class ZHADevice(LogMixin):
             await self._zigpy_device.endpoints[endpoint_id].add_to_group(
                 group_id, name=f"0x{group_id:04X}"
             )
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 "Failed to add endpoint: %s for device: '%s' to group: 0x%04x ex: %s",
                 endpoint_id,
@@ -913,7 +914,7 @@ class ZHADevice(LogMixin):
         """Remove the device endpoint from the provided zigbee group."""
         try:
             await self._zigpy_device.endpoints[endpoint_id].remove_from_group(group_id)
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 (
                     "Failed to remove endpoint: %s for device '%s' from group: 0x%04x"

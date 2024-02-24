@@ -1,7 +1,6 @@
 """Config flow for Somfy MyLink integration."""
 from __future__ import annotations
 
-import asyncio
 from copy import deepcopy
 import logging
 
@@ -40,7 +39,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         status_info = await somfy_mylink.status_info()
-    except asyncio.TimeoutError as ex:
+    except TimeoutError as ex:
         raise CannotConnect from ex
 
     if not status_info or "error" in status_info:

@@ -802,3 +802,31 @@ async def test_skipped_async_ha_write_state2(
         async_fire_mqtt_message(hass, topic, payload2)
         await hass.async_block_till_done()
         assert len(mock_async_ha_write_state.mock_calls) == 2
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            event.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

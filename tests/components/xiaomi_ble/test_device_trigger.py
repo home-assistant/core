@@ -97,6 +97,32 @@ async def test_event_motion_detected(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
+async def test_event_dimmer_rotate(hass: HomeAssistant) -> None:
+    """Make sure that a dimmer rotate event is fired."""
+    mac = "F8:24:41:C5:98:8B"
+    data = {"bindkey": "b853075158487ca39a5b5ea9"}
+    entry = await _async_setup_xiaomi_device(hass, mac, data)
+    events = async_capture_events(hass, "xiaomi_ble_event")
+
+    # Emit dimmer rotate left with 3 steps event
+    inject_bluetooth_service_info_bleak(
+        hass,
+        make_advertisement(
+            mac, b"X0\xb6\x036\x8b\x98\xc5A$\xf8\x8b\xb8\xf2f" b"\x13Q\x00\x00\x00\xd6"
+        ),
+    )
+
+    # wait for the event
+    await hass.async_block_till_done()
+    assert len(events) == 1
+    assert events[0].data["address"] == "F8:24:41:C5:98:8B"
+    assert events[0].data["event_type"] == "rotate_left"
+    assert events[0].data["event_properties"] == {"steps": 1}
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 async def test_get_triggers_button(hass: HomeAssistant) -> None:
     """Test that we get the expected triggers from a Xiaomi BLE button sensor."""
     mac = "54:EF:44:E3:9C:BC"

@@ -2294,7 +2294,7 @@ async def test_process_advertisements_timeout(
     def _callback(service_info: BluetoothServiceInfo) -> bool:
         return False
 
-    with pytest.raises(asyncio.TimeoutError):
+    with pytest.raises(TimeoutError):
         await async_process_advertisements(
             hass, _callback, {}, BluetoothScanningMode.ACTIVE, 0
         )

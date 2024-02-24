@@ -1,4 +1,5 @@
 """Support for Lupusec Home Security system."""
+from json import JSONDecodeError
 import logging
 
 import lupupy
@@ -111,16 +112,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         lupusec_system = await hass.async_add_executor_job(
             lupupy.Lupusec, username, password, host
         )
-
     except LupusecException:
         _LOGGER.error("Failed to connect to Lupusec device at %s", host)
         return False
-    except Exception as ex:  # pylint: disable=broad-except
-        _LOGGER.error(
-            "Unknown error while trying to connect to Lupusec device at %s: %s",
-            host,
-            ex,
-        )
+    except JSONDecodeError:
+        _LOGGER.error("Failed to connect to Lupusec device at %s", host)
         return False
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = lupusec_system

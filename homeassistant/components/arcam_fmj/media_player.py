@@ -325,9 +325,7 @@ class ArcamFmj(MediaPlayerEntity):
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         source = self._state.get_source()
-        if source == SourceCodes.DAB:
-            value = MediaType.MUSIC
-        elif source == SourceCodes.FM:
+        if source in (SourceCodes.DAB, SourceCodes.FM):
             value = MediaType.MUSIC
         else:
             value = None

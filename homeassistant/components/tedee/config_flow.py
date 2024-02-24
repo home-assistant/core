@@ -1,4 +1,5 @@
 """Config flow for Tedee integration."""
+
 from collections.abc import Mapping
 from typing import Any
 
@@ -11,9 +12,8 @@ from pytedee_async import (
 )
 import voluptuous as vol
 
-from homeassistant.components.webhook import async_generate_id as webhook_generate_id
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -62,10 +62,7 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="reauth_successful")
                 await self.async_set_unique_id(local_bridge.serial)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=NAME,
-                    data={**user_input, CONF_WEBHOOK_ID: webhook_generate_id()},
-                )
+                return self.async_create_entry(title=NAME, data=user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -87,14 +84,24 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_LOCAL_ACCESS_TOKEN,
-                        default=entry_data[CONF_LOCAL_ACCESS_TOKEN],
-                    ): str,
-                }
-            ),
-        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Dialog that informs the user that reauth is required."""
+        assert self.reauth_entry
+
+        if not user_input:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_LOCAL_ACCESS_TOKEN,
+                            default=self.reauth_entry.data[CONF_LOCAL_ACCESS_TOKEN],
+                        ): str,
+                    }
+                ),
+            )
+        return await self.async_step_user(user_input)

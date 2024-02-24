@@ -99,7 +99,8 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
 
     async def asyncSetUp(self):
         """Set up things to be run when tests are started."""
-        self.hass = await async_test_home_assistant(None)
+        self._manager = async_test_home_assistant()
+        self.hass = await self._manager.__aenter__()
         self.entity_registry = er.async_get(self.hass)
 
         # Patch the api client
@@ -122,6 +123,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
     async def asyncTearDown(self):
         """Tear down the test setup, stop hass/patchers."""
         await self.hass.async_stop(force=True)
+        await self._manager.__aexit__(None, None, None)
         self.picnic_patcher.stop()
 
     @property

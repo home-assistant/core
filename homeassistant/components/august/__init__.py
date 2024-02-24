@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await async_setup_august(hass, entry, august_gateway)
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to august api") from err
     except (AugustApiAIOHTTPError, ClientResponseError, CannotConnect) as err:
         raise ConfigEntryNotReady from err
@@ -233,7 +233,7 @@ class AugustData(AugustSubscriberMixin):
             return_exceptions=True,
         ):
             if isinstance(result, Exception) and not isinstance(
-                result, (asyncio.TimeoutError, ClientResponseError, CannotConnect)
+                result, (TimeoutError, ClientResponseError, CannotConnect)
             ):
                 _LOGGER.warning(
                     "Unexpected exception during initial sync: %s",
@@ -249,10 +249,11 @@ class AugustData(AugustSubscriberMixin):
         device = self.get_device_detail(device_id)
         activities = activities_from_pubnub_message(device, date_time, message)
         activity_stream = self.activity_stream
-        if activities:
-            activity_stream.async_process_newer_device_activities(activities)
+        if activities and activity_stream.async_process_newer_device_activities(
+            activities
+        ):
             self.async_signal_device_id_update(device.device_id)
-        activity_stream.async_schedule_house_id_refresh(device.house_id)
+            activity_stream.async_schedule_house_id_refresh(device.house_id)
 
     @callback
     def async_stop(self) -> None:
@@ -292,7 +293,7 @@ class AugustData(AugustSubscriberMixin):
         for device_id in device_ids_list:
             try:
                 await self._async_refresh_device_detail_by_id(device_id)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 _LOGGER.warning(
                     "Timed out calling august api during refresh of device: %s",
                     device_id,

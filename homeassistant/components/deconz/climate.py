@@ -100,6 +100,7 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     TYPE = DOMAIN
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device: Thermostat, gateway: DeconzGateway) -> None:
         """Set up thermostat device."""
@@ -119,7 +120,11 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
             HVAC_MODE_TO_DECONZ[item]: item for item in self._attr_hvac_modes
         }
 
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
 
         if device.fan_mode:
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE

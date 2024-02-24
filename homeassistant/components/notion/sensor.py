@@ -1,7 +1,7 @@
 """Support for Notion sensors."""
 from dataclasses import dataclass
 
-from aionotion.sensor.models import ListenerKind
+from aionotion.listener.models import ListenerKind
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -59,7 +59,7 @@ async def async_setup_entry(
             )
             for listener_id, listener in coordinator.data.listeners.items()
             for description in SENSOR_DESCRIPTIONS
-            if description.listener_kind == listener.listener_kind
+            if description.listener_kind.value == listener.definition_id
             and (sensor := coordinator.data.sensors[listener.sensor_id])
         ]
     )
@@ -71,7 +71,7 @@ class NotionSensor(NotionEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
-        if self.listener.listener_kind == ListenerKind.TEMPERATURE:
+        if self.listener.definition_id == ListenerKind.TEMPERATURE.value:
             if not self.coordinator.data.user_preferences:
                 return None
             if self.coordinator.data.user_preferences.celsius_enabled:
@@ -84,7 +84,7 @@ class NotionSensor(NotionEntity, SensorEntity):
         """Return the value reported by the sensor."""
         if not self.listener.status_localized:
             return None
-        if self.listener.listener_kind == ListenerKind.TEMPERATURE:
+        if self.listener.definition_id == ListenerKind.TEMPERATURE.value:
             # The Notion API only returns a localized string for temperature (e.g.
             # "70°"); we simply remove the degree symbol:
             return self.listener.status_localized.state[:-1]

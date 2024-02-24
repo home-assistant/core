@@ -90,6 +90,8 @@ def seen_all_fields(
 class IntegrationMatcher:
     """Integration matcher for the bluetooth integration."""
 
+    __slots__ = ("_integration_matchers", "_matched", "_matched_connectable", "_index")
+
     def __init__(self, integration_matchers: list[BluetoothMatcher]) -> None:
         """Initialize the matcher."""
         self._integration_matchers = integration_matchers
@@ -158,6 +160,16 @@ class BluetoothMatcherIndexBase(Generic[_T]):
     This is optimized for cases when no service infos will be matched in
     any bucket and we can quickly reject the service info as not matching.
     """
+
+    __slots__ = (
+        "local_name",
+        "service_uuid",
+        "service_data_uuid",
+        "manufacturer_id",
+        "service_uuid_set",
+        "service_data_uuid_set",
+        "manufacturer_id_set",
+    )
 
     def __init__(self) -> None:
         """Initialize the matcher index."""
@@ -284,6 +296,8 @@ class BluetoothCallbackMatcherIndex(
 
     Supports matching on addresses.
     """
+
+    __slots__ = ("address", "connectable")
 
     def __init__(self) -> None:
         """Initialize the matcher index."""

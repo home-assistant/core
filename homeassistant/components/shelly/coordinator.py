@@ -279,7 +279,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 self.name,
                 ENTRY_RELOAD_COOLDOWN,
             )
-            self.hass.async_create_task(self._debounced_reload.async_call())
+            self._debounced_reload.async_schedule_call()
         self._last_cfg_changed = cfg_changed
 
     async def _async_update_data(self) -> None:
@@ -496,7 +496,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                     self.name,
                     ENTRY_RELOAD_COOLDOWN,
                 )
-                self.hass.async_create_task(self._debounced_reload.async_call())
+                self._debounced_reload.async_schedule_call()
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
                 for event_callback in self._input_event_listeners:
                     event_callback(event)

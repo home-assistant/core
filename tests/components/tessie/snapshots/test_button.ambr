@@ -16,11 +16,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:flashlight',
+    'original_icon': None,
     'original_name': 'Flash lights',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -34,7 +36,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Flash lights',
-      'icon': 'mdi:flashlight',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_flash_lights',
@@ -60,11 +61,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:garage',
+    'original_icon': None,
     'original_name': 'Homelink',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -78,7 +81,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Homelink',
-      'icon': 'mdi:garage',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_homelink',
@@ -104,11 +106,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:bullhorn',
+    'original_icon': None,
     'original_name': 'Honk horn',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -122,7 +126,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Honk horn',
-      'icon': 'mdi:bullhorn',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_honk_horn',
@@ -148,11 +151,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:car-key',
+    'original_icon': None,
     'original_name': 'Keyless driving',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -166,7 +171,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Keyless driving',
-      'icon': 'mdi:car-key',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_keyless_driving',
@@ -192,11 +196,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:volume-high',
+    'original_icon': None,
     'original_name': 'Play fart',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -210,7 +216,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Play fart',
-      'icon': 'mdi:volume-high',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_play_fart',
@@ -236,11 +241,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:sleep-off',
+    'original_icon': None,
     'original_name': 'Wake',
     'platform': 'tessie',
     'previous_unique_id': None,
@@ -254,7 +261,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Wake',
-      'icon': 'mdi:sleep-off',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_wake',

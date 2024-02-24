@@ -151,7 +151,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     set_manager(manager)
     await manager.async_setup()
     hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, lambda event: manager.async_stop()
+        EVENT_HOMEASSISTANT_STOP, hass_callback(lambda event: manager.async_stop())
     )
     hass.data[DATA_MANAGER] = models.MANAGER = manager
     adapters = await manager.async_get_bluetooth_adapters()

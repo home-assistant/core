@@ -3,11 +3,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.ourgroceries import (
-    AsyncIOTimeoutError,
-    ClientError,
-    InvalidLoginException,
-)
+from homeassistant.components.ourgroceries import ClientError, InvalidLoginException
 from homeassistant.components.ourgroceries.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -41,7 +37,7 @@ def login_with_error(exception, ourgroceries: AsyncMock):
     [
         (InvalidLoginException, ConfigEntryState.SETUP_ERROR),
         (ClientError, ConfigEntryState.SETUP_RETRY),
-        (AsyncIOTimeoutError, ConfigEntryState.SETUP_RETRY),
+        (TimeoutError, ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_init_failure(

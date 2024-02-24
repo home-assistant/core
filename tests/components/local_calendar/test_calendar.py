@@ -630,6 +630,7 @@ async def test_websocket_update_recurring(
             "summary": "Morning Routine [Adjusted]",
             "start": {"dateTime": "2022-08-24T08:00:00-06:00"},
             "end": {"dateTime": "2022-08-24T08:30:00-06:00"},
+            "recurrence_id": "20220824T083000",
         },
         {
             "summary": "Morning Routine",

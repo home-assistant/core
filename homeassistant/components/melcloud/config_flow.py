@@ -60,7 +60,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if err.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
                 return self.async_abort(reason="invalid_auth")
             return self.async_abort(reason="cannot_connect")
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             return self.async_abort(reason="cannot_connect")
 
         return await self._create_entry(username, acquired_token)
@@ -126,17 +126,21 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     async_get_clientsession(self.hass),
                 )
         except (ClientResponseError, AttributeError) as err:
-            if isinstance(err, ClientResponseError) and err.status in (
-                HTTPStatus.UNAUTHORIZED,
-                HTTPStatus.FORBIDDEN,
+            if (
+                isinstance(err, ClientResponseError)
+                and err.status
+                in (
+                    HTTPStatus.UNAUTHORIZED,
+                    HTTPStatus.FORBIDDEN,
+                )
+                or isinstance(err, AttributeError)
+                and err.name == "get"
             ):
-                errors["base"] = "invalid_auth"
-            elif isinstance(err, AttributeError) and err.name == "get":
                 errors["base"] = "invalid_auth"
             else:
                 errors["base"] = "cannot_connect"
         except (
-            asyncio.TimeoutError,
+            TimeoutError,
             ClientError,
         ):
             errors["base"] = "cannot_connect"

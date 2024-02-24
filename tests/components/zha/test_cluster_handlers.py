@@ -1,5 +1,4 @@
 """Test ZHA Core cluster handlers."""
-import asyncio
 from collections.abc import Callable
 import logging
 import math
@@ -564,12 +563,12 @@ async def test_ep_cluster_handlers_configure(cluster_handler) -> None:
     ch_1 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
     ch_2 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
     ch_3 = cluster_handler(zha_const.CLUSTER_HANDLER_COLOR, 768)
-    ch_3.async_configure = AsyncMock(side_effect=asyncio.TimeoutError)
-    ch_3.async_initialize = AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_3.async_configure = AsyncMock(side_effect=TimeoutError)
+    ch_3.async_initialize = AsyncMock(side_effect=TimeoutError)
     ch_4 = cluster_handler(zha_const.CLUSTER_HANDLER_ON_OFF, 6)
     ch_5 = cluster_handler(zha_const.CLUSTER_HANDLER_LEVEL, 8)
-    ch_5.async_configure = AsyncMock(side_effect=asyncio.TimeoutError)
-    ch_5.async_initialize = AsyncMock(side_effect=asyncio.TimeoutError)
+    ch_5.async_configure = AsyncMock(side_effect=TimeoutError)
+    ch_5.async_initialize = AsyncMock(side_effect=TimeoutError)
 
     endpoint_mock = mock.MagicMock(spec_set=ZigpyEndpoint)
     type(endpoint_mock).in_clusters = mock.PropertyMock(return_value={})
@@ -959,7 +958,7 @@ async def test_quirk_id_cluster_handler(hass: HomeAssistant, caplog) -> None:
             zigpy.exceptions.ZigbeeException("Zigbee exception"),
             "Failed to send request: Zigbee exception",
         ),
-        (asyncio.TimeoutError(), "Failed to send request: device did not respond"),
+        (TimeoutError(), "Failed to send request: device did not respond"),
     ],
 )
 async def test_retry_request(

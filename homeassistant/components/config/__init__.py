@@ -26,6 +26,7 @@ from homeassistant.util.yaml.loader import JSON_TYPE
 _DataT = TypeVar("_DataT", dict[str, dict[str, Any]], list[dict[str, Any]])
 
 DOMAIN = "config"
+
 SECTIONS = (
     "area_registry",
     "auth",
@@ -35,6 +36,8 @@ SECTIONS = (
     "core",
     "device_registry",
     "entity_registry",
+    "floor_registry",
+    "label_registry",
     "script",
     "scene",
 )
@@ -50,23 +53,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, "config", "config", "hass:cog", require_admin=True
     )
 
-    async def setup_panel(panel_name: str) -> None:
-        """Set up a panel."""
+    for panel_name in SECTIONS:
         panel = importlib.import_module(f".{panel_name}", __name__)
 
-        if not panel:
-            return
-
-        success = await panel.async_setup(hass)
-
-        if success:
+        if panel.async_setup(hass):
             key = f"{DOMAIN}.{panel_name}"
             hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: key})
-
-    tasks = [asyncio.create_task(setup_panel(panel_name)) for panel_name in SECTIONS]
-
-    if tasks:
-        await asyncio.wait(tasks)
 
     return True
 

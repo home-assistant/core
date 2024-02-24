@@ -382,9 +382,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 data[CONF_CLOUD_USERNAME] = self.cloud_username
                 data[CONF_CLOUD_PASSWORD] = self.cloud_password
                 data[CONF_CLOUD_COUNTRY] = self.cloud_country
-            if self.hass.config_entries.async_update_entry(existing_entry, data=data):
-                await self.hass.config_entries.async_reload(existing_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
+            return self.async_update_reload_and_abort(existing_entry, data=data)
 
         if self.name is None:
             self.name = self.model

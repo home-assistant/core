@@ -33,13 +33,16 @@ def platforms() -> Platform | list[Platform]:
             "yna5x1",
             [
                 ("button.ozmo_950_relocate", SetRelocationState()),
-                ("button.ozmo_950_reset_brush_lifespan", ResetLifeSpan(LifeSpan.BRUSH)),
+                (
+                    "button.ozmo_950_reset_main_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.BRUSH),
+                ),
                 (
                     "button.ozmo_950_reset_filter_lifespan",
                     ResetLifeSpan(LifeSpan.FILTER),
                 ),
                 (
-                    "button.ozmo_950_reset_side_brush_lifespan",
+                    "button.ozmo_950_reset_side_brushes_lifespan",
                     ResetLifeSpan(LifeSpan.SIDE_BRUSH),
                 ),
             ],
@@ -56,7 +59,7 @@ async def test_buttons(
     entities: list[tuple[str, Command]],
 ) -> None:
     """Test that sensor entity snapshots match."""
-    assert sorted(hass.states.async_entity_ids()) == [e[0] for e in entities]
+    assert hass.states.async_entity_ids() == [e[0] for e in entities]
     device = controller.devices[0]
     for entity_id, command in entities:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
@@ -89,9 +92,9 @@ async def test_buttons(
         (
             "yna5x1",
             [
-                "button.ozmo_950_reset_brush_lifespan",
+                "button.ozmo_950_reset_main_brush_lifespan",
                 "button.ozmo_950_reset_filter_lifespan",
-                "button.ozmo_950_reset_side_brush_lifespan",
+                "button.ozmo_950_reset_side_brushes_lifespan",
             ],
         ),
     ],

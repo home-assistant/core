@@ -80,6 +80,7 @@ async def test_invalid_auth(
         ({}, 0),
         ({DOMAIN: IMPORT_DATA.copy()}, 1),
     ],
+    ids=["no_config", "import_config"],
 )
 async def test_async_setup_import(
     hass: HomeAssistant,

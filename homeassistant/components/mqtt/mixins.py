@@ -94,6 +94,7 @@ from .const import (
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
+    TEMPLATE_ERRORS,
 )
 from .debug_info import log_message, log_messages
 from .discovery import (
@@ -110,7 +111,6 @@ from .models import (
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from .subscription import (
     EntitySubscription,
@@ -480,7 +480,10 @@ def write_state_on_attr_change(
                 attribute: getattr(entity, attribute, UNDEFINED)
                 for attribute in attributes
             }
-            msg_callback(msg)
+            try:
+                msg_callback(msg)
+            except TEMPLATE_ERRORS:
+                return
             if not _attrs_have_changed(tracked_attrs):
                 return
 
@@ -527,8 +530,9 @@ class MqttAttributes(Entity):
         @log_messages(self.hass, self.entity_id)
         @write_state_on_attr_change(self, {"_attr_extra_state_attributes"})
         def attributes_message_received(msg: ReceiveMessage) -> None:
+            """Update extra state attributes."""
+            payload = attr_tpl(msg.payload)
             try:
-                payload = attr_tpl(msg.payload)
                 json_dict = json_loads(payload) if isinstance(payload, str) else None
                 if isinstance(json_dict, dict):
                     filtered_dict = {
@@ -636,7 +640,6 @@ class MqttAvailability(Entity):
         def availability_message_received(msg: ReceiveMessage) -> None:
             """Handle a new received MQTT availability message."""
             topic = msg.topic
-            payload: ReceivePayloadType
             payload = self._avail_topics[topic][CONF_AVAILABILITY_TEMPLATE](msg.payload)
             if payload == self._avail_topics[topic][CONF_PAYLOAD_AVAILABLE]:
                 self._available[topic] = True
@@ -646,8 +649,7 @@ class MqttAvailability(Entity):
                 self._available_latest = False
 
         self._available = {
-            topic: (self._available[topic] if topic in self._available else False)
-            for topic in self._avail_topics
+            topic: (self._available.get(topic, False)) for topic in self._avail_topics
         }
         topics: dict[str, dict[str, Any]] = {
             f"availability_{topic}": {
@@ -1345,15 +1347,12 @@ def async_removed_from_device(
     config_entry_id: str,
 ) -> bool:
     """Check if the passed event indicates MQTT was removed from a device."""
-    if event.data["action"] not in ("remove", "update"):
-        return False
-
     if event.data["action"] == "update":
         if "config_entries" not in event.data["changes"]:
             return False
         device_registry = dr.async_get(hass)
         if (
-            device_entry := device_registry.async_get(event.data["device_id"])
+            device_entry := device_registry.async_get(mqtt_device_id)
         ) and config_entry_id in device_entry.config_entries:
             # Not removed from device
             return False

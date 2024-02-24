@@ -212,7 +212,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     password = entry.data[CONF_PASSWORD]
 
-    if DOMAIN not in hass.data:
+    if not (data := hass.data.get(DOMAIN)) or data.websession.closed:
         websession = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
 
         hass.data[DOMAIN] = LTEData(websession)
@@ -258,7 +258,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if entry.state == ConfigEntryState.LOADED
     ]
     if len(loaded_entries) == 1:
-        hass.data.pop(DOMAIN)
+        hass.data.pop(DOMAIN, None)
 
     return unload_ok
 

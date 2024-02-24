@@ -381,12 +381,14 @@ class StatisticsSensor(SensorEntity):
             unit = None
         elif self._state_characteristic in STATS_NUMERIC_RETAIN_UNIT:
             unit = base_unit
-        elif self._state_characteristic in STATS_NOT_A_NUMBER:
-            unit = None
-        elif self._state_characteristic in (
-            STAT_COUNT,
-            STAT_COUNT_BINARY_ON,
-            STAT_COUNT_BINARY_OFF,
+        elif (
+            self._state_characteristic in STATS_NOT_A_NUMBER
+            or self._state_characteristic
+            in (
+                STAT_COUNT,
+                STAT_COUNT_BINARY_ON,
+                STAT_COUNT_BINARY_OFF,
+            )
         ):
             unit = None
         elif self._state_characteristic == STAT_VARIANCE:

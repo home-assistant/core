@@ -1,5 +1,4 @@
 """The tests for the LG webOS media player platform."""
-import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import Mock
@@ -469,7 +468,7 @@ async def test_client_disconnected(hass: HomeAssistant, client, monkeypatch) -> 
     """Test error not raised when client is disconnected."""
     await setup_webostv(hass)
     monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
-    monkeypatch.setattr(client, "connect", Mock(side_effect=asyncio.TimeoutError))
+    monkeypatch.setattr(client, "connect", Mock(side_effect=TimeoutError))
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
@@ -495,7 +494,7 @@ async def test_control_error_handling(
 
     # Device off, log a warning
     monkeypatch.setattr(client, "is_on", False)
-    monkeypatch.setattr(client, "play", Mock(side_effect=asyncio.TimeoutError))
+    monkeypatch.setattr(client, "play", Mock(side_effect=TimeoutError))
     await client.mock_state_update()
     await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
 
@@ -752,7 +751,7 @@ async def test_get_image_http_error(
     attrs = hass.states.get(ENTITY_ID).attributes
     assert "entity_picture_local" not in attrs
 
-    aioclient_mock.get(url, exc=asyncio.TimeoutError())
+    aioclient_mock.get(url, exc=TimeoutError())
     client = await hass_client_no_auth()
 
     resp = await client.get(attrs["entity_picture"])

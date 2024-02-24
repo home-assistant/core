@@ -523,7 +523,6 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
             )
             return
 
-        # pylint: disable=consider-using-dict-items
         key = [x for x in self._sources if self._sources[x] == source][0]
 
         # Check for source type

@@ -97,7 +97,7 @@ class WorxLandroidSensor(SensorEntity):
             async with asyncio.timeout(self.timeout):
                 auth = aiohttp.helpers.BasicAuth("admin", self.pin)
                 mower_response = await session.get(self.url, auth=auth)
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             if self.allow_unreachable is False:
                 _LOGGER.error("Error connecting to mower at %s", self.url)
 

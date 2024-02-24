@@ -35,7 +35,7 @@
         "prompt": {
           "name": "Prompt",
           "description": "The prompt",
-          "example": "Describe what you see in these images:"
+          "example": "Describe what you see in these images"
         },
         "image_filename": {
           "name": "Image filename",

@@ -65,7 +65,7 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 12
+STORAGE_VERSION_MINOR = 13
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -135,6 +135,7 @@ ReadOnlyEntityOptionsType = ReadOnlyDict[str, ReadOnlyDict[str, Any]]
 
 DISPLAY_DICT_OPTIONAL = (
     ("ai", "area_id"),
+    ("lb", "labels"),
     ("di", "device_id"),
     ("ic", "icon"),
     ("tk", "translation_key"),
@@ -174,6 +175,7 @@ class RegistryEntry:
         converter=attr.converters.default_if_none(factory=uuid_util.random_uuid_hex),  # type: ignore[misc]
     )
     has_entity_name: bool = attr.ib(default=False)
+    labels: set[str] = attr.ib(factory=set)
     name: str | None = attr.ib(default=None)
     options: ReadOnlyEntityOptionsType = attr.ib(
         default=None, converter=_protect_entity_options
@@ -219,9 +221,7 @@ class RegistryEntry:
         if not self.name and self.has_entity_name:
             display_dict["en"] = self.original_name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
-            if (precision := sensor_options.get("display_precision")) is not None:
-                display_dict["dp"] = precision
-            elif (
+            if (precision := sensor_options.get("display_precision")) is not None or (
                 precision := sensor_options.get("suggested_display_precision")
             ) is not None:
                 display_dict["dp"] = precision
@@ -262,6 +262,7 @@ class RegistryEntry:
             "hidden_by": self.hidden_by,
             "icon": self.icon,
             "id": self.id,
+            "labels": self.labels,
             "name": self.name,
             "options": self.options,
             "original_name": self.original_name,
@@ -348,7 +349,7 @@ class DeletedRegistryEntry:
 class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     """Store entity registry data."""
 
-    async def _async_migrate_func(
+    async def _async_migrate_func(  # noqa: C901
         self,
         old_major_version: int,
         old_minor_version: int,
@@ -429,6 +430,11 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
             for entity in data["entities"]:
                 entity["previous_unique_id"] = None
 
+        if old_major_version == 1 and old_minor_version < 13:
+            # Version 1.13 adds labels
+            for entity in data["entities"]:
+                entity["labels"] = []
+
         if old_major_version > 1:
             raise NotImplementedError
         return data
@@ -449,8 +455,9 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         super().__init__()
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
-        self._config_entry_id_index: dict[str, list[str]] = {}
-        self._device_id_index: dict[str, list[str]] = {}
+        self._config_entry_id_index: dict[str, dict[str, Literal[True]]] = {}
+        self._device_id_index: dict[str, dict[str, Literal[True]]] = {}
+        self._area_id_index: dict[str, dict[str, Literal[True]]] = {}
 
     def values(self) -> ValuesView[RegistryEntry]:
         """Return the underlying values to avoid __iter__ overhead."""
@@ -464,26 +471,40 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         data[key] = entry
         self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
+        # python has no ordered set, so we use a dict with True values
+        # https://discuss.python.org/t/add-orderedset-to-stdlib/12730
         if (config_entry_id := entry.config_entry_id) is not None:
-            self._config_entry_id_index.setdefault(config_entry_id, []).append(key)
+            self._config_entry_id_index.setdefault(config_entry_id, {})[key] = True
         if (device_id := entry.device_id) is not None:
-            self._device_id_index.setdefault(device_id, []).append(key)
+            self._device_id_index.setdefault(device_id, {})[key] = True
+        if (area_id := entry.area_id) is not None:
+            self._area_id_index.setdefault(area_id, {})[key] = True
+
+    def _unindex_entry_value(
+        self, key: str, value: str, index: dict[str, dict[str, Literal[True]]]
+    ) -> None:
+        """Unindex an entry value.
+
+        key is the entry key
+        value is the value to unindex such as config_entry_id or device_id.
+        index is the index to unindex from.
+        """
+        entries = index[value]
+        del entries[key]
+        if not entries:
+            del index[value]
 
     def _unindex_entry(self, key: str) -> None:
         """Unindex an entry."""
         entry = self.data[key]
         del self._entry_ids[entry.id]
         del self._index[(entry.domain, entry.platform, entry.unique_id)]
-        if (config_entry_id := entry.config_entry_id) is not None:
-            entries = self._config_entry_id_index[config_entry_id]
-            entries.remove(key)
-            if not entries:
-                del self._config_entry_id_index[config_entry_id]
-        if (device_id := entry.device_id) is not None:
-            entries = self._device_id_index[device_id]
-            entries.remove(key)
-            if not entries:
-                del self._device_id_index[device_id]
+        if config_entry_id := entry.config_entry_id:
+            self._unindex_entry_value(key, config_entry_id, self._config_entry_id_index)
+        if device_id := entry.device_id:
+            self._unindex_entry_value(key, device_id, self._device_id_index)
+        if area_id := entry.area_id:
+            self._unindex_entry_value(key, area_id, self._area_id_index)
 
     def __delitem__(self, key: str) -> None:
         """Remove an item."""
@@ -498,18 +519,30 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         """Get entry from id."""
         return self._entry_ids.get(key)
 
-    def get_entries_for_device_id(self, device_id: str) -> list[RegistryEntry]:
+    def get_entries_for_device_id(
+        self, device_id: str, include_disabled_entities: bool = False
+    ) -> list[RegistryEntry]:
         """Get entries for device."""
-        return [self.data[key] for key in self._device_id_index.get(device_id, ())]
+        data = self.data
+        return [
+            entry
+            for key in self._device_id_index.get(device_id, ())
+            if not (entry := data[key]).disabled_by or include_disabled_entities
+        ]
 
     def get_entries_for_config_entry_id(
         self, config_entry_id: str
     ) -> list[RegistryEntry]:
         """Get entries for config entry."""
+        data = self.data
         return [
-            self.data[key]
-            for key in self._config_entry_id_index.get(config_entry_id, ())
+            data[key] for key in self._config_entry_id_index.get(config_entry_id, ())
         ]
+
+    def get_entries_for_area_id(self, area_id: str) -> list[RegistryEntry]:
+        """Get entries for area."""
+        data = self.data
+        return [data[key] for key in self._area_id_index.get(area_id, ())]
 
 
 class EntityRegistry:
@@ -856,6 +889,7 @@ class EntityRegistry:
         hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         has_entity_name: bool | UndefinedType = UNDEFINED,
+        labels: set[str] | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
@@ -906,6 +940,7 @@ class EntityRegistry:
             ("hidden_by", hidden_by),
             ("icon", icon),
             ("has_entity_name", has_entity_name),
+            ("labels", labels),
             ("name", name),
             ("options", options),
             ("original_device_class", original_device_class),
@@ -983,6 +1018,7 @@ class EntityRegistry:
         hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         has_entity_name: bool | UndefinedType = UNDEFINED,
+        labels: set[str] | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
@@ -1007,6 +1043,7 @@ class EntityRegistry:
             hidden_by=hidden_by,
             icon=icon,
             has_entity_name=has_entity_name,
+            labels=labels,
             name=name,
             new_entity_id=new_entity_id,
             new_unique_id=new_unique_id,
@@ -1104,6 +1141,7 @@ class EntityRegistry:
                     icon=entity["icon"],
                     id=entity["id"],
                     has_entity_name=entity["has_entity_name"],
+                    labels=set(entity["labels"]),
                     name=entity["name"],
                     options=entity["options"],
                     original_device_class=entity["original_device_class"],
@@ -1160,6 +1198,7 @@ class EntityRegistry:
                 "icon": entry.icon,
                 "id": entry.id,
                 "has_entity_name": entry.has_entity_name,
+                "labels": list(entry.labels),
                 "name": entry.name,
                 "options": entry.options,
                 "original_device_class": entry.original_device_class,
@@ -1189,13 +1228,21 @@ class EntityRegistry:
         return data
 
     @callback
+    def async_clear_label_id(self, label_id: str) -> None:
+        """Clear label from registry entries."""
+        for entity_id, entry in self.entities.items():
+            if label_id in entry.labels:
+                labels = entry.labels.copy()
+                labels.remove(label_id)
+                self.async_update_entity(entity_id, labels=labels)
+
+    @callback
     def async_clear_config_entry(self, config_entry_id: str) -> None:
         """Clear config entry from registry entries."""
         now_time = time.time()
         for entity_id in [
-            entity_id
-            for entity_id, entry in self.entities.items()
-            if config_entry_id == entry.config_entry_id
+            entry.entity_id
+            for entry in self.entities.get_entries_for_config_entry_id(config_entry_id)
         ]:
             self.async_remove(entity_id)
         for key, deleted_entity in list(self.deleted_entities.items()):
@@ -1226,9 +1273,8 @@ class EntityRegistry:
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
         """Clear area id from registry entries."""
-        for entity_id, entry in self.entities.items():
-            if area_id == entry.area_id:
-                self.async_update_entity(entity_id, area_id=None)
+        for entry in self.entities.get_entries_for_area_id(area_id):
+            self.async_update_entity(entry.entity_id, area_id=None)
 
 
 @callback
@@ -1249,11 +1295,9 @@ def async_entries_for_device(
     registry: EntityRegistry, device_id: str, include_disabled_entities: bool = False
 ) -> list[RegistryEntry]:
     """Return entries that match a device."""
-    return [
-        entry
-        for entry in registry.entities.get_entries_for_device_id(device_id)
-        if (not entry.disabled_by or include_disabled_entities)
-    ]
+    return registry.entities.get_entries_for_device_id(
+        device_id, include_disabled_entities
+    )
 
 
 @callback
@@ -1261,7 +1305,15 @@ def async_entries_for_area(
     registry: EntityRegistry, area_id: str
 ) -> list[RegistryEntry]:
     """Return entries that match an area."""
-    return [entry for entry in registry.entities.values() if entry.area_id == area_id]
+    return registry.entities.get_entries_for_area_id(area_id)
+
+
+@callback
+def async_entries_for_label(
+    registry: EntityRegistry, label_id: str
+) -> list[RegistryEntry]:
+    """Return entries that match a label."""
+    return [entry for entry in registry.entities.values() if label_id in entry.labels]
 
 
 @callback
@@ -1305,7 +1357,26 @@ def async_config_entry_disabled_by_changed(
 @callback
 def _async_setup_cleanup(hass: HomeAssistant, registry: EntityRegistry) -> None:
     """Clean up device registry when entities removed."""
-    from . import event  # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
+    from . import event, label_registry as lr
+
+    @callback
+    def _label_removed_from_registry_filter(
+        event: lr.EventLabelRegistryUpdated,
+    ) -> bool:
+        """Filter all except for the remove action from label registry events."""
+        return event.data["action"] == "remove"
+
+    @callback
+    def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
+        """Update entity that have a label that has been removed."""
+        registry.async_clear_label_id(event.data["label_id"])
+
+    hass.bus.async_listen(
+        event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
+        event_filter=_label_removed_from_registry_filter,  # type: ignore[arg-type]
+        listener=_handle_label_registry_update,  # type: ignore[arg-type]
+    )
 
     @callback
     def cleanup(_: datetime) -> None:
@@ -1379,16 +1450,12 @@ async def async_migrate_entries(
     Can also be used to remove duplicated entity registry entries.
     """
     ent_reg = async_get(hass)
-
-    for entry in list(ent_reg.entities.values()):
-        if entry.config_entry_id != config_entry_id:
-            continue
-        if not ent_reg.entities.get_entry(entry.id):
-            continue
-
-        updates = entry_callback(entry)
-
-        if updates is not None:
+    entities = ent_reg.entities
+    for entry in entities.get_entries_for_config_entry_id(config_entry_id):
+        if (
+            entities.get_entry(entry.id)
+            and (updates := entry_callback(entry)) is not None
+        ):
             ent_reg.async_update_entity(entry.entity_id, **updates)
 
 

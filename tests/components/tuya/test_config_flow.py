@@ -11,7 +11,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import ANY, MockConfigEntry
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -37,7 +37,6 @@ async def test_user_flow(
 
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "scan"
-    assert result2.get("description_placeholders") == {"qrcode": ANY}
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -157,7 +156,6 @@ async def test_reauth_flow(
 
     assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == "scan"
-    assert result.get("description_placeholders") == {"qrcode": ANY}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -206,7 +204,6 @@ async def test_reauth_flow_migration(
 
     assert result2.get("type") == FlowResultType.FORM
     assert result2.get("step_id") == "scan"
-    assert result2.get("description_placeholders") == {"qrcode": ANY}
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],

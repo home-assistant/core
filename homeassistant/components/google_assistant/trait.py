@@ -1942,9 +1942,7 @@ class ModesTrait(_Trait):
         elif self.state.domain == media_player.DOMAIN:
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
                 mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
-        elif self.state.domain == input_select.DOMAIN:
-            mode_settings["option"] = self.state.state
-        elif self.state.domain == select.DOMAIN:
+        elif self.state.domain in (input_select.DOMAIN, select.DOMAIN):
             mode_settings["option"] = self.state.state
         elif self.state.domain == humidifier.DOMAIN:
             if ATTR_MODE in attrs:

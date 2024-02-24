@@ -1,7 +1,6 @@
 """Config flow for the Open Thread Border Router integration."""
 from __future__ import annotations
 
-import asyncio
 from contextlib import suppress
 import logging
 from typing import cast
@@ -115,7 +114,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             except (
                 python_otbr_api.OTBRError,
                 aiohttp.ClientError,
-                asyncio.TimeoutError,
+                TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
             else:
@@ -145,13 +144,14 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             for current_entry in current_entries:
                 if current_entry.source != SOURCE_HASSIO:
                     continue
-                if current_entry.unique_id != discovery_info.uuid:
-                    self.hass.config_entries.async_update_entry(
-                        current_entry, unique_id=discovery_info.uuid
-                    )
                 current_url = yarl.URL(current_entry.data["url"])
                 if (
-                    current_url.host != config["host"]
+                    # The first version did not set a unique_id
+                    # so if the entry does not have a unique_id
+                    # we have to assume it's the first version
+                    current_entry.unique_id
+                    and (current_entry.unique_id != discovery_info.uuid)
+                    or current_url.host != config["host"]
                     or current_url.port == config["port"]
                 ):
                     continue

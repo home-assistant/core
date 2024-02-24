@@ -374,7 +374,7 @@ async def test_supervisor_discovery(
 
 @pytest.mark.parametrize(
     ("discovery_info", "server_version_side_effect"),
-    [({"config": ADDON_DISCOVERY_INFO}, asyncio.TimeoutError())],
+    [({"config": ADDON_DISCOVERY_INFO}, TimeoutError())],
 )
 async def test_supervisor_discovery_cannot_connect(
     hass: HomeAssistant, supervisor, get_addon_discovery_info
@@ -1114,7 +1114,7 @@ async def test_addon_running(
         (
             {"config": ADDON_DISCOVERY_INFO},
             None,
-            asyncio.TimeoutError,
+            TimeoutError,
             None,
             "cannot_connect",
         ),
@@ -1366,7 +1366,7 @@ async def test_addon_installed_start_failure(
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
-            asyncio.TimeoutError,
+            TimeoutError,
         ),
         (
             None,
@@ -1705,7 +1705,7 @@ async def test_install_addon_failure(
 async def test_options_manual(hass: HomeAssistant, client, integration) -> None:
     """Test manual settings in options flow."""
     entry = integration
-    entry.unique_id = "1234"
+    hass.config_entries.async_update_entry(entry, unique_id="1234")
 
     assert client.connect.call_count == 1
     assert client.disconnect.call_count == 0
@@ -1733,7 +1733,7 @@ async def test_options_manual_different_device(
 ) -> None:
     """Test options flow manual step connecting to different device."""
     entry = integration
-    entry.unique_id = 5678
+    hass.config_entries.async_update_entry(entry, unique_id="5678")
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -1754,7 +1754,7 @@ async def test_options_not_addon(
 ) -> None:
     """Test options flow and opting out of add-on on Supervisor."""
     entry = integration
-    entry.unique_id = "1234"
+    hass.config_entries.async_update_entry(entry, unique_id="1234")
 
     assert client.connect.call_count == 1
     assert client.disconnect.call_count == 0
@@ -1861,9 +1861,8 @@ async def test_options_addon_running(
     """Test options flow and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data)
+    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -1971,9 +1970,8 @@ async def test_options_addon_running_no_changes(
     """Test options flow without changes, and add-on already running on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data)
+    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -2115,9 +2113,8 @@ async def test_options_different_device(
     """Test options flow and configuring a different device."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data)
+    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -2274,9 +2271,8 @@ async def test_options_addon_restart_failed(
     """Test options flow and add-on restart failure."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data)
+    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -2402,9 +2398,8 @@ async def test_options_addon_running_server_info_failure(
     """Test options flow and add-on already running with server info failure."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data)
+    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -2511,9 +2506,8 @@ async def test_options_addon_not_installed(
     """Test options flow and add-on not installed on Supervisor."""
     addon_options.update(old_addon_options)
     entry = integration
-    entry.unique_id = "1234"
     data = {**entry.data, **entry_data}
-    hass.config_entries.async_update_entry(entry, data=data)
+    hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
 
     assert entry.data["url"] == "ws://test.org"
 

@@ -300,7 +300,9 @@ class SenseTrendsSensor(CoordinatorEntity, SensorEntity):
     @property
     def last_reset(self):
         """Return the time when the sensor was last reset, if any."""
-        return self._data.trend_start(self._sensor_type)
+        if self._attr_state_class == SensorStateClass.TOTAL:
+            return self._data.trend_start(self._sensor_type)
+        return None
 
 
 class SenseEnergyDevice(SensorEntity):

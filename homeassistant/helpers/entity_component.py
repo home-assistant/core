@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
 from functools import partial
-from itertools import chain
 import logging
 from types import ModuleType
 from typing import Any, Generic
@@ -394,8 +393,8 @@ class EntityComponent(Generic[_EntityT]):
         entity_platform.async_prepare()
         return entity_platform
 
-    async def _async_shutdown(self, event: Event) -> None:
+    @callback
+    def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
-        await asyncio.gather(
-            *(platform.async_shutdown() for platform in chain(self._platforms.values()))
-        )
+        for platform in self._platforms.values():
+            platform.async_shutdown()

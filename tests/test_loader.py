@@ -188,6 +188,41 @@ async def test_get_integration_exceptions(hass: HomeAssistant) -> None:
         assert hue_light == integration.get_platform("light")
 
 
+async def test_get_platform_caches_failures_when_component_loaded(
+    hass: HomeAssistant,
+) -> None:
+    """Test get_platform cache failures only when the component is loaded."""
+    integration = await loader.async_get_integration(hass, "hue")
+
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ImportError("Boom")
+    ):
+        assert integration.get_component() == hue
+
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ImportError("Boom")
+    ):
+        assert integration.get_platform("light") == hue_light
+
+    # Hue is not loaded so we should still hit the import_module path
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ImportError("Boom")
+    ):
+        assert integration.get_platform("light") == hue_light
+
+    assert integration.get_component() == hue
+
+    # Hue is loaded so we should cache the import_module failure now
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ImportError("Boom")
+    ):
+        assert integration.get_platform("light") == hue_light
+
+    # Hue is loaded and the last call should have cached the import_module failure
+    with pytest.raises(ImportError):
+        assert integration.get_platform("light") == hue_light
+
+
 async def test_get_integration_legacy(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:

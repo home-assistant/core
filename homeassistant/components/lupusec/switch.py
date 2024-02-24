@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import partial
 from typing import Any
 
 import lupupy.constants as CONST
@@ -20,7 +21,7 @@ SCAN_INTERVAL = timedelta(seconds=2)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lupusec switch devices."""
 
@@ -29,10 +30,12 @@ async def async_setup_entry(
     device_types = CONST.TYPE_SWITCH
 
     switches = []
-    for device in data.get_devices(generic_type=device_types):
+    partial_func = partial(data.get_devices, generic_type=device_types)
+    devices = await hass.async_add_executor_job(partial_func)
+    for device in devices:
         switches.append(LupusecSwitch(device, config_entry.entry_id))
 
-    async_add_devices(switches)
+    async_add_entities(switches)
 
 
 class LupusecSwitch(LupusecBaseSensor, SwitchEntity):

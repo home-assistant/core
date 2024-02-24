@@ -6,13 +6,16 @@ from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE, EntityCate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .test_controller import setup_unifi_integration
+from .test_hub import setup_unifi_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_restart_device_button(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    websocket_mock,
 ) -> None:
     """Test restarting device button."""
     config_entry = await setup_unifi_integration(
@@ -33,12 +36,11 @@ async def test_restart_device_button(
             }
         ],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 1
 
-    ent_reg = er.async_get(hass)
-    ent_reg_entry = ent_reg.async_get("button.switch_restart")
+    ent_reg_entry = entity_registry.async_get("button.switch_restart")
     assert ent_reg_entry.unique_id == "device_restart-00:00:00:00:01:01"
     assert ent_reg_entry.entity_category is EntityCategory.CONFIG
 
@@ -50,7 +52,7 @@ async def test_restart_device_button(
     # Send restart device command
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/devmgr",
+        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/devmgr",
     )
 
     await hass.services.async_call(
@@ -78,7 +80,10 @@ async def test_restart_device_button(
 
 
 async def test_power_cycle_poe(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    websocket_mock,
 ) -> None:
     """Test restarting device button."""
     config_entry = await setup_unifi_integration(
@@ -115,12 +120,11 @@ async def test_power_cycle_poe(
             }
         ],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(BUTTON_DOMAIN)) == 2
 
-    ent_reg = er.async_get(hass)
-    ent_reg_entry = ent_reg.async_get("button.switch_port_1_power_cycle")
+    ent_reg_entry = entity_registry.async_get("button.switch_port_1_power_cycle")
     assert ent_reg_entry.unique_id == "power_cycle-00:00:00:00:01:01_1"
     assert ent_reg_entry.entity_category is EntityCategory.CONFIG
 
@@ -132,7 +136,7 @@ async def test_power_cycle_poe(
     # Send restart device command
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/devmgr",
+        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/devmgr",
     )
 
     await hass.services.async_call(

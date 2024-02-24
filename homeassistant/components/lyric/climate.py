@@ -173,6 +173,7 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
         PRESET_TEMPORARY_HOLD,
         PRESET_VACATION_HOLD,
     ]
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -229,6 +230,11 @@ class LyricClimate(LyricDeviceEntity, ClimateEntity):
             ]
             self._attr_supported_features = (
                 self._attr_supported_features | ClimateEntityFeature.FAN_MODE
+            )
+
+        if len(self.hvac_modes) > 1:
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
         super().__init__(

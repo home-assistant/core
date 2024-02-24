@@ -22,6 +22,8 @@ async def async_get_config_entry_diagnostics(
     diagnostics_data = {
         "info": dict(config_entry.data),
         "data": asdict(coordinator.data),
+        "model": coordinator.brother.model,
+        "firmware": coordinator.brother.firmware,
     }
 
     return diagnostics_data

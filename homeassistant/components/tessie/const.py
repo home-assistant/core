@@ -68,3 +68,13 @@ class TessieChargeCableLockStates(StrEnum):
 
     ENGAGED = "Engaged"
     DISENGAGED = "Disengaged"
+
+
+TessieChargeStates = {
+    "Starting": "starting",
+    "Charging": "charging",
+    "Stopped": "stopped",
+    "Complete": "complete",
+    "Disconnected": "disconnected",
+    "NoPower": "no_power",
+}

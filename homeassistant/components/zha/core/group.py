@@ -112,7 +112,7 @@ class ZHAGroupMember(LogMixin):
             await self._zha_device.device.endpoints[
                 self._endpoint_id
             ].remove_from_group(self._zha_group.group_id)
-        except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as ex:
+        except (zigpy.exceptions.ZigbeeException, TimeoutError) as ex:
             self.debug(
                 (
                     "Failed to remove endpoint: %s for device '%s' from group: 0x%04x"
