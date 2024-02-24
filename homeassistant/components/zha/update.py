@@ -203,3 +203,8 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
         """Call when entity will be removed."""
         await super().async_will_remove_from_hass()
         self._attr_in_progress = False
+
+    async def async_update(self) -> None:
+        """Update the entity."""
+        await CoordinatorEntity.async_update(self)
+        await super().async_update()
