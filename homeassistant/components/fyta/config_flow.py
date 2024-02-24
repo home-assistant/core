@@ -14,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
@@ -32,9 +31,6 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -42,30 +38,26 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input:
+            fyta = FytaConnector(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+
             try:
-                info = await self.validate_input(self.hass, user_input)
+                await fyta.login()
+                await fyta.client.close()
             except FytaConnectionError:
                 errors["base"] = "cannot_connect"
             except FytaAuthentificationError:
-                errors["base"] = "invalid_auth"
+                errors["base"] = "auth_error"
             except FytaPasswordError:
-                errors["base"] = "invalid_auth"
+                errors["base"] = "auth_error"
                 errors[CONF_PASSWORD] = "password_error"
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                self._async_abort_entries_match()
+                return self.async_create_entry(
+                    title=user_input[CONF_USERNAME], data=user_input
+                )
 
-        # If there is no user input or there were errors, show the form again, including any errors that were found with the input.
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
-
-    async def validate_input(self, hass: HomeAssistant, data: dict) -> dict[str, Any]:
-        """Validate if the user input is correct."""
-
-        fyta = FytaConnector(data[CONF_USERNAME], data[CONF_PASSWORD])
-
-        await fyta.login()
-
-        return {"title": data[CONF_USERNAME]}
