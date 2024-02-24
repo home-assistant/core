@@ -298,6 +298,16 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_set_method="set_glass_break_detection",
         ufp_perm=PermRequired.WRITE,
     ),
+    ProtectSwitchEntityDescription(
+        key="track_person",
+        name="Tracking: Person",
+        icon="mdi:walk",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="is_ptz",
+        ufp_value="is_person_tracking_enabled",
+        ufp_set_method="set_person_track",
+        ufp_perm=PermRequired.WRITE,
+    ),
 )
 
 PRIVACY_MODE_SWITCH = ProtectSwitchEntityDescription[Camera](
