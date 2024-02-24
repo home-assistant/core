@@ -46,7 +46,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import CONF_PROCESS, DOMAIN, NET_IO_TYPES
+from .const import CONF_PROCESS, DOMAIN, DOMAIN_COORDINATORS, NET_IO_TYPES
 from .coordinator import (
     MonitorCoordinator,
     SystemMonitorBootTimeCoordinator,
@@ -747,18 +747,22 @@ async def async_setup_entry(  # noqa: C901
                     )
                 )
 
+    hass.data[DOMAIN_COORDINATORS] = {}
     # No gathering to avoid swamping the executor
-    for coordinator in disk_coordinators.values():
+    for argument, coordinator in disk_coordinators.items():
+        hass.data[DOMAIN_COORDINATORS][f"disk_{argument}"] = coordinator
+    hass.data[DOMAIN_COORDINATORS]["boot_time"] = boot_time_coordinator
+    hass.data[DOMAIN_COORDINATORS]["cpu_temp"] = cpu_temp_coordinator
+    hass.data[DOMAIN_COORDINATORS]["memory"] = memory_coordinator
+    hass.data[DOMAIN_COORDINATORS]["net_addr"] = net_addr_coordinator
+    hass.data[DOMAIN_COORDINATORS]["net_io"] = net_io_coordinator
+    hass.data[DOMAIN_COORDINATORS]["process"] = process_coordinator
+    hass.data[DOMAIN_COORDINATORS]["processor"] = processor_coordinator
+    hass.data[DOMAIN_COORDINATORS]["swap"] = swap_coordinator
+    hass.data[DOMAIN_COORDINATORS]["system_load"] = system_load_coordinator
+
+    for coordinator in hass.data[DOMAIN_COORDINATORS].values():
         await coordinator.async_request_refresh()
-    await boot_time_coordinator.async_request_refresh()
-    await cpu_temp_coordinator.async_request_refresh()
-    await memory_coordinator.async_request_refresh()
-    await net_addr_coordinator.async_request_refresh()
-    await net_io_coordinator.async_request_refresh()
-    await process_coordinator.async_request_refresh()
-    await processor_coordinator.async_request_refresh()
-    await swap_coordinator.async_request_refresh()
-    await system_load_coordinator.async_request_refresh()
 
     async_add_entities(entities)
 
