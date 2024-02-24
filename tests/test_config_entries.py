@@ -4199,7 +4199,7 @@ async def test_initializing_flows_canceled_on_shutdown(
             manager.flow.async_init("test", context={"source": "reauth"})
         )
         await hass.async_block_till_done()
-        await manager.flow.async_shutdown()
+        manager.flow.async_shutdown()
 
         with pytest.raises(asyncio.exceptions.CancelledError):
             await task
