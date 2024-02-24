@@ -31,6 +31,7 @@ class MockProcess(Process):
         super().__init__(1)
         self._name = name
         self._ex = ex
+        self._create_time = 1708700400
 
     def name(self):
         """Return a name."""

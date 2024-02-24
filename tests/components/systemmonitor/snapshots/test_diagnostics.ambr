@@ -35,7 +35,7 @@
         'last_update_success': True,
       }),
       'process': dict({
-        'data': "[tests.components.systemmonitor.conftest.MockProcess(pid=1, name='python3', status='sleeping', started='2024-02-23 08:17:26'), tests.components.systemmonitor.conftest.MockProcess(pid=1, name='pip', status='sleeping', started='2024-02-23 08:17:26')]",
+        'data': "[tests.components.systemmonitor.conftest.MockProcess(pid=1, name='python3', status='sleeping', started='2024-02-23 15:00:00'), tests.components.systemmonitor.conftest.MockProcess(pid=1, name='pip', status='sleeping', started='2024-02-23 15:00:00')]",
         'last_update_success': True,
       }),
       'processor': dict({
