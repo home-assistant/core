@@ -22,8 +22,11 @@ class DataConnection(TypedDict):
     """A connection data class."""
 
     departure: datetime | None
+    next_departure: datetime | None
+    next_on_departure: datetime | None
     duration: str
     platform: str
+    remaining_time: str
     start: str
     destination: str
     train_number: str
@@ -48,6 +51,16 @@ class SwissPublicTransportDataUpdateCoordinator(
         )
         self._opendata = opendata
 
+    def remaining_time(self, departure) -> timedelta | None:
+        """Calculate the remaining time for the departure."""
+        departure_datetime = dt_util.parse_datetime(departure)
+
+        return (
+            departure_datetime - dt_util.as_local(dt_util.utcnow())
+            if departure_datetime
+            else None
+        )
+
     async def _async_update_data(self) -> list[DataConnection]:
         try:
             await self._opendata.async_get_data()
@@ -62,12 +75,27 @@ class SwissPublicTransportDataUpdateCoordinator(
                 departure=dt_util.parse_datetime(
                     self._opendata.connections[i]["departure"]
                 ),
+                next_departure=dt_util.parse_datetime(
+                    self._opendata.connections[i + 1]["departure"]
+                )
+                if len(self._opendata.connections) > i + 1
+                and self._opendata.connections[i + 1] is not None
+                else None,
+                next_on_departure=dt_util.parse_datetime(
+                    self._opendata.connections[i + 2]["departure"]
+                )
+                if len(self._opendata.connections) > i + 2
+                and self._opendata.connections[i + 2] is not None
+                else None,
                 train_number=self._opendata.connections[i]["number"],
                 platform=self._opendata.connections[i]["platform"],
                 transfers=self._opendata.connections[i]["transfers"],
                 duration=self._opendata.connections[i]["duration"],
                 start=self._opendata.from_name,
                 destination=self._opendata.to_name,
+                remaining_time=str(
+                    self.remaining_time(self._opendata.connections[i]["departure"])
+                ),
                 delay=self._opendata.connections[i]["delay"],
             )
             for i in range(SENSOR_CONNECTIONS_COUNT)
