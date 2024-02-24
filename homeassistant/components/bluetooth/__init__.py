@@ -173,9 +173,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         function=_async_rediscover_adapters,
     )
 
-    async def _async_shutdown_debouncer(_: Event) -> None:
+    @hass_callback
+    def _async_shutdown_debouncer(_: Event) -> None:
         """Shutdown debouncer."""
-        await discovery_debouncer.async_shutdown()
+        discovery_debouncer.async_shutdown()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_shutdown_debouncer)
 
