@@ -114,7 +114,8 @@ class BringTodoListEntity(
         """Update an item to the To-do list.
 
         Bring has an internal 'recent' list which we want to use instead of a todo list
-        status, therefore completed todo list items are matched to the recent list and pending items to the purchase list
+        status, therefore completed todo list items are matched to the recent list and
+        pending items to the purchase list.
 
         This results in following behaviour:
 
