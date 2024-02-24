@@ -88,12 +88,7 @@ class MoonCalendarEntity(CalendarEntity):
         summary: str
         for moon_phase in self._obj_moon_phases:
             if moon_phase["date"] >= dt_util.now().date():
-                summary = async_translate_calendar_summary(
-                    self.hass,
-                    DOMAIN,
-                    self._attr_translation_key,
-                    moon_phase["phase"],
-                )
+                summary = moon_phase["phase"]
                 next_moon_phase = (
                     moon_phase["date"],
                     summary,
@@ -102,7 +97,12 @@ class MoonCalendarEntity(CalendarEntity):
                 break
 
         return CalendarEvent(
-            summary=next_moon_phase[1],
+            summary=async_translate_calendar_summary(
+                self.hass,
+                DOMAIN,
+                self._attr_translation_key,
+                next_moon_phase[1],
+            ),
             start=next_moon_phase[0],
             end=next_moon_phase[2],
         )
@@ -120,14 +120,13 @@ class MoonCalendarEntity(CalendarEntity):
                 end_date is not None
                 and start_date.date() <= moon_phase["date"] <= end_date.date()
             ):
-                summary = async_translate_calendar_summary(
-                    self.hass,
-                    DOMAIN,
-                    self._attr_translation_key,
-                    moon_phase["phase"],
-                )
                 event = CalendarEvent(
-                    summary=summary,
+                    summary=async_translate_calendar_summary(
+                        self.hass,
+                        DOMAIN,
+                        self._attr_translation_key,
+                        moon_phase["phase"],
+                    ),
                     start=moon_phase["date"],
                     end=moon_phase["end"],
                 )
