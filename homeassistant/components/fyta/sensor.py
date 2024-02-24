@@ -38,10 +38,6 @@ PLANT_STATUS_LIST: list[str] = ["too_low", "low", "perfect", "high", "too_high"]
 
 SENSORS: Final[list[FytaSensorEntityDescription]] = [
     FytaSensorEntityDescription(
-        key="plant_name",
-        translation_key="plant_name",
-    ),
-    FytaSensorEntityDescription(
         key="scientific_name",
         translation_key="scientific_name",
     ),
@@ -50,30 +46,35 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
         translation_key="plant_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
+        value_fn=lambda value: PLANT_STATUS[value],
     ),
     FytaSensorEntityDescription(
         key="temperature_status",
         translation_key="temperature_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
+        value_fn=lambda value: PLANT_STATUS[value],
     ),
     FytaSensorEntityDescription(
         key="light_status",
         translation_key="light_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
+        value_fn=lambda value: PLANT_STATUS[value],
     ),
     FytaSensorEntityDescription(
         key="moisture_status",
         translation_key="moisture_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
+        value_fn=lambda value: PLANT_STATUS[value],
     ),
     FytaSensorEntityDescription(
         key="salinity_status",
         translation_key="salinity_status",
         device_class=SensorDeviceClass.ENUM,
         options=PLANT_STATUS_LIST,
+        value_fn=lambda value: PLANT_STATUS[value],
     ),
     FytaSensorEntityDescription(
         key="temperature",
@@ -111,36 +112,36 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    FytaSensorEntityDescription(
-        key="plant_number",
-        translation_key="plant_number",
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
 ]
+
+PLANT_NUMBER_SENSOR = FytaSensorEntityDescription(
+    key="plant_number",
+    translation_key="plant_number",
+    state_class=SensorStateClass.MEASUREMENT,
+    entity_category=EntityCategory.DIAGNOSTIC,
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the FYTA binary sensors."""
+    """Set up the FYTA sensors."""
     coordinator: FytaCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    plant_entities: list[CoordinatorEntity] = []
-    plant_entities = [
+    plant_entities: list[CoordinatorEntity] = [
         FytaCoordinatorSensor(coordinator, entry, sensor)
         for sensor in SENSORS
-        if sensor.key in coordinator.data or sensor.key == "plant_number"
+        if sensor.key in coordinator.data
     ]
+    plant_entities.append(
+        FytaCoordinatorSensor(coordinator, entry, PLANT_NUMBER_SENSOR)
+    )
 
-    plants = coordinator.plant_list
     plant_entities.extend(
-        [
             FytaPlantSensor(coordinator, entry, sensor, plant_id)
-            for plant_id in plants
+            for plant_id in coordinator.fyta.plant_list
             for sensor in SENSORS
             if sensor.key in coordinator.data[plant_id]
-        ]
     )
 
     async_add_entities(plant_entities)
@@ -156,7 +157,7 @@ class FytaCoordinatorSensor(FytaCoordinatorEntity, SensorEntity):
         """Return the state for this sensor."""
 
         if "plant_number" in self.entity_description.key:
-            val = len(self.coordinator.plant_list)
+            val = len(self.coordinator.fyta.plant_list)
         else:
             val = self.coordinator.data[self.entity_description.key]
         return self.entity_description.value_fn(val)
@@ -170,10 +171,6 @@ class FytaPlantSensor(FytaPlantEntity, SensorEntity):
     @property
     def native_value(self) -> str | int | float | datetime:
         """Return the state for this sensor."""
-        if "status" in self.entity_description.key:
-            val = PLANT_STATUS[
-                self.coordinator.data[self.plant_id][self.entity_description.key]
-            ]
-        else:
-            val = self.coordinator.data[self.plant_id][self.entity_description.key]
+
+        val = self.plant[self.entity_description.key]
         return self.entity_description.value_fn(val)

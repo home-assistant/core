@@ -54,6 +54,7 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 self._async_abort_entries_match()
+
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )

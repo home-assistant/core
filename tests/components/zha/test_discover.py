@@ -48,6 +48,7 @@ IGNORE_SUFFIXES = [
     "off_transition_time",
     "default_move_rate",
     "start_up_current_level",
+    "counter",
 ]
 
 

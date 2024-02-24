@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class FytaCoordinator(DataUpdateCoordinator):
+class FytaCoordinator(DataUpdateCoordinator[dict]):
     """Fyta custom coordinator."""
 
     config_entry: ConfigEntry
@@ -29,25 +29,18 @@ class FytaCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="FYTA Coordinator",
-            update_method=self._async_update_data,
             update_interval=timedelta(seconds=60),
         )
-        self.fyta = fyta
+        self.fyta: FytaConnector = fyta
+        self._attr_last_update_success: datetime | None = None
 
-        self.plant_list: dict[int, str] = {}
-        self.expiration: datetime | None = None
-        self._attr_last_update_success = None
-
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
 
-        if self.expiration is None or self.expiration < datetime.now():
+        if self.fyta.expiration is None or self.fyta.expiration < datetime.now():
             await self.renew_authentication()
 
         data = await self.fyta.update_all_plants()
-
-        self.plant_list = self.fyta.plant_list
-        data |= {"email": self.fyta.email}
 
         self._attr_last_update_success = datetime.now()
         return data
@@ -64,5 +57,4 @@ class FytaCoordinator(DataUpdateCoordinator):
         except FytaPasswordError as ex:
             raise ConfigEntryAuthFailed from ex
 
-        self.expiration = self.fyta.expiration
         return True
