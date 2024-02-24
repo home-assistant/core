@@ -13,7 +13,7 @@
       ]),
     }),
     'coordinator_data': dict({
-      'abc123': dict({
+      '0': dict({
         'attributes': dict({
           'custom_attr_1': 'custom_attr_1_value',
         }),
@@ -96,6 +96,7 @@
         }),
       }),
     ]),
+    'subscription_status': 'disconnected',
   })
 # ---
 # name: test_entry_diagnostics[entry]
@@ -112,7 +113,7 @@
       ]),
     }),
     'coordinator_data': dict({
-      'abc123': dict({
+      '0': dict({
         'attributes': dict({
           'custom_attr_1': 'custom_attr_1_value',
         }),
@@ -195,5 +196,6 @@
         }),
       }),
     ]),
+    'subscription_status': 'disconnected',
   })
 # ---

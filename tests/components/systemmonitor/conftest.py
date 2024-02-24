@@ -1,37 +1,19 @@
 """Fixtures for the System Monitor integration."""
 from __future__ import annotations
 
-from collections import namedtuple
 from collections.abc import Generator
 import socket
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, NonCallableMock, patch
 
 from psutil import NoSuchProcess, Process
 from psutil._common import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr, sswap
 import pytest
 
 from homeassistant.components.systemmonitor.const import DOMAIN
+from homeassistant.components.systemmonitor.coordinator import VirtualMemory
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-# Different depending on platform so making according to Linux
-svmem = namedtuple(
-    "svmem",
-    [
-        "total",
-        "available",
-        "percent",
-        "used",
-        "free",
-        "active",
-        "inactive",
-        "buffers",
-        "cached",
-        "shared",
-        "slab",
-    ],
-)
 
 
 @pytest.fixture(autouse=True)
@@ -92,7 +74,6 @@ async def mock_added_config_entry(
     hass: HomeAssistant,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Mock ConfigEntry that's been added to HA."""
@@ -112,30 +93,26 @@ def mock_process() -> list[MockProcess]:
 
 
 @pytest.fixture
-def mock_psutil(mock_process: list[MockProcess]) -> Mock:
+def mock_psutil(mock_process: list[MockProcess]) -> Generator:
     """Mock psutil."""
     with patch(
-        "homeassistant.components.systemmonitor.coordinator.psutil",
-        autospec=True,
-    ) as mock_psutil:
+        "homeassistant.components.systemmonitor.ha_psutil.PsutilWrapper",
+    ) as psutil_wrapper:
+        _wrapper = psutil_wrapper.return_value
+        _wrapper.psutil = NonCallableMock()
+        mock_psutil = _wrapper.psutil
         mock_psutil.disk_usage.return_value = sdiskusage(
             500 * 1024**3, 300 * 1024**3, 200 * 1024**3, 60.0
         )
         mock_psutil.swap_memory.return_value = sswap(
             100 * 1024**2, 60 * 1024**2, 40 * 1024**2, 60.0, 1, 1
         )
-        mock_psutil.virtual_memory.return_value = svmem(
+        mock_psutil.virtual_memory.return_value = VirtualMemory(
             100 * 1024**2,
             40 * 1024**2,
             40.0,
             60 * 1024**2,
             30 * 1024**2,
-            1,
-            1,
-            1,
-            1,
-            1,
-            1,
         )
         mock_psutil.net_io_counters.return_value = {
             "eth0": snetio(100 * 1024**2, 100 * 1024**2, 50, 50, 0, 0, 0, 0),
@@ -180,65 +157,18 @@ def mock_psutil(mock_process: list[MockProcess]) -> Mock:
         mock_psutil.sensors_temperatures.return_value = {
             "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
         }
-        mock_psutil.NoSuchProcess = NoSuchProcess
-        yield mock_psutil
-
-
-@pytest.fixture
-def mock_util(mock_process) -> Mock:
-    """Mock psutil."""
-    with patch(
-        "homeassistant.components.systemmonitor.util.psutil", autospec=True
-    ) as mock_util:
-        mock_util.net_if_addrs.return_value = {
-            "eth0": [
-                snicaddr(
-                    socket.AF_INET,
-                    "192.168.1.1",
-                    "255.255.255.0",
-                    "255.255.255.255",
-                    None,
-                )
-            ],
-            "eth1": [
-                snicaddr(
-                    socket.AF_INET,
-                    "192.168.10.1",
-                    "255.255.255.0",
-                    "255.255.255.255",
-                    None,
-                )
-            ],
-            "vethxyzxyz": [
-                snicaddr(
-                    socket.AF_INET,
-                    "172.16.10.1",
-                    "255.255.255.0",
-                    "255.255.255.255",
-                    None,
-                )
-            ],
-        }
-        mock_process = [MockProcess("python3")]
-        mock_util.process_iter.return_value = mock_process
-        # sensors_temperatures not available on MacOS so we
-        # need to override the spec
-        mock_util.sensors_temperatures = Mock()
-        mock_util.sensors_temperatures.return_value = {
-            "cpu0-thermal": [shwtemp("cpu0-thermal", 50.0, 60.0, 70.0)]
-        }
-        mock_util.disk_partitions.return_value = [
+        mock_psutil.disk_partitions.return_value = [
             sdiskpart("test", "/", "ext4", "", 1, 1),
             sdiskpart("test2", "/media/share", "ext4", "", 1, 1),
             sdiskpart("test3", "/incorrect", "", "", 1, 1),
             sdiskpart("proc", "/proc/run", "proc", "", 1, 1),
         ]
-        mock_util.disk_usage.return_value = sdiskusage(10, 10, 0, 0)
-        yield mock_util
+        mock_psutil.NoSuchProcess = NoSuchProcess
+        yield mock_psutil
 
 
 @pytest.fixture
-def mock_os() -> Mock:
+def mock_os() -> Generator:
     """Mock os."""
     with patch(
         "homeassistant.components.systemmonitor.coordinator.os"
