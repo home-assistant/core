@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import UserDict
 from collections.abc import ValuesView
 from enum import StrEnum
-from functools import partial
+from functools import lru_cache, partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
@@ -321,6 +321,7 @@ class DeletedDeviceEntry:
         )
 
 
+@lru_cache(maxsize=512)
 def format_mac(mac: str) -> str:
     """Format the mac address string for entry into dev reg."""
     to_test = mac
