@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from ipaddress import IPv4Address
 from typing import Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
@@ -10,7 +11,6 @@ from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
     BLOCK_GENERATIONS,
     DEFAULT_COAP_PORT,
-    DEFAULT_IP_ADDRESS,
     MODEL_1L,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
@@ -226,18 +226,22 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
 
     adapters = await network.async_get_adapters(hass)
     LOGGER.debug("Network adapters: %s", adapters)
-    if network.async_only_default_interface_enabled(adapters):
-        ipv4 = DEFAULT_IP_ADDRESS
-    else:
-        for adapter in adapters:
-            if adapter["enabled"] and adapter["default"]:
-                ipv4 = adapter["ipv4"][0]["address"]
 
+    ipv4: list[IPv4Address] = []
+    if not network.async_only_default_interface_enabled(adapters):
+        for address in await network.async_get_enabled_source_ips(hass):
+            if address.version == 4 and not (
+                address.is_link_local
+                or address.is_loopback
+                or address.is_multicast
+                or address.is_unspecified
+            ):
+                ipv4.append(address)
     if DOMAIN in hass.data:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
     else:
         port = DEFAULT_COAP_PORT
-    LOGGER.info("Starting CoAP context on IP %s with UDP port %s", ipv4, port)
+    LOGGER.info("Starting CoAP context with UDP port %s", port)
     await context.initialize(ipv4, port)
 
     @callback
