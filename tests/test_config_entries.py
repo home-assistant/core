@@ -8,6 +8,7 @@ import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -733,13 +734,13 @@ async def test_entries_excludes_ignore_and_disabled(
     ]
 
 
-async def test_saving_and_loading(hass: HomeAssistant) -> None:
+async def test_saving_and_loading(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that we're saving and loading correctly."""
     mock_integration(
         hass,
-        MockModule(
-            "test", async_setup_entry=lambda *args: AsyncMock(return_value=True)
-        ),
+        MockModule("test", async_setup_entry=AsyncMock(return_value=True)),
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -784,7 +785,8 @@ async def test_saving_and_loading(hass: HomeAssistant) -> None:
     )
 
     # To trigger the call_later
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    freezer.tick(1.0)
+    async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
 
