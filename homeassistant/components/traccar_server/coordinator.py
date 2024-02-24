@@ -97,7 +97,11 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             if (device := get_device(position["deviceId"], devices)) is None:
                 continue
 
-            if (attr := self._attrs(device, position)) is None:
+            if (
+                attr := self._retrun_custom_attributes_if_not_filtered_by_configuration(
+                    device, position
+                )
+            ) is None:
                 continue
 
             data[device["id"]] = {
@@ -124,7 +128,11 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             if device_id not in self.data:
                 continue
 
-            if (attr := self._attrs(device, self.data[device_id]["position"])) is None:
+            if (
+                attr := self._retrun_custom_attributes_if_not_filtered_by_configuration(
+                    device, self.data[device_id]["position"]
+                )
+            ) is None:
                 continue
 
             self.data[device_id]["device"] = device
@@ -136,7 +144,11 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             if device_id not in self.data:
                 continue
 
-            if (attr := self._attrs(self.data[device_id]["device"], position)) is None:
+            if (
+                attr := self._retrun_custom_attributes_if_not_filtered_by_configuration(
+                    self.data[device_id]["device"], position
+                )
+            ) is None:
                 continue
 
             self.data[device_id]["position"] = position
@@ -216,7 +228,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
         self.config_entry.async_on_unload(self.unsubscribe)
         self._subscription = asyncio.create_task(_subscriber())
 
-    def _attrs(
+    def _retrun_custom_attributes_if_not_filtered_by_configuration(
         self,
         device: DeviceModel,
         position: PositionModel,
