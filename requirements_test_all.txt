@@ -1369,7 +1369,7 @@ pydeconz==114
 pydexcom==0.2.3
 
 # homeassistant.components.discovergy
-pydiscovergy==2.0.5
+pydiscovergy==3.0.0
 
 # homeassistant.components.hydrawise
 pydrawise==2024.2.0
