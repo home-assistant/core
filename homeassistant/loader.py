@@ -53,6 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_COMPONENTS = "components"
 DATA_INTEGRATIONS = "integrations"
+DATA_MISSING_PLATFORMS = "missing_platforms"
 DATA_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
@@ -185,6 +186,7 @@ def async_setup(hass: HomeAssistant) -> None:
     _async_mount_config_dir(hass)
     hass.data[DATA_COMPONENTS] = {}
     hass.data[DATA_INTEGRATIONS] = {}
+    hass.data[DATA_MISSING_PLATFORMS] = {}
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
@@ -240,20 +242,23 @@ async def async_get_custom_components(
     hass: HomeAssistant,
 ) -> dict[str, Integration]:
     """Return cached list of custom integrations."""
-    if (reg_or_evt := hass.data.get(DATA_CUSTOM_COMPONENTS)) is None:
-        evt = hass.data[DATA_CUSTOM_COMPONENTS] = asyncio.Event()
+    comps_or_future: dict[str, Integration] | asyncio.Future[
+        dict[str, Integration]
+    ] | None = hass.data.get(DATA_CUSTOM_COMPONENTS)
 
-        reg = await _async_get_custom_components(hass)
+    if comps_or_future is None:
+        future = hass.data[DATA_CUSTOM_COMPONENTS] = hass.loop.create_future()
 
-        hass.data[DATA_CUSTOM_COMPONENTS] = reg
-        evt.set()
-        return reg
+        comps = await _async_get_custom_components(hass)
 
-    if isinstance(reg_or_evt, asyncio.Event):
-        await reg_or_evt.wait()
-        return cast(dict[str, "Integration"], hass.data.get(DATA_CUSTOM_COMPONENTS))
+        hass.data[DATA_CUSTOM_COMPONENTS] = comps
+        future.set_result(comps)
+        return comps
 
-    return cast(dict[str, "Integration"], reg_or_evt)
+    if isinstance(comps_or_future, asyncio.Future):
+        return await comps_or_future
+
+    return comps_or_future
 
 
 async def async_get_config_flows(
@@ -271,12 +276,10 @@ async def async_get_config_flows(
             flows.update(type_flows)
 
     flows.update(
-        [
-            integration.domain
-            for integration in integrations.values()
-            if integration.config_flow
-            and (type_filter is None or integration.integration_type == type_filter)
-        ]
+        integration.domain
+        for integration in integrations.values()
+        if integration.config_flow
+        and (type_filter is None or integration.integration_type == type_filter)
     )
 
     return flows
@@ -841,9 +844,19 @@ class Integration:
         if full_name in cache:
             return cache[full_name]
 
+        missing_platforms_cache: dict[str, ImportError] = self.hass.data[
+            DATA_MISSING_PLATFORMS
+        ]
+        if full_name in missing_platforms_cache:
+            raise missing_platforms_cache[full_name]
+
         try:
             cache[full_name] = self._import_platform(platform_name)
-        except ImportError:
+        except ImportError as ex:
+            if self.domain in cache:
+                # If the domain is loaded, cache that the platform
+                # does not exist so we do not try to load it again
+                missing_platforms_cache[full_name] = ex
             raise
         except Exception as err:
             _LOGGER.exception(
@@ -867,7 +880,7 @@ class Integration:
 
 
 def _resolve_integrations_from_root(
-    hass: HomeAssistant, root_module: ModuleType, domains: list[str]
+    hass: HomeAssistant, root_module: ModuleType, domains: Iterable[str]
 ) -> dict[str, Integration]:
     """Resolve multiple integrations from root."""
     integrations: dict[str, Integration] = {}
@@ -961,7 +974,7 @@ async def async_get_integrations(
         from . import components  # pylint: disable=import-outside-toplevel
 
         integrations = await hass.async_add_executor_job(
-            _resolve_integrations_from_root, hass, components, list(needed)
+            _resolve_integrations_from_root, hass, components, needed
         )
         for domain, future in needed.items():
             int_or_exc = integrations.get(domain)
@@ -1021,10 +1034,10 @@ def _load_file(
     Only returns it if also found to be valid.
     Async friendly.
     """
-    with suppress(KeyError):
-        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore[no-any-return]
-
-    cache = hass.data[DATA_COMPONENTS]
+    cache: dict[str, ComponentProtocol] = hass.data[DATA_COMPONENTS]
+    module: ComponentProtocol | None
+    if module := cache.get(comp_or_platform):
+        return module
 
     for path in (f"{base}.{comp_or_platform}" for base in base_paths):
         try:
