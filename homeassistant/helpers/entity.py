@@ -1418,6 +1418,11 @@ class Entity(
 
         entity_sources(self.hass)[self.entity_id] = entity_info
 
+        if "_extra" in self.__combined_unrecorded_attributes:
+            new = {*self.__combined_unrecorded_attributes}
+            new.remove("_extra")
+            new.union(self._attr_extra_state_attributes.keys())
+            self.__combined_unrecorded_attributes = frozenset(new)
         self._state_info = {
             "unrecorded_attributes": self.__combined_unrecorded_attributes
         }
