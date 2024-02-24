@@ -7,7 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.accuweather.const import ATTR_FORECAST, ATTRIBUTION
+from homeassistant.components.accuweather.const import ATTRIBUTION
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_WEATHER_APPARENT_TEMPERATURE,
@@ -46,16 +46,13 @@ from tests.common import (
 from tests.typing import WebSocketGenerator
 
 
-async def test_weather_without_forecast(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
+async def test_weather(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
     """Test states of the weather without forecast."""
     await init_integration(hass)
 
     state = hass.states.get("weather.home")
     assert state
     assert state.state == "sunny"
-    assert not state.attributes.get(ATTR_FORECAST)
     assert state.attributes.get(ATTR_WEATHER_HUMIDITY) == 67
     assert state.attributes.get(ATTR_WEATHER_PRESSURE) == 1012.0
     assert state.attributes.get(ATTR_WEATHER_TEMPERATURE) == 22.6
