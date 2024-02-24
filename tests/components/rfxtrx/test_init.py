@@ -50,11 +50,13 @@ async def test_fire_event(hass: HomeAssistant, rfxtrx) -> None:
         identifiers={("rfxtrx", "11", "0", "213c7f2:16")}
     )
     assert device_id_1
+    assert device_id_1.serial_number == "213c7f2:16"
 
     device_id_2 = device_registry.async_get_device(
         identifiers={("rfxtrx", "16", "0", "00:90")}
     )
     assert device_id_2
+    assert device_id_2.serial_number == "00:90"
 
     assert calls == [
         {
