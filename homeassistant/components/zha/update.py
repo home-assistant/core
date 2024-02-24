@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+import logging
 from typing import TYPE_CHECKING, Any
 
 from zigpy.ota import OtaImageWithMetadata
@@ -18,16 +19,24 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .core import discovery
 from .core.const import CLUSTER_HANDLER_OTA, SIGNAL_ADD_ENTITIES
-from .core.helpers import get_zha_data
+from .core.helpers import get_zha_data, get_zha_gateway
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 if TYPE_CHECKING:
+    from zigpy.application import ControllerApplication
+
     from .core.cluster_handlers import ClusterHandler
     from .core.device import ZHADevice
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.UPDATE
@@ -46,18 +55,46 @@ async def async_setup_entry(
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms[Platform.UPDATE]
 
+    coordinator = ZHAFirmwareUpdateCoordinator(
+        hass, get_zha_gateway(hass).application_controller
+    )
+
     unsub = async_dispatcher_connect(
         hass,
         SIGNAL_ADD_ENTITIES,
         functools.partial(
-            discovery.async_add_entities, async_add_entities, entities_to_create
+            discovery.async_add_entities,
+            async_add_entities,
+            entities_to_create,
+            coordinator=coordinator,
         ),
     )
     config_entry.async_on_unload(unsub)
 
 
+class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
+    """Firmware update coordinator that broadcasts updates network-wide."""
+
+    def __init__(
+        self, hass: HomeAssistant, controller_application: ControllerApplication
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="ZHA firmware update coordinator",
+            update_method=self.async_update_data,
+        )
+        self.controller_application = controller_application
+
+    async def async_update_data(self) -> None:
+        """Fetch the latest firmware update data."""
+        # Broadcast to all devices
+        await self.controller_application.ota.broadcast_notify(jitter=100)
+
+
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_OTA)
-class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
+class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
     """Representation of a ZHA firmware update entity."""
 
     _unique_id_suffix = "firmware_update"
@@ -74,10 +111,13 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ClusterHandler],
+        coordinator: ZHAFirmwareUpdateCoordinator,
         **kwargs: Any,
     ) -> None:
         """Initialize the ZHA update entity."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
+        CoordinatorEntity.__init__(self, coordinator)
+
         self._ota_cluster_handler: ClusterHandler = self.cluster_handlers[
             CLUSTER_HANDLER_OTA
         ]
@@ -124,15 +164,6 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, UpdateEntity):
         self._attr_in_progress = False
         if write_state:
             self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Handle the update entity service call to manually check for available firmware updates."""
-        await super().async_update()
-        # "Check for updates" in the HA settings menu can invoke this so we need to
-        # check if the device is mains powered so we don't get a ton of errors in the
-        # logs from sleepy devices.
-        if self.zha_device.available and self.zha_device.is_mains_powered:
-            await self._ota_cluster_handler.async_check_for_update()
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
