@@ -32,7 +32,7 @@ MODULE = "homeassistant.components.steamist"
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
     hostname=DEVICE_HOSTNAME,
     ip=DEVICE_IP_ADDRESS,
-    macaddress=DEVICE_MAC_ADDRESS,
+    macaddress=DEVICE_MAC_ADDRESS.lower().replace(":", ""),
 )
 
 
@@ -91,6 +91,7 @@ async def test_form_with_discovery(hass: HomeAssistant) -> None:
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == DEVICE_NAME
     assert result2["data"] == DEFAULT_ENTRY_DATA
+    assert result2["context"]["unique_id"] == FORMATTED_MAC_ADDRESS
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -230,7 +231,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
             data=dhcp.DhcpServiceInfo(
                 hostname="any",
                 ip=DEVICE_IP_ADDRESS,
-                macaddress="00:00:00:00:00:00",
+                macaddress="000000000000",
             ),
         )
         await hass.async_block_till_done()

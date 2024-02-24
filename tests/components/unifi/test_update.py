@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_controller import SITE, setup_unifi_integration
+from .test_hub import SITE, setup_unifi_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -183,10 +183,10 @@ async def test_install(
     )
 
 
-async def test_controller_state_change(
+async def test_hub_state_change(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, websocket_mock
 ) -> None:
-    """Verify entities state reflect on controller becoming unavailable."""
+    """Verify entities state reflect on hub becoming unavailable."""
     await setup_unifi_integration(hass, aioclient_mock, devices_response=[DEVICE_1])
 
     assert len(hass.states.async_entity_ids(UPDATE_DOMAIN)) == 1
