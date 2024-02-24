@@ -104,7 +104,7 @@ class NukiRingactionEntity(NukiEntity[NukiDevice], BinarySensorEntity):
         return self._nuki_device.ring_action_state
 
 
-class NukiBatterycriticalEntity(NukiEntity[NukiDevice], BinarySensorEntity):
+class NukiBatteryCriticalEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     """Representation of Nuki Battery Critical."""
 
     _attr_has_entity_name = True
