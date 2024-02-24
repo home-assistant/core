@@ -24,7 +24,7 @@ pytest-freezer==0.4.8
 pytest-socket==0.6.0
 pytest-test-groups==1.0.3
 pytest-sugar==0.9.7
-pytest-timeout==2.1.0
+pytest-timeout==2.2.0
 pytest-unordered==0.5.2
 pytest-picked==0.5.0
 pytest-xdist==3.3.1
