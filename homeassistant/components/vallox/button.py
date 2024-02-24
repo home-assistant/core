@@ -38,7 +38,7 @@ class ValloxButtonEntity(ValloxEntity, ButtonEntity):
         self._client = client
 
 
-class ValloxResetFilterButton(ValloxButtonEntity):
+class ValloxResetFilterChangeDateButton(ValloxButtonEntity):
     """Representation of a Vallox reset filter button."""
 
     async def async_press(self) -> None:
@@ -54,7 +54,9 @@ class ValloxButtonEntityDescription(ButtonEntityDescription):
 
 BUTTON_ENTITIES: tuple[ValloxButtonEntityDescription, ...] = (
     ValloxButtonEntityDescription(
-        key="reset_filter", translation_key="reset_filter", icon="mdi:air-filter"
+        key="reset_filter_change_date",
+        translation_key="reset_filter_change_date",
+        icon="mdi:air-filter",
     ),
 )
 
@@ -70,7 +72,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            ValloxResetFilterButton(
+            ValloxResetFilterChangeDateButton(
                 data["name"], data["coordinator"], description, data["client"]
             )
             for description in BUTTON_ENTITIES

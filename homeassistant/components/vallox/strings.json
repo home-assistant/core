@@ -86,8 +86,8 @@
       }
     },
     "button": {
-      "reset_filter": {
-        "name": "Reset filter"
+      "reset_filter_change_date": {
+        "name": "Reset filter change date"
       }
     }
   },

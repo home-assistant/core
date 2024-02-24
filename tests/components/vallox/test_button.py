@@ -21,7 +21,7 @@ async def test_reset_filter_button_entitity_press(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            service_data={ATTR_ENTITY_ID: "button.vallox_reset_filter"},
+            service_data={ATTR_ENTITY_ID: "button.vallox_reset_filter_change_date"},
         )
         await hass.async_block_till_done()
         set_filter_change_date.assert_called_once()
