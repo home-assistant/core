@@ -32,7 +32,7 @@ async def async_setup_entry(
 
     for opener in entry_data.openers:
         entities.append(NukiRingactionEntity(entry_data.coordinator, opener))
-        entities.append(NukiBatterycriticalEntity(entry_data.coordinator, opener))
+        entities.append(NukiBatteryCriticalEntity(entry_data.coordinator, opener))
 
     async_add_entities(entities)
 
