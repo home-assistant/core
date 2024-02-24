@@ -13,7 +13,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
     """Test all sensors."""
 
     entity_and_expected_values = [
-        EntityAndExpectedValues("sensor.tesla_wall_connector_state", "1", "2"),
+        EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_status", "not_connected", "unknown"
+        ),
         EntityAndExpectedValues(
             "sensor.tesla_wall_connector_handle_temperature", "25.5", "-1.4"
         ),
@@ -45,7 +47,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
             "sensor.tesla_wall_connector_phase_c_voltage", "232.1", "230"
         ),
         EntityAndExpectedValues(
-            "sensor.tesla_wall_connector_session_energy", "1234.56", "112.2"
+            "sensor.tesla_wall_connector_session_energy", "1.23456", "0.1122"
         ),
     ]
 
@@ -63,7 +65,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
     mock_vitals_first_update.session_energy_wh = 1234.56
 
     mock_vitals_second_update = get_vitals_mock()
-    mock_vitals_second_update.evse_state = 2
+    mock_vitals_second_update.evse_state = 3
     mock_vitals_second_update.handle_temp_c = -1.42
     mock_vitals_second_update.grid_v = 229.21
     mock_vitals_second_update.grid_hz = 49.981

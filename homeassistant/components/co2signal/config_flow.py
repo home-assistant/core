@@ -4,8 +4,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aioelectricitymaps import ElectricityMaps
-from aioelectricitymaps.exceptions import ElectricityMapsError, InvalidToken
+from aioelectricitymaps import (
+    ElectricityMaps,
+    ElectricityMapsError,
+    ElectricityMapsInvalidTokenError,
+    ElectricityMapsNoDataError,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -146,8 +150,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await fetch_latest_carbon_intensity(self.hass, em, data)
-            except InvalidToken:
+            except ElectricityMapsInvalidTokenError:
                 errors["base"] = "invalid_auth"
+            except ElectricityMapsNoDataError:
+                errors["base"] = "no_data"
             except ElectricityMapsError:
                 errors["base"] = "unknown"
             else:

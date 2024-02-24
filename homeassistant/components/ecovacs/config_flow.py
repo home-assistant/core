@@ -75,7 +75,7 @@ async def _validate_input(
     rest_config = create_rest_config(
         aiohttp_client.async_get_clientsession(hass),
         device_id=device_id,
-        country=country,
+        alpha_2_country=country,
         override_rest_url=rest_url,
     )
 
@@ -266,6 +266,10 @@ class EcovacsConfigFlow(ConfigFlow, domain=DOMAIN):
         # If not we will inform the user about the mismatch.
         error = None
         placeholders = None
+
+        # Convert the country to upper case as ISO 3166-1 alpha-2 country codes are upper case
+        user_input[CONF_COUNTRY] = user_input[CONF_COUNTRY].upper()
+
         if len(user_input[CONF_COUNTRY]) != 2:
             error = "invalid_country_length"
             placeholders = {"countries_url": "https://www.iso.org/obp/ui/#search/code/"}

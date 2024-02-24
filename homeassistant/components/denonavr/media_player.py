@@ -21,6 +21,7 @@ from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
     AvrNetworkError,
+    AvrProcessingError,
     AvrTimoutError,
     DenonAvrError,
 )
@@ -201,6 +202,16 @@ def async_log_errors(
                     self._receiver.host,
                 )
                 self._attr_available = False
+        except AvrProcessingError:
+            available = True
+            if self.available:
+                _LOGGER.warning(
+                    (
+                        "Update of Denon AVR receiver at host %s not complete. "
+                        "Device is still available"
+                    ),
+                    self._receiver.host,
+                )
         except AvrForbiddenError:
             available = False
             if self.available:
@@ -274,8 +285,6 @@ class DenonDevice(MediaPlayerEntity):
             and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
 
-        self._telnet_was_healthy: bool | None = None
-
     async def _telnet_callback(self, zone: str, event: str, parameter: str) -> None:
         """Process a telnet command callback."""
         # There are multiple checks implemented which reduce unnecessary updates of the ha state machine
@@ -306,23 +315,12 @@ class DenonDevice(MediaPlayerEntity):
         """Get the latest status information from device."""
         receiver = self._receiver
 
-        # We can only skip the update if telnet was healthy after
-        # the last update and is still healthy now to ensure that
-        # we don't miss any state changes while telnet is down
-        # or reconnecting.
-        if (
-            telnet_is_healthy := receiver.telnet_connected and receiver.telnet_healthy
-        ) and self._telnet_was_healthy:
+        # We skip the update if telnet is healthy.
+        # When telnet recovers it automatically updates all properties.
+        if receiver.telnet_connected and receiver.telnet_healthy:
             return
 
-        # if async_update raises an exception, we don't want to skip the next update
-        # so we set _telnet_was_healthy to None here and only set it to the value
-        # before the update if the update was successful
-        self._telnet_was_healthy = None
-
         await receiver.async_update()
-
-        self._telnet_was_healthy = telnet_is_healthy
 
         if self._update_audyssey:
             await receiver.async_update_audyssey()
@@ -453,9 +451,6 @@ class DenonDevice(MediaPlayerEntity):
     @async_log_errors
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        # Ensure that the AVR is turned on, which is necessary for input
-        # switch to work.
-        await self.async_turn_on()
         await self._receiver.async_set_input_func(source)
 
     @async_log_errors

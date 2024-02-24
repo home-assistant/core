@@ -181,7 +181,7 @@ async def test_mqtt_await_ack_at_disconnect(
             data={"certificate": "auto", mqtt.CONF_BROKER: "test-broker"},
         )
         entry.add_to_hass(hass)
-        assert await mqtt.async_setup_entry(hass, entry)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         mqtt_client = mock_client.return_value
 
         # publish from MQTT client without awaiting
@@ -430,25 +430,27 @@ async def test_value_template_fails(
     entity.hass = hass
     tpl = template.Template("{{ value_json.some_var * 2 }}")
     val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass, entity=entity)
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError) as exc:
         val_tpl.async_render_with_possible_json_value('{"some_var": null }')
-    await hass.async_block_till_done()
+    assert str(exc.value) == "unsupported operand type(s) for *: 'NoneType' and 'int'"
     assert (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
         "rendering template for entity 'sensor.test', "
         "template: '{{ value_json.some_var * 2 }}'"
     ) in caplog.text
     caplog.clear()
-    with pytest.raises(TypeError):
+    with pytest.raises(TypeError) as exc:
         val_tpl.async_render_with_possible_json_value(
             '{"some_var": null }', default=100
         )
+    assert str(exc.value) == "unsupported operand type(s) for *: 'NoneType' and 'int'"
     assert (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
         "rendering template for entity 'sensor.test', "
         "template: '{{ value_json.some_var * 2 }}', default value: 100 and payload: "
         '{"some_var": null }'
     ) in caplog.text
+    await hass.async_block_till_done()
 
 
 async def test_service_call_without_topic_does_not_publish(
@@ -1398,6 +1400,8 @@ async def test_replaying_payload_same_topic(
         hass, "test/state", "online", qos=0, retain=True
     )  # Simulate a (retained) message played back
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
     assert len(calls_a) == 1
     mqtt_client_mock.subscribe.assert_called()
     calls_a = []
@@ -1495,6 +1499,7 @@ async def test_replaying_payload_after_resubscribing(
     unsub = await mqtt.async_subscribe(hass, "test/state", _callback_a)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_client_mock.subscribe.assert_called()
 
@@ -1635,6 +1640,7 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
     await mqtt.async_subscribe(hass, "test/state", record_calls, 1)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.called
 
@@ -1996,8 +2002,7 @@ async def test_initial_setup_logs_error(
     entry.add_to_hass(hass)
     mqtt_client_mock.connect.return_value = 1
     try:
-        assert await mqtt.async_setup_entry(hass, entry)
-        await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(entry.entry_id)
     except HomeAssistantError:
         assert True
     assert "Failed to connect to MQTT server:" in caplog.text
@@ -2052,8 +2057,7 @@ async def test_publish_error(
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect = lambda *args: 1
         mock_client().publish().rc = 1
-        assert await mqtt.async_setup_entry(hass, entry)
-        await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(entry.entry_id)
         with pytest.raises(HomeAssistantError):
             await mqtt.async_publish(
                 hass, "some-topic", b"test-payload", qos=0, retain=False, encoding=None
@@ -2232,8 +2236,7 @@ async def test_handle_mqtt_timeout_on_callback(
         # Make sure we are connected correctly
         mock_client.on_connect(mock_client, None, None, 0)
         # Set up the integration
-        assert await mqtt.async_setup_entry(hass, entry)
-        await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(entry.entry_id)
 
         # Now call we publish without simulating and ACK callback
         await mqtt.async_publish(hass, "no_callback/test-topic", "test-payload")
@@ -2252,7 +2255,7 @@ async def test_setup_raises_config_entry_not_ready_if_no_connect_broker(
 
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client().connect = MagicMock(side_effect=OSError("Connection error"))
-        assert await mqtt.async_setup_entry(hass, entry)
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert "Failed to connect to MQTT server due to exception:" in caplog.text
 
@@ -2480,7 +2483,7 @@ async def test_delayed_birth_message(
         await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
-        with pytest.raises(asyncio.TimeoutError):
+        with pytest.raises(TimeoutError):
             await asyncio.wait_for(birth.wait(), 0.2)
         assert not mqtt_client_mock.publish.called
         assert not birth.is_set()
@@ -2638,7 +2641,9 @@ async def test_default_entry_setting_are_applied(
 
     # Config entry data is incomplete but valid according the schema
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    entry.data = {"broker": "test-broker", "port": 1234}
+    hass.config_entries.async_update_entry(
+        entry, data={"broker": "test-broker", "port": 1234}
+    )
     await mqtt_mock_entry()
     await hass.async_block_till_done()
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from yolink.client_request import ClientRequest
 from yolink.const import ATTR_DEVICE_SPEAKER_HUB
@@ -30,12 +31,21 @@ class YoLinkNumberTypeConfigEntityDescription(NumberEntityDescription):
     """YoLink NumberEntity description."""
 
     exists_fn: Callable[[YoLinkDevice], bool]
+    should_update_entity: Callable
     value: Callable
 
 
 NUMBER_TYPE_CONF_SUPPORT_DEVICES = [ATTR_DEVICE_SPEAKER_HUB]
 
 SUPPORT_SET_VOLUME_DEVICES = [ATTR_DEVICE_SPEAKER_HUB]
+
+
+def get_volume_value(state: dict[str, Any]) -> int | None:
+    """Get volume option."""
+    if (options := state.get("options")) is not None:
+        return options.get("volume")
+    return None
+
 
 DEVICE_CONFIG_DESCRIPTIONS: tuple[YoLinkNumberTypeConfigEntityDescription, ...] = (
     YoLinkNumberTypeConfigEntityDescription(
@@ -48,7 +58,8 @@ DEVICE_CONFIG_DESCRIPTIONS: tuple[YoLinkNumberTypeConfigEntityDescription, ...] 
         native_unit_of_measurement=None,
         icon="mdi:volume-high",
         exists_fn=lambda device: device.device_type in SUPPORT_SET_VOLUME_DEVICES,
-        value=lambda state: state["options"]["volume"],
+        should_update_entity=lambda value: value is not None,
+        value=get_volume_value,
     ),
 )
 
@@ -98,7 +109,10 @@ class YoLinkNumberTypeConfigEntity(YoLinkEntity, NumberEntity):
     @callback
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
-        attr_val = self.entity_description.value(state)
+        if (
+            attr_val := self.entity_description.value(state)
+        ) is None and self.entity_description.should_update_entity(attr_val) is False:
+            return
         self._attr_native_value = attr_val
         self.async_write_ha_state()
 

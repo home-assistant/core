@@ -78,6 +78,23 @@
       "work_mode": {
         "default": "mdi:cog"
       }
+    },
+    "switch": {
+      "advanced_mode": {
+        "default": "mdi:tune"
+      },
+      "carpet_auto_fan_boost": {
+        "default": "mdi:fan-auto"
+      },
+      "clean_preference": {
+        "default": "mdi:broom"
+      },
+      "continuous_cleaning": {
+        "default": "mdi:refresh-auto"
+      },
+      "true_detect": {
+        "default": "mdi:laser-pointer"
+      }
     }
   }
 }

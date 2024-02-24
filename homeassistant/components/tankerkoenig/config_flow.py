@@ -57,8 +57,11 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _data: dict[str, Any] = {}
-    _stations: dict[str, str] = {}
+    def __init__(self) -> None:
+        """Init the FlowHandler."""
+        super().__init__()
+        self._data: dict[str, Any] = {}
+        self._stations: dict[str, str] = {}
 
     @staticmethod
     @callback
