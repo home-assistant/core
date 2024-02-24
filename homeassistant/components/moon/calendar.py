@@ -45,7 +45,7 @@ async def async_setup_entry(
     """Set up the Moon phase Calendar config entry."""
 
     obj_moon_phases = get_moon_phases(
-        dt_util.now(), (dt_util.now() + timedelta(days=30))
+        dt_util.now().date(), (dt_util.now().date() + timedelta(days=30))
     )
 
     async_add_entities(
@@ -111,15 +111,12 @@ class MoonCalendarEntity(CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        obj_moon_phases = get_moon_phases(start_date, end_date)
+        obj_moon_phases = get_moon_phases(start_date.date(), end_date.date())
 
         event_list: list[CalendarEvent] = []
 
         for moon_phase in obj_moon_phases:
-            if (
-                end_date is not None
-                and start_date.date() <= moon_phase["date"] <= end_date.date()
-            ):
+            if moon_phase is not None:
                 event = CalendarEvent(
                     summary=async_translate_calendar_summary(
                         self.hass,
