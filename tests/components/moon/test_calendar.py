@@ -1,4 +1,4 @@
-"""Tests for calendar platform of Holiday integration."""
+"""Tests for calendar platform of Moon integration."""
 from datetime import datetime
 
 from freezegun.api import FrozenDateTimeFactory
