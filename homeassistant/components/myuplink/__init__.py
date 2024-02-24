@@ -22,6 +22,7 @@ from .coordinator import MyUplinkDataCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
