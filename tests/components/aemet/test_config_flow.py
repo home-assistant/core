@@ -25,6 +25,14 @@ CONFIG = {
 }
 
 
+def _get_schema_default(schema, key_name):
+    """Iterate schema to find a key."""
+    for schema_key in schema:
+        if schema_key == key_name:
+            return schema_key.default()
+    raise KeyError(f"{key_name} not found in schema")
+
+
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test that the form is served with valid input."""
 
@@ -85,6 +93,10 @@ async def test_form_options(
 
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
+        assert (
+            _get_schema_default(result["data_schema"].schema, CONF_STATION_UPDATES)
+            is True
+        )
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_STATION_UPDATES: False}
