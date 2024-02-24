@@ -71,7 +71,6 @@ async def test_migrate_process_sensor_to_binary_sensors(
     hass: HomeAssistant,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
