@@ -87,7 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is not None:
-            # TOD: device duplication should be check by MAC address
+            # TOD: device duplication should be check by MAC address or get IP associated to a hostname in order to raise AbortFlow("already_configured") in case of duplication
             self._async_abort_entries_match(
                 {
                     CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
