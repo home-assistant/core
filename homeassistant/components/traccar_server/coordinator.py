@@ -236,7 +236,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
         device: DeviceModel,
         position: PositionModel,
     ) -> dict[str, Any] | None:
-        """Filter attributes."""
+        """Return a dictionary of custom attributes if not filtered by accuracy configuration."""
         attr = {}
         skip_accuracy_filter = False
 
