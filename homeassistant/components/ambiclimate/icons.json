@@ -1,0 +1,8 @@
+{
+  "entity": {},
+  "services": {
+    "set_comfort_mode": "mdi:abc",
+    "send_comfort_feedback": "mdi:abc",
+    "set_temperature_mode": "mdi:abc"
+  }
+}
