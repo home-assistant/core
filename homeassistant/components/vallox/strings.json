@@ -84,6 +84,11 @@
       "bypass_locked": {
         "name": "Bypass locked"
       }
+    },
+    "button": {
+      "reset_filter": {
+        "name": "Reset filter"
+      }
     }
   },
   "services": {
