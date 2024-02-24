@@ -305,6 +305,13 @@ class AugustData(AugustSubscriberMixin):
                     exc_info=err,
                 )
 
+    async def refresh_camera_by_id(self, device_id: str) -> None:
+        """Re-fetch doorbell/camera data from API."""
+        await self._async_update_device_detail(
+            self._doorbells_by_id[device_id],
+            self._api.async_get_doorbell_detail,
+        )
+
     async def _async_refresh_device_detail_by_id(self, device_id: str) -> None:
         if device_id in self._locks_by_id:
             if self.activity_stream and self.activity_stream.pubnub.connected:

@@ -29,5 +29,5 @@
   "import_executor": true,
   "iot_class": "cloud_push",
   "loggers": ["pubnub", "yalexs"],
-  "requirements": ["yalexs==1.11.4", "yalexs-ble==2.4.2"]
+  "requirements": ["yalexs==2.0.0", "yalexs-ble==2.4.2"]
 }
