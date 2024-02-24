@@ -159,7 +159,7 @@ async def async_setup_component(
         if setup_done_future := setup_done_futures.pop(domain, None):
             setup_done_future.set_result(result)
         return result
-    except BaseException as err:  # pylint: disable=broad-except
+    except BaseException as err:
         futures = [setup_future]
         if setup_done_future := setup_done_futures.pop(domain, None):
             futures.append(setup_done_future)
