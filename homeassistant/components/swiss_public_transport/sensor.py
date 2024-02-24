@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
@@ -56,9 +56,9 @@ class SwissPublicTransportSensorEntityDescription(SensorEntityDescription):
     """Describes swiss public transport sensor entity."""
 
     exists_fn: Callable[[DataConnection], bool]
-    value_fn: Callable[[DataConnection], datetime | None]
+    value_fn: Callable[[DataConnection], Any]
 
-    index: int
+    index: int | None = None
     has_legacy_attributes: bool
 
 
@@ -68,6 +68,7 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
             key=f"departure{i or ''}",
             translation_key=f"departure{i}",
             device_class=SensorDeviceClass.TIMESTAMP,
+            icon="mdi:bus-clock",
             has_legacy_attributes=i == 0,
             value_fn=lambda data_connection: data_connection["departure"],
             exists_fn=lambda data_connection: data_connection is not None,
@@ -75,6 +76,42 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
         )
         for i in range(SENSOR_CONNECTIONS_COUNT)
     ],
+    SwissPublicTransportSensorEntityDescription(
+        key="duration",
+        translation_key="duration",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        icon="mdi:timeline-clock",
+        has_legacy_attributes=False,
+        value_fn=lambda data_connection: data_connection["duration"],
+        exists_fn=lambda data_connection: data_connection is not None,
+    ),
+    SwissPublicTransportSensorEntityDescription(
+        key="transfers",
+        translation_key="transfers",
+        icon="mdi:transit-transfer",
+        has_legacy_attributes=False,
+        value_fn=lambda data_connection: data_connection["transfers"],
+        exists_fn=lambda data_connection: data_connection is not None,
+    ),
+    SwissPublicTransportSensorEntityDescription(
+        key="platform",
+        translation_key="platform",
+        icon="mdi:bus-stop-uncovered",
+        has_legacy_attributes=False,
+        value_fn=lambda data_connection: data_connection["platform"],
+        exists_fn=lambda data_connection: data_connection is not None,
+    ),
+    SwissPublicTransportSensorEntityDescription(
+        key="delay",
+        translation_key="delay",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:clock-plus",
+        has_legacy_attributes=False,
+        value_fn=lambda data_connection: data_connection["delay"],
+        exists_fn=lambda data_connection: data_connection is not None,
+    ),
 )
 
 
@@ -170,14 +207,14 @@ class SwissPublicTransportSensor(
     def enabled(self) -> bool:
         """Enable the sensor if data is available."""
         return self.entity_description.exists_fn(
-            self.coordinator.data[self.entity_description.index]
+            self.coordinator.data[self.entity_description.index or 0]
         )
 
     @property
     def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(
-            self.coordinator.data[self.entity_description.index]
+            self.coordinator.data[self.entity_description.index or 0]
         )
 
     async def async_added_to_hass(self) -> None:
@@ -196,10 +233,11 @@ class SwissPublicTransportSensor(
     @callback
     def _async_update_attrs(self) -> None:
         """Update the extra state attributes based on the coordinator data."""
-        self._attr_extra_state_attributes = {
-            key: value
-            for key, value in self.coordinator.data[
-                self.entity_description.index
-            ].items()
-            if key not in {"departure"}
-        }
+        if self.entity_description.has_legacy_attributes:
+            self._attr_extra_state_attributes = {
+                key: value
+                for key, value in self.coordinator.data[
+                    self.entity_description.index or 0
+                ].items()
+                if key not in {"departure"}
+            }
