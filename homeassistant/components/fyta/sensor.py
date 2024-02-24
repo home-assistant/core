@@ -138,12 +138,10 @@ async def async_setup_entry(
     )
 
     plant_entities.extend(
-        [
             FytaPlantSensor(coordinator, entry, sensor, plant_id)
             for plant_id in coordinator.fyta.plant_list
             for sensor in SENSORS
             if sensor.key in coordinator.data[plant_id]
-        ]
     )
 
     async_add_entities(plant_entities)
