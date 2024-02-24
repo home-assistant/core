@@ -114,7 +114,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
 
         return data
 
-    async def handle_sunscription_data(self, data: SubscriptionData) -> None:
+    async def handle_subscription_data(self, data: SubscriptionData) -> None:
         """Handle subscription data."""
         self.logger.debug("Received subscription data: %s", data)
         self._should_log_subscription_error = True
@@ -203,7 +203,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
 
         async def _subscriber():
             try:
-                await self.client.subscribe(self.handle_sunscription_data)
+                await self.client.subscribe(self.handle_subscription_data)
             except TraccarException as ex:
                 if self._should_log_subscription_error:
                     self._should_log_subscription_error = False
