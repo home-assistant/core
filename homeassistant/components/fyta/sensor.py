@@ -114,7 +114,7 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
     ),
 ]
 
-PLANT_NUMBER_SENSOR: FytaSensorEntityDescription = FytaSensorEntityDescription(
+PLANT_NUMBER_SENSOR = FytaSensorEntityDescription(
     key="plant_number",
     translation_key="plant_number",
     state_class=SensorStateClass.MEASUREMENT,
