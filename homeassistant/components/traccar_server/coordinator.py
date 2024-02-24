@@ -210,8 +210,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                     LOGGER.error("Error while subscribing to Traccar: %s", ex)
                 # Retry after 10 seconds
                 await asyncio.sleep(10)
-                await self.unsubscribe()
-                await self.subscribe()
+                await _subscriber()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.unsubscribe)
         self.config_entry.async_on_unload(self.unsubscribe)
