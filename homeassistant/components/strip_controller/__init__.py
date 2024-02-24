@@ -2,6 +2,8 @@
 
 Based on homeassistant/components/upnp
 Based on homeassistant/components/sun/sensor.py to associate entities to devices
+Based on homeassistant/components/wled/button.py to create a configuration like WLED "Restart"
+Based on homeassistant/components/wled/number.py to create a configuration like WLED "Intensity"
 
 """
 from __future__ import annotations
