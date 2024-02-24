@@ -1,5 +1,12 @@
 {
   "entity": {
-    "sensor": {}
+    "sensor": {
+      "pollutant_level": {
+        "default": "mdi:gauge"
+      },
+      "pollutant_label": {
+        "default": "mdi:chemical-weapon"
+      }
+    }
   }
 }
