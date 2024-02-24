@@ -186,7 +186,7 @@ STATS_BINARY_PERCENTAGE = {
 CONF_STATE_CHARACTERISTIC = "state_characteristic"
 CONF_SAMPLES_MAX_BUFFER_SIZE = "sampling_size"
 CONF_MAX_AGE = "max_age"
-CONF_PRESERVE_LAST_VAL = "preserve_last_val"
+CONF_KEEP_LAST_SAMPLE = "keep_last_sample"
 CONF_PRECISION = "precision"
 CONF_PERCENTILE = "percentile"
 
@@ -232,7 +232,7 @@ _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
             vol.Coerce(int), vol.Range(min=1)
         ),
         vol.Optional(CONF_MAX_AGE): cv.time_period,
-        vol.Optional(CONF_PRESERVE_LAST_VAL, default=False): cv.boolean,
+        vol.Optional(CONF_KEEP_LAST_SAMPLE, default=False): cv.boolean,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
         vol.Optional(CONF_PERCENTILE, default=50): vol.All(
             vol.Coerce(int), vol.Range(min=1, max=99)
@@ -265,7 +265,7 @@ async def async_setup_platform(
                 state_characteristic=config[CONF_STATE_CHARACTERISTIC],
                 samples_max_buffer_size=config.get(CONF_SAMPLES_MAX_BUFFER_SIZE),
                 samples_max_age=config.get(CONF_MAX_AGE),
-                samples_preserve_last_val=config[CONF_PRESERVE_LAST_VAL],
+                samples_keep_last=config[CONF_KEEP_LAST_SAMPLE],
                 precision=config[CONF_PRECISION],
                 percentile=config[CONF_PERCENTILE],
             )
@@ -285,7 +285,7 @@ class StatisticsSensor(SensorEntity):
         state_characteristic: str,
         samples_max_buffer_size: int | None,
         samples_max_age: timedelta | None,
-        samples_preserve_last_val: bool,
+        samples_keep_last: bool,
         precision: int,
         percentile: int,
     ) -> None:
@@ -301,7 +301,7 @@ class StatisticsSensor(SensorEntity):
         self._state_characteristic: str = state_characteristic
         self._samples_max_buffer_size: int | None = samples_max_buffer_size
         self._samples_max_age: timedelta | None = samples_max_age
-        self._samples_preserve_last_val: bool = samples_preserve_last_val
+        self.samples_keep_last: bool = samples_keep_last
         self._precision: int = precision
         self._percentile: int = percentile
         self._value: StateType | datetime = None
@@ -461,17 +461,17 @@ class StatisticsSensor(SensorEntity):
         now = dt_util.utcnow()
 
         _LOGGER.debug(
-            "%s: purging records older then %s(%s)(preserve_last_val: %s)",
+            "%s: purging records older then %s(%s)(keep_last_sample: %s)",
             self.entity_id,
             dt_util.as_local(now - max_age),
             self._samples_max_age,
-            self._samples_preserve_last_val,
+            self.samples_keep_last,
         )
 
         while self.ages and (now - self.ages[0]) > max_age:
-            if self._samples_preserve_last_val and len(self.ages) == 1:
+            if self.samples_keep_last and len(self.ages) == 1:
                 # Under normal circumstance this will not be executed, as a purge will not
-                # be scheduled for the last value if _samples_preserve_last_val is enabled.
+                # be scheduled for the last value if samples_keep_last is enabled.
                 # If this happens to be called outside normal scheduling logic or a
                 # source sensor update, this ensures the last value is preserved.
                 _LOGGER.debug(
@@ -494,7 +494,7 @@ class StatisticsSensor(SensorEntity):
     def _next_to_purge_timestamp(self) -> datetime | None:
         """Find the timestamp when the next purge would occur."""
         if self.ages and self._samples_max_age:
-            if self._samples_preserve_last_val and len(self.ages) == 1:
+            if self.samples_keep_last and len(self.ages) == 1:
                 # Preserve the most recent entry if it is the only value.
                 # Do not schedule another purge. When a new source
                 # value is inserted it will restart purge cycle.

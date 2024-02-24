@@ -467,7 +467,7 @@ async def test_age_limit_expiry(hass: HomeAssistant) -> None:
         assert state.attributes.get("age_coverage_ratio") is None
 
 
-async def test_age_limit_expiry_with_preserve_last_val(hass: HomeAssistant) -> None:
+async def test_age_limit_expiry_with_keep_last_sample(hass: HomeAssistant) -> None:
     """Test that values are removed with given max age."""
     now = dt_util.utcnow()
     current_time = datetime(now.year + 1, 8, 2, 12, 23, tzinfo=dt_util.UTC)
@@ -485,7 +485,7 @@ async def test_age_limit_expiry_with_preserve_last_val(hass: HomeAssistant) -> N
                         "state_characteristic": "mean",
                         "sampling_size": 20,
                         "max_age": {"minutes": 4},
-                        "preserve_last_val": True,
+                        "keep_last_sample": True,
                     },
                 ]
             },
