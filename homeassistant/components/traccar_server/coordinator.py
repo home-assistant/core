@@ -232,7 +232,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
         self,
         device: DeviceModel,
         position: PositionModel,
-    ) -> None | dict[str, Any]:
+    ) -> dict[str, Any] | None:
         """Filter attributes."""
         attr = {}
         skip_accuracy_filter = False
