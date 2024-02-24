@@ -33,7 +33,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
-async def test_form(hass: HomeAssistant) -> None:
+async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
