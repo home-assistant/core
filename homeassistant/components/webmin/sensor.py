@@ -84,11 +84,9 @@ async def async_setup_entry(
     """Set up Webmin sensors based on a config entry."""
     coordinator: WebminUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            WebminSensor(coordinator, description)
-            for description in SENSOR_TYPES
-            if description.key in coordinator.data
-        ]
+        WebminSensor(coordinator, description)
+        for description in SENSOR_TYPES
+        if description.key in coordinator.data
     )
 
 

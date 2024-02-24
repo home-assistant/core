@@ -54,13 +54,6 @@ async def validate_user_input(
     instance = WebminInstance(session=session)
     try:
         data = await instance.update()
-        ifaces = [iface for iface in data["active_interfaces"] if "ether" in iface]
-        ifaces.sort(key=lambda x: x["ether"])
-        mac_address = ifaces[0]["ether"]
-        await cast(SchemaConfigFlowHandler, handler.parent_handler).async_set_unique_id(
-            mac_address
-        )
-        return user_input
     except ClientResponseError as err:
         if err.status == HTTPStatus.UNAUTHORIZED:
             raise SchemaFlowError("invalid_auth") from err
@@ -73,6 +66,14 @@ async def validate_user_input(
         raise SchemaFlowError("cannot_connect") from err
     except Exception as err:
         raise SchemaFlowError("unknown") from err
+
+    ifaces = [iface for iface in data["active_interfaces"] if "ether" in iface]
+    ifaces.sort(key=lambda x: x["ether"])
+    mac_address = ifaces[0]["ether"]
+    await cast(SchemaConfigFlowHandler, handler.parent_handler).async_set_unique_id(
+        mac_address
+    )
+    return user_input
 
 
 CONFIG_SCHEMA = vol.Schema(
