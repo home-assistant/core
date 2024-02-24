@@ -49,6 +49,7 @@ from .const import (
 DEFAULT_OFF_DELAY = 2.0
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
+CONNECT_TIMEOUT = 30.0
 
 _Ts = TypeVarTuple("_Ts")
 
@@ -133,7 +134,14 @@ def _create_rfx(
         event_callback,
         modes=modes,
     )
-    rfx.connect(30)
+
+    try:
+        rfx.connect(CONNECT_TIMEOUT)
+    except TimeoutError as exc:
+        raise ConfigEntryNotReady("Timeout on connect") from exc
+    except rfxtrxmod.RFXtrxTransportError as exc:
+        raise ConfigEntryNotReady(str(exc)) from exc
+
     return rfx
 
 
@@ -260,12 +268,9 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
             _remove_device(device_id)
 
     # Initialize library
-    try:
-        rfx_object = await hass.async_add_executor_job(
-            _create_rfx, config, lambda event: hass.add_job(async_handle_receive, event)
-        )
-    except TimeoutError as exc:
-        raise ConfigEntryNotReady("Timeout on connect") from exc
+    rfx_object = await hass.async_add_executor_job(
+        _create_rfx, config, lambda event: hass.add_job(async_handle_receive, event)
+    )
 
     hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
 

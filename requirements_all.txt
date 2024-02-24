@@ -1642,7 +1642,7 @@ pyEmby==1.9
 pyHik==0.3.2
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.30.1
+pyRFXtrx==0.31.0
 
 # homeassistant.components.sony_projector
 pySDCP==1
