@@ -109,8 +109,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             last_step=False,
         )
 
-        # TOD hacer que desde acá se creen todas las secciones, cada step crea 1 seccion
-
     async def _get_number_of_led(self):
         # TOD: obtain number of led to set default section length with it (0 to number_of_led)
         return 300
