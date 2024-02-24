@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.translation import async_get_cached_translations
 from homeassistant.util import dt as dt_util
 
 from . import get_moon_phases
@@ -63,6 +64,7 @@ class MoonCalendarEntity(CalendarEntity):
     """Representation of a Moon Phase Calendar element."""
 
     _attr_has_entity_name = True
+    _attr_name = None
     _attr_translation_key = "moon_phases"
 
     def __init__(
@@ -86,7 +88,12 @@ class MoonCalendarEntity(CalendarEntity):
         summary: str
         for moon_phase in self._obj_moon_phases:
             if moon_phase["date"] >= dt_util.now().date():
-                summary = MOON_SUMMARY.get(moon_phase["phase"], moon_phase["phase"])
+                summary = async_translate_calendar_summary(
+                    self.hass,
+                    DOMAIN,
+                    self._attr_translation_key,
+                    moon_phase["phase"],
+                )
                 next_moon_phase = (
                     moon_phase["date"],
                     summary,
@@ -113,7 +120,12 @@ class MoonCalendarEntity(CalendarEntity):
                 end_date is not None
                 and start_date.date() <= moon_phase["date"] <= end_date.date()
             ):
-                summary = MOON_SUMMARY.get(moon_phase["phase"], moon_phase["phase"])
+                summary = async_translate_calendar_summary(
+                    self.hass,
+                    DOMAIN,
+                    self._attr_translation_key,
+                    moon_phase["phase"],
+                )
                 event = CalendarEvent(
                     summary=summary,
                     start=moon_phase["date"],
@@ -122,3 +134,19 @@ class MoonCalendarEntity(CalendarEntity):
                 event_list.append(event)
 
         return event_list
+
+
+def async_translate_calendar_summary(
+    hass: HomeAssistant,
+    platform: str,
+    translation_key: str | None,
+    summary: str,
+) -> str:
+    """Translate provided summary calendar using cached translations for currently selected language."""
+    language = hass.config.language
+    if translation_key is not None and summary is not None:
+        localize_key = f"component.{platform}.entity.calendar.{translation_key}.state_attributes.message.state.{summary}"
+        translations = async_get_cached_translations(hass, language, "entity")
+        if localize_key in translations:
+            return translations[localize_key]
+    return summary
