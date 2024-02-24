@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.aemet.const import DOMAIN
@@ -13,6 +14,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.freeze_time("2024-02-23T18:00:00+00:00")
 async def test_config_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
