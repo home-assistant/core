@@ -313,6 +313,67 @@ async def test_sampling_boundaries_given(hass: HomeAssistant) -> None:
     assert state is not None
 
 
+async def test_keep_last_value_given(hass: HomeAssistant) -> None:
+    """Test if either sampling_size or max_age are given."""
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": [
+                {
+                    "platform": "statistics",
+                    "name": "test_none",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "keep_last_sample": True,
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_sampling_size",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
+                    "keep_last_sample": True,
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_max_age",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "max_age": {"minutes": 4},
+                    "keep_last_sample": True,
+                },
+                {
+                    "platform": "statistics",
+                    "name": "test_both",
+                    "entity_id": "sensor.test_monitored",
+                    "state_characteristic": "mean",
+                    "sampling_size": 20,
+                    "max_age": {"minutes": 4},
+                    "keep_last_sample": True,
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        "sensor.test_monitored",
+        str(VALUES_NUMERIC[0]),
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_none")
+    assert state is None
+    state = hass.states.get("sensor.test_sampling_size")
+    assert state is None
+    state = hass.states.get("sensor.test_max_age")
+    assert state is not None
+    state = hass.states.get("sensor.test_both")
+    assert state is not None
+
+
 async def test_sampling_size_reduced(hass: HomeAssistant) -> None:
     """Test limited buffer size."""
     assert await async_setup_component(

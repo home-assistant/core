@@ -222,6 +222,16 @@ def valid_boundary_configuration(config: dict[str, Any]) -> dict[str, Any]:
     return config
 
 
+def valid_keep_last_sample(config: dict[str, Any]) -> dict[str, Any]:
+    """Validate that if keep_last_sample is set, max_age must also be set."""
+
+    if config.get(CONF_KEEP_LAST_SAMPLE) is True and config.get(CONF_MAX_AGE) is None:
+        raise vol.RequiredFieldInvalid(
+            "The sensor configuration must provide 'max_age' if 'keep_last_sample' is True"
+        )
+    return config
+
+
 _PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
@@ -243,6 +253,7 @@ PLATFORM_SCHEMA = vol.All(
     _PLATFORM_SCHEMA_BASE,
     valid_state_characteristic_configuration,
     valid_boundary_configuration,
+    valid_keep_last_sample,
 )
 
 
