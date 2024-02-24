@@ -93,6 +93,7 @@ class SystemMonitorDiskCoordinator(MonitorCoordinator[sdiskusage]):
         """Fetch data."""
         try:
             usage: sdiskusage = self._psutil.disk_usage(self._argument)
+            _LOGGER.debug("sdiskusage: %s", usage)
             return usage
         except PermissionError as err:
             raise UpdateFailed(f"No permission to access {self._argument}") from err
@@ -106,6 +107,7 @@ class SystemMonitorSwapCoordinator(MonitorCoordinator[sswap]):
     def update_data(self) -> sswap:
         """Fetch data."""
         swap: sswap = self._psutil.swap_memory()
+        _LOGGER.debug("sswap: %s", swap)
         return swap
 
 
@@ -115,6 +117,7 @@ class SystemMonitorMemoryCoordinator(MonitorCoordinator[VirtualMemory]):
     def update_data(self) -> VirtualMemory:
         """Fetch data."""
         memory = self._psutil.virtual_memory()
+        _LOGGER.debug("memory: %s", memory)
         return VirtualMemory(
             memory.total, memory.available, memory.percent, memory.used, memory.free
         )
@@ -126,6 +129,7 @@ class SystemMonitorNetIOCoordinator(MonitorCoordinator[dict[str, snetio]]):
     def update_data(self) -> dict[str, snetio]:
         """Fetch data."""
         io_counters: dict[str, snetio] = self._psutil.net_io_counters(pernic=True)
+        _LOGGER.debug("io_counters: %s", io_counters)
         return io_counters
 
 
@@ -135,6 +139,7 @@ class SystemMonitorNetAddrCoordinator(MonitorCoordinator[dict[str, list[snicaddr
     def update_data(self) -> dict[str, list[snicaddr]]:
         """Fetch data."""
         addresses: dict[str, list[snicaddr]] = self._psutil.net_if_addrs()
+        _LOGGER.debug("ip_addresses: %s", addresses)
         return addresses
 
 
@@ -166,6 +171,7 @@ class SystemMonitorProcessorCoordinator(MonitorCoordinator[float | None]):
         tid and compares it against the previous one.
         """
         cpu_percent: float = self._psutil.cpu_percent(interval=None)
+        _LOGGER.debug("cpu_percent: %s", cpu_percent)
         if cpu_percent > 0.0:
             return cpu_percent
         return None
@@ -176,7 +182,9 @@ class SystemMonitorBootTimeCoordinator(MonitorCoordinator[datetime]):
 
     def update_data(self) -> datetime:
         """Fetch data."""
-        return dt_util.utc_from_timestamp(self._psutil.boot_time())
+        boot_time = dt_util.utc_from_timestamp(self._psutil.boot_time())
+        _LOGGER.debug("boot time: %s", boot_time)
+        return boot_time
 
 
 class SystemMonitorProcessCoordinator(MonitorCoordinator[list[Process]]):
@@ -185,6 +193,7 @@ class SystemMonitorProcessCoordinator(MonitorCoordinator[list[Process]]):
     def update_data(self) -> list[Process]:
         """Fetch data."""
         processes = self._psutil.process_iter()
+        _LOGGER.debug("processes: %s", processes)
         return list(processes)
 
 
@@ -195,6 +204,7 @@ class SystemMonitorCPUtempCoordinator(MonitorCoordinator[dict[str, list[shwtemp]
         """Fetch data."""
         try:
             temps: dict[str, list[shwtemp]] = self._psutil.sensors_temperatures()
+            _LOGGER.debug("temps: %s", temps)
             return temps
         except AttributeError as err:
             raise UpdateFailed("OS does not provide temperature sensors") from err
