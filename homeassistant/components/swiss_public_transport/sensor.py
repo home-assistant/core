@@ -27,7 +27,14 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_DESTINATION, CONF_START, DEFAULT_NAME, DOMAIN, PLACEHOLDERS
+from .const import (
+    CONF_DESTINATION,
+    CONF_START,
+    DEFAULT_NAME,
+    DOMAIN,
+    PLACEHOLDERS,
+    SENSOR_CONNECTIONS_COUNT,
+)
 from .coordinator import DataConnection, SwissPublicTransportDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,7 +72,7 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
             exists_fn=lambda data_connection: data_connection is not None,
             index=i,
         )
-        for i in range(3)
+        for i in range(SENSOR_CONNECTIONS_COUNT)
     ],
 )
 
