@@ -32,7 +32,7 @@ def roku_exception_handler(
     """Decorate Roku calls to handle Roku exceptions."""
 
     def decorator(
-        func: _FuncType[_RokuEntityT, _P]
+        func: _FuncType[_RokuEntityT, _P],
     ) -> _ReturnFuncType[_RokuEntityT, _P]:
         @wraps(func)
         async def wrapper(

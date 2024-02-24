@@ -9,10 +9,10 @@ import logging
 from typing import Any, Generic, TypeVar
 
 from bleak import BleakError
+from bluetooth_data_tools import monotonic_time_coarse
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.util.dt import monotonic_time_coarse
 
 from . import BluetoothChange, BluetoothScanningMode, BluetoothServiceInfoBleak
 from .passive_update_coordinator import PassiveBluetoothDataUpdateCoordinator
@@ -168,7 +168,7 @@ class ActiveBluetoothDataUpdateCoordinator(
         # We use bluetooth events to trigger the poll so that we scan as soon as
         # possible after a device comes online or back in range, if a poll is due
         if self.needs_poll(service_info):
-            self.hass.async_create_task(self._debounced_poll.async_call())
+            self._debounced_poll.async_schedule_call()
 
     @callback
     def _async_stop(self) -> None:

@@ -16,19 +16,15 @@ class HomeWizardEntity(CoordinatorEntity[HWEnergyDeviceUpdateCoordinator]):
 
     def __init__(self, coordinator: HWEnergyDeviceUpdateCoordinator) -> None:
         """Initialize the HomeWizard entity."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            name=coordinator.entry.title,
             manufacturer="HomeWizard",
             sw_version=coordinator.data.device.firmware_version,
             model=coordinator.data.device.product_type,
         )
 
-        if coordinator.data.device.serial is not None:
+        if (serial_number := coordinator.data.device.serial) is not None:
             self._attr_device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, coordinator.data.device.serial)
+                (CONNECTION_NETWORK_MAC, serial_number)
             }
-
-            self._attr_device_info[ATTR_IDENTIFIERS] = {
-                (DOMAIN, coordinator.data.device.serial)
-            }
+            self._attr_device_info[ATTR_IDENTIFIERS] = {(DOMAIN, serial_number)}

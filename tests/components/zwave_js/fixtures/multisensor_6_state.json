@@ -62,7 +62,14 @@
       "index": 0,
       "installerIcon": 3079,
       "userIcon": 3079,
-      "commandClasses": []
+      "commandClasses": [
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": false
+        }
+      ]
     }
   ],
   "values": [

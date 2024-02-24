@@ -6,8 +6,10 @@ from typing import Any
 
 import sqlalchemy
 from sqlalchemy.engine import Result
-from sqlalchemy.exc import NoSuchColumnError, SQLAlchemyError
+from sqlalchemy.exc import MultipleResultsFound, NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
+import sqlparse
+from sqlparse.exceptions import SQLParseError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -80,11 +82,16 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 ).extend(OPTIONS_SCHEMA.schema)
 
 
-def validate_sql_select(value: str) -> str | None:
+def validate_sql_select(value: str) -> str:
     """Validate that value is a SQL SELECT query."""
-    if not value.lstrip().lower().startswith("select"):
-        raise ValueError("Incorrect Query")
-    return value
+    if len(query := sqlparse.parse(value.lstrip().lstrip(";"))) > 1:
+        raise MultipleResultsFound
+    if len(query) == 0 or (query_type := query[0].get_type()) == "UNKNOWN":
+        raise ValueError
+    if query_type != "SELECT":
+        _LOGGER.debug("The SQL query %s is of type %s", query, query_type)
+        raise SQLParseError
+    return str(query[0])
 
 
 def validate_query(db_url: str, query: str, column: str) -> bool:
@@ -148,7 +155,7 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             db_url_for_validation = None
 
             try:
-                validate_sql_select(query)
+                query = validate_sql_select(query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
@@ -156,9 +163,14 @@ class SQLConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
                 description_placeholders = {"column": column}
+            except MultipleResultsFound:
+                errors["query"] = "multiple_queries"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
-            except ValueError:
+            except SQLParseError:
+                errors["query"] = "query_no_read_only"
+            except ValueError as err:
+                _LOGGER.debug("Invalid query: %s", err)
                 errors["query"] = "query_invalid"
 
             options = {
@@ -209,7 +221,7 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             name = self.options.get(CONF_NAME, self.config_entry.title)
 
             try:
-                validate_sql_select(query)
+                query = validate_sql_select(query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
@@ -217,9 +229,14 @@ class SQLOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
             except NoSuchColumnError:
                 errors["column"] = "column_invalid"
                 description_placeholders = {"column": column}
+            except MultipleResultsFound:
+                errors["query"] = "multiple_queries"
             except SQLAlchemyError:
                 errors["db_url"] = "db_url_invalid"
-            except ValueError:
+            except SQLParseError:
+                errors["query"] = "query_no_read_only"
+            except ValueError as err:
+                _LOGGER.debug("Invalid query: %s", err)
                 errors["query"] = "query_invalid"
             else:
                 recorder_db = get_instance(self.hass).db_url

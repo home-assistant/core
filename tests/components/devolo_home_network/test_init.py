@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from devolo_plc_api.exceptions.device import DeviceNotFound
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.button import DOMAIN as BUTTON
@@ -15,6 +16,7 @@ from homeassistant.components.update import DOMAIN as UPDATE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import async_get_platforms
 
 from . import configure_integration
@@ -24,16 +26,22 @@ from .mock import MockDevice
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_device")
-async def test_setup_entry(hass: HomeAssistant) -> None:
+async def test_setup_entry(
+    hass: HomeAssistant,
+    mock_device: MockDevice,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test setup entry."""
     entry = configure_integration(hass)
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
-        return_value=True,
-    ), patch("homeassistant.core.EventBus.async_listen_once"):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.LOADED
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+    device_info = device_registry.async_get_device(
+        {(DOMAIN, mock_device.serial_number)}
+    )
+    assert device_info == snapshot
 
 
 @pytest.mark.usefixtures("mock_device")

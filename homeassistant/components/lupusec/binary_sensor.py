@@ -2,51 +2,62 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import partial
+import logging
 
 import lupupy.constants as CONST
 
-from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
+from . import DOMAIN
+from .entity import LupusecBaseSensor
 
 SCAN_INTERVAL = timedelta(seconds=2)
 
+_LOGGER = logging.getLogger(__name__)
 
-def setup_platform(
+
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up a sensor for an Lupusec device."""
-    if discovery_info is None:
-        return
+    """Set up a binary sensors for a Lupusec device."""
 
-    data = hass.data[LUPUSEC_DOMAIN]
+    data = hass.data[DOMAIN][config_entry.entry_id]
 
-    device_types = [CONST.TYPE_OPENING]
+    device_types = CONST.TYPE_OPENING + CONST.TYPE_SENSOR
 
-    devices = []
-    for device in data.lupusec.get_devices(generic_type=device_types):
-        devices.append(LupusecBinarySensor(data, device))
+    sensors = []
+    partial_func = partial(data.get_devices, generic_type=device_types)
+    devices = await hass.async_add_executor_job(partial_func)
+    for device in devices:
+        sensors.append(LupusecBinarySensor(device, config_entry.entry_id))
 
-    add_entities(devices)
+    async_add_entities(sensors)
 
 
-class LupusecBinarySensor(LupusecDevice, BinarySensorEntity):
+class LupusecBinarySensor(LupusecBaseSensor, BinarySensorEntity):
     """A binary sensor implementation for Lupusec device."""
 
+    _attr_name = None
+
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return self._device.is_on
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of the binary sensor."""
-        if self._device.generic_type not in DEVICE_CLASSES:
+        if self._device.generic_type not in (
+            item.value for item in BinarySensorDeviceClass
+        ):
             return None
         return self._device.generic_type

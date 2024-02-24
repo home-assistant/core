@@ -72,7 +72,7 @@ async def async_get_actions(
         }
 
         actions.append({**base_action, CONF_TYPE: "set_hvac_mode"})
-        if supported_features & const.SUPPORT_PRESET_MODE:
+        if supported_features & const.ClimateEntityFeature.PRESET_MODE:
             actions.append({**base_action, CONF_TYPE: "set_preset_mode"})
 
     return actions

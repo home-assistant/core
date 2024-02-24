@@ -457,7 +457,7 @@ async def test_node_metadata(
     assert msg["error"]["code"] == ERR_NOT_LOADED
 
 
-async def test_node_comments(
+async def test_node_alerts(
     hass: HomeAssistant,
     wallmote_central_scene,
     integration,
@@ -473,13 +473,14 @@ async def test_node_comments(
     await ws_client.send_json(
         {
             ID: 3,
-            TYPE: "zwave_js/node_comments",
+            TYPE: "zwave_js/node_alerts",
             DEVICE_ID: device.id,
         }
     )
     msg = await ws_client.receive_json()
     result = msg["result"]
     assert result["comments"] == [{"level": "info", "text": "test"}]
+    assert result["is_embedded"]
 
 
 async def test_add_node(
@@ -2793,6 +2794,7 @@ async def test_set_config_parameter(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+    assert msg["result"]["status"] == "queued"
 
     assert len(client.async_send_command_no_wait.call_args_list) == 1
     args = client.async_send_command_no_wait.call_args[0][0]
@@ -2825,6 +2827,7 @@ async def test_set_config_parameter(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+    assert msg["result"]["status"] == "queued"
 
     assert len(client.async_send_command_no_wait.call_args_list) == 1
     args = client.async_send_command_no_wait.call_args[0][0]
@@ -2856,6 +2859,7 @@ async def test_set_config_parameter(
 
     msg = await ws_client.receive_json()
     assert msg["success"]
+    assert msg["result"]["status"] == "queued"
 
     assert len(client.async_send_command_no_wait.call_args_list) == 1
     args = client.async_send_command_no_wait.call_args[0][0]
@@ -4653,11 +4657,20 @@ async def test_subscribe_node_statistics(
 
 
 async def test_hard_reset_controller(
-    hass: HomeAssistant, client, integration, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    client,
+    integration,
+    listen_block,
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that the hard_reset_controller WS API call works."""
     entry = integration
     ws_client = await hass_ws_client(hass)
+
+    dev_reg = dr.async_get(hass)
+    device = dev_reg.async_get_device(
+        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    )
 
     client.async_send_command.return_value = {}
     await ws_client.send_json(
@@ -4667,8 +4680,13 @@ async def test_hard_reset_controller(
             ENTRY_ID: entry.entry_id,
         }
     )
+
+    listen_block.set()
+    listen_block.clear()
+    await hass.async_block_till_done()
+
     msg = await ws_client.receive_json()
-    assert msg["result"] is None
+    assert msg["result"] == device.id
     assert msg["success"]
 
     assert len(client.async_send_command.call_args_list) == 1

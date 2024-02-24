@@ -34,9 +34,9 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
@@ -754,35 +754,6 @@ async def test_options_only_stream(
     )
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_CONTENT_TYPE] == "image/jpeg"
-
-
-# These below can be deleted after deprecation period is finished.
-@respx.mock
-async def test_import(hass: HomeAssistant, fakeimg_png) -> None:
-    """Test configuration.yaml import used during migration."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA_YAML
-    )
-    # duplicate import should be aborted
-    result2 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=TESTDATA_YAML
-    )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Yaml Defined Name"
-    await hass.async_block_till_done()
-
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(
-        HOMEASSISTANT_DOMAIN, "deprecated_yaml_generic"
-    )
-    assert issue.translation_key == "deprecated_yaml"
-
-    # Any name defined in yaml should end up as the entity id.
-    assert hass.states.get("camera.yaml_defined_name")
-    assert result2["type"] == FlowResultType.ABORT
-
-
-# These above can be deleted after deprecation period is finished.
 
 
 async def test_unload_entry(hass: HomeAssistant, fakeimg_png) -> None:

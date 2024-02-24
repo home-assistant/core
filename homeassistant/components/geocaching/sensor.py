@@ -18,14 +18,14 @@ from .const import DOMAIN
 from .coordinator import GeocachingDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class GeocachingRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[GeocachingStatus], str | int | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class GeocachingSensorEntityDescription(
     SensorEntityDescription, GeocachingRequiredKeysMixin
 ):

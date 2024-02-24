@@ -12,14 +12,14 @@ from .coordinator import RenaultDataUpdateCoordinator, T
 from .renault_vehicle import RenaultVehicleProxy
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultDataRequiredKeysMixin:
     """Mixin for required keys."""
 
     coordinator: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultDataEntityDescription(EntityDescription, RenaultDataRequiredKeysMixin):
     """Class describing Renault data entities."""
 

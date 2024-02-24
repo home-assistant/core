@@ -25,7 +25,7 @@ async def async_setup_entry(
     current: set[int] = set()
 
     @callback
-    def async_add_acmeda_sensors():
+    def async_add_acmeda_sensors() -> None:
         async_add_acmeda_entities(
             hass, AcmedaBattery, config_entry, current, async_add_entities
         )
@@ -48,4 +48,4 @@ class AcmedaBattery(AcmedaBase, SensorEntity):
     @property
     def native_value(self) -> float | int | None:
         """Return the state of the device."""
-        return self.roller.battery
+        return self.roller.battery  # type: ignore[no-any-return]

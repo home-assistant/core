@@ -4,14 +4,9 @@ import logging
 
 import pytest
 
-from homeassistant.components.knx.const import (
-    CONF_PAYLOAD,
-    CONF_PAYLOAD_LENGTH,
-    DOMAIN,
-    KNX_ADDRESS,
-)
+from homeassistant.components.knx.const import CONF_PAYLOAD_LENGTH, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ButtonSchema
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_NAME, CONF_PAYLOAD, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -130,9 +125,9 @@ async def test_button_invalid(
         assert len(caplog.messages) == 2
         record = caplog.records[0]
         assert record.levelname == "ERROR"
-        assert f"Invalid config for [knx]: {error_msg}" in record.message
+        assert f"Invalid config for 'knx': {error_msg}" in record.message
         record = caplog.records[1]
         assert record.levelname == "ERROR"
-        assert "Setup failed for knx: Invalid config." in record.message
+        assert "Setup failed for 'knx': Invalid config." in record.message
     assert hass.states.get("button.test") is None
     assert hass.data.get(DOMAIN) is None

@@ -18,6 +18,11 @@ from .const import (
     EVENT_QUERY_RECEIVED,
     EVENT_SYNC_RECEIVED,
 )
+from .data_redaction import (
+    async_redact_request_msg,
+    async_redact_response_msg,
+    async_redact_sync_msg,
+)
 from .error import SmartHomeError
 from .helpers import GoogleEntity, RequestData, async_get_entities
 
@@ -42,7 +47,11 @@ async def async_handle_message(hass, config, user_id, message, source):
     response = await _process(hass, data, message)
 
     if response and "errorCode" in response["payload"]:
-        _LOGGER.error("Error handling message %s: %s", message, response["payload"])
+        _LOGGER.error(
+            "Error handling message %s: %s",
+            async_redact_request_msg(message),
+            async_redact_response_msg(response["payload"]),
+        )
 
     return response
 
@@ -118,7 +127,7 @@ async def async_devices_sync(
     devices = await async_devices_sync_response(hass, data.config, agent_user_id)
     response = create_sync_response(agent_user_id, devices)
 
-    _LOGGER.debug("Syncing entities response: %s", response)
+    _LOGGER.debug("Syncing entities response: %s", async_redact_sync_msg(response))
 
     return response
 
@@ -246,7 +255,7 @@ async def handle_devices_execute(
         for entity_id, result in zip(executions, execute_results):
             if result is not None:
                 results[entity_id] = result
-    except asyncio.TimeoutError:
+    except TimeoutError:
         pass
 
     final_results = list(results.values())

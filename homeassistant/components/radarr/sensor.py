@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from copy import deepcopy
-from dataclasses import dataclass
+import dataclasses
 from datetime import UTC, datetime
 from typing import Any, Generic
 
@@ -39,21 +38,23 @@ def get_modified_description(
     description: RadarrSensorEntityDescription[T], mount: RootFolder
 ) -> tuple[RadarrSensorEntityDescription[T], str]:
     """Return modified description and folder name."""
-    desc = deepcopy(description)
     name = mount.path.rsplit("/")[-1].rsplit("\\")[-1]
-    desc.key = f"{description.key}_{name}"
-    desc.name = f"{description.name} {name}".capitalize()
+    desc = dataclasses.replace(
+        description,
+        key=f"{description.key}_{name}",
+        name=f"{description.name} {name}".capitalize(),
+    )
     return desc, name
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class RadarrSensorEntityDescriptionMixIn(Generic[T]):
     """Mixin for required keys."""
 
     value_fn: Callable[[T, str], str | int | datetime]
 
 
-@dataclass
+@dataclasses.dataclass(frozen=True)
 class RadarrSensorEntityDescription(
     SensorEntityDescription, RadarrSensorEntityDescriptionMixIn[T], Generic[T]
 ):

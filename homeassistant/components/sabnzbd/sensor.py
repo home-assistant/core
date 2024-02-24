@@ -20,14 +20,14 @@ from . import DOMAIN, SIGNAL_SABNZBD_UPDATED
 from .const import DEFAULT_NAME, KEY_API_DATA
 
 
-@dataclass
+@dataclass(frozen=True)
 class SabnzbdRequiredKeysMixin:
     """Mixin for required keys."""
 
     key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SabnzbdSensorEntityDescription(SensorEntityDescription, SabnzbdRequiredKeysMixin):
     """Describes Sabnzbd sensor entity."""
 

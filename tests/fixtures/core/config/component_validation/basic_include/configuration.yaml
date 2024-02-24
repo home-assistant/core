@@ -1,0 +1,13 @@
+iot_domain: !include integrations/iot_domain.yaml
+adr_0007_1: !include integrations/adr_0007_1.yaml
+adr_0007_2: !include integrations/adr_0007_2.yaml
+adr_0007_3: !include integrations/adr_0007_3.yaml
+adr_0007_4: !include integrations/adr_0007_4.yaml
+adr_0007_5: !include integrations/adr_0007_5.yaml
+custom_validator_ok_1: !include integrations/custom_validator_ok_1.yaml
+custom_validator_ok_2: !include integrations/custom_validator_ok_2.yaml
+custom_validator_bad_1: !include integrations/custom_validator_bad_1.yaml
+custom_validator_bad_2: !include integrations/custom_validator_bad_2.yaml
+"iot_domain ": !include integrations/iot_domain .yaml
+"": !include integrations/.yaml
+5: !include integrations/5.yaml

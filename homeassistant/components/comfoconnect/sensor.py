@@ -79,14 +79,14 @@ ATTR_SUPPLY_TEMPERATURE = "supply_temperature"
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class ComfoconnectRequiredKeysMixin:
     """Mixin for required keys."""
 
     sensor_id: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class ComfoconnectSensorEntityDescription(
     SensorEntityDescription, ComfoconnectRequiredKeysMixin
 ):

@@ -32,6 +32,7 @@ from aioairzone_cloud.const import (
 )
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -142,10 +143,9 @@ async def async_setup_entry(
 class AirzoneClimate(AirzoneEntity, ClimateEntity):
     """Define an Airzone Cloud climate."""
 
-    _attr_has_entity_name = True
     _attr_name = None
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -174,6 +174,12 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
 
 class AirzoneDeviceClimate(AirzoneClimate):
     """Define an Airzone Cloud Device base class."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
@@ -205,9 +211,18 @@ class AirzoneDeviceClimate(AirzoneClimate):
             }
         await self._async_update_params(params)
 
+        if ATTR_HVAC_MODE in kwargs:
+            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
+
 
 class AirzoneDeviceGroupClimate(AirzoneClimate):
     """Define an Airzone Cloud DeviceGroup base class."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
@@ -238,6 +253,9 @@ class AirzoneDeviceGroupClimate(AirzoneClimate):
                 API_UNITS: TemperatureUnit.CELSIUS.value,
             }
         await self._async_update_params(params)
+
+        if ATTR_HVAC_MODE in kwargs:
+            await self.async_set_hvac_mode(kwargs[ATTR_HVAC_MODE])
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
@@ -387,4 +405,6 @@ class AirzoneZoneClimate(AirzoneZoneEntity, AirzoneDeviceClimate):
         await self._async_update_params(params)
 
         if slave_raise:
-            raise HomeAssistantError(f"Mode can't be changed on slave zone {self.name}")
+            raise HomeAssistantError(
+                f"Mode can't be changed on slave zone {self.entity_id}"
+            )

@@ -11,10 +11,11 @@ from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SRPEnergyDataUpdateCoordinator
-from .const import DOMAIN
+from .const import DEVICE_CONFIG_URL, DEVICE_MANUFACTURER, DEVICE_MODEL, DOMAIN
 
 
 async def async_setup_entry(
@@ -37,18 +38,23 @@ class SrpEntity(CoordinatorEntity[SRPEnergyDataUpdateCoordinator], SensorEntity)
     _attr_translation_key = "energy_usage"
 
     def __init__(
-        self, coordinator: SRPEnergyDataUpdateCoordinator, config_entry: ConfigEntry
+        self,
+        coordinator: SRPEnergyDataUpdateCoordinator,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the SrpEntity class."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{config_entry.entry_id}_total_usage"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
-            name="SRP Energy",
+            name=f"SRP Energy {config_entry.title}",
             entry_type=DeviceEntryType.SERVICE,
+            manufacturer=DEVICE_MANUFACTURER,
+            model=DEVICE_MODEL,
+            configuration_url=DEVICE_CONFIG_URL,
         )
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> StateType:
         """Return the state of the device."""
         return self.coordinator.data

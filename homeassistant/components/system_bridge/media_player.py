@@ -4,10 +4,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Final
 
-from systembridgeconnector.models.media_control import (
-    Action as MediaAction,
-    MediaControl,
-)
+from systembridgemodels.media_control import Action as MediaAction, MediaControl
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -22,9 +19,9 @@ from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SystemBridgeEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
+from .entity import SystemBridgeEntity
 
 STATUS_CHANGING: Final[str] = "CHANGING"
 STATUS_STOPPED: Final[str] = "STOPPED"
@@ -121,10 +118,8 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
             features |= MediaPlayerEntityFeature.PREVIOUS_TRACK
         if data.media.is_next_enabled:
             features |= MediaPlayerEntityFeature.NEXT_TRACK
-        if data.media.is_pause_enabled:
-            features |= MediaPlayerEntityFeature.PAUSE
-        if data.media.is_play_enabled:
-            features |= MediaPlayerEntityFeature.PLAY
+        if data.media.is_pause_enabled or data.media.is_play_enabled:
+            features |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
         if data.media.is_stop_enabled:
             features |= MediaPlayerEntityFeature.STOP
 

@@ -101,6 +101,8 @@ KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
     ATTR_STATE: {CONTAINER_INFO},
 }
 
+REQUEST_REFRESH_DELAY = 10
+
 
 class SupervisorEntityModel(StrEnum):
     """Supervisor entity model."""

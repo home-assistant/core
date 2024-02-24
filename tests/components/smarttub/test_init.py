@@ -1,5 +1,4 @@
 """Test smarttub setup process."""
-import asyncio
 from unittest.mock import patch
 
 from smarttub import LoginFailed
@@ -26,7 +25,7 @@ async def test_setup_entry_not_ready(
     setup_component, hass: HomeAssistant, config_entry, smarttub_api
 ) -> None:
     """Test setup when the entry is not ready."""
-    smarttub_api.login.side_effect = asyncio.TimeoutError
+    smarttub_api.login.side_effect = TimeoutError
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -42,6 +41,7 @@ async def test_setup_auth_failed(
     config_entry.add_to_hass(hass)
     with patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
         mock_flow_init.assert_called_with(
             DOMAIN,

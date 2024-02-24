@@ -195,6 +195,11 @@ def build_plm_schema(ports: dict[str, str], device=vol.UNDEFINED):
     return vol.Schema({vol.Required(CONF_DEVICE, default=device): vol.In(ports)})
 
 
+def build_plm_manual_schema(device=vol.UNDEFINED):
+    """Build the manual PLM schema for config flow."""
+    return vol.Schema({vol.Required(CONF_DEVICE, default=device): str})
+
+
 def build_hub_schema(
     hub_version,
     host=vol.UNDEFINED,

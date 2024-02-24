@@ -1,6 +1,8 @@
 """The Nibe Heat Pump sensors."""
 from __future__ import annotations
 
+from datetime import date
+
 from nibe.coil import Coil
 from nibe.coil_groups import WATER_HEATER_COILGROUPS, WaterHeaterCoilGroup
 from nibe.exceptions import CoilNotFoundException
@@ -17,8 +19,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, LOGGER, Coordinator
-from .const import VALUES_TEMPORARY_LUX_INACTIVE, VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE
+from .const import (
+    DOMAIN,
+    LOGGER,
+    VALUES_TEMPORARY_LUX_INACTIVE,
+    VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE,
+)
+from .coordinator import Coordinator
 
 
 async def async_setup_entry(
@@ -127,7 +134,7 @@ class WaterHeater(CoordinatorEntity[Coordinator], WaterHeaterEntity):
                 return None
             return self.coordinator.get_coil_float(coil)
 
-        def _get_value(coil: Coil | None) -> int | str | float | None:
+        def _get_value(coil: Coil | None) -> int | str | float | date | None:
             if coil is None:
                 return None
             return self.coordinator.get_coil_value(coil)

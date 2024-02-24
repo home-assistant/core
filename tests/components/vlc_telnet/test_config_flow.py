@@ -124,7 +124,7 @@ async def test_errors(
         "homeassistant.components.vlc_telnet.config_flow.Client.login",
         side_effect=login_side_effect,
     ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect"
+        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect",
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -219,7 +219,7 @@ async def test_reauth_errors(
         "homeassistant.components.vlc_telnet.config_flow.Client.login",
         side_effect=login_side_effect,
     ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect"
+        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect",
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -316,7 +316,7 @@ async def test_hassio_errors(
         "homeassistant.components.vlc_telnet.config_flow.Client.login",
         side_effect=login_side_effect,
     ), patch(
-        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect"
+        "homeassistant.components.vlc_telnet.config_flow.Client.disconnect",
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

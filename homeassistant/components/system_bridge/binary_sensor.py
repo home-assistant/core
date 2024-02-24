@@ -14,18 +14,14 @@ from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SystemBridgeEntity
 from .const import DOMAIN
 from .coordinator import SystemBridgeDataUpdateCoordinator
+from .entity import SystemBridgeEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing System Bridge binary sensor entities."""
-
-    # SystemBridgeBinarySensor does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
 
     value: Callable = round
 

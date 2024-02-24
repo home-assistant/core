@@ -41,6 +41,7 @@
       'disabled_by': None,
       'domain': 'axis',
       'entry_id': '676abe5b73621446e6550a2e86ffe3dd',
+      'minor_version': 1,
       'options': dict({
         'events': True,
       }),

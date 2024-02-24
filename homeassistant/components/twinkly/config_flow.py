@@ -1,7 +1,6 @@
 """Config flow to configure the Twinkly integration."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -11,10 +10,10 @@ from voluptuous import Required, Schema
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
-from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_ID, CONF_NAME, DEV_ID, DEV_MODEL, DEV_NAME, DOMAIN
+from .const import DEV_ID, DEV_MODEL, DEV_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class TwinklyConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device_info = await Twinkly(
                     host, async_get_clientsession(self.hass)
                 ).get_details()
-            except (asyncio.TimeoutError, ClientError):
+            except (TimeoutError, ClientError):
                 errors[CONF_HOST] = "cannot_connect"
             else:
                 await self.async_set_unique_id(device_info[DEV_ID])

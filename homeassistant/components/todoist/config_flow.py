@@ -16,7 +16,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SETTINGS_URL = "https://todoist.com/app/settings/integrations"
+SETTINGS_URL = "https://app.todoist.com/app/settings/integrations/developer"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -44,7 +44,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await api.get_tasks()
             except HTTPError as err:
                 if err.response.status_code == HTTPStatus.UNAUTHORIZED:
-                    errors["base"] = "invalid_access_token"
+                    errors["base"] = "invalid_api_key"
                 else:
                     errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except

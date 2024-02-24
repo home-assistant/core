@@ -72,7 +72,7 @@ async def test_lights(
     assert light_4.attributes["friendly_name"] == "Hue on/off light"
     assert light_4.state == "off"
     assert light_4.attributes["mode"] == "normal"
-    assert light_4.attributes["supported_color_modes"] == []
+    assert light_4.attributes["supported_color_modes"] == [ColorMode.ONOFF]
 
 
 async def test_light_turn_on_service(
@@ -217,6 +217,7 @@ async def test_light_turn_off_service(
 
     # verify the light is on before we start
     assert hass.states.get(test_light_id).state == "on"
+    brightness_pct = hass.states.get(test_light_id).attributes["brightness"] / 255 * 100
 
     # now call the HA turn_off service
     await hass.services.async_call(
@@ -256,6 +257,23 @@ async def test_light_turn_off_service(
     assert mock_bridge_v2.mock_requests[1]["json"]["on"]["on"] is False
     assert mock_bridge_v2.mock_requests[1]["json"]["dynamics"]["duration"] == 200
 
+    # test turn_on resets brightness
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 3
+    assert mock_bridge_v2.mock_requests[2]["json"]["on"]["on"] is True
+    assert (
+        round(
+            mock_bridge_v2.mock_requests[2]["json"]["dimming"]["brightness"]
+            - brightness_pct
+        )
+        == 0
+    )
+
     # test again with sending long flash
     await hass.services.async_call(
         "light",
@@ -263,8 +281,8 @@ async def test_light_turn_off_service(
         {"entity_id": test_light_id, "flash": "long"},
         blocking=True,
     )
-    assert len(mock_bridge_v2.mock_requests) == 3
-    assert mock_bridge_v2.mock_requests[2]["json"]["alert"]["action"] == "breathe"
+    assert len(mock_bridge_v2.mock_requests) == 4
+    assert mock_bridge_v2.mock_requests[3]["json"]["alert"]["action"] == "breathe"
 
     # test again with sending short flash
     await hass.services.async_call(
@@ -273,8 +291,8 @@ async def test_light_turn_off_service(
         {"entity_id": test_light_id, "flash": "short"},
         blocking=True,
     )
-    assert len(mock_bridge_v2.mock_requests) == 4
-    assert mock_bridge_v2.mock_requests[3]["json"]["identify"]["action"] == "identify"
+    assert len(mock_bridge_v2.mock_requests) == 5
+    assert mock_bridge_v2.mock_requests[4]["json"]["identify"]["action"] == "identify"
 
 
 async def test_light_added(hass: HomeAssistant, mock_bridge_v2) -> None:
@@ -332,7 +350,10 @@ async def test_light_availability(
 
 
 async def test_grouped_lights(
-    hass: HomeAssistant, mock_bridge_v2, v2_resources_test_data
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2,
+    v2_resources_test_data,
 ) -> None:
     """Test if all v2 grouped lights get created with correct features."""
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
@@ -341,8 +362,7 @@ async def test_grouped_lights(
 
     # test if entities for hue groups are created and enabled by default
     for entity_id in ("light.test_zone", "light.test_room"):
-        ent_reg = er.async_get(hass)
-        entity_entry = ent_reg.async_get(entity_id)
+        entity_entry = entity_registry.async_get(entity_id)
 
         assert entity_entry
         # scene entities should have be assigned to the room/zone device/service
@@ -480,6 +500,17 @@ async def test_grouped_lights(
     assert len(mock_bridge_v2.mock_requests) == 1
     assert mock_bridge_v2.mock_requests[0]["json"]["on"]["on"] is False
     assert mock_bridge_v2.mock_requests[0]["json"]["dynamics"]["duration"] == 200
+
+    # Test turn_on resets brightness
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 2
+    assert mock_bridge_v2.mock_requests[1]["json"]["on"]["on"] is True
+    assert mock_bridge_v2.mock_requests[1]["json"]["dimming"]["brightness"] == 100
 
     # Test sending short flash effect to a grouped light
     mock_bridge_v2.mock_requests.clear()

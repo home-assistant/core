@@ -1,5 +1,4 @@
 """Tests for iAqualink integration."""
-import asyncio
 import logging
 from unittest.mock import AsyncMock, patch
 
@@ -56,7 +55,7 @@ async def test_setup_login_timeout(hass: HomeAssistant, config_entry) -> None:
 
     with patch(
         "homeassistant.components.iaqualink.AqualinkClient.login",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -114,7 +113,8 @@ async def test_setup_devices_exception(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
     ), patch.object(
-        system, "get_devices"
+        system,
+        "get_devices",
     ) as mock_get_devices:
         mock_get_devices.side_effect = AqualinkServiceException
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -142,7 +142,8 @@ async def test_setup_all_good_no_recognized_devices(
         "homeassistant.components.iaqualink.AqualinkClient.get_systems",
         return_value=systems,
     ), patch.object(
-        system, "get_devices"
+        system,
+        "get_devices",
     ) as mock_get_devices:
         mock_get_devices.return_value = devices
         await hass.config_entries.async_setup(config_entry.entry_id)

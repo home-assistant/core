@@ -19,7 +19,7 @@ from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
 def handle_error(
-    func: Callable[[Command | list[Command]], Any]
+    func: Callable[[Command | list[Command]], Any],
 ) -> Callable[[Command | list[Command]], Coroutine[Any, Any, None]]:
     """Handle tradfri api call error."""
 

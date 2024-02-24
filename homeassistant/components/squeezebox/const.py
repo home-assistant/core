@@ -6,3 +6,4 @@ PLAYER_DISCOVERY_UNSUB = "player_discovery_unsub"
 DISCOVERY_TASK = "discovery_task"
 DEFAULT_PORT = 9000
 SQUEEZEBOX_SOURCE_STRINGS = ("source:", "wavin:", "spotify:")
+CONF_HTTPS = "https"

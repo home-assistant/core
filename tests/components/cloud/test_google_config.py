@@ -42,7 +42,7 @@ def mock_conf(hass, cloud_prefs):
         GACTIONS_SCHEMA({}),
         "mock-user-id",
         cloud_prefs,
-        Mock(claims={"cognito:username": "abcdefghjkl"}),
+        Mock(username="abcdefghjkl"),
     )
 
 
@@ -104,9 +104,11 @@ async def test_sync_entities(mock_conf, hass: HomeAssistant, cloud_prefs) -> Non
     assert await async_setup_component(hass, "homeassistant", {})
 
     await mock_conf.async_initialize()
+    assert len(mock_conf.async_get_agent_users()) == 0
+
     await mock_conf.async_connect_agent_user("mock-user-id")
 
-    assert len(mock_conf._store.agent_user_ids) == 1
+    assert len(mock_conf.async_get_agent_users()) == 1
 
     with patch(
         "hass_nabucasa.cloud_api.async_google_actions_request_sync",
@@ -115,16 +117,15 @@ async def test_sync_entities(mock_conf, hass: HomeAssistant, cloud_prefs) -> Non
         assert (
             await mock_conf.async_sync_entities("mock-user-id") == HTTPStatus.NOT_FOUND
         )
-        assert len(mock_conf._store.agent_user_ids) == 0
+        assert len(mock_conf.async_get_agent_users()) == 0
         assert len(mock_request_sync.mock_calls) == 1
 
 
 async def test_google_update_expose_trigger_sync(
-    hass: HomeAssistant, cloud_prefs
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, cloud_prefs
 ) -> None:
     """Test Google config responds to updating exposed entities."""
     assert await async_setup_component(hass, "homeassistant", {})
-    entity_registry = er.async_get(hass)
 
     # Enable exposing new entities to Google
     expose_new(hass, True)
@@ -145,7 +146,7 @@ async def test_google_update_expose_trigger_sync(
             GACTIONS_SCHEMA({}),
             "mock-user-id",
             cloud_prefs,
-            Mock(claims={"cognito:username": "abcdefghjkl"}),
+            Mock(username="abcdefghjkl"),
         )
         await config.async_initialize()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -176,10 +177,12 @@ async def test_google_update_expose_trigger_sync(
 
 
 async def test_google_entity_registry_sync(
-    hass: HomeAssistant, mock_cloud_login, cloud_prefs
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_cloud_login,
+    cloud_prefs,
 ) -> None:
     """Test Google config responds to entity registry."""
-    entity_registry = er.async_get(hass)
 
     # Enable exposing new entities to Google
     expose_new(hass, True)
@@ -235,7 +238,7 @@ async def test_google_entity_registry_sync(
         assert len(mock_sync.mock_calls) == 3
 
         # When hass is not started yet we wait till started
-        hass.state = CoreState.starting
+        hass.set_state(CoreState.starting)
         hass.bus.async_fire(
             er.EVENT_ENTITY_REGISTRY_UPDATED,
             {"action": "create", "entity_id": entry.entity_id},
@@ -246,24 +249,31 @@ async def test_google_entity_registry_sync(
 
 
 async def test_google_device_registry_sync(
-    hass: HomeAssistant, mock_cloud_login, cloud_prefs
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_cloud_login,
+    cloud_prefs,
 ) -> None:
     """Test Google config responds to device registry."""
     config = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
     )
-    ent_reg = er.async_get(hass)
 
     # Enable exposing new entities to Google
     expose_new(hass, True)
 
-    entity_entry = ent_reg.async_get_or_create("light", "hue", "1234", device_id="1234")
-    entity_entry = ent_reg.async_update_entity(entity_entry.entity_id, area_id="ABCD")
+    entity_entry = entity_registry.async_get_or_create(
+        "light", "hue", "1234", device_id="1234"
+    )
+    entity_entry = entity_registry.async_update_entity(
+        entity_entry.entity_id, area_id="ABCD"
+    )
 
     with patch.object(config, "async_sync_entities_all"):
         await config.async_initialize()
         await hass.async_block_till_done()
-    await config.async_connect_agent_user("mock-user-id")
+        await config.async_connect_agent_user("mock-user-id")
+        await hass.async_block_till_done()
 
     with patch.object(config, "async_schedule_google_sync_all") as mock_sync:
         # Device registry updated with non-relevant changes
@@ -293,7 +303,7 @@ async def test_google_device_registry_sync(
 
         assert len(mock_sync.mock_calls) == 0
 
-        ent_reg.async_update_entity(entity_entry.entity_id, area_id=None)
+        entity_registry.async_update_entity(entity_entry.entity_id, area_id=None)
 
         # Device registry updated with relevant changes
         # but entity has area ID so not impacted
@@ -319,7 +329,6 @@ async def test_sync_google_when_started(
     )
     with patch.object(config, "async_sync_entities_all") as mock_sync:
         await config.async_initialize()
-        await config.async_connect_agent_user("mock-user-id")
         await hass.async_block_till_done()
         assert len(mock_sync.mock_calls) == 1
 
@@ -331,10 +340,9 @@ async def test_sync_google_on_home_assistant_start(
     config = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data["cloud"]
     )
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     with patch.object(config, "async_sync_entities_all") as mock_sync:
         await config.async_initialize()
-        await config.async_connect_agent_user("mock-user-id")
         assert len(mock_sync.mock_calls) == 0
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -434,8 +442,10 @@ def test_enabled_requires_valid_sub(
     assert not config.enabled
 
 
-async def test_setup_integration(hass: HomeAssistant, mock_conf, cloud_prefs) -> None:
-    """Test that we set up the integration if used."""
+async def test_setup_google_assistant(
+    hass: HomeAssistant, mock_conf, cloud_prefs
+) -> None:
+    """Test that we set up the google_assistant integration if enabled in cloud."""
     assert await async_setup_component(hass, "homeassistant", {})
     mock_conf._cloud.subscription_expired = False
 
@@ -466,8 +476,10 @@ async def test_google_handle_logout(
         "homeassistant.components.google_assistant.report_state.async_enable_report_state",
     ) as mock_enable:
         gconf.async_enable_report_state()
+        await hass.async_block_till_done()
 
     assert len(mock_enable.mock_calls) == 1
+    assert len(gconf._on_deinitialize) == 6
 
     # This will trigger a prefs update when we logout.
     await cloud_prefs.get_cloud_user()
@@ -477,8 +489,13 @@ async def test_google_handle_logout(
         "async_check_token",
         side_effect=AssertionError("Should not be called"),
     ):
+        # Fake logging out; CloudClient.logout_cleanups sets username to None
+        # and deinitializes the Google config.
         await cloud_prefs.async_set_username(None)
+        gconf.async_deinitialize()
         await hass.async_block_till_done()
+        # Check listeners are removed:
+        assert not gconf._on_deinitialize
 
     assert len(mock_enable.return_value.mock_calls) == 1
 
@@ -491,7 +508,7 @@ async def test_google_config_migrate_expose_entity_prefs(
     google_settings_version: int,
 ) -> None:
     """Test migrating Google entity config."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set("light.state_only", "on")
@@ -604,7 +621,7 @@ async def test_google_config_migrate_expose_entity_prefs_v2_no_exposed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config from v2 to v3 when no entity is exposed."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set("light.state_only", "on")
@@ -651,7 +668,7 @@ async def test_google_config_migrate_expose_entity_prefs_v2_exposed(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config from v2 to v3 when an entity is exposed."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     hass.states.async_set("light.state_only", "on")
@@ -698,7 +715,7 @@ async def test_google_config_migrate_expose_entity_prefs_default_none(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
     entity_default = entity_registry.async_get_or_create(
@@ -735,7 +752,7 @@ async def test_google_config_migrate_expose_entity_prefs_default(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating Google entity config."""
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
 
     assert await async_setup_component(hass, "homeassistant", {})
 

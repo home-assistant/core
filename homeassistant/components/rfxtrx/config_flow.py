@@ -372,7 +372,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             entity_registry.async_remove(entry.entity_id)
 
         # Wait for entities to finish cleanup
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with asyncio.timeout(10):
                 await wait_for_entities.wait()
         remove_track_state_changes()
@@ -407,7 +407,7 @@ class OptionsFlow(config_entries.OptionsFlow):
             )
 
         # Wait for entities to finish renaming
-        with suppress(asyncio.TimeoutError):
+        with suppress(TimeoutError):
             async with asyncio.timeout(10):
                 await wait_for_entities.wait()
         remove_track_state_changes()
@@ -566,10 +566,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
         list_of_ports = {}
         for port in ports:
-            list_of_ports[
-                port.device
-            ] = f"{port}, s/n: {port.serial_number or 'n/a'}" + (
-                f" - {port.manufacturer}" if port.manufacturer else ""
+            list_of_ports[port.device] = (
+                f"{port}, s/n: {port.serial_number or 'n/a'}"
+                + (f" - {port.manufacturer}" if port.manufacturer else "")
             )
         list_of_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
 
@@ -644,7 +643,7 @@ def _test_transport(host: str | None, port: int | None, device: str | None) -> b
     else:
         try:
             conn = rfxtrxmod.PySerialTransport(device)
-        except serial.serialutil.SerialException:
+        except serial.SerialException:
             return False
 
         if conn.serial is None:

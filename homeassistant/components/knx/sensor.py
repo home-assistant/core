@@ -40,7 +40,7 @@ from .schema import SensorSchema
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-@dataclass
+@dataclass(frozen=True)
 class KNXSystemEntityDescription(SensorEntityDescription):
     """Class describing KNX system sensor entities."""
 

@@ -1,18 +1,21 @@
 """Config flow for Wyoming integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 from urllib.parse import urlparse
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.components import hassio, zeroconf
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 from .data import WyomingService
+
+_LOGGER = logging.getLogger()
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -27,7 +30,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _hassio_discovery: HassioServiceInfo
+    _hassio_discovery: hassio.HassioServiceInfo
+    _service: WyomingService | None = None
+    _name: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -50,27 +55,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors={"base": "cannot_connect"},
             )
 
-        # ASR = automated speech recognition (speech-to-text)
-        asr_installed = [asr for asr in service.info.asr if asr.installed]
+        if name := service.get_name():
+            return self.async_create_entry(title=name, data=user_input)
 
-        # TTS = text-to-speech
-        tts_installed = [tts for tts in service.info.tts if tts.installed]
+        return self.async_abort(reason="no_services")
 
-        # wake-word-detection
-        wake_installed = [wake for wake in service.info.wake if wake.installed]
-
-        if asr_installed:
-            name = asr_installed[0].name
-        elif tts_installed:
-            name = tts_installed[0].name
-        elif wake_installed:
-            name = wake_installed[0].name
-        else:
-            return self.async_abort(reason="no_services")
-
-        return self.async_create_entry(title=name, data=user_input)
-
-    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
+    async def async_step_hassio(
+        self, discovery_info: hassio.HassioServiceInfo
+    ) -> FlowResult:
         """Handle Supervisor add-on discovery."""
         await self.async_set_unique_id(discovery_info.uuid)
         self._abort_if_unique_id_configured()
@@ -93,11 +85,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             uri = urlparse(self._hassio_discovery.config["uri"])
             if service := await WyomingService.create(uri.hostname, uri.port):
-                if (
-                    not any(asr for asr in service.info.asr if asr.installed)
-                    and not any(tts for tts in service.info.tts if tts.installed)
-                    and not any(wake for wake in service.info.wake if wake.installed)
-                ):
+                if not service.has_services():
                     return self.async_abort(reason="no_services")
 
                 return self.async_create_entry(
@@ -111,4 +99,53 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="hassio_confirm",
             description_placeholders={"addon": self._hassio_discovery.name},
             errors=errors,
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle zeroconf discovery."""
+        _LOGGER.debug("Discovery info: %s", discovery_info)
+        if discovery_info.port is None:
+            return self.async_abort(reason="no_port")
+
+        service = await WyomingService.create(discovery_info.host, discovery_info.port)
+        if (service is None) or (not (name := service.get_name())):
+            # No supported services
+            return self.async_abort(reason="no_services")
+
+        self._name = name
+
+        # Use zeroconf name + service name as unique id.
+        # The satellite will use its own MAC as the zeroconf name by default.
+        unique_id = f"{discovery_info.name}_{self._name}"
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
+
+        self.context[CONF_NAME] = self._name
+        self.context["title_placeholders"] = {"name": self._name}
+
+        self._service = service
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow initiated by zeroconf."""
+        assert self._service is not None
+        assert self._name is not None
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="zeroconf_confirm",
+                description_placeholders={"name": self._name},
+                errors={},
+            )
+
+        return self.async_create_entry(
+            title=self._name,
+            data={
+                CONF_HOST: self._service.host,
+                CONF_PORT: self._service.port,
+            },
         )

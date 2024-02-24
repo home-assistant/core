@@ -3,6 +3,7 @@ import datetime
 from unittest.mock import ANY, MagicMock, call, patch
 
 from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeed
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -90,7 +91,7 @@ def _generate_mock_feed_entry(
     return feed_entry
 
 
-async def test_setup(hass: HomeAssistant) -> None:
+async def test_setup(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test the general setup of the platform."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -114,11 +115,10 @@ async def test_setup(hass: HomeAssistant) -> None:
     mock_entry_3 = _generate_mock_feed_entry("3456", "Title 3", 25.5, (-31.2, 150.2))
     mock_entry_4 = _generate_mock_feed_entry("4567", "Title 4", 12.5, (-31.3, 150.3))
 
-    # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "aio_geojson_client.feed.GeoJsonFeed.update"
-    ) as mock_feed_update:
+    freezer.move_to(utcnow)
+
+    with patch("aio_geojson_client.feed.GeoJsonFeed.update") as mock_feed_update:
         mock_feed_update.return_value = (
             "OK",
             [mock_entry_1, mock_entry_2, mock_entry_3],

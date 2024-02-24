@@ -6,7 +6,7 @@ from pysqueezebox import Server
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp
-from homeassistant.components.squeezebox.const import DOMAIN
+from homeassistant.components.squeezebox.const import CONF_HTTPS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -59,7 +59,13 @@ async def test_user_form(hass: HomeAssistant) -> None:
         # test the edit step
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_HOST: HOST, CONF_PORT: PORT, CONF_USERNAME: "", CONF_PASSWORD: ""},
+            {
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_USERNAME: "",
+                CONF_PASSWORD: "",
+                CONF_HTTPS: False,
+            },
         )
         assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
@@ -68,6 +74,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
             CONF_PORT: PORT,
             CONF_USERNAME: "",
             CONF_PASSWORD: "",
+            CONF_HTTPS: False,
         }
 
         await hass.async_block_till_done()
@@ -107,8 +114,13 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
         "homeassistant.components.squeezebox.async_setup_entry",
         return_value=True,
     ):
-        entry = MockConfigEntry(domain=DOMAIN, unique_id=UUID)
-        await hass.config_entries.async_add(entry)
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id=UUID,
+            data={CONF_HOST: HOST, CONF_PORT: PORT, CONF_HTTPS: False},
+        )
+        entry.add_to_hass(hass)
+
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -186,7 +198,7 @@ async def test_discovery_no_uuid(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data={CONF_HOST: HOST, CONF_PORT: PORT},
+            data={CONF_HOST: HOST, CONF_PORT: PORT, CONF_HTTPS: False},
         )
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "edit"
@@ -205,7 +217,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="any",
             ),
         )
@@ -224,7 +236,7 @@ async def test_dhcp_discovery_no_server_found(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="any",
             ),
         )
@@ -243,7 +255,7 @@ async def test_dhcp_discovery_existing_player(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="any",
             ),
         )

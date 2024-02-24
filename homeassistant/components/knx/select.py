@@ -9,6 +9,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_NAME,
+    CONF_PAYLOAD,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
@@ -19,7 +20,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_PAYLOAD,
     CONF_PAYLOAD_LENGTH,
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,

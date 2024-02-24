@@ -6,7 +6,7 @@
         'language': 'en',
       }),
       'payload': None,
-      'type': 'transcibe',
+      'type': 'transcribe',
     }),
     dict({
       'data': dict({

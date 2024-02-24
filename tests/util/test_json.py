@@ -1,10 +1,12 @@
 """Test Home Assistant json utility functions."""
 from pathlib import Path
 
+import orjson
 import pytest
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import (
+    json_loads,
     json_loads_array,
     json_loads_object,
     load_json,
@@ -153,3 +155,20 @@ async def test_deprecated_save_json(
     save_json(fname, TEST_JSON_A)
     assert "uses save_json from homeassistant.util.json" in caplog.text
     assert "should be updated to use homeassistant.helpers.json module" in caplog.text
+
+
+async def test_loading_derived_class():
+    """Test loading data from classes derived from str."""
+
+    class MyStr(str):
+        pass
+
+    class MyBytes(bytes):
+        pass
+
+    assert json_loads('"abc"') == "abc"
+    assert json_loads(MyStr('"abc"')) == "abc"
+
+    assert json_loads(b'"abc"') == "abc"
+    with pytest.raises(orjson.JSONDecodeError):
+        assert json_loads(MyBytes(b'"abc"')) == "abc"

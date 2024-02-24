@@ -539,6 +539,13 @@ def test_string(hass: HomeAssistant) -> None:
     for value in (True, 1, "hello"):
         schema(value)
 
+    # Test subclasses of str are returned
+    class MyString(str):
+        pass
+
+    my_string = MyString("hello")
+    assert schema(my_string) is my_string
+
     # Test template support
     for text, native in (
         ("[1, 2]", [1, 2]),
@@ -832,6 +839,7 @@ def test_selector_in_serializer() -> None:
         "selector": {
             "text": {
                 "multiline": False,
+                "multiple": False,
             }
         }
     }
@@ -1623,3 +1631,43 @@ def test_platform_only_schema(
     cv.platform_only_config_schema("test_domain")({"test_domain": {"foo": "bar"}})
     assert expected_message in caplog.text
     assert issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, expected_issue)
+
+
+def test_domain() -> None:
+    """Test domain."""
+    with pytest.raises(vol.Invalid):
+        cv.domain_key(5)
+    with pytest.raises(vol.Invalid):
+        cv.domain_key("")
+    with pytest.raises(vol.Invalid):
+        cv.domain_key("hue ")
+    with pytest.raises(vol.Invalid):
+        cv.domain_key("hue  ")
+    assert cv.domain_key("hue") == "hue"
+    assert cv.domain_key("hue1") == "hue1"
+    assert cv.domain_key("hue 1") == "hue"
+    assert cv.domain_key("hue  1") == "hue"
+
+
+def test_color_hex() -> None:
+    """Test color validation in hex format."""
+    assert cv.color_hex("#123456") == "#123456"
+    assert cv.color_hex("#FFaaFF") == "#FFaaFF"
+    assert cv.color_hex("#FFFFFF") == "#FFFFFF"
+    assert cv.color_hex("#000000") == "#000000"
+
+    msg = r"Color should be in the format #RRGGBB"
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex("#777")
+
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex("FFFFF")
+
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex("FFFFFF")
+
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex("#FFFFFFF")
+
+    with pytest.raises(vol.Invalid, match=msg):
+        cv.color_hex(123456)

@@ -8,7 +8,10 @@ ENTITY_MIGRATIONS = {
         "new_name": "Active Alert",
     },
     "chem_calcium_harness": {
-        "new_key": VALUE.CALCIUM_HARNESS,
+        "new_key": VALUE.CALCIUM_HARDNESS,
+    },
+    "calcium_harness": {
+        "new_key": VALUE.CALCIUM_HARDNESS,
     },
     "chem_current_orp": {
         "new_key": VALUE.ORP_NOW,

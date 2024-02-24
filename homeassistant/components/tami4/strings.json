@@ -22,6 +22,11 @@
       "filter_litters_passed": {
         "name": "Filter water passed"
       }
+    },
+    "button": {
+      "boil_water": {
+        "name": "Boil water"
+      }
     }
   },
   "config": {

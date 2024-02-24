@@ -29,6 +29,14 @@ def device_from_bed(bed: SleepIQBed) -> DeviceInfo:
     )
 
 
+def sleeper_for_side(bed: SleepIQBed, side: str) -> SleepIQSleeper:
+    """Find the sleeper for a side or the first sleeper."""
+    for sleeper in bed.sleepers:
+        if sleeper.side == side:
+            return sleeper
+    return bed.sleepers[0]
+
+
 class SleepIQEntity(Entity):
     """Implementation of a SleepIQ entity."""
 

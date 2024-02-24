@@ -39,14 +39,14 @@ from .const import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class DaikinRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_func: Callable[[Appliance], float | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class DaikinSensorEntityDescription(SensorEntityDescription, DaikinRequiredKeysMixin):
     """Describes Daikin sensor entity."""
 

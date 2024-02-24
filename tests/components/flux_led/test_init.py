@@ -139,7 +139,7 @@ async def test_config_entry_retry_right_away_on_discovery(hass: HomeAssistant) -
 
 
 async def test_coordinator_retry_right_away_on_discovery_already_setup(
-    hass: HomeAssistant,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test discovery makes the coordinator force poll if its already setup."""
     config_entry = MockConfigEntry(
@@ -156,7 +156,6 @@ async def test_coordinator_retry_right_away_on_discovery_already_setup(
     assert config_entry.state == ConfigEntryState.LOADED
 
     entity_id = "light.bulb_rgbcw_ddeeff"
-    entity_registry = er.async_get(hass)
     assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
@@ -241,7 +240,9 @@ async def test_time_sync_startup_and_next_day(hass: HomeAssistant) -> None:
     assert len(bulb.async_set_time.mock_calls) == 2
 
 
-async def test_unique_id_migrate_when_mac_discovered(hass: HomeAssistant) -> None:
+async def test_unique_id_migrate_when_mac_discovered(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test unique id migrated when mac discovered."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -260,7 +261,6 @@ async def test_unique_id_migrate_when_mac_discovered(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
     assert not config_entry.unique_id
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get("light.bulb_rgbcw_ddeeff").unique_id
         == config_entry.entry_id
@@ -285,7 +285,7 @@ async def test_unique_id_migrate_when_mac_discovered(hass: HomeAssistant) -> Non
 
 
 async def test_unique_id_migrate_when_mac_discovered_via_discovery(
-    hass: HomeAssistant,
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test unique id migrated when mac discovered via discovery and the mac address from dhcp was one off."""
     config_entry = MockConfigEntry(
@@ -306,7 +306,6 @@ async def test_unique_id_migrate_when_mac_discovered_via_discovery(
         await hass.async_block_till_done()
 
     assert config_entry.unique_id == MAC_ADDRESS_ONE_OFF
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get("light.bulb_rgbcw_ddeeff").unique_id
         == MAC_ADDRESS_ONE_OFF

@@ -2,42 +2,46 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from functools import partial
 from typing import Any
 
 import lupupy.constants as CONST
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
+from . import DOMAIN
+from .entity import LupusecBaseSensor
 
 SCAN_INTERVAL = timedelta(seconds=2)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Lupusec switch devices."""
-    if discovery_info is None:
-        return
 
-    data = hass.data[LUPUSEC_DOMAIN]
+    data = hass.data[DOMAIN][config_entry.entry_id]
 
-    devices = []
+    device_types = CONST.TYPE_SWITCH
 
-    for device in data.lupusec.get_devices(generic_type=CONST.TYPE_SWITCH):
-        devices.append(LupusecSwitch(data, device))
+    switches = []
+    partial_func = partial(data.get_devices, generic_type=device_types)
+    devices = await hass.async_add_executor_job(partial_func)
+    for device in devices:
+        switches.append(LupusecSwitch(device, config_entry.entry_id))
 
-    add_entities(devices)
+    async_add_entities(switches)
 
 
-class LupusecSwitch(LupusecDevice, SwitchEntity):
+class LupusecSwitch(LupusecBaseSensor, SwitchEntity):
     """Representation of a Lupusec switch."""
+
+    _attr_name = None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
@@ -48,6 +52,6 @@ class LupusecSwitch(LupusecDevice, SwitchEntity):
         self._device.switch_off()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._device.is_on

@@ -23,7 +23,7 @@ from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweNumberEntityDescriptionBase:
     """Required values when describing Goodwe number entities."""
 
@@ -32,7 +32,7 @@ class GoodweNumberEntityDescriptionBase:
     filter: Callable[[Inverter], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweNumberEntityDescription(
     NumberEntityDescription, GoodweNumberEntityDescriptionBase
 ):

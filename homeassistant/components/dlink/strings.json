@@ -9,6 +9,7 @@
           "use_legacy_protocol": "Use legacy protocol"
         },
         "data_description": {
+          "host": "The hostname or IP address of your D-Link device",
           "password": "Default: PIN code on the back."
         }
       },

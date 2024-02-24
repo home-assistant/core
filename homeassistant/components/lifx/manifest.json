@@ -29,9 +29,11 @@
       "LIFX GU10",
       "LIFX Lightstrip",
       "LIFX Mini",
+      "LIFX Neon",
       "LIFX Nightvision",
       "LIFX Pls",
       "LIFX Plus",
+      "LIFX String",
       "LIFX Tile",
       "LIFX White",
       "LIFX Z"
@@ -40,8 +42,8 @@
   "iot_class": "local_polling",
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"],
   "requirements": [
-    "aiolifx==0.8.10",
+    "aiolifx==1.0.0",
     "aiolifx-effects==0.3.2",
-    "aiolifx-themes==0.4.5"
+    "aiolifx-themes==0.4.10"
   ]
 }

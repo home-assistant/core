@@ -9,7 +9,7 @@ ALLOWED_WATERING_TIME = [5, 10, 15, 30, 45, 60]
 CONF_WATERING_TIME = "watering_minutes"
 
 DOMAIN = "hydrawise"
-DEFAULT_WATERING_TIME = 15
+DEFAULT_WATERING_TIME = timedelta(minutes=15)
 
 MANUFACTURER = "Hydrawise"
 

@@ -26,6 +26,7 @@
       'disabled_by': None,
       'domain': 'airnow',
       'entry_id': '3bd2acb0e4f0476d40865546d0d91921',
+      'minor_version': 1,
       'options': dict({
         'radius': 150,
       }),

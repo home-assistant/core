@@ -8,7 +8,6 @@ from homeassistant.components.google_travel_time.const import (
     CONF_AVOID,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
-    CONF_LANGUAGE,
     CONF_ORIGIN,
     CONF_TIME,
     CONF_TIME_TYPE,
@@ -21,7 +20,7 @@ from homeassistant.components.google_travel_time.const import (
     DOMAIN,
     UNITS_IMPERIAL,
 )
-from homeassistant.const import CONF_API_KEY, CONF_MODE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CONFIG
@@ -116,7 +115,7 @@ async def test_timeout(hass: HomeAssistant) -> None:
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": "timeout_connect"}
 
 
 async def test_malformed_api_key(hass: HomeAssistant) -> None:
