@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -27,13 +28,11 @@ async def async_setup_entry(
     for lock in entry_data.locks:
         if lock.is_door_sensor_activated:
             entities.append(NukiDoorsensorEntity(entry_data.coordinator, lock))
+        entities.append(NukiBatteryCriticalEntity(entry_data.coordinator, lock))
 
-    entities.extend(
-        [
-            NukiRingactionEntity(entry_data.coordinator, opener)
-            for opener in entry_data.openers
-        ]
-    )
+    for opener in entry_data.openers:
+        entities.append(NukiRingactionEntity(entry_data.coordinator, opener))
+        entities.append(NukiBatteryCriticalEntity(entry_data.coordinator, opener))
 
     async_add_entities(entities)
 
@@ -103,3 +102,22 @@ class NukiRingactionEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     def is_on(self) -> bool:
         """Return the value of the ring action state."""
         return self._nuki_device.ring_action_state
+
+
+class NukiBatteryCriticalEntity(NukiEntity[NukiDevice], BinarySensorEntity):
+    """Representation of Nuki Battery Critical."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "battery_critical"
+    _attr_device_class = BinarySensorDeviceClass.BATTERY
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return f"{self._nuki_device.nuki_id}_battery_critical"
+
+    @property
+    def is_on(self) -> bool:
+        """Return the value of the ring action state."""
+        return self._nuki_device.battery_critical

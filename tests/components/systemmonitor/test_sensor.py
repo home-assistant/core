@@ -11,6 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.systemmonitor.const import DOMAIN
+from homeassistant.components.systemmonitor.coordinator import VirtualMemory
 from homeassistant.components.systemmonitor.sensor import get_cpu_icon
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -18,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockProcess, svmem
+from .conftest import MockProcess
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -28,7 +29,6 @@ async def test_sensor(
     entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -82,7 +82,6 @@ async def test_process_sensor_not_loaded(
     entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -128,7 +127,6 @@ async def test_sensor_not_loading_veth_networks(
 async def test_sensor_icon(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
-    mock_util: Mock,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
@@ -150,7 +148,6 @@ async def test_sensor_yaml(
     entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
 ) -> None:
     """Test the sensor imported from YAML."""
     config = {
@@ -182,7 +179,6 @@ async def test_sensor_yaml_fails_missing_argument(
     entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
 ) -> None:
     """Test the sensor imported from YAML fails on missing mandatory argument."""
     config = {
@@ -203,7 +199,6 @@ async def test_sensor_updating(
     hass: HomeAssistant,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the sensor."""
@@ -245,18 +240,12 @@ async def test_sensor_updating(
     assert memory_sensor.state == STATE_UNAVAILABLE
 
     mock_psutil.virtual_memory.side_effect = None
-    mock_psutil.virtual_memory.return_value = svmem(
+    mock_psutil.virtual_memory.return_value = VirtualMemory(
         100 * 1024**2,
         25 * 1024**2,
         25.0,
         60 * 1024**2,
         30 * 1024**2,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
     )
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -271,7 +260,6 @@ async def test_sensor_process_fails(
     hass: HomeAssistant,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -394,7 +382,6 @@ async def test_sensor_network_sensors(
 async def test_missing_cpu_temperature(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
-    mock_util: Mock,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,
@@ -404,7 +391,7 @@ async def test_missing_cpu_temperature(
     mock_psutil.sensors_temperatures.return_value = {
         "not_exist": [shwtemp("not_exist", 50.0, 60.0, 70.0)]
     }
-    mock_util.sensors_temperatures.return_value = {
+    mock_psutil.sensors_temperatures.return_value = {
         "not_exist": [shwtemp("not_exist", 50.0, 60.0, 70.0)]
     }
     mock_config_entry.add_to_hass(hass)
@@ -419,7 +406,6 @@ async def test_missing_cpu_temperature(
 async def test_processor_temperature(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
-    mock_util: Mock,
     mock_psutil: Mock,
     mock_os: Mock,
     mock_config_entry: MockConfigEntry,

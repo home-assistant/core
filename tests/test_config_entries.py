@@ -8,6 +8,7 @@ import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -733,13 +734,13 @@ async def test_entries_excludes_ignore_and_disabled(
     ]
 
 
-async def test_saving_and_loading(hass: HomeAssistant) -> None:
+async def test_saving_and_loading(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that we're saving and loading correctly."""
     mock_integration(
         hass,
-        MockModule(
-            "test", async_setup_entry=lambda *args: AsyncMock(return_value=True)
-        ),
+        MockModule("test", async_setup_entry=AsyncMock(return_value=True)),
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -784,7 +785,8 @@ async def test_saving_and_loading(hass: HomeAssistant) -> None:
     )
 
     # To trigger the call_later
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    freezer.tick(1.0)
+    async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
 
@@ -3602,6 +3604,39 @@ async def test_setup_retrying_during_shutdown(hass: HomeAssistant) -> None:
     entry.async_cancel_retry_setup()
 
 
+async def test_scheduling_reload_cancels_setup_retry(hass: HomeAssistant) -> None:
+    """Test scheduling a reload cancels setup retry."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(side_effect=ConfigEntryNotReady)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+    cancel_mock = Mock()
+
+    with patch(
+        "homeassistant.config_entries.async_call_later", return_value=cancel_mock
+    ):
+        await entry.async_setup(hass)
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert len(cancel_mock.mock_calls) == 0
+
+    mock_setup_entry.side_effect = None
+    mock_setup_entry.return_value = True
+    hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    assert len(cancel_mock.mock_calls) == 1
+    await hass.async_block_till_done()
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+async def test_scheduling_reload_unknown_entry(hass: HomeAssistant) -> None:
+    """Test scheduling a reload raises with an unknown entry."""
+    with pytest.raises(config_entries.UnknownEntry):
+        hass.config_entries.async_schedule_reload("non-existing")
+
+
 @pytest.mark.parametrize(
     ("matchers", "reason"),
     [
@@ -3947,7 +3982,7 @@ async def test_unique_id_update_while_setup_in_progress(
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
-async def test_disallow_entry_reload_with_setup_in_progresss(
+async def test_disallow_entry_reload_with_setup_in_progress(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
     """Test we do not allow reload while the config entry is still setting up."""
@@ -4166,7 +4201,7 @@ async def test_initializing_flows_canceled_on_shutdown(
             manager.flow.async_init("test", context={"source": "reauth"})
         )
         await hass.async_block_till_done()
-        await manager.flow.async_shutdown()
+        manager.flow.async_shutdown()
 
         with pytest.raises(asyncio.exceptions.CancelledError):
             await task

@@ -80,7 +80,7 @@ CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
 CHECK_WEBSOCKET_INTERVAL = timedelta(minutes=1)
 
 
-class UniFiController:
+class UnifiHub:
     """Manages a single UniFi Network instance."""
 
     def __init__(
@@ -165,7 +165,7 @@ class UniFiController:
 
     @property
     def host(self) -> str:
-        """Return the host of this controller."""
+        """Return the host of this hub."""
         host: str = self.config_entry.data[CONF_HOST]
         return host
 
@@ -180,10 +180,10 @@ class UniFiController:
         requires_admin: bool = False,
     ) -> None:
         """Register platform for UniFi entity management."""
-        controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-        if requires_admin and not controller.is_admin:
+        hub: UnifiHub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+        if requires_admin and not hub.is_admin:
             return
-        controller.register_platform_add_entities(
+        hub.register_platform_add_entities(
             entity_class, descriptions, async_add_entities
         )
 
@@ -351,7 +351,7 @@ class UniFiController:
 
     @property
     def device_info(self) -> DeviceInfo:
-        """UniFi controller device info."""
+        """UniFi Network device info."""
         assert self.config_entry.unique_id is not None
 
         version: str | None = None
@@ -384,10 +384,10 @@ class UniFiController:
         If config entry is updated due to reauth flow
         the entry might already have been reset and thus is not available.
         """
-        if not (controller := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
+        if not (hub := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
             return
-        controller.load_config_entry_options()
-        async_dispatcher_send(hass, controller.signal_options_update)
+        hub.load_config_entry_options()
+        async_dispatcher_send(hass, hub.signal_options_update)
 
     @callback
     def start_websocket(self) -> None:
@@ -449,7 +449,7 @@ class UniFiController:
             self.ws_task.cancel()
 
     async def async_reset(self) -> bool:
-        """Reset this controller to default state.
+        """Reset this hub to default state.
 
         Will cancel any scheduled setup retry and will unload
         the config entry.
@@ -489,11 +489,11 @@ class UniFiController:
         return True
 
 
-async def get_unifi_controller(
+async def get_unifi_api(
     hass: HomeAssistant,
     config: MappingProxyType[str, Any],
 ) -> aiounifi.Controller:
-    """Create a controller object and verify authentication."""
+    """Create a aiounifi object and verify authentication."""
     ssl_context: ssl.SSLContext | Literal[False] = False
 
     if verify_ssl := config.get(CONF_VERIFY_SSL):
@@ -505,7 +505,7 @@ async def get_unifi_controller(
             hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
         )
 
-    controller = aiounifi.Controller(
+    api = aiounifi.Controller(
         Configuration(
             session,
             host=config[CONF_HOST],
@@ -519,8 +519,8 @@ async def get_unifi_controller(
 
     try:
         async with asyncio.timeout(10):
-            await controller.login()
-        return controller
+            await api.login()
+        return api
 
     except aiounifi.Unauthorized as err:
         LOGGER.warning(

@@ -56,7 +56,6 @@ class TessieSensorEntityDescription(SensorEntityDescription):
 DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     TessieSensorEntityDescription(
         key="charge_state_charging_state",
-        icon="mdi:ev-station",
         options=list(TessieChargeStates.values()),
         device_class=SensorDeviceClass.ENUM,
         value_fn=lambda value: TessieChargeStates[cast(str, value)],
