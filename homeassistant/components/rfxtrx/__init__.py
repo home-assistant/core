@@ -492,6 +492,7 @@ class RfxtrxEntity(RestoreEntity):
             identifiers=get_identifiers_from_device_tuple(device_id),
             model=device.type_string,
             name=f"{device.type_string} {device.id_string}",
+            serial_number=device.id_string,
         )
         self._attr_unique_id = "_".join(x for x in device_id)
         self._device = device
