@@ -25,7 +25,7 @@ PLATFORMS: list[Platform] = [Platform.LAWN_MOWER, Platform.SENSOR, Platform.SWIT
 
 @dataclass
 class AutomowerEntryData:
-    """Hold Matter data for the config entry."""
+    """Hold Husqvarna Automower data for the config entry."""
 
     coordinator: AutomowerDataUpdateCoordinator
     listen_task: asyncio.Task
@@ -73,9 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle unload of an entry."""
-    matter_entry_data: AutomowerEntryData = hass.data[DOMAIN][entry.entry_id]
-    await matter_entry_data.coordinator.shutdown()
-    matter_entry_data.listen_task.cancel()
+    automower_entry_data: AutomowerEntryData = hass.data[DOMAIN][entry.entry_id]
+    await automower_entry_data.coordinator.shutdown()
+    automower_entry_data.listen_task.cancel()
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
