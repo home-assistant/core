@@ -465,6 +465,16 @@ def async_create_issue_unsupported_firmware(
     )
 
 
+def is_rpc_wifi_stations_disabled(
+    config: dict[str, Any], _status: dict[str, Any], key: str
+) -> bool:
+    """Return true if rpc all WiFi stations are disabled."""
+    if config[key]["sta"]["enable"] is True or config[key]["sta1"]["enable"] is True:
+        return False
+
+    return True
+
+
 async def parse_host(input_host: str) -> tuple[str, int]:
     """Parse host to verify port."""
 
@@ -477,13 +487,3 @@ async def parse_host(input_host: str) -> tuple[str, int]:
         port = 80
 
     return (host, port)
-
-
-def is_rpc_wifi_stations_disabled(
-    config: dict[str, Any], _status: dict[str, Any], key: str
-) -> bool:
-    """Return true if rpc all WiFi stations are disabled."""
-    if config[key]["sta"]["enable"] is True or config[key]["sta1"]["enable"] is True:
-        return False
-
-    return True
