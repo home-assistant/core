@@ -1,15 +1,18 @@
 """Data UpdateCoordinator for the Husqvarna Automower integration."""
+import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
 from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerAttributes
+from aioautomower.session import AutomowerSession
+from aiohttp import ClientConnectorSSLError
 
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,7 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttributes]]):
     """Class to manage fetching Husqvarna data."""
 
-    def __init__(self, hass: HomeAssistant, api: AsyncConfigEntryAuth) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: AutomowerSession, entry: ConfigEntry
+    ) -> None:
         """Initialize data updater."""
         super().__init__(
             hass,
@@ -49,3 +54,27 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
     def callback(self, ws_data: dict[str, MowerAttributes]) -> None:
         """Process websocket callbacks and write them to the DataUpdateCoordinator."""
         self.async_set_updated_data(ws_data)
+
+    async def client_listen(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        automower_client: AutomowerSession,
+        init_ready: asyncio.Event,
+    ) -> None:
+        """Listen with the client."""
+        try:
+            await automower_client.start_listening(init_ready)
+        except ClientConnectorSSLError as err:
+            if entry.state != ConfigEntryState.LOADED:
+                raise
+            _LOGGER.error("Failed to listen: %s", err)
+        except Exception as err:  # pylint: disable=broad-except
+            # We need to guard against unknown exceptions to not crash this task.
+            _LOGGER.exception("Unexpected exception: %s", err)
+            if entry.state != ConfigEntryState.LOADED:
+                raise
+
+        if not hass.is_stopping:
+            _LOGGER.debug("Disconnected from server. Reloading integration")
+            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))

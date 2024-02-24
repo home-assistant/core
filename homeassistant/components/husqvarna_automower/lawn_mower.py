@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import AutomowerEntryData
 from .const import DOMAIN
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerControlEntity
@@ -44,7 +45,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up lawn mower platform."""
-    coordinator: AutomowerDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    matter_entry_data: AutomowerEntryData = hass.data[DOMAIN][entry.entry_id]
+    coordinator = matter_entry_data.coordinator
     async_add_entities(
         AutomowerLawnMowerEntity(mower_id, coordinator) for mower_id in coordinator.data
     )

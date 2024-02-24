@@ -1,4 +1,5 @@
 """Test helpers for Husqvarna Automower."""
+import asyncio
 from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
@@ -82,4 +83,15 @@ def mock_automower_client() -> Generator[AsyncMock, None, None]:
         client.get_status.return_value = mower_list_to_dictionary_dataclass(
             load_json_value_fixture("mower.json", DOMAIN)
         )
+
+        async def listen(init_ready: asyncio.Event | None) -> None:
+            """Mock listen."""
+            if init_ready is not None:
+                init_ready.set()
+            listen_block = asyncio.Event()
+            await listen_block.wait()
+            pytest.fail("Listen was not cancelled!")
+
+        client.start_listening = AsyncMock(side_effect=listen)
+
         yield client
