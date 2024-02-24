@@ -264,9 +264,9 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return self._state
 
     @property
-    def current_humidity(self) -> int | None:
+    def current_humidity(self) -> float | None:
         """Return the measured humidity."""
-        return int(self._cur_humidity) if self._cur_humidity is not None else None
+        return self._cur_humidity
 
     @property
     def target_humidity(self) -> int | None:

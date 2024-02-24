@@ -199,7 +199,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     @property
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
-        data: dict[str, int | str | None] = {}
+        data: dict[str, Any] = {}
 
         if self.action is not None:
             data[ATTR_ACTION] = self.action if self.is_on else HumidifierAction.OFF
@@ -221,7 +221,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
         return self._attr_action
 
     @cached_property
-    def current_humidity(self) -> int | None:
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self._attr_current_humidity
 
