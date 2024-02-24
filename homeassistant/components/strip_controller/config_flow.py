@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import voluptuous as vol
 
@@ -26,7 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 # TOD: Create  OptionsFlow to edit sections (check homeassistant/components/met/config_flow.py).
 # TOD: validate connection at first step so the user don't need to pass all steps to validate ip and port
 # TOD: Load section (also with their colors) configuration from file in ConfigFlow so the user don't need to reconfigure the same sections twice. Loading sections from the generic configuration.yml of Home Assistant is enough
-# TOD: Prevent setting the same device twice (allow only one entity ).
 
 
 def validate_section(section: tuple[int, int]):
@@ -46,6 +45,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._current_step: int = 0
         self._number_of_led: int
         self._device_name: str
+        self._device_address: Optional[str] = None
+        self._device_port: Optional[int] = None
         self._number_of_sections: int
         self._sections: list[tuple[int, int]] = []
 
@@ -67,7 +68,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not self._is_last_step():
                     return self._next_step()
 
-                data = {CONF_SECTIONS: self._sections, CONF_NAME: self._device_name}
+                data = {
+                    CONF_SECTIONS: self._sections,
+                    CONF_IP_ADDRESS: self._device_address,
+                    CONF_PORT: self._device_port,
+                }
                 return self.async_create_entry(title=self._device_name, data=data)
 
         return self.async_show_form(
@@ -82,8 +87,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is not None:
+            # TOD: device duplication should be check by MAC address
+            self._async_abort_entries_match(
+                {
+                    CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+            )
+
             self._number_of_sections = user_input[CONF_NUMBER_OF_SECTIONS]
             self._device_name = user_input[CONF_NAME]
+            self._device_address = user_input[CONF_IP_ADDRESS]
+            self._device_port = user_input[CONF_PORT]
             self._number_of_led = await self._get_number_of_led()
             return self._next_step()
 
