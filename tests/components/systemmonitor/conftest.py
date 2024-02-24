@@ -163,6 +163,7 @@ def mock_psutil(mock_process: list[MockProcess]) -> Generator:
             sdiskpart("test3", "/incorrect", "", "", 1, 1),
             sdiskpart("proc", "/proc/run", "proc", "", 1, 1),
         ]
+        mock_psutil.boot_time.return_value = 1708786800.0
         mock_psutil.NoSuchProcess = NoSuchProcess
         yield mock_psutil
 

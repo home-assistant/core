@@ -14,7 +14,10 @@ import psutil_home_assistant as ha_psutil
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    TimestampDataUpdateCoordinator,
+    UpdateFailed,
+)
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +53,7 @@ dataT = TypeVar(
 )
 
 
-class MonitorCoordinator(DataUpdateCoordinator[dataT]):
+class MonitorCoordinator(TimestampDataUpdateCoordinator[dataT]):
     """A System monitor Base Data Update Coordinator."""
 
     def __init__(
