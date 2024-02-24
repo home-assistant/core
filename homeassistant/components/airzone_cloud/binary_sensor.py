@@ -7,6 +7,7 @@ from typing import Any, Final
 from aioairzone_cloud.const import (
     AZD_ACTIVE,
     AZD_AIDOOS,
+    AZD_AQ_ACTIVE,
     AZD_ERRORS,
     AZD_PROBLEMS,
     AZD_SYSTEMS,
@@ -75,6 +76,10 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
     AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.RUNNING,
         key=AZD_ACTIVE,
+    ),
+    AirzoneBinarySensorEntityDescription(
+        key=AZD_AQ_ACTIVE,
+        translation_key="air_quality_active",
     ),
     AirzoneBinarySensorEntityDescription(
         attributes={
