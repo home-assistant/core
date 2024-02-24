@@ -33,7 +33,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
         yield mock_setup_entry
 
 
-async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
+async def test_user_flow(hass: HomeAssistant, mock_setup_entry) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -44,11 +44,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
 
     with patch(
         "homeassistant.components.fyta.config_flow.FytaConnector",
-        return_value=AsyncMock(),
-    ), patch(
-        "homeassistant.components.fyta.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+        return_value=AsyncMock()
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
         )
@@ -60,96 +57,77 @@ async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-def init_config_flow(hass: HomeAssistant):
-    """Init a configuration flow."""
-    flow = config_flow.FytaConfigFlow()
-    flow.hass = hass
-    return flow
+async def test_form_exceptions(hass: HomeAssistant, mock_setup_entry) -> None:
+    """Test we can handle Form exceptions."""
 
-
-async def test_user(hass: HomeAssistant) -> None:
-    """Test user config."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "user"
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
     # tests with connection error
-    with patch(
-        "homeassistant.components.fyta.config_flow.FytaConnector",
-        return_value=AsyncMock(),
-    ) as mock:
+    with patch("homeassistant.components.fyta.config_flow.FytaConnector", return_value=AsyncMock()) as mock:
         fyta = mock.return_value
-        fyta.login.side_effect = FytaConnectionError
+        fyta.login.side_effect=FytaConnectionError
 
-        result = await flow.async_step_user(
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
         )
+        await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
     # tests with authentication error
-    with patch(
-        "homeassistant.components.fyta.config_flow.FytaConnector",
-        return_value=AsyncMock(),
-    ) as mock:
+    with patch("homeassistant.components.fyta.config_flow.FytaConnector", return_value=AsyncMock()) as mock:
         fyta = mock.return_value
-        fyta.login.side_effect = FytaAuthentificationError
+        fyta.login.side_effect=FytaAuthentificationError
 
-        result = await flow.async_step_user(
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
         )
+        await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "auth_error"}
 
     # tests with password error
-    with patch(
-        "homeassistant.components.fyta.config_flow.FytaConnector",
-        return_value=AsyncMock(),
-    ) as mock:
+    with patch("homeassistant.components.fyta.config_flow.FytaConnector", return_value=AsyncMock()) as mock:
         fyta = mock.return_value
-        fyta.login.side_effect = FytaPasswordError
+        fyta.login.side_effect=FytaPasswordError
 
-        result = await flow.async_step_user(
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
         )
+        await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "auth_error", CONF_PASSWORD: "password_error"}
 
     # tests with other error
-    with patch(
-        "homeassistant.components.fyta.config_flow.FytaConnector",
-        return_value=AsyncMock(),
-    ) as mock:
+    with patch("homeassistant.components.fyta.config_flow.FytaConnector", return_value=AsyncMock()) as mock:
         fyta = mock.return_value
-        fyta.login.side_effect = Exception
+        fyta.login.side_effect=Exception
 
-        result = await flow.async_step_user(
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
         )
+        await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "unknown"}
 
     # tests with all information provided
-    with patch(
-        "homeassistant.components.fyta.config_flow.FytaConnector",
-        return_value=AsyncMock(),
-    ) as mock:
+    with patch("homeassistant.components.fyta.config_flow.FytaConnector", return_value=AsyncMock()) as mock:
         fyta = mock.return_value
-        fyta.login.return_value = {
-            "access_token": ACCESS_TOKEN,
-            "expiration": EXPIRATION,
-        }
+        fyta.login.return_value = {"access_token": ACCESS_TOKEN, "expiration": EXPIRATION}
 
-        result = await flow.async_step_user(
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
         )
+        await hass.async_block_till_done()
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
+
+    assert len(mock_setup_entry.mock_calls) == 1
