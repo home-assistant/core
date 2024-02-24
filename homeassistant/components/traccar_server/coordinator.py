@@ -98,7 +98,8 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 continue
 
             if (
-                attr := self._retrun_custom_attributes_if_not_filtered_by_configuration(
+                attr
+                := self._return_custom_attributes_if_not_filtered_by_accuracy_configuration(
                     device, position
                 )
             ) is None:
@@ -129,7 +130,8 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 continue
 
             if (
-                attr := self._retrun_custom_attributes_if_not_filtered_by_configuration(
+                attr
+                := self._return_custom_attributes_if_not_filtered_by_accuracy_configuration(
                     device, self.data[device_id]["position"]
                 )
             ) is None:
@@ -145,7 +147,8 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 continue
 
             if (
-                attr := self._retrun_custom_attributes_if_not_filtered_by_configuration(
+                attr
+                := self._return_custom_attributes_if_not_filtered_by_accuracy_configuration(
                     self.data[device_id]["device"], position
                 )
             ) is None:
@@ -228,7 +231,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
         self.config_entry.async_on_unload(self.unsubscribe)
         self._subscription = asyncio.create_task(_subscriber())
 
-    def _retrun_custom_attributes_if_not_filtered_by_configuration(
+    def _return_custom_attributes_if_not_filtered_by_accuracy_configuration(
         self,
         device: DeviceModel,
         position: PositionModel,
