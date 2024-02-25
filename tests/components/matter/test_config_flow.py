@@ -36,7 +36,7 @@ def setup_entry_fixture() -> Generator[AsyncMock, None, None]:
 def client_connect_fixture() -> Generator[AsyncMock, None, None]:
     """Mock server version."""
     with patch(
-        "homeassistant.components.matter.config_flow.MatterClient.connect"
+        "homeassistant.components.matter.config_flow.core.MatterClient.connect"
     ) as client_connect:
         yield client_connect
 

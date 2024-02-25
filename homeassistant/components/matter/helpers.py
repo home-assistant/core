@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -12,10 +12,26 @@ from homeassistant.helpers import device_registry as dr
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 
 if TYPE_CHECKING:
+    # This module must not import from matter_server or chip
+    # as it will lead to the event loop being blocked
     from matter_server.client.models.node import MatterEndpoint, MatterNode
     from matter_server.common.models import ServerInfoMessage
 
     from .adapter import MatterAdapter
+
+
+class MatterDeviceInfo(TypedDict):
+    """Dictionary with Matter Device info.
+
+    Used to send to other Matter controllers,
+    such as Google Home to prevent duplicated devices.
+
+    Reference: https://developers.home.google.com/matter/device-deduplication
+    """
+
+    unique_id: str
+    vendor_id: str  # vendorId hex string
+    product_id: str  # productId hex string
 
 
 class MissingNode(HomeAssistantError):

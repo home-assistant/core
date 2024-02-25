@@ -10,6 +10,7 @@ from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models import ServerInfoMessage
 import pytest
 
+from homeassistant.components.matter import _async_load_core
 from homeassistant.core import HomeAssistant
 
 from .common import setup_integration_with_node_fixture
@@ -20,11 +21,17 @@ MOCK_FABRIC_ID = 12341234
 MOCK_COMPR_FABRIC_ID = 1234
 
 
+@pytest.fixture(name="preload_matter_core")
+async def preload_matter_core(hass: HomeAssistant) -> None:
+    """Preload the Matter core component."""
+    await _async_load_core(hass)
+
+
 @pytest.fixture(name="matter_client")
 async def matter_client_fixture() -> AsyncGenerator[MagicMock, None]:
     """Fixture for a Matter client."""
     with patch(
-        "homeassistant.components.matter.MatterClient", autospec=True
+        "homeassistant.components.matter.core.MatterClient", autospec=True
     ) as client_class:
         client = client_class.return_value
 

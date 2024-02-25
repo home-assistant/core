@@ -4,8 +4,6 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from matter_server.client import MatterClient
-from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -47,6 +45,9 @@ def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
+    # pylint:disable-next=import-outside-toplevel
+    from matter_server.client import MatterClient
+
     client = MatterClient(data[CONF_URL], aiohttp_client.async_get_clientsession(hass))
     await client.connect()
 
@@ -152,6 +153,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         addon_manager: AddonManager = get_addon_manager(self.hass)
 
         await addon_manager.async_schedule_start_addon()
+        # pylint:disable-next=import-outside-toplevel
+        from matter_server.client.exceptions import CannotConnect
+
         # Sleep some seconds to let the add-on start properly before connecting.
         for _ in range(ADDON_SETUP_TIMEOUT_ROUNDS):
             await asyncio.sleep(ADDON_SETUP_TIMEOUT)
@@ -203,6 +207,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         errors = {}
+        # pylint:disable-next=import-outside-toplevel
+        from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
 
         try:
             await validate_input(self.hass, user_input)
@@ -276,7 +282,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Prepare info needed to complete the config entry."""
+
         if not self.ws_address:
+            # pylint:disable-next=import-outside-toplevel
+            from matter_server.client.exceptions import CannotConnect
+
             discovery_info = await self._async_get_addon_discovery_info()
             ws_address = self.ws_address = build_ws_address(
                 discovery_info["host"], discovery_info["port"]
