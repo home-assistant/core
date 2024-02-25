@@ -6,7 +6,6 @@ from http import HTTPStatus
 import os
 import re
 import threading
-import time
 
 import requests
 import voluptuous as vol
@@ -54,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     translation_key = "deprecated_yaml"
     if (
-         import_result["type"] == FlowResultType.ABORT
+        import_result["type"] == FlowResultType.ABORT
         and import_result["reason"] == "import_failed"
     ):
         translation_key = "import_failed"
@@ -129,21 +128,22 @@ async def _async_download_file(
     ).start()
 
 
-def _async_do_download(hass: HomeAssistant, service: ServiceCall, download_path: str):
+def _async_do_download(
+    hass: HomeAssistant, service: ServiceCall, download_path: str
+) -> None:
     """Download the file."""
     try:
-        url: str = service.data.get(ATTR_URL)
+        url = service.data.get(ATTR_URL)
         subdir: str | None = service.data.get(ATTR_SUBDIR)
         filename: str | None = service.data.get(ATTR_FILENAME)
-        overwrite: bool = service.data.get(ATTR_OVERWRITE)
-
+        overwrite = service.data.get(ATTR_OVERWRITE)
         if subdir:
             # Check the path
             raise_if_invalid_path(subdir)
 
         final_path = None
 
-        req = requests.get(url, stream=True, timeout=10)
+        req = requests.get(url, stream=True, timeout=10)  # type: ignore[arg-type]
 
         if req.status_code != HTTPStatus.OK:
             _LOGGER.warning(
@@ -163,11 +163,11 @@ def _async_do_download(hass: HomeAssistant, service: ServiceCall, download_path:
                     filename = match[0].strip("'\" ")
 
             if not filename:
-                filename = os.path.basename(url).strip()
+                filename = os.path.basename(url).strip()  # type: ignore[arg-type]
 
             if not filename:
                 # Generate a random filename
-                filename = "ha_download_" + str(time.time())
+                filename = "ha_download"
 
             # Check the filename
             raise_if_invalid_filename(filename)
