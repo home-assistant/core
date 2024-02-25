@@ -894,7 +894,7 @@ hyperion-py==0.7.5
 iaqualink==0.5.0
 
 # homeassistant.components.ibeacon
-ibeacon-ble==1.0.1
+ibeacon-ble==1.2.0
 
 # homeassistant.components.google
 # homeassistant.components.local_calendar
@@ -1537,7 +1537,7 @@ pynetgear==0.10.10
 pynobo==1.6.0
 
 # homeassistant.components.nuki
-pynuki==1.6.2
+pynuki==1.6.3
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -1715,7 +1715,7 @@ python-fullykiosk==0.0.12
 python-homeassistant-analytics==0.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==4.3.0
+python-homewizard-energy==4.3.1
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2240,7 +2240,7 @@ youtubeaio==1.1.5
 yt-dlp==2023.11.16
 
 # homeassistant.components.zamg
-zamg==0.3.5
+zamg==0.3.6
 
 # homeassistant.components.zeroconf
 zeroconf==0.131.0
