@@ -156,8 +156,7 @@ async def test_turn_on_with_brightness(hass: HomeAssistant) -> None:
 
     assert hass.states.get("light.test_garage_2_light").state == STATE_ON
     assert (
-        hass.states.get("light.test_garage_2_light").attributes.get("brightness")
-        == 127.5
+        hass.states.get("light.test_garage_2_light").attributes.get("brightness") == 127
     )
 
 
