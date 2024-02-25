@@ -48,7 +48,6 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
 
             errors[CONF_HOST] = "invalid_host"
 
-        user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
