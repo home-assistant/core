@@ -209,7 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         name=f"Nuki Bridge {bridge_id}",
         model="Hardware Bridge",
         sw_version=info["versions"]["firmwareVersion"],
-        serial_number=info["ids"]["hardwareId"],
+        serial_number=parse_id(info["ids"]["hardwareId"]),
     )
 
     try:
