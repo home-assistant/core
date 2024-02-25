@@ -168,6 +168,23 @@ async def test_import(hass: HomeAssistant) -> None:
         }
 
 
+async def test_import_not_online(hass: HomeAssistant) -> None:
+    """Test that the import works."""
+    with _patch_lg_netcast(fail_connection=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={
+                CONF_HOST: IP_ADDRESS,
+                CONF_ACCESS_TOKEN: FAKE_PIN,
+                CONF_NAME: MODEL_NAME,
+            },
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "cannot_connect"
+
+
 async def test_import_duplicate_error(hass):
     """Test that errors are shown when duplicates are added during import."""
     config_entry = MockConfigEntry(
