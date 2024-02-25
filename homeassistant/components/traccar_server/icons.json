@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "altitude": {
+        "default": "mdi:altimeter"
+      },
+      "address": {
+        "default": "mdi:map-marker"
+      },
+      "geofence": {
+        "default": "mdi:map-marker"
+      }
+    }
+  }
+}

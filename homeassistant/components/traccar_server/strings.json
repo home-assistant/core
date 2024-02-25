@@ -41,5 +41,26 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "address": {
+        "name": "Address"
+      },
+      "altitude": {
+        "name": "Altitude"
+      },
+      "geofence": {
+        "name": "Geofence"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "offline": "Offline",
+          "online": "Online",
+          "unknown": "Unknown"
+        }
+      }
+    }
   }
 }
