@@ -54,17 +54,18 @@ DISCOVERY_INFO_WITH_MAC = zeroconf.ZeroconfServiceInfo(
 
 
 @pytest.mark.parametrize(
-    ("gen", "model"),
+    ("gen", "model", "port"),
     [
-        (1, MODEL_1),
-        (2, MODEL_PLUS_2PM),
-        (3, MODEL_PLUS_2PM),
+        (1, MODEL_1, 80),
+        (2, MODEL_PLUS_2PM, 80),
+        (3, MODEL_PLUS_2PM, 11200),
     ],
 )
 async def test_form(
     hass: HomeAssistant,
     gen: int,
     model: str,
+    port: int,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
 ) -> None:
@@ -77,7 +78,13 @@ async def test_form(
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
-        return_value={"mac": "test-mac", "type": MODEL_1, "auth": False, "gen": gen},
+        return_value={
+            "mac": "test-mac",
+            "type": MODEL_1,
+            "auth": False,
+            "gen": gen,
+            "port": port,
+        },
     ), patch(
         "homeassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -86,7 +93,7 @@ async def test_form(
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "1.1.1.1"},
+            {"host": f"1.1.1.1:{port}"},
         )
         await hass.async_block_till_done()
 
@@ -94,6 +101,7 @@ async def test_form(
     assert result2["title"] == "Test name"
     assert result2["data"] == {
         "host": "1.1.1.1",
+        "port": port,
         "model": model,
         "sleep_period": 0,
         "gen": gen,
@@ -168,6 +176,7 @@ async def test_form_auth(
     assert result3["title"] == "Test name"
     assert result3["data"] == {
         "host": "1.1.1.1",
+        "port": 80,
         "model": model,
         "sleep_period": 0,
         "gen": gen,
@@ -757,6 +766,7 @@ async def test_zeroconf_require_auth(
     assert result2["title"] == "Test name"
     assert result2["data"] == {
         "host": "1.1.1.1",
+        "port": 80,
         "model": MODEL_1,
         "sleep_period": 0,
         "gen": 1,
@@ -1144,6 +1154,7 @@ async def test_sleeping_device_gen2_with_new_firmware(
 
     assert result["data"] == {
         "host": "1.1.1.1",
+        "port": 80,
         "model": MODEL_PLUS_2PM,
         "sleep_period": 666,
         "gen": 2,

@@ -67,6 +67,7 @@ INTERNAL_WIFI_AP_IP = "192.168.33.1"
 async def validate_input(
     hass: HomeAssistant,
     host: str,
+    port: int,
     info: dict[str, Any],
     data: dict[str, Any],
 ) -> dict[str, Any]:
@@ -74,7 +75,6 @@ async def validate_input(
 
     Data has the keys from HOST_SCHEMA with values provided by the user.
     """
-    host, port = await parse_host(host)
     options = ConnectionOptions(
         ip_address=host,
         username=data.get(CONF_USERNAME),
@@ -125,6 +125,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     host: str = ""
+    port: int = 80
     info: dict[str, Any] = {}
     device_info: dict[str, Any] = {}
     entry: ConfigEntry | None = None
@@ -135,9 +136,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            host: str = user_input[CONF_HOST]
+            host, port = await parse_host(user_input[CONF_HOST])
             try:
-                self.info = await self._async_get_info(host)
+                self.info = await self._async_get_info(host, port)
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
             except FirmwareUnsupported:
@@ -149,12 +150,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(self.info["mac"])
                 self._abort_if_unique_id_configured({CONF_HOST: host})
                 self.host = host
+                self.port = port
                 if get_info_auth(self.info):
                     return await self.async_step_credentials()
 
                 try:
                     device_info = await validate_input(
-                        self.hass, self.host, self.info, {}
+                        self.hass, self.host, self.port, self.info, {}
                     )
                 except DeviceConnectionError:
                     errors["base"] = "cannot_connect"
@@ -192,7 +194,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME] = "admin"
             try:
                 device_info = await validate_input(
-                    self.hass, self.host, self.info, user_input
+                    self.hass, self.host, self.port, self.info, user_input
                 )
             except InvalidAuthError:
                 errors["base"] = "invalid_auth"
@@ -205,12 +207,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if device_info["model"]:
-                    host, port = await parse_host(self.host)
                     return self.async_create_entry(
                         title=device_info["title"],
                         data={
-                            CONF_HOST: host,
-                            CONF_PORT: port,
+                            **user_input,
+                            CONF_HOST: self.host,
+                            CONF_PORT: self.port,
                             CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                             "model": device_info["model"],
                             CONF_GEN: device_info[CONF_GEN],
@@ -263,6 +265,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host
+        # Devices behind range extender doesn't generate zeroconf packets
+        # so port is always the default one
+        port = 80
         # First try to get the mac address from the name
         # so we can avoid making another connection to the
         # device if we already have it configured
@@ -270,7 +275,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._async_discovered_mac(mac, host)
 
         try:
-            self.info = await self._async_get_info(host)
+            self.info = await self._async_get_info(host, port)
         except DeviceConnectionError:
             return self.async_abort(reason="cannot_connect")
         except FirmwareUnsupported:
@@ -293,7 +298,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_credentials()
 
         try:
-            self.device_info = await validate_input(self.hass, self.host, self.info, {})
+            self.device_info = await validate_input(
+                self.hass, self.host, self.port, self.info, {}
+            )
         except DeviceConnectionError:
             return self.async_abort(reason="cannot_connect")
 
@@ -345,17 +352,18 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         assert self.entry is not None
         host = self.entry.data[CONF_HOST]
+        port = self.entry.data.get(CONF_PORT, 80)
 
         if user_input is not None:
             try:
-                info = await self._async_get_info(host)
+                info = await self._async_get_info(host, port)
             except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
                 return self.async_abort(reason="reauth_unsuccessful")
 
             if get_device_entry_gen(self.entry) != 1:
                 user_input[CONF_USERNAME] = "admin"
             try:
-                await validate_input(self.hass, host, info, user_input)
+                await validate_input(self.hass, host, port, info, user_input)
             except (DeviceConnectionError, InvalidAuthError, FirmwareUnsupported):
                 return self.async_abort(reason="reauth_unsuccessful")
 
@@ -377,9 +385,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_get_info(self, host: str) -> dict[str, Any]:
+    async def _async_get_info(self, host: str, port: int) -> dict[str, Any]:
         """Get info from shelly device."""
-        host, port = await parse_host(host)
         return await get_info(async_get_clientsession(self.hass), host, None, port)
 
     @staticmethod
