@@ -4,7 +4,13 @@
 from homeassistant import data_entry_flow
 from homeassistant.components.lg_netcast.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_HOST,
+    CONF_ID,
+    CONF_MODEL,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -66,6 +72,7 @@ async def test_manual_host(hass: HomeAssistant) -> None:
             CONF_HOST: IP_ADDRESS,
             CONF_ACCESS_TOKEN: FAKE_PIN,
             CONF_NAME: FRIENDLY_NAME,
+            CONF_MODEL: MODEL_NAME,
             CONF_ID: UNIQUE_ID,
         }
 
@@ -156,6 +163,7 @@ async def test_import(hass: HomeAssistant) -> None:
             CONF_HOST: IP_ADDRESS,
             CONF_ACCESS_TOKEN: FAKE_PIN,
             CONF_NAME: MODEL_NAME,
+            CONF_MODEL: MODEL_NAME,
             CONF_ID: UNIQUE_ID,
         }
 

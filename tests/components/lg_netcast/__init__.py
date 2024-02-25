@@ -7,7 +7,13 @@ import requests
 
 from homeassistant.components.lg_netcast import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_HOST,
+    CONF_ID,
+    CONF_MODEL,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -95,6 +101,7 @@ async def setup_lgnetcast(hass: HomeAssistant, unique_id: str = UNIQUE_ID):
             CONF_HOST: IP_ADDRESS,
             CONF_ACCESS_TOKEN: FAKE_PIN,
             CONF_NAME: MODEL_NAME,
+            CONF_MODEL: MODEL_NAME,
             CONF_ID: unique_id,
         },
         title=MODEL_NAME,

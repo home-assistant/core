@@ -7,13 +7,19 @@ from pylgnetcast import AccessTokenError, LgNetCastClient, SessionIdError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_HOST,
+    CONF_ID,
+    CONF_MODEL,
+    CONF_NAME,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.network import is_host_valid
 
-from .const import ATTR_FRIENDLY_NAME, ATTR_UUID, DEFAULT_NAME, DOMAIN
+from .const import ATTR_FRIENDLY_NAME, ATTR_MODEL_NAME, ATTR_UUID, DEFAULT_NAME, DOMAIN
 from .helpers import LGNetCastDetailDiscoveryError, async_discover_netcast_details
 
 
@@ -115,6 +121,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
             raise AbortFlow("invalid_host")
 
         self.device_config[CONF_ID] = unique_id
+        self.device_config[CONF_MODEL] = details[ATTR_MODEL_NAME]
 
         if CONF_NAME not in self.device_config:
             self.device_config[CONF_NAME] = details[ATTR_FRIENDLY_NAME] or DEFAULT_NAME

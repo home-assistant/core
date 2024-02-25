@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
@@ -71,12 +71,13 @@ async def async_setup_entry(
     access_token = config_entry.data[CONF_ACCESS_TOKEN]
     unique_id = config_entry.unique_id
     name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+    model = config_entry.data[CONF_MODEL]
 
     client = LgNetCastClient(host, access_token)
 
     hass.data[DOMAIN][config_entry.entry_id] = client
 
-    async_add_entities([LgTVDevice(client, name, unique_id=unique_id)])
+    async_add_entities([LgTVDevice(client, name, model, unique_id=unique_id)])
 
 
 async def async_setup_platform(
@@ -107,7 +108,7 @@ class LgTVDevice(MediaPlayerEntity):
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_media_content_type = MediaType.CHANNEL
 
-    def __init__(self, client, name, *, unique_id=None):
+    def __init__(self, client, name, model, *, unique_id=None):
         """Initialize the LG TV device."""
         self._client = client
         self._name = name
@@ -125,6 +126,7 @@ class LgTVDevice(MediaPlayerEntity):
                 identifiers={(DOMAIN, unique_id)},
                 manufacturer=ATTR_MANUFACTURER,
                 name=name,
+                model=model,
             )
 
     async def async_added_to_hass(self) -> None:
