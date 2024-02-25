@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 
 from attr import dataclass
-from tplink_omada_client.definitions import GatewayPortMode, LinkStatus
+from tplink_omada_client.definitions import GatewayPortMode, LinkStatus, PoEMode
 from tplink_omada_client.devices import (
     OmadaDevice,
     OmadaGateway,
@@ -32,26 +32,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors."""
     controller: OmadaSiteController = hass.data[DOMAIN][config_entry.entry_id]
-    omada_client = controller.omada_client
 
     gateway_coordinator = await controller.get_gateway_coordinator()
     if not gateway_coordinator:
         return
 
-    gateway = await omada_client.get_gateway(gateway_coordinator.mac)
-
-    async_add_entities(
-        get_gateway_port_status_sensors(gateway, hass, gateway_coordinator)
-    )
-
-    await gateway_coordinator.async_request_refresh()
+    for gateway in gateway_coordinator.data.values():
+        async_add_entities(
+            get_gateway_port_status_sensors(gateway, hass, gateway_coordinator)
+        )
 
 
 def get_gateway_port_status_sensors(
     gateway: OmadaGateway, hass: HomeAssistant, coordinator: OmadaGatewayCoordinator
 ) -> Generator[BinarySensorEntity, None, None]:
     """Generate binary sensors for gateway ports."""
-    for port in gateway.port_status:
+    for port_config in gateway.port_configs:
+        port = port_config.port_status
         if port.mode == GatewayPortMode.WAN:
             yield OmadaGatewayPortBinarySensor(
                 coordinator,
@@ -64,6 +61,18 @@ def get_gateway_port_status_sensors(
                     update_func=lambda p: p.wan_connected,
                 ),
             )
+            yield OmadaGatewayPortBinarySensor(
+                coordinator,
+                gateway,
+                GatewayPortBinarySensorConfig(
+                    port_number=port.port_number,
+                    id_suffix="online_detection",
+                    name_suffix="Online Detection",
+                    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+                    update_func=lambda p: p.online_detection,
+                ),
+            )
+
         if port.mode == GatewayPortMode.LAN:
             yield OmadaGatewayPortBinarySensor(
                 coordinator,
@@ -76,6 +85,18 @@ def get_gateway_port_status_sensors(
                     update_func=lambda p: p.link_status == LinkStatus.LINK_UP,
                 ),
             )
+            if port_config.poe_mode == PoEMode.ENABLED:
+                yield OmadaGatewayPortBinarySensor(
+                    coordinator,
+                    gateway,
+                    GatewayPortBinarySensorConfig(
+                        port_number=port.port_number,
+                        id_suffix="poe_delivery",
+                        name_suffix="PoE Delivery",
+                        device_class=BinarySensorDeviceClass.POWER,
+                        update_func=lambda p: p.poe_active,
+                    ),
+                )
 
 
 @dataclass
@@ -107,6 +128,11 @@ class OmadaGatewayPortBinarySensor(OmadaDeviceEntity[OmadaGateway], BinarySensor
         self._attr_device_class = config.device_class
 
         self._attr_name = f"Port {config.port_number} {config.name_suffix}"
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
 
     @callback
     def _handle_coordinator_update(self) -> None:

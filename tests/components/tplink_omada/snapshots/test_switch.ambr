@@ -1,4 +1,7 @@
 # serializer version: 1
+# name: test_gateway_connect_ipv4_switch
+  None
+# ---
 # name: test_poe_switches
   StateSnapshot({
     'attributes': ReadOnlyDict({

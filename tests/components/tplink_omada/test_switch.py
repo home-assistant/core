@@ -5,7 +5,11 @@ from unittest.mock import MagicMock
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client import SwitchPortOverrides
 from tplink_omada_client.definitions import PoEMode
-from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
+from tplink_omada_client.devices import (
+    OmadaGatewayPortStatus,
+    OmadaSwitch,
+    OmadaSwitchPortDetails,
+)
 
 from homeassistant.components import switch
 from homeassistant.const import ATTR_ENTITY_ID
@@ -32,6 +36,43 @@ async def test_poe_switches(
             i,
             snapshot,
         )
+
+
+async def test_gateway_connect_ipv4_switch(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test gateway connected switches."""
+    gateway_mac = "AA-BB-CC-DD-EE-FF"
+
+    entity_id = "switch.test_router_4_wan_connect_ipv4"
+    entity = hass.states.get(entity_id)
+    assert entity == snapshot
+
+    test_gateway = await mock_omada_site_client.get_gateway(gateway_mac)
+    port_status = test_gateway.port_status[3]
+    assert port_status.port_number == 4
+
+    mock_omada_site_client.set_gateway_wan_port_connect_state.reset_mock()
+    mock_omada_site_client.set_gateway_wan_port_connect_state.return_value = (
+        await _update_gateway_port_status(port_status, "wan_connected", False)
+    )
+    await call_service(hass, "turn_off", entity_id)
+    mock_omada_site_client.set_gateway_wan_port_connect_state.assert_called_once_with(
+        4, test_gateway, False, False
+    )
+    assert entity.state == "off"
+
+    # mock_omada_site_client.set_gateway_wan_port_connect_state.reset_mock()
+    # mock_omada_site_client.set_gateway_wan_port_connect_state.return_value = (
+    #     await _update_gateway_port_status(port_status, "wan_connected", False)
+    # )
+    # await call_service(hass, "turn_on", entity_id)
+    # mock_omada_site_client.set_gateway_wan_port_connect_state.assert_called_once()
+    # (4, test_gateway, True, False)
+    # assert entity.state == "off"
 
 
 async def _test_poe_switch(
@@ -114,6 +155,15 @@ async def _update_port_details(
     raw_data = port_details.raw_data.copy()
     raw_data["poe"] = PoEMode.ENABLED if poe_enabled else PoEMode.DISABLED
     return OmadaSwitchPortDetails(raw_data)
+
+
+async def _update_gateway_port_status(
+    port_status: OmadaGatewayPortStatus, key: str, value: bool
+) -> OmadaGatewayPortStatus:
+    assert port_status is not None
+    raw_data = port_status.raw_data.copy()
+    raw_data[key] = value
+    return OmadaGatewayPortStatus(raw_data)
 
 
 def call_service(hass: HomeAssistant, service: str, entity_id: str):

@@ -5,7 +5,11 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from tplink_omada_client.devices import OmadaSwitch, OmadaSwitchPortDetails
+from tplink_omada_client.devices import (
+    OmadaGateway,
+    OmadaSwitch,
+    OmadaSwitchPortDetails,
+)
 
 from homeassistant.components.tplink_omada.config_flow import CONF_SITE
 from homeassistant.components.tplink_omada.const import DOMAIN
@@ -45,6 +49,11 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 def mock_omada_site_client() -> Generator[AsyncMock, None, None]:
     """Mock Omada site client."""
     site_client = AsyncMock()
+
+    gateway_data = json.loads(load_fixture("gateway-TL-ER7212PC.json", DOMAIN))
+    gateway = OmadaGateway(gateway_data)
+    site_client.get_gateway.return_value = gateway
+
     switch1_data = json.loads(load_fixture("switch-TL-SG3210XHP-M2.json", DOMAIN))
     switch1 = OmadaSwitch(switch1_data)
     site_client.get_switches.return_value = [switch1]
