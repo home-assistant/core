@@ -388,7 +388,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_get_info(self, host: str, port: int) -> dict[str, Any]:
         """Get info from shelly device."""
-        return await get_info(async_get_clientsession(self.hass), host, None, port)
+        return await get_info(async_get_clientsession(self.hass), host, port=port)
 
     @staticmethod
     @callback
