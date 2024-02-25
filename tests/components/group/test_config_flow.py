@@ -214,7 +214,7 @@ def get_suggested(schema, key):
         ("cover", "open", {}, {}),
         ("event", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("fan", "on", {}, {}),
-        ("light", "on", {"all": False}, {}),
+        ("light", "on", {"all": False, "sync": False}, {}),
         ("lock", "locked", {}, {}),
         ("media_player", "on", {}, {}),
         (
@@ -316,10 +316,11 @@ async def test_options(
 @pytest.mark.parametrize(
     ("group_type", "extra_options", "extra_options_after", "advanced"),
     (
-        ("light", {"all": False}, {"all": False}, False),
-        ("light", {"all": True}, {"all": True}, False),
-        ("light", {"all": False}, {"all": False}, True),
-        ("light", {"all": True}, {"all": False}, True),
+        ("light", {"all": False, "sync": False}, {"all": False, "sync": False}, False),
+        ("light", {"all": True, "sync": False}, {"all": True, "sync": False}, False),
+        ("light", {"all": False, "sync": False}, {"all": False, "sync": False}, True),
+        ("light", {"all": True, "sync": False}, {"all": False, "sync": False}, True),
+        ("light", {"all": False, "sync": True}, {"all": False, "sync": False}, True),
         ("switch", {"all": False}, {"all": False}, False),
         ("switch", {"all": True}, {"all": True}, False),
         ("switch", {"all": False}, {"all": False}, True),
