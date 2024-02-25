@@ -51,7 +51,7 @@ class BringTodoListEntity(
 ):
     """A To-do List representation of the Bring! Shopping List."""
 
-    _attr_translation_key = "shopping_list"
+    _attr_translation_key = "grocery"
     _attr_has_entity_name = True
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
@@ -71,6 +71,7 @@ class BringTodoListEntity(
         self._list_uuid = bring_list["listUuid"]
         self._attr_name = bring_list["name"]
         self._attr_unique_id = f"{unique_id}_{self._list_uuid}"
+        self._attr_translation_key = bring_list["theme"][27:]
 
     @property
     def todo_items(self) -> list[TodoItem]:

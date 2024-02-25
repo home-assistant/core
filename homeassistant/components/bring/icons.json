@@ -1,8 +1,41 @@
 {
   "entity": {
     "todo": {
-      "shopping_list": {
-        "default": "mdi:cart"
+      "grocery": {
+        "default": "mdi:cart",
+        "state": {
+          "0": "mdi:cart-check"
+        }
+      },
+      "home": {
+        "default": "mdi:cart",
+        "state": {
+          "0": "mdi:cart-check"
+        }
+      },
+      "party": {
+        "default": "mdi:party-popper"
+      },
+      "office": {
+        "default": "mdi:desk"
+      },
+      "holiday": {
+        "default": "mdi:bag-personal"
+      },
+      "pharmacy": {
+        "default": "mdi:medical-bag"
+      },
+      "hardware": {
+        "default": "mdi:hammer-screwdriver"
+      },
+      "pets": {
+        "default": "mdi:bone"
+      },
+      "garden": {
+        "default": "mdi:sprout"
+      },
+      "baby": {
+        "default": "mdi:baby-carriage"
       }
     }
   }
