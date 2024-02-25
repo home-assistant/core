@@ -159,11 +159,10 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
         self.async_write_ha_state()
 
     @callback
-    def _reset_progress(self, write_state: bool = True) -> None:
+    def _reset_progress(self) -> None:
         """Reset update install progress."""
         self._attr_in_progress = False
-        if write_state:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
