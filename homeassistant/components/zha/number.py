@@ -38,6 +38,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.NUMBER)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SENSOR)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.NUMBER
 )
@@ -970,20 +971,27 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
     _attr_icon: str = ICONS[0]
 
-    def __init__(
-        self,
-        unique_id: str,
-        zha_device: ZHADevice,
-        cluster_handlers: list[ClusterHandler],
-        **kwargs: Any,
-    ) -> None:
-        """Init this ZHA local temperature calibration entity."""
-        self._cluster_handler: ClusterHandler = cluster_handlers[0]
-        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-        if zha_device.model == "TRVZB":
-            self._attr_native_max_value: float = 7
-            self._attr_native_min_value: float = -7
-            self._attr_native_step: float = 0.2
+
+@MULTI_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    models={"TRVZB"},
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class ThermostatLocalTempCalibrationSonoffTRVZB(ZHANumberConfigurationEntity):
+    """Local temperature calibration for the Sonoff TRVZB."""
+
+    _unique_id_suffix = "local_temperature_calibration"
+    _attr_native_min_value: float = -7
+    _attr_native_max_value: float = 7
+    _attr_native_step: float = 0.2
+    _attr_multiplier: float = 0.1
+    _attribute_name = "local_temperature_calibration"
+    _attr_translation_key: str = "local_temperature_calibration"
+
+    _attr_mode: NumberMode = NumberMode.SLIDER
+    _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
+    _attr_icon: str = ICONS[0]
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
