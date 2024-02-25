@@ -550,3 +550,76 @@ async def test_cpu_percentage_is_zero_returns_unknown(
     cpu_sensor = hass.states.get("sensor.system_monitor_processor_use")
     assert cpu_sensor is not None
     assert cpu_sensor.state == "15"
+
+
+async def test_remove_obsolete_entities(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_added_config_entry: ConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test we remove sensors that are not actual and disabled."""
+    cpu_sensor = hass.states.get("sensor.system_monitor_processor_use")
+    assert cpu_sensor is None
+    cpu_sensor_entity = entity_registry.async_get("sensor.system_monitor_processor_use")
+    assert cpu_sensor_entity.disabled is True
+
+    assert (
+        len(
+            entity_registry.entities.get_entries_for_config_entry_id(
+                mock_added_config_entry.entry_id
+            )
+        )
+        == 37
+    )
+
+    entity_registry.async_update_entity(
+        "sensor.system_monitor_processor_use", disabled_by=None
+    )
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Fake an entity which should be removed as not supported and disabled
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "network_out_veth12345",
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+        config_entry=mock_added_config_entry,
+        has_entity_name=True,
+        device_id=cpu_sensor_entity.device_id,
+        translation_key="network_out",
+    )
+    # Fake an entity which should not be removed as not supported but not disabled
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "network_out_veth54321",
+        disabled_by=None,
+        config_entry=mock_added_config_entry,
+        has_entity_name=True,
+        device_id=cpu_sensor_entity.device_id,
+        translation_key="network_out",
+    )
+    await hass.config_entries.async_reload(mock_added_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        len(
+            entity_registry.entities.get_entries_for_config_entry_id(
+                mock_added_config_entry.entry_id
+            )
+        )
+        == 38
+    )
+
+    assert (
+        entity_registry.async_get("sensor.systemmonitor_network_out_veth12345") is None
+    )
+    assert (
+        entity_registry.async_get("sensor.systemmonitor_network_out_veth54321")
+        is not None
+    )
