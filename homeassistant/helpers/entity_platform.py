@@ -469,7 +469,6 @@ class EntityPlatform:
         task = self.hass.async_create_task(
             self.async_add_entities(new_entities, update_before_add=update_before_add),
             f"EntityPlatform async_add_entities {self.domain}.{self.platform_name}",
-            eager_start=True,
         )
 
         if not self._setup_complete:
@@ -485,7 +484,6 @@ class EntityPlatform:
             self.hass,
             self.async_add_entities(new_entities, update_before_add=update_before_add),
             f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
-            eager_start=True,
         )
 
         if not self._setup_complete:
