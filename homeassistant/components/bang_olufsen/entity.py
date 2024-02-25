@@ -36,7 +36,6 @@ class BangOlufsenBase:
 
         # Set the configuration variables.
         self._host: str = self.entry.data[CONF_HOST]
-        self._name: str = self.entry.title
         self._unique_id: str = cast(str, self.entry.unique_id)
 
         # Objects that get directly updated by notifications.
