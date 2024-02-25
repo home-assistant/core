@@ -38,7 +38,7 @@ def _validate_country_and_province(
     if not province:
         return
     try:
-        country_holidays(country, prov=province)
+        country_holidays(country, subdiv=province)
     except NotImplementedError as ex:
         async_create_issue(
             hass,
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _validate_country_and_province(hass, entry, country, province)
 
     if country and CONF_LANGUAGE not in entry.options:
-        cls: HolidayBase = country_holidays(country, prov=province)
+        cls: HolidayBase = country_holidays(country, subdiv=province)
         default_language = cls.default_language
         new_options = entry.options.copy()
         new_options[CONF_LANGUAGE] = default_language
