@@ -1,6 +1,8 @@
 """Config flow to configure the LG Netcast TV integration."""
 from __future__ import annotations
 
+import contextlib
+from datetime import datetime
 from typing import Any
 
 from pylgnetcast import AccessTokenError, LgNetCastClient, SessionIdError
@@ -14,12 +16,20 @@ from homeassistant.const import (
     CONF_MODEL,
     CONF_NAME,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.core import CALLBACK_TYPE, DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.network import is_host_valid
 
-from .const import ATTR_FRIENDLY_NAME, ATTR_MODEL_NAME, ATTR_UUID, DEFAULT_NAME, DOMAIN
+from .const import (
+    ATTR_FRIENDLY_NAME,
+    ATTR_MODEL_NAME,
+    ATTR_UUID,
+    DEFAULT_NAME,
+    DISPLAY_ACCESS_TOKEN_INTERVAL,
+    DOMAIN,
+)
 from .helpers import LGNetCastDetailDiscoveryError, async_discover_netcast_details
 
 
@@ -33,6 +43,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
         self.client: LgNetCastClient | None = None
         self.device_config: dict[str, Any] = {}
         self._discovered_devices: dict[str, Any] = {}
+        self._track_interval: CALLBACK_TYPE | None = None
 
     def create_client(self) -> None:
         """Create LG Netcast client from config."""
@@ -131,6 +142,9 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle Authorize step."""
         errors: dict[str, str] = {}
+        if self._track_interval is not None:
+            self._track_interval()
+            self._track_interval = None
 
         if user_input is not None and user_input.get(CONF_ACCESS_TOKEN) is not None:
             self.device_config[CONF_ACCESS_TOKEN] = user_input[CONF_ACCESS_TOKEN]
@@ -155,6 +169,13 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             return await self.async_create_device()
 
+        self._track_interval = async_track_time_interval(
+            self.hass,
+            self.async_display_access_token,
+            DISPLAY_ACCESS_TOKEN_INTERVAL,
+            cancel_on_shutdown=True,
+        )
+
         return self.async_show_form(
             step_id="authorize",
             data_schema=vol.Schema(
@@ -164,6 +185,15 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    @callback
+    async def async_display_access_token(self, _: datetime | None = None):
+        """Display access token on screen."""
+        assert self.client is not None
+        with contextlib.suppress(AccessTokenError, SessionIdError):
+            await self.hass.async_add_executor_job(
+                self.client._get_session_id  # pylint: disable=protected-access
+            )
 
     async def async_create_device(self) -> FlowResult:
         """Create LG Netcast TV Device from config."""
