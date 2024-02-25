@@ -41,6 +41,8 @@ class HumidifierComelitAction(StrEnum):
     MANUAL = "man"
     SET = "set"
     AUTO = "auto"
+    LOWER = "lower"
+    UPPER = "upper"
 
 
 MODE_TO_ACTION: dict[str, HumidifierComelitAction] = {
@@ -199,9 +201,12 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
-        await self.coordinator.api.set_humidity_status(
-            self._device.index, HumidifierComelitAction.ON
+        mode = (
+            HumidifierComelitAction.LOWER
+            if self._attr_device_class == HumidifierDeviceClass.DEHUMIDIFIER
+            else HumidifierComelitAction.UPPER
         )
+        await self.coordinator.api.set_humidity_status(self._device.index, mode)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
