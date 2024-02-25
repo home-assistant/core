@@ -15,7 +15,7 @@ from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
 from yarl import URL
 
-from homeassistant.components import matter, webhook
+from homeassistant.components import webhook
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
@@ -644,16 +644,19 @@ class GoogleEntity:
             return device
 
         # Add Matter info
-        if (
-            "matter" in self.hass.config.components
-            and any(x for x in device_entry.identifiers if x[0] == "matter")
-            and (
-                matter_info := matter.get_matter_device_info(self.hass, device_entry.id)
-            )
+        if "matter" in self.hass.config.components and any(
+            x for x in device_entry.identifiers if x[0] == "matter"
         ):
-            device["matterUniqueId"] = matter_info["unique_id"]
-            device["matterOriginalVendorId"] = matter_info["vendor_id"]
-            device["matterOriginalProductId"] = matter_info["product_id"]
+            # pylint: disable-next=import-outside-toplevel
+            from homeassistant.components.matter import get_matter_device_info
+
+            # Import matter can block the event loop for multiple seconds
+            # so we import it here to avoid blocking the event loop during
+            # setup since google_assistant is imported from cloud.
+            if matter_info := get_matter_device_info(self.hass, device_entry.id):
+                device["matterUniqueId"] = matter_info["unique_id"]
+                device["matterOriginalVendorId"] = matter_info["vendor_id"]
+                device["matterOriginalProductId"] = matter_info["product_id"]
 
         # Add deviceInfo
         device_info = {}
