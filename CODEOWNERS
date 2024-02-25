@@ -732,6 +732,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/led_ble/ @bdraco
 /tests/components/led_ble/ @bdraco
 /homeassistant/components/lg_netcast/ @Drafteed
+/tests/components/lg_netcast/ @Drafteed
 /homeassistant/components/lidarr/ @tkdrob
 /tests/components/lidarr/ @tkdrob
 /homeassistant/components/light/ @home-assistant/core

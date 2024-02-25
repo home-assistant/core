@@ -17,14 +17,16 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import ATTR_MANUFACTURER, DOMAIN
 
 DEFAULT_NAME = "LG TV Remote"
 
@@ -54,6 +56,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up a LG Netcast Media Player from a config_entry."""
+
+    host = config_entry.data[CONF_HOST]
+    access_token = config_entry.data[CONF_ACCESS_TOKEN]
+    unique_id = config_entry.unique_id
+    name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+
+    client = LgNetCastClient(host, access_token)
+
+    async_add_entities([LgTVDevice(client, name, None, unique_id=unique_id)])
+
+
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -80,7 +99,7 @@ class LgTVDevice(MediaPlayerEntity):
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_media_content_type = MediaType.CHANNEL
 
-    def __init__(self, client, name, on_action_script):
+    def __init__(self, client, name, on_action_script, *, unique_id=None):
         """Initialize the LG TV device."""
         self._client = client
         self._name = name
@@ -92,6 +111,13 @@ class LgTVDevice(MediaPlayerEntity):
         self._program_name = ""
         self._sources = {}
         self._source_names = []
+        if unique_id is not None:
+            self._attr_unique_id = unique_id
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, unique_id)},
+                manufacturer=ATTR_MANUFACTURER,
+                name=f"{ATTR_MANUFACTURER} Netcast",
+            )
 
     def send_command(self, command):
         """Send remote control commands to the TV."""
