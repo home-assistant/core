@@ -129,6 +129,7 @@ class NukiBatteryChargingEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     _attr_has_entity_name = True
     _attr_device_class = BinarySensorDeviceClass.BATTERY_CHARGING
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
 
     @property
     def unique_id(self) -> str:
