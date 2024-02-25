@@ -1,4 +1,5 @@
 """Support for Tado thermostats."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -238,13 +239,13 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         supported_hvac_modes: list[HVACMode],
         support_flags: ClimateEntityFeature,
         device_info: dict[str, str],
-        heat_min_temp: Optional[float] = None,
-        heat_max_temp: Optional[float] = None,
-        heat_step: Optional[float] = None,
-        cool_min_temp: Optional[float] = None,
-        cool_max_temp: Optional[float] = None,
-        cool_step: Optional[float] = None,
-        supported_fan_modes: Optional[list[str]] = None,
+        heat_min_temp: float | None = None,
+        heat_max_temp: float | None = None,
+        heat_step: float | None = None,
+        cool_min_temp: float | None = None,
+        cool_max_temp: float | None = None,
+        cool_step: float | None = None,
+        supported_fan_modes: list[str] | None = None,
     ) -> None:
         """Initialize of Tado climate entity."""
         self._tado = tado
@@ -530,7 +531,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self.async_write_ha_state()
 
     def _normalize_target_temp_for_hvac_mode(self) -> None:
-        def adjust_temp(min_temp, max_temp):
+        def adjust_temp(min_temp, max_temp) -> float | None:
             if max_temp is not None and self._target_temp > max_temp:
                 return max_temp
             if min_temp is not None and self._target_temp < min_temp:
