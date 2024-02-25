@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import cast
 
 from homeassistant.components.sensor import (
@@ -23,6 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import parse_duration, utcnow
 
 from . import GlancesDataUpdateCoordinator
 from .const import CPU_ICON, DOMAIN
@@ -212,6 +214,13 @@ SENSOR_TYPES = {
         translation_key="raid_used",
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ("uptime", "uptime"): GlancesSensorEntityDescription(
+        key="uptime",
+        type="uptime",
+        translation_key="uptime",
+        icon="mdi:clock-time-eight-outline",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 }
 
 
@@ -237,6 +246,14 @@ async def async_setup_entry(
                 for param in params
                 if (sensor_description := SENSOR_TYPES.get((sensor_type, param)))
             )
+        elif sensor_type == "uptime":
+            if sensor_description := SENSOR_TYPES.get((sensor_type, sensor_type)):
+                entities.append(
+                    GlancesTimestampSensor(
+                        coordinator,
+                        sensor_description,
+                    )
+                )
         else:
             entities.extend(
                 GlancesSensor(
@@ -290,7 +307,7 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         return False
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the resources."""
         value = self.coordinator.data[self.entity_description.type]
 
@@ -299,3 +316,26 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
                 StateType, value[self._sensor_label][self.entity_description.key]
             )
         return cast(StateType, value[self.entity_description.key])
+
+
+class GlancesTimestampSensor(GlancesSensor):
+    """Implementation of a Glances Timestamp sensor."""
+
+    _attr_native_value: datetime | None = None
+
+    @property
+    def native_value(self) -> StateType | datetime:
+        """Return the state of the resources."""
+        uptime = self.coordinator.data[self.entity_description.type]
+        up_duration = parse_duration(uptime)
+        if up_duration:
+            new_value = utcnow() - up_duration
+            # Accept only changes of more than 10 minutes to avoid flapping
+            if (
+                self._attr_native_value is None
+                or abs((new_value - self._attr_native_value).total_seconds()) > 600
+            ):
+                self._attr_native_value = new_value
+        else:
+            self._attr_native_value = None
+        return self._attr_native_value
