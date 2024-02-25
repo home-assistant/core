@@ -702,7 +702,6 @@ debugpy==1.8.1
 deebot-client==6.0.2
 
 # homeassistant.components.ihc
-# homeassistant.components.lg_netcast
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
 defusedxml==0.7.1
@@ -1935,7 +1934,7 @@ pylast==5.1.0
 pylaunches==1.4.0
 
 # homeassistant.components.lg_netcast
-pylgnetcast==0.3.7
+pylgnetcast==0.3.9
 
 # homeassistant.components.forked_daapd
 pylibrespot-java==0.1.1
