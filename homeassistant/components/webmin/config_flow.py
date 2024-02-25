@@ -8,8 +8,6 @@ from xmlrpc.client import Fault
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 import voluptuous as vol
-from webmin_xmlrpc.client import WebminInstance
-from yarl import URL
 
 from homeassistant.const import (
     CONF_HOST,
@@ -20,7 +18,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.helpers import selector
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -29,6 +26,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .const import DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
+from .helpers import get_instance_from_options, get_sorted_mac_addresses
 
 
 async def validate_user_input(
@@ -39,19 +37,7 @@ async def validate_user_input(
     handler.parent_handler._async_abort_entries_match(
         {CONF_HOST: user_input[CONF_HOST]}
     )
-    base_url = URL.build(
-        scheme="https" if user_input[CONF_SSL] else "http",
-        user=user_input[CONF_USERNAME],
-        password=user_input[CONF_PASSWORD],
-        host=user_input[CONF_HOST],
-        port=int(user_input[CONF_PORT]),
-    )
-    session = async_create_clientsession(
-        handler.parent_handler.hass,
-        verify_ssl=user_input[CONF_VERIFY_SSL],
-        base_url=base_url,
-    )
-    instance = WebminInstance(session=session)
+    instance, _ = get_instance_from_options(handler.parent_handler.hass, user_input)
     try:
         data = await instance.update()
     except ClientResponseError as err:
@@ -67,11 +53,8 @@ async def validate_user_input(
     except Exception as err:
         raise SchemaFlowError("unknown") from err
 
-    ifaces = [iface for iface in data["active_interfaces"] if "ether" in iface]
-    ifaces.sort(key=lambda x: x["ether"])
-    mac_address = ifaces[0]["ether"]
     await cast(SchemaConfigFlowHandler, handler.parent_handler).async_set_unique_id(
-        mac_address
+        get_sorted_mac_addresses(data)[0]
     )
     return user_input
 
