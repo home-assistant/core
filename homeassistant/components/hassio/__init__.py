@@ -590,8 +590,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await async_setup_addon_panel(hass, hassio)
 
     # Setup hardware integration for the detected board type
-    async def _async_setup_hardware_integration(_: datetime | None = None) -> None:
-        """Set up hardaware integration for the detected board type."""
+    @callback
+    def _async_setup_hardware_integration(_: datetime | None = None) -> None:
+        """Set up hardware integration for the detected board type."""
         if (os_info := get_os_info(hass)) is None:
             # os info not yet fetched from supervisor, retry later
             async_call_later(
@@ -614,7 +615,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         _async_setup_hardware_integration, cancel_on_shutdown=True
     )
 
-    await _async_setup_hardware_integration()
+    _async_setup_hardware_integration()
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
