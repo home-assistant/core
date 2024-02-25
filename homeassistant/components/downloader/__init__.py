@@ -53,9 +53,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     translation_key = "deprecated_yaml"
-    if import_result.get("type") == FlowResultType.ABORT:
-        if import_result.get("reason") == "import_failed":
-            translation_key = "import_failed"
+    if (
+         import_result["type"] == FlowResultType.ABORT
+        and import_result["reason"] == "import_failed"
+    ):
+        translation_key = "import_failed"
 
     async_create_issue(
         hass,
