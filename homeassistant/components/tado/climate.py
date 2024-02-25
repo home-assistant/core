@@ -263,7 +263,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._attr_fan_modes = supported_fan_modes
         self._attr_supported_features = support_flags
 
-        # Why are they here? Part of generic thermostat it seems? Need to be set?
         self._cur_temp = None
         self._cur_humidity = None
         if self.supported_features & ClimateEntityFeature.SWING_MODE:
