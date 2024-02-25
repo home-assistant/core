@@ -146,6 +146,9 @@ async def setup_enphase_envoy_fixture(hass, config, mock_envoy):
     ), patch(
         "homeassistant.components.enphase_envoy.PLATFORMS",
         [],
+    ), patch(
+        "homeassistant.components.enphase_envoy.coordinator.EnphaseUpdateCoordinator._async_mark_setup_complete",
+        return_value=None,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
