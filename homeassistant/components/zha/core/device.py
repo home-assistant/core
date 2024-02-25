@@ -33,7 +33,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import const
+from . import const, discovery
 from .cluster_handlers import ClusterHandler, ZDOClusterHandler
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
@@ -432,6 +432,7 @@ class ZHADevice(LogMixin):
                 zha_dev.async_update_sw_build_id,
             )
         )
+        discovery.PROBE.discover_device_entities(zha_dev)
         return zha_dev
 
     @callback

@@ -8,12 +8,16 @@ import logging
 import os
 from typing import NamedTuple, TypeVar
 
-import psutil
+from psutil import Process
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
+import psutil_home_assistant as ha_psutil
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    TimestampDataUpdateCoordinator,
+    UpdateFailed,
+)
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +44,7 @@ dataT = TypeVar(
     | dict[str, list[snicaddr]]
     | dict[str, snetio]
     | float
-    | list[psutil.Process]
+    | list[Process]
     | sswap
     | VirtualMemory
     | tuple[float, float, float]
@@ -49,10 +53,12 @@ dataT = TypeVar(
 )
 
 
-class MonitorCoordinator(DataUpdateCoordinator[dataT]):
+class MonitorCoordinator(TimestampDataUpdateCoordinator[dataT]):
     """A System monitor Base Data Update Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, name: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, psutil_wrapper: ha_psutil.PsutilWrapper, name: str
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -61,6 +67,7 @@ class MonitorCoordinator(DataUpdateCoordinator[dataT]):
             update_interval=DEFAULT_SCAN_INTERVAL,
             always_update=False,
         )
+        self._psutil = psutil_wrapper.psutil
 
     async def _async_update_data(self) -> dataT:
         """Fetch data."""
@@ -74,15 +81,23 @@ class MonitorCoordinator(DataUpdateCoordinator[dataT]):
 class SystemMonitorDiskCoordinator(MonitorCoordinator[sdiskusage]):
     """A System monitor Disk Data Update Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, name: str, argument: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        psutil_wrapper: ha_psutil.PsutilWrapper,
+        name: str,
+        argument: str,
+    ) -> None:
         """Initialize the disk coordinator."""
-        super().__init__(hass, name)
+        super().__init__(hass, psutil_wrapper, name)
         self._argument = argument
 
     def update_data(self) -> sdiskusage:
         """Fetch data."""
         try:
-            return psutil.disk_usage(self._argument)
+            usage: sdiskusage = self._psutil.disk_usage(self._argument)
+            _LOGGER.debug("sdiskusage: %s", usage)
+            return usage
         except PermissionError as err:
             raise UpdateFailed(f"No permission to access {self._argument}") from err
         except OSError as err:
@@ -94,7 +109,9 @@ class SystemMonitorSwapCoordinator(MonitorCoordinator[sswap]):
 
     def update_data(self) -> sswap:
         """Fetch data."""
-        return psutil.swap_memory()
+        swap: sswap = self._psutil.swap_memory()
+        _LOGGER.debug("sswap: %s", swap)
+        return swap
 
 
 class SystemMonitorMemoryCoordinator(MonitorCoordinator[VirtualMemory]):
@@ -102,7 +119,8 @@ class SystemMonitorMemoryCoordinator(MonitorCoordinator[VirtualMemory]):
 
     def update_data(self) -> VirtualMemory:
         """Fetch data."""
-        memory = psutil.virtual_memory()
+        memory = self._psutil.virtual_memory()
+        _LOGGER.debug("memory: %s", memory)
         return VirtualMemory(
             memory.total, memory.available, memory.percent, memory.used, memory.free
         )
@@ -113,7 +131,9 @@ class SystemMonitorNetIOCoordinator(MonitorCoordinator[dict[str, snetio]]):
 
     def update_data(self) -> dict[str, snetio]:
         """Fetch data."""
-        return psutil.net_io_counters(pernic=True)
+        io_counters: dict[str, snetio] = self._psutil.net_io_counters(pernic=True)
+        _LOGGER.debug("io_counters: %s", io_counters)
+        return io_counters
 
 
 class SystemMonitorNetAddrCoordinator(MonitorCoordinator[dict[str, list[snicaddr]]]):
@@ -121,13 +141,20 @@ class SystemMonitorNetAddrCoordinator(MonitorCoordinator[dict[str, list[snicaddr
 
     def update_data(self) -> dict[str, list[snicaddr]]:
         """Fetch data."""
-        return psutil.net_if_addrs()
+        addresses: dict[str, list[snicaddr]] = self._psutil.net_if_addrs()
+        _LOGGER.debug("ip_addresses: %s", addresses)
+        return addresses
 
 
-class SystemMonitorLoadCoordinator(MonitorCoordinator[tuple[float, float, float]]):
+class SystemMonitorLoadCoordinator(
+    MonitorCoordinator[tuple[float, float, float] | None]
+):
     """A System monitor Load Data Update Coordinator."""
 
-    def update_data(self) -> tuple[float, float, float]:
+    def update_data(self) -> tuple[float, float, float] | None:
+        """Coordinator is not async."""
+
+    async def _async_update_data(self) -> tuple[float, float, float] | None:
         """Fetch data."""
         return os.getloadavg()
 
@@ -136,8 +163,18 @@ class SystemMonitorProcessorCoordinator(MonitorCoordinator[float | None]):
     """A System monitor Processor Data Update Coordinator."""
 
     def update_data(self) -> float | None:
-        """Fetch data."""
-        cpu_percent = psutil.cpu_percent(interval=None)
+        """Coordinator is not async."""
+
+    async def _async_update_data(self) -> float | None:
+        """Get cpu usage.
+
+        Unlikely the rest of the coordinators, this one is async
+        since it does not block and we need to make sure it runs
+        in the same thread every time as psutil checks the thread
+        tid and compares it against the previous one.
+        """
+        cpu_percent: float = self._psutil.cpu_percent(interval=None)
+        _LOGGER.debug("cpu_percent: %s", cpu_percent)
         if cpu_percent > 0.0:
             return cpu_percent
         return None
@@ -148,15 +185,18 @@ class SystemMonitorBootTimeCoordinator(MonitorCoordinator[datetime]):
 
     def update_data(self) -> datetime:
         """Fetch data."""
-        return dt_util.utc_from_timestamp(psutil.boot_time())
+        boot_time = dt_util.utc_from_timestamp(self._psutil.boot_time())
+        _LOGGER.debug("boot time: %s", boot_time)
+        return boot_time
 
 
-class SystemMonitorProcessCoordinator(MonitorCoordinator[list[psutil.Process]]):
+class SystemMonitorProcessCoordinator(MonitorCoordinator[list[Process]]):
     """A System monitor Process Data Update Coordinator."""
 
-    def update_data(self) -> list[psutil.Process]:
+    def update_data(self) -> list[Process]:
         """Fetch data."""
-        processes = psutil.process_iter()
+        processes = self._psutil.process_iter()
+        _LOGGER.debug("processes: %s", processes)
         return list(processes)
 
 
@@ -166,6 +206,8 @@ class SystemMonitorCPUtempCoordinator(MonitorCoordinator[dict[str, list[shwtemp]
     def update_data(self) -> dict[str, list[shwtemp]]:
         """Fetch data."""
         try:
-            return psutil.sensors_temperatures()
+            temps: dict[str, list[shwtemp]] = self._psutil.sensors_temperatures()
+            _LOGGER.debug("temps: %s", temps)
+            return temps
         except AttributeError as err:
             raise UpdateFailed("OS does not provide temperature sensors") from err
