@@ -237,6 +237,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
                 or address.is_unspecified
             ):
                 ipv4.append(address)
+    LOGGER.debug("Network IPv4 addresses: %s", ipv4)
     if DOMAIN in hass.data:
         port = hass.data[DOMAIN].get(CONF_COAP_PORT, DEFAULT_COAP_PORT)
     else:
