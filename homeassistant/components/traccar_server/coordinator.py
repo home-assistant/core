@@ -17,7 +17,7 @@ from pytraccar import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -163,7 +163,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             update_devices.add(device_id)
 
         for device_id in update_devices:
-            dispatcher_send(self.hass, f"{DOMAIN}_{device_id}")
+            async_dispatcher_send(self.hass, f"{DOMAIN}_{device_id}")
 
     async def import_events(self, _: datetime) -> None:
         """Import events from Traccar."""
