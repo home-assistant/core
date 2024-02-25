@@ -826,7 +826,15 @@ class Integration:
         return self._all_dependencies_resolved
 
     def get_component(self) -> ComponentProtocol:
-        """Return the component."""
+        """Return the component.
+
+        This method must be thread-safe as its called from the executor
+        and the event loop.
+
+        This is mostly a thin wrapper around importlib.import_module
+        with a dict cache which is thread-safe since importlib has
+        appropriate locks.
+        """
         cache: dict[str, ComponentProtocol] = self.hass.data[DATA_COMPONENTS]
         if self.domain in cache:
             return cache[self.domain]
@@ -908,6 +916,15 @@ class Integration:
         return self._load_platform(platform_name)
 
     def _load_platform(self, platform_name: str) -> ModuleType:
+        """Load a platform for an integration.
+
+        This method must be thread-safe as its called from the executor
+        and the event loop.
+
+        This is mostly a thin wrapper around importlib.import_module
+        with a dict cache which is thread-safe since importlib has
+        appropriate locks.
+        """
         full_name = f"{self.domain}.{platform_name}"
         cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
         try:
@@ -934,7 +951,11 @@ class Integration:
         return cache[full_name]
 
     def _import_platform(self, platform_name: str) -> ModuleType:
-        """Import the platform."""
+        """Import the platform.
+
+        This method must be thread-safe as its called from the executor
+        and the event loop.
+        """
         return importlib.import_module(f"{self.pkg_path}.{platform_name}")
 
     def __repr__(self) -> str:
