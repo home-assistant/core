@@ -265,6 +265,7 @@ INTEGRATION_MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("loggers"): [str],
         vol.Optional("disabled"): str,
         vol.Optional("iot_class"): vol.In(SUPPORTED_IOT_CLASSES),
+        vol.Optional("pre_import_setup"): [str],
     }
 )
 

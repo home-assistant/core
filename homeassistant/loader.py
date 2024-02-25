@@ -179,6 +179,7 @@ class Manifest(TypedDict, total=False):
     version: str
     codeowners: list[str]
     loggers: list[str]
+    pre_import_setup: list[str]
 
 
 def async_setup(hass: HomeAssistant) -> None:
@@ -722,6 +723,11 @@ class Integration:
     ) -> Literal["entity", "device", "hardware", "helper", "hub", "service", "system"]:
         """Return the integration type."""
         return self.manifest.get("integration_type", "hub")
+
+    @cached_property
+    def pre_import_setup(self) -> list[str] | None:
+        """Return modules to import in the executor before the integration is setup."""
+        return self.manifest.get("pre_import_setup")
 
     @property
     def mqtt(self) -> list[str] | None:
