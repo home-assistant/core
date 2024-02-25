@@ -5,7 +5,12 @@ from pylgnetcast import AccessTokenError, LgNetCastClient, SessionIdError
 import requests
 import requests_mock
 
-from tests.common import load_fixture
+from homeassistant.components.lg_netcast import DOMAIN
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry, load_fixture
 
 FAIL_TO_BIND_IP = "1.2.3.4"
 
@@ -14,6 +19,7 @@ DEVICE_TYPE = "TV"
 MODEL_NAME = "MockLGModelName"
 FRIENDLY_NAME = "LG Smart TV"
 UNIQUE_ID = "1234"
+ENTITY_ID = f"{MP_DOMAIN}.{MODEL_NAME.lower()}"
 
 FAKE_SESSION_ID = "987654321"
 FAKE_PIN = "123456"
@@ -105,3 +111,24 @@ def _patch_lg_netcast(
         "homeassistant.components.lg_netcast.config_flow.LgNetCastClient",
         new=_generate_fake_lgnetcast_client,
     )
+
+
+async def setup_lgnetcast(hass: HomeAssistant, unique_id: str = UNIQUE_ID):
+    """Initialize lg netcast and media_player for tests."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: IP_ADDRESS,
+            CONF_ACCESS_TOKEN: FAKE_PIN,
+            CONF_NAME: MODEL_NAME,
+            CONF_ID: unique_id,
+        },
+        title=MODEL_NAME,
+        unique_id=unique_id,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return config_entry

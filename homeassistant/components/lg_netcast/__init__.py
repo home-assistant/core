@@ -16,6 +16,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a config entry."""
+    hass.data.setdefault(DOMAIN, {})
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
