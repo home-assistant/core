@@ -61,11 +61,11 @@ async def test_manual_host(hass: HomeAssistant) -> None:
         )
 
         assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result3["title"] == f"{FRIENDLY_NAME} ({MODEL_NAME})"
+        assert result3["title"] == FRIENDLY_NAME
         assert result3["data"] == {
             CONF_HOST: IP_ADDRESS,
             CONF_ACCESS_TOKEN: FAKE_PIN,
-            CONF_NAME: f"{FRIENDLY_NAME} ({MODEL_NAME})",
+            CONF_NAME: FRIENDLY_NAME,
             CONF_ID: UNIQUE_ID,
         }
 

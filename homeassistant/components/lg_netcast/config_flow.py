@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.network import is_host_valid
 
-from .const import ATTR_UUID, DEFAULT_NAME, DOMAIN
+from .const import ATTR_FRIENDLY_NAME, ATTR_UUID, DEFAULT_NAME, DOMAIN
 from .helpers import LGNetCastDetailDiscoveryError, async_discover_netcast_details
 
 
@@ -117,11 +117,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
         self.device_config[CONF_ID] = unique_id
 
         if CONF_NAME not in self.device_config:
-            model_name = details["model_name"]
-            friendly_name = details["friendly_name"] or DEFAULT_NAME
-            self.device_config[CONF_NAME] = (
-                f"{friendly_name} ({model_name})" if model_name else friendly_name
-            )
+            self.device_config[CONF_NAME] = details[ATTR_FRIENDLY_NAME] or DEFAULT_NAME
 
     async def async_step_authorize(
         self, user_input: dict[str, Any] | None = None

@@ -124,7 +124,7 @@ class LgTVDevice(MediaPlayerEntity):
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, unique_id)},
                 manufacturer=ATTR_MANUFACTURER,
-                name=f"{ATTR_MANUFACTURER} Netcast",
+                name=name,
             )
 
     async def async_added_to_hass(self) -> None:
