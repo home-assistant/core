@@ -147,7 +147,6 @@ async def test_import(hass: HomeAssistant) -> None:
                 CONF_HOST: IP_ADDRESS,
                 CONF_ACCESS_TOKEN: FAKE_PIN,
                 CONF_NAME: MODEL_NAME,
-                CONF_ID: UNIQUE_ID,
             },
         )
 

@@ -19,8 +19,9 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -29,7 +30,6 @@ from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_MANUFACTURER, DOMAIN
-from .helpers import LGNetCastDetailDiscoveryError, async_discover_netcast_details
 from .triggers.turn_on import async_get_turn_on_trigger
 
 DEFAULT_NAME = "LG TV Remote"
@@ -89,18 +89,15 @@ async def async_setup_platform(
 
     host = config.get(CONF_HOST)
 
-    client = LgNetCastClient(host, None)
-
-    try:
-        details = await async_discover_netcast_details(hass, client)
-    except LGNetCastDetailDiscoveryError as err:
-        raise PlatformNotReady(f"Connection error while connecting to {host}") from err
-
-    unique_id = details["uuid"]
-
-    await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data={**config, CONF_ID: unique_id}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
+
+    if (
+        result.get("type") == FlowResultType.ABORT
+        and result.get("reason") == "cannot_connect"
+    ):
+        raise PlatformNotReady(f"Connection error while connecting to {host}")
 
 
 class LgTVDevice(MediaPlayerEntity):
