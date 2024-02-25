@@ -337,6 +337,7 @@ class EnergySensor(SHCEntity, SensorEntity):
 class ValveTappetSensor(SHCEntity, SensorEntity):
     """Representation of an SHC valve tappet reporting sensor."""
 
+    _attr_translation_key = "valvetappet"
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
 
