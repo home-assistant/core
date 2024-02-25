@@ -9,7 +9,7 @@ from aiounifi.models.message import MessageKey
 import pytest
 
 from homeassistant.components.unifi.const import DOMAIN as UNIFI_DOMAIN
-from homeassistant.components.unifi.hub import RETRY_TIMER
+from homeassistant.components.unifi.hub.websocket import RETRY_TIMER
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
