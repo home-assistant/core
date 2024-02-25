@@ -26,17 +26,17 @@ async def async_setup_entry(
     coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ].coordinator
-    covers = []
-    for bee_id, bee in coordinator.data.bees.items():
-        if bee.productID == 47:
-            actuator_up_id = next(filter(lambda x: x.deviceID == 551, bee.actuators)).id
-            actuator_down_id = next(
-                filter(lambda x: x.deviceID == 552, bee.actuators)
-            ).id
-            covers.append(
-                MBCover(coordinator, bee_id, actuator_up_id, actuator_down_id)
-            )
-    async_add_entities(covers)
+
+    async_add_entities(
+        MBCover(
+            coordinator,
+            bee_id,
+            next(filter(lambda x: x.deviceID == 551, bee.actuators)).id,
+            next(filter(lambda x: x.deviceID == 552, bee.actuators)).id,
+        )
+        for bee_id, bee in coordinator.data.bees.items()
+        if bee.productID == 47
+    )
 
 
 class MBCover(MicroBeesEntity, CoverEntity):
