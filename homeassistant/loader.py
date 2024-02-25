@@ -881,6 +881,11 @@ class Integration:
             import_future.set_result(platform)
         except BaseException as ex:
             import_future.set_exception(ex)
+            with suppress(BaseException):
+                # Clear the exception retrieved flag on the future since
+                # it will never be retrieved unless there
+                # are concurrent calls to async_get_platform
+                import_future.result()
             raise
         finally:
             self._import_futures.pop(full_name)
