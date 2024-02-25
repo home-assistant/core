@@ -1,17 +1,20 @@
 """Tests for TP-Link Omada switch entities."""
-
+from typing import Any
 from unittest.mock import MagicMock
 
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client import SwitchPortOverrides
 from tplink_omada_client.definitions import PoEMode
 from tplink_omada_client.devices import (
+    OmadaGateway,
     OmadaGatewayPortStatus,
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
+from tplink_omada_client.exceptions import InvalidDevice
 
 from homeassistant.components import switch
+from homeassistant.components.tplink_omada.controller import OmadaSiteController
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -47,7 +50,7 @@ async def test_gateway_connect_ipv4_switch(
     """Test gateway connected switches."""
     gateway_mac = "AA-BB-CC-DD-EE-FF"
 
-    entity_id = "switch.test_router_4_wan_connect_ipv4"
+    entity_id = "switch.test_router_port_4_internet_connected"
     entity = hass.states.get(entity_id)
     assert entity == snapshot
 
@@ -57,22 +60,56 @@ async def test_gateway_connect_ipv4_switch(
 
     mock_omada_site_client.set_gateway_wan_port_connect_state.reset_mock()
     mock_omada_site_client.set_gateway_wan_port_connect_state.return_value = (
-        await _update_gateway_port_status(port_status, "wan_connected", False)
+        _get_updated_gateway_port_status(
+            mock_omada_site_client, test_gateway, 3, "internetState", 0
+        )
     )
     await call_service(hass, "turn_off", entity_id)
     mock_omada_site_client.set_gateway_wan_port_connect_state.assert_called_once_with(
-        4, test_gateway, False, False
+        4, False, test_gateway, ipv6=False
     )
+    entity = hass.states.get(entity_id)
     assert entity.state == "off"
 
-    # mock_omada_site_client.set_gateway_wan_port_connect_state.reset_mock()
-    # mock_omada_site_client.set_gateway_wan_port_connect_state.return_value = (
-    #     await _update_gateway_port_status(port_status, "wan_connected", False)
-    # )
-    # await call_service(hass, "turn_on", entity_id)
-    # mock_omada_site_client.set_gateway_wan_port_connect_state.assert_called_once()
-    # (4, test_gateway, True, False)
-    # assert entity.state == "off"
+    mock_omada_site_client.set_gateway_wan_port_connect_state.reset_mock()
+    mock_omada_site_client.set_gateway_wan_port_connect_state.return_value = (
+        _get_updated_gateway_port_status(
+            mock_omada_site_client, test_gateway, 3, "internetState", 1
+        )
+    )
+    await call_service(hass, "turn_on", entity_id)
+    mock_omada_site_client.set_gateway_wan_port_connect_state.assert_called_once_with(
+        4, True, test_gateway, ipv6=False
+    )
+    entity = hass.states.get(entity_id)
+    assert entity.state == "on"
+
+
+async def test_gateway_api_fail_disables_switch_entities(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test gateway connected switches."""
+    entity_id = "switch.test_router_port_4_internet_connected"
+    entity = hass.states.get(entity_id)
+    assert entity == snapshot
+    assert entity.state == "on"
+
+    controller: OmadaSiteController = hass.data[init_integration.domain][
+        init_integration.entry_id
+    ]
+
+    gateway_coordinator = await controller.get_gateway_coordinator()
+
+    mock_omada_site_client.get_gateway.reset_mock()
+    mock_omada_site_client.get_gateway.side_effect = InvalidDevice("Expected error")
+
+    await gateway_coordinator.async_refresh()
+
+    entity = hass.states.get(entity_id)
+    assert entity.state == "unavailable"
 
 
 async def _test_poe_switch(
@@ -135,6 +172,7 @@ async def _test_poe_switch(
         True,
         **mock_omada_site_client.update_switch_port.call_args.kwargs,
     )
+    hass.async_block_till_done()
     entity = hass.states.get(entity_id)
     assert entity.state == "on"
 
@@ -157,13 +195,18 @@ async def _update_port_details(
     return OmadaSwitchPortDetails(raw_data)
 
 
-async def _update_gateway_port_status(
-    port_status: OmadaGatewayPortStatus, key: str, value: bool
+def _get_updated_gateway_port_status(
+    mock_omada_site_client: MagicMock,
+    gateway: OmadaGateway,
+    port: int,
+    key: str,
+    value: Any,
 ) -> OmadaGatewayPortStatus:
-    assert port_status is not None
-    raw_data = port_status.raw_data.copy()
-    raw_data[key] = value
-    return OmadaGatewayPortStatus(raw_data)
+    gateway_data = gateway.raw_data.copy()
+    gateway_data["portStats"][port][key] = value
+    mock_omada_site_client.get_gateway.reset_mock()
+    mock_omada_site_client.get_gateway.return_value = OmadaGateway(gateway_data)
+    return OmadaGatewayPortStatus(gateway_data["portStats"][port])
 
 
 def call_service(hass: HomeAssistant, service: str, entity_id: str):

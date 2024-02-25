@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from typing import Any
 
 from attr import dataclass
@@ -19,6 +19,7 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -71,11 +72,11 @@ def get_gateway_port_switch_entities(
     gateway: OmadaGateway,
     coordinator: OmadaGatewayCoordinator,
     omada_client: OmadaSiteClient,
-):
+) -> Generator[Entity, None, None]:
     """Get switch entities for the ports on a gateway."""
 
     for port in gateway.port_status:
-        # For WAN ports, create a switch to connect/disconect the port from the internet
+        # For WAN ports, create a switch to connect/disconnect the port from the internet
         if port.mode == GatewayPortMode.WAN:
             yield OmadaGatewayPortSwitchEntity(
                 coordinator,
@@ -219,6 +220,8 @@ class OmadaGatewayPortSwitchEntity(OmadaDeviceEntity[OmadaGateway], SwitchEntity
         if self._port_details is None:
             return
         self._port_details = await self._config.set_func(self._port_details, enable)
+        self._attr_is_on = enable
+        self.async_write_ha_state()
         # Refresh to make sure the requested changes stuck
         await self.coordinator.async_request_refresh()
 
