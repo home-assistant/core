@@ -231,7 +231,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "maxlinev": SensorEntityDescription(
         key="maxlinev",
-        translation_key="input_voltage_high",
         name="UPS Input Voltage High",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
