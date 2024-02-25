@@ -1,16 +1,16 @@
 """Tests for LG Netcast TV."""
 from unittest.mock import patch
+from xml.etree import ElementTree
 
 from pylgnetcast import AccessTokenError, LgNetCastClient, SessionIdError
 import requests
-import requests_mock
 
 from homeassistant.components.lg_netcast import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry
 
 FAIL_TO_BIND_IP = "1.2.3.4"
 
@@ -43,47 +43,21 @@ def _patched_lgnetcast_client(
             raise SessionIdError("Can not get session id from TV.")
         return FAKE_SESSION_ID
 
-    def _send_fake_to_tv_wrapper(func):
-        def _send_fake_to_tv(*args, **kwargs):
-            with requests_mock.Mocker() as m:
-                if fail_connection:
-                    m.get(
-                        f"{client.url}data?target=rootservice.xml",
-                        exc=requests.exceptions.ConnectTimeout,
-                    )
-                elif invalid_details:
-                    m.get(
-                        f"{client.url}data?target=rootservice.xml",
-                        text=load_fixture("invalid_rootservice.xml", "lg_netcast"),
-                    )
-                elif no_unique_id:
-                    m.get(
-                        f"{client.url}data?target=rootservice.xml",
-                        request_headers={"User-Agent": "UDAP/2.0"},
-                        text=load_fixture("rootservice_no_unique_id.xml", "lg_netcast"),
-                        status_code=200,
-                    )
-                else:
-                    m.get(
-                        f"{client.url}data?target=rootservice.xml",
-                        text=load_fixture(
-                            "invalid_useragent_rootservice.xml", "lg_netcast"
-                        ),
-                        status_code=404,
-                    )
-                    if not always_404:
-                        m.get(
-                            f"{client.url}data?target=rootservice.xml",
-                            request_headers={"User-Agent": "UDAP/2.0"},
-                            text=load_fixture("rootservice.xml", "lg_netcast"),
-                            status_code=200,
-                        )
-                return func(*args, **kwargs)
-
-        return _send_fake_to_tv
+    def _get_fake_query_device_info():
+        if fail_connection:
+            raise requests.exceptions.ConnectTimeout("Mocked Failed Connection")
+        if always_404:
+            return None
+        if invalid_details:
+            raise ElementTree.ParseError("Mocked Parsed Error")
+        return {
+            "uuid": UNIQUE_ID if not no_unique_id else None,
+            "model_name": MODEL_NAME,
+            "friendly_name": FRIENDLY_NAME,
+        }
 
     client._get_session_id = _get_fake_session_id
-    client._send_to_tv = _send_fake_to_tv_wrapper(client._send_to_tv)
+    client.query_device_info = _get_fake_query_device_info
 
     return client
 

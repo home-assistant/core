@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<envelope>
-    <device>
-        <deviceType>TV</deviceType>
-        <modelName>MockLGModelName</modelName>
-        <friendlyName>LG Smart TV</friendlyName>
-        <manufacturer>LG Electronics</manufacturer>
-        <uuid>
