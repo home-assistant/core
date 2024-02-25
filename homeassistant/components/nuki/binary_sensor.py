@@ -83,7 +83,6 @@ class NukiRingactionEntity(NukiEntity[NukiDevice], BinarySensorEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "ring_action"
-    _attr_icon = "mdi:bell-ring"
 
     @property
     def unique_id(self) -> str:
