@@ -915,6 +915,7 @@ class ConfigEntry:
         hass: HomeAssistant,
         target: Coroutine[Any, Any, _R],
         name: str | None = None,
+        eager_start: bool = False,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -923,28 +924,7 @@ class ConfigEntry:
         target: target to call.
         """
         task = hass.async_create_task(
-            target, f"{name} {self.title} {self.domain} {self.entry_id}"
-        )
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
-
-        return task
-
-    @callback
-    def async_create_eager_task(
-        self,
-        hass: HomeAssistant,
-        target: Coroutine[Any, Any, _R],
-        name: str | None = None,
-    ) -> asyncio.Task[_R]:
-        """Create an eager task from within the event loop.
-
-        This method must be run in the event loop.
-
-        target: target to call.
-        """
-        task = hass.async_create_eager_task(
-            target, f"{name} {self.title} {self.domain} {self.entry_id}"
+            target, f"{name} {self.title} {self.domain} {self.entry_id}", eager_start
         )
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)

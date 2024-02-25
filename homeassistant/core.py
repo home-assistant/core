@@ -623,7 +623,10 @@ class HomeAssistant:
 
     @callback
     def async_create_task(
-        self, target: Coroutine[Any, Any, _R], name: str | None = None
+        self,
+        target: Coroutine[Any, Any, _R],
+        name: str | None = None,
+        eager_start: bool = False,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -632,32 +635,17 @@ class HomeAssistant:
 
         target: target to call.
         """
-        task = self.loop.create_task(target, name=name)
-        self._tasks.add(task)
-        task.add_done_callback(self._tasks.remove)
-        return task
-
-    @callback
-    def async_create_eager_task(
-        self, target: Coroutine[Any, Any, _R], name: str | None = None
-    ) -> asyncio.Task[_R]:
-        """Create an eager task from within the event loop.
-
-        This method must be run in the event loop. If you are using this in your
-        integration, use the create task methods on the config entry instead.
-
-        target: target to call.
-        """
-        task = create_eager_task(target, name=name, loop=self.loop)
+        if eager_start:
+            task = create_eager_task(target, name=name, loop=self.loop)
+        else:
+            task = self.loop.create_task(target, name=name)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
         return task
 
     @callback
     def async_create_background_task(
-        self,
-        target: Coroutine[Any, Any, _R],
-        name: str,
+        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = False
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -667,7 +655,10 @@ class HomeAssistant:
 
         This method must be run in the event loop.
         """
-        task = self.loop.create_task(target, name=name)
+        if eager_start:
+            task = create_eager_task(target, name=name, loop=self.loop)
+        else:
+            task = self.loop.create_task(target, name=name)
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.remove)
         return task

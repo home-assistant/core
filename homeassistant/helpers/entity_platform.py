@@ -466,9 +466,10 @@ class EntityPlatform:
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
         """Schedule adding entities for a single platform async."""
-        task = self.hass.async_create_eager_task(
+        task = self.hass.async_create_task(
             self.async_add_entities(new_entities, update_before_add=update_before_add),
             f"EntityPlatform async_add_entities {self.domain}.{self.platform_name}",
+            eager_start=True,
         )
 
         if not self._setup_complete:
@@ -480,10 +481,11 @@ class EntityPlatform:
     ) -> None:
         """Schedule adding entities for a single platform async and track the task."""
         assert self.config_entry
-        task = self.config_entry.async_create_eager_task(
+        task = self.config_entry.async_create_task(
             self.hass,
             self.async_add_entities(new_entities, update_before_add=update_before_add),
             f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
+            eager_start=True,
         )
 
         if not self._setup_complete:
