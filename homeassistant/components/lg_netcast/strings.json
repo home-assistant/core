@@ -5,6 +5,9 @@
         "description": "Ensure that your TV is turned on before trying to set it up.\nIf you leave the host empty, discovery will be used to find devices.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the LG Netcast TV to control."
         }
       },
       "authorize": {
