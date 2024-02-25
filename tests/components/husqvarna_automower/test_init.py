@@ -1,5 +1,4 @@
 """Tests for init module."""
-import asyncio
 import http
 import time
 from unittest.mock import AsyncMock
@@ -83,28 +82,3 @@ async def test_update_failed(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert entry.state == ConfigEntryState.SETUP_RETRY
-
-
-@pytest.mark.parametrize("error", [Exception("Boom"), ApiException("Boom")])
-async def test_listen_failure_timeout(
-    hass: HomeAssistant,
-    listen_ready_timeout: int,
-    mock_automower_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    error: ApiException,
-) -> None:
-    """Test client listen errors during the first timeout phase."""
-
-    async def start_listening(listen_ready: asyncio.Event) -> None:
-        """Mock the client start_listening method."""
-        # Set the connect side effect to stop an endless loop on reload.
-        mock_automower_client.connect.side_effect = ApiException("Boom")
-        raise error
-
-    mock_automower_client.start_listening.side_effect = start_listening
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

@@ -1,14 +1,13 @@
 """The Husqvarna Automower integration."""
 
 import asyncio
-from dataclasses import dataclass
 import logging
 
 from aioautomower.session import AutomowerSession
 from aiohttp import ClientError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
@@ -21,14 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 LISTEN_READY_TIMEOUT = 15
 PLATFORMS: list[Platform] = [Platform.LAWN_MOWER, Platform.SENSOR, Platform.SWITCH]
-
-
-@dataclass
-class AutomowerEntryData:
-    """Hold Husqvarna Automower data for the config entry."""
-
-    coordinator: AutomowerDataUpdateCoordinator
-    listen_task: asyncio.Task
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -51,21 +42,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = AutomowerDataUpdateCoordinator(hass, automower_api, entry)
     await coordinator.async_config_entry_first_refresh()
     init_ready = asyncio.Event()
-    listen_task = asyncio.create_task(
-        coordinator.client_listen(hass, entry, automower_api, init_ready)
+    entry.async_create_background_task(
+        hass,
+        coordinator.client_listen(hass, entry, automower_api, init_ready),
+        "websocket_task",
     )
     try:
         async with asyncio.timeout(LISTEN_READY_TIMEOUT):
             await init_ready.wait()
     except TimeoutError as err:
-        listen_task.cancel()
         raise ConfigEntryNotReady("Automower client not ready") from err
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = AutomowerEntryData(
-        coordinator, listen_task
-    )
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, coordinator.shutdown)
-    )
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -73,9 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle unload of an entry."""
-    automower_entry_data: AutomowerEntryData = hass.data[DOMAIN][entry.entry_id]
-    await automower_entry_data.coordinator.shutdown()
-    automower_entry_data.listen_task.cancel()
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

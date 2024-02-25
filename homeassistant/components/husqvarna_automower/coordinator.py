@@ -2,7 +2,6 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any
 
 from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerAttributes
@@ -44,10 +43,6 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             return await self.api.get_status()
         except ApiException as err:
             raise UpdateFailed(err) from err
-
-    async def shutdown(self, *_: Any) -> None:
-        """Close resources."""
-        await self.api.close()
 
     @callback
     def callback(self, ws_data: dict[str, MowerAttributes]) -> None:
