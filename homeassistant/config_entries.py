@@ -22,6 +22,8 @@ from random import randint
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
 
+from async_interrupt import interrupt
+
 from . import data_entry_flow, loader
 from .components import persistent_notification
 from .const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, Platform
@@ -603,7 +605,8 @@ class ConfigEntry:
             )
         return self._setup_again_job
 
-    async def async_shutdown(self) -> None:
+    @callback
+    def async_shutdown(self) -> None:
         """Call when Home Assistant is stopping."""
         self.async_cancel_retry_setup()
 
@@ -947,6 +950,10 @@ current_entry: ContextVar[ConfigEntry | None] = ContextVar(
 )
 
 
+class FlowCancelledError(Exception):
+    """Error to indicate that a flow has been cancelled."""
+
+
 class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
     """Manage all the config entry flows that are in progress."""
 
@@ -961,8 +968,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         self.config_entries = config_entries
         self._hass_config = hass_config
         self._pending_import_flows: dict[str, dict[str, asyncio.Future[None]]] = {}
-        self._initialize_tasks: dict[str, list[asyncio.Task]] = {}
-        self._discovery_debouncer = Debouncer(
+        self._initialize_futures: dict[str, list[asyncio.Future[None]]] = {}
+        self._discovery_debouncer = Debouncer[None](
             hass,
             _LOGGER,
             cooldown=DISCOVERY_COOLDOWN,
@@ -993,20 +1000,26 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             raise KeyError("Context not set or doesn't have a source set")
 
         flow_id = uuid_util.random_uuid_hex()
+        loop = self.hass.loop
+
         if context["source"] == SOURCE_IMPORT:
-            init_done: asyncio.Future[None] = self.hass.loop.create_future()
-            self._pending_import_flows.setdefault(handler, {})[flow_id] = init_done
+            self._pending_import_flows.setdefault(handler, {})[
+                flow_id
+            ] = loop.create_future()
 
-        task = asyncio.create_task(
-            self._async_init(flow_id, handler, context, data),
-            name=f"config entry flow {handler} {flow_id}",
-        )
-        self._initialize_tasks.setdefault(handler, []).append(task)
-
+        cancel_init_future = loop.create_future()
+        self._initialize_futures.setdefault(handler, []).append(cancel_init_future)
         try:
-            flow, result = await task
+            async with interrupt(
+                cancel_init_future,
+                FlowCancelledError,
+                "Config entry initialize canceled: Home Assistant is shutting down",
+            ):
+                flow, result = await self._async_init(flow_id, handler, context, data)
+        except FlowCancelledError as ex:
+            raise asyncio.CancelledError from ex
         finally:
-            self._initialize_tasks[handler].remove(task)
+            self._initialize_futures[handler].remove(cancel_init_future)
             self._pending_import_flows.get(handler, {}).pop(flow_id, None)
 
         if result["type"] != data_entry_flow.FlowResultType.ABORT:
@@ -1039,14 +1052,13 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                 init_done.set_result(None)
         return flow, result
 
-    async def async_shutdown(self) -> None:
+    @callback
+    def async_shutdown(self) -> None:
         """Cancel any initializing flows."""
-        for task_list in self._initialize_tasks.values():
-            for task in task_list:
-                task.cancel(
-                    "Config entry initialize canceled: Home Assistant is shutting down"
-                )
-        await self._discovery_debouncer.async_shutdown()
+        for future_list in self._initialize_futures.values():
+            for future in future_list:
+                future.set_result(None)
+        self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
@@ -1407,18 +1419,12 @@ class ConfigEntries:
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
         return {"require_restart": not unload_success}
 
-    async def _async_shutdown(self, event: Event) -> None:
+    @callback
+    def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
-        await asyncio.gather(
-            *(
-                asyncio.create_task(
-                    entry.async_shutdown(),
-                    name=f"config entry shutdown {entry.title} {entry.domain} {entry.entry_id}",
-                )
-                for entry in self._entries.values()
-            )
-        )
-        await self.flow.async_shutdown()
+        for entry in self._entries.values():
+            entry.async_shutdown()
+        self.flow.async_shutdown()
 
     async def async_initialize(self) -> None:
         """Initialize config entry config."""
@@ -1752,7 +1758,10 @@ class ConfigEntries:
         Config entries which are created after Home Assistant is started can't be waited
         for, the function will just return if the config entry is loaded or not.
         """
-        if setup_future := self.hass.data.get(DATA_SETUP_DONE, {}).get(entry.domain):
+        setup_done: dict[str, asyncio.Future[bool]] = self.hass.data.get(
+            DATA_SETUP_DONE, {}
+        )
+        if setup_future := setup_done.get(entry.domain):
             await setup_future
         # The component was not loaded.
         if entry.domain not in self.hass.config.components:

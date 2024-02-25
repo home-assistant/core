@@ -20,7 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 class BringData(BringList):
     """Coordinator data class."""
 
-    items: list[BringItemsResponse]
+    purchase_items: list[BringItemsResponse]
+    recently_items: list[BringItemsResponse]
 
 
 class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
@@ -56,7 +57,8 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
                 ) from e
             except BringParseException as e:
                 raise UpdateFailed("Unable to parse response from bring") from e
-            lst["items"] = items["purchase"]
+            lst["purchase_items"] = items["purchase"]
+            lst["recently_items"] = items["recently"]
             list_dict[lst["listUuid"]] = lst
 
         return list_dict

@@ -3,15 +3,12 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
-from collections.abc import Callable
-import ipaddress
-from typing import Any, ClassVar, Final
+from typing import ClassVar, Final
 
 import voluptuous as vol
 from xknx.devices.climate import SetpointShiftMode
-from xknx.dpt import DPTBase, DPTNumeric, DPTString
-from xknx.exceptions import ConversionError, CouldNotParseAddress, CouldNotParseTelegram
-from xknx.telegram.address import IndividualAddress, parse_device_group_address
+from xknx.dpt import DPTBase, DPTNumeric
+from xknx.exceptions import ConversionError, CouldNotParseTelegram
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -57,83 +54,19 @@ from .const import (
     PRESET_MODES,
     ColorTempModes,
 )
-
-##################
-# KNX VALIDATORS
-##################
-
-
-def dpt_subclass_validator(dpt_base_class: type[DPTBase]) -> Callable[[Any], str | int]:
-    """Validate that value is parsable as given sensor type."""
-
-    def dpt_value_validator(value: Any) -> str | int:
-        """Validate that value is parsable as sensor type."""
-        if (
-            isinstance(value, (str, int))
-            and dpt_base_class.parse_transcoder(value) is not None
-        ):
-            return value
-        raise vol.Invalid(
-            f"type '{value}' is not a valid DPT identifier for"
-            f" {dpt_base_class.__name__}."
-        )
-
-    return dpt_value_validator
-
-
-numeric_type_validator = dpt_subclass_validator(DPTNumeric)  # type: ignore[type-abstract]
-sensor_type_validator = dpt_subclass_validator(DPTBase)  # type: ignore[type-abstract]
-string_type_validator = dpt_subclass_validator(DPTString)
-
-
-def ga_validator(value: Any) -> str | int:
-    """Validate that value is parsable as GroupAddress or InternalGroupAddress."""
-    if isinstance(value, (str, int)):
-        try:
-            parse_device_group_address(value)
-            return value
-        except CouldNotParseAddress:
-            pass
-    raise vol.Invalid(
-        f"value '{value}' is not a valid KNX group address '<main>/<middle>/<sub>',"
-        " '<main>/<sub>' or '<free>' (eg.'1/2/3', '9/234', '123'), nor xknx internal"
-        " address 'i-<string>'."
-    )
-
-
-ga_list_validator = vol.All(
-    cv.ensure_list,
-    [ga_validator],
-    vol.IsTrue("value must be a group address or a list containing group addresses"),
-)
-
-ia_validator = vol.Any(
-    vol.All(str, str.strip, cv.matches_regex(IndividualAddress.ADDRESS_RE.pattern)),
-    vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
-    msg=(
-        "value does not match pattern for KNX individual address"
-        " '<area>.<line>.<device>' (eg.'1.1.100')"
-    ),
+from .validation import (
+    ga_list_validator,
+    ga_validator,
+    numeric_type_validator,
+    sensor_type_validator,
+    string_type_validator,
+    sync_state_validator,
 )
 
 
-def ip_v4_validator(value: Any, multicast: bool | None = None) -> str:
-    """Validate that value is parsable as IPv4 address.
-
-    Optionally check if address is in a reserved multicast block or is explicitly not.
-    """
-    try:
-        address = ipaddress.IPv4Address(value)
-    except ipaddress.AddressValueError as ex:
-        raise vol.Invalid(f"value '{value}' is not a valid IPv4 address: {ex}") from ex
-    if multicast is not None and address.is_multicast != multicast:
-        raise vol.Invalid(
-            f"value '{value}' is not a valid IPv4"
-            f" {'multicast' if multicast else 'unicast'} address"
-        )
-    return str(address)
-
-
+##################
+# KNX SUB VALIDATORS
+##################
 def number_limit_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     """Validate a number entity configurations dependent on configured value type."""
     value_type = entity_config[CONF_TYPE]
@@ -226,12 +159,6 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
         payloads_seen.add(payload)
     return entity_config
 
-
-sync_state_validator = vol.Any(
-    vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
-    cv.boolean,
-    cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
-)
 
 #########
 # EVENT
