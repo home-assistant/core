@@ -17,7 +17,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.webmin.coordinator.WebminInstance.update",
+        "homeassistant.components.webmin.helpers.WebminInstance.update",
         return_value=load_json_object_fixture("webmin_update.json", DOMAIN),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
