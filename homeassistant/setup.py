@@ -365,7 +365,6 @@ async def _async_setup_component(  # noqa: C901
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
-
     integration_set = {domain}
 
     load_translations_task: asyncio.Task[None] | None = None
