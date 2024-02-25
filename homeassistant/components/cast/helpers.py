@@ -294,10 +294,7 @@ async def parse_m3u(hass, url):
                 continue
             length = info[0].split(" ", 1)
             title = info[1].strip()
-        elif line.startswith("#EXT-X-VERSION:"):
-            # HLS stream, supported by cast devices
-            raise PlaylistSupported("HLS")
-        elif line.startswith("#EXT-X-STREAM-INF:"):
+        elif line.startswith(("#EXT-X-VERSION:", "#EXT-X-STREAM-INF:")):
             # HLS stream, supported by cast devices
             raise PlaylistSupported("HLS")
         elif line.startswith("#"):

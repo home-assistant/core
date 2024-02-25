@@ -80,6 +80,15 @@
       },
       "comfort_temperature": {
         "name": "Comfort temperature"
+      },
+      "normal_heating_temperature": {
+        "name": "[%key:component::vicare::entity::number::normal_temperature::name%]"
+      },
+      "reduced_heating_temperature": {
+        "name": "[%key:component::vicare::entity::number::reduced_temperature::name%]"
+      },
+      "comfort_heating_temperature": {
+        "name": "[%key:component::vicare::entity::number::comfort_temperature::name%]"
       }
     },
     "sensor": {

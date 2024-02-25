@@ -53,6 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_COMPONENTS = "components"
 DATA_INTEGRATIONS = "integrations"
+DATA_MISSING_PLATFORMS = "missing_platforms"
 DATA_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
@@ -185,6 +186,7 @@ def async_setup(hass: HomeAssistant) -> None:
     _async_mount_config_dir(hass)
     hass.data[DATA_COMPONENTS] = {}
     hass.data[DATA_INTEGRATIONS] = {}
+    hass.data[DATA_MISSING_PLATFORMS] = {}
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
@@ -842,9 +844,19 @@ class Integration:
         if full_name in cache:
             return cache[full_name]
 
+        missing_platforms_cache: dict[str, ImportError] = self.hass.data[
+            DATA_MISSING_PLATFORMS
+        ]
+        if full_name in missing_platforms_cache:
+            raise missing_platforms_cache[full_name]
+
         try:
             cache[full_name] = self._import_platform(platform_name)
-        except ImportError:
+        except ImportError as ex:
+            if self.domain in cache:
+                # If the domain is loaded, cache that the platform
+                # does not exist so we do not try to load it again
+                missing_platforms_cache[full_name] = ex
             raise
         except Exception as err:
             _LOGGER.exception(
@@ -1022,10 +1034,10 @@ def _load_file(
     Only returns it if also found to be valid.
     Async friendly.
     """
-    with suppress(KeyError):
-        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore[no-any-return]
-
-    cache = hass.data[DATA_COMPONENTS]
+    cache: dict[str, ComponentProtocol] = hass.data[DATA_COMPONENTS]
+    module: ComponentProtocol | None
+    if module := cache.get(comp_or_platform):
+        return module
 
     for path in (f"{base}.{comp_or_platform}" for base in base_paths):
         try:

@@ -1400,6 +1400,8 @@ async def test_replaying_payload_same_topic(
         hass, "test/state", "online", qos=0, retain=True
     )  # Simulate a (retained) message played back
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
     assert len(calls_a) == 1
     mqtt_client_mock.subscribe.assert_called()
     calls_a = []
@@ -1497,6 +1499,7 @@ async def test_replaying_payload_after_resubscribing(
     unsub = await mqtt.async_subscribe(hass, "test/state", _callback_a)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     mqtt_client_mock.subscribe.assert_called()
 
@@ -1637,6 +1640,7 @@ async def test_not_calling_unsubscribe_with_active_subscribers(
     await mqtt.async_subscribe(hass, "test/state", record_calls, 1)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))  # cooldown
+    await hass.async_block_till_done()
     await hass.async_block_till_done()
     assert mqtt_client_mock.subscribe.called
 
