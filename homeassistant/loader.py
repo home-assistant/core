@@ -868,7 +868,7 @@ class Integration:
                 platform = self._load_platform(platform_name)
             import_future.set_result(platform)
             return platform
-        except Exception as ex:
+        except BaseException as ex:
             import_future.set_exception(ex)
             raise
         finally:
