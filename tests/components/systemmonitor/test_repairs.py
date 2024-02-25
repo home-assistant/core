@@ -28,7 +28,6 @@ async def test_migrate_process_sensor(
     entity_registry_enabled_by_default: None,
     mock_psutil: Mock,
     mock_os: Mock,
-    mock_util: Mock,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
