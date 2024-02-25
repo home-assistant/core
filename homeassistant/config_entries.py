@@ -19,6 +19,7 @@ from enum import Enum, StrEnum
 import functools
 import logging
 from random import randint
+import sys
 import time
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
@@ -2379,7 +2380,12 @@ async def _load_integration(
         start = time.perf_counter()
 
     try:
-        if domain not in hass.config.components and integration.import_executor:
+        if (
+            integration.import_executor
+            and domain not in hass.config.components
+            and f"hass.components.{domain}" not in sys.modules
+            and f"custom_components.{domain}" not in sys.modules
+        ):
             await hass.async_add_executor_job(integration.get_platform, "config_flow")
         else:
             integration.get_platform("config_flow")
