@@ -37,7 +37,8 @@ from homeassistant.const import (
     UnitOfInformation,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -46,7 +47,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateTyp
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import CONF_PROCESS, DOMAIN, NET_IO_TYPES
+from .const import CONF_PROCESS, DOMAIN, DOMAIN_COORDINATORS, NET_IO_TYPES
 from .coordinator import (
     MonitorCoordinator,
     SystemMonitorBootTimeCoordinator,
@@ -569,7 +570,7 @@ async def async_setup_entry(  # noqa: C901
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_resources.add(f"{_type}_{argument}")
+                loaded_resources.add(slugify(f"{_type}_{argument}"))
                 entities.append(
                     SystemMonitorSensor(
                         net_addr_coordinator,
@@ -584,7 +585,7 @@ async def async_setup_entry(  # noqa: C901
         if _type == "last_boot":
             argument = ""
             is_enabled = check_legacy_resource(f"{_type}_{argument}", legacy_resources)
-            loaded_resources.add(f"{_type}_{argument}")
+            loaded_resources.add(slugify(f"{_type}_{argument}"))
             entities.append(
                 SystemMonitorSensor(
                     boot_time_coordinator,
@@ -599,7 +600,7 @@ async def async_setup_entry(  # noqa: C901
         if _type.startswith("load_"):
             argument = ""
             is_enabled = check_legacy_resource(f"{_type}_{argument}", legacy_resources)
-            loaded_resources.add(f"{_type}_{argument}")
+            loaded_resources.add(slugify(f"{_type}_{argument}"))
             entities.append(
                 SystemMonitorSensor(
                     system_load_coordinator,
@@ -614,7 +615,7 @@ async def async_setup_entry(  # noqa: C901
         if _type.startswith("memory_"):
             argument = ""
             is_enabled = check_legacy_resource(f"{_type}_{argument}", legacy_resources)
-            loaded_resources.add(f"{_type}_{argument}")
+            loaded_resources.add(slugify(f"{_type}_{argument}"))
             entities.append(
                 SystemMonitorSensor(
                     memory_coordinator,
@@ -630,7 +631,7 @@ async def async_setup_entry(  # noqa: C901
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_resources.add(f"{_type}_{argument}")
+                loaded_resources.add(slugify(f"{_type}_{argument}"))
                 entities.append(
                     SystemMonitorSensor(
                         net_io_coordinator,
@@ -674,7 +675,7 @@ async def async_setup_entry(  # noqa: C901
         if _type == "processor_use":
             argument = ""
             is_enabled = check_legacy_resource(f"{_type}_{argument}", legacy_resources)
-            loaded_resources.add(f"{_type}_{argument}")
+            loaded_resources.add(slugify(f"{_type}_{argument}"))
             entities.append(
                 SystemMonitorSensor(
                     processor_coordinator,
@@ -692,7 +693,7 @@ async def async_setup_entry(  # noqa: C901
                 continue
             argument = ""
             is_enabled = check_legacy_resource(f"{_type}_{argument}", legacy_resources)
-            loaded_resources.add(f"{_type}_{argument}")
+            loaded_resources.add(slugify(f"{_type}_{argument}"))
             entities.append(
                 SystemMonitorSensor(
                     cpu_temp_coordinator,
@@ -707,7 +708,7 @@ async def async_setup_entry(  # noqa: C901
         if _type.startswith("swap_"):
             argument = ""
             is_enabled = check_legacy_resource(f"{_type}_{argument}", legacy_resources)
-            loaded_resources.add(f"{_type}_{argument}")
+            loaded_resources.add(slugify(f"{_type}_{argument}"))
             entities.append(
                 SystemMonitorSensor(
                     swap_coordinator,
@@ -729,6 +730,7 @@ async def async_setup_entry(  # noqa: C901
                 loaded_resources,
             )
             if check_resource not in loaded_resources:
+                loaded_resources.add(check_resource)
                 split_index = resource.rfind("_")
                 _type = resource[:split_index]
                 argument = resource[split_index + 1 :]
@@ -747,18 +749,43 @@ async def async_setup_entry(  # noqa: C901
                     )
                 )
 
+    hass.data[DOMAIN_COORDINATORS] = {}
     # No gathering to avoid swamping the executor
-    for coordinator in disk_coordinators.values():
+    for argument, coordinator in disk_coordinators.items():
+        hass.data[DOMAIN_COORDINATORS][f"disk_{argument}"] = coordinator
+    hass.data[DOMAIN_COORDINATORS]["boot_time"] = boot_time_coordinator
+    hass.data[DOMAIN_COORDINATORS]["cpu_temp"] = cpu_temp_coordinator
+    hass.data[DOMAIN_COORDINATORS]["memory"] = memory_coordinator
+    hass.data[DOMAIN_COORDINATORS]["net_addr"] = net_addr_coordinator
+    hass.data[DOMAIN_COORDINATORS]["net_io"] = net_io_coordinator
+    hass.data[DOMAIN_COORDINATORS]["process"] = process_coordinator
+    hass.data[DOMAIN_COORDINATORS]["processor"] = processor_coordinator
+    hass.data[DOMAIN_COORDINATORS]["swap"] = swap_coordinator
+    hass.data[DOMAIN_COORDINATORS]["system_load"] = system_load_coordinator
+
+    for coordinator in hass.data[DOMAIN_COORDINATORS].values():
         await coordinator.async_request_refresh()
-    await boot_time_coordinator.async_request_refresh()
-    await cpu_temp_coordinator.async_request_refresh()
-    await memory_coordinator.async_request_refresh()
-    await net_addr_coordinator.async_request_refresh()
-    await net_io_coordinator.async_request_refresh()
-    await process_coordinator.async_request_refresh()
-    await processor_coordinator.async_request_refresh()
-    await swap_coordinator.async_request_refresh()
-    await system_load_coordinator.async_request_refresh()
+
+    @callback
+    def clean_obsolete_entities() -> None:
+        """Remove entities which are disabled and not supported from setup."""
+        entity_registry = er.async_get(hass)
+        entities = entity_registry.entities.get_entries_for_config_entry_id(
+            entry.entry_id
+        )
+        for entity in entities:
+            if (
+                entity.unique_id not in loaded_resources
+                and entity.disabled is True
+                and (
+                    entity_id := entity_registry.async_get_entity_id(
+                        SENSOR_DOMAIN, DOMAIN, entity.unique_id
+                    )
+                )
+            ):
+                entity_registry.async_remove(entity_id)
+
+    clean_obsolete_entities()
 
     async_add_entities(entities)
 

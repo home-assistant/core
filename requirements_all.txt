@@ -315,7 +315,7 @@ aiomusiccast==0.14.8
 aionanoleaf==0.2.1
 
 # homeassistant.components.notion
-aionotion==2024.02.1
+aionotion==2024.02.2
 
 # homeassistant.components.oncue
 aiooncue==0.3.5
@@ -1104,7 +1104,7 @@ iammeter==0.2.1
 iaqualink==0.5.0
 
 # homeassistant.components.ibeacon
-ibeacon-ble==1.0.1
+ibeacon-ble==1.2.0
 
 # homeassistant.components.watson_iot
 ibmiotf==0.3.4
@@ -1325,7 +1325,7 @@ moehlenhoff-alpha2==1.3.0
 mopeka-iot-ble==0.7.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.21
+motionblinds==0.6.23
 
 # homeassistant.components.motioneye
 motioneye-client==0.3.14
@@ -1429,7 +1429,7 @@ oauth2client==4.1.3
 objgraph==3.5.0
 
 # homeassistant.components.garages_amsterdam
-odp-amsterdam==6.0.0
+odp-amsterdam==6.0.1
 
 # homeassistant.components.oem
 oemthermostat==1.1.1
@@ -1480,7 +1480,7 @@ openwrt-luci-rpc==1.1.16
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.3.0
+opower==0.3.1
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1767,7 +1767,7 @@ pydelijn==1.1.0
 pydexcom==0.2.3
 
 # homeassistant.components.discovergy
-pydiscovergy==2.0.5
+pydiscovergy==3.0.0
 
 # homeassistant.components.doods
 pydoods==1.0.2
@@ -1992,7 +1992,7 @@ pynetio==0.1.9.1
 pynobo==1.6.0
 
 # homeassistant.components.nuki
-pynuki==1.6.2
+pynuki==1.6.3
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -2233,7 +2233,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==4.3.0
+python-homewizard-energy==4.3.1
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2734,7 +2734,7 @@ total-connect-client==2023.2
 tp-connected==0.0.4
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.3.2
+tplink-omada-client==1.3.11
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -2890,7 +2890,7 @@ yalesmartalarmclient==0.3.9
 
 # homeassistant.components.august
 # homeassistant.components.yalexs_ble
-yalexs-ble==2.4.1
+yalexs-ble==2.4.2
 
 # homeassistant.components.august
 yalexs==1.11.2
@@ -2914,7 +2914,7 @@ youtubeaio==1.1.5
 yt-dlp==2023.11.16
 
 # homeassistant.components.zamg
-zamg==0.3.5
+zamg==0.3.6
 
 # homeassistant.components.zengge
 zengge==0.2

@@ -1,13 +1,13 @@
 """The TP-Link Omada integration."""
 from __future__ import annotations
 
+from tplink_omada_client import OmadaSite
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
     OmadaClientException,
     UnsupportedControllerVersion,
 )
-from tplink_omada_client.omadaclient import OmadaSite
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform

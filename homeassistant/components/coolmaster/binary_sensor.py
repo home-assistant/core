@@ -37,7 +37,6 @@ class CoolmasterCleanFilter(CoolmasterEntity, BinarySensorEntity):
         translation_key="clean_filter",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:air-filter",
     )
 
     @property
