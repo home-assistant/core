@@ -655,6 +655,7 @@ class Integration:
             self._all_dependencies_resolved = True
             self._all_dependencies = set()
 
+        self._import_futures: dict[str, asyncio.Future[ModuleType]] = {}
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
     @cached_property
@@ -843,10 +844,39 @@ class Integration:
 
         return cache[self.domain]
 
-    def get_platform(self, platform_name: str) -> ModuleType:
+    async def async_get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
+        domain = self.domain
         full_name = f"{self.domain}.{platform_name}"
+        if platform := self._get_platform_cached(full_name):
+            return platform
+        if future := self._import_futures.get(full_name):
+            return await future
+        import_future = self.hass.loop.create_future()
+        self._import_futures[full_name] = import_future
+        try:
+            if (
+                self.import_executor
+                and domain not in self.hass.config.components
+                and f"hass.components.{domain}" not in sys.modules
+                and f"custom_components.{domain}" not in sys.modules
+            ):
+                platform = await self.hass.async_add_executor_job(
+                    self._load_platform, platform_name
+                )
+            else:
+                platform = self._load_platform(platform_name)
+            import_future.set_result(platform)
+            return platform
+        except Exception as ex:
+            import_future.set_exception(ex)
+            raise
+        finally:
+            self._import_futures.pop(full_name)
+
+    def _get_platform_cached(self, full_name: str) -> ModuleType | None:
+        """Return a platform for an integration from cache."""
+        cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
         if full_name in cache:
             return cache[full_name]
 
@@ -856,12 +886,26 @@ class Integration:
         if full_name in missing_platforms_cache:
             raise missing_platforms_cache[full_name]
 
+        return None
+
+    def get_platform(self, platform_name: str) -> ModuleType:
+        """Return a platform for an integration."""
+        if platform := self._get_platform_cached(f"{self.domain}.{platform_name}"):
+            return platform
+        return self._load_platform(platform_name)
+
+    def _load_platform(self, platform_name: str) -> ModuleType:
+        full_name = f"{self.domain}.{platform_name}"
+        cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
         try:
             cache[full_name] = self._import_platform(platform_name)
         except ImportError as ex:
             if self.domain in cache:
                 # If the domain is loaded, cache that the platform
                 # does not exist so we do not try to load it again
+                missing_platforms_cache: dict[str, ImportError] = self.hass.data[
+                    DATA_MISSING_PLATFORMS
+                ]
                 missing_platforms_cache[full_name] = ex
             raise
         except Exception as err:
