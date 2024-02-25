@@ -132,7 +132,7 @@ BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        value_fn=lambda battery_data: round(battery_data.v_out, 1),
+        value_fn=lambda battery_data: round(battery_data.v_out or 0.0, 1),
     ),
     PowerwallSensorEntityDescription[BatteryResponse, float](
         key="instant_frequency",
@@ -142,7 +142,7 @@ BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         entity_registry_enabled_default=False,
-        value_fn=lambda battery_data: round(battery_data.f_out, 1),
+        value_fn=lambda battery_data: round(battery_data.f_out or 0.0, 1),
     ),
     PowerwallSensorEntityDescription[BatteryResponse, float](
         key="instant_current",
@@ -152,7 +152,7 @@ BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         entity_registry_enabled_default=False,
-        value_fn=lambda battery_data: round(battery_data.i_out, 1),
+        value_fn=lambda battery_data: round(battery_data.i_out or 0.0, 1),
     ),
     PowerwallSensorEntityDescription[BatteryResponse, int](
         key="instant_power",
@@ -161,7 +161,7 @@ BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda battery_data: battery_data.p_out,
+        value_fn=lambda battery_data: battery_data.p_out or 0,
     ),
     PowerwallSensorEntityDescription[BatteryResponse, float](
         key="battery_export",
@@ -172,7 +172,7 @@ BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=0,
-        value_fn=lambda battery_data: battery_data.energy_discharged,
+        value_fn=lambda battery_data: battery_data.energy_discharged or 0.0,
     ),
     PowerwallSensorEntityDescription[BatteryResponse, float](
         key="battery_import",
@@ -183,7 +183,7 @@ BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=0,
-        value_fn=lambda battery_data: battery_data.energy_charged,
+        value_fn=lambda battery_data: battery_data.energy_charged or 0.0,
     ),
     PowerwallSensorEntityDescription[BatteryResponse, int](
         key="battery_remaining",
