@@ -91,6 +91,7 @@ from .helpers.json import json_bytes, json_fragment
 from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
+    create_eager_task,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
@@ -632,6 +633,22 @@ class HomeAssistant:
         target: target to call.
         """
         task = self.loop.create_task(target, name=name)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
+        return task
+
+    @callback
+    def async_create_eager_task(
+        self, target: Coroutine[Any, Any, _R], name: str | None = None
+    ) -> asyncio.Task[_R]:
+        """Create an eager task from within the event loop.
+
+        This method must be run in the event loop. If you are using this in your
+        integration, use the create task methods on the config entry instead.
+
+        target: target to call.
+        """
+        task = create_eager_task(target, name=name, loop=self.loop)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
         return task

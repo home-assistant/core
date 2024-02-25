@@ -57,6 +57,7 @@ from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedT
 from .loader import async_suggest_report_issue
 from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
 from .util import uuid as uuid_util
+from .util.async_ import create_eager_task
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
@@ -930,6 +931,27 @@ class ConfigEntry:
         return task
 
     @callback
+    def async_create_eager_task(
+        self,
+        hass: HomeAssistant,
+        target: Coroutine[Any, Any, _R],
+        name: str | None = None,
+    ) -> asyncio.Task[_R]:
+        """Create an eager task from within the event loop.
+
+        This method must be run in the event loop.
+
+        target: target to call.
+        """
+        task = hass.async_create_eager_task(
+            target, f"{name} {self.title} {self.domain} {self.entry_id}"
+        )
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
+
+        return task
+
+    @callback
     def async_create_background_task(
         self, hass: HomeAssistant, target: Coroutine[Any, Any, _R], name: str
     ) -> asyncio.Task[_R]:
@@ -1682,7 +1704,7 @@ class ConfigEntries:
         """Forward the setup of an entry to platforms."""
         await asyncio.gather(
             *(
-                asyncio.create_task(
+                create_eager_task(
                     self.async_forward_entry_setup(entry, platform),
                     name=f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
                 )
@@ -1718,7 +1740,7 @@ class ConfigEntries:
         return all(
             await asyncio.gather(
                 *(
-                    asyncio.create_task(
+                    create_eager_task(
                         self.async_forward_entry_unload(entry, platform),
                         name=f"config entry forward unload {entry.title} {entry.domain} {entry.entry_id} {platform}",
                     )
