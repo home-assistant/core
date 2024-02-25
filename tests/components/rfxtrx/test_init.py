@@ -208,8 +208,10 @@ async def test_reconnect(rfxtrx, hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.LOADED
     rfxtrx.connect.call_count = 1
 
-    rfxtrx.event_callback(rfxtrxmod.ConnectionLost())
-    await hass.async_block_till_done()
+    await hass.async_add_executor_job(
+        rfxtrx.event_callback,
+        rfxtrxmod.ConnectionLost(),
+    )
 
     assert config_entry.state is ConfigEntryState.LOADED
     rfxtrx.connect.call_count = 2
