@@ -6,6 +6,7 @@ OAUTH2_AUTHORIZE = "https://dev.microbees.com/oauth/authorize"
 OAUTH2_TOKEN = "https://dev.microbees.com/oauth/token"
 PLATFORMS = [
     Platform.COVER,
+    Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
