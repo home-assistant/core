@@ -41,9 +41,6 @@
     "binary_sensor": {
       "ring_action": {
         "name": "Ring Action"
-      },
-      "battery_critical": {
-        "name": "Battery critical"
       }
     },
     "lock": {
