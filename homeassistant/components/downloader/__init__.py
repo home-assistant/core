@@ -134,7 +134,7 @@ def _async_do_download(hass: HomeAssistant, service: ServiceCall, download_path:
     try:
         url: str = service.data.get(ATTR_URL)
         subdir: str | None = service.data.get(ATTR_SUBDIR)
-        filename = service.data.get(ATTR_FILENAME)
+        filename: str | None = service.data.get(ATTR_FILENAME)
         overwrite = service.data.get(ATTR_OVERWRITE)
 
         if subdir:
