@@ -289,6 +289,9 @@ async def _async_setup_component(  # noqa: C901
         log_error(str(err))
         return False
 
+    if debug := _LOGGER.isEnabledFor(logging.DEBUG):
+        start = timer()
+
     # Some integrations fail on import because they call functions incorrectly.
     # So we do it before validating config to catch these errors.
     try:
@@ -299,6 +302,9 @@ async def _async_setup_component(  # noqa: C901
     except ImportError as err:
         log_error(f"Unable to import component: {err}", err)
         return False
+
+    if debug:
+        _LOGGER.debug("Component %s import took %.3f seconds", domain, timer() - start)
 
     integration_config_info = await conf_util.async_process_component_config(
         hass, config, integration
