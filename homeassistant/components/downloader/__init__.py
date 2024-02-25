@@ -132,7 +132,7 @@ async def _async_download_file(
 def _async_do_download(hass: HomeAssistant, service: ServiceCall, download_path: str):
     """Download the file."""
     try:
-        url = service.data.get(ATTR_URL)
+        url: str = service.data.get(ATTR_URL)
         subdir = service.data.get(ATTR_SUBDIR)
         filename = service.data.get(ATTR_FILENAME)
         overwrite = service.data.get(ATTR_OVERWRITE)
