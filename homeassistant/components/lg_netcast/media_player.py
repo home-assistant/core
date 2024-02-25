@@ -107,11 +107,12 @@ class LgTVDevice(MediaPlayerEntity):
     _attr_assumed_state = True
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_media_content_type = MediaType.CHANNEL
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(self, client, name, model, *, unique_id=None):
         """Initialize the LG TV device."""
         self._client = client
-        self._name = name
         self._muted = False
         self._turn_on = PluggableAction(self.async_write_ha_state)
         self._volume = 0
@@ -197,11 +198,6 @@ class LgTVDevice(MediaPlayerEntity):
             (volume, muted) = volume_info
             self._volume = volume
             self._muted = muted
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def is_volume_muted(self):
