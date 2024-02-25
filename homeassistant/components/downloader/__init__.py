@@ -143,7 +143,7 @@ def _async_do_download(hass: HomeAssistant, service: ServiceCall, download_path:
 
         final_path = None
 
-        req = requests.get(url, stream=True, timeout=10)  # type: ignore[arg-type]
+        req = requests.get(url, stream=True, timeout=10)
 
         if req.status_code != HTTPStatus.OK:
             _LOGGER.warning(
