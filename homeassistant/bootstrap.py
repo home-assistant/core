@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 import contextlib
 from datetime import timedelta
 import logging
@@ -50,7 +51,6 @@ from .setup import (
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
-from .util.async_ import create_eager_task
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_virtual_env
 
@@ -665,7 +665,7 @@ async def _async_resolve_domains_to_setup(
             to_get = old_to_resolve
 
         manifest_deps: set[str] = set()
-        resolve_dependencies_tasks: list[asyncio.Task[bool]] = []
+        resolve_dependencies_tasks: list[Coroutine[Any, Any, bool]] = []
         integrations_to_process: list[loader.Integration] = []
 
         for domain, itg in (await loader.async_get_integrations(hass, to_get)).items():
@@ -677,13 +677,7 @@ async def _async_resolve_domains_to_setup(
             manifest_deps.update(itg.after_dependencies)
             needed_requirements.update(itg.requirements)
             if not itg.all_dependencies_resolved:
-                resolve_dependencies_tasks.append(
-                    create_eager_task(
-                        itg.resolve_dependencies(),
-                        name=f"resolve dependencies {domain}",
-                        loop=hass.loop,
-                    )
-                )
+                resolve_dependencies_tasks.append(itg.resolve_dependencies())
 
         if unseen_deps := manifest_deps - integration_cache.keys():
             # If there are dependencies, try to preload all
