@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<envelope>
+    <device>
+        <deviceType>TV</deviceType>
+        <modelName>MockLGModelName</modelName>
+        <friendlyName>LG Smart TV</friendlyName>
+        <manufacturer>LG Electronics</manufacturer>
+    </device>
+    <port>8080</port>
+    <serviceList>
+        <service name="AppToApp">
+            <apiList>
+                <api type="command">
+                    <name>SendMessage</name>
+                    <name>TerminateApplication</name>
+                    <name>LaunchApplication</name>
+                </api>
+                <api type="event">
+                    <name>ReceiveMessage</name>
+                </api>
+                <api type="query">
+                    <name>GetApplicationStatus</name>
+                    <name>GetApplicationID</name>
+                </api>
+            </apiList>
+        </service>
+        <service name="smartText">
+            <apiList>
+                <api type="event">
+                    <name>TextEdited</name>
+                    <name>KeyboardVisible</name>
+                </api>
+            </apiList>
+        </service>
+        <service name="mobilehome">
+            <apiList>
+                <api type="command">
+                    <name>AppTerminate</name>
+                    <name>AppExecute</name>
+                </api>
+                <api type="event">
+                    <name>Mobilehome_App_Errstate</name>
+                    <name>Mobilehome_App_Change</name>
+                </api>
+                <api type="query">
+                    <name>appicon_get</name>
+                    <name>appnum_get</name>
+                    <name>applist_get</name>
+                </api>
+            </apiList>
+        </service>
+        <service name="netrcu">
+            <apiList>
+                <api type="command">
+                    <name>HandleChannelChange</name>
+                    <name>HandleTouchWheel</name>
+                    <name>HandleTouchClick</name>
+                    <name>HandleTouchMove</name>
+                    <name>HandleKeyInput</name>
+                </api>
+                <api type="event">
+                    <name>3DMode</name>
+                    <name>DragMode</name>
+                    <name>CallStateChanged</name>
+                    <name>ChannelChanged</name>
+                    <name>CursorVisible</name>
+                </api>
+                <api type="query">
+                    <name>volume_info</name>
+                    <name>is_3d</name>
+                    <name>screen_image</name>
+                    <name>channel_list</name>
+                    <name>context_ui</name>
+                    <name>cur_channel</name>
+                </api>
+            </apiList>
+        </service>
+    </serviceList>
+</envelope>

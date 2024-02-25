@@ -17,16 +17,17 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_MANUFACTURER, DOMAIN
+from .helpers import LGNetCastDetailDiscoveryError, async_discover_netcast_details
 
 DEFAULT_NAME = "LG TV Remote"
 
@@ -73,23 +74,29 @@ async def async_setup_entry(
     async_add_entities([LgTVDevice(client, name, None, unique_id=unique_id)])
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the LG TV platform."""
 
     host = config.get(CONF_HOST)
-    access_token = config.get(CONF_ACCESS_TOKEN)
-    name = config[CONF_NAME]
-    on_action = config.get(CONF_ON_ACTION)
 
-    client = LgNetCastClient(host, access_token)
-    on_action_script = Script(hass, on_action, name, DOMAIN) if on_action else None
+    client = LgNetCastClient(host, None)
+    # on_action_script = Script(hass, on_action, name, DOMAIN) if on_action else None
 
-    add_entities([LgTVDevice(client, name, on_action_script)], True)
+    try:
+        details = await async_discover_netcast_details(hass, client)
+    except LGNetCastDetailDiscoveryError as err:
+        raise PlatformNotReady(f"Connection error while connecting to {host}") from err
+
+    unique_id = details["uuid"]
+
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data={**config, CONF_ID: unique_id}
+    )
 
 
 class LgTVDevice(MediaPlayerEntity):

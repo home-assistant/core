@@ -8,10 +8,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.util.network import is_host_valid
 
 from .const import DEFAULT_NAME, DOMAIN
+from .helpers import LGNetCastDetailDiscoveryError, async_discover_netcast_details
 
 
 class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
@@ -52,6 +55,49 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
+        """Import configuration from yaml."""
+        self.device_config = {
+            CONF_HOST: config[CONF_HOST],
+            CONF_NAME: config[CONF_NAME],
+            CONF_ID: config[CONF_ID],
+        }
+        try:
+            self._async_abort_entries_match({CONF_ID: config[CONF_ID]})
+        except AbortFlow as err:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_yaml_import_issue_already_configured",
+                breaks_in_ha_version="2024.6.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue_already_configured",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "interation_title": "LG Netcast",
+                },
+            )
+            raise err
+
+        async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2024.6.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "LG Netcast",
+            },
+        )
+
+        return await self.async_step_authorize(config)
+
     async def async_step_authorize(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -63,6 +109,27 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.create_client()
         assert self.client is not None
+
+        if not self.device_config.get(CONF_ID):
+            try:
+                details = await async_discover_netcast_details(self.hass, self.client)
+            except LGNetCastDetailDiscoveryError:
+                return self.async_abort(reason="cannot_connect")
+            unique_id = details["uuid"]
+            if unique_id is None:
+                return self.async_abort(reason="invalid_host")
+            self.device_config[CONF_ID] = unique_id
+            if CONF_NAME not in self.device_config:
+                model_name = details["model_name"]
+                friendly_name = details["friendly_name"] or DEFAULT_NAME
+                self.device_config[CONF_NAME] = (
+                    f"{friendly_name} ({model_name})" if model_name else friendly_name
+                )
+
+        await self.async_set_unique_id(self.device_config[CONF_ID])
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self.device_config[CONF_HOST]}
+        )
 
         try:
             await self.hass.async_add_executor_job(
@@ -88,11 +155,6 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_create_device(self) -> FlowResult:
         """Create LG Netcast TV Device from config."""
         assert self.client
-
-        if CONF_ID not in self.device_config:
-            await self._async_handle_discovery_without_unique_id()
-            assert CONF_NAME not in self.device_config
-            self.device_config[CONF_NAME] = DEFAULT_NAME
 
         return self.async_create_entry(
             title=self.device_config[CONF_NAME], data=self.device_config

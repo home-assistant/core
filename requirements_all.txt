@@ -702,6 +702,7 @@ debugpy==1.8.1
 deebot-client==6.0.2
 
 # homeassistant.components.ihc
+# homeassistant.components.lg_netcast
 # homeassistant.components.namecheapdns
 # homeassistant.components.ohmconnect
 defusedxml==0.7.1
