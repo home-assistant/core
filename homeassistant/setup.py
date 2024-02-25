@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable, Generator, Iterable
 import contextlib
-import importlib
 import logging.handlers
 import time
 from timeit import default_timer as timer
@@ -246,23 +245,6 @@ async def _async_process_dependencies(
     return failed
 
 
-def _load_imports(imports: list[str]) -> None:
-    """Load imports."""
-    for _import in imports:
-        try:
-            importlib.import_module(_import)
-        except Exception as exc:  # pylint: disable=broad-except
-            _LOGGER.error("Error loading %s: %s", _import, exc)
-
-
-async def _async_load_imports_in_executor(
-    hass: core.HomeAssistant, imports: list[str]
-) -> None:
-    """Load imports in executor that block the event loop for a long time."""
-    _LOGGER.debug("Loading %s in the executor", imports)
-    await hass.async_add_executor_job(_load_imports, imports)
-
-
 async def _async_setup_component(  # noqa: C901
     hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
@@ -310,7 +292,10 @@ async def _async_setup_component(  # noqa: C901
     # Some integrations fail on import because they call functions incorrectly.
     # So we do it before validating config to catch these errors.
     try:
-        component = integration.get_component()
+        if integration.import_executor:
+            component = await hass.async_add_executor_job(integration.get_component)
+        else:
+            component = integration.get_component()
     except ImportError as err:
         log_error(f"Unable to import component: {err}", err)
         return False
@@ -362,9 +347,6 @@ async def _async_setup_component(  # noqa: C901
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
-
-    if imports := integration.pre_import_setup:
-        await _async_load_imports_in_executor(hass, imports)
 
     integration_set = {domain}
 
