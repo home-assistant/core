@@ -1,7 +1,6 @@
 """Support for functionality to download files."""
 from __future__ import annotations
 
-import asyncio
 from http import HTTPStatus
 import os
 import re
@@ -89,11 +88,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
-    lock = asyncio.Lock()
-
     async def _async_run_download(call: ServiceCall) -> None:
-        async with lock:
-            await _async_download_file(hass, call, download_path)
+        await _async_download_file(hass, call, download_path)
 
     async_register_admin_service(
         hass,
