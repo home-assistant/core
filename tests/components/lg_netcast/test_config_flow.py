@@ -77,12 +77,12 @@ async def test_manual_host_no_connection_during_authorize(hass: HomeAssistant) -
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
 async def test_manual_host_invalid_details_during_authorize(
-    hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
     """Test manual host configuration."""
     with _patch_lg_netcast(invalid_details=True):
@@ -90,7 +90,7 @@ async def test_manual_host_invalid_details_during_authorize(
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -101,7 +101,7 @@ async def test_manual_host_unsuccessful_details_response(hass: HomeAssistant) ->
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
 
@@ -112,7 +112,7 @@ async def test_manual_host_no_unique_id_response(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "invalid_host"
 
 
@@ -151,7 +151,7 @@ async def test_import(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == UNIQUE_ID
         assert result["data"] == {
             CONF_HOST: IP_ADDRESS,
@@ -187,5 +187,5 @@ async def test_import_duplicate_error(hass):
             },
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
