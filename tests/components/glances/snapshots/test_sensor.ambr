@@ -935,3 +935,50 @@
     'state': '30.7',
   })
 # ---
+# name: test_sensor_states[sensor.0_0_0_0_timestamp-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_timestamp',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': 'mdi:clock-time-eight-outline',
+    'original_name': 'Timestamp',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'uptime',
+    'unique_id': 'test--uptime',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_timestamp-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': '0.0.0.0 Timestamp',
+      'icon': 'mdi:clock-time-eight-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_timestamp',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-02-25T10:25:13+00:00',
+  })
+# ---
