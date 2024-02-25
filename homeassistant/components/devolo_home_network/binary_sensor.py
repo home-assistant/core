@@ -52,7 +52,7 @@ SENSOR_TYPES: dict[str, DevoloBinarySensorEntityDescription] = {
         device_class=BinarySensorDeviceClass.PLUG,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:router-network",
+        translation_key="connected_to_router",
         value_func=_is_connected_to_router,
     ),
 }

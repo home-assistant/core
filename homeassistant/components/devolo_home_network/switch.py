@@ -42,15 +42,15 @@ class DevoloSwitchEntityDescription(
 SWITCH_TYPES: dict[str, DevoloSwitchEntityDescription[Any]] = {
     SWITCH_GUEST_WIFI: DevoloSwitchEntityDescription[WifiGuestAccessGet](
         key=SWITCH_GUEST_WIFI,
-        icon="mdi:wifi",
+        translation_key="guest_wifi",
         is_on_func=lambda data: data.enabled is True,
         turn_on_func=lambda device: device.device.async_set_wifi_guest_access(True),  # type: ignore[union-attr]
         turn_off_func=lambda device: device.device.async_set_wifi_guest_access(False),  # type: ignore[union-attr]
     ),
     SWITCH_LEDS: DevoloSwitchEntityDescription[bool](
         key=SWITCH_LEDS,
+        translation_key="leds",
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:led-off",
         is_on_func=bool,
         turn_on_func=lambda device: device.device.async_set_led_setting(True),  # type: ignore[union-attr]
         turn_off_func=lambda device: device.device.async_set_led_setting(False),  # type: ignore[union-attr]

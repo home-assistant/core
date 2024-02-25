@@ -68,22 +68,22 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any]] = {
         key=CONNECTED_PLC_DEVICES,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:lan",
+        translation_key="connected_plc_devices",
         value_func=lambda data: len(
             {device.mac_address_from for device in data.data_rates}
         ),
     ),
     CONNECTED_WIFI_CLIENTS: DevoloSensorEntityDescription[list[ConnectedStationInfo]](
         key=CONNECTED_WIFI_CLIENTS,
-        icon="mdi:wifi",
+        translation_key="connected_wifi_clients",
         state_class=SensorStateClass.MEASUREMENT,
         value_func=len,
     ),
     NEIGHBORING_WIFI_NETWORKS: DevoloSensorEntityDescription[list[NeighborAPInfo]](
         key=NEIGHBORING_WIFI_NETWORKS,
+        translation_key="neighboring_wifi_networks",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:wifi-marker",
         value_func=len,
     ),
     PLC_RX_RATE: DevoloSensorEntityDescription[DataRate](
