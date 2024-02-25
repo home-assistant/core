@@ -147,12 +147,13 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(
                 self.client._get_session_id  # pylint: disable=protected-access
             )
-            return await self.async_create_device()
         except AccessTokenError:
             if user_input is not None:
                 errors[CONF_ACCESS_TOKEN] = "invalid_access_token"
         except SessionIdError:
             errors["base"] = "cannot_connect"
+        else:
+            return await self.async_create_device()
 
         return self.async_show_form(
             step_id="authorize",
