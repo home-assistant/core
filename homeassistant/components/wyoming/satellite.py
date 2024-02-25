@@ -287,13 +287,37 @@ class WyomingSatellite:
         if end_stage is None:
             raise ValueError(f"Invalid end stage: {end_stage}")
 
-        pipeline_id = pipeline_select.get_chosen_pipeline(
-            self.hass,
-            DOMAIN,
-            self.device.satellite_id,
-        )
+        pipeline_id: str | None = None
+        if run_pipeline.name:
+            # Find pipeline by name
+            for pipeline in assist_pipeline.async_get_pipelines(self.hass):
+                if pipeline.name == run_pipeline.name:
+                    pipeline_id = pipeline.id
+                    break
+
+            if pipeline_id is None:
+                raise ValueError(f"No pipeline named {run_pipeline.name}")
+        else:
+            # Use configured pipeline
+            pipeline_id = pipeline_select.get_chosen_pipeline(
+                self.hass,
+                DOMAIN,
+                self.device.satellite_id,
+            )
+
         pipeline = assist_pipeline.async_get_pipeline(self.hass, pipeline_id)
         assert pipeline is not None
+
+        # Text-to-speech audio format
+        tts_audio_output = {tts.ATTR_PREFERRED_FORMAT: "wav"}
+        if run_pipeline.snd_format is not None:
+            # Satellite has requested a specific sample rate, etc.
+            tts_audio_output[
+                tts.ATTR_PREFERRED_SAMPLE_RATE
+            ] = run_pipeline.snd_format.rate
+            tts_audio_output[
+                tts.ATTR_PREFERRED_SAMPLE_CHANNELS
+            ] = run_pipeline.snd_format.channels
 
         # We will push audio in through a queue
         self._audio_queue = asyncio.Queue()
@@ -324,7 +348,7 @@ class WyomingSatellite:
                 stt_stream=stt_stream,
                 start_stage=start_stage,
                 end_stage=end_stage,
-                tts_audio_output="wav",
+                tts_audio_output=tts_audio_output,
                 pipeline_id=pipeline_id,
                 audio_settings=assist_pipeline.AudioSettings(
                     noise_suppression_level=self.device.noise_suppression_level,

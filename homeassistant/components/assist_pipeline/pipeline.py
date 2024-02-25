@@ -524,7 +524,7 @@ class PipelineRun:
     language: str = None  # type: ignore[assignment]
     runner_data: Any | None = None
     intent_agent: str | None = None
-    tts_audio_output: str | None = None
+    tts_audio_output: str | dict[str, Any] | None = None
     wake_word_settings: WakeWordSettings | None = None
     audio_settings: AudioSettings = field(default_factory=AudioSettings)
 
@@ -1026,11 +1026,16 @@ class PipelineRun:
             tts_options[tts.ATTR_VOICE] = self.pipeline.tts_voice
 
         if self.tts_audio_output is not None:
-            tts_options[tts.ATTR_PREFERRED_FORMAT] = self.tts_audio_output
-            if self.tts_audio_output == "wav":
-                # 16 Khz, 16-bit mono
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = 16000
-                tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = 1
+            if isinstance(self.tts_audio_output, str):
+                # Audio format only
+                tts_options[tts.ATTR_PREFERRED_FORMAT] = self.tts_audio_output
+                if self.tts_audio_output == "wav":
+                    # 16 Khz, 16-bit mono
+                    tts_options[tts.ATTR_PREFERRED_SAMPLE_RATE] = 16000
+                    tts_options[tts.ATTR_PREFERRED_SAMPLE_CHANNELS] = 1
+            else:
+                # Merge options that were passed in
+                tts_options.update(self.tts_audio_output)
 
         try:
             options_supported = await tts.async_support_options(
