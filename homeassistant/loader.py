@@ -14,6 +14,7 @@ import importlib
 import logging
 import pathlib
 import sys
+import time
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, Protocol, TypedDict, TypeVar, cast
 
@@ -852,27 +853,39 @@ class Integration:
             return platform
         if future := self._import_futures.get(full_name):
             return await future
+        if debug := _LOGGER.isEnabledFor(logging.DEBUG):
+            start = time.perf_counter()
         import_future = self.hass.loop.create_future()
         self._import_futures[full_name] = import_future
+        load_executor = (
+            self.import_executor
+            and domain not in self.hass.config.components
+            and f"hass.components.{domain}" not in sys.modules
+            and f"custom_components.{domain}" not in sys.modules
+        )
         try:
-            if (
-                self.import_executor
-                and domain not in self.hass.config.components
-                and f"hass.components.{domain}" not in sys.modules
-                and f"custom_components.{domain}" not in sys.modules
-            ):
+            if load_executor:
                 platform = await self.hass.async_add_executor_job(
                     self._load_platform, platform_name
                 )
             else:
                 platform = self._load_platform(platform_name)
             import_future.set_result(platform)
-            return platform
         except BaseException as ex:
             import_future.set_exception(ex)
             raise
         finally:
             self._import_futures.pop(full_name)
+
+        if debug:
+            _LOGGER.debug(
+                "Loaded flow for %s in %.2fs (loaded_executor=%s)",
+                domain,
+                time.perf_counter() - start,
+                load_executor,
+            )
+
+        return platform
 
     def _get_platform_cached(self, full_name: str) -> ModuleType | None:
         """Return a platform for an integration from cache."""
