@@ -40,7 +40,7 @@
         },
         "value": {
           "name": "Comfort value",
-          "description": "Send any of the following comfort values: too_hot, too_warm, bit_warm, comfortable, bit_cold, too_cold, freezing\n."
+          "description": "Send any of the following comfort values: too_hot, too_warm, bit_warm, comfortable, bit_cold, too_cold, freezing."
         }
       }
     },

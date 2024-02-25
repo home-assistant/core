@@ -1052,12 +1052,13 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                 init_done.set_result(None)
         return flow, result
 
-    async def async_shutdown(self) -> None:
+    @callback
+    def async_shutdown(self) -> None:
         """Cancel any initializing flows."""
         for future_list in self._initialize_futures.values():
             for future in future_list:
                 future.set_result(None)
-        await self._discovery_debouncer.async_shutdown()
+        self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
@@ -1418,11 +1419,12 @@ class ConfigEntries:
         self._async_dispatch(ConfigEntryChange.REMOVED, entry)
         return {"require_restart": not unload_success}
 
-    async def _async_shutdown(self, event: Event) -> None:
+    @callback
+    def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
         for entry in self._entries.values():
             entry.async_shutdown()
-        await self.flow.async_shutdown()
+        self.flow.async_shutdown()
 
     async def async_initialize(self) -> None:
         """Initialize config entry config."""
@@ -1756,7 +1758,10 @@ class ConfigEntries:
         Config entries which are created after Home Assistant is started can't be waited
         for, the function will just return if the config entry is loaded or not.
         """
-        if setup_future := self.hass.data.get(DATA_SETUP_DONE, {}).get(entry.domain):
+        setup_done: dict[str, asyncio.Future[bool]] = self.hass.data.get(
+            DATA_SETUP_DONE, {}
+        )
+        if setup_future := setup_done.get(entry.domain):
             await setup_future
         # The component was not loaded.
         if entry.domain not in self.hass.config.components:
