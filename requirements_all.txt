@@ -2914,7 +2914,7 @@ youtubeaio==1.1.5
 yt-dlp==2023.11.16
 
 # homeassistant.components.zamg
-zamg==0.3.5
+zamg==0.3.6
 
 # homeassistant.components.zengge
 zengge==0.2
