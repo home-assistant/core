@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import PyTado
 import voluptuous as vol
@@ -280,7 +280,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._cool_max_temp = cool_max_temp
         self._cool_step = cool_step
 
-        self._target_temp: Optional[float] = None
+        self._target_temp: float | None = None
 
         self._current_tado_fan_speed = CONST_FAN_OFF
         self._current_tado_hvac_mode = CONST_MODE_OFF
@@ -288,7 +288,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_swing_mode = TADO_SWING_OFF
 
         self._tado_zone_data: PyTado.TadoZone = {}
-        self._tado_geofence_data: Optional[dict[str, str]] = None
+        self._tado_geofence_data: dict[str, str] | None = None
 
         self._tado_zone_temp_offset: dict[str, Any] = {}
 
@@ -550,10 +550,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def _control_hvac(
         self,
         hvac_mode: str | None = None,
-        target_temp: Optional[float] | None = None,
+        target_temp: float | None = None,
         fan_mode: str | None = None,
         swing_mode: str | None = None,
-        duration: Optional[int] | None = None,
+        duration: int | None = None,
         overlay_mode: str | None = None,
     ):
         """Send new target temperature to Tado."""
