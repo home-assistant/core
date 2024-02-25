@@ -2376,7 +2376,10 @@ async def _load_integration(
     await async_process_deps_reqs(hass, hass_config, integration)
 
     try:
-        integration.get_platform("config_flow")
+        if integration.import_executor:
+            await hass.async_add_executor_job(integration.get_platform, "config_flow")
+        else:
+            integration.get_platform("config_flow")
     except ImportError as err:
         _LOGGER.error(
             "Error occurred loading flow for integration %s: %s",
