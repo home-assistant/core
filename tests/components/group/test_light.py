@@ -1783,3 +1783,53 @@ async def test_state_sync_disabled(
     await hass.async_block_till_done()
     assert light1.state == STATE_OFF
     assert light2.state == STATE_ON
+
+
+async def test_state_sync_ignore_unspecified(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
+    """Test the state synchronization - do not try to sync unspecified states.
+
+    When in sync mode, do not try to synchronize `unknown` or `unavailable`
+    states.
+    """
+    platform = getattr(hass.components, "test.light")
+    platform.init(empty=True)
+
+    platform.ENTITIES.append(platform.MockLight("test1", STATE_OFF))
+    platform.ENTITIES.append(platform.MockLight("test2", STATE_OFF))
+
+    light1 = platform.ENTITIES[0]
+    light2 = platform.ENTITIES[1]
+    light2.turn_on = MagicMock()
+
+    await async_setup_component(
+        hass,
+        LIGHT_DOMAIN,
+        {
+            LIGHT_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": DOMAIN,
+                    "entities": ["light.test1", "light.test2"],
+                    "all": "false",
+                    "sync": "true",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # light1 becomes Unavailable - light2 is not synced
+    hass.states.async_set(light1.entity_id, STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+
+    light2.turn_on.assert_not_called()
+
+    # light1 becomes Unknown - light2 is not synced
+    hass.states.async_set(light1.entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+
+    light2.turn_on.assert_not_called()
