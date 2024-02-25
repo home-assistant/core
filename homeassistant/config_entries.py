@@ -2379,7 +2379,7 @@ async def _load_integration(
         start = time.perf_counter()
 
     try:
-        if integration.import_executor:
+        if domain not in hass.config.components and integration.import_executor:
             await hass.async_add_executor_job(integration.get_platform, "config_flow")
         else:
             integration.get_platform("config_flow")
