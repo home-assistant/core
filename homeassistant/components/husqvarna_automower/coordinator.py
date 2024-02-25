@@ -76,4 +76,4 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
 
         if not hass.is_stopping:
             _LOGGER.debug("Disconnected from server. Reloading integration")
-            hass.async_create_task(hass.config_entries.async_reload(entry.entry_id))
+            hass.config_entries.async_schedule_reload(entry.entry_id)
