@@ -163,7 +163,7 @@ def _async_do_download(hass: HomeAssistant, service: ServiceCall, download_path:
                     filename = match[0].strip("'\" ")
 
             if not filename:
-                filename = os.path.basename(url).strip()  # type: ignore[arg-type]
+                filename = os.path.basename(url).strip()
 
             if not filename:
                 # Generate a random filename
