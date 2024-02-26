@@ -1,0 +1,15 @@
+{
+  "domain": "plexamp",
+  "name": "Plexamp Media Player",
+  "codeowners": [
+    "@gloaysa"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/plexamp",
+  "homekit": {},
+  "iot_class": "local_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
