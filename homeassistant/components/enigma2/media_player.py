@@ -107,7 +107,7 @@ async def async_setup_platform(
 
     device = OpenWebIfDevice(
         host=session,
-        turn_off_to_deep=config.get(CONF_DEEP_STANDBY),
+        turn_off_to_deep=config.get(CONF_DEEP_STANDBY, False),
         source_bouquet=config.get(CONF_SOURCE_BOUQUET),
     )
 
