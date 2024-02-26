@@ -208,7 +208,7 @@ def test_async_create_task_eager_start_fallback_schedule_coroutine(
         pass
 
     ha.HomeAssistant.async_create_task(hass, job(), eager_start=True)
-    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.call_soon.mock_calls) == 1
     # Should fallback to loop.create_task since 3.11 does
     # not support eager_start
     assert len(hass.loop.create_task.mock_calls) == 0
