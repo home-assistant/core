@@ -32,6 +32,16 @@ def mock_current_request_mock():
         yield mock_current_request
 
 
+@pytest.fixture
+def patch_hassio():
+    """Patch the hassio component."""
+    with patch("homeassistant.components.hassio.is_hassio", return_value=True), patch(
+        "homeassistant.components.hassio.get_host_info",
+        return_value={"hostname": "homeassistant"},
+    ):
+        yield
+
+
 async def test_get_url_internal(hass: HomeAssistant) -> None:
     """Test getting an instance URL when the user has set an internal URL."""
     assert hass.config.internal_url is None
@@ -566,7 +576,7 @@ async def test_get_request_host(hass: HomeAssistant) -> None:
 
 
 async def test_get_current_request_url_with_known_host(
-    hass: HomeAssistant, current_request
+    hass: HomeAssistant, current_request, patch_hassio
 ) -> None:
     """Test getting current request URL with known hosts addresses."""
     hass.config.api = Mock(use_ssl=False, port=8123, local_ip="127.0.0.1")
@@ -595,10 +605,6 @@ async def test_get_current_request_url_with_known_host(
 
     # Ensure hostname from Supervisor is accepted transparently
     mock_component(hass, "hassio")
-    hass.components.hassio.is_hassio = Mock(return_value=True)
-    hass.components.hassio.get_host_info = Mock(
-        return_value={"hostname": "homeassistant"}
-    )
 
     with patch(
         "homeassistant.helpers.network._get_request_host",
@@ -662,11 +668,8 @@ async def test_is_internal_request(hass: HomeAssistant, mock_current_request) ->
         assert is_internal_request(hass), mock_current_request.return_value.url
 
     # Test for matching against HassOS hostname
-    with patch.object(
-        hass.components.hassio, "is_hassio", return_value=True
-    ), patch.object(
-        hass.components.hassio,
-        "get_host_info",
+    with patch("homeassistant.components.hassio.is_hassio", return_value=True), patch(
+        "homeassistant.components.hassio.get_host_info",
         return_value={"hostname": "hellohost"},
     ):
         for allowed in ("hellohost", "hellohost.local"):
