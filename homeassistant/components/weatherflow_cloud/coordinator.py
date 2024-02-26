@@ -18,7 +18,6 @@ class WeatherFlowCloudDataUpdateCoordinator(
 ):
     """Class to manage fetching REST Based WeatherFlow Forecast data."""
 
-    config_entry: ConfigEntry
 
     def __init__(self, hass: HomeAssistant, api_token: str) -> None:
         """Initialize global WeatherFlow forecast data updater."""
