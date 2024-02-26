@@ -42,7 +42,6 @@ async def test_attributes(
     assert state.state == "-875.0"
     assert state.attributes == {
         "friendly_name": ENTITY_FRIENDLY_NAME,
-        "icon": "mdi:thermometer-lines",
         "min": -3000,
         "max": 3000,
         "mode": "auto",

@@ -47,7 +47,6 @@ async def test_attributes(
     assert state.state == STATE_OFF
     assert state.attributes == {
         "friendly_name": ENTITY_FRIENDLY_NAME,
-        "icon": "mdi:water-alert-outline",
     }
 
 
