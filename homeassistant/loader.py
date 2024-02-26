@@ -179,6 +179,7 @@ class Manifest(TypedDict, total=False):
     version: str
     codeowners: list[str]
     loggers: list[str]
+    single_config_entry: bool
 
 
 def async_setup(hass: HomeAssistant) -> None:
@@ -368,6 +369,9 @@ async def async_get_integration_descriptions(
             "integration_type": integration.integration_type,
             "iot_class": integration.iot_class,
             "name": integration.name,
+            "single_config_entry": integration.manifest.get(
+                "single_config_entry", False
+            ),
         }
         custom_flows[integration_key][integration.domain] = metadata
 
@@ -769,6 +773,11 @@ class Integration:
         if "version" not in self.manifest:
             return None
         return AwesomeVersion(self.manifest["version"])
+
+    @cached_property
+    def single_config_entry(self) -> bool:
+        """Return if the integration supports a single config entry only."""
+        return self.manifest.get("single_config_entry", False)
 
     @property
     def all_dependencies(self) -> set[str]:
