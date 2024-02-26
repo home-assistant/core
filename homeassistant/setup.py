@@ -192,7 +192,7 @@ async def _async_process_dependencies(
 
     dependencies_tasks = {
         dep: setup_futures.get(dep)
-        or hass.loop.create_task(
+        or asyncio.create_task(
             async_setup_component(hass, dep, config),
             name=f"setup {dep} as dependency of {integration.domain}",
         )
