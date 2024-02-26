@@ -1,10 +1,11 @@
 """Support for Vallox buttons."""
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import date
 
-from vallox_websocket_api import Vallox
+from vallox_websocket_api import MetricData, Vallox
 
 from homeassistant.components.date import DateEntity, DateEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +17,7 @@ from . import ValloxDataUpdateCoordinator, ValloxEntity
 from .const import DOMAIN
 
 
-class ValloxFilterChangeDate(ValloxEntity, DateEntity):
+class ValloxDateEntity(ValloxEntity, DateEntity):
     """Representation of a Vallox date."""
 
     entity_description: ValloxDateEntityDescription
@@ -41,18 +42,21 @@ class ValloxFilterChangeDate(ValloxEntity, DateEntity):
     def native_value(self) -> date | None:
         """Return the latest value."""
 
-        return self.coordinator.data.filter_change_date
+        return self.entity_description.value_fn(self.coordinator.data)
 
     async def async_set_value(self, value: date) -> None:
         """Change the date."""
 
         await self._client.set_filter_change_date(value)
-        await self.coordinator.async_request_refresh()
+        await self.entity_description.set_value_fn(self._client, value)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ValloxDateEntityDescription(DateEntityDescription):
     """Describes Vallox date entity."""
+
+    value_fn: Callable[[MetricData], date | None]
+    set_value_fn: Callable[[Vallox, date], Awaitable[None]]
 
 
 DATE_ENTITIES: tuple[ValloxDateEntityDescription, ...] = (
@@ -60,6 +64,8 @@ DATE_ENTITIES: tuple[ValloxDateEntityDescription, ...] = (
         key="filter_change_date",
         translation_key="filter_change_date",
         icon="mdi:air-filter",
+        value_fn=lambda data: data.filter_change_date,
+        set_value_fn=lambda client, value: client.set_filter_change_date(value),
     ),
 )
 
@@ -75,7 +81,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            ValloxFilterChangeDate(
+            ValloxDateEntity(
                 data["name"], data["coordinator"], description, data["client"]
             )
             for description in DATE_ENTITIES
