@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import Awaitable, Callable, Generator, Iterable
 import contextlib
 import logging.handlers
-import sys
 import time
 from timeit import default_timer as timer
 from types import ModuleType
@@ -290,33 +289,11 @@ async def _async_setup_component(  # noqa: C901
         log_error(str(err))
         return False
 
-    if debug := _LOGGER.isEnabledFor(logging.DEBUG):
-        start = timer()
-
-    load_executor = (
-        integration.import_executor
-        and f"hass.components.{domain}" not in sys.modules
-        and f"custom_components.{domain}" not in sys.modules
-    )
-    # Some integrations fail on import because they call functions incorrectly.
-    # So we do it before validating config to catch these errors.
-
     try:
-        if load_executor:
-            component = await hass.async_add_executor_job(integration.get_component)
-        else:
-            component = integration.get_component()
+        component = await integration.async_get_component()
     except ImportError as err:
         log_error(f"Unable to import component: {err}", err)
         return False
-
-    if debug:
-        _LOGGER.debug(
-            "Component %s import took %.3f seconds (loaded_executor=%s)",
-            domain,
-            timer() - start,
-            load_executor,
-        )
 
     integration_config_info = await conf_util.async_process_component_config(
         hass, config, integration

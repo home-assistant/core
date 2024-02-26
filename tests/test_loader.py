@@ -174,6 +174,20 @@ async def test_get_integration(hass: HomeAssistant) -> None:
     assert hue_light == integration.get_platform("light")
 
 
+async def test_async_get_component(hass: HomeAssistant) -> None:
+    """Test resolving integration."""
+    with pytest.raises(loader.IntegrationNotLoaded):
+        loader.async_get_loaded_integration(hass, "hue")
+
+    integration = await loader.async_get_integration(hass, "hue")
+    assert await integration.async_get_component() == hue
+    assert integration.get_platform("light") == hue_light
+
+    integration = loader.async_get_loaded_integration(hass, "hue")
+    assert await integration.async_get_component() == hue
+    assert integration.get_platform("light") == hue_light
+
+
 async def test_get_integration_exceptions(hass: HomeAssistant) -> None:
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "hue")

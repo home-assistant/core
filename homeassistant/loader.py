@@ -825,6 +825,32 @@ class Integration:
 
         return self._all_dependencies_resolved
 
+    async def async_get_component(self) -> ComponentProtocol:
+        """Return the component."""
+        if debug := _LOGGER.isEnabledFor(logging.DEBUG):
+            start = time.perf_counter()
+        domain = self.domain
+        load_executor = (
+            self.import_executor
+            and f"hass.components.{domain}" not in sys.modules
+            and f"custom_components.{domain}" not in sys.modules
+        )
+        # Some integrations fail on import because they call functions incorrectly.
+        # So we do it before validating config to catch these errors.
+        if load_executor:
+            comp = await self.hass.async_add_executor_job(self.get_component)
+        else:
+            comp = self.get_component()
+
+        if debug:
+            _LOGGER.debug(
+                "Component %s import took %.3f seconds (loaded_executor=%s)",
+                domain,
+                time.perf_counter() - start,
+                load_executor,
+            )
+        return comp
+
     def get_component(self) -> ComponentProtocol:
         """Return the component.
 
