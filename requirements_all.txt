@@ -2813,7 +2813,7 @@ waterfurnace==1.1.0
 webrtc-noise-gain==1.2.3
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.5
+whirlpool-sixth-sense==0.18.6
 
 # homeassistant.components.whois
 whois==0.9.27
