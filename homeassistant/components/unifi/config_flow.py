@@ -47,8 +47,8 @@ from .const import (
     DEFAULT_DPI_RESTRICTIONS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from .controller import UniFiController, get_unifi_controller
 from .errors import AuthenticationRequired, CannotConnect
+from .hub import UnifiHub, get_unifi_api
 
 DEFAULT_PORT = 443
 DEFAULT_SITE_ID = "default"
@@ -99,11 +99,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             }
 
             try:
-                controller = await get_unifi_controller(
-                    self.hass, MappingProxyType(self.config)
-                )
-                await controller.sites.update()
-                self.sites = controller.sites
+                hub = await get_unifi_api(self.hass, MappingProxyType(self.config))
+                await hub.sites.update()
+                self.sites = hub.sites
 
             except AuthenticationRequired:
                 errors["base"] = "faulty_credentials"
@@ -160,18 +158,16 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
                 abort_reason = "reauth_successful"
 
             if config_entry:
-                controller: UniFiController | None = self.hass.data.get(
-                    UNIFI_DOMAIN, {}
-                ).get(config_entry.entry_id)
+                hub: UnifiHub | None = self.hass.data.get(UNIFI_DOMAIN, {}).get(
+                    config_entry.entry_id
+                )
 
-                if controller and controller.available:
+                if hub and hub.available:
                     return self.async_abort(reason="already_configured")
 
-                self.hass.config_entries.async_update_entry(
-                    config_entry, data=self.config
+                return self.async_update_reload_and_abort(
+                    config_entry, data=self.config, reason=abort_reason
                 )
-                await self.hass.config_entries.async_reload(config_entry.entry_id)
-                return self.async_abort(reason=abort_reason)
 
             site_nice_name = self.sites[unique_id].description
             return self.async_create_entry(title=site_nice_name, data=self.config)
@@ -242,7 +238,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Unifi Network options."""
 
-    controller: UniFiController
+    hub: UnifiHub
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize UniFi Network options flow."""
@@ -255,8 +251,8 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         """Manage the UniFi Network options."""
         if self.config_entry.entry_id not in self.hass.data[UNIFI_DOMAIN]:
             return self.async_abort(reason="integration_not_setup")
-        self.controller = self.hass.data[UNIFI_DOMAIN][self.config_entry.entry_id]
-        self.options[CONF_BLOCK_CLIENT] = self.controller.option_block_clients
+        self.hub = self.hass.data[UNIFI_DOMAIN][self.config_entry.entry_id]
+        self.options[CONF_BLOCK_CLIENT] = self.hub.option_block_clients
 
         if self.show_advanced_options:
             return await self.async_step_configure_entity_sources()
@@ -273,7 +269,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
         clients_to_block = {}
 
-        for client in self.controller.api.clients.values():
+        for client in self.hub.api.clients.values():
             clients_to_block[
                 client.mac
             ] = f"{client.name or client.hostname} ({client.mac})"
@@ -284,11 +280,11 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_TRACK_CLIENTS,
-                        default=self.controller.option_track_clients,
+                        default=self.hub.option_track_clients,
                     ): bool,
                     vol.Optional(
                         CONF_TRACK_DEVICES,
-                        default=self.controller.option_track_devices,
+                        default=self.hub.option_track_devices,
                     ): bool,
                     vol.Optional(
                         CONF_BLOCK_CLIENT, default=self.options[CONF_BLOCK_CLIENT]
@@ -308,7 +304,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
         clients = {
             client.mac: f"{client.name or client.hostname} ({client.mac})"
-            for client in self.controller.api.clients.values()
+            for client in self.hub.api.clients.values()
         }
         clients |= {
             mac: f"Unknown ({mac})"
@@ -340,16 +336,16 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             return await self.async_step_client_control()
 
         ssids = (
-            {wlan.name for wlan in self.controller.api.wlans.values()}
+            {wlan.name for wlan in self.hub.api.wlans.values()}
             | {
                 f"{wlan.name}{wlan.name_combine_suffix}"
-                for wlan in self.controller.api.wlans.values()
+                for wlan in self.hub.api.wlans.values()
                 if not wlan.name_combine_enabled
                 and wlan.name_combine_suffix is not None
             }
             | {
                 wlan["name"]
-                for ap in self.controller.api.devices.values()
+                for ap in self.hub.api.devices.values()
                 for wlan in ap.wlan_overrides
                 if "name" in wlan
             }
@@ -357,7 +353,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         ssid_filter = {ssid: ssid for ssid in sorted(ssids)}
 
         selected_ssids_to_filter = [
-            ssid for ssid in self.controller.option_ssid_filter if ssid in ssid_filter
+            ssid for ssid in self.hub.option_ssid_filter if ssid in ssid_filter
         ]
 
         return self.async_show_form(
@@ -366,28 +362,26 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_TRACK_CLIENTS,
-                        default=self.controller.option_track_clients,
+                        default=self.hub.option_track_clients,
                     ): bool,
                     vol.Optional(
                         CONF_TRACK_WIRED_CLIENTS,
-                        default=self.controller.option_track_wired_clients,
+                        default=self.hub.option_track_wired_clients,
                     ): bool,
                     vol.Optional(
                         CONF_TRACK_DEVICES,
-                        default=self.controller.option_track_devices,
+                        default=self.hub.option_track_devices,
                     ): bool,
                     vol.Optional(
                         CONF_SSID_FILTER, default=selected_ssids_to_filter
                     ): cv.multi_select(ssid_filter),
                     vol.Optional(
                         CONF_DETECTION_TIME,
-                        default=int(
-                            self.controller.option_detection_time.total_seconds()
-                        ),
+                        default=int(self.hub.option_detection_time.total_seconds()),
                     ): int,
                     vol.Optional(
                         CONF_IGNORE_WIRED_BUG,
-                        default=self.controller.option_ignore_wired_bug,
+                        default=self.hub.option_ignore_wired_bug,
                     ): bool,
                 }
             ),
@@ -404,7 +398,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
         clients_to_block = {}
 
-        for client in self.controller.api.clients.values():
+        for client in self.hub.api.clients.values():
             clients_to_block[
                 client.mac
             ] = f"{client.name or client.hostname} ({client.mac})"
@@ -447,11 +441,11 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Optional(
                         CONF_ALLOW_BANDWIDTH_SENSORS,
-                        default=self.controller.option_allow_bandwidth_sensors,
+                        default=self.hub.option_allow_bandwidth_sensors,
                     ): bool,
                     vol.Optional(
                         CONF_ALLOW_UPTIME_SENSORS,
-                        default=self.controller.option_allow_uptime_sensors,
+                        default=self.hub.option_allow_uptime_sensors,
                     ): bool,
                 }
             ),

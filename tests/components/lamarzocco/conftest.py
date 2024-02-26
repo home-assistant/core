@@ -20,15 +20,19 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_config_entry(mock_lamarzocco: MagicMock) -> MockConfigEntry:
+def mock_config_entry(
+    hass: HomeAssistant, mock_lamarzocco: MagicMock
+) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    return MockConfigEntry(
+    entry = MockConfigEntry(
         title="My LaMarzocco",
         domain=DOMAIN,
         data=USER_INPUT
         | {CONF_MACHINE: mock_lamarzocco.serial_number, CONF_HOST: "host"},
         unique_id=mock_lamarzocco.serial_number,
     )
+    entry.add_to_hass(hass)
+    return entry
 
 
 @pytest.fixture
@@ -97,6 +101,7 @@ def mock_lamarzocco(
         )
         lamarzocco.config = load_json_object_fixture("config.json", DOMAIN)
         lamarzocco.statistics = load_json_array_fixture("statistics.json", DOMAIN)
+        lamarzocco.schedule = load_json_array_fixture("schedule.json", DOMAIN)
 
         lamarzocco.get_all_machines.return_value = [
             (serial_number, model_name),

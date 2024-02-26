@@ -1,6 +1,7 @@
 """Constants for System Monitor."""
 
 DOMAIN = "systemmonitor"
+DOMAIN_COORDINATORS = "systemmonitor_coordinators"
 
 CONF_INDEX = "index"
 CONF_PROCESS = "process"
