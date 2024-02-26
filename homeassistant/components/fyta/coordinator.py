@@ -19,9 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class FytaCoordinator(
-    DataUpdateCoordinator[dict[int | str, int | str | bool | dict[str, Any]]]
-):
+class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
     """Fyta custom coordinator."""
 
     config_entry: ConfigEntry
@@ -38,7 +36,7 @@ class FytaCoordinator(
 
     async def _async_update_data(
         self,
-    ) -> dict[int | str, int | str | bool | dict[str, Any]]:
+    ) -> dict[int, dict[str, Any]]:
         """Fetch data from API endpoint."""
 
         if self.fyta.expiration is None or self.fyta.expiration < datetime.now():
