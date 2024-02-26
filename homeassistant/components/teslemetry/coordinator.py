@@ -14,18 +14,28 @@ from .const import LOGGER, TeslemetryState
 SYNC_INTERVAL = 60
 
 
-class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching data from the Teslemetry API."""
+class TeslemetryDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+    """Base class for Teslemetry Data Coordinators."""
 
-    def __init__(self, hass: HomeAssistant, api: VehicleSpecific) -> None:
+    name: str
+
+    def __init__(
+        self, hass: HomeAssistant, api: VehicleSpecific | EnergySpecific
+    ) -> None:
         """Initialize Teslemetry Vehicle Update Coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            name="Teslemetry Vehicle",
+            name=self.name,
             update_interval=timedelta(seconds=SYNC_INTERVAL),
         )
         self.api = api
+
+
+class TeslemetryVehicleDataCoordinator(TeslemetryDataCoordinator):
+    """Class to manage fetching data from the Teslemetry API."""
+
+    name = "Teslemetry Vehicle"
 
     async def async_config_entry_first_refresh(self) -> None:
         """Perform first refresh."""
@@ -67,18 +77,10 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return result
 
 
-class TeslemetryEnergyDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class TeslemetryEnergyDataCoordinator(TeslemetryDataCoordinator):
     """Class to manage fetching data from the Teslemetry API."""
 
-    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
-        """Initialize Teslemetry Energy Update Coordinator."""
-        super().__init__(
-            hass,
-            LOGGER,
-            name="Teslemetry Energy Site",
-            update_interval=timedelta(seconds=SYNC_INTERVAL),
-        )
-        self.api = api
+    name = "Teslemetry Energy Site"
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""
