@@ -5,11 +5,12 @@ from collections import UserDict
 from collections.abc import Iterable, ValuesView
 import dataclasses
 from dataclasses import dataclass
-from typing import Literal, TypedDict, cast
+from typing import Any, Literal, TypedDict, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
+from .storage import Store
 from .typing import UNDEFINED, EventType, UndefinedType
 
 DATA_REGISTRY = "floor_registry"
@@ -96,7 +97,8 @@ class FloorRegistry:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the floor registry."""
         self.hass = hass
-        self._store = hass.helpers.storage.Store(
+        self._store: Store[dict[str, list[dict[str, Any]]]] = Store(
+            hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
             atomic_writes=True,
