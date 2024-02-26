@@ -1,6 +1,7 @@
 """Diagnostics support for Enphase Envoy."""
 from __future__ import annotations
 
+import copy
 import json
 from typing import TYPE_CHECKING, Any
 
@@ -70,7 +71,7 @@ async def async_get_config_entry_diagnostics(
 
     # redact envoy serial in envoy data
     cleaned_data = json.loads(
-        json.dumps(coordinator.data).replace(
+        json.dumps(copy.deepcopy(coordinator.data)).replace(
             coordinator.envoy_serial_number, "<<envoyserial>>"
         )
     )
