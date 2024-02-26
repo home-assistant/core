@@ -135,7 +135,7 @@ class Store(Generic[_T]):
         """
         if self._load_task is None:
             self._load_task = self.hass.async_create_task(
-                self._async_load(), f"Storage load {self.key}"
+                self._async_load(), f"Storage load {self.key}", eager_start=True
             )
 
         return await self._load_task
@@ -318,7 +318,9 @@ class Store(Generic[_T]):
             # wrote. Reschedule the timer to the next write time.
             self._async_reschedule_delayed_write(self._next_write_time)
             return
-        self.hass.async_create_task(self._async_callback_delayed_write())
+        self.hass.async_create_task(
+            self._async_callback_delayed_write(), eager_start=True
+        )
 
     @callback
     def _async_ensure_final_write_listener(self) -> None:
