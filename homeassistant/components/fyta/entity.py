@@ -71,4 +71,4 @@ class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):
     @property
     def available(self) -> bool:
         """Test if entity is available."""
-        return super().available and (self.plant_id in self.coordinator.data)
+        return super().available and self.plant_id in self.coordinator.data
