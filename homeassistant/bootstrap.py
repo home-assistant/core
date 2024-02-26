@@ -157,6 +157,17 @@ CRITICAL_INTEGRATIONS = {
     "frontend",
 }
 
+SETUP_ORDER = {
+    # Load logging as soon as possible
+    "logging": LOGGING_INTEGRATIONS,
+    # Setup frontend
+    "frontend": FRONTEND_INTEGRATIONS,
+    # Setup recorder
+    "recorder": RECORDER_INTEGRATIONS,
+    # Start up debuggers. Start these first in case they want to wait.
+    "debugger": DEBUGGER_INTEGRATIONS,
+}
+
 
 async def async_setup_hass(
     runtime_config: RuntimeConfig,
@@ -748,25 +759,10 @@ async def _async_set_up_integrations(
     if "recorder" in domains_to_setup:
         recorder.async_initialize_recorder(hass)
 
-    # Load logging as soon as possible
-    if logging_domains := domains_to_setup & LOGGING_INTEGRATIONS:
-        _LOGGER.info("Setting up logging: %s", logging_domains)
-        await async_setup_multi_components(hass, logging_domains, config)
-
-    # Setup frontend
-    if frontend_domains := domains_to_setup & FRONTEND_INTEGRATIONS:
-        _LOGGER.info("Setting up frontend: %s", frontend_domains)
-        await async_setup_multi_components(hass, frontend_domains, config)
-
-    # Setup recorder
-    if recorder_domains := domains_to_setup & RECORDER_INTEGRATIONS:
-        _LOGGER.info("Setting up recorder: %s", recorder_domains)
-        await async_setup_multi_components(hass, recorder_domains, config)
-
-    # Start up debuggers. Start these first in case they want to wait.
-    if debuggers := domains_to_setup & DEBUGGER_INTEGRATIONS:
-        _LOGGER.debug("Setting up debuggers: %s", debuggers)
-        await async_setup_multi_components(hass, debuggers, config)
+    for name, domain_group in SETUP_ORDER.items():
+        if to_setup := domains_to_setup & domain_group:
+            _LOGGER.info("Setting up %s: %s", name, to_setup)
+            await async_setup_multi_components(hass, to_setup, config)
 
     # calculate what components to setup in what stage
     stage_1_domains: set[str] = set()
@@ -792,10 +788,10 @@ async def _async_set_up_integrations(
 
     stage_2_domains = (
         domains_to_setup
-        - logging_domains
-        - frontend_domains
-        - recorder_domains
-        - debuggers
+        - LOGGING_INTEGRATIONS
+        - FRONTEND_INTEGRATIONS
+        - RECORDER_INTEGRATIONS
+        - DEBUGGER_INTEGRATIONS
         - stage_1_domains
     )
 
