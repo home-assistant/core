@@ -828,6 +828,7 @@ class ConfigEntry:
             issue_domain=self.domain,
             severity=ir.IssueSeverity.ERROR,
             translation_key="config_entry_reauth",
+            translation_placeholders={"name": self.title},
         )
 
     @callback
