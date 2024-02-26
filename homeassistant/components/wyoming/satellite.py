@@ -88,7 +88,9 @@ class WyomingSatellite:
                     await self._connect_and_loop()
                 except asyncio.CancelledError:
                     raise  # don't restart
-                except Exception:  # pylint: disable=broad-exception-caught
+                except Exception as err:  # pylint: disable=broad-exception-caught
+                    _LOGGER.debug("%s: %s", err.__class__.__name__, str(err))
+
                     # Ensure sensor is off (before restart)
                     self.device.set_is_active(False)
 

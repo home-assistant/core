@@ -192,13 +192,13 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
         return None
 
-    def _get_phrase(self, model_name: str) -> str:
-        """Get wake word phrase for model name."""
+    def _get_phrase(self, model_id: str) -> str:
+        """Get wake word phrase for model id."""
         for ww_model in self._supported_wake_words:
             if not ww_model.phrase:
                 continue
 
-            if ww_model.name == model_name:
+            if ww_model.id == model_id:
                 return ww_model.phrase
 
-        return model_name
+        return model_id
