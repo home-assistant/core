@@ -11,7 +11,6 @@ from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesActuatorEntity
 
 BUTTON_TRANSLATIONS = {51: "button_gate", 91: "button_panic"}
-BUTTON_PRODUCT_IDS = {51, 91}
 
 
 async def async_setup_entry(
@@ -24,7 +23,7 @@ async def async_setup_entry(
     async_add_entities(
         MBButton(coordinator, bee_id, button.id)
         for bee_id, bee in coordinator.data.bees.items()
-        if bee.productID in BUTTON_PRODUCT_IDS
+        if bee.productID in BUTTON_TRANSLATIONS
         for button in bee.actuators
     )
 
