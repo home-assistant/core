@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -41,7 +42,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         gateway_id,
     )
 
-    wolf_client = WolfClient(username, password)
+    wolf_client = WolfClient(
+        username,
+        password,
+        client_lambda=lambda: get_async_client(hass=hass, verify_ssl=False),
+    )
 
     parameters = await fetch_parameters_init(wolf_client, gateway_id, device_id)
 
