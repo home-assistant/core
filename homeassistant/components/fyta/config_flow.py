@@ -38,6 +38,8 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         if user_input:
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
+
             fyta = FytaConnector(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
 
             try:
@@ -46,15 +48,13 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except FytaConnectionError:
                 errors["base"] = "cannot_connect"
             except FytaAuthentificationError:
-                errors["base"] = "auth_error"
+                errors["base"] = "invalid_auth"
             except FytaPasswordError:
-                errors["base"] = "auth_error"
+                errors["base"] = "invalid_auth"
                 errors[CONF_PASSWORD] = "password_error"
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
             else:
-                self._async_abort_entries_match()
-
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
