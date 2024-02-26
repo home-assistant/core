@@ -11,6 +11,9 @@
     "button": {
       "button_gate": {
         "default": "mdi:gate"
+      },
+      "button_panic": {
+        "default": "mdi:alert-octagram"
       }
     }
   }

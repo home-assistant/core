@@ -10,8 +10,8 @@ from .const import DOMAIN
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesActuatorEntity
 
-BUTTON_TRANSLATIONS = {51: "button_gate"}
-BUTTON_PRODUCT_IDS = {51}
+BUTTON_TRANSLATIONS = {51: "button_gate", 91: "button_panic"}
+BUTTON_PRODUCT_IDS = {51, 91}
 
 
 async def async_setup_entry(
