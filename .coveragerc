@@ -775,6 +775,7 @@ omit =
     homeassistant/components/microbees/const.py
     homeassistant/components/microbees/coordinator.py
     homeassistant/components/microbees/entity.py
+    homeassistant/components/microbees/light.py
     homeassistant/components/microbees/sensor.py
     homeassistant/components/microbees/switch.py
     homeassistant/components/microsoft/tts.py
@@ -1587,6 +1588,7 @@ omit =
     homeassistant/components/weatherflow/__init__.py
     homeassistant/components/weatherflow/const.py
     homeassistant/components/weatherflow/sensor.py
+    homeassistant/components/webmin/sensor.py
     homeassistant/components/wiffi/__init__.py
     homeassistant/components/wiffi/binary_sensor.py
     homeassistant/components/wiffi/sensor.py

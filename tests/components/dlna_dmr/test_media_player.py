@@ -2043,6 +2043,8 @@ async def test_poll_availability(
     # Check that an update will poll the device for availability
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
     await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
+
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         MOCK_DEVICE_LOCATION
     )
@@ -2057,6 +2059,8 @@ async def test_poll_availability(
     # Check that an update will notice the device and connect to it
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
     await async_update_entity(hass, mock_entity_id)
+    await hass.async_block_till_done()
+
     domain_data_mock.upnp_factory.async_create_device.assert_awaited_once_with(
         MOCK_DEVICE_LOCATION
     )

@@ -8,6 +8,7 @@ import logging
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -733,13 +734,13 @@ async def test_entries_excludes_ignore_and_disabled(
     ]
 
 
-async def test_saving_and_loading(hass: HomeAssistant) -> None:
+async def test_saving_and_loading(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
     """Test that we're saving and loading correctly."""
     mock_integration(
         hass,
-        MockModule(
-            "test", async_setup_entry=lambda *args: AsyncMock(return_value=True)
-        ),
+        MockModule("test", async_setup_entry=AsyncMock(return_value=True)),
     )
     mock_platform(hass, "test.config_flow", None)
 
@@ -784,7 +785,8 @@ async def test_saving_and_loading(hass: HomeAssistant) -> None:
     )
 
     # To trigger the call_later
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    freezer.tick(1.0)
+    async_fire_time_changed(hass)
     # To execute the save
     await hass.async_block_till_done()
 
@@ -1042,7 +1044,7 @@ async def test_reauth_issue(hass: HomeAssistant) -> None:
         learn_more_url=None,
         severity=ir.IssueSeverity.ERROR,
         translation_key="config_entry_reauth",
-        translation_placeholders=None,
+        translation_placeholders={"name": "test_title"},
     )
 
     result = await hass.config_entries.flow.async_configure(issue.data["flow_id"], {})
@@ -4199,7 +4201,7 @@ async def test_initializing_flows_canceled_on_shutdown(
             manager.flow.async_init("test", context={"source": "reauth"})
         )
         await hass.async_block_till_done()
-        await manager.flow.async_shutdown()
+        manager.flow.async_shutdown()
 
         with pytest.raises(asyncio.exceptions.CancelledError):
             await task
@@ -4226,11 +4228,16 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
 
     entry.async_on_unload(test_unload)
     entry.async_create_task(hass, test_task())
-    entry.async_create_background_task(hass, test_task(), "background-task-name")
+    entry.async_create_background_task(
+        hass, test_task(), "background-task-name", eager_start=True
+    )
+    entry.async_create_background_task(
+        hass, test_task(), "background-task-name", eager_start=False
+    )
     await asyncio.sleep(0)
     hass.loop.call_soon(event.set)
     await entry._async_process_on_unload(hass)
-    assert results == ["on_unload", "background", "normal"]
+    assert results == ["on_unload", "background", "background", "normal"]
 
 
 async def test_preview_supported(
