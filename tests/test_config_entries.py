@@ -1044,7 +1044,7 @@ async def test_reauth_issue(hass: HomeAssistant) -> None:
         learn_more_url=None,
         severity=ir.IssueSeverity.ERROR,
         translation_key="config_entry_reauth",
-        translation_placeholders=None,
+        translation_placeholders={"name": "test_title"},
     )
 
     result = await hass.config_entries.flow.async_configure(issue.data["flow_id"], {})
@@ -4228,11 +4228,16 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
 
     entry.async_on_unload(test_unload)
     entry.async_create_task(hass, test_task())
-    entry.async_create_background_task(hass, test_task(), "background-task-name")
+    entry.async_create_background_task(
+        hass, test_task(), "background-task-name", eager_start=True
+    )
+    entry.async_create_background_task(
+        hass, test_task(), "background-task-name", eager_start=False
+    )
     await asyncio.sleep(0)
     hass.loop.call_soon(event.set)
     await entry._async_process_on_unload(hass)
-    assert results == ["on_unload", "background", "normal"]
+    assert results == ["on_unload", "background", "background", "normal"]
 
 
 async def test_preview_supported(

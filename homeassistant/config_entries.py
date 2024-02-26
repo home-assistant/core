@@ -78,6 +78,7 @@ _LOGGER = logging.getLogger(__name__)
 SOURCE_BLUETOOTH = "bluetooth"
 SOURCE_DHCP = "dhcp"
 SOURCE_DISCOVERY = "discovery"
+SOURCE_HARDWARE = "hardware"
 SOURCE_HASSIO = "hassio"
 SOURCE_HOMEKIT = "homekit"
 SOURCE_IMPORT = "import"
@@ -159,6 +160,7 @@ DISCOVERY_SOURCES = {
     SOURCE_BLUETOOTH,
     SOURCE_DHCP,
     SOURCE_DISCOVERY,
+    SOURCE_HARDWARE,
     SOURCE_HOMEKIT,
     SOURCE_IMPORT,
     SOURCE_INTEGRATION_DISCOVERY,
@@ -891,6 +893,7 @@ class ConfigEntry:
             issue_domain=self.domain,
             severity=ir.IssueSeverity.ERROR,
             translation_key="config_entry_reauth",
+            translation_placeholders={"name": self.title},
         )
 
     @callback
@@ -914,6 +917,7 @@ class ConfigEntry:
         hass: HomeAssistant,
         target: Coroutine[Any, Any, _R],
         name: str | None = None,
+        eager_start: bool = False,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -922,7 +926,7 @@ class ConfigEntry:
         target: target to call.
         """
         task = hass.async_create_task(
-            target, f"{name} {self.title} {self.domain} {self.entry_id}"
+            target, f"{name} {self.title} {self.domain} {self.entry_id}", eager_start
         )
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
@@ -931,7 +935,11 @@ class ConfigEntry:
 
     @callback
     def async_create_background_task(
-        self, hass: HomeAssistant, target: Coroutine[Any, Any, _R], name: str
+        self,
+        hass: HomeAssistant,
+        target: Coroutine[Any, Any, _R],
+        name: str,
+        eager_start: bool = False,
     ) -> asyncio.Task[_R]:
         """Create a background task tied to the config entry lifecycle.
 
@@ -939,7 +947,7 @@ class ConfigEntry:
 
         target: target to call.
         """
-        task = hass.async_create_background_task(target, name)
+        task = hass.async_create_background_task(target, name, eager_start)
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.remove)
         return task

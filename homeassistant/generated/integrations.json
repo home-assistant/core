@@ -6668,6 +6668,12 @@
       "integration_type": "hub",
       "config_flow": false
     },
+    "webmin": {
+      "name": "Webmin",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "wemo": {
       "name": "Belkin WeMo",
       "integration_type": "hub",
