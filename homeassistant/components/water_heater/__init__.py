@@ -360,6 +360,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Set new target operation mode."""
         await self.hass.async_add_executor_job(self.set_operation_mode, operation_mode)
 
+    @final
     async def async_handle_set_operation_mode(self, operation_mode: str) -> None:
         """Handle a set target operation mode service call."""
         if self.operation_list is None:
