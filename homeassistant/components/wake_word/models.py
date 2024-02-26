@@ -7,7 +7,13 @@ class WakeWord:
     """Wake word model."""
 
     id: str
+    """Id of wake word model"""
+
     name: str
+    """Name of wake word model"""
+
+    phrase: str | None = None
+    """Wake word phrase used to trigger model"""
 
 
 @dataclass

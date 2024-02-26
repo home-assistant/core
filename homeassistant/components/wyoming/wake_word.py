@@ -1,10 +1,8 @@
 """Support for Wyoming wake-word-detection services."""
+
 import asyncio
 from collections.abc import AsyncIterable
-from functools import lru_cache
 import logging
-import re
-import unicodedata
 
 from wyoming.audio import AudioChunk, AudioStart
 from wyoming.client import AsyncTcpClient
@@ -52,7 +50,9 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
         wake_service = service.info.wake[0]
 
         self._supported_wake_words = [
-            wake_word.WakeWord(id=ww.name, name=ww.description or ww.name)
+            wake_word.WakeWord(
+                id=ww.name, name=ww.description or ww.name, phrase=ww.phrase
+            )
             for ww in wake_service.models
         ]
         self._attr_name = wake_service.name
@@ -67,7 +67,11 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
         if info is not None:
             wake_service = info.wake[0]
             self._supported_wake_words = [
-                wake_word.WakeWord(id=ww.name, name=ww.description or ww.name)
+                wake_word.WakeWord(
+                    id=ww.name,
+                    name=ww.description or ww.name,
+                    phrase=ww.phrase,
+                )
                 for ww in wake_service.models
             ]
 
@@ -143,9 +147,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
                                 return wake_word.DetectionResult(
                                     wake_word_id=detection.name,
-                                    wake_word_phrase=_normalize_wake_word_phrase(
-                                        detection.name
-                                    ),
+                                    wake_word_phrase=self._get_phrase(detection.name),
                                     timestamp=detection.timestamp,
                                     queued_audio=queued_audio,
                                 )
@@ -190,22 +192,13 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
 
         return None
 
+    def _get_phrase(self, model_name: str) -> str:
+        """Get wake word phrase for model name."""
+        for ww_model in self._supported_wake_words:
+            if not ww_model.phrase:
+                continue
 
-@lru_cache
-def _normalize_wake_word_phrase(wake_word_phrase: str) -> str:
-    """Normalize a wake word phrase for matching between wake word systems."""
-    # Lower case
-    wake_word_phrase = wake_word_phrase.strip().casefold()
+            if ww_model.name == model_name:
+                return ww_model.phrase
 
-    # Remove version numbers like v1.0
-    wake_word_phrase = re.sub(r"v[0-9]+(\.[0-9])+", "", wake_word_phrase)
-
-    # Replace everything except numbers/letters with whitespace
-    wake_word_phrase = "".join(
-        c if unicodedata.category(c) in ("Ll", "Nd") else " " for c in wake_word_phrase
-    )
-
-    # Noramlize whitespace
-    wake_word_phrase = " ".join(wake_word_phrase.strip().split())
-
-    return wake_word_phrase
+        return model_name
