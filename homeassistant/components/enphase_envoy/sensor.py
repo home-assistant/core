@@ -576,7 +576,7 @@ async def async_setup_entry(
         entities.extend(
             EnvoyConsumptionCTEntity(coordinator, description)
             for description in CT_NET_CONSUMPTION_SENSORS
-            if ctmeter.measurement_type is CtType.NET_CONSUMPTION
+            if ctmeter.measurement_type == CtType.NET_CONSUMPTION
         )
     # For each net consumption ct phase reported add net consumption entities
     if phase_data := envoy_data.ctmeter_consumption_phases:
@@ -584,14 +584,14 @@ async def async_setup_entry(
             EnvoyConsumptionCTPhaseEntity(coordinator, description)
             for use_phase, phase in phase_data.items()
             for description in CT_NET_CONSUMPTION_PHASE_SENSORS[use_phase]
-            if phase.measurement_type is CtType.NET_CONSUMPTION
+            if phase.measurement_type == CtType.NET_CONSUMPTION
         )
     # Add production CT entities
     if ctmeter := envoy_data.ctmeter_production:
         entities.extend(
             EnvoyProductionCTEntity(coordinator, description)
             for description in CT_PRODUCTION_SENSORS
-            if ctmeter.measurement_type is CtType.PRODUCTION
+            if ctmeter.measurement_type == CtType.PRODUCTION
         )
     # For each production ct phase reported add production ct entities
     if phase_data := envoy_data.ctmeter_production_phases:
@@ -599,7 +599,7 @@ async def async_setup_entry(
             EnvoyProductionCTPhaseEntity(coordinator, description)
             for use_phase, phase in phase_data.items()
             for description in CT_PRODUCTION_PHASE_SENSORS[use_phase]
-            if phase.measurement_type is CtType.PRODUCTION
+            if phase.measurement_type == CtType.PRODUCTION
         )
 
     if envoy_data.inverters:
