@@ -32,7 +32,8 @@ async def async_setup_entry(
         if device.widget in WIDGET_TO_CLIMATE_ENTITY
     )
 
-    # Mainly Atlantic APC
+    # Match devices based on the widget and controllableName
+    # This is for example used for Atlantic APC, where devices with different functionality share the same uiClass and widget.
     async_add_entities(
         WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY[device.widget][
             cast(Controllable, device.controllable_name)

@@ -26,7 +26,6 @@ HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
 class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
     """Representation of Atlantic Pass APC Zone Control."""
 
-    _attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
@@ -38,6 +37,8 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
     ) -> None:
         """Init method."""
         super().__init__(device_url, coordinator)
+
+        self._attr_hvac_modes = [*HVAC_MODE_TO_OVERKIZ]
 
         # Cooling is supported by a separate command
         if self.is_auto_hvac_mode_available:

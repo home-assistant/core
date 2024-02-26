@@ -23,6 +23,8 @@ OVERKIZ_MODE_TO_PRESET_MODES: dict[str, str] = {
 
 PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_MODE_TO_PRESET_MODES.items()}
 
+TEMPERATURE_ZONECONTROL_DEVICE_INDEX = 1
+
 
 # Those device depends on a main probe that choose the operating mode (heating, cooling, ...)
 class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
@@ -45,7 +47,9 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         # Those APC Heating and Cooling probes depends on the zone control device (main probe).
         # Only the base device (#1) can be used to get/set some states.
         # Like to retrieve and set the current operating mode (heating, cooling, drying, off).
-        self.zone_control_device = self.executor.linked_device(1)
+        self.zone_control_device = self.executor.linked_device(
+            TEMPERATURE_ZONECONTROL_DEVICE_INDEX
+        )
 
     @property
     def is_using_derogated_temperature_fallback(self) -> bool:
@@ -59,13 +63,13 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     def zone_control_hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool, dry, off mode."""
 
-        state = self.zone_control_device.states[OverkizState.IO_PASS_APC_OPERATING_MODE]
-
-        return (
-            OVERKIZ_TO_HVAC_MODE[state.value_as_str]
-            if state is not None and state.value_as_str is not None
-            else HVACMode.OFF
-        )
+        if (
+            state := self.zone_control_device.states[
+                OverkizState.IO_PASS_APC_OPERATING_MODE
+            ]
+        ) is not None and (value := state.value_as_str) is not None:
+            return OVERKIZ_TO_HVAC_MODE[value]
+        return HVACMode.OFF
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -190,7 +194,6 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 ),
             )
 
-        # Not sure this temperature is relevant.
         return cast(
             float, self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE)
         )
