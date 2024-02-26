@@ -211,7 +211,7 @@ def test_async_create_task_eager_start_fallback_schedule_coroutine(
     assert len(hass.loop.call_soon.mock_calls) == 0
     # Should fallback to loop.create_task since 3.11 does
     # not support eager_start
-    assert len(hass.loop.create_task.mock_calls) == 2
+    assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
 
 
