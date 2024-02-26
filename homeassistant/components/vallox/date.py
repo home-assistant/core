@@ -47,8 +47,8 @@ class ValloxDateEntity(ValloxEntity, DateEntity):
     async def async_set_value(self, value: date) -> None:
         """Change the date."""
 
-        await self._client.set_filter_change_date(value)
         await self.entity_description.set_value_fn(self._client, value)
+        await self.coordinator.async_request_refresh()
 
 
 @dataclass(frozen=True, kw_only=True)
