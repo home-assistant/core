@@ -391,7 +391,7 @@ async def test_reauth_flow_update_configuration(
     """Verify reauth flow can update hub configuration."""
     config_entry = await setup_unifi_integration(hass, aioclient_mock)
     hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    hub.available = False
+    hub.websocket.available = False
 
     result = await hass.config_entries.flow.async_init(
         UNIFI_DOMAIN,

@@ -9,7 +9,6 @@ import ssl
 from types import MappingProxyType
 from typing import Any, Literal
 
-import aiohttp
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -45,7 +44,7 @@ from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 import homeassistant.util.dt as dt_util
 
-from .const import (
+from ..const import (
     ATTR_MANUFACTURER,
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -72,12 +71,11 @@ from .const import (
     PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
-from .entity import UnifiEntity, UnifiEntityDescription
-from .errors import AuthenticationRequired, CannotConnect
+from ..entity import UnifiEntity, UnifiEntityDescription
+from ..errors import AuthenticationRequired, CannotConnect
+from .websocket import UnifiWebsocket
 
-RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-CHECK_WEBSOCKET_INTERVAL = timedelta(minutes=1)
 
 
 class UnifiHub:
@@ -90,11 +88,8 @@ class UnifiHub:
         self.hass = hass
         self.config_entry = config_entry
         self.api = api
+        self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
 
-        self.ws_task: asyncio.Task | None = None
-        self._cancel_websocket_check: CALLBACK_TYPE | None = None
-
-        self.available = True
         self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
 
         self.site = config_entry.data[CONF_SITE_ID]
@@ -168,6 +163,11 @@ class UnifiHub:
         """Return the host of this hub."""
         host: str = self.config_entry.data[CONF_HOST]
         return host
+
+    @property
+    def available(self) -> bool:
+        """Websocket connection state."""
+        return self.websocket.available
 
     @callback
     @staticmethod
@@ -292,9 +292,6 @@ class UnifiHub:
         self._cancel_heartbeat_check = async_track_time_interval(
             self.hass, self._async_check_for_stale, CHECK_HEARTBEAT_INTERVAL
         )
-        self._cancel_websocket_check = async_track_time_interval(
-            self.hass, self._async_watch_websocket, CHECK_WEBSOCKET_INTERVAL
-        )
 
     @callback
     def async_heartbeat(
@@ -390,63 +387,12 @@ class UnifiHub:
         async_dispatcher_send(hass, hub.signal_options_update)
 
     @callback
-    def start_websocket(self) -> None:
-        """Start up connection to websocket."""
-
-        async def _websocket_runner() -> None:
-            """Start websocket."""
-            try:
-                await self.api.start_websocket()
-            except (aiohttp.ClientConnectorError, aiounifi.WebsocketError):
-                LOGGER.error("Websocket disconnected")
-            self.available = False
-            async_dispatcher_send(self.hass, self.signal_reachable)
-            self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
-
-        self.ws_task = self.hass.loop.create_task(_websocket_runner())
-
-    @callback
-    def reconnect(self, log: bool = False) -> None:
-        """Prepare to reconnect UniFi session."""
-        if log:
-            LOGGER.info("Will try to reconnect to UniFi Network")
-        self.hass.loop.create_task(self.async_reconnect())
-
-    async def async_reconnect(self) -> None:
-        """Try to reconnect UniFi Network session."""
-        try:
-            async with asyncio.timeout(5):
-                await self.api.login()
-                self.start_websocket()
-
-            if not self.available:
-                self.available = True
-                async_dispatcher_send(self.hass, self.signal_reachable)
-
-        except (
-            TimeoutError,
-            aiounifi.BadGateway,
-            aiounifi.ServiceUnavailable,
-            aiounifi.AiounifiException,
-        ):
-            self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
-
-    @callback
-    def _async_watch_websocket(self, now: datetime) -> None:
-        """Watch timestamp for last received websocket message."""
-        LOGGER.debug(
-            "Last received websocket timestamp: %s",
-            self.api.connectivity.ws_message_received,
-        )
-
-    @callback
     def shutdown(self, event: Event) -> None:
         """Wrap the call to unifi.close.
 
         Used as an argument to EventBus.async_listen_once.
         """
-        if self.ws_task is not None:
-            self.ws_task.cancel()
+        self.websocket.stop()
 
     async def async_reset(self) -> bool:
         """Reset this hub to default state.
@@ -454,18 +400,7 @@ class UnifiHub:
         Will cancel any scheduled setup retry and will unload
         the config entry.
         """
-        if self.ws_task is not None:
-            self.ws_task.cancel()
-
-            _, pending = await asyncio.wait([self.ws_task], timeout=10)
-
-            if pending:
-                LOGGER.warning(
-                    "Unloading %s (%s) config entry. Task %s did not complete in time",
-                    self.config_entry.title,
-                    self.config_entry.domain,
-                    self.ws_task,
-                )
+        await self.websocket.stop_and_wait()
 
         unload_ok = await self.hass.config_entries.async_unload_platforms(
             self.config_entry, PLATFORMS
@@ -477,10 +412,6 @@ class UnifiHub:
         if self._cancel_heartbeat_check:
             self._cancel_heartbeat_check()
             self._cancel_heartbeat_check = None
-
-        if self._cancel_websocket_check:
-            self._cancel_websocket_check()
-            self._cancel_websocket_check = None
 
         if self._cancel_poe_command:
             self._cancel_poe_command()
