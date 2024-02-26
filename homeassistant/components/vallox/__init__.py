@@ -49,7 +49,7 @@ PLATFORMS: list[str] = [
     Platform.SENSOR,
     Platform.FAN,
     Platform.BINARY_SENSOR,
-    Platform.BUTTON,
+    Platform.DATE,
     Platform.NUMBER,
     Platform.SWITCH,
 ]

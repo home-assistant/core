@@ -6,7 +6,7 @@ from datetime import date
 
 from vallox_websocket_api import Vallox
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.date import DateEntity, DateEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -16,20 +16,20 @@ from . import ValloxDataUpdateCoordinator, ValloxEntity
 from .const import DOMAIN
 
 
-class ValloxButtonEntity(ValloxEntity, ButtonEntity):
-    """Representation of a Vallox button."""
+class ValloxFilterChangeDate(ValloxEntity, DateEntity):
+    """Representation of a Vallox date."""
 
-    entity_description: ValloxButtonEntityDescription
+    entity_description: ValloxDateEntityDescription
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,
         name: str,
         coordinator: ValloxDataUpdateCoordinator,
-        description: ValloxButtonEntityDescription,
+        description: ValloxDateEntityDescription,
         client: Vallox,
     ) -> None:
-        """Initialize the Vallox button."""
+        """Initialize the Vallox date."""
         super().__init__(name, coordinator)
 
         self.entity_description = description
@@ -37,25 +37,28 @@ class ValloxButtonEntity(ValloxEntity, ButtonEntity):
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
         self._client = client
 
+    @property
+    def native_value(self) -> date | None:
+        """Return the latest value."""
 
-class ValloxResetFilterChangeDateButton(ValloxButtonEntity):
-    """Representation of a Vallox reset filter button."""
+        return self.coordinator.data.filter_change_date
 
-    async def async_press(self) -> None:
-        """Press the button."""
-        await self._client.set_filter_change_date(date.today())
+    async def async_set_value(self, value: date) -> None:
+        """Change the date."""
+
+        await self._client.set_filter_change_date(value)
         await self.coordinator.async_request_refresh()
 
 
 @dataclass(frozen=True)
-class ValloxButtonEntityDescription(ButtonEntityDescription):
-    """Describes Vallox button entity."""
+class ValloxDateEntityDescription(DateEntityDescription):
+    """Describes Vallox date entity."""
 
 
-BUTTON_ENTITIES: tuple[ValloxButtonEntityDescription, ...] = (
-    ValloxButtonEntityDescription(
-        key="reset_filter_change_date",
-        translation_key="reset_filter_change_date",
+DATE_ENTITIES: tuple[ValloxDateEntityDescription, ...] = (
+    ValloxDateEntityDescription(
+        key="filter_change_date",
+        translation_key="filter_change_date",
         icon="mdi:air-filter",
     ),
 )
@@ -72,9 +75,9 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            ValloxResetFilterChangeDateButton(
+            ValloxFilterChangeDate(
                 data["name"], data["coordinator"], description, data["client"]
             )
-            for description in BUTTON_ENTITIES
+            for description in DATE_ENTITIES
         ]
     )

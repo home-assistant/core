@@ -85,9 +85,9 @@
         "name": "Bypass locked"
       }
     },
-    "button": {
-      "reset_filter_change_date": {
-        "name": "Reset filter change date"
+    "date": {
+      "filter_change_date": {
+        "name": "Filter change date"
       }
     }
   },
