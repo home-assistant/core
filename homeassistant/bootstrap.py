@@ -622,7 +622,9 @@ async def async_setup_multi_components(
     domains_not_yet_setup = domains - hass.config.components
     futures = {
         domain: hass.async_create_task(
-            async_setup_component(hass, domain, config), f"setup component {domain}"
+            async_setup_component(hass, domain, config),
+            f"setup component {domain}",
+            eager_start=True,
         )
         for domain in domains_not_yet_setup
     }
