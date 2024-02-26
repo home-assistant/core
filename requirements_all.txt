@@ -2244,9 +2244,6 @@ python-izone==1.2.9
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.9
 
-# homeassistant.components.juicenet
-python-juicenet==1.1.0
-
 # homeassistant.components.tplink
 python-kasa[speedups]==0.6.2.1
 
