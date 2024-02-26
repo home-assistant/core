@@ -595,7 +595,7 @@ class HomeAssistant:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
-            task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
+            task = asyncio.create_task(hassjob.target(*args), name=hassjob.name)
         elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
                 hassjob.target = cast(Callable[..., _R], hassjob.target)
@@ -631,7 +631,7 @@ class HomeAssistant:
 
         target: target to call.
         """
-        task = self.loop.create_task(target, name=name)
+        task = asyncio.create_task(target, name=name)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
         return task
@@ -650,7 +650,7 @@ class HomeAssistant:
 
         This method must be run in the event loop.
         """
-        task = self.loop.create_task(target, name=name)
+        task = asyncio.create_task(target, name=name)
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.remove)
         return task
