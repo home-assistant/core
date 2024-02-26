@@ -10,6 +10,9 @@ from .const import DOMAIN
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesActuatorEntity
 
+BUTTON_TRANSLATIONS = {51: "button_gate"}
+BUTTON_PRODUCT_IDS = {51}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -19,12 +22,10 @@ async def async_setup_entry(
         entry.entry_id
     ].coordinator
     async_add_entities(
-        [
-            MBButton(coordinator, bee_id, button.id)
-            for bee_id, bee in coordinator.data.bees.items()
-            if bee.productID == 51
-            for button in bee.actuators
-        ]
+        MBButton(coordinator, bee_id, button.id)
+        for bee_id, bee in coordinator.data.bees.items()
+        if bee.productID in BUTTON_PRODUCT_IDS
+        for button in bee.actuators
     )
 
 
@@ -39,7 +40,7 @@ class MBButton(MicroBeesActuatorEntity, ButtonEntity):
     ) -> None:
         """Initialize the microBees button."""
         super().__init__(coordinator, bee_id, actuator_id)
-        self._attr_icon = "mdi:gate"
+        self._attr_translation_key = BUTTON_TRANSLATIONS.get(self.bee.productID)
 
     @property
     def name(self) -> str:
