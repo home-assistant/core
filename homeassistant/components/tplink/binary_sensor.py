@@ -73,7 +73,7 @@ class BinarySensor(CoordinatedTPLinkEntity, BinarySensorEntity):
         self._attr_unique_id = f"{legacy_device_id(device)}_new_{id_}"
         _ = BinarySensorDeviceClass  # TODO: no-op to avoid pre-commit removing the import
         self.entity_description = BinarySensorEntityDescription(
-            key=id_, name=feature.name, icon=feature.icon
+            key=id_, translation_key=id_, name=feature.name, icon=feature.icon
         )
         self._async_update_attrs()
 

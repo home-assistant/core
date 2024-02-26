@@ -72,6 +72,7 @@ class Number(CoordinatedTPLinkEntity, NumberEntity):
 
         self.entity_description = NumberEntityDescription(
             key=id_,
+            translation_key=id_,
             name=feature.name,
             icon=feature.icon,
             native_min_value=feature.minimum_value,
