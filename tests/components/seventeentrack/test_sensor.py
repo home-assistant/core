@@ -8,6 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 from py17track.errors import SeventeenTrackError
 
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from . import goto_future, init_integration
 from .conftest import (
@@ -51,6 +52,13 @@ async def test_login_exception(
         "Error"
     )
     await init_integration(hass, VALID_CONFIG_FULL)
+    assert not hass.states.async_entity_ids("sensor")
+
+
+async def test_login_exception(hass: HomeAssistant) -> None:
+    """Ensure nothing is created when config has exception in login."""
+    ProfileMock.login_result = False
+    await init_integration(hass, config=VALID_CONFIG, options=VALID_OPTIONS)
     assert not hass.states.async_entity_ids("sensor")
 
 
@@ -315,3 +323,22 @@ async def test_non_valid_platform_config(
     mock_seventeentrack.return_value.profile.login.return_value = False
     await init_integration(hass, VALID_CONFIG_FULL)
     assert len(hass.states.async_entity_ids()) == 0
+
+
+async def test_full_valid_platform_config(hass: HomeAssistant) -> None:
+    """Ensure everything starts correctly."""
+    with (
+        patch(
+            "homeassistant.components.seventeentrack.config_flow.SeventeenTrackClient",
+            new=ClientMock,
+        ),
+        patch(
+            "homeassistant.components.seventeentrack.SeventeenTrackClient",
+            new=ClientMock,
+        ),
+    ):
+        assert await async_setup_component(hass, "sensor", VALID_PLATFORM_CONFIG_FULL)
+        await hass.async_block_till_done()
+        assert len(hass.states.async_entity_ids()) == len(
+            ProfileMock.summary_data.keys()
+        )
