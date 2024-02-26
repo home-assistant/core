@@ -29,6 +29,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "acomax": {
+      "name": "Acomax",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "actiontec": {
       "name": "Actiontec",
       "integration_type": "hub",
