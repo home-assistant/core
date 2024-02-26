@@ -18,7 +18,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         severity=ir.IssueSeverity.ERROR,
         translation_key="integration_removed",
         translation_placeholders={
-            "blog": "https://www.home-assistant.io/blog/2024/02/26/removal-of-juicenet-integration/",
             "entries": "/config/integrations/integration/juicenet",
         },
     )
