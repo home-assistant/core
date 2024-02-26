@@ -17,7 +17,7 @@ async def test_entity_state(
     mock_integration: MockConfigEntry,
 ) -> None:
     """Tests entity state is registered."""
-    entity = hass.states.get(POWER_ID)
+    state = hass.states.get(POWER_ID)
     assert entity
     assert entity_registry.async_get(entity.entity_id)
 
