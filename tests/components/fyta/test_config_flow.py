@@ -122,7 +122,7 @@ async def test_form_exceptions(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_duplicate_entry(hass: HomeAssistant) -> None:
+async def test_duplicate_entry(hass: HomeAssistant, mock_fyta: AsyncMock) -> None:
     """Test duplicate setup handling."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -140,21 +140,11 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.fyta.config_flow.FytaConnector",
-        return_value=AsyncMock(),
-    ) as mock:
-        fyta = mock.return_value
-        fyta.login.return_value = {
-            "access_token": ACCESS_TOKEN,
-            "expiration": EXPIRATION,
-        }
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
