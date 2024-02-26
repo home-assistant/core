@@ -144,9 +144,9 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             cast(
                 str,
                 self.executor.select_state(
-                    OverkizState.IO_PASS_APC_HEATING_MODE
+                    OverkizState.IO_PASS_APC_COOLING_MODE
                     if self.zone_control_hvac_mode == HVACMode.COOL
-                    else OverkizState.IO_PASS_APC_COOLING_MODE
+                    else OverkizState.IO_PASS_APC_HEATING_MODE
                 ),
             )
         ]
