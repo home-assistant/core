@@ -759,10 +759,10 @@ async def _async_set_up_integrations(
     if "recorder" in domains_to_setup:
         recorder.async_initialize_recorder(hass)
 
-    for name, domain_group in SETUP_ORDER.items():
-        if to_setup := domains_to_setup & domain_group:
-            _LOGGER.info("Setting up %s: %s", name, to_setup)
-            await async_setup_multi_components(hass, to_setup, config)
+    pre_stage_domains: dict[str, set[str]] = {
+        name: domains_to_setup & domain_group
+        for name, domain_group in SETUP_ORDER.items()
+    }
 
     # calculate what components to setup in what stage
     stage_1_domains: set[str] = set()
@@ -786,14 +786,9 @@ async def _async_set_up_integrations(
 
             deps_promotion.update(dep_itg.all_dependencies)
 
-    stage_2_domains = (
-        domains_to_setup
-        - LOGGING_INTEGRATIONS
-        - FRONTEND_INTEGRATIONS
-        - RECORDER_INTEGRATIONS
-        - DEBUGGER_INTEGRATIONS
-        - stage_1_domains
-    )
+    stage_2_domains = domains_to_setup - stage_1_domains
+    for domain_group in pre_stage_domains.values():
+        stage_2_domains -= domain_group
 
     # Enables after dependencies when setting up stage 1 domains
     async_set_domains_to_be_loaded(hass, stage_1_domains)
