@@ -10,7 +10,7 @@
       "reauth": {
         "description": "Reauthenticate with WeatherFlow",
         "data": {
-          "api_token": "Personal api token"
+          "api_token": "[%key:component::weatherflow_cloud::config::step::user::data::api_token%]"
         }
       }
     },
@@ -20,7 +20,8 @@
     },
 
     "abort": {
-      "already_configured": "A configuration with this API key has already been configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   }
 }
