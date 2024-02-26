@@ -18,6 +18,8 @@ from .const import DOMAIN
 from .coordinator import MicroBeesUpdateCoordinator
 from .entity import MicroBeesActuatorEntity
 
+CLIMATE_PRODUCT_IDS = {76, 78}
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -26,23 +28,18 @@ async def async_setup_entry(
     coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ].coordinator
-    climates = []
-    for bee_id, bee in coordinator.data.bees.items():
-        if bee.productID in (76, 78):
-            if bee.productID == 76:
-                temperature_sensor = next(
-                    filter(lambda x: x.deviceID == 762, bee.sensors)
-                )
-            elif bee.productID == 78:
-                temperature_sensor = next(
-                    filter(lambda x: x.deviceID == 782, bee.sensors)
-                )
-            climates.append(
-                MBClimate(
-                    coordinator, bee_id, bee.actuators[0].id, temperature_sensor.id
-                )
-            )
-    async_add_entities(climates)
+    async_add_entities(
+        MBClimate(
+            coordinator,
+            bee_id,
+            bee.actuators[0].id,
+            next(filter(lambda x: x.deviceID == 762, bee.sensors)).id
+            if bee.productID == 76
+            else next(filter(lambda x: x.deviceID == 782, bee.sensors)).id,
+        )
+        for bee_id, bee in coordinator.data.bees.items()
+        if bee.productID in CLIMATE_PRODUCT_IDS
+    )
 
 
 class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
