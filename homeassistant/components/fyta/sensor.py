@@ -156,7 +156,7 @@ class FytaCoordinatorSensor(FytaCoordinatorEntity, SensorEntity):
     def native_value(self) -> str | int | float | datetime:
         """Return the state for this sensor."""
 
-        if "plant_number" in self.entity_description.key:
+        if self.entity_description.key == "plant_number":
             val = len(self.coordinator.fyta.plant_list)
         else:
             val = self.coordinator.data[self.entity_description.key]
