@@ -638,12 +638,6 @@ omit =
     homeassistant/components/izone/climate.py
     homeassistant/components/izone/discovery.py
     homeassistant/components/joaoapps_join/*
-    homeassistant/components/juicenet/__init__.py
-    homeassistant/components/juicenet/device.py
-    homeassistant/components/juicenet/entity.py
-    homeassistant/components/juicenet/number.py
-    homeassistant/components/juicenet/sensor.py
-    homeassistant/components/juicenet/switch.py
     homeassistant/components/justnimbus/coordinator.py
     homeassistant/components/justnimbus/entity.py
     homeassistant/components/justnimbus/sensor.py
@@ -775,6 +769,7 @@ omit =
     homeassistant/components/microbees/const.py
     homeassistant/components/microbees/coordinator.py
     homeassistant/components/microbees/entity.py
+    homeassistant/components/microbees/light.py
     homeassistant/components/microbees/sensor.py
     homeassistant/components/microbees/switch.py
     homeassistant/components/microsoft/tts.py
@@ -1587,6 +1582,7 @@ omit =
     homeassistant/components/weatherflow/__init__.py
     homeassistant/components/weatherflow/const.py
     homeassistant/components/weatherflow/sensor.py
+    homeassistant/components/webmin/sensor.py
     homeassistant/components/wiffi/__init__.py
     homeassistant/components/wiffi/binary_sensor.py
     homeassistant/components/wiffi/sensor.py

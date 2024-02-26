@@ -346,11 +346,11 @@ class EntityPlatform:
 
                 # Block till all entities are done
                 while self._tasks:
-                    pending = [task for task in self._tasks if not task.done()]
+                    # Await all tasks even if they are done
+                    # to ensure exceptions are propagated
+                    pending = self._tasks.copy()
                     self._tasks.clear()
-
-                    if pending:
-                        await asyncio.gather(*pending)
+                    await asyncio.gather(*pending)
 
                 hass.config.components.add(full_name)
                 self._setup_complete = True
@@ -505,6 +505,82 @@ class EntityPlatform:
             self.hass.loop,
         ).result()
 
+    async def _async_add_and_update_entities(
+        self,
+        coros: list[Coroutine[Any, Any, None]],
+        entities: list[Entity],
+        timeout: float,
+    ) -> None:
+        """Add entities for a single platform and update them.
+
+        Since we are updating the entities before adding them, we need to
+        schedule the coroutines as tasks so we can await them in the event
+        loop. This is because the update is likely to yield control to the
+        event loop and will finish faster if we run them concurrently.
+        """
+        results: list[BaseException | None] | None = None
+        try:
+            async with self.hass.timeout.async_timeout(timeout, self.domain):
+                results = await asyncio.gather(*coros, return_exceptions=True)
+        except TimeoutError:
+            self.logger.warning(
+                "Timed out adding entities for domain %s with platform %s after %ds",
+                self.domain,
+                self.platform_name,
+                timeout,
+            )
+
+        if not results:
+            return
+
+        for idx, result in enumerate(results):
+            if isinstance(result, Exception):
+                entity = entities[idx]
+                self.logger.exception(
+                    "Error adding entity %s for domain %s with platform %s",
+                    entity.entity_id,
+                    self.domain,
+                    self.platform_name,
+                    exc_info=result,
+                )
+            elif isinstance(result, BaseException):
+                raise result
+
+    async def _async_add_entities(
+        self,
+        coros: list[Coroutine[Any, Any, None]],
+        entities: list[Entity],
+        timeout: float,
+    ) -> None:
+        """Add entities for a single platform without updating.
+
+        In this case we are not updating the entities before adding them
+        which means its unlikely that we will not have to yield control
+        to the event loop so we can await the coros directly without
+        scheduling them as tasks.
+        """
+        try:
+            async with self.hass.timeout.async_timeout(timeout, self.domain):
+                for idx, coro in enumerate(coros):
+                    try:
+                        await coro
+                    except Exception as ex:  # pylint: disable=broad-except
+                        entity = entities[idx]
+                        self.logger.exception(
+                            "Error adding entity %s for domain %s with platform %s",
+                            entity.entity_id,
+                            self.domain,
+                            self.platform_name,
+                            exc_info=ex,
+                        )
+        except TimeoutError:
+            self.logger.warning(
+                "Timed out adding entities for domain %s with platform %s after %ds",
+                self.domain,
+                self.platform_name,
+                timeout,
+            )
+
     async def async_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
     ) -> None:
@@ -517,40 +593,31 @@ class EntityPlatform:
             return
 
         hass = self.hass
-
         entity_registry = ent_reg.async_get(hass)
-        tasks = [
-            self._async_add_entity(entity, update_before_add, entity_registry)
-            for entity in new_entities
-        ]
+        coros: list[Coroutine[Any, Any, None]] = []
+        entities: list[Entity] = []
+        for entity in new_entities:
+            coros.append(
+                self._async_add_entity(entity, update_before_add, entity_registry)
+            )
+            entities.append(entity)
 
         # No entities for processing
-        if not tasks:
+        if not coros:
             return
 
-        timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(tasks), SLOW_ADD_MIN_TIMEOUT)
-        try:
-            async with self.hass.timeout.async_timeout(timeout, self.domain):
-                await asyncio.gather(*tasks)
-        except TimeoutError:
-            self.logger.warning(
-                "Timed out adding entities for domain %s with platform %s after %ds",
-                self.domain,
-                self.platform_name,
-                timeout,
-            )
-        except Exception:
-            self.logger.exception(
-                "Error adding entities for domain %s with platform %s",
-                self.domain,
-                self.platform_name,
-            )
-            raise
+        timeout = max(SLOW_ADD_ENTITY_MAX_WAIT * len(coros), SLOW_ADD_MIN_TIMEOUT)
+        if update_before_add:
+            add_func = self._async_add_and_update_entities
+        else:
+            add_func = self._async_add_entities
+
+        await add_func(coros, entities, timeout)
 
         if (
             (self.config_entry and self.config_entry.pref_disable_polling)
             or self._async_unsub_polling is not None
-            or not any(entity.should_poll for entity in self.entities.values())
+            or not any(entity.should_poll for entity in entities)
         ):
             return
 
