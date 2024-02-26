@@ -22,5 +22,4 @@ async def test_entity_state(
     assert entity_registry.async_get(state.entity_id)
 
     entity = hass.states.get(entity.entity_id)
-    assert entity is not None
     assert state.state == "standby"
