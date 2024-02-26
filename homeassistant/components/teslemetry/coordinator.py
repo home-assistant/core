@@ -2,9 +2,7 @@
 from datetime import timedelta
 from typing import Any
 
-
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
-
 from tesla_fleet_api.exceptions import TeslaFleetError, VehicleOffline
 
 from homeassistant.core import HomeAssistant
