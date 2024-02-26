@@ -1,4 +1,5 @@
 """Support for functionality to download files."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -89,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return False
 
     async def _async_run_download(call: ServiceCall) -> None:
-        await _async_download_file(hass, call, download_path)
+        download_file(hass, call, download_path)
 
     async_register_admin_service(
         hass,
@@ -115,18 +116,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_download_file(
+def download_file(
     hass: HomeAssistant, service: ServiceCall, download_path: str
 ) -> None:
     """Start thread to download file specified in the URL."""
-    threading.Thread(
-        target=_async_do_download, args=(hass, service, download_path)
-    ).start()
+    threading.Thread(target=do_download, args=(hass, service, download_path)).start()
 
 
-def _async_do_download(
-    hass: HomeAssistant, service: ServiceCall, download_path: str
-) -> None:
+def do_download(hass: HomeAssistant, service: ServiceCall, download_path: str) -> None:
     """Download the file."""
     try:
         url = service.data.get(ATTR_URL)
