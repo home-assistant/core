@@ -3383,6 +3383,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "madeco": {
+      "name": "Madeco",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "mailgun": {
       "name": "Mailgun",
       "integration_type": "hub",
