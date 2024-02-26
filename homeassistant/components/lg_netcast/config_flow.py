@@ -142,9 +142,7 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle Authorize step."""
         errors: dict[str, str] = {}
-        if self._track_interval is not None:
-            self._track_interval()
-            self._track_interval = None
+        self.async_stop_display_access_token()
 
         if user_input is not None and user_input.get(CONF_ACCESS_TOKEN) is not None:
             self.device_config[CONF_ACCESS_TOKEN] = user_input[CONF_ACCESS_TOKEN]
@@ -194,6 +192,17 @@ class LGNetCast(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(
                 self.client._get_session_id  # pylint: disable=protected-access
             )
+
+    @callback
+    def async_remove(self):
+        """Terminate Access token display if flow is removed."""
+        self.async_stop_display_access_token()
+
+    def async_stop_display_access_token(self):
+        """Stop Access token request if running."""
+        if self._track_interval is not None:
+            self._track_interval()
+            self._track_interval = None
 
     async def async_create_device(self) -> FlowResult:
         """Create LG Netcast TV Device from config."""

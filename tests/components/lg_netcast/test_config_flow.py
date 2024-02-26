@@ -1,6 +1,9 @@
 """Define tests for the LG Netcast config flow."""
 
 
+from datetime import timedelta
+from unittest.mock import DEFAULT, patch
+
 from homeassistant import data_entry_flow
 from homeassistant.components.lg_netcast.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
@@ -213,3 +216,35 @@ async def test_import_duplicate_error(hass):
 
         assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
+
+
+async def test_display_access_token_aborted(hass: HomeAssistant):
+    """Test Access token display is cancelled."""
+
+    def _async_track_time_interval(
+        hass: HomeAssistant,
+        action,
+        interval: timedelta,
+        *,
+        name=None,
+        cancel_on_shutdown=None,
+    ):
+        hass.async_create_task(action())
+        return DEFAULT
+
+    with _patch_lg_netcast(session_error=True), patch(
+        "homeassistant.components.lg_netcast.config_flow.async_track_time_interval"
+    ) as mock_interval:
+        mock_interval.side_effect = _async_track_time_interval
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: IP_ADDRESS}
+        )
+
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["step_id"] == "authorize"
+        assert not result["errors"]
+
+        assert mock_interval.called
+
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        assert mock_interval.return_value.called
