@@ -2,6 +2,7 @@
 
 
 from anova_wifi import AnovaApi
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.anova import DOMAIN
@@ -45,13 +46,19 @@ async def test_unload_entry(hass: HomeAssistant, anova_api: AnovaApi) -> None:
 
 
 async def test_no_devices_found(
-    hass: HomeAssistant, anova_api_no_devices: AnovaApi
+    hass: HomeAssistant,
+    anova_api_no_devices: AnovaApi,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test when there don't seem to be any devices on the account."""
     entry = await async_init_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     # Config flow should be loaded - but we shouldn't have our entities.
     assert hass.states.get("sensor.anova_precision_cooker_mode") is None
+    assert (
+        "No devices were found on the websocket, perhaps you don't have any devices on this account?"
+        in caplog.text
+    )
 
 
 async def test_migrate_entry(hass: HomeAssistant, anova_api: AnovaApi) -> None:
