@@ -137,7 +137,8 @@ class Debouncer(Generic[_R_co]):
                 # Schedule a new timer to prevent new runs during cooldown
                 self._schedule_timer()
 
-    async def async_shutdown(self) -> None:
+    @callback
+    def async_shutdown(self) -> None:
         """Cancel any scheduled call, and prevent new runs."""
         self._shutdown_requested = True
         self.async_cancel()
