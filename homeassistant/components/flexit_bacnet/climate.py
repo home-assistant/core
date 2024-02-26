@@ -85,15 +85,6 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
         await self.device.update()
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return device specific state attributes."""
-        return {
-            "air_filter_exchange_interval": self.device.air_filter_exchange_interval,
-            "air_temp_setpoint_away": self.device.air_temp_setpoint_away,
-            "air_temp_setpoint_home": self.device.air_temp_setpoint_home,
-        }
-
-    @property
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
         if self.device.electric_heater:
