@@ -205,6 +205,7 @@ class LightGroup(GroupEntity, LightEntity):
             key: value for key, value in kwargs.items() if key in FORWARDED_ATTRIBUTES
         }
         data[ATTR_ENTITY_ID] = self._entity_ids
+        self._target_sync_state = STATE_ON
 
         _LOGGER.debug("Forwarded turn_on command: %s", data)
 
@@ -219,6 +220,7 @@ class LightGroup(GroupEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to all lights in the light group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
+        self._target_sync_state = STATE_OFF
 
         if ATTR_TRANSITION in kwargs:
             data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
