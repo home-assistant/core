@@ -174,3 +174,8 @@ async def test_report_missing_integration_frame(
         frame.report(what, error_if_core=False)
         assert what in caplog.text
         assert caplog.text.count(what) == 1
+
+        caplog.clear()
+
+        frame.report(what, error_if_core=False, log_custom_component_only=True)
+        assert caplog.text == ""

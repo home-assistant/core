@@ -1273,6 +1273,18 @@ def bind_hass(func: _CallableT) -> _CallableT:
     The use of this decorator is discouraged, and it should not be used
     for new functions.
     """
+    from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+
+    report(
+        (
+            "uses @bind_hass decorator."
+            " This is deprecated and will stop working in Home Assistant 2024.9, it"
+            " should be updated to pass hass object as first argument"
+        ),
+        error_if_core=False,
+        log_custom_component_only=True,
+    )
+
     setattr(func, "__bind_hass", True)
     return func
 

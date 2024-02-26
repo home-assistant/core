@@ -1,6 +1,6 @@
 """Test to verify that we can load components."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -8,6 +8,7 @@ from homeassistant import loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import frame
 
 from .common import MockModule, async_get_persistent_notifications, mock_integration
 
@@ -287,6 +288,7 @@ async def test_get_integration_custom_component(
 ) -> None:
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "test_package")
+
     assert integration.get_component().DOMAIN == "test_package"
     assert integration.name == "Test Package"
 
@@ -1001,3 +1003,32 @@ async def test_config_folder_not_in_path(hass):
 
     # Verify that we are able to load the file with absolute path
     import tests.testing_config.check_config_not_in_path  # noqa: F401
+
+
+async def test_bind_hass_use_reported(
+    caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
+) -> None:
+    """Test that use of @bind_hass is reported."""
+    from homeassistant.loader import bind_hass
+
+    integration_frame = frame.IntegrationFrame(
+        custom_integration=True,
+        frame=mock_integration_frame,
+        integration="test_integration_frame",
+        module="custom_components.test_integration_frame",
+        relative_filename="custom_components/test_integration_frame/__init__.py",
+    )
+
+    with patch(
+        "homeassistant.helpers.frame.get_integration_frame",
+        return_value=integration_frame,
+    ):
+
+        @bind_hass
+        def _test(hass: HomeAssistant):
+            pass
+
+        assert (
+            "Detected that custom integration 'test_integration_frame'"
+            " uses @bind_hass decorator. This is deprecated"
+        ) in caplog.text
