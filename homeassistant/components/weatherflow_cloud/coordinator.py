@@ -5,7 +5,6 @@ from aiohttp import ClientResponseError
 from weatherflow4py.api import WeatherFlowRestAPI
 from weatherflow4py.models.unified import WeatherFlowData
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -17,7 +16,6 @@ class WeatherFlowCloudDataUpdateCoordinator(
     DataUpdateCoordinator[dict[int, WeatherFlowData]]
 ):
     """Class to manage fetching REST Based WeatherFlow Forecast data."""
-
 
     def __init__(self, hass: HomeAssistant, api_token: str) -> None:
         """Initialize global WeatherFlow forecast data updater."""
