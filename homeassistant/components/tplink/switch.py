@@ -76,7 +76,7 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
             self._attr_entity_category = None
 
         self.entity_description = SwitchEntityDescription(
-            key=id_, name=feature.name, icon=feature.icon
+            key=id_, translation_key=id_, name=feature.name, icon=feature.icon
         )
         self._async_update_attrs()
 
@@ -94,9 +94,3 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
         is_on = self._feature.value
-
-        icon = self._feature.icon
-        # TODO: hacky way to support on/off icons. maybe this should be removed?
-        if icon and "{state}" in icon:
-            icon = icon.replace("{state}", "on" if is_on else "off")
-        self._attr_icon = icon

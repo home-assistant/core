@@ -178,7 +178,7 @@ class Sensor(CoordinatedTPLinkEntity, SensorEntity):
         self._feature = feature
         self._attr_unique_id = f"{legacy_device_id(device)}_new_{id_}"
         self.entity_description = SensorEntityDescription(
-            key=id_, name=feature.name, icon=feature.icon
+            key=id_, translation_key=id_, name=feature.name, icon=feature.icon
         )
 
     @callback

@@ -1,16 +1,43 @@
 {
   "entity": {
+    "binary_sensor": {
+      "alarm": {
+        "default": "mdi:alarm",
+        "state": {
+          "off": "mdi:alarm-off"
+        }
+      },
+      "cloud_connection": {
+        "default": "mdi:cloud",
+        "state": {
+          "off": "mdi:cloud-off-outline"
+        }
+      }
+    },
+    "sensor": {
+      "signal_level": {
+        "default": "mdi:signal",
+        "state": {
+          "1": "mdi:signal-cellular-1",
+          "2": "mdi:signal-cellular-2",
+          "3": "mdi:signal-cellular-3"
+        }
+      },
+      "alarm_volume": {
+        "default": "mdi:volume-medium",
+        "state": {
+          "low": "mdi:volume-low",
+          "high": "mdi:volume-high"
+        }
+      }
+    },
     "switch": {
       "led": {
-        "default": "mdi:led-off",
+        "default": "mdi:led-on",
         "state": {
-          "on": "mdi:led-on"
+          "off": "mdi:led-off"
         }
       }
     }
-  },
-  "services": {
-    "sequence_effect": "mdi:playlist-play",
-    "random_effect": "mdi:shuffle-variant"
   }
 }
