@@ -93,7 +93,7 @@ omit =
     homeassistant/components/aseko_pool_live/entity.py
     homeassistant/components/aseko_pool_live/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
-    homeassistant/components/asterisk_mbox/*
+    homeassistant/components/asterisk_mbox/mailbox.py
     homeassistant/components/aten_pe/*
     homeassistant/components/atome/*
     homeassistant/components/aurora/__init__.py

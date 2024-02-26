@@ -62,7 +62,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.error("Unknown mailbox platform specified")
             return
 
-        if p_type not in ["asterisk_cdr", "asterisk_mbox", "demo"]:
+        if p_type not in ["asterisk_mbox", "demo"]:
             # Asterisk integration will raise a repair issue themselves
             # For demo we don't create one
             async_create_issue(
