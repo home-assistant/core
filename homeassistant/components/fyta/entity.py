@@ -1,5 +1,4 @@
 """Entities for FYTA integration."""
-from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntityDescription
