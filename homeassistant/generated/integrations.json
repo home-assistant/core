@@ -3043,6 +3043,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "krispol": {
+      "name": "Krispol",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "kulersky": {
       "name": "Kuler Sky",
       "integration_type": "hub",
