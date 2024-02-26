@@ -1,4 +1,5 @@
 """Validate dependencies."""
+
 from __future__ import annotations
 
 import contextlib
@@ -29,7 +30,6 @@ CORE_INTEGRATION_FIELD_SCHEMA = vol.Schema(
     {
         vol.Optional("example"): exists,
         vol.Optional("default"): exists,
-        vol.Optional("values"): exists,
         vol.Optional("required"): bool,
         vol.Optional("advanced"): bool,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
