@@ -30,7 +30,7 @@ class FytaCoordinatorEntity(CoordinatorEntity[FytaCoordinator]):
             manufacturer="Fyta",
             model="Controller",
             identifiers={(DOMAIN, entry.entry_id)},
-            name=f"Fyta Coordinator ({self.coordinator.fyta.email})",
+            name=f"Fyta Coordinator ({coordinator.fyta.email})",
         )
 
         self.entity_description = description
