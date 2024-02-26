@@ -53,6 +53,10 @@ _RND: Final = SystemRandom()
 
 GET_IMAGE_TIMEOUT: Final = 10
 
+FRAME_BOUNDARY = "frame-boundary"
+FRAME_SEPARATOR = bytes(f"\r\n--{FRAME_BOUNDARY}\r\n", "utf-8")
+LAST_FRAME_MARKER = bytes(f"\r\n--{FRAME_BOUNDARY}--\r\n", "utf-8")
+
 
 class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes image entities."""
@@ -306,30 +310,32 @@ async def async_get_still_stream(
     request: web.Request,
     image_entity: ImageEntity,
 ) -> web.StreamResponse:
-    """Generate an HTTP multipart stream from the Image.
-
-    This method must be run in the event loop.
-    """
+    """Generate an HTTP multipart stream from the Image."""
     response = web.StreamResponse()
-    response.content_type = CONTENT_TYPE_MULTIPART.format("frameboundary")
+    response.content_type = CONTENT_TYPE_MULTIPART.format(FRAME_BOUNDARY)
     await response.prepare(request)
-    boundary = bytes("\r\n--frameboundary\r\n", "utf-8")
 
     async def _write_frame() -> bool:
         img_bytes = await image_entity.async_image()
         if img_bytes is None:
-            await response.write(bytes("\r\n--frameboundary--\r\n", "utf-8"))
+            await response.write(LAST_FRAME_MARKER)
             return False
+        frame = bytearray(FRAME_SEPARATOR)
         header = bytes(
             f"Content-Type: {image_entity.content_type}\r\n"
             f"Content-Length: {len(img_bytes)}\r\n\r\n",
             "utf-8",
         )
-        frame = boundary + header + img_bytes
+        frame.extend(header)
+        frame.extend(img_bytes)
         # Chrome shows the n-1 frame so send the frame twice
         # https://issues.chromium.org/issues/41199053
         # https://issues.chromium.org/issues/40791855
-        await response.write(frame + frame)
+        # While this results in additional bandwidth usage,
+        # given the low frequency of image updates, it is acceptable.
+        frame.extend(frame)
+        await response.write(frame)
+        # Drain to ensure that the latest frame is available to the client
         await response.drain()
         return True
 
@@ -342,7 +348,7 @@ async def async_get_still_stream(
     hass: HomeAssistant = request.app["hass"]
     remove = async_track_state_change_event(
         hass,
-        [image_entity.entity_id],
+        image_entity.entity_id,
         image_state_update,
     )
     try:
