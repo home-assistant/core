@@ -29,7 +29,7 @@ from .entity import FytaCoordinatorEntity, FytaPlantEntity
 class FytaSensorEntityDescription(SensorEntityDescription):
     """Describes Fyta sensor entity."""
 
-    value_fn: Callable[[str | int | float], str | int | float | datetime] = (
+    value_fn: Callable[[str | int | float | datetime], str | int | float | datetime] = (
         lambda value: value
     )
 
@@ -129,19 +129,14 @@ async def async_setup_entry(
     coordinator: FytaCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     plant_entities: list[CoordinatorEntity] = [
-        FytaCoordinatorSensor(coordinator, entry, sensor)
-        for sensor in SENSORS
-        if sensor.key in coordinator.data
+        FytaCoordinatorSensor(coordinator, entry, PLANT_NUMBER_SENSOR),
     ]
-    plant_entities.append(
-        FytaCoordinatorSensor(coordinator, entry, PLANT_NUMBER_SENSOR)
-    )
 
     plant_entities.extend(
-            FytaPlantSensor(coordinator, entry, sensor, plant_id)
-            for plant_id in coordinator.fyta.plant_list
-            for sensor in SENSORS
-            if sensor.key in coordinator.data[plant_id]
+        FytaPlantSensor(coordinator, entry, sensor, plant_id)
+        for plant_id in coordinator.fyta.plant_list
+        for sensor in SENSORS
+        if sensor.key in coordinator.data[plant_id]
     )
 
     async_add_entities(plant_entities)
@@ -156,10 +151,7 @@ class FytaCoordinatorSensor(FytaCoordinatorEntity, SensorEntity):
     def native_value(self) -> str | int | float | datetime:
         """Return the state for this sensor."""
 
-        if self.entity_description.key == "plant_number":
-            val = len(self.coordinator.fyta.plant_list)
-        else:
-            val = self.coordinator.data[self.entity_description.key]
+        val = len(self.coordinator.fyta.plant_list)
         return self.entity_description.value_fn(val)
 
 
