@@ -92,6 +92,7 @@ async def async_get_config_entry_diagnostics(
                 {
                     "manufacturer": device.manufacturer,
                     "model": device.model,
+                    "logical_type": device.device_type,
                 }
                 for device in gateway.devices.values()
             ],

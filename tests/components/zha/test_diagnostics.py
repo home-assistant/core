@@ -87,8 +87,16 @@ async def test_diagnostics_for_config_entry(
     assert isinstance(diagnostics_data["devices"], list)
     assert len(diagnostics_data["devices"]) == 2
     assert diagnostics_data["devices"] == [
-        {"manufacturer": "Coordinator Manufacturer", "model": "Coordinator Model"},
-        {"manufacturer": "FakeManufacturer", "model": "FakeModel"},
+        {
+            "manufacturer": "Coordinator Manufacturer",
+            "model": "Coordinator Model",
+            "logical_type": "Coordinator",
+        },
+        {
+            "manufacturer": "FakeManufacturer",
+            "model": "FakeModel",
+            "logical_type": "EndDevice",
+        },
     ]
 
 
