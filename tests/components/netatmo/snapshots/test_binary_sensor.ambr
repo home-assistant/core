@@ -1,0 +1,241 @@
+# serializer version: 1
+# name: test_entity[binary_sensor.sirene_in_hall_monitoring-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.sirene_in_hall_monitoring',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SAFETY: 'safety'>,
+    'original_icon': 'mdi:alarm-light',
+    'original_name': 'Monitoring',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:e3:9b-monitoring',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[binary_sensor.sirene_in_hall_monitoring-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'safety',
+      'friendly_name': 'Sirene in hall Monitoring',
+      'icon': 'mdi:alarm-light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sirene_in_hall_monitoring',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entity[binary_sensor.sirene_in_hall_sounding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.sirene_in_hall_sounding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SOUND: 'sound'>,
+    'original_icon': 'mdi:alarm-light',
+    'original_name': 'Sounding',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:e3:9b-sounding',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[binary_sensor.sirene_in_hall_sounding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'sound',
+      'friendly_name': 'Sirene in hall Sounding',
+      'icon': 'mdi:alarm-light',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sirene_in_hall_sounding',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity[binary_sensor.window_hall_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.window_hall_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': 'mdi:window-closed-variant',
+    'original_name': 'Motion',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:86:99-motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[binary_sensor.window_hall_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'motion',
+      'friendly_name': 'Window Hall Motion',
+      'icon': 'mdi:window-closed-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.window_hall_motion',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity[binary_sensor.window_hall_opening-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.window_hall_opening',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': 'mdi:window-closed-variant',
+    'original_name': 'Opening',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:86:99-opening',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[binary_sensor.window_hall_opening-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'opening',
+      'friendly_name': 'Window Hall Opening',
+      'icon': 'mdi:window-closed-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.window_hall_opening',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_entity[binary_sensor.window_hall_vibration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.window_hall_vibration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.VIBRATION: 'vibration'>,
+    'original_icon': 'mdi:window-closed-variant',
+    'original_name': 'Vibration',
+    'platform': 'netatmo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '12:34:56:00:86:99-vibration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity[binary_sensor.window_hall_vibration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Netatmo',
+      'device_class': 'vibration',
+      'friendly_name': 'Window Hall Vibration',
+      'icon': 'mdi:window-closed-variant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.window_hall_vibration',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
