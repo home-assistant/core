@@ -42,23 +42,23 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback, State
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 from homeassistant.helpers.event import (
-    async_track_state_change_event,
     EventStateChangedData,
+    async_track_state_change_event,
 )
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, EventType
 
 from . import GroupEntity
-from .util import find_state_attributes, mean_tuple, reduce_attribute
 from .const import CONF_SYNC
+from .util import find_state_attributes, mean_tuple, reduce_attribute
 
 DEFAULT_NAME = "Light Group"
 CONF_ALL = "all"
@@ -193,7 +193,7 @@ class LightGroup(GroupEntity, LightEntity):
         # Only install the state listener if synchronization is enabled
         if self.sync:
             unsub = async_track_state_change_event(
-                hass, entity_ids, self.watched_entity_change
+                hass, entity_ids, self._watched_entity_change
             )
             self.async_on_remove(unsub)
 
@@ -339,7 +339,7 @@ class LightGroup(GroupEntity, LightEntity):
         self._attr_supported_features &= SUPPORT_GROUP_LIGHT
 
     @callback
-    async def watched_entity_change(
+    async def _watched_entity_change(
         self, event: EventType[EventStateChangedData]
     ) -> None:
         nst = event.data["new_state"]
@@ -350,9 +350,9 @@ class LightGroup(GroupEntity, LightEntity):
 
                 # Call the appropriate service for all the other lights in the group
                 data = {
-                    ATTR_ENTITY_ID: list(
-                        set(self._entity_ids).difference(set([nst.entity_id]))
-                    )
+                    ATTR_ENTITY_ID: [
+                        entity for entity in self._entity_ids if entity != nst.entity_id
+                    ]
                 }
 
                 await self.hass.services.async_call(
