@@ -55,8 +55,8 @@ from .const import (
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
     DATA_LAST_WAKE_UP,
-    DEFAULT_WAKE_WORD_COOLDOWN,
     DOMAIN,
+    WAKE_WORD_COOLDOWN,
 )
 from .error import (
     DuplicateWakeUpDetectedError,
@@ -454,9 +454,6 @@ class WakeWordSettings:
     audio_seconds_to_buffer: float = 0
     """Seconds of audio to buffer before detection and forward to STT."""
 
-    cooldown_seconds: float = DEFAULT_WAKE_WORD_COOLDOWN
-    """Seconds after a wake word detection where other detections are ignored."""
-
 
 @dataclass(frozen=True)
 class AudioSettings:
@@ -748,7 +745,7 @@ class PipelineRun:
             )
             if last_wake_up is not None:
                 sec_since_last_wake_up = time.monotonic() - last_wake_up
-                if sec_since_last_wake_up < wake_word_settings.cooldown_seconds:
+                if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
                     _LOGGER.debug(
                         "Duplicate wake word detection occurred for %s",
                         result.wake_word_phrase,
@@ -1335,12 +1332,6 @@ class PipelineInput:
         stt_audio_buffer: list[ProcessedAudioChunk] = []
         stt_processed_stream: AsyncIterable[ProcessedAudioChunk] | None = None
 
-        # Timeout before another pipeline with the same wake word phrase can run again
-        cooldown_seconds: float = DEFAULT_WAKE_WORD_COOLDOWN
-        if self.run.wake_word_settings is not None:
-            # Use cooldown from wake settings if available
-            cooldown_seconds = self.run.wake_word_settings.cooldown_seconds
-
         if self.stt_stream is not None:
             if self.run.audio_settings.needs_processor:
                 # VAD/noise suppression/auto gain/volume
@@ -1375,7 +1366,7 @@ class PipelineInput:
                     )
                     if last_wake_up is not None:
                         sec_since_last_wake_up = time.monotonic() - last_wake_up
-                        if sec_since_last_wake_up < cooldown_seconds:
+                        if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
                             _LOGGER.debug(
                                 "Speech-to-text cancelled to avoid duplicate wake-up for %s",
                                 self.wake_word_phrase,
