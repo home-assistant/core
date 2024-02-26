@@ -86,7 +86,7 @@ async def daikin_api_setup(
             device = await Appliance.factory(
                 host, session, key=key, uuid=uuid, password=password
             )
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         _LOGGER.debug("Connection to %s timed out", host)
         raise ConfigEntryNotReady from err
     except ClientConnectionError as err:

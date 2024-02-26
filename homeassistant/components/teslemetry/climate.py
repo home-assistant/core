@@ -45,6 +45,7 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
         | ClimateEntityFeature.PRESET_MODE
     )
     _attr_preset_modes = ["off", "keep", "dog", "camp"]
+    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def hvac_mode(self) -> HVACMode | None:

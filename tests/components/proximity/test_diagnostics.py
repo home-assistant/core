@@ -35,6 +35,16 @@ async def test_entry_diagnostics(
         "not_home",
         {"friendly_name": "test2", "latitude": 150.1, "longitude": 20.1},
     )
+    hass.states.async_set(
+        "device_tracker.test3",
+        "my secret address",
+        {
+            "friendly_name": "test3",
+            "latitude": 150.1,
+            "longitude": 20.1,
+            "location_name": "my secret address",
+        },
+    )
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -45,6 +55,7 @@ async def test_entry_diagnostics(
                 "device_tracker.test1",
                 "device_tracker.test2",
                 "device_tracker.test3",
+                "device_tracker.test4",
             ],
             CONF_IGNORED_ZONES: [],
             CONF_TOLERANCE: 1,

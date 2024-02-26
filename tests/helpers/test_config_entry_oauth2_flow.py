@@ -1,5 +1,4 @@
 """Tests for the Somfy config flow."""
-import asyncio
 from http import HTTPStatus
 import logging
 import time
@@ -143,7 +142,7 @@ async def test_abort_if_authorization_timeout(
 
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.asyncio.timeout",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await flow.async_step_user()
 
@@ -336,7 +335,7 @@ async def test_abort_on_oauth_timeout_error(
 
     with patch(
         "homeassistant.helpers.config_entry_oauth2_flow.asyncio.timeout",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -396,19 +395,19 @@ async def test_abort_discovered_multiple(
             HTTPStatus.UNAUTHORIZED,
             {},
             "oauth_unauthorized",
-            "Token request failed (unknown): unknown",
+            "Token request for oauth2_test failed (unknown): unknown",
         ),
         (
             HTTPStatus.NOT_FOUND,
             {},
             "oauth_failed",
-            "Token request failed (unknown): unknown",
+            "Token request for oauth2_test failed (unknown): unknown",
         ),
         (
             HTTPStatus.INTERNAL_SERVER_ERROR,
             {},
             "oauth_failed",
-            "Token request failed (unknown): unknown",
+            "Token request for oauth2_test failed (unknown): unknown",
         ),
         (
             HTTPStatus.BAD_REQUEST,
@@ -418,7 +417,7 @@ async def test_abort_discovered_multiple(
                 "error_uri": "See the full API docs at https://authorization-server.com/docs/access_token",
             },
             "oauth_failed",
-            "Token request failed (invalid_request): Request was missing the",
+            "Token request for oauth2_test failed (invalid_request): Request was missing the",
         ),
     ],
 )
@@ -541,7 +540,7 @@ async def test_abort_if_oauth_token_closing_error(
 
     with caplog.at_level(logging.DEBUG):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert "Token request failed (unknown): unknown" in caplog.text
+    assert "Token request for oauth2_test failed (unknown): unknown" in caplog.text
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "oauth_unauthorized"
@@ -710,6 +709,7 @@ async def test_oauth_session(
             },
         },
     )
+    config_entry.add_to_hass(hass)
 
     now = time.time()
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
@@ -756,6 +756,7 @@ async def test_oauth_session_with_clock_slightly_out_of_sync(
             },
         },
     )
+    config_entry.add_to_hass(hass)
 
     now = time.time()
     session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)

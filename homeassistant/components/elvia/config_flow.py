@@ -35,8 +35,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._api_token = api_token = user_input[CONF_API_TOKEN]
             client = Elvia(meter_value_token=api_token).meter_value()
             try:
+                end_time = dt_util.utcnow()
                 results = await client.get_meter_values(
-                    start_time=(dt_util.now() - timedelta(hours=1)).isoformat()
+                    start_time=(end_time - timedelta(hours=1)).isoformat(),
+                    end_time=end_time.isoformat(),
                 )
 
             except ElviaError.AuthError as exception:

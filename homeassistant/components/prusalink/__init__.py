@@ -113,9 +113,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             new_data[CONF_PASSWORD] = password
 
         ir.async_delete_issue(hass, DOMAIN, "firmware_5_1_required")
-        config_entry.minor_version = 2
-
-        hass.config_entries.async_update_entry(config_entry, data=new_data)
+        hass.config_entries.async_update_entry(
+            config_entry, data=new_data, minor_version=2
+        )
 
     return True
 

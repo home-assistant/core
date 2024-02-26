@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass, field
 from typing import Any
 
-from aionotion import async_get_client
 from aionotion.errors import InvalidCredentialsError, NotionError
 import voluptuous as vol
 
@@ -13,9 +13,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_REFRESH_TOKEN, CONF_USER_UUID, DOMAIN, LOGGER
+from .util import async_get_client_with_credentials
 
 AUTH_SCHEMA = vol.Schema(
     {
@@ -30,15 +30,23 @@ REAUTH_SCHEMA = vol.Schema(
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class CredentialsValidationResult:
+    """Define a validation result."""
+
+    user_uuid: str | None = None
+    refresh_token: str | None = None
+    errors: dict[str, Any] = field(default_factory=dict)
+
+
 async def async_validate_credentials(
     hass: HomeAssistant, username: str, password: str
-) -> dict[str, Any]:
-    """Validate a Notion username and password (returning any errors)."""
-    session = aiohttp_client.async_get_clientsession(hass)
+) -> CredentialsValidationResult:
+    """Validate a Notion username and password."""
     errors = {}
 
     try:
-        await async_get_client(username, password, session=session)
+        client = await async_get_client_with_credentials(hass, username, password)
     except InvalidCredentialsError:
         errors["base"] = "invalid_auth"
     except NotionError as err:
@@ -48,7 +56,12 @@ async def async_validate_credentials(
         LOGGER.exception("Unknown error while validation credentials: %s", err)
         errors["base"] = "unknown"
 
-    return errors
+    if errors:
+        return CredentialsValidationResult(errors=errors)
+
+    return CredentialsValidationResult(
+        user_uuid=client.user_uuid, refresh_token=client.refresh_token
+    )
 
 
 class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -82,20 +95,24 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        if errors := await async_validate_credentials(
+        credentials_validation_result = await async_validate_credentials(
             self.hass, self._reauth_entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
-        ):
+        )
+
+        if credentials_validation_result.errors:
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
-                errors=errors,
+                errors=credentials_validation_result.errors,
                 description_placeholders={
                     CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME]
                 },
             )
 
         self.hass.config_entries.async_update_entry(
-            self._reauth_entry, data=self._reauth_entry.data | user_input
+            self._reauth_entry,
+            data=self._reauth_entry.data
+            | {CONF_REFRESH_TOKEN: credentials_validation_result.refresh_token},
         )
         self.hass.async_create_task(
             self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
@@ -112,13 +129,22 @@ class NotionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(user_input[CONF_USERNAME])
         self._abort_if_unique_id_configured()
 
-        if errors := await async_validate_credentials(
+        credentials_validation_result = await async_validate_credentials(
             self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-        ):
+        )
+
+        if credentials_validation_result.errors:
             return self.async_show_form(
                 step_id="user",
                 data_schema=AUTH_SCHEMA,
-                errors=errors,
+                errors=credentials_validation_result.errors,
             )
 
-        return self.async_create_entry(title=user_input[CONF_USERNAME], data=user_input)
+        return self.async_create_entry(
+            title=user_input[CONF_USERNAME],
+            data={
+                CONF_USERNAME: user_input[CONF_USERNAME],
+                CONF_USER_UUID: credentials_validation_result.user_uuid,
+                CONF_REFRESH_TOKEN: credentials_validation_result.refresh_token,
+            },
+        )

@@ -28,7 +28,8 @@ async def test_new_users_available(
     MONITORED_USERS = {"User 1": {"enabled": True}}
     OPTIONS_WITH_USERS = copy.deepcopy(DEFAULT_OPTIONS)
     OPTIONS_WITH_USERS[Platform.MEDIA_PLAYER][CONF_MONITORED_USERS] = MONITORED_USERS
-    entry.options = OPTIONS_WITH_USERS
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, options=OPTIONS_WITH_USERS)
 
     mock_plex_server = await setup_plex_server(config_entry=entry)
 
@@ -55,7 +56,8 @@ async def test_new_ignored_users_available(
     OPTIONS_WITH_USERS = copy.deepcopy(DEFAULT_OPTIONS)
     OPTIONS_WITH_USERS[Platform.MEDIA_PLAYER][CONF_MONITORED_USERS] = MONITORED_USERS
     OPTIONS_WITH_USERS[Platform.MEDIA_PLAYER][CONF_IGNORE_NEW_SHARED_USERS] = True
-    entry.options = OPTIONS_WITH_USERS
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, options=OPTIONS_WITH_USERS)
 
     mock_plex_server = await setup_plex_server(config_entry=entry)
 
@@ -167,7 +169,8 @@ async def test_ignore_plex_web_client(
     """Test option to ignore Plex Web clients."""
     OPTIONS = copy.deepcopy(DEFAULT_OPTIONS)
     OPTIONS[Platform.MEDIA_PLAYER][CONF_IGNORE_PLEX_WEB_CLIENTS] = True
-    entry.options = OPTIONS
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, options=OPTIONS)
 
     mock_plex_server = await setup_plex_server(
         config_entry=entry, client_type="plexweb", disable_clients=True

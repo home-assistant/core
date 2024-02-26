@@ -205,7 +205,7 @@ def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
         command_id=cluster.commands_by_name[cmd_name].id,
         schema=cluster.commands_by_name[cmd_name].schema,
         disable_default_response=False,
-        direction=foundation.Direction.Server_to_Client,
+        direction=foundation.Direction.Client_to_Server,
         args=(),
         kwargs=kwargs,
     )
