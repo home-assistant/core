@@ -169,7 +169,7 @@ async def async_setup_entry(
 class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
     """Representation of a media player."""
 
-    _attr_name: str | None = None
+    _attr_has_entity_name = False
     _attr_icon = "mdi:speaker-wireless"
     _attr_supported_features = BANG_OLUFSEN_FEATURES
 
@@ -626,7 +626,7 @@ class BangOlufsenMediaPlayer(MediaPlayerEntity, BangOlufsenEntity):
         """Return the current playback progress."""
         # Don't show progress if the the device is a Beolink listener.
         if self._remote_leader is None:
-            return self._playback_progress.progress
+            return None
         return self._playback_progress.progress
 
     @property
