@@ -16,7 +16,7 @@ from .const import DOMAIN
 
 
 class ValloxFilterChangeDateEntity(ValloxEntity, DateEntity):
-    """Representation of a Vallox date."""
+    """Representation of a Vallox filter change date entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "filter_change_date"
@@ -31,7 +31,7 @@ class ValloxFilterChangeDateEntity(ValloxEntity, DateEntity):
         """Initialize the Vallox date."""
         super().__init__(name, coordinator)
 
-        self._attr_unique_id = f"{self._device_uuid}-{self._attr_translation_key}"
+        self._attr_unique_id = f"{self._device_uuid}-filter_change_date"
         self._client = client
 
     @property
@@ -52,7 +52,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the buttons."""
+    """Set up Vallox filter change date entity."""
 
     data = hass.data[DOMAIN][entry.entry_id]
 

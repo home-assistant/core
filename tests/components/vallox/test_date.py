@@ -1,4 +1,4 @@
-"""Tests for Vallox button platform."""
+"""Tests for Vallox date platform."""
 
 from datetime import date
 
