@@ -813,3 +813,12 @@ async def test_loading_component_loads_translations(hass: HomeAssistant) -> None
     assert await setup.async_setup_component(hass, "comp", {})
     assert mock_setup.called
     assert translation.async_translations_loaded(hass, {"comp"}) is True
+
+
+async def test_importing_integration_in_executor(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
+    """Test we can import an integration in an executor."""
+    assert await setup.async_setup_component(hass, "test_package_loaded_executor", {})
+    assert await setup.async_setup_component(hass, "test_package_loaded_executor", {})
+    await hass.async_block_till_done()
