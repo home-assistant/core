@@ -205,6 +205,8 @@ async def async_update_programs_and_zones(
     programs affect zones and certain combinations of zones affect programs.
     """
     data: RainMachineData = hass.data[DOMAIN][entry.entry_id]
+    # No gather here to allow http keep-alive to reuse
+    # the connection for each coordinator.
     await data.coordinators[DATA_PROGRAMS].async_refresh()
     await data.coordinators[DATA_ZONES].async_refresh()
 
