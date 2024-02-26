@@ -259,12 +259,30 @@ async def test_window_sensor(
         await hass.async_block_till_done()
 
     prefix = "sensor.window_hall_"
-    assert hass.states.get(f"{prefix}status").state == "no_news"
     assert hass.states.get(f"{prefix}battery_percent").state == "75"
+    assert hass.states.get(f"{prefix}opening").state == "off"
+    assert hass.states.get(f"{prefix}motion").state == "off"
+    assert hass.states.get(f"{prefix}vibration").state == "off"
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
-    # Fake backend response changing schedule
+    # Fake backend response
+    response = {
+        "event_type": "tag_small_move",
+        "push_type": "NACamera-tag_small_move",
+        "home_id": "3d3e344f491763b24c424e8b",
+        "event_id": "601dce1560abca1ebad9b723",
+        "camera_id": "12:34:56:00:f1:62",
+        "device_id": "12:34:56:00:f1:62",
+        "module_id": "12:34:56:00:86:99",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+    assert hass.states.get(f"{prefix}opening").state == "off"
+    assert hass.states.get(f"{prefix}motion").state == "off"
+    assert hass.states.get(f"{prefix}vibration").state == "on"
+
+    # Fake backend response
     response = {
         "event_type": "tag_big_move",
         "push_type": "NACamera-tag_big_move",
@@ -276,8 +294,9 @@ async def test_window_sensor(
     }
     await simulate_webhook(hass, webhook_id, response)
     await hass.async_block_till_done()
-    assert hass.states.get(f"{prefix}status").state == "no_news"
-    assert hass.states.get(f"{prefix}battery_percent").state == "75"
+    assert hass.states.get(f"{prefix}opening").state == "off"
+    assert hass.states.get(f"{prefix}motion").state == "on"
+    assert hass.states.get(f"{prefix}vibration").state == "off"
 
     response = {
         "event_type": "tag_open",
@@ -290,8 +309,41 @@ async def test_window_sensor(
     }
     await simulate_webhook(hass, webhook_id, response)
     await hass.async_block_till_done()
-    assert hass.states.get(f"{prefix}status").state == "open"
-    assert hass.states.get(f"{prefix}battery_percent").state == "75"
+    assert hass.states.get(f"{prefix}opening").state == "on"
+    assert hass.states.get(f"{prefix}motion").state == "off"
+    assert hass.states.get(f"{prefix}vibration").state == "off"
+
+    # Fake backend response
+    response = {
+        "event_type": "tag_big_move",
+        "push_type": "NACamera-tag_big_move",
+        "home_id": "3d3e344f491763b24c424e8b",
+        "event_id": "601dce1560abca1ebad9b723",
+        "camera_id": "12:34:56:00:f1:62",
+        "device_id": "12:34:56:00:f1:62",
+        "module_id": "12:34:56:00:86:99",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+    assert hass.states.get(f"{prefix}opening").state == "on"
+    assert hass.states.get(f"{prefix}motion").state == "on"
+    assert hass.states.get(f"{prefix}vibration").state == "off"
+
+    # Fake backend response
+    response = {
+        "event_type": "tag_uninstalled",
+        "push_type": "NACamera-tag_uninstalled",
+        "home_id": "3d3e344f491763b24c424e8b",
+        "event_id": "601dce1560abca1ebad9b723",
+        "camera_id": "12:34:56:00:f1:62",
+        "device_id": "12:34:56:00:f1:62",
+        "module_id": "12:34:56:00:86:99",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+    await hass.async_block_till_done()
+    assert hass.states.get(f"{prefix}opening").state == "unavailable"
+    assert hass.states.get(f"{prefix}motion").state == "unavailable"
+    assert hass.states.get(f"{prefix}vibration").state == "unavailable"
 
 
 async def test_siren_sensor(
@@ -306,7 +358,8 @@ async def test_siren_sensor(
     prefix = "sensor.sirene_in_hall_"
     assert hass.states.get(f"{prefix}status").state == "no_sound"
     assert hass.states.get(f"{prefix}battery_percent").state == "25"
-    assert hass.states.get(f"{prefix}monitoring").state == "False"
+    assert hass.states.get(f"{prefix}monitoring").state == "off"
+    assert hass.states.get(f"{prefix}sounding").state == "off"
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
 
@@ -323,4 +376,5 @@ async def test_siren_sensor(
     await hass.async_block_till_done()
     assert hass.states.get(f"{prefix}status").state == "no_sound"
     assert hass.states.get(f"{prefix}battery_percent").state == "25"
-    assert hass.states.get(f"{prefix}monitoring").state == "False"
+    assert hass.states.get(f"{prefix}monitoring").state == "off"
+    assert hass.states.get(f"{prefix}sounding").state == "off"
