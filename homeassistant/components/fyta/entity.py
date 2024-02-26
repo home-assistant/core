@@ -1,4 +1,5 @@
 """Entities for FYTA integration."""
+from datetime import datetime
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntityDescription
@@ -57,7 +58,6 @@ class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):
             model="Plant",
             identifiers={(DOMAIN, f"{entry.entry_id}-{plant_id}")},
             name=self.plant.get("name"),
-
             via_device=(DOMAIN, entry.entry_id),
             sw_version=self.plant.get("sw_version"),
         )
@@ -66,7 +66,7 @@ class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):
     @property
     def plant(self) -> dict[str, Any]:
         """Get plant data."""
-        return self.coordinator.data[self.plant_id]
+        return self.coordinator.data.get(self.plant_id, {})
 
     @property
     def available(self) -> bool:
