@@ -34,7 +34,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict]):
         self.fyta: FytaConnector = fyta
         self._attr_last_update_success: datetime | None = None
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[int, dict[str, Any]]:
         """Fetch data from API endpoint."""
 
         if self.fyta.expiration is None or self.fyta.expiration < datetime.now():
