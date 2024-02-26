@@ -245,7 +245,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==22.0.0
+aioesphomeapi==22.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -315,7 +315,7 @@ aiomusiccast==0.14.8
 aionanoleaf==0.2.1
 
 # homeassistant.components.notion
-aionotion==2024.02.1
+aionotion==2024.02.2
 
 # homeassistant.components.oncue
 aiooncue==0.3.5
@@ -578,7 +578,7 @@ bluemaestro-ble==0.2.3
 # bluepy==1.3.0
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.17.0
+bluetooth-adapters==0.18.0
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.3.0
@@ -633,7 +633,7 @@ buienradar==1.0.5
 cached_ipaddress==0.3.0
 
 # homeassistant.components.caldav
-caldav==1.3.8
+caldav==1.3.9
 
 # homeassistant.components.circuit
 circuit-webhook==1.0.1
@@ -1006,7 +1006,7 @@ gspread==5.5.0
 gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
-guppy3==3.1.4
+guppy3==3.1.4.post1
 
 # homeassistant.components.iaqualink
 h2==4.1.0
@@ -1080,7 +1080,7 @@ home-assistant-intents==2024.2.2
 homeconnect==0.7.2
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.16
+homematicip==1.1.0
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1104,7 +1104,7 @@ iammeter==0.2.1
 iaqualink==0.5.0
 
 # homeassistant.components.ibeacon
-ibeacon-ble==1.0.1
+ibeacon-ble==1.2.0
 
 # homeassistant.components.watson_iot
 ibmiotf==0.3.4
@@ -1992,7 +1992,7 @@ pynetio==0.1.9.1
 pynobo==1.6.0
 
 # homeassistant.components.nuki
-pynuki==1.6.2
+pynuki==1.6.3
 
 # homeassistant.components.nut
 pynut2==2.1.2
@@ -2233,7 +2233,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==4.3.0
+python-homewizard-energy==4.3.1
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2683,7 +2683,7 @@ temperusb==1.6.1
 # tensorflow==2.5.0
 
 # homeassistant.components.teslemetry
-tesla-fleet-api==0.2.3
+tesla-fleet-api==0.4.6
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.1
@@ -2790,7 +2790,7 @@ uvcclient==0.11.0
 vacuum-map-parser-roborock==0.1.1
 
 # homeassistant.components.vallox
-vallox-websocket-api==5.0.2
+vallox-websocket-api==5.1.0
 
 # homeassistant.components.rdw
 vehicle==2.2.1
@@ -2914,7 +2914,7 @@ youtubeaio==1.1.5
 yt-dlp==2023.11.16
 
 # homeassistant.components.zamg
-zamg==0.3.5
+zamg==0.3.6
 
 # homeassistant.components.zengge
 zengge==0.2

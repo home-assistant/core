@@ -32,9 +32,9 @@ dependencies    = [
     "attrs==23.2.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==24.2.0",
-    "bcrypt==4.0.1",
+    "bcrypt==4.1.2",
     "certifi>=2021.5.30",
-    "ciso8601==2.3.0",
+    "ciso8601==2.3.1",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.26.0",

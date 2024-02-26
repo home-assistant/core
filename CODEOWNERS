@@ -854,8 +854,8 @@ build.json @home-assistant/supervisor
 /tests/components/mysensors/ @MartinHjelmare @functionpointer
 /homeassistant/components/mystrom/ @fabaff
 /tests/components/mystrom/ @fabaff
-/homeassistant/components/myuplink/ @pajzo
-/tests/components/myuplink/ @pajzo
+/homeassistant/components/myuplink/ @pajzo @astrandb
+/tests/components/myuplink/ @pajzo @astrandb
 /homeassistant/components/nam/ @bieniu
 /tests/components/nam/ @bieniu
 /homeassistant/components/nanoleaf/ @milanmeu
@@ -973,8 +973,8 @@ build.json @home-assistant/supervisor
 /tests/components/otbr/ @home-assistant/core
 /homeassistant/components/ourgroceries/ @OnFreund
 /tests/components/ourgroceries/ @OnFreund
-/homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
-/tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev
+/homeassistant/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117
+/tests/components/overkiz/ @imicknl @vlebourl @tetienne @nyroDev @tronix117
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
