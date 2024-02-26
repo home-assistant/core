@@ -826,7 +826,12 @@ class Integration:
         return self._all_dependencies_resolved
 
     async def async_get_component(self) -> ComponentProtocol:
-        """Return the component."""
+        """Return the component.
+
+        This method will load the component if it't not already loaded
+        and will check if import_executor is set and load it in the executor,
+        otherwise it will load it in the event loop.
+        """
         if debug := _LOGGER.isEnabledFor(logging.DEBUG):
             start = time.perf_counter()
         domain = self.domain
