@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import cast, Any
+from typing import Any, cast
 
 import voluptuous as vol
 from watchdog.events import (
