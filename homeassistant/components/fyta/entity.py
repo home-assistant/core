@@ -66,7 +66,7 @@ class FytaPlantEntity(CoordinatorEntity[FytaCoordinator]):
     @property
     def plant(self) -> dict[str, Any]:
         """Get plant data."""
-        return self.coordinator.data.get(self.plant_id, {})
+        return self.coordinator.data[self.plant_id]
 
     @property
     def available(self) -> bool:
