@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from fyta_cli.fyta_connector import FytaConnector
 from fyta_cli.fyta_exceptions import (
@@ -18,7 +19,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class FytaCoordinator(DataUpdateCoordinator[dict]):
+class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
     """Fyta custom coordinator."""
 
     config_entry: ConfigEntry
@@ -31,8 +32,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict]):
             name="FYTA Coordinator",
             update_interval=timedelta(seconds=60),
         )
-        self.fyta: FytaConnector = fyta
-        self._attr_last_update_success: datetime | None = None
+        self.fyta = fyta
 
     async def _async_update_data(self) -> dict[int, dict[str, Any]]:
         """Fetch data from API endpoint."""
@@ -42,7 +42,6 @@ class FytaCoordinator(DataUpdateCoordinator[dict]):
 
         data = await self.fyta.update_all_plants()
 
-        self._attr_last_update_success = datetime.now()
         return data
 
     async def renew_authentication(self) -> bool:
