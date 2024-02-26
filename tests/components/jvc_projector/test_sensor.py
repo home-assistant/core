@@ -19,7 +19,7 @@ async def test_entity_state(
     """Tests entity state is registered."""
     state = hass.states.get(POWER_ID)
     assert state
-    assert entity_registry.async_get(entity.entity_id)
+    assert entity_registry.async_get(state.entity_id)
 
     entity = hass.states.get(entity.entity_id)
     assert entity is not None
