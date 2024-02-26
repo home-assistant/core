@@ -1,7 +1,7 @@
 {
   "domain": "myuplink",
   "name": "myUplink",
-  "codeowners": ["@pajzo"],
+  "codeowners": ["@pajzo", "@astrandb"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/myuplink",
