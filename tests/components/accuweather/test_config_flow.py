@@ -3,12 +3,14 @@
 from unittest.mock import PropertyMock, patch
 
 from accuweather import ApiError, InvalidApiKeyError, RequestsExceededError
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.accuweather.const import CONF_FORECAST, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -107,14 +109,12 @@ async def test_integration_already_exists(hass: HomeAssistant) -> None:
             data=VALID_CONFIG,
         ).add_to_hass(hass)
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=VALID_CONFIG,
-        )
-
-        assert result["type"] == "abort"
-        assert result["reason"] == "single_instance_allowed"
+        with pytest.raises(HomeAssistantError, match="Cannot start a config flow"):
+            await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_USER},
+                data=VALID_CONFIG,
+            )
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
