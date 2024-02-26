@@ -2,13 +2,15 @@
 
 from copy import deepcopy
 from http import HTTPStatus
+import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import aiohttp
-from hass_nabucasa import thingtalk, voice
+from hass_nabucasa import thingtalk
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
+from hass_nabucasa.voice import TTS_VOICES
 import pytest
 
 from homeassistant.components.alexa import errors as alexa_errors
@@ -774,7 +776,7 @@ async def test_websocket_status(
             "google_report_state": True,
             "remote_allow_remote_enable": True,
             "remote_enabled": False,
-            "tts_default_voice": ["en-US", "female"],
+            "tts_default_voice": ["en-US", "JennyNeural"],
         },
         "alexa_entities": {
             "include_domains": [],
@@ -896,14 +898,13 @@ async def test_websocket_update_preferences(
 
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    await client.send_json_auto_id(
         {
-            "id": 5,
             "type": "cloud/update_prefs",
             "alexa_enabled": False,
             "google_enabled": False,
             "google_secure_devices_pin": "1234",
-            "tts_default_voice": ["en-GB", "male"],
+            "tts_default_voice": ["en-GB", "RyanNeural"],
             "remote_allow_remote_enable": False,
         }
     )
@@ -914,7 +915,7 @@ async def test_websocket_update_preferences(
     assert not cloud.client.prefs.alexa_enabled
     assert cloud.client.prefs.google_secure_devices_pin == "1234"
     assert cloud.client.prefs.remote_allow_remote_enable is False
-    assert cloud.client.prefs.tts_default_voice == ("en-GB", "male")
+    assert cloud.client.prefs.tts_default_voice == ("en-GB", "RyanNeural")
 
 
 async def test_websocket_update_preferences_alexa_report_state(
@@ -1593,24 +1594,15 @@ async def test_tts_info(
     setup_cloud: None,
 ) -> None:
     """Test that we can get TTS info."""
-    # Verify the format is as expected
-    assert voice.MAP_VOICE[("en-US", voice.Gender.FEMALE)] == "JennyNeural"
-
     client = await hass_ws_client(hass)
 
-    with patch.dict(
-        "homeassistant.components.cloud.http_api.MAP_VOICE",
-        {
-            ("en-US", voice.Gender.MALE): "GuyNeural",
-            ("en-US", voice.Gender.FEMALE): "JennyNeural",
-        },
-        clear=True,
-    ):
-        await client.send_json({"id": 5, "type": "cloud/tts/info"})
-        response = await client.receive_json()
+    await client.send_json_auto_id({"type": "cloud/tts/info"})
+    response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"languages": [["en-US", "male"], ["en-US", "female"]]}
+    assert response["result"] == {
+        "languages": json.loads(json.dumps(list(TTS_VOICES.items())))
+    }
 
 
 @pytest.mark.parametrize(

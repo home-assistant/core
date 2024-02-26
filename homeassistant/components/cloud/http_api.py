@@ -16,7 +16,7 @@ from aiohttp import web
 import attr
 from hass_nabucasa import Cloud, auth, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
-from hass_nabucasa.voice import MAP_VOICE
+from hass_nabucasa.voice import TTS_VOICES
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -426,6 +426,15 @@ async def websocket_subscription(
     async_manage_legacy_subscription_issue(hass, data)
 
 
+def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
+    """Validate language and voice."""
+    if value[0] not in TTS_VOICES:
+        raise vol.Invalid(f"Invalid language {value[0]}")
+    if value[1] not in TTS_VOICES[value[0]]:
+        raise vol.Invalid(f"Invalid voice {value[1]} for language {value[0]}")
+    return value
+
+
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -436,7 +445,7 @@ async def websocket_subscription(
         vol.Optional(PREF_GOOGLE_REPORT_STATE): bool,
         vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
         vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
-            vol.Coerce(tuple), vol.In(MAP_VOICE)
+            vol.Coerce(tuple), validate_language_voice
         ),
         vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
     }
@@ -840,5 +849,6 @@ def tts_info(
 ) -> None:
     """Fetch available tts info."""
     connection.send_result(
-        msg["id"], {"languages": [(lang, gender.value) for lang, gender in MAP_VOICE]}
+        msg["id"],
+        {"languages": list(TTS_VOICES.items())},
     )

@@ -6,6 +6,8 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 import uuid
 
+from hass_nabucasa.voice import MAP_VOICE
+
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.models import User
 from homeassistant.components import webhook
@@ -82,6 +84,24 @@ class CloudPreferencesStore(Store):
                 # In HA Core 2024.9, remove the import and also remove the Google
                 # assistant store if it's not been migrated by manual Google assistant
                 old_data.setdefault(PREF_GOOGLE_CONNECTED, await google_connected())
+            if old_minor_version < 4:
+                # Update the default TTS voice to the new default
+                # The default tts voice is a tuple.
+                # The first item is the language, the second the used to be gender.
+                # The new second item is the voice name.
+                default_tts_voice = old_data.get(PREF_TTS_DEFAULT_VOICE)
+                if default_tts_voice and (voice_item_two := default_tts_voice[1]) in (
+                    "female",
+                    "male",
+                ):
+                    language: str = default_tts_voice[0]
+                    if voice := MAP_VOICE.get((language, voice_item_two)):
+                        old_data[PREF_TTS_DEFAULT_VOICE] = (
+                            language,
+                            voice,
+                        )
+                    else:
+                        old_data[PREF_TTS_DEFAULT_VOICE] = DEFAULT_TTS_DEFAULT_VOICE
 
         return old_data
 
@@ -332,7 +352,10 @@ class CloudPreferences:
 
     @property
     def tts_default_voice(self) -> tuple[str, str]:
-        """Return the default TTS voice."""
+        """Return the default TTS voice.
+
+        The return value is a tuple of language and voice.
+        """
         return self._prefs.get(PREF_TTS_DEFAULT_VOICE, DEFAULT_TTS_DEFAULT_VOICE)  # type: ignore[no-any-return]
 
     async def get_cloud_user(self) -> str:
