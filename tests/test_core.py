@@ -8,6 +8,7 @@ import functools
 import gc
 import logging
 import os
+import sys
 from tempfile import TemporaryDirectory
 import threading
 import time
@@ -161,7 +162,9 @@ def test_async_add_job_add_hass_threaded_job_to_pool() -> None:
     assert len(hass.loop.run_in_executor.mock_calls) == 2
 
 
-def test_async_create_task_schedule_coroutine(event_loop) -> None:
+def test_async_create_task_schedule_coroutine(
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=event_loop))
 
@@ -171,6 +174,44 @@ def test_async_create_task_schedule_coroutine(event_loop) -> None:
     ha.HomeAssistant.async_create_task(hass, job())
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 12), reason="eager_start is only supported for Python 3.12"
+)
+def test_async_create_task_eager_start_schedule_coroutine(
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
+
+    async def job():
+        pass
+
+    ha.HomeAssistant.async_create_task(hass, job(), eager_start=True)
+    # Should create the task directly since 3.12 supports eager_start
+    assert len(hass.loop.create_task.mock_calls) == 0
+    assert len(hass.add_job.mock_calls) == 0
+
+
+@pytest.mark.skipif(
+    sys.version_info >= (3, 12), reason="eager_start is not supported on < 3.12"
+)
+def test_async_create_task_eager_start_fallback_schedule_coroutine(
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
+
+    async def job():
+        pass
+
+    ha.HomeAssistant.async_create_task(hass, job(), eager_start=True)
+    assert len(hass.loop.call_soon.mock_calls) == 1
+    # Should fallback to loop.create_task since 3.11 does
+    # not support eager_start
+    assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
 
 
@@ -2598,7 +2639,8 @@ async def test_state_changed_events_to_not_leak_contexts(hass: HomeAssistant) ->
     assert len(_get_by_type("homeassistant.core.Context")) == init_count
 
 
-async def test_background_task(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("eager_start", (True, False))
+async def test_background_task(hass: HomeAssistant, eager_start: bool) -> None:
     """Test background tasks being quit."""
     result = asyncio.Future()
 
@@ -2609,7 +2651,9 @@ async def test_background_task(hass: HomeAssistant) -> None:
             result.set_result(hass.state)
             raise
 
-    task = hass.async_create_background_task(test_task(), "happy task")
+    task = hass.async_create_background_task(
+        test_task(), "happy task", eager_start=eager_start
+    )
     assert "happy task" in str(task)
     await asyncio.sleep(0)
     await hass.async_stop()
