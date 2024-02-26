@@ -11,7 +11,7 @@ from homeassistant import config_entries, setup
 from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, translation
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -801,3 +801,15 @@ async def test_setup_config_entry_from_yaml(
     caplog.clear()
     hass.data.pop(setup.DATA_SETUP)
     hass.config.components.remove("test_integration_only_entry")
+
+
+async def test_loading_component_loads_translations(hass: HomeAssistant) -> None:
+    """Test that loading a component loads translations."""
+    assert translation.async_translations_loaded(hass, {"comp"}) is False
+    mock_setup = Mock(return_value=True)
+
+    mock_integration(hass, MockModule("comp", setup=mock_setup))
+
+    assert await setup.async_setup_component(hass, "comp", {})
+    assert mock_setup.called
+    assert translation.async_translations_loaded(hass, {"comp"}) is True

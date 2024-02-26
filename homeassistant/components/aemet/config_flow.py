@@ -21,7 +21,7 @@ from .const import CONF_STATION_UPDATES, DEFAULT_NAME, DOMAIN
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_STATION_UPDATES): bool,
+        vol.Required(CONF_STATION_UPDATES, default=True): bool,
     }
 )
 OPTIONS_FLOW = {
