@@ -166,8 +166,7 @@ def build_item_response(
         payload["idstring"] = "A:ALBUMARTIST/" + "/".join(
             payload["idstring"].split("/")[2:]
         )
-    
-    payload["idstring"] = urllib.parse.unquote(str(payload["idstring"]))
+        payload["idstring"] = urllib.parse.unquote(str(payload["idstring"]))
 
     try:
         search_type = MEDIA_TYPES_TO_SONOS[payload["search_type"]]
