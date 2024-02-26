@@ -476,7 +476,7 @@ class ConfigEntry:
 
         if domain_is_integration:
             try:
-                integration.get_platform("config_flow")
+                await integration.async_get_platform("config_flow")
             except ImportError as err:
                 _LOGGER.error(
                     (
@@ -1007,6 +1007,19 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
+        # Avoid starting a config flow on an integration that only supports
+        # a single config entry, but which already has an entry
+        if (
+            context.get("source") != SOURCE_REAUTH
+            and await _support_single_config_entry_only(self.hass, handler)
+            and self.config_entries.async_has_entry(handler)
+        ):
+            raise HomeAssistantError(
+                "Cannot start a config flow, the integration"
+                " supports only a single config entry"
+                " but already has one"
+            )
+
         flow_id = uuid_util.random_uuid_hex()
         loop = self.hass.loop
 
@@ -1104,11 +1117,21 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         # or the default discovery ID
         for progress_flow in self.async_progress_by_handler(flow.handler):
             progress_unique_id = progress_flow["context"].get("unique_id")
-            if progress_flow["flow_id"] != flow.flow_id and (
+            progress_flow_id = progress_flow["flow_id"]
+
+            if progress_flow_id != flow.flow_id and (
                 (flow.unique_id and progress_unique_id == flow.unique_id)
                 or progress_unique_id == DEFAULT_DISCOVERY_UNIQUE_ID
             ):
-                self.async_abort(progress_flow["flow_id"])
+                self.async_abort(progress_flow_id)
+
+            # Abort any flows in progress for the same handler
+            # when integration allows only one config entry
+            if (
+                progress_flow_id != flow.flow_id
+                and await _support_single_config_entry_only(self.hass, flow.handler)
+            ):
+                self.async_abort(progress_flow_id)
 
         if flow.unique_id is not None:
             # Reset unique ID when the default discovery ID has been used
@@ -1367,12 +1390,28 @@ class ConfigEntries:
         """Return entry for a domain with a matching unique id."""
         return self._entries.get_entry_by_domain_and_unique_id(domain, unique_id)
 
+    @callback
+    def async_has_entry(self, domain: str) -> bool:
+        """Return if there are entries for a domain."""
+        return bool(self.async_entries(domain))
+
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
         if entry.entry_id in self._entries.data:
             raise HomeAssistantError(
                 f"An entry with the id {entry.entry_id} already exists."
             )
+
+        # Avoid adding a config entry for a integration
+        # that only supports a single config entry, but already has an entry
+        if await _support_single_config_entry_only(
+            self.hass, entry.domain
+        ) and self.async_has_entry(entry.domain):
+            raise HomeAssistantError(
+                f"An entry for {entry.domain} already exists,"
+                f" but integration supports only one config entry"
+            )
+
         self._entries[entry.entry_id] = entry
         self._async_dispatch(ConfigEntryChange.ADDED, entry)
         await self.async_setup(entry.entry_id)
@@ -2371,6 +2410,12 @@ async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     return hasattr(component, "async_remove_config_entry_device")
 
 
+async def _support_single_config_entry_only(hass: HomeAssistant, domain: str) -> bool:
+    """Test if a domain supports only a single config entry."""
+    integration = await loader.async_get_integration(hass, domain)
+    return integration.single_config_entry
+
+
 async def _load_integration(
     hass: HomeAssistant, domain: str, hass_config: ConfigType
 ) -> None:
@@ -2382,9 +2427,8 @@ async def _load_integration(
 
     # Make sure requirements and dependencies of component are resolved
     await async_process_deps_reqs(hass, hass_config, integration)
-
     try:
-        integration.get_platform("config_flow")
+        await integration.async_get_platform("config_flow")
     except ImportError as err:
         _LOGGER.error(
             "Error occurred loading flow for integration %s: %s",

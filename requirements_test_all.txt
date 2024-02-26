@@ -64,7 +64,7 @@ PyMetEireann==2021.8.0
 PyMetno==0.11.0
 
 # homeassistant.components.keymitt_ble
-PyMicroBot==0.0.16
+PyMicroBot==0.0.17
 
 # homeassistant.components.nina
 PyNINA==0.3.3
@@ -1296,7 +1296,7 @@ pyDuotecno==2024.1.2
 pyElectra==1.2.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.30.1
+pyRFXtrx==0.31.0
 
 # homeassistant.components.tibber
 pyTibber==0.28.2
@@ -1719,9 +1719,6 @@ python-homewizard-energy==4.3.1
 
 # homeassistant.components.izone
 python-izone==1.2.9
-
-# homeassistant.components.juicenet
-python-juicenet==1.1.0
 
 # homeassistant.components.tplink
 python-kasa[speedups]==0.6.2.1
@@ -2204,10 +2201,10 @@ xbox-webapi==2.0.11
 xiaomi-ble==0.25.2
 
 # homeassistant.components.knx
-xknx==2.12.0
+xknx==2.12.1
 
 # homeassistant.components.knx
-xknxproject==3.6.0
+xknxproject==3.7.0
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
