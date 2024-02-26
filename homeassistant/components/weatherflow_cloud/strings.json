@@ -6,12 +6,19 @@
         "data": {
           "api_token": "Personal api token"
         }
+      },
+      "reauth": {
+        "description": "Reauthenticate with WeatherFlow",
+        "data": {
+          "api_token": "Personal api token"
+        }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
     },
+
     "abort": {
       "already_configured": "A configuration with this API key has already been configured."
     }

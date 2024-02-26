@@ -41,14 +41,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors = await _validate_api_token(api_token)
             if not errors:
                 # Update the existing entry and abort
-                existing_entry = self.hass.config_entries.async_get_entry(
+                if existing_entry := self.hass.config_entries.async_get_entry(
                     self.context["entry_id"]
-                )
-                self.hass.config_entries.async_update_entry(
-                    existing_entry,  # type: ignore[arg-type]
-                    data={CONF_API_TOKEN: api_token},
-                )
-                return self.async_abort(reason="reauth_successful")
+                ):
+                    return self.async_update_reload_and_abort(
+                        existing_entry,
+                        data={CONF_API_TOKEN: api_token},
+                        reason="reauth_successful",
+                    )
 
         return self.async_show_form(
             step_id="reauth",

@@ -65,8 +65,8 @@ async def test_config_errors(
     hass: HomeAssistant, request, expected_error, mock_fixture, mock_get_stations
 ) -> None:
     """Test the config flow for various error scenarios."""
-    mock_get_stations = request.getfixturevalue(mock_fixture)
-    with mock_get_stations:
+    mock_get_stations_bad = request.getfixturevalue(mock_fixture)
+    with mock_get_stations_bad:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -81,6 +81,15 @@ async def test_config_errors(
 
         assert result["type"] == FlowResultType.FORM
         assert result["errors"] == {"base": expected_error}
+
+    with mock_get_stations:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: "string"},
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(hass: HomeAssistant, mock_get_stations_401_error) -> None:
@@ -108,3 +117,4 @@ async def test_reauth(hass: HomeAssistant, mock_get_stations_401_error) -> None:
     )
 
     assert result["reason"] == "reauth_successful"
+    assert result["type"] == FlowResultType.ABORT
