@@ -91,7 +91,6 @@ from .models import (  # noqa: F401
     MqttCommandTemplate,
     MqttData,
     MqttValueTemplate,
-    MqttValueTemplateException,
     PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
