@@ -42,6 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_SEMAPHORE = "storage_semaphore"
 
+
 _T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
 
 
@@ -108,13 +109,14 @@ class Store(Generic[_T]):
         self.hass = hass
         self._private = private
         self._data: dict[str, Any] | None = None
-        self._unsub_delay_listener: CALLBACK_TYPE | None = None
+        self._delay_handle: asyncio.TimerHandle | None = None
         self._unsub_final_write_listener: CALLBACK_TYPE | None = None
         self._write_lock = asyncio.Lock()
         self._load_task: asyncio.Future[_T | None] | None = None
         self._encoder = encoder
         self._atomic_writes = atomic_writes
         self._read_only = read_only
+        self._next_write_time = 0.0
 
     @cached_property
     def path(self):
@@ -279,9 +281,6 @@ class Store(Generic[_T]):
         delay: float = 0,
     ) -> None:
         """Save data with an optional delay."""
-        # pylint: disable-next=import-outside-toplevel
-        from .event import async_call_later
-
         self._data = {
             "version": self.version,
             "minor_version": self.minor_version,
@@ -289,15 +288,37 @@ class Store(Generic[_T]):
             "data_func": data_func,
         }
 
+        next_when = self.hass.loop.time() + delay
+        if self._delay_handle and self._delay_handle.when() < next_when:
+            self._next_write_time = next_when
+            return
+
         self._async_cleanup_delay_listener()
         self._async_ensure_final_write_listener()
 
         if self.hass.state is CoreState.stopping:
             return
 
-        self._unsub_delay_listener = async_call_later(
-            self.hass, delay, self._async_callback_delayed_write
+        # We use call_later directly here to avoid a circular import
+        self._async_reschedule_delayed_write(next_when)
+
+    @callback
+    def _async_reschedule_delayed_write(self, when: float) -> None:
+        """Reschedule a delayed write."""
+        self._delay_handle = self.hass.loop.call_at(
+            when, self._async_schedule_callback_delayed_write
         )
+
+    @callback
+    def _async_schedule_callback_delayed_write(self) -> None:
+        """Schedule the delayed write in a task."""
+        if self.hass.loop.time() < self._next_write_time:
+            # Timer fired too early because there were multiple
+            # calls to async_delay_save before the first one
+            # wrote. Reschedule the timer to the next write time.
+            self._async_reschedule_delayed_write(self._next_write_time)
+            return
+        self.hass.async_create_task(self._async_callback_delayed_write())
 
     @callback
     def _async_ensure_final_write_listener(self) -> None:
@@ -317,11 +338,11 @@ class Store(Generic[_T]):
     @callback
     def _async_cleanup_delay_listener(self) -> None:
         """Clean up a delay listener."""
-        if self._unsub_delay_listener is not None:
-            self._unsub_delay_listener()
-            self._unsub_delay_listener = None
+        if self._delay_handle is not None:
+            self._delay_handle.cancel()
+            self._delay_handle = None
 
-    async def _async_callback_delayed_write(self, _now):
+    async def _async_callback_delayed_write(self) -> None:
         """Handle a delayed write callback."""
         # catch the case where a call is scheduled and then we stop Home Assistant
         if self.hass.state is CoreState.stopping:
