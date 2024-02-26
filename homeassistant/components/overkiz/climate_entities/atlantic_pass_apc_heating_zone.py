@@ -179,7 +179,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         return OVERKIZ_TO_PRESET_MODES[heating_mode]
 
     @property
-    def target_temperature(self) -> float:
+    def target_temperature(self) -> float | None:
         """Return hvac target temperature."""
         current_heating_profile = self.current_heating_profile
         if current_heating_profile in OVERKIZ_TEMPERATURE_STATE_BY_PROFILE:
