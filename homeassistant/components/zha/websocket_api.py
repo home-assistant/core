@@ -9,7 +9,7 @@ import voluptuous as vol
 import zigpy.backups
 from zigpy.config import CONF_DEVICE
 from zigpy.config.validators import cv_boolean
-from zigpy.types.named import EUI64
+from zigpy.types.named import EUI64, KeyData
 from zigpy.zcl.clusters.security import IasAce
 import zigpy.zdo.types as zdo_types
 
@@ -328,19 +328,19 @@ async def websocket_permit_devices(
     connection.subscriptions[msg["id"]] = async_cleanup
     zha_gateway.async_enable_debug_mode()
     src_ieee: EUI64
-    code: bytes
+    link_key: KeyData
     if ATTR_SOURCE_IEEE in msg:
         src_ieee = msg[ATTR_SOURCE_IEEE]
-        code = msg[ATTR_INSTALL_CODE]
-        _LOGGER.debug("Allowing join for %s device with install code", src_ieee)
-        await zha_gateway.application_controller.permit_with_key(
-            time_s=duration, node=src_ieee, code=code
+        link_key = msg[ATTR_INSTALL_CODE]
+        _LOGGER.debug("Allowing join for %s device with link key", src_ieee)
+        await zha_gateway.application_controller.permit_with_link_key(
+            time_s=duration, node=src_ieee, link_key=link_key
         )
     elif ATTR_QR_CODE in msg:
-        src_ieee, code = msg[ATTR_QR_CODE]
-        _LOGGER.debug("Allowing join for %s device with install code", src_ieee)
-        await zha_gateway.application_controller.permit_with_key(
-            time_s=duration, node=src_ieee, code=code
+        src_ieee, link_key = msg[ATTR_QR_CODE]
+        _LOGGER.debug("Allowing join for %s device with link key", src_ieee)
+        await zha_gateway.application_controller.permit_with_link_key(
+            time_s=duration, node=src_ieee, link_key=link_key
         )
     else:
         await zha_gateway.application_controller.permit(time_s=duration, node=ieee)
@@ -1249,21 +1249,21 @@ def async_load_api(hass: HomeAssistant) -> None:
         duration: int = service.data[ATTR_DURATION]
         ieee: EUI64 | None = service.data.get(ATTR_IEEE)
         src_ieee: EUI64
-        code: bytes
+        link_key: KeyData
         if ATTR_SOURCE_IEEE in service.data:
             src_ieee = service.data[ATTR_SOURCE_IEEE]
-            code = service.data[ATTR_INSTALL_CODE]
-            _LOGGER.info("Allowing join for %s device with install code", src_ieee)
-            await application_controller.permit_with_key(
-                time_s=duration, node=src_ieee, code=code
+            link_key = service.data[ATTR_INSTALL_CODE]
+            _LOGGER.info("Allowing join for %s device with link key", src_ieee)
+            await application_controller.permit_with_link_key(
+                time_s=duration, node=src_ieee, link_key=link_key
             )
             return
 
         if ATTR_QR_CODE in service.data:
-            src_ieee, code = service.data[ATTR_QR_CODE]
-            _LOGGER.info("Allowing join for %s device with install code", src_ieee)
-            await application_controller.permit_with_key(
-                time_s=duration, node=src_ieee, code=code
+            src_ieee, link_key = service.data[ATTR_QR_CODE]
+            _LOGGER.info("Allowing join for %s device with link key", src_ieee)
+            await application_controller.permit_with_link_key(
+                time_s=duration, node=src_ieee, link_key=link_key
             )
             return
 

@@ -1345,7 +1345,7 @@ async def async_fetch_image(
     """Retrieve an image."""
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    with suppress(asyncio.TimeoutError):
+    with suppress(TimeoutError):
         async with asyncio.timeout(10):
             response = await websession.get(url)
             if response.status == HTTPStatus.OK:

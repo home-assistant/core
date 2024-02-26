@@ -118,7 +118,7 @@ async def async_get_version_info(hass: HomeAssistant, ws_address: str) -> Versio
             version_info: VersionInfo = await get_server_version(
                 ws_address, async_get_clientsession(hass)
             )
-    except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+    except (TimeoutError, aiohttp.ClientError) as err:
         # We don't want to spam the log if the add-on isn't started
         # or takes a long time to start.
         _LOGGER.debug("Failed to connect to Z-Wave JS server: %s", err)

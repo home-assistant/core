@@ -430,10 +430,10 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
     def _make_disconnected(self, *_: core_Event) -> None:
         """No heart beat by device.
 
-        Reset sensor value to 0 when client device is disconnected
+        Set sensor as unavailable when client device is disconnected
         """
-        if self._attr_native_value != 0:
-            self._attr_native_value = 0
+        if self._attr_available:
+            self._attr_available = False
             self.async_write_ha_state()
 
     @callback

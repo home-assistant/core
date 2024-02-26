@@ -75,6 +75,7 @@ from .errors import AuthenticationRequired, CannotConnect
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
+CHECK_WEBSOCKET_INTERVAL = timedelta(minutes=1)
 
 
 class UniFiController:
@@ -89,6 +90,7 @@ class UniFiController:
         self.api = api
 
         self.ws_task: asyncio.Task | None = None
+        self._cancel_websocket_check: CALLBACK_TYPE | None = None
 
         self.available = True
         self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
@@ -275,6 +277,9 @@ class UniFiController:
         self._cancel_heartbeat_check = async_track_time_interval(
             self.hass, self._async_check_for_stale, CHECK_HEARTBEAT_INTERVAL
         )
+        self._cancel_websocket_check = async_track_time_interval(
+            self.hass, self._async_watch_websocket, CHECK_WEBSOCKET_INTERVAL
+        )
 
     @callback
     def async_heartbeat(
@@ -404,12 +409,20 @@ class UniFiController:
                 async_dispatcher_send(self.hass, self.signal_reachable)
 
         except (
-            asyncio.TimeoutError,
+            TimeoutError,
             aiounifi.BadGateway,
             aiounifi.ServiceUnavailable,
             aiounifi.AiounifiException,
         ):
             self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
+
+    @callback
+    def _async_watch_websocket(self, now: datetime) -> None:
+        """Watch timestamp for last received websocket message."""
+        LOGGER.debug(
+            "Last received websocket timestamp: %s",
+            self.api.connectivity.ws_message_received,
+        )
 
     @callback
     def shutdown(self, event: Event) -> None:
@@ -449,6 +462,10 @@ class UniFiController:
         if self._cancel_heartbeat_check:
             self._cancel_heartbeat_check()
             self._cancel_heartbeat_check = None
+
+        if self._cancel_websocket_check:
+            self._cancel_websocket_check()
+            self._cancel_websocket_check = None
 
         if self._cancel_poe_command:
             self._cancel_poe_command()
@@ -499,7 +516,7 @@ async def get_unifi_controller(
         raise AuthenticationRequired from err
 
     except (
-        asyncio.TimeoutError,
+        TimeoutError,
         aiounifi.BadGateway,
         aiounifi.Forbidden,
         aiounifi.ServiceUnavailable,

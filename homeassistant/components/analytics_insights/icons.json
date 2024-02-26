@@ -3,6 +3,9 @@
     "sensor": {
       "core_integrations": {
         "default": "mdi:puzzle"
+      },
+      "custom_integrations": {
+        "default": "mdi:puzzle-edit"
       }
     }
   }

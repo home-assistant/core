@@ -907,6 +907,9 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+        removal_condition=lambda config, _status, key: (
+            config[key]["sta"]["enable"] is False
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
         use_polling_coordinator=True,
     ),
@@ -955,8 +958,12 @@ RPC_SENSORS: Final = {
         sub_key="percent",
         name="Analog input",
         native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "analoginput_xpercent": RpcSensorDescription(
+        key="input",
+        sub_key="xpercent",
+        name="Analog value",
     ),
 }
 

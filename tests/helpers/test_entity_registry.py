@@ -1370,6 +1370,13 @@ async def test_disabled_entities_excluded_from_entity_list(
     )
     assert entries == [entry1, entry2]
 
+    ent_reg = er.async_get(hass)
+    assert ent_reg.entities.get_entries_for_device_id(device_entry.id) == [entry1]
+
+    assert ent_reg.entities.get_entries_for_device_id(
+        device_entry.id, include_disabled_entities=True
+    ) == [entry1, entry2]
+
 
 async def test_entity_max_length_exceeded(entity_registry: er.EntityRegistry) -> None:
     """Test that an exception is raised when the max character length is exceeded."""

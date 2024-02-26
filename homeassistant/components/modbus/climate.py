@@ -97,7 +97,12 @@ async def async_setup_platform(
 class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     """Representation of a Modbus Thermostat."""
 
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -359,7 +364,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
             # Translate the value received
             if fan_mode is not None:
-                self._attr_fan_mode = self._fan_mode_mapping_from_modbus[int(fan_mode)]
+                self._attr_fan_mode = self._fan_mode_mapping_from_modbus.get(
+                    int(fan_mode), self._attr_fan_mode
+                )
 
         # Read the on/off register if defined. If the value in this
         # register is "OFF", it will take precedence over the value

@@ -3,9 +3,10 @@ from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, Mock, patch
 
-from aionotion.bridge.models import BridgeAllResponse
-from aionotion.sensor.models import ListenerAllResponse, SensorAllResponse
-from aionotion.user.models import UserPreferencesResponse
+from aionotion.bridge.models import Bridge
+from aionotion.listener.models import Listener
+from aionotion.sensor.models import Sensor
+from aionotion.user.models import UserPreferences
 import pytest
 
 from homeassistant.components.notion import DOMAIN
@@ -32,17 +33,32 @@ def client_fixture(data_bridge, data_listener, data_sensor, data_user_preference
     """Define a fixture for an aionotion client."""
     return Mock(
         bridge=Mock(
-            async_all=AsyncMock(return_value=BridgeAllResponse.parse_obj(data_bridge))
+            async_all=AsyncMock(
+                return_value=[
+                    Bridge.from_dict(bridge) for bridge in data_bridge["base_stations"]
+                ]
+            )
+        ),
+        listener=Mock(
+            async_all=AsyncMock(
+                return_value=[
+                    Listener.from_dict(listener)
+                    for listener in data_listener["listeners"]
+                ]
+            )
         ),
         sensor=Mock(
-            async_all=AsyncMock(return_value=SensorAllResponse.parse_obj(data_sensor)),
-            async_listeners=AsyncMock(
-                return_value=ListenerAllResponse.parse_obj(data_listener)
-            ),
+            async_all=AsyncMock(
+                return_value=[
+                    Sensor.from_dict(sensor) for sensor in data_sensor["sensors"]
+                ]
+            )
         ),
         user=Mock(
             async_preferences=AsyncMock(
-                return_value=UserPreferencesResponse.parse_obj(data_user_preferences)
+                return_value=UserPreferences.from_dict(
+                    data_user_preferences["user_preferences"]
+                )
             )
         ),
     )

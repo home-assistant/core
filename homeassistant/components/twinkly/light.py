@@ -1,7 +1,6 @@
 """The Twinkly light component."""
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -282,7 +281,7 @@ class TwinklyLight(LightEntity):
             # We don't use the echo API to track the availability since
             # we already have to pull the device to get its state.
             self._attr_available = True
-        except (asyncio.TimeoutError, ClientError):
+        except (TimeoutError, ClientError):
             # We log this as "info" as it's pretty common that the Christmas
             # light are not reachable in July
             if self._attr_available:

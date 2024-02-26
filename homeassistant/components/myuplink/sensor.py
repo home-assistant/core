@@ -9,7 +9,11 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import (
+    UnitOfElectricCurrent,
+    UnitOfFrequency,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -24,6 +28,18 @@ DEVICE_POINT_DESCRIPTIONS = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+    ),
+    "A": SensorEntityDescription(
+        key="ampere",
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+    ),
+    "Hz": SensorEntityDescription(
+        key="hertz",
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
     ),
 }
 
@@ -75,7 +91,7 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
 
         # Internal properties
         self.point_id = device_point.parameter_id
-        self._attr_name = device_point.parameter_name
+        self._attr_name = device_point.parameter_name.replace("\u002d", "")
 
         if entity_description is not None:
             self.entity_description = entity_description

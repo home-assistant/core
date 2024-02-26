@@ -23,6 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .assist_pipeline import async_migrate_cloud_pipeline_engine
@@ -32,6 +33,7 @@ from .prefs import CloudPreferences
 
 ATTR_GENDER = "gender"
 
+DEPRECATED_VOICES = {"XiaoxuanNeural": "XiaozhenNeural"}
 SUPPORT_LANGUAGES = list(TTS_VOICES)
 
 _LOGGER = logging.getLogger(__name__)
@@ -158,13 +160,15 @@ class CloudTTSEntity(TextToSpeechEntity):
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS from Home Assistant Cloud."""
+        original_voice: str | None = options.get(ATTR_VOICE)
+        voice = handle_deprecated_voice(self.hass, original_voice)
         # Process TTS
         try:
             data = await self.cloud.voice.process_tts(
                 text=message,
                 language=language,
                 gender=options.get(ATTR_GENDER),
-                voice=options.get(ATTR_VOICE),
+                voice=voice,
                 output=options[ATTR_AUDIO_OUTPUT],
             )
         except VoiceError as err:
@@ -230,13 +234,16 @@ class CloudProvider(Provider):
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load TTS from Home Assistant Cloud."""
+        original_voice: str | None = options.get(ATTR_VOICE)
+        assert self.hass is not None
+        voice = handle_deprecated_voice(self.hass, original_voice)
         # Process TTS
         try:
             data = await self.cloud.voice.process_tts(
                 text=message,
                 language=language,
                 gender=options.get(ATTR_GENDER),
-                voice=options.get(ATTR_VOICE),
+                voice=voice,
                 output=options[ATTR_AUDIO_OUTPUT],
             )
         except VoiceError as err:
@@ -244,3 +251,33 @@ class CloudProvider(Provider):
             return (None, None)
 
         return (str(options[ATTR_AUDIO_OUTPUT].value), data)
+
+
+@callback
+def handle_deprecated_voice(
+    hass: HomeAssistant,
+    original_voice: str | None,
+) -> str | None:
+    """Handle deprecated voice."""
+    voice = original_voice
+    if (
+        original_voice
+        and voice
+        and (voice := DEPRECATED_VOICES.get(original_voice, original_voice))
+        != original_voice
+    ):
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_voice_{original_voice}",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            breaks_in_ha_version="2024.8.0",
+            translation_key="deprecated_voice",
+            translation_placeholders={
+                "deprecated_voice": original_voice,
+                "replacement_voice": voice,
+            },
+        )
+    return voice

@@ -73,12 +73,16 @@ class BSBLANClimate(
     _attr_name = None
     # Determine preset modes
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_preset_modes = PRESET_MODES
 
     # Determine hvac modes
     _attr_hvac_modes = HVAC_MODES
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

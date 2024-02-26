@@ -26,7 +26,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -40,7 +40,8 @@ from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Apple TV"
+DEFAULT_NAME_TV = "Apple TV"
+DEFAULT_NAME_HP = "HomePod"
 
 BACKOFF_TIME_LOWER_LIMIT = 15  # seconds
 BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
@@ -56,10 +57,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     manager = AppleTVManager(hass, entry)
 
     if manager.is_on:
-        await manager.connect_once(raise_missing_credentials=True)
-        if not manager.atv:
-            address = entry.data[CONF_ADDRESS]
-            raise ConfigEntryNotReady(f"Not found at {address}, waiting for discovery")
+        address = entry.data[CONF_ADDRESS]
+
+        try:
+            await manager.async_first_connect()
+        except (
+            exceptions.AuthenticationError,
+            exceptions.InvalidCredentialsError,
+            exceptions.NoCredentialsError,
+        ) as ex:
+            raise ConfigEntryAuthFailed(
+                f"{address}: Authentication failed, try reconfiguring device: {ex}"
+            ) from ex
+        except (
+            asyncio.CancelledError,
+            exceptions.ConnectionLostError,
+            exceptions.ConnectionFailedError,
+        ) as ex:
+            raise ConfigEntryNotReady(f"{address}: {ex}") from ex
+        except (
+            exceptions.ProtocolError,
+            exceptions.NoServiceError,
+            exceptions.PairingError,
+            exceptions.BackOffError,
+            exceptions.DeviceIdMissingError,
+        ) as ex:
+            _LOGGER.debug(
+                "Error setting up apple_tv at %s: %s", address, ex, exc_info=ex
+            )
+            raise ConfigEntryNotReady(f"{address}: {ex}") from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.unique_id] = manager
 
@@ -227,11 +253,25 @@ class AppleTVManager(DeviceListener):
                 "Not starting connect loop (%s, %s)", self.atv is None, self.is_on
             )
 
+    async def _connect_once(self, raise_missing_credentials: bool) -> None:
+        """Connect to device once."""
+        if conf := await self._scan():
+            await self._connect(conf, raise_missing_credentials)
+
+    async def async_first_connect(self):
+        """Connect to device for the first time."""
+        connect_ok = False
+        try:
+            await self._connect_once(raise_missing_credentials=True)
+            connect_ok = True
+        finally:
+            if not connect_ok:
+                await self.disconnect()
+
     async def connect_once(self, raise_missing_credentials: bool) -> None:
         """Try to connect once."""
         try:
-            if conf := await self._scan():
-                await self._connect(conf, raise_missing_credentials)
+            await self._connect_once(raise_missing_credentials)
         except exceptions.AuthenticationError:
             self.config_entry.async_start_reauth(self.hass)
             await self.disconnect()
@@ -244,7 +284,7 @@ class AppleTVManager(DeviceListener):
             pass
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Failed to connect")
-            self.atv = None
+            await self.disconnect()
 
     async def _connect_loop(self):
         """Connect loop background task function."""
@@ -358,7 +398,11 @@ class AppleTVManager(DeviceListener):
             ATTR_MANUFACTURER: "Apple",
             ATTR_NAME: self.config_entry.data[CONF_NAME],
         }
-        attrs[ATTR_SUGGESTED_AREA] = attrs[ATTR_NAME].removesuffix(f" {DEFAULT_NAME}")
+        attrs[ATTR_SUGGESTED_AREA] = (
+            attrs[ATTR_NAME]
+            .removesuffix(f" {DEFAULT_NAME_TV}")
+            .removesuffix(f" {DEFAULT_NAME_HP}")
+        )
 
         if self.atv:
             dev_info = self.atv.device_info

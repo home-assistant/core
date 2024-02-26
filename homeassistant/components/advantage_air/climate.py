@@ -83,12 +83,17 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_max_temp = 32
     _attr_min_temp = 16
     _attr_name = None
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
         """Initialize an AdvantageAir AC unit."""
         super().__init__(instance, ac_key)
 
-        self._attr_supported_features = ClimateEntityFeature.FAN_MODE
+        self._attr_supported_features = (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
         self._attr_hvac_modes = [
             HVACMode.OFF,
             HVACMode.COOL,
@@ -198,11 +203,16 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     """AdvantageAir MyTemp Zone control."""
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT_COOL]
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
         """Initialize an AdvantageAir Zone control."""

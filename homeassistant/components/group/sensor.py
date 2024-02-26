@@ -1,4 +1,5 @@
 """Platform allowing several sensors to be grouped into one sensor to provide numeric combinations."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -13,6 +14,7 @@ from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
@@ -299,7 +301,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         unique_id: str | None,
         name: str,
         entity_ids: list[str],
-        mode: bool,
+        ignore_non_numeric: bool,
         sensor_type: str,
         unit_of_measurement: str | None,
         state_class: SensorStateClass | None,
@@ -313,12 +315,14 @@ class SensorGroup(GroupEntity, SensorEntity):
         self._device_class = device_class
         self._native_unit_of_measurement = unit_of_measurement
         self._valid_units: set[str | None] = set()
+        self._can_convert: bool = False
         self._attr_name = name
         if name == DEFAULT_NAME:
             self._attr_name = f"{DEFAULT_NAME} {sensor_type}".capitalize()
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
-        self.mode = all if mode is False else any
+        self._ignore_non_numeric = ignore_non_numeric
+        self.mode = all if ignore_non_numeric is False else any
         self._state_calc: Callable[
             [list[tuple[str, float, State]]],
             tuple[dict[str, str | None], float | None],
@@ -351,16 +355,29 @@ class SensorGroup(GroupEntity, SensorEntity):
                         self._valid_units
                         and (uom := state.attributes["unit_of_measurement"])
                         in self._valid_units
+                        and self._can_convert is True
                     ):
                         numeric_state = UNIT_CONVERTERS[self.device_class].convert(
                             numeric_state, uom, self.native_unit_of_measurement
                         )
+                    if (
+                        self._valid_units
+                        and (uom := state.attributes["unit_of_measurement"])
+                        not in self._valid_units
+                    ):
+                        raise HomeAssistantError("Not a valid unit")
+
                     sensor_values.append((entity_id, numeric_state, state))
                     if entity_id in self._state_incorrect:
                         self._state_incorrect.remove(entity_id)
+                    valid_states.append(True)
                 except ValueError:
                     valid_states.append(False)
-                    if entity_id not in self._state_incorrect:
+                    # Log invalid states unless ignoring non numeric values
+                    if (
+                        not self._ignore_non_numeric
+                        and entity_id not in self._state_incorrect
+                    ):
                         self._state_incorrect.add(entity_id)
                         _LOGGER.warning(
                             "Unable to use state. Only numerical states are supported,"
@@ -388,8 +405,6 @@ class SensorGroup(GroupEntity, SensorEntity):
                             state.attributes.get("unit_of_measurement"),
                             self.entity_id,
                         )
-                    continue
-                valid_states.append(True)
 
         # Set group as unavailable if all members do not have numeric values
         self._attr_available = any(numeric_state for numeric_state in valid_states)
@@ -532,8 +547,21 @@ class SensorGroup(GroupEntity, SensorEntity):
             unit_of_measurements.append(_unit_of_measurement)
 
         # Ensure only valid unit of measurements for the specific device class can be used
-        if (device_class := self.device_class) in UNIT_CONVERTERS and all(
-            x in UNIT_CONVERTERS[device_class].VALID_UNITS for x in unit_of_measurements
+        if (
+            # Test if uom's in device class is convertible
+            (device_class := self.device_class) in UNIT_CONVERTERS
+            and all(
+                uom in UNIT_CONVERTERS[device_class].VALID_UNITS
+                for uom in unit_of_measurements
+            )
+        ) or (
+            # Test if uom's in device class is not convertible
+            device_class
+            and device_class not in UNIT_CONVERTERS
+            and device_class in DEVICE_CLASS_UNITS
+            and all(
+                uom in DEVICE_CLASS_UNITS[device_class] for uom in unit_of_measurements
+            )
         ):
             async_delete_issue(
                 self.hass, DOMAIN, f"{self.entity_id}_uoms_not_matching_device_class"
@@ -542,6 +570,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                 self.hass, DOMAIN, f"{self.entity_id}_uoms_not_matching_no_device_class"
             )
             return unit_of_measurements[0]
+
         if device_class:
             async_create_issue(
                 self.hass,
@@ -555,7 +584,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                     "entity_id": self.entity_id,
                     "device_class": device_class,
                     "source_entities": ", ".join(self._entity_ids),
-                    "uoms:": ", ".join(unit_of_measurements),
+                    "uoms": ", ".join(unit_of_measurements),
                 },
             )
         else:
@@ -570,7 +599,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                 translation_placeholders={
                     "entity_id": self.entity_id,
                     "source_entities": ", ".join(self._entity_ids),
-                    "uoms:": ", ".join(unit_of_measurements),
+                    "uoms": ", ".join(unit_of_measurements),
                 },
             )
         return None
@@ -583,5 +612,13 @@ class SensorGroup(GroupEntity, SensorEntity):
         if (
             device_class := self.device_class
         ) in UNIT_CONVERTERS and self.native_unit_of_measurement:
+            self._can_convert = True
             return UNIT_CONVERTERS[device_class].VALID_UNITS
+        if (
+            device_class
+            and (device_class) in DEVICE_CLASS_UNITS
+            and self.native_unit_of_measurement
+        ):
+            valid_uoms: set = DEVICE_CLASS_UNITS[device_class]
+            return valid_uoms
         return set()

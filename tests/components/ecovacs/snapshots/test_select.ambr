@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_selects[yna5x1-entity_ids0][select.ozmo_950_water_amount:entity-registry]
+# name: test_selects[yna5x1-entity_ids0][select.ozmo_950_water_flow_level:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.ozmo_950_water_amount',
+    'entity_id': 'select.ozmo_950_water_flow_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28,7 +28,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Water amount',
+    'original_name': 'Water flow level',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -37,10 +37,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[yna5x1-entity_ids0][select.ozmo_950_water_amount:state]
+# name: test_selects[yna5x1-entity_ids0][select.ozmo_950_water_flow_level:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Water amount',
+      'friendly_name': 'Ozmo 950 Water flow level',
       'options': list([
         'low',
         'medium',
@@ -49,7 +49,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.ozmo_950_water_amount',
+    'entity_id': 'select.ozmo_950_water_flow_level',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': 'ultrahigh',

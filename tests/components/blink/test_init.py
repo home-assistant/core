@@ -1,5 +1,4 @@
 """Test the Blink init."""
-import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
@@ -23,7 +22,7 @@ PIN = "1234"
 
 @pytest.mark.parametrize(
     ("the_error", "available"),
-    [(ClientError, False), (asyncio.TimeoutError, False), (None, False)],
+    [(ClientError, False), (TimeoutError, False), (None, False)],
 )
 async def test_setup_not_ready(
     hass: HomeAssistant,

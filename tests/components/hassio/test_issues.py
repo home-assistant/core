@@ -1,7 +1,6 @@
 """Test issues from supervisor issues."""
 from __future__ import annotations
 
-from asyncio import TimeoutError
 import os
 from typing import Any
 from unittest.mock import ANY, patch

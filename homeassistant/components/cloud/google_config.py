@@ -173,8 +173,12 @@ class CloudGoogleConfig(AbstractConfig):
         """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
         return self._prefs.google_local_webhook_id
 
-    def get_local_agent_user_id(self, webhook_id: Any) -> str:
-        """Return the user ID to be used for actions received via the local SDK."""
+    def get_local_user_id(self, webhook_id: Any) -> str:
+        """Map webhook ID to a Home Assistant user ID.
+
+        Any action inititated by Google Assistant via the local SDK will be attributed
+        to the returned user ID.
+        """
         return self._user
 
     @property
@@ -209,9 +213,11 @@ class CloudGoogleConfig(AbstractConfig):
 
     async def async_initialize(self) -> None:
         """Perform async initialization of config."""
+        _LOGGER.debug("async_initialize")
         await super().async_initialize()
 
         async def on_hass_started(hass: HomeAssistant) -> None:
+            _LOGGER.debug("async_initialize on_hass_started")
             if self._prefs.google_settings_version != GOOGLE_SETTINGS_VERSION:
                 _LOGGER.info(
                     "Start migration of Google Assistant settings from v%s to v%s",
@@ -238,16 +244,19 @@ class CloudGoogleConfig(AbstractConfig):
                 await self._prefs.async_update(
                     google_settings_version=GOOGLE_SETTINGS_VERSION
                 )
-            async_listen_entity_updates(
-                self.hass, CLOUD_GOOGLE, self._async_exposed_entities_updated
+            self._on_deinitialize.append(
+                async_listen_entity_updates(
+                    self.hass, CLOUD_GOOGLE, self._async_exposed_entities_updated
+                )
             )
 
         async def on_hass_start(hass: HomeAssistant) -> None:
+            _LOGGER.debug("async_initialize on_hass_start")
             if self.enabled and GOOGLE_DOMAIN not in self.hass.config.components:
                 await async_setup_component(self.hass, GOOGLE_DOMAIN, {})
 
-        start.async_at_start(self.hass, on_hass_start)
-        start.async_at_started(self.hass, on_hass_started)
+        self._on_deinitialize.append(start.async_at_start(self.hass, on_hass_start))
+        self._on_deinitialize.append(start.async_at_started(self.hass, on_hass_started))
 
         # Remove any stored user agent id that is not ours
         remove_agent_user_ids = []
@@ -255,17 +264,25 @@ class CloudGoogleConfig(AbstractConfig):
             if agent_user_id != self.agent_user_id:
                 remove_agent_user_ids.append(agent_user_id)
 
+        if remove_agent_user_ids:
+            _LOGGER.debug("remove non cloud agent_user_ids: %s", remove_agent_user_ids)
         for agent_user_id in remove_agent_user_ids:
             await self.async_disconnect_agent_user(agent_user_id)
 
-        self._prefs.async_listen_updates(self._async_prefs_updated)
-        self.hass.bus.async_listen(
-            er.EVENT_ENTITY_REGISTRY_UPDATED,
-            self._handle_entity_registry_updated,
+        self._on_deinitialize.append(
+            self._prefs.async_listen_updates(self._async_prefs_updated)
         )
-        self.hass.bus.async_listen(
-            dr.EVENT_DEVICE_REGISTRY_UPDATED,
-            self._handle_device_registry_updated,
+        self._on_deinitialize.append(
+            self.hass.bus.async_listen(
+                er.EVENT_ENTITY_REGISTRY_UPDATED,
+                self._handle_entity_registry_updated,
+            )
+        )
+        self._on_deinitialize.append(
+            self.hass.bus.async_listen(
+                dr.EVENT_DEVICE_REGISTRY_UPDATED,
+                self._handle_device_registry_updated,
+            )
         )
 
     def should_expose(self, state: State) -> bool:
@@ -365,6 +382,7 @@ class CloudGoogleConfig(AbstractConfig):
 
     async def _async_prefs_updated(self, prefs: CloudPreferences) -> None:
         """Handle updated preferences."""
+        _LOGGER.debug("_async_prefs_updated")
         if not self._cloud.is_logged_in:
             if self.is_reporting_state:
                 self.async_disable_report_state()

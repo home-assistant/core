@@ -1576,9 +1576,10 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
-    with patch(
-        "habluetooth.scanner.OriginalBleakScanner.start",
-    ) as mock_bleak_scanner_start:
+    with patch.object(
+        bluetooth_scanner.OriginalBleakScanner,
+        "start",
+    ) as mock_bleak_scanner_start, patch.object(bluetooth_scanner, "HaScanner"):
         yield mock_bleak_scanner_start
 
 

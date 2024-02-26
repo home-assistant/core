@@ -2480,7 +2480,7 @@ async def test_delayed_birth_message(
         await mqtt.async_subscribe(hass, "homeassistant/status", wait_birth)
         mqtt_client_mock.on_connect(None, None, 0, 0)
         await hass.async_block_till_done()
-        with pytest.raises(asyncio.TimeoutError):
+        with pytest.raises(TimeoutError):
             await asyncio.wait_for(birth.wait(), 0.2)
         assert not mqtt_client_mock.publish.called
         assert not birth.is_set()

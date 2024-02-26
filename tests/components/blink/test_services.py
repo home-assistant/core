@@ -179,7 +179,7 @@ async def test_service_pin_called_with_unloaded_entry(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    mock_config_entry.state = ConfigEntryState.SETUP_ERROR
+    mock_config_entry.mock_state(hass, ConfigEntryState.SETUP_ERROR)
     hass.config.is_allowed_path = Mock(return_value=True)
     mock_blink_api.cameras = {CAMERA_NAME: AsyncMock()}
 
@@ -207,7 +207,7 @@ async def test_service_update_called_with_unloaded_entry(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_config_entry.state = ConfigEntryState.SETUP_ERROR
+    mock_config_entry.mock_state(hass, ConfigEntryState.SETUP_ERROR)
     hass.config.is_allowed_path = Mock(return_value=True)
     mock_blink_api.cameras = {CAMERA_NAME: AsyncMock()}
 

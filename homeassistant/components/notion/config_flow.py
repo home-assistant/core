@@ -38,7 +38,9 @@ async def async_validate_credentials(
     errors = {}
 
     try:
-        await async_get_client(username, password, session=session)
+        await async_get_client(
+            username, password, session=session, use_legacy_auth=True
+        )
     except InvalidCredentialsError:
         errors["base"] = "invalid_auth"
     except NotionError as err:

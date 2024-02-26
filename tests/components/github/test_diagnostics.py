@@ -25,7 +25,10 @@ async def test_entry_diagnostics(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test config entry diagnostics."""
-    mock_config_entry.options = {CONF_REPOSITORIES: ["home-assistant/core"]}
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_REPOSITORIES: ["home-assistant/core"]},
+    )
     response_json = json.loads(load_fixture("graphql.json", DOMAIN))
     response_json["data"]["repository"]["full_name"] = "home-assistant/core"
 

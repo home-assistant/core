@@ -8,6 +8,8 @@ from psutil._common import sdiskusage, shwtemp, snetio, snicaddr
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.systemmonitor.const import DOMAIN
 from homeassistant.components.systemmonitor.sensor import get_cpu_icon
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -23,11 +25,33 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 async def test_sensor(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: None,
-    mock_added_config_entry: ConfigEntry,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    mock_util: Mock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the sensor."""
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        data={},
+        options={
+            "binary_sensor": {"process": ["python3", "pip"]},
+            "sensor": {"process": ["python3", "pip"]},
+            "resources": [
+                "disk_use_percent_/",
+                "disk_use_percent_/home/notexist/",
+                "memory_free_",
+                "network_out_eth0",
+                "process_python3",
+            ],
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
     assert memory_sensor is not None
     assert memory_sensor.state == "40.0"
@@ -44,11 +68,45 @@ async def test_sensor(
     assert process_sensor.state == STATE_ON
 
     for entity in er.async_entries_for_config_entry(
-        entity_registry, mock_added_config_entry.entry_id
+        entity_registry, mock_config_entry.entry_id
     ):
-        state = hass.states.get(entity.entity_id)
-        assert state.state == snapshot(name=f"{state.name} - state")
-        assert state.attributes == snapshot(name=f"{state.name} - attributes")
+        if entity.domain == SENSOR_DOMAIN:
+            state = hass.states.get(entity.entity_id)
+            assert state.state == snapshot(name=f"{state.name} - state")
+            assert state.attributes == snapshot(name=f"{state.name} - attributes")
+
+
+async def test_process_sensor_not_loaded(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: None,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    mock_util: Mock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the process sensor is not loaded once migrated."""
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        data={},
+        options={
+            "binary_sensor": {"process": ["python3", "pip"]},
+            "resources": [
+                "disk_use_percent_/",
+                "disk_use_percent_/home/notexist/",
+                "memory_free_",
+                "network_out_eth0",
+                "process_python3",
+            ],
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
+    assert process_sensor is None
 
 
 async def test_sensor_not_loading_veth_networks(
@@ -112,7 +170,7 @@ async def test_sensor_yaml(
     assert memory_sensor is not None
     assert memory_sensor.state == "40.0"
 
-    process_sensor = hass.states.get("sensor.system_monitor_process_python3")
+    process_sensor = hass.states.get("binary_sensor.system_monitor_process_python3")
     assert process_sensor is not None
     assert process_sensor.state == STATE_ON
 
@@ -142,11 +200,32 @@ async def test_sensor_yaml_fails_missing_argument(
 
 async def test_sensor_updating(
     hass: HomeAssistant,
-    mock_added_config_entry: ConfigEntry,
     mock_psutil: Mock,
+    mock_os: Mock,
+    mock_util: Mock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the sensor."""
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        data={},
+        options={
+            "binary_sensor": {"process": ["python3", "pip"]},
+            "sensor": {"process": ["python3", "pip"]},
+            "resources": [
+                "disk_use_percent_/",
+                "disk_use_percent_/home/notexist/",
+                "memory_free_",
+                "network_out_eth0",
+                "process_python3",
+            ],
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     memory_sensor = hass.states.get("sensor.system_monitor_memory_free")
     assert memory_sensor is not None
     assert memory_sensor.state == "40.0"
@@ -189,12 +268,33 @@ async def test_sensor_updating(
 
 async def test_sensor_process_fails(
     hass: HomeAssistant,
-    mock_added_config_entry: ConfigEntry,
     mock_psutil: Mock,
+    mock_os: Mock,
+    mock_util: Mock,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test process not exist failure."""
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        data={},
+        options={
+            "binary_sensor": {"process": ["python3", "pip"]},
+            "sensor": {"process": ["python3", "pip"]},
+            "resources": [
+                "disk_use_percent_/",
+                "disk_use_percent_/home/notexist/",
+                "memory_free_",
+                "network_out_eth0",
+                "process_python3",
+            ],
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     process_sensor = hass.states.get("sensor.system_monitor_process_python3")
     assert process_sensor is not None
     assert process_sensor.state == STATE_ON

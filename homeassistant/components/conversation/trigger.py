@@ -98,7 +98,12 @@ async def async_attach_trigger(
                 # mypy does not understand the type narrowing, unclear why
                 return automation_result.conversation_response  # type: ignore[return-value]
 
-        return "Done"
+        # It's important to return None here instead of a string.
+        #
+        # When editing in the UI, a copy of this trigger is registered.
+        # If we return a string from here, there is a race condition between the
+        # two trigger copies for who will provide a response.
+        return None
 
     default_agent = await _get_agent_manager(hass).async_get_agent(HOME_ASSISTANT_AGENT)
     assert isinstance(default_agent, DefaultAgent)

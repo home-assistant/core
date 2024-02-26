@@ -217,7 +217,7 @@ async def async_setup_hass(
         )
         # Ask integrations to shut down. It's messy but we can't
         # do a clean stop without knowing what is broken
-        with contextlib.suppress(asyncio.TimeoutError):
+        with contextlib.suppress(TimeoutError):
             async with hass.timeout.async_timeout(10):
                 await hass.async_stop()
 
@@ -738,7 +738,7 @@ async def _async_set_up_integrations(
                 STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
             ):
                 await async_setup_multi_components(hass, stage_1_domains, config)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
     # Add after dependencies when setting up stage 2 domains
@@ -751,7 +751,7 @@ async def _async_set_up_integrations(
                 STAGE_2_TIMEOUT, cool_down=COOLDOWN_TIME
             ):
                 await async_setup_multi_components(hass, stage_2_domains, config)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning("Setup timed out for stage 2 - moving forward")
 
     # Wrap up startup
@@ -759,7 +759,7 @@ async def _async_set_up_integrations(
     try:
         async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
             await hass.async_block_till_done()
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.warning("Setup timed out for bootstrap - moving forward")
 
     watch_task.cancel()

@@ -181,6 +181,9 @@ dacite>=1.7.0
 
 # Musle wheels for pandas 2.2.0 cannot be build for any architecture.
 pandas==2.1.4
+
+# chacha20poly1305-reuseable==0.12.0 is incompatible with cryptography==42.0.x
+chacha20poly1305-reuseable>=0.12.1
 """
 
 GENERATED_MESSAGE = (

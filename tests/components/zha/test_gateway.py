@@ -198,7 +198,7 @@ async def test_gateway_group_methods(
     # the group entity should not have been cleaned up
     assert entity_id not in hass.states.async_entity_ids(Platform.LIGHT)
 
-    with patch("zigpy.zcl.Cluster.request", side_effect=asyncio.TimeoutError):
+    with patch("zigpy.zcl.Cluster.request", side_effect=TimeoutError):
         await zha_group.members[0].async_remove_from_group()
         assert len(zha_group.members) == 1
         for member in zha_group.members:

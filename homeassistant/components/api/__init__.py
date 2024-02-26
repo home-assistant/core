@@ -175,7 +175,7 @@ class APIEventStream(HomeAssistantView):
                     msg = f"data: {payload}\n\n"
                     _LOGGER.debug("STREAM %s WRITING %s", id(stop_obj), msg.strip())
                     await response.write(msg.encode("UTF-8"))
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     await to_write.put(STREAM_PING_PAYLOAD)
 
         except asyncio.CancelledError:

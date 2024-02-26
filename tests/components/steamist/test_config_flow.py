@@ -1,5 +1,4 @@
 """Test the Steamist config flow."""
-import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -103,7 +102,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.steamist.config_flow.Steamist.async_get_status",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

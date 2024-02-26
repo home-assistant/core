@@ -1,5 +1,4 @@
 """The tests for the analytics ."""
-import asyncio
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, patch
 
@@ -756,7 +755,7 @@ async def test_timeout_while_sending(
 ) -> None:
     """Test timeout error while sending analytics."""
     analytics = Analytics(hass)
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, exc=asyncio.TimeoutError())
+    aioclient_mock.post(ANALYTICS_ENDPOINT_URL_DEV, exc=TimeoutError())
 
     await analytics.save_preferences({ATTR_BASE: True})
     with patch(

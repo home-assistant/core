@@ -50,7 +50,7 @@ class ConnectMotionGateway:
         try:
             # update device info and get the connected sub devices
             await self._hass.async_add_executor_job(self.update_gateway)
-        except socket.timeout:
+        except TimeoutError:
             _LOGGER.error(
                 "Timeout trying to connect to Motion Gateway with host %s", host
             )

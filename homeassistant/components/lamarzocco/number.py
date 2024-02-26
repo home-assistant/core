@@ -79,7 +79,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         set_value_fn=lambda coordinator, value: coordinator.lm.set_dose_hot_water(
             value=int(value)
         ),
-        native_value_fn=lambda lm: lm.current_status["dose_k5"],
+        native_value_fn=lambda lm: lm.current_status["dose_hot_water"],
         supported_fn=lambda coordinator: coordinator.lm.model_name
         in (
             LaMarzoccoModel.GS3_AV,

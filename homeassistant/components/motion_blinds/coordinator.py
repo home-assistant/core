@@ -2,7 +2,6 @@
 import asyncio
 from datetime import timedelta
 import logging
-from socket import timeout
 from typing import Any
 
 from motionblinds import DEVICE_TYPES_WIFI, ParseException
@@ -50,7 +49,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
         """Fetch data from gateway."""
         try:
             self._gateway.Update()
-        except (timeout, ParseException):
+        except (TimeoutError, ParseException):
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
 
@@ -65,7 +64,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
                 blind.Update()
             else:
                 blind.Update_trigger()
-        except (timeout, ParseException):
+        except (TimeoutError, ParseException):
             # let the error be logged and handled by the motionblinds library
             return {ATTR_AVAILABLE: False}
 

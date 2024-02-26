@@ -374,7 +374,7 @@ async def test_supervisor_discovery(
 
 @pytest.mark.parametrize(
     ("discovery_info", "server_version_side_effect"),
-    [({"config": ADDON_DISCOVERY_INFO}, asyncio.TimeoutError())],
+    [({"config": ADDON_DISCOVERY_INFO}, TimeoutError())],
 )
 async def test_supervisor_discovery_cannot_connect(
     hass: HomeAssistant, supervisor, get_addon_discovery_info
@@ -1114,7 +1114,7 @@ async def test_addon_running(
         (
             {"config": ADDON_DISCOVERY_INFO},
             None,
-            asyncio.TimeoutError,
+            TimeoutError,
             None,
             "cannot_connect",
         ),
@@ -1366,7 +1366,7 @@ async def test_addon_installed_start_failure(
     [
         (
             {"config": ADDON_DISCOVERY_INFO},
-            asyncio.TimeoutError,
+            TimeoutError,
         ),
         (
             None,
