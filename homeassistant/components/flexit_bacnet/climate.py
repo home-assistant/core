@@ -88,7 +88,7 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
         if self.device.electric_heater:
-            return HVACAction.PREHEATING
+            return HVACAction.HEATING
         return HVACAction.FAN
 
     @property
