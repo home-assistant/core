@@ -1032,3 +1032,30 @@ async def test_bind_hass_use_reported(
             "Detected that custom integration 'test_integration_frame'"
             " uses @bind_hass decorator. This is deprecated"
         ) in caplog.text
+
+
+async def test_hass_components_use_reported(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
+) -> None:
+    """Test that use of hass.components is reported."""
+    integration_frame = frame.IntegrationFrame(
+        custom_integration=True,
+        frame=mock_integration_frame,
+        integration="test_integration_frame",
+        module="custom_components.test_integration_frame",
+        relative_filename="custom_components/test_integration_frame/__init__.py",
+    )
+
+    with patch(
+        "homeassistant.helpers.frame.get_integration_frame",
+        return_value=integration_frame,
+    ), patch(
+        "homeassistant.components.http.start_http_server_and_save_config",
+        return_value=None,
+    ):
+        await hass.components.http.start_http_server_and_save_config(hass, [], None)
+
+        assert (
+            "Detected that custom integration 'test_integration_frame'"
+            " accesses hass.components.http. This is deprecated"
+        ) in caplog.text

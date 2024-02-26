@@ -1247,6 +1247,18 @@ class Components:
         if component is None:
             raise ImportError(f"Unable to load {comp_name}")
 
+        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+
+        report(
+            (
+                f"accesses hass.components.{comp_name}."
+                " This is deprecated and will stop working in Home Assistant 2024.9, it"
+                f" should be updated to import functions used from {comp_name} directly"
+            ),
+            error_if_core=False,
+            log_custom_component_only=True,
+        )
+
         wrapped = ModuleWrapper(self._hass, component)
         setattr(self, comp_name, wrapped)
         return wrapped
