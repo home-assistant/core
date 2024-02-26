@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "user": {
+        "data": {
+          "host": "Host (IP address or domain name)",
+          "plex_token": "(Optional) Insert a valid plex token to see album image",
+          "plex_ip_address": "(Optional) Add local IP address of your plex instance to see album image"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "invalid_host": "Couldn't connect to Plexamp. Is the right host?"
+    }
+  }
+}

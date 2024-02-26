@@ -1005,6 +1005,8 @@ build.json @home-assistant/supervisor
 /tests/components/plaato/ @JohNan
 /homeassistant/components/plex/ @jjlawren
 /tests/components/plex/ @jjlawren
+/homeassistant/components/plexamp/ @gloaysa
+/tests/components/plexamp/ @gloaysa
 /homeassistant/components/plugwise/ @CoMPaTech @bouwew @frenck
 /tests/components/plugwise/ @CoMPaTech @bouwew @frenck
 /homeassistant/components/plum_lightpad/ @ColinHarrington @prystupa

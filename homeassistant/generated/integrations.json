@@ -4528,6 +4528,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "plexamp": {
+      "name": "Plexamp Media Player",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "plugwise": {
       "name": "Plugwise",
       "integration_type": "hub",
