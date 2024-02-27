@@ -25,7 +25,12 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_TRACKED_INTEGRATIONS, DOMAIN, LOGGER
+from .const import (
+    CONF_TRACKED_CUSTOM_INTEGRATIONS,
+    CONF_TRACKED_INTEGRATIONS,
+    DOMAIN,
+    LOGGER,
+)
 
 INTEGRATION_TYPES_WITHOUT_ANALYTICS = (
     IntegrationType.BRAND,
@@ -48,16 +53,32 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the initial step."""
         self._async_abort_entries_match()
-        if user_input:
-            return self.async_create_entry(
-                title="Home Assistant Analytics Insights", data={}, options=user_input
-            )
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if not user_input.get(CONF_TRACKED_INTEGRATIONS) and not user_input.get(
+                CONF_TRACKED_CUSTOM_INTEGRATIONS
+            ):
+                errors["base"] = "no_integrations_selected"
+            else:
+                return self.async_create_entry(
+                    title="Home Assistant Analytics Insights",
+                    data={},
+                    options={
+                        CONF_TRACKED_INTEGRATIONS: user_input.get(
+                            CONF_TRACKED_INTEGRATIONS, []
+                        ),
+                        CONF_TRACKED_CUSTOM_INTEGRATIONS: user_input.get(
+                            CONF_TRACKED_CUSTOM_INTEGRATIONS, []
+                        ),
+                    },
+                )
 
         client = HomeassistantAnalyticsClient(
             session=async_get_clientsession(self.hass)
         )
         try:
             integrations = await client.get_integrations()
+            custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")
             return self.async_abort(reason="cannot_connect")
@@ -72,11 +93,19 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         ]
         return self.async_show_form(
             step_id="user",
+            errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_TRACKED_INTEGRATIONS): SelectSelector(
+                    vol.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                         SelectSelectorConfig(
                             options=options,
+                            multiple=True,
+                            sort=True,
+                        )
+                    ),
+                    vol.Optional(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
+                        SelectSelectorConfig(
+                            options=list(custom_integrations),
                             multiple=True,
                             sort=True,
                         )
@@ -93,14 +122,31 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Manage the options."""
-        if user_input:
-            return self.async_create_entry(title="", data=user_input)
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if not user_input.get(CONF_TRACKED_INTEGRATIONS) and not user_input.get(
+                CONF_TRACKED_CUSTOM_INTEGRATIONS
+            ):
+                errors["base"] = "no_integrations_selected"
+            else:
+                return self.async_create_entry(
+                    title="",
+                    data={
+                        CONF_TRACKED_INTEGRATIONS: user_input.get(
+                            CONF_TRACKED_INTEGRATIONS, []
+                        ),
+                        CONF_TRACKED_CUSTOM_INTEGRATIONS: user_input.get(
+                            CONF_TRACKED_CUSTOM_INTEGRATIONS, []
+                        ),
+                    },
+                )
 
         client = HomeassistantAnalyticsClient(
             session=async_get_clientsession(self.hass)
         )
         try:
             integrations = await client.get_integrations()
+            custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")
             return self.async_abort(reason="cannot_connect")
@@ -115,12 +161,20 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
         ]
         return self.async_show_form(
             step_id="init",
+            errors=errors,
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
-                        vol.Required(CONF_TRACKED_INTEGRATIONS): SelectSelector(
+                        vol.Optional(CONF_TRACKED_INTEGRATIONS): SelectSelector(
                             SelectSelectorConfig(
                                 options=options,
+                                multiple=True,
+                                sort=True,
+                            )
+                        ),
+                        vol.Optional(CONF_TRACKED_CUSTOM_INTEGRATIONS): SelectSelector(
+                            SelectSelectorConfig(
+                                options=list(custom_integrations),
                                 multiple=True,
                                 sort=True,
                             )

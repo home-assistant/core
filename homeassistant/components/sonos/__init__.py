@@ -393,7 +393,7 @@ class SonosDiscoveryManager:
                 OSError,
                 SoCoException,
                 Timeout,
-                asyncio.TimeoutError,
+                TimeoutError,
             ) as ex:
                 if not self.hosts_in_error.get(ip_addr):
                     _LOGGER.warning(
@@ -447,7 +447,7 @@ class SonosDiscoveryManager:
                     OSError,
                     SoCoException,
                     Timeout,
-                    asyncio.TimeoutError,
+                    TimeoutError,
                 ) as ex:
                     _LOGGER.warning("Discovery message failed to %s : %s", ip_addr, ex)
             elif not known_speaker.available:

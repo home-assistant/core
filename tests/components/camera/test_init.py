@@ -1,5 +1,4 @@
 """The tests for the camera component."""
-import asyncio
 from http import HTTPStatus
 import io
 from types import ModuleType
@@ -204,7 +203,7 @@ async def test_get_image_with_timeout(hass: HomeAssistant, image_mock_url) -> No
     """Try to get image with timeout."""
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ), pytest.raises(HomeAssistantError):
         await camera.async_get_image(hass, "camera.demo_camera")
 
@@ -670,7 +669,7 @@ async def test_websocket_web_rtc_offer_timeout(
 
     with patch(
         "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
-        side_effect=asyncio.TimeoutError(),
+        side_effect=TimeoutError(),
     ):
         await client.send_json(
             {

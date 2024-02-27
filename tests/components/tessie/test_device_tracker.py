@@ -14,6 +14,6 @@ async def test_device_tracker(
 ) -> None:
     """Tests that the device tracker entities are correct."""
 
-    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    entry = await setup_platform(hass, [Platform.DEVICE_TRACKER])
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)

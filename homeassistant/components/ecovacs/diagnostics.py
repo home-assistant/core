@@ -8,10 +8,16 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import CONF_OVERRIDE_MQTT_URL, CONF_OVERRIDE_REST_URL, DOMAIN
 from .controller import EcovacsController
 
-REDACT_CONFIG = {CONF_USERNAME, CONF_PASSWORD, "title"}
+REDACT_CONFIG = {
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    "title",
+    CONF_OVERRIDE_MQTT_URL,
+    CONF_OVERRIDE_REST_URL,
+}
 REDACT_DEVICE = {"did", CONF_NAME, "homeId"}
 
 

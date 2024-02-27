@@ -40,6 +40,8 @@ async def test_async_setup_user_config_flow(hass: HomeAssistant, mock_bridge) ->
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
+        await hass.async_block_till_done()
+
     await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
 
@@ -86,6 +88,7 @@ async def test_update_fail(
     async_fire_time_changed(
         hass, dt_util.utcnow() + timedelta(seconds=MAX_UPDATE_INTERVAL_SEC - 1)
     )
+    await hass.async_block_till_done()
 
     for device in DUMMY_SWITCHER_DEVICES:
         entity_id = f"switch.{slugify(device.name)}"

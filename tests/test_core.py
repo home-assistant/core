@@ -8,6 +8,7 @@ import functools
 import gc
 import logging
 import os
+import sys
 from tempfile import TemporaryDirectory
 import threading
 import time
@@ -161,7 +162,9 @@ def test_async_add_job_add_hass_threaded_job_to_pool() -> None:
     assert len(hass.loop.run_in_executor.mock_calls) == 2
 
 
-def test_async_create_task_schedule_coroutine(event_loop) -> None:
+def test_async_create_task_schedule_coroutine(
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock(loop=MagicMock(wraps=event_loop))
 
@@ -171,6 +174,44 @@ def test_async_create_task_schedule_coroutine(event_loop) -> None:
     ha.HomeAssistant.async_create_task(hass, job())
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
+
+
+@pytest.mark.skipif(
+    sys.version_info < (3, 12), reason="eager_start is only supported for Python 3.12"
+)
+def test_async_create_task_eager_start_schedule_coroutine(
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
+
+    async def job():
+        pass
+
+    ha.HomeAssistant.async_create_task(hass, job(), eager_start=True)
+    # Should create the task directly since 3.12 supports eager_start
+    assert len(hass.loop.create_task.mock_calls) == 0
+    assert len(hass.add_job.mock_calls) == 0
+
+
+@pytest.mark.skipif(
+    sys.version_info >= (3, 12), reason="eager_start is not supported on < 3.12"
+)
+def test_async_create_task_eager_start_fallback_schedule_coroutine(
+    event_loop: asyncio.AbstractEventLoop,
+) -> None:
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock(loop=MagicMock(wraps=event_loop))
+
+    async def job():
+        pass
+
+    ha.HomeAssistant.async_create_task(hass, job(), eager_start=True)
+    assert len(hass.loop.call_soon.mock_calls) == 1
+    # Should fallback to loop.create_task since 3.11 does
+    # not support eager_start
+    assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
 
 
@@ -410,7 +451,7 @@ async def test_stage_shutdown(hass: HomeAssistant) -> None:
 async def test_stage_shutdown_timeouts(hass: HomeAssistant) -> None:
     """Simulate a shutdown, test timeouts at each step."""
 
-    with patch.object(hass.timeout, "async_timeout", side_effect=asyncio.TimeoutError):
+    with patch.object(hass.timeout, "async_timeout", side_effect=TimeoutError):
         await hass.async_stop()
 
     assert hass.state is CoreState.stopped
@@ -1194,8 +1235,8 @@ async def test_statemachine_remove(hass: HomeAssistant) -> None:
     assert len(events) == 1
 
 
-async def test_statemachine_case_insensitivty(hass: HomeAssistant) -> None:
-    """Test insensitivty."""
+async def test_state_machine_case_insensitivity(hass: HomeAssistant) -> None:
+    """Test setting and getting states entity_id insensitivity."""
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
 
     hass.states.async_set("light.BOWL", "off")
@@ -1203,6 +1244,15 @@ async def test_statemachine_case_insensitivty(hass: HomeAssistant) -> None:
 
     assert hass.states.is_state("light.bowl", "off")
     assert len(events) == 1
+
+    hass.states.async_set("ligHT.Bowl", "on")
+    assert hass.states.get("light.bowl").state == "on"
+
+    hass.states.async_set("light.BOWL", "off")
+    assert hass.states.get("light.BoWL").state == "off"
+
+    hass.states.async_set("light.bowl", "on")
+    assert hass.states.get("light.bowl").state == "on"
 
 
 async def test_statemachine_last_changed_not_updated_on_same_state(
@@ -2589,7 +2639,8 @@ async def test_state_changed_events_to_not_leak_contexts(hass: HomeAssistant) ->
     assert len(_get_by_type("homeassistant.core.Context")) == init_count
 
 
-async def test_background_task(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("eager_start", (True, False))
+async def test_background_task(hass: HomeAssistant, eager_start: bool) -> None:
     """Test background tasks being quit."""
     result = asyncio.Future()
 
@@ -2600,7 +2651,9 @@ async def test_background_task(hass: HomeAssistant) -> None:
             result.set_result(hass.state)
             raise
 
-    task = hass.async_create_background_task(test_task(), "happy task")
+    task = hass.async_create_background_task(
+        test_task(), "happy task", eager_start=eager_start
+    )
     assert "happy task" in str(task)
     await asyncio.sleep(0)
     await hass.async_stop()
@@ -2809,3 +2862,16 @@ def test_deprecated_constants(
 ) -> None:
     """Test deprecated constants."""
     import_and_test_deprecated_constant_enum(caplog, ha, enum, "SOURCE_", "2025.1")
+
+
+def test_one_time_listener_repr(hass: HomeAssistant) -> None:
+    """Test one time listener repr."""
+
+    def _listener(event: ha.Event):
+        """Test listener."""
+
+    one_time_listener = ha._OneTimeListener(hass, _listener)
+    repr_str = repr(one_time_listener)
+    assert "OneTimeListener" in repr_str
+    assert "test_core" in repr_str
+    assert "_listener" in repr_str

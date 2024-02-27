@@ -170,7 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             notification_id=NOTIFICATION_ID,
         )
         return False
-    except asyncio.TimeoutError:
+    except TimeoutError:
         # The TimeoutError exception object returns nothing when casted to a
         # string, so we'll handle it separately.
         err = f"{_TIMEOUT}s timeout exceeded when connecting to Logi Circle API"
