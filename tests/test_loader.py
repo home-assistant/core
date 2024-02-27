@@ -1005,39 +1005,13 @@ async def test_config_folder_not_in_path(hass):
     import tests.testing_config.check_config_not_in_path  # noqa: F401
 
 
-async def test_bind_hass_use_reported(
-    caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
-) -> None:
-    """Test that use of @bind_hass is reported."""
-    from homeassistant.loader import bind_hass
-
-    integration_frame = frame.IntegrationFrame(
-        custom_integration=True,
-        frame=mock_integration_frame,
-        integration="test_integration_frame",
-        module="custom_components.test_integration_frame",
-        relative_filename="custom_components/test_integration_frame/__init__.py",
-    )
-
-    with patch(
-        "homeassistant.helpers.frame.get_integration_frame",
-        return_value=integration_frame,
-    ):
-
-        @bind_hass
-        def _test(hass: HomeAssistant):
-            pass
-
-        assert (
-            "Detected that custom integration 'test_integration_frame'"
-            " uses @bind_hass decorator. This is deprecated"
-        ) in caplog.text
-
-
 async def test_hass_components_use_reported(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
 ) -> None:
     """Test that use of hass.components is reported."""
+    mock_integration_frame.filename = (
+        "/home/paulus/homeassistant/custom_components/demo/light.py"
+    )
     integration_frame = frame.IntegrationFrame(
         custom_integration=True,
         frame=mock_integration_frame,
@@ -1053,7 +1027,7 @@ async def test_hass_components_use_reported(
         "homeassistant.components.http.start_http_server_and_save_config",
         return_value=None,
     ):
-        await hass.components.http.start_http_server_and_save_config(hass, [], None)
+        hass.components.http.start_http_server_and_save_config(hass, [], None)
 
         assert (
             "Detected that custom integration 'test_integration_frame'"
