@@ -264,6 +264,7 @@ HARDWARE_INTEGRATIONS = {
     "odroid-c2": "hardkernel",
     "odroid-c4": "hardkernel",
     "odroid-m1": "hardkernel",
+    "odroid-m1s": "hardkernel",
     "odroid-n2": "hardkernel",
     "odroid-xu4": "hardkernel",
     "rpi2": "raspberry_pi",
