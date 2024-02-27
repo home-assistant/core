@@ -72,10 +72,6 @@ async def async_get_device_diagnostics(
 
     states_to_redact = {x["position"]["address"] for x in coordinator.data.values()}
 
-    # Enable all entitits to show everything in snapshots
-    for entity in entities:
-        entity_registry.async_update_entity(entity.entity_id, disabled_by=None)
-
     await hass.config_entries.async_reload(entry.entry_id)
     return async_redact_data(
         {

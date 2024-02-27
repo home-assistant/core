@@ -72,86 +72,6 @@
     }),
     'entities': list([
       dict({
-        'disabled': True,
-        'enity_id': 'sensor.x_wing_battery',
-        'state': dict({
-          'attributes': dict({
-            'device_class': 'battery',
-            'friendly_name': 'X-Wing Battery',
-            'state_class': 'measurement',
-            'unit_of_measurement': '%',
-          }),
-          'state': '15.00000867601',
-        }),
-        'unit_of_measurement': '%',
-      }),
-      dict({
-        'disabled': True,
-        'enity_id': 'sensor.x_wing_speed',
-        'state': dict({
-          'attributes': dict({
-            'device_class': 'speed',
-            'friendly_name': 'X-Wing Speed',
-            'state_class': 'measurement',
-            'unit_of_measurement': 'kn',
-          }),
-          'state': '4568795',
-        }),
-        'unit_of_measurement': 'kn',
-      }),
-      dict({
-        'disabled': True,
-        'enity_id': 'sensor.x_wing_altitude',
-        'state': dict({
-          'attributes': dict({
-            'friendly_name': 'X-Wing Altitude',
-            'state_class': 'measurement',
-            'unit_of_measurement': 'm',
-          }),
-          'state': '546841384638',
-        }),
-        'unit_of_measurement': 'm',
-      }),
-      dict({
-        'disabled': True,
-        'enity_id': 'sensor.x_wing_address',
-        'state': dict({
-          'attributes': dict({
-            'friendly_name': 'X-Wing Address',
-          }),
-          'state': '**REDACTED**',
-        }),
-        'unit_of_measurement': None,
-      }),
-      dict({
-        'disabled': True,
-        'enity_id': 'sensor.x_wing_status',
-        'state': dict({
-          'attributes': dict({
-            'device_class': 'enum',
-            'friendly_name': 'X-Wing Status',
-            'options': list([
-              'offline',
-              'online',
-              'unknown',
-            ]),
-          }),
-          'state': 'online',
-        }),
-        'unit_of_measurement': None,
-      }),
-      dict({
-        'disabled': True,
-        'enity_id': 'sensor.x_wing_geofence',
-        'state': dict({
-          'attributes': dict({
-            'friendly_name': 'X-Wing Geofence',
-          }),
-          'state': 'Tatooine',
-        }),
-        'unit_of_measurement': None,
-      }),
-      dict({
         'disabled': False,
         'enity_id': 'device_tracker.x_wing',
         'state': dict({
@@ -168,6 +88,86 @@
             'tracker': 'traccar_server',
           }),
           'state': 'not_home',
+        }),
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': False,
+        'enity_id': 'sensor.x_wing_battery',
+        'state': dict({
+          'attributes': dict({
+            'device_class': 'battery',
+            'friendly_name': 'X-Wing Battery',
+            'state_class': 'measurement',
+            'unit_of_measurement': '%',
+          }),
+          'state': '15.00000867601',
+        }),
+        'unit_of_measurement': '%',
+      }),
+      dict({
+        'disabled': False,
+        'enity_id': 'sensor.x_wing_speed',
+        'state': dict({
+          'attributes': dict({
+            'device_class': 'speed',
+            'friendly_name': 'X-Wing Speed',
+            'state_class': 'measurement',
+            'unit_of_measurement': 'kn',
+          }),
+          'state': '4568795',
+        }),
+        'unit_of_measurement': 'kn',
+      }),
+      dict({
+        'disabled': False,
+        'enity_id': 'sensor.x_wing_altitude',
+        'state': dict({
+          'attributes': dict({
+            'friendly_name': 'X-Wing Altitude',
+            'state_class': 'measurement',
+            'unit_of_measurement': 'm',
+          }),
+          'state': '546841384638',
+        }),
+        'unit_of_measurement': 'm',
+      }),
+      dict({
+        'disabled': False,
+        'enity_id': 'sensor.x_wing_address',
+        'state': dict({
+          'attributes': dict({
+            'friendly_name': 'X-Wing Address',
+          }),
+          'state': '**REDACTED**',
+        }),
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': False,
+        'enity_id': 'sensor.x_wing_status',
+        'state': dict({
+          'attributes': dict({
+            'device_class': 'enum',
+            'friendly_name': 'X-Wing Status',
+            'options': list([
+              'offline',
+              'online',
+              'unknown',
+            ]),
+          }),
+          'state': 'online',
+        }),
+        'unit_of_measurement': None,
+      }),
+      dict({
+        'disabled': False,
+        'enity_id': 'sensor.x_wing_geofence',
+        'state': dict({
+          'attributes': dict({
+            'friendly_name': 'X-Wing Geofence',
+          }),
+          'state': 'Tatooine',
         }),
         'unit_of_measurement': None,
       }),
