@@ -194,6 +194,9 @@ class MyUplinkSystemBinarySensor(MyUplinkSystemEntity, BinarySensorEntity):
             self.entity_description = entity_description
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Binary sensor state value."""
-        return self.coordinator.data.systems[0].has_alarm
+        for system in self.coordinator.data.systems:
+            if system.id == self.system_id:
+                return system.has_alarm
+        return None
