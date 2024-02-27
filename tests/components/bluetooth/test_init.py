@@ -6,7 +6,6 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
-from bleak_retry_connector import bleak_manager
 from bluetooth_adapters import DEFAULT_ADDRESS
 from habluetooth import scanner
 from habluetooth.wrappers import HaBleakScannerWrapper
@@ -57,36 +56,6 @@ from . import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-
-@pytest.fixture(name="disable_bluez_manager_socket", autouse=True)
-def mock_disable_bluez_manager_socket():
-    """Mock the bluez manager socket."""
-    with patch.object(bleak_manager, "get_global_bluez_manager_with_timeout"):
-        yield
-
-
-async def test_setup_and_stop_no_bluetooth(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
-) -> None:
-    """Test we fail gracefully when bluetooth is not available."""
-    mock_bt = [
-        {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
-    ]
-    with patch(
-        "habluetooth.scanner.OriginalBleakScanner",
-        side_effect=BleakError,
-    ) as mock_ha_bleak_scanner, patch(
-        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
-    ):
-        await async_setup_with_one_adapter(hass)
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    assert len(mock_ha_bleak_scanner.mock_calls) == 1
-    assert "Failed to initialize Bluetooth" in caplog.text
 
 
 async def test_setup_and_stop(
@@ -157,6 +126,29 @@ async def test_setup_and_stop_passive(
         "scanning_mode": "passive",
         "detection_callback": ANY,
     }
+
+
+async def test_setup_and_stop_no_bluetooth(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
+) -> None:
+    """Test we fail gracefully when bluetooth is not available."""
+    mock_bt = [
+        {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
+    ]
+    with patch(
+        "habluetooth.scanner.OriginalBleakScanner",
+        side_effect=BleakError,
+    ) as mock_ha_bleak_scanner, patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch("homeassistant.components.bluetooth.discovery_flow.async_create_flow"):
+        await async_setup_with_one_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert len(mock_ha_bleak_scanner.mock_calls) == 1
+    assert "Failed to initialize Bluetooth" in caplog.text
 
 
 async def test_setup_and_stop_old_bluez(
