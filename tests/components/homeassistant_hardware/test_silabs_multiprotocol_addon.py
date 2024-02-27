@@ -97,7 +97,7 @@ def config_flow_handler(
     hass: HomeAssistant, current_request_with_host: Any
 ) -> Generator[FakeConfigFlow, None, None]:
     """Fixture for a test config flow."""
-    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
     with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
         yield
 
@@ -1424,6 +1424,7 @@ async def test_option_flow_install_multi_pan_addon_zha_migration_fails_step_2(
         title="Test HW",
     )
     config_entry.add_to_hass(hass)
+
     zha_config_entry = MockConfigEntry(
         data={"device": {"path": "/dev/ttyTEST123"}, "radio_type": "ezsp"},
         domain=ZHA_DOMAIN,
