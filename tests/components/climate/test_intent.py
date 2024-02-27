@@ -1,4 +1,5 @@
 """Test climate intents."""
+
 from collections.abc import Generator
 from unittest.mock import patch
 
@@ -135,8 +136,10 @@ async def test_get_temperature(
     # Add climate entities to different areas:
     # climate_1 => living room
     # climate_2 => bedroom
+    # nothing in office
     living_room_area = area_registry.async_create(name="Living Room")
     bedroom_area = area_registry.async_create(name="Bedroom")
+    office_area = area_registry.async_create(name="Office")
 
     entity_registry.async_update_entity(
         climate_1.entity_id, area_id=living_room_area.id
@@ -158,7 +161,7 @@ async def test_get_temperature(
         hass,
         "test",
         climate_intent.INTENT_GET_TEMPERATURE,
-        {"area": {"value": "Bedroom"}},
+        {"area": {"value": bedroom_area.name}},
     )
     assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
@@ -178,6 +181,52 @@ async def test_get_temperature(
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = response.matched_states[0]
     assert state.attributes["current_temperature"] == 22.0
+
+    # Check area with no climate entities
+    with pytest.raises(intent.NoStatesMatchedError) as error:
+        response = await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_GET_TEMPERATURE,
+            {"area": {"value": office_area.name}},
+        )
+
+    # Exception should contain details of what we tried to match
+    assert isinstance(error.value, intent.NoStatesMatchedError)
+    assert error.value.name is None
+    assert error.value.area == office_area.name
+    assert error.value.domains == {DOMAIN}
+    assert error.value.device_classes is None
+
+    # Check wrong name
+    with pytest.raises(intent.NoStatesMatchedError) as error:
+        response = await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_GET_TEMPERATURE,
+            {"name": {"value": "Does not exist"}},
+        )
+
+    assert isinstance(error.value, intent.NoStatesMatchedError)
+    assert error.value.name == "Does not exist"
+    assert error.value.area is None
+    assert error.value.domains == {DOMAIN}
+    assert error.value.device_classes is None
+
+    # Check wrong name with area
+    with pytest.raises(intent.NoStatesMatchedError) as error:
+        response = await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_GET_TEMPERATURE,
+            {"name": {"value": "Climate 1"}, "area": {"value": bedroom_area.name}},
+        )
+
+    assert isinstance(error.value, intent.NoStatesMatchedError)
+    assert error.value.name == "Climate 1"
+    assert error.value.area == bedroom_area.name
+    assert error.value.domains == {DOMAIN}
+    assert error.value.device_classes is None
 
 
 async def test_get_temperature_no_entities(
@@ -216,19 +265,28 @@ async def test_get_temperature_no_state(
         climate_1.entity_id, area_id=living_room_area.id
     )
 
-    with patch("homeassistant.core.StateMachine.get", return_value=None), pytest.raises(
-        intent.IntentHandleError
+    with (
+        patch("homeassistant.core.StateMachine.get", return_value=None),
+        pytest.raises(intent.IntentHandleError),
     ):
         await intent.async_handle(
             hass, "test", climate_intent.INTENT_GET_TEMPERATURE, {}
         )
 
-    with patch(
-        "homeassistant.core.StateMachine.async_all", return_value=[]
-    ), pytest.raises(intent.IntentHandleError):
+    with (
+        patch("homeassistant.core.StateMachine.async_all", return_value=[]),
+        pytest.raises(intent.NoStatesMatchedError) as error,
+    ):
         await intent.async_handle(
             hass,
             "test",
             climate_intent.INTENT_GET_TEMPERATURE,
             {"area": {"value": "Living Room"}},
         )
+
+    # Exception should contain details of what we tried to match
+    assert isinstance(error.value, intent.NoStatesMatchedError)
+    assert error.value.name is None
+    assert error.value.area == "Living Room"
+    assert error.value.domains == {DOMAIN}
+    assert error.value.device_classes is None

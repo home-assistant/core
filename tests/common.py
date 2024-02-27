@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Generator, Mapping, Sequence
-from contextlib import contextmanager
+from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
+from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 import functools as ft
@@ -17,7 +17,7 @@ import pathlib
 import threading
 import time
 from types import ModuleType
-from typing import Any, NoReturn
+from typing import Any, NoReturn, TypeVar
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
@@ -63,12 +63,15 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
     event,
+    floor_registry as fr,
     intent,
     issue_registry as ir,
+    label_registry as lr,
     recorder as recorder_helper,
     restore_state,
     restore_state as rs,
     storage,
+    translation,
 )
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -152,15 +155,17 @@ def get_test_config_dir(*add_path):
     return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
 
 
-def get_test_home_assistant():
+@contextmanager
+def get_test_home_assistant() -> Generator[HomeAssistant, None, None]:
     """Return a Home Assistant object pointing at test config directory."""
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    hass = loop.run_until_complete(async_test_home_assistant(loop))
+    context_manager = async_test_home_assistant(loop)
+    hass = loop.run_until_complete(context_manager.__aenter__())
 
     loop_stop_event = threading.Event()
 
-    def run_loop():
+    def run_loop() -> None:
         """Run event loop."""
 
         loop._thread_ident = threading.get_ident()
@@ -170,27 +175,55 @@ def get_test_home_assistant():
     orig_stop = hass.stop
     hass._stopped = Mock(set=loop.stop)
 
-    def start_hass(*mocks):
+    def start_hass(*mocks: Any) -> None:
         """Start hass."""
         asyncio.run_coroutine_threadsafe(hass.async_start(), loop).result()
 
-    def stop_hass():
+    def stop_hass() -> None:
         """Stop hass."""
         orig_stop()
         loop_stop_event.wait()
-        loop.close()
 
     hass.start = start_hass
     hass.stop = stop_hass
 
     threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
 
-    return hass
+    yield hass
+    loop.run_until_complete(context_manager.__aexit__(None, None, None))
+    loop.close()
 
 
-async def async_test_home_assistant(event_loop, load_registries=True):
+_T = TypeVar("_T", bound=Mapping[str, Any] | Sequence[Any])
+
+
+class StoreWithoutWriteLoad(storage.Store[_T]):
+    """Fake store that does not write or load. Used for testing."""
+
+    async def async_save(self, *args: Any, **kwargs: Any) -> None:
+        """Save the data.
+
+        This function is mocked out in tests.
+        """
+
+    @callback
+    def async_save_delay(self, *args: Any, **kwargs: Any) -> None:
+        """Save data with an optional delay.
+
+        This function is mocked out in tests.
+        """
+
+
+@asynccontextmanager
+async def async_test_home_assistant(
+    event_loop: asyncio.AbstractEventLoop | None = None,
+    load_registries: bool = True,
+    storage_dir: str | None = None,
+) -> AsyncGenerator[HomeAssistant, None]:
     """Return a Home Assistant object pointing at test config dir."""
     hass = HomeAssistant(get_test_config_dir())
+    if storage_dir:
+        hass.config.config_dir = storage_dir
     store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
@@ -199,6 +232,7 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     orig_async_add_job = hass.async_add_job
     orig_async_add_executor_job = hass.async_add_executor_job
     orig_async_create_task = hass.async_create_task
+    orig_tz = dt_util.DEFAULT_TIME_ZONE
 
     def async_add_job(target, *args):
         """Add job."""
@@ -226,14 +260,14 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
         return orig_async_add_executor_job(target, *args)
 
-    def async_create_task(coroutine, name=None):
+    def async_create_task(coroutine, name=None, eager_start=False):
         """Create task."""
         if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
             fut = asyncio.Future()
             fut.set_result(None)
             return fut
 
-        return orig_async_create_task(coroutine, name)
+        return orig_async_create_task(coroutine, name, eager_start)
 
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
@@ -267,22 +301,42 @@ async def async_test_home_assistant(event_loop, load_registries=True):
     # Load the registries
     entity.async_setup(hass)
     loader.async_setup(hass)
+
+    # setup translation cache instead of calling translation.async_setup(hass)
+    hass.data[translation.TRANSLATION_FLATTEN_CACHE] = translation._TranslationCache(
+        hass
+    )
     if load_registries:
-        with patch(
-            "homeassistant.helpers.storage.Store.async_load", return_value=None
+        with patch.object(
+            StoreWithoutWriteLoad, "async_load", return_value=None
+        ), patch(
+            "homeassistant.helpers.area_registry.AreaRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.device_registry.DeviceRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.entity_registry.EntityRegistryStore",
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.storage.Store",  # Floor & label registry are different
+            StoreWithoutWriteLoad,
+        ), patch(
+            "homeassistant.helpers.issue_registry.IssueRegistryStore",
+            StoreWithoutWriteLoad,
         ), patch(
             "homeassistant.helpers.restore_state.RestoreStateData.async_setup_dump",
             return_value=None,
         ), patch(
             "homeassistant.helpers.restore_state.start.async_at_start",
         ):
-            await asyncio.gather(
-                ar.async_load(hass),
-                dr.async_load(hass),
-                er.async_load(hass),
-                ir.async_load(hass),
-                rs.async_load(hass),
-            )
+            await ar.async_load(hass)
+            await dr.async_load(hass)
+            await er.async_load(hass)
+            await fr.async_load(hass)
+            await ir.async_load(hass)
+            await lr.async_load(hass)
+            await rs.async_load(hass)
         hass.data[bootstrap.DATA_REGISTRIES_LOADED] = None
 
     hass.set_state(CoreState.running)
@@ -294,7 +348,10 @@ async def async_test_home_assistant(event_loop, load_registries=True):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
-    return hass
+    yield hass
+
+    # Restore timezone, it is set when creating the hass object
+    dt_util.DEFAULT_TIME_ZONE = orig_tz
 
 
 def async_mock_service(
@@ -838,8 +895,9 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
             entity_namespace=entity_namespace,
         )
 
-        async def _async_on_stop(_: Event) -> None:
-            await self.async_shutdown()
+        @callback
+        def _async_on_stop(_: Event) -> None:
+            self.async_shutdown()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_on_stop)
 
@@ -934,7 +992,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             kwargs["state"] = state
         super().__init__(**kwargs)
         if reason is not None:
-            self.reason = reason
+            object.__setattr__(self, "reason", reason)
 
     def add_to_hass(self, hass: HomeAssistant) -> None:
         """Test helper to add entry to hass."""
@@ -943,6 +1001,27 @@ class MockConfigEntry(config_entries.ConfigEntry):
     def add_to_manager(self, manager: config_entries.ConfigEntries) -> None:
         """Test helper to add entry to entry manager."""
         manager._entries[self.entry_id] = self
+
+    def mock_state(
+        self,
+        hass: HomeAssistant,
+        state: config_entries.ConfigEntryState,
+        reason: str | None = None,
+    ) -> None:
+        """Mock the state of a config entry to be used in tests.
+
+        Currently this is a wrapper around _async_set_state, but it may
+        change in the future.
+
+        It is preferable to get the config entry into the desired state
+        by using the normal config entry methods, and this helper
+        is only intended to be used in cases where that is not possible.
+
+        When in doubt, this helper should not be used in new code
+        and is only intended for backwards compatibility with existing
+        tests.
+        """
+        self._async_set_state(hass, state, reason)
 
 
 def patch_yaml_files(files_dict, endswith=True):
@@ -1337,7 +1416,7 @@ def mock_integration(
         f"{loader.PACKAGE_BUILTIN}.{module.DOMAIN}"
         if built_in
         else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
-        None,
+        pathlib.Path(""),
         module.mock_manifest(),
     )
 

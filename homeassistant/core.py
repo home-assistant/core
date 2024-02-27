@@ -22,6 +22,7 @@ from dataclasses import dataclass
 import datetime
 import enum
 import functools
+import inspect
 import logging
 import os
 import pathlib
@@ -90,6 +91,7 @@ from .helpers.json import json_bytes, json_fragment
 from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
+    create_eager_task,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
@@ -621,7 +623,10 @@ class HomeAssistant:
 
     @callback
     def async_create_task(
-        self, target: Coroutine[Any, Any, _R], name: str | None = None
+        self,
+        target: Coroutine[Any, Any, _R],
+        name: str | None = None,
+        eager_start: bool = False,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -630,16 +635,17 @@ class HomeAssistant:
 
         target: target to call.
         """
-        task = self.loop.create_task(target, name=name)
+        if eager_start:
+            task = create_eager_task(target, name=name, loop=self.loop)
+        else:
+            task = self.loop.create_task(target, name=name)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
         return task
 
     @callback
     def async_create_background_task(
-        self,
-        target: Coroutine[Any, Any, _R],
-        name: str,
+        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = False
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -649,7 +655,10 @@ class HomeAssistant:
 
         This method must be run in the event loop.
         """
-        task = self.loop.create_task(target, name=name)
+        if eager_start:
+            task = create_eager_task(target, name=name, loop=self.loop)
+        else:
+            task = self.loop.create_task(target, name=name)
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.remove)
         return task
@@ -1066,7 +1075,7 @@ class Event:
     def __init__(
         self,
         event_type: str,
-        data: dict[str, Any] | None = None,
+        data: Mapping[str, Any] | None = None,
         origin: EventOrigin = EventOrigin.local,
         time_fired: datetime.datetime | None = None,
         context: Context | None = None,
@@ -1077,9 +1086,7 @@ class Event:
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         if not context:
-            context = Context(
-                id=ulid_at_time(dt_util.utc_to_timestamp(self.time_fired))
-            )
+            context = Context(id=ulid_at_time(self.time_fired.timestamp()))
         self.context = context
         if not context.origin_event:
             context.origin_event = self
@@ -1160,7 +1167,7 @@ class _OneTimeListener:
     remove: CALLBACK_TYPE | None = None
 
     @callback
-    def async_call(self, event: Event) -> None:
+    def __call__(self, event: Event) -> None:
         """Remove listener from event bus and then fire listener."""
         if not self.remove:
             # If the listener was already removed, we don't need to do anything
@@ -1168,6 +1175,13 @@ class _OneTimeListener:
         self.remove()
         self.remove = None
         self.hass.async_run_job(self.listener, event)
+
+    def __repr__(self) -> str:
+        """Return the representation of the listener and source module."""
+        module = inspect.getmodule(self.listener)
+        if module:
+            return f"<_OneTimeListener {module.__name__}:{self.listener}>"
+        return f"<_OneTimeListener {self.listener}>"
 
 
 class EventBus:
@@ -1198,7 +1212,7 @@ class EventBus:
     def fire(
         self,
         event_type: str,
-        event_data: dict[str, Any] | None = None,
+        event_data: Mapping[str, Any] | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
     ) -> None:
@@ -1211,7 +1225,7 @@ class EventBus:
     def async_fire(
         self,
         event_type: str,
-        event_data: dict[str, Any] | None = None,
+        event_data: Mapping[str, Any] | None = None,
         origin: EventOrigin = EventOrigin.local,
         context: Context | None = None,
         time_fired: datetime.datetime | None = None,
@@ -1366,7 +1380,7 @@ class EventBus:
             event_type,
             (
                 HassJob(
-                    one_time_listener.async_call,
+                    one_time_listener,
                     f"onetime listen {event_type} {listener}",
                     job_type=HassJobType.Callback,
                 ),

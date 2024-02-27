@@ -1397,7 +1397,7 @@
           'name': dict({
             'name': 'name',
             'text': 'my cool light',
-            'value': 'light.kitchen',
+            'value': 'my cool light',
           }),
         }),
         'intent': dict({
@@ -1422,7 +1422,7 @@
           'name': dict({
             'name': 'name',
             'text': 'my cool light',
-            'value': 'light.kitchen',
+            'value': 'my cool light',
           }),
         }),
         'intent': dict({
@@ -1572,7 +1572,7 @@
           'name': dict({
             'name': 'name',
             'text': 'test light',
-            'value': 'light.demo_1234',
+            'value': 'test light',
           }),
         }),
         'intent': dict({
@@ -1604,7 +1604,7 @@
           'name': dict({
             'name': 'name',
             'text': 'test light',
-            'value': 'light.demo_1234',
+            'value': 'test light',
           }),
         }),
         'intent': dict({

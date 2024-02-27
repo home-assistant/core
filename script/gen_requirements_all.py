@@ -134,10 +134,6 @@ pubnub!=6.4.0
 # https://github.com/dahlia/iso4217/issues/16
 iso4217!=1.10.20220401
 
-# Matplotlib 3.6.2 has issues building wheels on armhf/armv7
-# We need at least >=2.1.0 (tensorflow integration -> pycocotools)
-matplotlib==3.6.1
-
 # pyOpenSSL 24.0.0 or later required to avoid import errors when
 # cryptography 42.0.0 is installed with botocore
 pyOpenSSL>=24.0.0
@@ -155,13 +151,9 @@ faust-cchardet>=2.1.18
 # https://github.com/aaugustin/websockets/issues/1329
 websockets>=11.0.1
 
-# pyasn1 0.5.0 has breaking changes which cause pysnmplib to fail
-# until they are resolved, we need to pin pyasn1 to 0.4.8 and
-# pysnmplib to 5.0.21 to avoid the issue.
-# https://github.com/pyasn1/pyasn1/pull/30#issuecomment-1517564335
-# https://github.com/pysnmp/pysnmp/issues/51
-pyasn1==0.4.8
-pysnmplib==5.0.21
+# pysnmplib is no longer maintained and does not work with newer
+# python
+pysnmplib==1000000000.0.0
 # pysnmp is no longer maintained and does not work with newer
 # python
 pysnmp==1000000000.0.0
@@ -181,6 +173,9 @@ dacite>=1.7.0
 
 # Musle wheels for pandas 2.2.0 cannot be build for any architecture.
 pandas==2.1.4
+
+# chacha20poly1305-reuseable==0.12.0 is incompatible with cryptography==42.0.x
+chacha20poly1305-reuseable>=0.12.1
 """
 
 GENERATED_MESSAGE = (

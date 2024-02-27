@@ -1,4 +1,5 @@
 """Test ESPHome manager."""
+import asyncio
 from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, call
 
@@ -91,7 +92,9 @@ async def test_esphome_device_service_calls_allowed(
     entity_info = []
     states = []
     user_service = []
-    mock_config_entry.options = {CONF_ALLOW_SERVICE_CALLS: True}
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ALLOW_SERVICE_CALLS: True}
+    )
     device: MockESPHomeDevice = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
@@ -352,7 +355,12 @@ async def test_unique_id_updated_to_mac(
         unique_id="mock-config-name",
     )
     entry.add_to_hass(hass)
+    subscribe_done = hass.loop.create_future()
 
+    def async_subscribe_states(*args, **kwargs) -> None:
+        subscribe_done.set_result(None)
+
+    mock_client.subscribe_states = async_subscribe_states
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(
             mac_address="1122334455aa",
@@ -361,6 +369,8 @@ async def test_unique_id_updated_to_mac(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await subscribe_done
 
     assert entry.unique_id == "11:22:33:44:55:aa"
 
@@ -380,13 +390,20 @@ async def test_unique_id_not_updated_if_name_same_and_already_mac(
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
+    disconnect_done = hass.loop.create_future()
 
+    def async_disconnect(*args, **kwargs) -> None:
+        disconnect_done.set_result(None)
+
+    mock_client.disconnect = async_disconnect
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(mac_address="1122334455ab", name="test")
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await disconnect_done
 
     # Mac should never update
     assert entry.unique_id == "11:22:33:44:55:aa"
@@ -402,13 +419,20 @@ async def test_unique_id_updated_if_name_unset_and_already_mac(
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
+    disconnect_done = hass.loop.create_future()
 
+    def async_disconnect(*args, **kwargs) -> None:
+        disconnect_done.set_result(None)
+
+    mock_client.disconnect = async_disconnect
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(mac_address="1122334455ab", name="test")
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await disconnect_done
 
     # Mac should never update
     assert entry.unique_id == "11:22:33:44:55:aa"
@@ -429,13 +453,20 @@ async def test_unique_id_not_updated_if_name_different_and_already_mac(
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
+    disconnect_done = hass.loop.create_future()
 
+    def async_disconnect(*args, **kwargs) -> None:
+        disconnect_done.set_result(None)
+
+    mock_client.disconnect = async_disconnect
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(mac_address="1122334455ab", name="different")
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await disconnect_done
 
     # Mac should not be updated because name is different
     assert entry.unique_id == "11:22:33:44:55:aa"
@@ -458,13 +489,20 @@ async def test_name_updated_only_if_mac_matches(
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
+    subscribe_done = hass.loop.create_future()
 
+    def async_subscribe_states(*args, **kwargs) -> None:
+        subscribe_done.set_result(None)
+
+    mock_client.subscribe_states = async_subscribe_states
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(mac_address="1122334455aa", name="new")
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await subscribe_done
 
     assert entry.unique_id == "11:22:33:44:55:aa"
     assert entry.data[CONF_DEVICE_NAME] == "new"
@@ -485,13 +523,20 @@ async def test_name_updated_only_if_mac_was_unset(
         unique_id="notamac",
     )
     entry.add_to_hass(hass)
+    subscribe_done = hass.loop.create_future()
 
+    def async_subscribe_states(*args, **kwargs) -> None:
+        subscribe_done.set_result(None)
+
+    mock_client.subscribe_states = async_subscribe_states
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(mac_address="1122334455aa", name="new")
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await subscribe_done
 
     assert entry.unique_id == "11:22:33:44:55:aa"
     assert entry.data[CONF_DEVICE_NAME] == "new"
@@ -515,13 +560,20 @@ async def test_connection_aborted_wrong_device(
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
+    disconnect_done = hass.loop.create_future()
 
+    def async_disconnect(*args, **kwargs) -> None:
+        disconnect_done.set_result(None)
+
+    mock_client.disconnect = async_disconnect
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(mac_address="1122334455ab", name="different")
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await disconnect_done
 
     assert (
         "Unexpected device found at 192.168.43.183; expected `test` "
@@ -530,8 +582,7 @@ async def test_connection_aborted_wrong_device(
     )
 
     assert "Error getting setting up connection for" not in caplog.text
-    assert len(mock_client.disconnect.mock_calls) == 1
-    mock_client.disconnect.reset_mock()
+    mock_client.disconnect = AsyncMock()
     caplog.clear()
     # Make sure discovery triggers a reconnect
     service_info = dhcp.DhcpServiceInfo(
@@ -573,15 +624,20 @@ async def test_failure_during_connect(
         unique_id="11:22:33:44:55:aa",
     )
     entry.add_to_hass(hass)
+    disconnect_done = hass.loop.create_future()
 
+    async def async_disconnect(*args, **kwargs) -> None:
+        disconnect_done.set_result(None)
+
+    mock_client.disconnect = async_disconnect
     mock_client.device_info = AsyncMock(side_effect=APIConnectionError("fail"))
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    async with asyncio.timeout(1):
+        await disconnect_done
 
     assert "Error getting setting up connection for" in caplog.text
-    # Ensure we disconnect so that the reconnect logic is triggered
-    assert len(mock_client.disconnect.mock_calls) == 1
 
 
 async def test_state_subscription(
