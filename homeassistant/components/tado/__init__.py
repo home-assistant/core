@@ -176,7 +176,7 @@ class TadoConnector:
         """Return correct overlay mode based on the action and defaults."""
         # If user gave duration then overlay mode needs to be timer
         if duration:
-            overlay_mode = CONST_OVERLAY_TIMER
+            return CONST_OVERLAY_TIMER
         # If no duration or timer set to fallback setting
         if overlay_mode is None:
             overlay_mode = (
