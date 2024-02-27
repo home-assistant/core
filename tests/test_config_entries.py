@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Generator
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from datetime import timedelta
 import logging
 from typing import Any
@@ -4434,10 +4435,56 @@ async def test_hashable_non_string_unique_id(
     assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
 
 
-async def test_avoid_starting_config_flow_on_single_config_entry(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+RAISES_SINGLE_ENTRY_ERROR = pytest.raises(
+    HomeAssistantError,
+    match=(
+        r"Cannot start a config flow, "
+        r"the integration supports only a single config entry but already has one"
+    ),
+)
+
+
+@pytest.mark.parametrize(
+    ("source", "user_input", "expectation", "expected_result"),
+    [
+        (
+            config_entries.SOURCE_IGNORE,
+            {"unique_id": "blah", "title": "blah"},
+            does_not_raise(),
+            {"type": data_entry_flow.FlowResultType.CREATE_ENTRY},
+        ),
+        (
+            config_entries.SOURCE_REAUTH,
+            None,
+            does_not_raise(),
+            {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
+        ),
+        (
+            config_entries.SOURCE_UNIGNORE,
+            None,
+            does_not_raise(),
+            {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
+        ),
+        (
+            config_entries.SOURCE_USER,
+            None,
+            RAISES_SINGLE_ENTRY_ERROR,
+            {},
+        ),
+    ],
+)
+async def test_starting_config_flow_on_single_config_entry(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    user_input: dict,
+    expectation: AbstractContextManager,
+    expected_result: dict,
 ) -> None:
-    """Test that we cannot start a config flow for a single config entry integration."""
+    """Test starting a config flow for a single config entry integration.
+
+    In this test, the integration has one ignored flow and one entry added by user.
+    """
     integration = loader.Integration(
         hass,
         "components.comp",
@@ -4458,17 +4505,105 @@ async def test_avoid_starting_config_flow_on_single_config_entry(
         options={"vendor": "options"},
     )
     entry.add_to_hass(hass)
+    ignored_entry = MockConfigEntry(
+        domain="comp",
+        unique_id="2345",
+        title="Test",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    ignored_entry.add_to_hass(hass)
 
     mock_platform(hass, "comp.config_flow", None)
 
     with patch(
         "homeassistant.loader.async_get_integration",
         return_value=integration,
-    ), pytest.raises(
-        HomeAssistantError,
-        match=r"Cannot start a config flow, the integration supports only a single config entry but already has one",
-    ):
-        await hass.config_entries.flow.async_init("comp", context={"source": "user"})
+    ), expectation:
+        result = await hass.config_entries.flow.async_init(
+            "comp", context={"source": source}, data=user_input
+        )
+
+    for key in expected_result:
+        assert result[key] == expected_result[key]
+
+
+@pytest.mark.parametrize(
+    ("source", "user_input", "expectation", "expected_result"),
+    [
+        (
+            config_entries.SOURCE_IGNORE,
+            {"unique_id": "blah", "title": "blah"},
+            does_not_raise(),
+            {"type": data_entry_flow.FlowResultType.CREATE_ENTRY},
+        ),
+        (
+            config_entries.SOURCE_REAUTH,
+            None,
+            does_not_raise(),
+            {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
+        ),
+        (
+            config_entries.SOURCE_UNIGNORE,
+            None,
+            does_not_raise(),
+            {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
+        ),
+        (
+            config_entries.SOURCE_USER,
+            None,
+            does_not_raise(),
+            {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
+        ),
+    ],
+)
+async def test_starting_config_flow_on_single_config_entry_2(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    user_input: dict,
+    expectation: AbstractContextManager,
+    expected_result: dict,
+) -> None:
+    """Test starting a config flow for a single config entry integration.
+
+    In this test, the integration has one ignored flow but no entry added by user.
+    """
+    integration = loader.Integration(
+        hass,
+        "components.comp",
+        None,
+        {
+            "name": "Comp",
+            "dependencies": [],
+            "requirements": [],
+            "domain": "comp",
+            "single_config_entry": True,
+        },
+    )
+    ignored_entry = MockConfigEntry(
+        domain="comp",
+        unique_id="2345",
+        title="Test",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    ignored_entry.add_to_hass(hass)
+
+    mock_platform(hass, "comp.config_flow", None)
+
+    with patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
+    ), expectation:
+        result = await hass.config_entries.flow.async_init(
+            "comp", context={"source": source}, data=user_input
+        )
+
+    for key in expected_result:
+        assert result[key] == expected_result[key]
 
 
 async def test_avoid_adding_second_config_entry_on_single_config_entry(
@@ -4564,45 +4699,6 @@ async def test_in_progress_get_canceled_when_entry_is_created(
 
     assert len(manager.flow.async_progress()) == 0
     assert len(manager.async_entries()) == 1
-
-
-async def test_start_reauth_still_possible_for_single_config_entry(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
-):
-    """Test that we can still start a reauth flow on a single config entry integration."""
-    integration = loader.Integration(
-        hass,
-        "components.comp",
-        None,
-        {
-            "name": "Comp",
-            "dependencies": [],
-            "requirements": [],
-            "domain": "comp",
-            "single_config_entry": True,
-        },
-    )
-    entry = MockConfigEntry(
-        domain="comp",
-        unique_id="1234",
-        title="Test",
-        data={"vendor": "data"},
-        options={"vendor": "options"},
-    )
-    entry.add_to_hass(hass)
-
-    mock_platform(hass, "comp.config_flow", None)
-
-    with patch(
-        "homeassistant.loader.async_get_integration",
-        return_value=integration,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            "comp", context={"source": config_entries.SOURCE_REAUTH}
-        )
-
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
 
 
 async def test_directly_mutating_blocked(
