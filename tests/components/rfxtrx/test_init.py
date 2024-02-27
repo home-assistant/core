@@ -204,6 +204,7 @@ async def test_connect_failed(
 async def test_reconnect(rfxtrx, hass: HomeAssistant) -> None:
     """Test that we reconnect on connection loss."""
     config_entry = await setup_rfx_test_cfg(hass, device="/dev/ttyUSBfake")
+    await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
     rfxtrx.connect.call_count = 1
@@ -212,6 +213,7 @@ async def test_reconnect(rfxtrx, hass: HomeAssistant) -> None:
         rfxtrx.event_callback,
         rfxtrxmod.ConnectionLost(),
     )
+    await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
     rfxtrx.connect.call_count = 2
