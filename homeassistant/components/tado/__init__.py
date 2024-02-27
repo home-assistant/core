@@ -192,9 +192,10 @@ class TadoConnector:
             overlay_mode = self.fallback or CONST_OVERLAY_TADO_MODE
         # If default is Tado default then look it up
         if overlay_mode == CONST_OVERLAY_TADO_DEFAULT:
-            zone_data = self.data["zone"][zone_id]
-            zone_fallback = zone_data.default_overlay_termination_type
-            overlay_mode = zone_fallback or CONST_OVERLAY_TADO_MODE
+            overlay_mode = (
+                self.data["zone"][zone_id].default_overlay_termination_type
+                or CONST_OVERLAY_TADO_MODE
+            )
 
         return overlay_mode
 
