@@ -161,6 +161,7 @@ class Debouncer(Generic[_R_co]):
             self.hass.async_create_task(
                 self._handle_timer_finish(),
                 f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}",
+                eager_start=True,
             )
 
     @callback
