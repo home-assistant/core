@@ -189,17 +189,12 @@ class TadoConnector:
             return CONST_OVERLAY_TIMER
         # If no duration or timer set to fallback setting
         if overlay_mode is None:
-            overlay_mode = (
-                self.fallback if self.fallback is not None else CONST_OVERLAY_TADO_MODE
-            )
+            overlay_mode = self.fallback or CONST_OVERLAY_TADO_MODE
         # If default is Tado default then look it up
         if overlay_mode == CONST_OVERLAY_TADO_DEFAULT:
             zone_data = self.data["zone"][zone_id]
-            overlay_mode = (
-                zone_data.default_overlay_termination_type
-                if zone_data.default_overlay_termination_type is not None
-                else CONST_OVERLAY_TADO_MODE
-            )
+            zone_fallback = zone_data.default_overlay_termination_type
+            overlay_mode = zone_fallback or CONST_OVERLAY_TADO_MODE
 
         return overlay_mode
 
