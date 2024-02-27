@@ -57,7 +57,7 @@ class JvcSensor(JvcProjectorEntity, SensorEntity):
         """Initialize the JVC Projector sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.device.mac}_{description.key}"
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
 
     @property
     def native_value(self) -> str | None:
