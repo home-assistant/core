@@ -250,9 +250,9 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
 
     def _control_heater(
         self,
-        hvac_mode: Optional[str] = None,
-        target_temp: Optional[float] = None,
-        duration: Optional[int] = None,
+        hvac_mode: str | None = None,
+        target_temp: float | None = None,
+        duration: int | None = None,
     ):
         """Send new target temperature."""
         if hvac_mode:
