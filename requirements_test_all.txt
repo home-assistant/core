@@ -2195,7 +2195,7 @@ wled==0.17.0
 wolf-comm==0.0.4
 
 # homeassistant.components.wyoming
-wyoming==1.5.2
+wyoming==1.5.3
 
 # homeassistant.components.xbox
 xbox-webapi==2.0.11
