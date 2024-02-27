@@ -17,7 +17,7 @@ def disable_bluez_manager_socket():
 
 @pytest.fixture(name="disable_dbus_socket", autouse=True, scope="session")
 def disable_dbus_socket():
-    """Mock the bluez manager socket."""
+    """Mock the dbus message bus to avoid creating a socket."""
     with patch.object(message_bus, "MessageBus"):
         yield
 
