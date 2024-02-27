@@ -963,7 +963,7 @@ async def test_reauth_issue(hass: HomeAssistant) -> None:
         learn_more_url=None,
         severity=ir.IssueSeverity.ERROR,
         translation_key="config_entry_reauth",
-        translation_placeholders=None,
+        translation_placeholders={"name": "test_title"},
     )
 
     result = await hass.config_entries.flow.async_configure(issue.data["flow_id"], {})
