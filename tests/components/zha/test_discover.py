@@ -103,12 +103,6 @@ async def test_devices(
         zha_dev = await zha_device_joined_restored(zigpy_device)
         await hass_disable_services.async_block_till_done()
 
-    created_entities = {}
-
-    for mock_call in mock_add_entities.mock_calls:
-        for entity in mock_call.args[1]:
-            created_entities[entity.entity_id] = entity
-
     if cluster_identify:
         # We only identify on join
         should_identify = (
@@ -142,6 +136,11 @@ async def test_devices(
     assert event_cluster_handlers == set(device[DEV_SIG_EVT_CLUSTER_HANDLERS])
 
     # Keep track of unhandled entities: they should always be ones we explicitly ignore
+    created_entities = {
+        entity.entity_id: entity
+        for mock_call in mock_add_entities.mock_calls
+        for entity in mock_call.args[1]
+    }
     unhandled_entities = set(created_entities.keys())
     entity_registry = er.async_get(hass_disable_services)
 
