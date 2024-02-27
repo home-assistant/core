@@ -210,7 +210,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
 
         self._control_heater(hvac_mode=mode)
 
-    def set_timer(self, time_period: int, temperature: Optional[float] = None):
+    def set_timer(self, time_period: int, temperature: float | None = None):
         """Set the timer on the entity, and temperature if supported."""
         if not self._supports_temperature_control and temperature is not None:
             temperature = None
