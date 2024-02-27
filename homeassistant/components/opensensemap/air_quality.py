@@ -11,12 +11,12 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_STATION_ID, DOMAIN, MANUFACTURER, SensorTypeId
+from .const import CONF_STATION_ID, DOMAIN, MANUFACTURER
 from .coordinator import OpenSenseMapDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -86,6 +86,4 @@ class OpenSenseMapQuality(
     @property
     def particulate_matter_10(self) -> float | None:
         """Return the particulate matter 10 level."""
-        if self._pm10_id is None:
-            return -1
-        return self.coordinator.data[self._pm10_id].value
+        return self.coordinator.data.pm10

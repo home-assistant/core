@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "invalid_id": "The provided id is not a valid station id."
+      "invalid_id": "[%key:component::opensensemap::config::error::invalid_id%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -12,8 +12,8 @@
       "user": {
         "description": "Enter an opensensemap station id.",
         "data": {
-          "station_id": "Station id",
-        },
+          "station_id": "Station id"
+        }
       }
     },
     "flow_title": "{name}"

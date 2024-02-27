@@ -1,18 +1,15 @@
 """Accessing OpenSenseMapApi."""
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, cast
+from datetime import timedelta
 
-from opensensemap_api import _TITLES, OpenSenseMap
+from opensensemap_api import OpenSenseMap
 from opensensemap_api.exceptions import OpenSenseMapError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER, SensorTypeId
+from .const import LOGGER
 
 
 class OpenSenseMapDataUpdateCoordinator(DataUpdateCoordinator[OpenSenseMap]):
@@ -32,7 +29,7 @@ class OpenSenseMapDataUpdateCoordinator(DataUpdateCoordinator[OpenSenseMap]):
         )
         self.station_api = station_api
 
-        async def _async_update_data(self)-> OpenSenseMap:
+    async def _async_update_data(self) -> OpenSenseMap:
         """Fetch data from API endpoint."""
         try:
             await self.station_api.get_data()

@@ -1,1 +1,0 @@
-"""Test openSenseMap Sensor implementations."""
