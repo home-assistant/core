@@ -322,7 +322,7 @@ class EntityPlatform:
     ) -> bool:
         """Set up a platform via config file or config entry.
 
-        async_create_setup_awaitable creates a coroutine that sets up platform.
+        async_create_setup_awaitable creates an awaitable that sets up platform.
         """
         current_platform.set(self)
         logger = self.logger
