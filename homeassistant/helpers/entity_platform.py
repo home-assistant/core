@@ -630,10 +630,15 @@ class EntityPlatform:
 
         self._async_unsub_polling = async_track_time_interval(
             self.hass,
-            self._update_entity_states,
+            self._async_handle_interval_callback,
             self.scan_interval,
             name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
         )
+
+    @callback
+    def _async_handle_interval_callback(self, now: datetime) -> None:
+        """Update all the entity states in a single platform."""
+        self.hass.async_create_task(self._update_entity_states(now), eager_start=True)
 
     def _entity_id_already_exists(self, entity_id: str) -> tuple[bool, bool]:
         """Check if an entity_id already exists.
@@ -995,7 +1000,7 @@ class EntityPlatform:
                 return
 
             if tasks := [
-                entity.async_update_ha_state(True)
+                create_eager_task(entity.async_update_ha_state(True))
                 for entity in self.entities.values()
                 if entity.should_poll
             ]:
