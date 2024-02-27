@@ -198,10 +198,10 @@ async def test_setup_and_stop_no_bluetooth(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    assert len(mock_ha_bleak_scanner.mock_calls) == 1
-    assert "Failed to initialize Bluetooth" in caplog.text
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+        assert len(mock_ha_bleak_scanner.mock_calls) == 1
+        assert "Failed to initialize Bluetooth" in caplog.text
 
 
 async def test_setup_and_stop_broken_bluetooth(
