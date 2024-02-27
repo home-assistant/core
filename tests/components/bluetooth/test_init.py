@@ -178,7 +178,7 @@ async def test_setup_and_stop_old_bluez(
 
 
 async def test_setup_and_stop_no_bluetooth(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, macos_adapter: None
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we fail gracefully when bluetooth is not available."""
     mock_bt = [
