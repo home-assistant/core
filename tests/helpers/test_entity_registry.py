@@ -23,6 +23,7 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     flush_store,
+    mock_config_flow,
     mock_platform,
 )
 
@@ -1278,9 +1279,9 @@ async def test_disable_config_entry_disables_entities(
 ) -> None:
     """Test that we disable entities tied to a config entry."""
     mock_platform(hass, "light.config_flow", None)
-    config_entries.HANDLERS["light"] = config_entries.ConfigFlow
-    config_entry = MockConfigEntry(domain="light")
-    config_entry.add_to_hass(hass)
+    with mock_config_flow("light", config_entries.ConfigFlow):
+        config_entry = MockConfigEntry(domain="light")
+        config_entry.add_to_hass(hass)
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,

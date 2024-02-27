@@ -11,7 +11,7 @@ from homeassistant.components.hassio import AddonError, AddonInfo, AddonState, H
 from homeassistant.components.hassio.handler import HassioAPIError
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
 from homeassistant.components.zha.core.const import DOMAIN as ZHA_DOMAIN
-from homeassistant.config_entries import HANDLERS, ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
@@ -23,6 +23,7 @@ from tests.common import (
     MockPlatform,
     flush_store,
     mock_component,
+    mock_config_flow,
     mock_platform,
 )
 
@@ -96,8 +97,9 @@ def config_flow_handler(
     hass: HomeAssistant, current_request_with_host: Any
 ) -> Generator[FakeConfigFlow, None, None]:
     """Fixture for a test config flow."""
-    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
-    HANDLERS[TEST_DOMAIN] = FakeConfigFlow
+    mock_platform(hass, f"{TEST_DOMAIN}.config_flow", None)
+    with mock_config_flow(TEST_DOMAIN, FakeConfigFlow):
+        yield
 
 
 @pytest.fixture

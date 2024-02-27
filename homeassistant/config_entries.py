@@ -36,7 +36,7 @@ from .core import (
     HomeAssistant,
     callback,
 )
-from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowResult
+from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowResult, UnknownHandler
 from .exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -2474,7 +2474,10 @@ async def _support_single_config_entry_only(hass: HomeAssistant, domain: str) ->
 
 async def support_entry_reconfigure(hass: HomeAssistant, domain: str) -> bool:
     """Test if a domain supports reconfigure flow."""
-    handler = await _async_get_flow_handler(hass, domain, {})
+    try:
+        handler = await _async_get_flow_handler(hass, domain, {})
+    except UnknownHandler:
+        return False
     return bool(handler and hasattr(handler, "async_step_reconfigure"))
 
 

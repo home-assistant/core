@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from homeassistant.components.assist_pipeline import Pipeline
+from homeassistant.components.assist_pipeline.const import DOMAIN
 from homeassistant.components.assist_pipeline.pipeline import (
     AssistDevice,
     PipelineData,
@@ -15,13 +16,13 @@ from homeassistant.components.assist_pipeline.select import (
     VadSensitivitySelect,
 )
 from homeassistant.components.assist_pipeline.vad import VadSensitivity
-from homeassistant.config_entries import HANDLERS, ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from tests.common import MockConfigEntry, MockPlatform, mock_platform
+from tests.common import MockConfigEntry, MockPlatform, mock_config_flow, mock_platform
 
 
 class SelectPlatform(MockPlatform):
@@ -49,12 +50,14 @@ class SelectPlatform(MockPlatform):
 async def init_select(hass: HomeAssistant, init_components) -> ConfigEntry:
     """Initialize select entity."""
     mock_platform(hass, "assist_pipeline.config_flow", None)
-    HANDLERS["assist_pipeline"] = ConfigFlow
     mock_platform(hass, "assist_pipeline.select", SelectPlatform())
-    config_entry = MockConfigEntry(domain="assist_pipeline")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_forward_entry_setup(config_entry, "select")
-    return config_entry
+    with mock_config_flow(DOMAIN, ConfigFlow):
+        config_entry = MockConfigEntry(domain="assist_pipeline")
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_forward_entry_setup(
+            config_entry, "select"
+        )
+        return config_entry
 
 
 @pytest.fixture
