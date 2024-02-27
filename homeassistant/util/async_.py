@@ -216,7 +216,8 @@ async def gather_with_limited_concurrency(
             return await task
 
     return await gather(
-        *(sem_task(task) for task in tasks), return_exceptions=return_exceptions
+        *(create_eager_task(sem_task(task)) for task in tasks),
+        return_exceptions=return_exceptions,
     )
 
 
