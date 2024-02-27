@@ -33,7 +33,6 @@ class BaseEntityDescriptionMixin:
 class BaseEntityDescription(SensorEntityDescription):
     """Describes GitHub sensor entity default overrides."""
 
-    icon: str = "mdi:github"
     attr_fn: Callable[[dict[str, Any]], Mapping[str, Any] | None] = lambda data: None
     avabl_fn: Callable[[dict[str, Any]], bool] = lambda data: True
 
@@ -55,7 +54,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="stargazers_count",
         translation_key="stargazers_count",
-        icon="mdi:star",
         native_unit_of_measurement="Stars",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -64,7 +62,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="subscribers_count",
         translation_key="subscribers_count",
-        icon="mdi:glasses",
         native_unit_of_measurement="Watchers",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -73,7 +70,6 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
     GitHubSensorEntityDescription(
         key="forks_count",
         translation_key="forks_count",
-        icon="mdi:source-fork",
         native_unit_of_measurement="Forks",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
