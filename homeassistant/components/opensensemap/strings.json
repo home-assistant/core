@@ -13,11 +13,7 @@
         "description": "Enter an opensensemap station id.",
         "data": {
           "station_id": "Station id",
-          "name": "[%key:common::config_flow::data::name%]"
         },
-        "data_description": {
-          "name": "Take the opensensemap station name if emtpy."
-        }
       }
     },
     "flow_title": "{name}"

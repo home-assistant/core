@@ -1,6 +1,4 @@
 """Setting up config entry from deprecated Air Quality platform."""
-# Air quality platform is deprecated.
-# This platform implementation is used for importing existing yaml configs only.
 
 from __future__ import annotations
 
@@ -73,30 +71,20 @@ class OpenSenseMapQuality(
 
         self._name = config_entry.data[CONF_NAME]
         self._station_id = config_entry.data[CONF_STATION_ID]
-        self._attr_unique_id = f"{self._station_id}_sensor"
+        self._attr_unique_id = f"{self._station_id}_air_quality"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._station_id)},
             manufacturer=MANUFACTURER,
             name=self._name,
-            entry_type=DeviceEntryType.SERVICE,
         )
-        self._pm25_id = None
-        self._pm10_id = None
-        for sensor_descr in self.coordinator.sensors.values():
-            if sensor_descr.sensor_type == SensorTypeId.PM25:
-                self._pm25_id = sensor_descr.id
-            elif sensor_descr.sensor_type == SensorTypeId.PM10:
-                self._pm10_id = sensor_descr.id
 
     @property
-    def particulate_matter_2_5(self) -> float:
+    def particulate_matter_2_5(self) -> float | None:
         """Return the particulate matter 2.5 level."""
-        if self._pm25_id is None:
-            return -1
-        return self.coordinator.data[self._pm25_id].value
+        return self.coordinator.data.pm2_5
 
     @property
-    def particulate_matter_10(self) -> float:
+    def particulate_matter_10(self) -> float | None:
         """Return the particulate matter 10 level."""
         if self._pm10_id is None:
             return -1
