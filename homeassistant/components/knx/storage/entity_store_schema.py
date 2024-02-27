@@ -56,6 +56,26 @@ def ga_schema(
     return vol.Schema(schema)
 
 
+def optional_ga_schema(
+    key: str, ga_schema_validator: vol.Schema
+) -> dict[vol.Marker, vol.Schema]:
+    """Validate group address schema or remove key if no address is set."""
+    # frontend will return {key: {"write": None, "state": None}} for unused GA sets
+    # -> remove this entirely for optional keys
+    # if one GA is set, validate as usual
+    return {
+        vol.Optional(key): ga_schema_validator,
+        vol.Remove(key): vol.Schema(
+            {
+                vol.Optional("write"): None,
+                vol.Optional("state"): None,
+                vol.Optional("passive"): vol.IsFalse(),  # None or empty list
+            },
+            extra=vol.ALLOW_EXTRA,
+        ),
+    }
+
+
 SWITCH_SCHEMA = vol.Schema(
     {
         vol.Required("entity"): BASE_ENTITY_SCHEMA,
