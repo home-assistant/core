@@ -475,7 +475,7 @@ class ConfigEntry:
                 )
             return
 
-        if domain_is_integration:
+        if integration.config_flow and domain_is_integration:
             try:
                 await integration.async_get_platform("config_flow")
             except ImportError as err:
