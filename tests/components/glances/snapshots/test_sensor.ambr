@@ -199,57 +199,6 @@
     'state': '59',
   })
 # ---
-# name: test_sensor_states[sensor.0_0_0_0_data_size-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.0_0_0_0_data_size',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
-    'original_icon': 'mdi:memory',
-    'original_name': 'Data size',
-    'platform': 'glances',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'memory_used',
-    'unique_id': 'test--memory_use',
-    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
-  })
-# ---
-# name: test_sensor_states[sensor.0_0_0_0_data_size-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': '0.0.0.0 Data size',
-      'icon': 'mdi:memory',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.0_0_0_0_data_size',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1047.1',
-  })
-# ---
 # name: test_sensor_states[sensor.0_0_0_0_err_temp_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -747,6 +696,57 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '27.6',
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_memory_use-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.0_0_0_0_memory_use',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': 'mdi:memory',
+    'original_name': 'Memory use',
+    'platform': 'glances',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'memory_use',
+    'unique_id': 'test--memory_use',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_sensor_states[sensor.0_0_0_0_memory_use-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': '0.0.0.0 Memory use',
+      'icon': 'mdi:memory',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.0_0_0_0_memory_use',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1047.1',
   })
 # ---
 # name: test_sensor_states[sensor.0_0_0_0_na_temp_temperature-entry]

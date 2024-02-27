@@ -292,7 +292,7 @@ async def _async_setup_component(  # noqa: C901
     # Some integrations fail on import because they call functions incorrectly.
     # So we do it before validating config to catch these errors.
     try:
-        component = integration.get_component()
+        component = await integration.async_get_component()
     except ImportError as err:
         log_error(f"Unable to import component: {err}", err)
         return False

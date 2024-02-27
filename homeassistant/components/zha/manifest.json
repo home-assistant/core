@@ -6,6 +6,7 @@
   "config_flow": true,
   "dependencies": ["file_upload"],
   "documentation": "https://www.home-assistant.io/integrations/zha",
+  "import_executor": true,
   "iot_class": "local_polling",
   "loggers": [
     "aiosqlite",
