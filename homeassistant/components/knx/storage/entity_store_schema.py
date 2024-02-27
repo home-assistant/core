@@ -1,4 +1,5 @@
 """KNX entity store schema."""
+from enum import Enum
 from typing import Any
 
 import voluptuous as vol
@@ -27,6 +28,7 @@ def ga_schema(
     passive: bool = True,
     write_required: bool = False,
     state_required: bool = False,
+    dpt: type[Enum] | None = None,
 ) -> vol.Schema:
     """Return a schema for a knx group address selector."""
     schema: dict[vol.Marker, Any] = {}
@@ -53,6 +55,12 @@ def ga_schema(
         )
     else:
         schema[vol.Remove("passive")] = object
+
+    if dpt is not None:
+        schema[vol.Required("dpt")] = vol.In(dpt)
+    else:
+        schema[vol.Remove("dpt")] = object
+
     return vol.Schema(schema)
 
 
