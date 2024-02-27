@@ -62,7 +62,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         translation_key="deprecated_integration",
         translation_placeholders={
             "domain": DOMAIN,
-            "integration_title": "Asterisk Call Detail Records",
+            "integration_title": "Asterisk Voicemail",
+            "mailbox": "mailbox",
         },
     )
 
