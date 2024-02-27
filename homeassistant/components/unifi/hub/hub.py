@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-
 import aiounifi
-from aiounifi.models.device import DeviceSetPoePortModeRequest
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     DeviceEntry,
@@ -16,15 +13,12 @@ from homeassistant.helpers.device_registry import (
     DeviceInfo,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later, async_track_time_interval
-import homeassistant.util.dt as dt_util
 
 from ..const import ATTR_MANUFACTURER, CONF_SITE_ID, DOMAIN as UNIFI_DOMAIN, PLATFORMS
 from .config import UnifiConfig
+from .entity_helper import UnifiEntityHelper
 from .entity_loader import UnifiEntityLoader
 from .websocket import UnifiWebsocket
-
-CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
 
 
 class UnifiHub:
@@ -38,16 +32,11 @@ class UnifiHub:
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
         self.entity_loader = UnifiEntityLoader(self)
+        self.entity_helper = UnifiEntityHelper(hass, api)
         self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
-
-        self._cancel_heartbeat_check: CALLBACK_TYPE | None = None
-        self._heartbeat_time: dict[str, datetime] = {}
-
-        self.poe_command_queue: dict[str, dict[int, str]] = {}
-        self._cancel_poe_command: CALLBACK_TYPE | None = None
 
     @callback
     @staticmethod
@@ -85,62 +74,7 @@ class UnifiHub:
 
         self.config.entry.add_update_listener(self.async_config_entry_updated)
 
-        self._cancel_heartbeat_check = async_track_time_interval(
-            self.hass, self._async_check_for_stale, CHECK_HEARTBEAT_INTERVAL
-        )
-
-    @callback
-    def async_heartbeat(
-        self, unique_id: str, heartbeat_expire_time: datetime | None = None
-    ) -> None:
-        """Signal when a device has fresh home state."""
-        if heartbeat_expire_time is not None:
-            self._heartbeat_time[unique_id] = heartbeat_expire_time
-            return
-
-        if unique_id in self._heartbeat_time:
-            del self._heartbeat_time[unique_id]
-
-    @callback
-    def _async_check_for_stale(self, *_: datetime) -> None:
-        """Check for any devices scheduled to be marked disconnected."""
-        now = dt_util.utcnow()
-
-        unique_ids_to_remove = []
-        for unique_id, heartbeat_expire_time in self._heartbeat_time.items():
-            if now > heartbeat_expire_time:
-                async_dispatcher_send(
-                    self.hass, f"{self.signal_heartbeat_missed}_{unique_id}"
-                )
-                unique_ids_to_remove.append(unique_id)
-
-        for unique_id in unique_ids_to_remove:
-            del self._heartbeat_time[unique_id]
-
-    @callback
-    def async_queue_poe_port_command(
-        self, device_id: str, port_idx: int, poe_mode: str
-    ) -> None:
-        """Queue commands to execute them together per device."""
-        if self._cancel_poe_command:
-            self._cancel_poe_command()
-            self._cancel_poe_command = None
-
-        device_queue = self.poe_command_queue.setdefault(device_id, {})
-        device_queue[port_idx] = poe_mode
-
-        async def async_execute_command(now: datetime) -> None:
-            """Execute previously queued commands."""
-            queue = self.poe_command_queue.copy()
-            self.poe_command_queue.clear()
-            for device_id, device_commands in queue.items():
-                device = self.api.devices[device_id]
-                commands = list(device_commands.items())
-                await self.api.request(
-                    DeviceSetPoePortModeRequest.create(device, targets=commands)
-                )
-
-        self._cancel_poe_command = async_call_later(self.hass, 5, async_execute_command)
+        self.entity_helper.initialize()
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -205,12 +139,6 @@ class UnifiHub:
         if not unload_ok:
             return False
 
-        if self._cancel_heartbeat_check:
-            self._cancel_heartbeat_check()
-            self._cancel_heartbeat_check = None
-
-        if self._cancel_poe_command:
-            self._cancel_poe_command()
-            self._cancel_poe_command = None
+        self.entity_helper.reset()
 
         return True
