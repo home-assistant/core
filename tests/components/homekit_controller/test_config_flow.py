@@ -12,7 +12,7 @@ from aiohomekit.model.services import ServicesTypes
 from bleak.exc import BleakError
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
@@ -483,6 +483,44 @@ async def test_discovery_invalid_config_entry(hass: HomeAssistant, controller) -
 
     # And new config flow should continue allowing user to set up a new pairing
     assert result["type"] == "form"
+
+
+async def test_discovery_ignored_config_entry(hass: HomeAssistant, controller) -> None:
+    """There is already a config entry but it is ignored."""
+    pairing = await controller.add_paired_device(Accessories(), "00:00:00:00:00:00")
+
+    MockConfigEntry(
+        domain="homekit_controller",
+        data={},
+        unique_id="00:00:00:00:00:00",
+        source=config_entries.SOURCE_IGNORE,
+    ).add_to_hass(hass)
+
+    # We just added a mock config entry so it must be visible in hass
+    assert len(hass.config_entries.async_entries()) == 1
+
+    device = setup_mock_accessory(controller)
+    discovery_info = get_device_discovery_info(device)
+
+    # Device is discovered
+    with patch.object(
+        pairing,
+        "list_accessories_and_characteristics",
+        side_effect=AuthenticationError("Invalid pairing keys"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "homekit_controller",
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=discovery_info,
+        )
+
+    # Entry is still ignored
+    config_entry_count = len(hass.config_entries.async_entries())
+    assert config_entry_count == 1
+
+    # We should abort since there is no accessory id in the data
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_discovery_already_configured(hass: HomeAssistant, controller) -> None:
@@ -1029,6 +1067,7 @@ async def test_mdns_update_to_paired_during_pairing(
         "source": config_entries.SOURCE_ZEROCONF,
     }
 
+    finish_pairing_started = asyncio.Event()
     mdns_update_to_paired = asyncio.Event()
 
     original_async_start_pairing = device.async_start_pairing
@@ -1037,6 +1076,7 @@ async def test_mdns_update_to_paired_during_pairing(
         finish_pairing = await original_async_start_pairing(*args, **kwargs)
 
         async def _finish_pairing(*args, **kwargs):
+            finish_pairing_started.set()
             # Insert an event wait to make sure
             # we trigger the mdns update in the middle of the pairing
             await mdns_update_to_paired.wait()
@@ -1060,6 +1100,8 @@ async def test_mdns_update_to_paired_during_pairing(
             result["flow_id"], user_input={"pairing_code": "111-22-333"}
         )
     )
+    # Ensure the task starts
+    await finish_pairing_started.wait()
     # Make sure when the device is discovered as paired via mdns
     # it does not abort pairing if it happens before pairing is finished
     result2 = await hass.config_entries.flow.async_init(

@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "derivative": {
+        "default": "mdi:chart-line"
+      }
+    }
+  }
+}

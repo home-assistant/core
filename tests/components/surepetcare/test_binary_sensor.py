@@ -1,10 +1,10 @@
 """The tests for the Sure Petcare binary sensor platform."""
-from homeassistant.components.surepetcare.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.setup import async_setup_component
 
-from . import HOUSEHOLD_ID, HUB_ID, MOCK_CONFIG
+from . import HOUSEHOLD_ID, HUB_ID
+
+from tests.common import MockConfigEntry
 
 EXPECTED_ENTITY_IDS = {
     "binary_sensor.pet_flap_connectivity": f"{HOUSEHOLD_ID}-13576-connectivity",
@@ -15,11 +15,10 @@ EXPECTED_ENTITY_IDS = {
 }
 
 
-async def test_binary_sensors(hass: HomeAssistant, surepetcare) -> None:
+async def test_binary_sensors(
+    hass: HomeAssistant, surepetcare, mock_config_entry_setup: MockConfigEntry
+) -> None:
     """Test the generation of unique ids."""
-    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG)
-    await hass.async_block_till_done()
-
     entity_registry = er.async_get(hass)
     state_entity_ids = hass.states.async_entity_ids()
 

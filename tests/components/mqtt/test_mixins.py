@@ -315,7 +315,7 @@ async def test_default_entity_and_device_name(
     """
 
     events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
-    hass.state = CoreState.starting
+    hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "mock-broker"})
@@ -396,3 +396,59 @@ async def test_name_attribute_is_set_or_not(
 
     assert state is not None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) is None
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "availability_topic": "test-topic",
+                    "availability_template": "{{ value_json.some_var * 1 }}",
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "availability": {
+                        "topic": "test-topic",
+                        "value_template": "{{ value_json.some_var * 1 }}",
+                    },
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "json_attributes_topic": "test-topic",
+                    "json_attributes_template": "{{ value_json.some_var * 1 }}",
+                }
+            }
+        },
+    ],
+    ids=[
+        "availability_template1",
+        "availability_template2",
+        "json_attributes_template",
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

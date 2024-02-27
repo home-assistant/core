@@ -41,11 +41,6 @@ class TedeeEntity(CoordinatorEntity[TedeeApiCoordinator]):
         self._lock = self.coordinator.data.get(self._lock.lock_id, self._lock)
         super()._handle_coordinator_update()
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self._lock.is_connected
-
 
 class TedeeDescriptionEntity(TedeeEntity):
     """Base class for Tedee device entities."""

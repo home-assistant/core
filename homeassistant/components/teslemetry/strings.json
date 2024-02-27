@@ -1,0 +1,35 @@
+{
+  "config": {
+    "error": {
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "subscription_required": "Subscription required, please visit {short_url}",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "description": "Enter an access token from {url}."
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "driver_temp": {
+        "name": "[%key:component::climate::title%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "off": "Normal",
+              "keep": "Keep mode",
+              "dog": "Dog mode",
+              "camp": "Camp mode"
+            }
+          }
+        }
+      }
+    }
+  }
+}

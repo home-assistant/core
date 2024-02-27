@@ -1139,7 +1139,7 @@ async def test_group_alarm(hass: HomeAssistant) -> None:
     hass.states.async_set("alarm_control_panel.one", "armed_away")
     hass.states.async_set("alarm_control_panel.two", "armed_home")
     hass.states.async_set("alarm_control_panel.three", "armed_away")
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     assert await async_setup_component(
         hass,
@@ -1187,7 +1187,7 @@ async def test_group_vacuum_off(hass: HomeAssistant) -> None:
     hass.states.async_set("vacuum.one", "docked")
     hass.states.async_set("vacuum.two", "off")
     hass.states.async_set("vacuum.three", "off")
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     assert await async_setup_component(
         hass,
@@ -1280,7 +1280,7 @@ async def test_switch_removed(hass: HomeAssistant) -> None:
     hass.states.async_set("switch.two", "off")
     hass.states.async_set("switch.three", "on")
 
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
     assert await async_setup_component(
         hass,
         "group",
@@ -1409,7 +1409,7 @@ async def test_group_that_references_a_group_of_lights(hass: HomeAssistant) -> N
         "light.living_front_ri",
         "light.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "off")
@@ -1443,7 +1443,7 @@ async def test_group_that_references_a_group_of_covers(hass: HomeAssistant) -> N
         "cover.living_front_ri",
         "cover.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "closed")
@@ -1479,7 +1479,7 @@ async def test_group_that_references_two_groups_of_covers(hass: HomeAssistant) -
         "cover.living_front_ri",
         "cover.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in entity_ids:
         hass.states.async_set(entity_id, "closed")
@@ -1523,7 +1523,7 @@ async def test_group_that_references_two_types_of_groups(hass: HomeAssistant) ->
         "device_tracker.living_front_ri",
         "device_tracker.living_back_lef",
     ]
-    hass.state = CoreState.stopped
+    hass.set_state(CoreState.stopped)
 
     for entity_id in group_1_entity_ids:
         hass.states.async_set(entity_id, "closed")

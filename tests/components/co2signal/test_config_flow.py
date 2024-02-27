@@ -1,10 +1,11 @@
 """Test the CO2 Signal config flow."""
 from unittest.mock import AsyncMock, patch
 
-from aioelectricitymaps.exceptions import (
-    ElectricityMapsDecodeError,
+from aioelectricitymaps import (
+    ElectricityMapsConnectionError,
     ElectricityMapsError,
-    InvalidToken,
+    ElectricityMapsInvalidTokenError,
+    ElectricityMapsNoDataError,
 )
 import pytest
 
@@ -134,17 +135,14 @@ async def test_form_country(hass: HomeAssistant) -> None:
     ("side_effect", "err_code"),
     [
         (
-            InvalidToken,
+            ElectricityMapsInvalidTokenError,
             "invalid_auth",
         ),
         (ElectricityMapsError("Something else"), "unknown"),
-        (ElectricityMapsDecodeError("Boom"), "unknown"),
+        (ElectricityMapsConnectionError("Boom"), "unknown"),
+        (ElectricityMapsNoDataError("I have no data"), "no_data"),
     ],
-    ids=[
-        "invalid auth",
-        "generic error",
-        "json decode error",
-    ],
+    ids=["invalid auth", "generic error", "json decode error", "no data error"],
 )
 async def test_form_error_handling(
     hass: HomeAssistant,

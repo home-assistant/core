@@ -65,7 +65,7 @@ from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.STT]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.STT, Platform.TTS]
 
 SERVICE_REMOTE_CONNECT = "remote_connect"
 SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
@@ -288,13 +288,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     loaded = False
     stt_platform_loaded = asyncio.Event()
     tts_platform_loaded = asyncio.Event()
+    stt_tts_entities_added = asyncio.Event()
     hass.data[DATA_PLATFORMS_SETUP] = {
         Platform.STT: stt_platform_loaded,
         Platform.TTS: tts_platform_loaded,
+        "stt_tts_entities_added": stt_tts_entities_added,
     }
 
     async def _on_start() -> None:
-        """Discover platforms."""
+        """Handle cloud started after login."""
         nonlocal loaded
 
         # Prevent multiple discovery
@@ -302,14 +304,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             return
         loaded = True
 
-        tts_info = {"platform_loaded": tts_platform_loaded}
-
-        await async_load_platform(hass, Platform.TTS, DOMAIN, tts_info, config)
-        await tts_platform_loaded.wait()
-
-        # The config entry should be loaded after the legacy tts platform is loaded
-        # to make sure that the tts integration is setup before we try to migrate
-        # old assist pipelines in the cloud stt entity.
         await hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
 
     async def _on_connect() -> None:
@@ -337,6 +331,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     http_api.async_setup(hass)
 
     account_link.async_setup(hass)
+
+    # Load legacy tts platform for backwards compatibility.
+    hass.async_create_task(
+        async_load_platform(
+            hass,
+            Platform.TTS,
+            DOMAIN,
+            {"platform_loaded": tts_platform_loaded},
+            config,
+        )
+    )
 
     async_call_later(
         hass=hass,
@@ -375,8 +380,10 @@ def _remote_handle_prefs_updated(cloud: Cloud[CloudClient]) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    stt_platform_loaded: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][Platform.STT]
-    stt_platform_loaded.set()
+    stt_tts_entities_added: asyncio.Event = hass.data[DATA_PLATFORMS_SETUP][
+        "stt_tts_entities_added"
+    ]
+    stt_tts_entities_added.set()
 
     return True
 
