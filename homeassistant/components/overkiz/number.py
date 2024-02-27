@@ -219,14 +219,14 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
                 self.entity_description.min_value_state_name
             )
         ):
-            self.native_min_value = cast(float, state.value)
+            self._attr_native_min_value = cast(float, state.value)
 
         if self.entity_description.max_value_state_name and (
             state := self.device.states.get(
                 self.entity_description.max_value_state_name
             )
         ):
-            self.native_max_value = cast(float, state.value)
+            self._attr_native_max_value = cast(float, state.value)
 
     @property
     def native_value(self) -> float | None:
