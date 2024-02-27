@@ -699,7 +699,7 @@ debugpy==1.8.1
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==5.2.2
+deebot-client==6.0.2
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -2860,7 +2860,7 @@ wirelesstagpy==0.8.1
 wled==0.17.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.4
+wolf-comm==0.0.6
 
 # homeassistant.components.wyoming
 wyoming==1.5.3
