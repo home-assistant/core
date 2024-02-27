@@ -2013,39 +2013,39 @@ async def test_disable_config_entry_disables_devices(
         config_entry = MockConfigEntry(domain="light")
         config_entry.add_to_hass(hass)
 
-        entry1 = device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        )
-        entry2 = device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
-            disabled_by=dr.DeviceEntryDisabler.USER,
-        )
+    entry1 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "34:56:AB:CD:EF:12")},
+        disabled_by=dr.DeviceEntryDisabler.USER,
+    )
 
-        assert not entry1.disabled
-        assert entry2.disabled
+    assert not entry1.disabled
+    assert entry2.disabled
 
-        await hass.config_entries.async_set_disabled_by(
-            config_entry.entry_id, config_entries.ConfigEntryDisabler.USER
-        )
-        await hass.async_block_till_done()
+    await hass.config_entries.async_set_disabled_by(
+        config_entry.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
 
-        entry1 = device_registry.async_get(entry1.id)
-        assert entry1.disabled
-        assert entry1.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
-        entry2 = device_registry.async_get(entry2.id)
-        assert entry2.disabled
-        assert entry2.disabled_by is dr.DeviceEntryDisabler.USER
+    entry1 = device_registry.async_get(entry1.id)
+    assert entry1.disabled
+    assert entry1.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+    entry2 = device_registry.async_get(entry2.id)
+    assert entry2.disabled
+    assert entry2.disabled_by is dr.DeviceEntryDisabler.USER
 
-        await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_set_disabled_by(config_entry.entry_id, None)
+    await hass.async_block_till_done()
 
-        entry1 = device_registry.async_get(entry1.id)
-        assert not entry1.disabled
-        entry2 = device_registry.async_get(entry2.id)
-        assert entry2.disabled
-        assert entry2.disabled_by is dr.DeviceEntryDisabler.USER
+    entry1 = device_registry.async_get(entry1.id)
+    assert not entry1.disabled
+    entry2 = device_registry.async_get(entry2.id)
+    assert entry2.disabled
+    assert entry2.disabled_by is dr.DeviceEntryDisabler.USER
 
 
 async def test_only_disable_device_if_all_config_entries_are_disabled(
@@ -2059,39 +2059,39 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(
         config_entry2 = MockConfigEntry(domain="light")
         config_entry2.add_to_hass(hass)
 
-        device_registry.async_get_or_create(
-            config_entry_id=config_entry1.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        )
-        entry1 = device_registry.async_get_or_create(
-            config_entry_id=config_entry2.entry_id,
-            connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        )
-        assert len(entry1.config_entries) == 2
-        assert not entry1.disabled
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry1 = device_registry.async_get_or_create(
+        config_entry_id=config_entry2.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    assert len(entry1.config_entries) == 2
+    assert not entry1.disabled
 
-        await hass.config_entries.async_set_disabled_by(
-            config_entry1.entry_id, config_entries.ConfigEntryDisabler.USER
-        )
-        await hass.async_block_till_done()
+    await hass.config_entries.async_set_disabled_by(
+        config_entry1.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
 
-        entry1 = device_registry.async_get(entry1.id)
-        assert not entry1.disabled
+    entry1 = device_registry.async_get(entry1.id)
+    assert not entry1.disabled
 
-        await hass.config_entries.async_set_disabled_by(
-            config_entry2.entry_id, config_entries.ConfigEntryDisabler.USER
-        )
-        await hass.async_block_till_done()
+    await hass.config_entries.async_set_disabled_by(
+        config_entry2.entry_id, config_entries.ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
 
-        entry1 = device_registry.async_get(entry1.id)
-        assert entry1.disabled
-        assert entry1.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
+    entry1 = device_registry.async_get(entry1.id)
+    assert entry1.disabled
+    assert entry1.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
 
-        await hass.config_entries.async_set_disabled_by(config_entry1.entry_id, None)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_set_disabled_by(config_entry1.entry_id, None)
+    await hass.async_block_till_done()
 
-        entry1 = device_registry.async_get(entry1.id)
-        assert not entry1.disabled
+    entry1 = device_registry.async_get(entry1.id)
+    assert not entry1.disabled
 
 
 @pytest.mark.parametrize(
