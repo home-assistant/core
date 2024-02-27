@@ -647,7 +647,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     def _play_media_playable_media_types(
         self, media_type: MediaType | str, media_id: str
-    ):
+    ) -> None:
         soco = self.coordinator.soco
         item_list = media_browser.get_media_list(
             self.media.library, media_id, media_type
