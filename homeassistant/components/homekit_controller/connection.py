@@ -544,7 +544,7 @@ class HKDevice:
                 current_unique_id.add((accessory.aid, service.iid, None))
 
                 for char in service.characteristics:
-                    if self.pairing.transport != TransportType.BLE:
+                    if self.pairing.transport != Transport.BLE:
                         if char.type == CharacteristicsTypes.THREAD_CONTROL_POINT:
                             continue
 
