@@ -59,6 +59,13 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.fixture(name="disable_bluez_manager_socket", autouse=True)
+def mock_disable_bluez_manager_socket():
+    """Mock the bluez manager socket."""
+    with patch.object(bleak_manager, "get_global_bluez_manager_with_timeout"):
+        yield
+
+
 async def test_setup_and_stop(
     hass: HomeAssistant, mock_bleak_scanner_start: MagicMock, enable_bluetooth: None
 ) -> None:
@@ -179,7 +186,6 @@ async def test_setup_and_stop_old_bluez(
     }
 
 
-@patch.object(bleak_manager, "get_global_bluez_manager_with_timeout", AsyncMock())
 async def test_setup_and_stop_no_bluetooth(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
 ) -> None:
