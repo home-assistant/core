@@ -21,7 +21,7 @@ from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
-from . import storage
+from . import storage, translation
 from .debounce import Debouncer
 from .deprecation import (
     DeprecatedConstantEnum,
@@ -566,9 +566,10 @@ class DeviceRegistry:
             full_translation_key = (
                 f"component.{config_entry.domain}.device.{translation_key}.name"
             )
-            translated_name = config_entry.translations.get(
-                full_translation_key, translation_key
+            translations = translation.async_get_cached_translations(
+                self.hass, self.hass.config.language, "device", config_entry.domain
             )
+            translated_name = translations.get(full_translation_key, translation_key)
             name = self._substitute_name_placeholders(
                 config_entry.domain, translated_name, translation_placeholders or {}
             )
