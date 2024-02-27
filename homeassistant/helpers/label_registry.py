@@ -5,7 +5,7 @@ from collections import UserDict
 from collections.abc import Iterable, ValuesView
 import dataclasses
 from dataclasses import dataclass
-from typing import Any, Literal, TypedDict, cast
+from typing import Literal, TypedDict, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
@@ -97,7 +97,7 @@ class LabelRegistry:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the label registry."""
         self.hass = hass
-        self._store: Store[dict[str, list[dict[str, Any]]]] = Store(
+        self._store: Store[dict[str, list[dict[str, str | None]]]] = Store(
             hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
@@ -232,6 +232,10 @@ class LabelRegistry:
 
         if data is not None:
             for label in data["labels"]:
+                # Check if the necessary keys are present
+                if label["label_id"] is None or label["name"] is None:
+                    continue
+
                 normalized_name = _normalize_label_name(label["name"])
                 labels[label["label_id"]] = LabelEntry(
                     color=label["color"],
