@@ -3,17 +3,19 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from aioautomower.exceptions import ApiException
+from aioautomower.exceptions import ApiException, HusqvarnaWSServerHandshakeError
 from aioautomower.model import MowerAttributes
 from aioautomower.session import AutomowerSession
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+# from aiohttp import WSServerHandshakeError
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+MAX_WS_RECONNECT_TIME = 600
 
 
 class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttributes]]):
@@ -54,21 +56,23 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         hass: HomeAssistant,
         entry: ConfigEntry,
         automower_client: AutomowerSession,
-        init_ready: asyncio.Event,
+        reconnect_time: int = 2,
     ) -> None:
         """Listen with the client."""
         try:
-            await automower_client.start_listening(init_ready)
-        except ApiException as err:
-            if entry.state != ConfigEntryState.LOADED:
-                raise
-            _LOGGER.error("Failed to listen: %s", err)
-        except Exception as err:  # pylint: disable=broad-except
-            # We need to guard against unknown exceptions to not crash this task.
-            _LOGGER.exception("Unexpected exception: %s", err)
-            if entry.state != ConfigEntryState.LOADED:
-                raise
+            websocket = await automower_client.auth.websocket_connect()
+            await automower_client.start_listening(websocket)
+        except HusqvarnaWSServerHandshakeError as err:
+            _LOGGER.debug(
+                "Failed to connect to weboscket. Trying to reconnect: %s", err
+            )
 
         if not hass.is_stopping:
-            _LOGGER.debug("Disconnected from server. Reloading integration")
-            hass.config_entries.async_schedule_reload(entry.entry_id)
+            await asyncio.sleep(reconnect_time)
+            reconnect_time = min(reconnect_time * 2, MAX_WS_RECONNECT_TIME)
+            await self.client_listen(
+                hass=hass,
+                entry=entry,
+                automower_client=automower_client,
+                reconnect_time=reconnect_time,
+            )

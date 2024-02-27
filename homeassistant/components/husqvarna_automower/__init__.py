@@ -1,6 +1,5 @@
 """The Husqvarna Automower integration."""
 
-import asyncio
 import logging
 
 from aioautomower.session import AutomowerSession
@@ -18,7 +17,6 @@ from .coordinator import AutomowerDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-LISTEN_READY_TIMEOUT = 15
 PLATFORMS: list[Platform] = [Platform.LAWN_MOWER, Platform.SENSOR, Platform.SWITCH]
 
 
@@ -41,17 +39,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from err
     coordinator = AutomowerDataUpdateCoordinator(hass, automower_api, entry)
     await coordinator.async_config_entry_first_refresh()
-    init_ready = asyncio.Event()
     entry.async_create_background_task(
         hass,
-        coordinator.client_listen(hass, entry, automower_api, init_ready),
+        coordinator.client_listen(hass, entry, automower_api),
         "websocket_task",
     )
-    try:
-        async with asyncio.timeout(LISTEN_READY_TIMEOUT):
-            await init_ready.wait()
-    except TimeoutError as err:
-        raise ConfigEntryNotReady("Automower client not ready") from err
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
