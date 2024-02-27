@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantOverkizData
 from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity
 
 BOOST_MODE_DURATION_DELAY = 1
@@ -37,8 +38,8 @@ class OverkizNumberDescriptionMixin:
 class OverkizNumberDescription(NumberEntityDescription, OverkizNumberDescriptionMixin):
     """Class to describe an Overkiz number."""
 
-    native_min_key: str | None = None
-    native_max_key: str | None = None
+    min_value_state_name: str | None = None
+    max_value_state_name: str | None = None
     inverted: bool = False
     set_native_value: Callable[
         [float, Callable[..., Awaitable[None]]], Awaitable[None]
@@ -96,8 +97,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         command=OverkizCommand.SET_EXPECTED_NUMBER_OF_SHOWER,
         native_min_value=2,
         native_max_value=4,
-        native_min_key=OverkizState.CORE_MINIMAL_SHOWER_MANUAL_MODE,
-        native_max_key=OverkizState.CORE_MAXIMAL_SHOWER_MANUAL_MODE,
+        min_value_state_name=OverkizState.CORE_MINIMAL_SHOWER_MANUAL_MODE,
+        max_value_state_name=OverkizState.CORE_MAXIMAL_SHOWER_MANUAL_MODE,
         entity_category=EntityCategory.CONFIG,
     ),
     # SomfyHeatingTemperatureInterface
@@ -204,6 +205,29 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
 
     entity_description: OverkizNumberDescription
 
+    def __init__(
+        self,
+        device_url: str,
+        coordinator: OverkizDataUpdateCoordinator,
+        description: OverkizNumberDescription,
+    ) -> None:
+        """Initialize a device."""
+        super().__init__(device_url, coordinator, description)
+
+        if self.entity_description.min_value_state_name and (
+            state := self.device.states.get(
+                self.entity_description.min_value_state_name
+            )
+        ):
+            self.native_min_value = cast(float, state.value)
+
+        if self.entity_description.max_value_state_name and (
+            state := self.device.states.get(
+                self.entity_description.max_value_state_name
+            )
+        ):
+            self.native_max_value = cast(float, state.value)
+
     @property
     def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
@@ -229,14 +253,3 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
         await self.executor.async_execute_command(
             self.entity_description.command, value
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Run when this Entity has been added to HA."""
-        await super().async_added_to_hass()
-
-        if self.entity_description.native_min_key:
-            if state := self.device.states.get(self.entity_description.native_min_key):
-                self.native_min_value = cast(float, state.value)
-        if self.entity_description.native_max_key:
-            if state := self.device.states.get(self.entity_description.native_max_key):
-                self.native_max_value = cast(float, state.value)
