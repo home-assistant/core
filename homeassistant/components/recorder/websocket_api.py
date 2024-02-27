@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import datetime as dt
 import logging
 from typing import TYPE_CHECKING, Any, Literal, cast
-from typing import Any, Literal, cast
 
 import voluptuous as vol
 
