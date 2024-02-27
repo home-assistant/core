@@ -179,6 +179,7 @@ async def test_setup_and_stop_old_bluez(
     }
 
 
+@patch.object(bleak_manager, "get_global_bluez_manager_with_timeout", AsyncMock())
 async def test_setup_and_stop_no_bluetooth(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
 ) -> None:
@@ -189,19 +190,17 @@ async def test_setup_and_stop_no_bluetooth(
     with patch(
         "habluetooth.scanner.OriginalBleakScanner",
         side_effect=BleakError,
-    ) as mock_ha_bleak_scanner, patch.object(
-        bleak_manager, "get_global_bluez_manager_with_timeout"
-    ), patch(
+    ) as mock_ha_bleak_scanner, patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
         await async_setup_with_one_adapter(hass)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await hass.async_block_till_done()
-        assert len(mock_ha_bleak_scanner.mock_calls) == 1
-        assert "Failed to initialize Bluetooth" in caplog.text
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert len(mock_ha_bleak_scanner.mock_calls) == 1
+    assert "Failed to initialize Bluetooth" in caplog.text
 
 
 async def test_setup_and_stop_broken_bluetooth(
