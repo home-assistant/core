@@ -16,7 +16,7 @@ from pyenphase import (
     EnvoySystemConsumption,
     EnvoySystemProduction,
 )
-from pyenphase.const import PhaseNames
+from pyenphase.const import PHASENAMES
 from pyenphase.models.meters import (
     CtMeterStatus,
     CtState,
@@ -56,8 +56,6 @@ _LOGGER = logging.getLogger(__name__)
 
 INVERTERS_KEY = "inverters"
 LAST_REPORTED_KEY = "last_reported"
-
-PHASENAMES: list[str] = list(PhaseNames)
 
 
 @dataclass(frozen=True)
