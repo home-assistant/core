@@ -199,6 +199,29 @@ async def test_setup_and_stop_broken_bluetooth(
     assert len(bluetooth.async_discovered_service_info(hass)) == 0
 
 
+async def test_setup_and_stop_no_bluetooth(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
+) -> None:
+    """Test we fail gracefully when bluetooth is not available."""
+    mock_bt = [
+        {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
+    ]
+    with patch(
+        "habluetooth.scanner.OriginalBleakScanner",
+        side_effect=BleakError,
+    ) as mock_ha_bleak_scanner, patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch("homeassistant.components.bluetooth.discovery_flow.async_create_flow"):
+        await async_setup_with_one_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert len(mock_ha_bleak_scanner.mock_calls) == 1
+    assert "Failed to initialize Bluetooth" in caplog.text
+
+
 async def test_setup_and_stop_broken_bluetooth_hanging(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, macos_adapter: None
 ) -> None:
@@ -221,29 +244,6 @@ async def test_setup_and_stop_broken_bluetooth_hanging(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert "Timed out starting Bluetooth" in caplog.text
-
-
-async def test_setup_and_stop_no_bluetooth(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
-) -> None:
-    """Test we fail gracefully when bluetooth is not available."""
-    mock_bt = [
-        {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
-    ]
-    with patch(
-        "habluetooth.scanner.OriginalBleakScanner",
-        side_effect=BleakError,
-    ) as mock_ha_bleak_scanner, patch(
-        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
-    ), patch("homeassistant.components.bluetooth.discovery_flow.async_create_flow"):
-        await async_setup_with_one_adapter(hass)
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    assert len(mock_ha_bleak_scanner.mock_calls) == 1
-    assert "Failed to initialize Bluetooth" in caplog.text
 
 
 async def test_setup_and_retry_adapter_not_yet_available(
