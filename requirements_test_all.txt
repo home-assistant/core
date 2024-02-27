@@ -433,6 +433,9 @@ aranet4==2.2.2
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.4.0
 
+# homeassistant.components.asterisk_mbox
+asterisk_mbox==0.5.0
+
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
 # homeassistant.components.samsungtv
@@ -574,7 +577,7 @@ dbus-fast==2.21.1
 debugpy==1.8.1
 
 # homeassistant.components.ecovacs
-deebot-client==5.2.2
+deebot-client==6.0.2
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
