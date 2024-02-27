@@ -1008,6 +1008,8 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
+        flow_id = uuid_util.random_uuid_hex()
+
         # Avoid starting a config flow on an integration that only supports
         # a single config entry, but which already has an entry
         if (
@@ -1015,13 +1017,14 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             and await _support_single_config_entry_only(self.hass, handler)
             and self.config_entries.async_entries(handler, include_ignore=False)
         ):
-            raise HomeAssistantError(
-                "Cannot start a config flow, the integration"
-                " supports only a single config entry"
-                " but already has one"
+            return FlowResult(
+                type=data_entry_flow.FlowResultType.ABORT,
+                flow_id=flow_id,
+                handler=handler,
+                reason="single_instance_allowed",
+                translation_domain=HA_DOMAIN,
             )
 
-        flow_id = uuid_util.random_uuid_hex()
         loop = self.hass.loop
 
         if context["source"] == SOURCE_IMPORT:
@@ -1110,6 +1113,21 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
+
+        # Avoid adding a config entry for a integration
+        # that only supports a single config entry, but already has an entry
+        if (
+            await _support_single_config_entry_only(self.hass, flow.handler)
+            and flow.context["source"] != SOURCE_IGNORE
+            and self.config_entries.async_entries(flow.handler, include_ignore=False)
+        ):
+            return FlowResult(
+                type=data_entry_flow.FlowResultType.ABORT,
+                flow_id=flow.flow_id,
+                handler=flow.handler,
+                reason="single_instance_allowed",
+                translation_domain=HA_DOMAIN,
+            )
 
         # Check if config entry exists with unique ID. Unload it.
         existing_entry = None
@@ -1396,18 +1414,6 @@ class ConfigEntries:
         if entry.entry_id in self._entries.data:
             raise HomeAssistantError(
                 f"An entry with the id {entry.entry_id} already exists."
-            )
-
-        # Avoid adding a config entry for a integration
-        # that only supports a single config entry, but already has an entry
-        if (
-            await _support_single_config_entry_only(self.hass, entry.domain)
-            and entry.source != SOURCE_IGNORE
-            and self.async_entries(entry.domain, include_ignore=False)
-        ):
-            raise HomeAssistantError(
-                f"An entry for {entry.domain} already exists,"
-                f" but integration supports only one config entry"
             )
 
         self._entries[entry.entry_id] = entry
