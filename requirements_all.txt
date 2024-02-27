@@ -263,7 +263,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.1.4
+aiohomekit==3.1.5
 
 # homeassistant.components.http
 aiohttp-fast-url-dispatcher==0.3.0
@@ -392,7 +392,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==71
+aiounifi==72
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -1794,7 +1794,7 @@ pyedimax==0.2.1
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.19.0
+pyenphase==1.19.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.6
@@ -2860,7 +2860,7 @@ wirelesstagpy==0.8.1
 wled==0.17.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.4
+wolf-comm==0.0.6
 
 # homeassistant.components.wyoming
 wyoming==1.5.3
