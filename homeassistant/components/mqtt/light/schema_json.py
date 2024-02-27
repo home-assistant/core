@@ -115,9 +115,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(
                 CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE
             ): vol.All(vol.Coerce(int), vol.Range(min=1)),
-            vol.Inclusive(
-                CONF_COLOR_MODE, "color_mode", default=DEFAULT_COLOR_MODE
-            ): cv.boolean,
+            vol.Optional(CONF_COLOR_MODE, default=DEFAULT_COLOR_MODE): cv.boolean,
             vol.Optional(CONF_COLOR_TEMP, default=DEFAULT_COLOR_TEMP): cv.boolean,
             vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
@@ -137,7 +135,7 @@ _PLATFORM_SCHEMA_BASE = (
             vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
             vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
             vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
-            vol.Inclusive(CONF_SUPPORTED_COLOR_MODES, "color_mode"): vol.All(
+            vol.Optional(CONF_SUPPORTED_COLOR_MODES): vol.All(
                 cv.ensure_list,
                 [vol.In(VALID_COLOR_MODES)],
                 vol.Unique(),
@@ -156,11 +154,23 @@ _PLATFORM_SCHEMA_BASE = (
 DISCOVERY_SCHEMA_JSON = vol.All(
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_color_configuration,
+    cv.deprecated(CONF_COLOR_MODE),
+    cv.deprecated(CONF_BRIGHTNESS, replacement_key=CONF_SUPPORTED_COLOR_MODES),
+    cv.deprecated(CONF_COLOR_TEMP, replacement_key=CONF_SUPPORTED_COLOR_MODES),
+    cv.deprecated(CONF_HS, replacement_key=CONF_SUPPORTED_COLOR_MODES),
+    cv.deprecated(CONF_RGB, replacement_key=CONF_SUPPORTED_COLOR_MODES),
+    cv.deprecated(CONF_XY, replacement_key=CONF_SUPPORTED_COLOR_MODES),
 )
 
 PLATFORM_SCHEMA_MODERN_JSON = vol.All(
     _PLATFORM_SCHEMA_BASE,
     valid_color_configuration,
+    cv.deprecated(CONF_COLOR_MODE),
+    cv.deprecated(CONF_BRIGHTNESS, replacement_key=CONF_SUPPORTED_COLOR_MODES),
+    cv.deprecated(CONF_COLOR_TEMP, replacement_key=CONF_SUPPORTED_COLOR_MODES),
+    cv.deprecated(CONF_HS, replacement_key=CONF_SUPPORTED_COLOR_MODES),
+    cv.deprecated(CONF_RGB, replacement_key=CONF_SUPPORTED_COLOR_MODES),
+    cv.deprecated(CONF_XY, replacement_key=CONF_SUPPORTED_COLOR_MODES),
 )
 
 
@@ -205,7 +215,13 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._attr_supported_features |= (
             config[CONF_EFFECT] and LightEntityFeature.EFFECT
         )
-        if not self._config[CONF_COLOR_MODE]:
+        if supported_color_modes := self._config.get(CONF_SUPPORTED_COLOR_MODES, []):
+            self._attr_supported_color_modes = supported_color_modes
+            if self.supported_color_modes and len(self.supported_color_modes) == 1:
+                self._attr_color_mode = next(iter(self.supported_color_modes))
+            else:
+                self._attr_color_mode = ColorMode.UNKNOWN
+        else:
             color_modes = {ColorMode.ONOFF}
             if config[CONF_BRIGHTNESS]:
                 color_modes.add(ColorMode.BRIGHTNESS)
@@ -216,12 +232,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
             if self.supported_color_modes and len(self.supported_color_modes) == 1:
                 self._fixed_color_mode = next(iter(self.supported_color_modes))
-        else:
-            self._attr_supported_color_modes = self._config[CONF_SUPPORTED_COLOR_MODES]
-            if self.supported_color_modes and len(self.supported_color_modes) == 1:
-                self._attr_color_mode = next(iter(self.supported_color_modes))
-            else:
-                self._attr_color_mode = ColorMode.UNKNOWN
 
     def _update_color(self, values: dict[str, Any]) -> None:
         if not self._config[CONF_COLOR_MODE]:
