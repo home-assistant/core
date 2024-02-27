@@ -285,6 +285,7 @@ async def test_signal_repetitions_cancelling(hass: HomeAssistant, monkeypatch) -
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}, blocking=True
@@ -292,6 +293,8 @@ async def test_signal_repetitions_cancelling(hass: HomeAssistant, monkeypatch) -
     await hass.async_block_till_done()
 
     assert [call[0][1] for call in protocol.send_command_ack.call_args_list] == [
+        "off",
+        "off",
         "off",
         "on",
         "on",
