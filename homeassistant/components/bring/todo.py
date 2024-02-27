@@ -49,7 +49,7 @@ class BringTodoListEntity(
 ):
     """A To-do List representation of the Bring! Shopping List."""
 
-    _attr_icon = "mdi:cart"
+    _attr_translation_key = "shopping_list"
     _attr_has_entity_name = True
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM

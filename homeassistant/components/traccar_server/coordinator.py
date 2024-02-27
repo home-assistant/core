@@ -15,9 +15,8 @@ from pytraccar import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -66,7 +65,6 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
         self.skip_accuracy_filter_for = skip_accuracy_filter_for
         self._geofences: list[GeofenceModel] = []
         self._last_event_import: datetime | None = None
-        self._subscription: asyncio.Task | None = None
         self._should_log_subscription_error: bool = True
 
     async def _async_update_data(self) -> TraccarServerCoordinatorData:
@@ -115,8 +113,6 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 "attributes": attr,
             }
 
-        await self.subscribe()
-
         return data
 
     async def handle_subscription_data(self, data: SubscriptionData) -> None:
@@ -163,7 +159,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             update_devices.add(device_id)
 
         for device_id in update_devices:
-            dispatcher_send(self.hass, f"{DOMAIN}_{device_id}")
+            async_dispatcher_send(self.hass, f"{DOMAIN}_{device_id}")
 
     async def import_events(self, _: datetime) -> None:
         """Import events from Traccar."""
@@ -203,33 +199,17 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 },
             )
 
-    async def unsubscribe(self, *args) -> None:
-        """Unsubscribe from Traccar Server."""
-        if self._subscription is None:
-            return
-        self._should_log_subscription_error = False
-        self._subscription.cancel()
-        self._subscription = None
-
     async def subscribe(self) -> None:
         """Subscribe to events."""
-        if self._subscription is not None:
-            return
-
-        async def _subscriber():
-            try:
-                await self.client.subscribe(self.handle_subscription_data)
-            except TraccarException as ex:
-                if self._should_log_subscription_error:
-                    self._should_log_subscription_error = False
-                    LOGGER.error("Error while subscribing to Traccar: %s", ex)
-                # Retry after 10 seconds
-                await asyncio.sleep(10)
-                await _subscriber()
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.unsubscribe)
-        self.config_entry.async_on_unload(self.unsubscribe)
-        self._subscription = asyncio.create_task(_subscriber())
+        try:
+            await self.client.subscribe(self.handle_subscription_data)
+        except TraccarException as ex:
+            if self._should_log_subscription_error:
+                self._should_log_subscription_error = False
+                LOGGER.error("Error while subscribing to Traccar: %s", ex)
+            # Retry after 10 seconds
+            await asyncio.sleep(10)
+            await self.subscribe()
 
     def _return_custom_attributes_if_not_filtered_by_accuracy_configuration(
         self,
