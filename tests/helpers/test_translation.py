@@ -2,12 +2,13 @@
 import asyncio
 from os import path
 import pathlib
+from typing import Any
 from unittest.mock import Mock, call, patch
 
 import pytest
 
 from homeassistant import loader
-from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_CORE_CONFIG_UPDATE
+from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
@@ -79,7 +80,9 @@ async def test_component_translation_path(
     )
 
 
-def test_load_translations_files(hass: HomeAssistant) -> None:
+def test__load_translations_files_by_language(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test the load translation files function."""
     # Test one valid and one invalid file
     file1 = hass.config.path(
@@ -88,15 +91,22 @@ def test_load_translations_files(hass: HomeAssistant) -> None:
     file2 = hass.config.path(
         "custom_components", "test", "translations", "invalid.json"
     )
-    assert translation.load_translations_files(
-        {"switch.test": file1, "invalid": file2}
+    file3 = hass.config.path(
+        "custom_components", "test", "translations", "_broken.en.json"
+    )
+    assert translation._load_translations_files_by_language(
+        {"en": {"switch.test": file1, "invalid": file2, "broken": file3}}
     ) == {
-        "switch.test": {
-            "state": {"string1": "Value 1", "string2": "Value 2"},
-            "something": "else",
-        },
-        "invalid": {},
+        "en": {
+            "switch.test": {
+                "state": {"string1": "Value 1", "string2": "Value 2"},
+                "something": "else",
+            },
+            "invalid": {},
+        }
     }
+    assert "Translation file is unexpected type" in caplog.text
+    assert "_broken.en.json" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -215,8 +225,8 @@ async def test_get_translations_loads_config_flows(
         "homeassistant.helpers.translation.component_translation_path",
         return_value="bla.json",
     ), patch(
-        "homeassistant.helpers.translation.load_translations_files",
-        return_value={"component1": {"title": "world"}},
+        "homeassistant.helpers.translation._load_translations_files_by_language",
+        return_value={"en": {"component1": {"title": "world"}}},
     ), patch(
         "homeassistant.helpers.translation.async_get_integrations",
         return_value={"component1": integration},
@@ -244,8 +254,8 @@ async def test_get_translations_loads_config_flows(
         "homeassistant.helpers.translation.component_translation_path",
         return_value="bla.json",
     ), patch(
-        "homeassistant.helpers.translation.load_translations_files",
-        return_value={"component2": {"title": "world"}},
+        "homeassistant.helpers.translation._load_translations_files_by_language",
+        return_value={"en": {"component2": {"title": "world"}}},
     ), patch(
         "homeassistant.helpers.translation.async_get_integrations",
         return_value={"component2": integration},
@@ -280,19 +290,21 @@ async def test_get_translations_while_loading_components(hass: HomeAssistant) ->
     hass.config.components.add("component1")
     load_count = 0
 
-    def mock_load_translation_files(files):
+    def mock_load_translation_files(
+        files: dict[str, dict[str, Any]],
+    ) -> dict[str, dict[str, Any]]:
         """Mock load translation files."""
         nonlocal load_count
         load_count += 1
         # Mimic race condition by loading a component during setup
 
-        return {"component1": {"title": "world"}}
+        return {language: {"component1": {"title": "world"}} for language in files}
 
     with patch(
         "homeassistant.helpers.translation.component_translation_path",
         return_value="bla.json",
     ), patch(
-        "homeassistant.helpers.translation.load_translations_files",
+        "homeassistant.helpers.translation._load_translations_files_by_language",
         mock_load_translation_files,
     ), patch(
         "homeassistant.helpers.translation.async_get_integrations",
@@ -330,18 +342,18 @@ async def test_translation_merging(
     hass.config.components.add("moon.sensor")
     hass.config.components.add("sensor")
 
-    orig_load_translations = translation.load_translations_files
+    orig_load_translations = translation._load_translations_files_by_language
 
     def mock_load_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["moon.sensor"] = {
+        result["en"]["moon.sensor"] = {
             "state": {"moon__phase": {"first_quarter": "First Quarter"}}
         }
         return result
 
     with patch(
-        "homeassistant.helpers.translation.load_translations_files",
+        "homeassistant.helpers.translation._load_translations_files_by_language",
         side_effect=mock_load_translations_files,
     ):
         translations = await translation.async_get_translations(hass, "en", "state")
@@ -354,11 +366,11 @@ async def test_translation_merging(
     def mock_load_bad_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["season.sensor"] = {"state": "bad data"}
+        result["en"]["season.sensor"] = {"state": "bad data"}
         return result
 
     with patch(
-        "homeassistant.helpers.translation.load_translations_files",
+        "homeassistant.helpers.translation._load_translations_files_by_language",
         side_effect=mock_load_bad_translations_files,
     ):
         translations = await translation.async_get_translations(hass, "en", "state")
@@ -375,12 +387,12 @@ async def test_translation_merging_loaded_apart(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we merge translations of two integrations when they are not loaded at the same time."""
-    orig_load_translations = translation.load_translations_files
+    orig_load_translations = translation._load_translations_files_by_language
 
     def mock_load_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["moon.sensor"] = {
+        result["en"]["moon.sensor"] = {
             "state": {"moon__phase": {"first_quarter": "First Quarter"}}
         }
         return result
@@ -388,7 +400,7 @@ async def test_translation_merging_loaded_apart(
     hass.config.components.add("sensor")
 
     with patch(
-        "homeassistant.helpers.translation.load_translations_files",
+        "homeassistant.helpers.translation._load_translations_files_by_language",
         side_effect=mock_load_translations_files,
     ):
         translations = await translation.async_get_translations(hass, "en", "state")
@@ -398,7 +410,7 @@ async def test_translation_merging_loaded_apart(
     hass.config.components.add("moon.sensor")
 
     with patch(
-        "homeassistant.helpers.translation.load_translations_files",
+        "homeassistant.helpers.translation._load_translations_files_by_language",
         side_effect=mock_load_translations_files,
     ):
         translations = await translation.async_get_translations(hass, "en", "state")
@@ -406,7 +418,7 @@ async def test_translation_merging_loaded_apart(
     assert "component.sensor.state.moon__phase.first_quarter" in translations
 
     with patch(
-        "homeassistant.helpers.translation.load_translations_files",
+        "homeassistant.helpers.translation._load_translations_files_by_language",
         side_effect=mock_load_translations_files,
     ):
         translations = await translation.async_get_translations(
@@ -592,20 +604,6 @@ async def test_get_cached_translations(
 async def test_setup(hass: HomeAssistant):
     """Test the setup load listeners helper."""
     translation.async_setup(hass)
-
-    with patch(
-        "homeassistant.helpers.translation._TranslationCache.async_load",
-    ) as mock:
-        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "loaded_component"})
-        await hass.async_block_till_done()
-        mock.assert_called_once_with(hass.config.language, {"loaded_component"})
-
-    with patch(
-        "homeassistant.helpers.translation._TranslationCache.async_load",
-    ) as mock:
-        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "config.component"})
-        await hass.async_block_till_done()
-        mock.assert_not_called()
 
     # Should not be called if the language is the current language
     with patch(
