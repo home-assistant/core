@@ -23,8 +23,6 @@ from tests.common import (
     flush_store,
     help_test_all,
     import_and_test_deprecated_constant_enum,
-    mock_config_flow,
-    mock_platform,
 )
 
 
@@ -2008,10 +2006,8 @@ async def test_disable_config_entry_disables_devices(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test that we disable entities tied to a config entry."""
-    mock_platform(hass, "light.config_flow", None)
-    with mock_config_flow("light", config_entries.ConfigFlow):
-        config_entry = MockConfigEntry(domain="light")
-        config_entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
 
     entry1 = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -2052,12 +2048,10 @@ async def test_only_disable_device_if_all_config_entries_are_disabled(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test that we only disable device if all related config entries are disabled."""
-    mock_platform(hass, "light.config_flow", None)
-    with mock_config_flow("light", config_entries.ConfigFlow):
-        config_entry1 = MockConfigEntry(domain="light")
-        config_entry1.add_to_hass(hass)
-        config_entry2 = MockConfigEntry(domain="light")
-        config_entry2.add_to_hass(hass)
+    config_entry1 = MockConfigEntry(domain="light")
+    config_entry1.add_to_hass(hass)
+    config_entry2 = MockConfigEntry(domain="light")
+    config_entry2.add_to_hass(hass)
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry1.entry_id,
