@@ -260,7 +260,7 @@ class EntityPlatform:
             return
 
         @callback
-        def async_create_setup_task() -> (
+        def async_create_setup_awaitable() -> (
             Coroutine[Any, Any, None] | asyncio.Future[None]
         ):
             """Get task to set up platform."""
@@ -283,7 +283,7 @@ class EntityPlatform:
                 discovery_info,
             )
 
-        await self._async_setup_platform(async_create_setup_task)
+        await self._async_setup_platform(async_create_setup_awaitable)
 
     @callback
     def async_shutdown(self) -> None:
@@ -305,7 +305,7 @@ class EntityPlatform:
         platform = self.platform
 
         @callback
-        def async_create_setup_task() -> Coroutine[Any, Any, None]:
+        def async_create_setup_awaitable() -> Coroutine[Any, Any, None]:
             """Get task to set up platform."""
             config_entries.current_entry.set(config_entry)
 
@@ -313,14 +313,16 @@ class EntityPlatform:
                 self.hass, config_entry, self._async_schedule_add_entities_for_entry
             )
 
-        return await self._async_setup_platform(async_create_setup_task)
+        return await self._async_setup_platform(async_create_setup_awaitable)
 
     async def _async_setup_platform(
-        self, async_create_setup_task: Callable[[], Awaitable[None]], tries: int = 0
+        self,
+        async_create_setup_awaitable: Callable[[], Awaitable[None]],
+        tries: int = 0,
     ) -> bool:
         """Set up a platform via config file or config entry.
 
-        async_create_setup_task creates a coroutine that sets up platform.
+        async_create_setup_awaitable creates a coroutine that sets up platform.
         """
         current_platform.set(self)
         logger = self.logger
@@ -340,12 +342,12 @@ class EntityPlatform:
         )
         with async_start_setup(hass, [full_name]):
             try:
-                task = async_create_setup_task()
-                if asyncio.iscoroutine(task):
-                    task = create_eager_task(async_create_setup_task())
+                awaitable = async_create_setup_awaitable()
+                if asyncio.iscoroutine(awaitable):
+                    awaitable = create_eager_task(async_create_setup_awaitable())
 
                 async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, self.domain):
-                    await asyncio.shield(task)
+                    await asyncio.shield(awaitable)
 
                 # Block till all entities are done
                 while self._tasks:
@@ -381,7 +383,9 @@ class EntityPlatform:
                 async def setup_again(*_args: Any) -> None:
                     """Run setup again."""
                     self._async_cancel_retry_setup = None
-                    await self._async_setup_platform(async_create_setup_task, tries)
+                    await self._async_setup_platform(
+                        async_create_setup_awaitable, tries
+                    )
 
                 if hass.state is CoreState.running:
                     self._async_cancel_retry_setup = async_call_later(
