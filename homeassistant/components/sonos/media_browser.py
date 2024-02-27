@@ -504,7 +504,7 @@ def get_media_list(
 
 def get_media(
     media_library: MusicLibrary, item_id: str, search_type: str
-) -> MusicServiceItem | None:
+) -> MusicServiceItem:
     """Fetch a single media/album."""
     matches = get_media_list(media_library, item_id, search_type)
     if len(matches) > 0:
