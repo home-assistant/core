@@ -47,6 +47,7 @@ from . import (
     FakeScanner,
     _get_manager,
     async_setup_with_default_adapter,
+    async_setup_with_one_adapter,
     generate_advertisement_data,
     generate_ble_device,
     inject_advertisement,
@@ -178,7 +179,7 @@ async def test_setup_and_stop_old_bluez(
 
 
 async def test_setup_and_stop_no_bluetooth(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
 ) -> None:
     """Test we fail gracefully when bluetooth is not available."""
     mock_bt = [
@@ -190,7 +191,7 @@ async def test_setup_and_stop_no_bluetooth(
     ) as mock_ha_bleak_scanner, patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
     ):
-        await async_setup_with_default_adapter(hass)
+        await async_setup_with_one_adapter(hass)
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
