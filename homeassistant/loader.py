@@ -1252,7 +1252,7 @@ class Components:
         report(
             (
                 f"accesses hass.components.{comp_name}."
-                " This is deprecated and will stop working in Home Assistant 2024.9, it"
+                " This is deprecated and will stop working in Home Assistant 2024.6, it"
                 f" should be updated to import functions used from {comp_name} directly"
             ),
             error_if_core=False,
