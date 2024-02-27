@@ -16,7 +16,7 @@ from pyenphase import (
     EnvoySystemConsumption,
     EnvoySystemProduction,
 )
-from pyenphase.const import PHASENAMES, PhaseNames
+from pyenphase.const import PhaseNames
 from pyenphase.models.meters import (
     CtMeterStatus,
     CtState,
@@ -56,6 +56,8 @@ _LOGGER = logging.getLogger(__name__)
 
 INVERTERS_KEY = "inverters"
 LAST_REPORTED_KEY = "last_reported"
+
+PHASENAMES: list[str] = list(PhaseNames)
 
 
 @dataclass(frozen=True)
@@ -154,7 +156,7 @@ PRODUCTION_SENSORS = (
 
 
 PRODUCTION_PHASE_SENSORS = {
-    (on_phase := str(PhaseNames(PHASENAMES[phase]))): [
+    (on_phase := PHASENAMES[phase]): [
         replace(
             sensor,
             key=f"{sensor.key}_l{phase + 1}",
@@ -231,7 +233,7 @@ CONSUMPTION_SENSORS = (
 
 
 CONSUMPTION_PHASE_SENSORS = {
-    (on_phase := str(PhaseNames(PHASENAMES[phase]))): [
+    (on_phase := PHASENAMES[phase]): [
         replace(
             sensor,
             key=f"{sensor.key}_l{phase + 1}",
@@ -340,11 +342,12 @@ CT_NET_CONSUMPTION_SENSORS = (
 
 
 CT_NET_CONSUMPTION_PHASE_SENSORS = {
-    (on_phase := str(PhaseNames(PHASENAMES[phase]))): [
+    (on_phase := PHASENAMES[phase]): [
         replace(
             sensor,
             key=f"{sensor.key}_l{phase + 1}",
             translation_key=f"{sensor.translation_key}_phase",
+            entity_registry_enabled_default=False,
             on_phase=on_phase,
             translation_placeholders={"phase_name": f"l{phase + 1}"},
         )
@@ -374,11 +377,12 @@ CT_PRODUCTION_SENSORS = (
 )
 
 CT_PRODUCTION_PHASE_SENSORS = {
-    (on_phase := str(PhaseNames(PHASENAMES[phase]))): [
+    (on_phase := PHASENAMES[phase]): [
         replace(
             sensor,
             key=f"{sensor.key}_l{phase + 1}",
             translation_key=f"{sensor.translation_key}_phase",
+            entity_registry_enabled_default=False,
             on_phase=on_phase,
             translation_placeholders={"phase_name": f"l{phase + 1}"},
         )

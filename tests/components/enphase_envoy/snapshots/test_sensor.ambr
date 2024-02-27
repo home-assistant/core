@@ -1497,7 +1497,7 @@
       'config_entry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
-      'disabled_by': None,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
       'domain': 'sensor',
       'entity_category': None,
       'entity_id': 'sensor.envoy_1234_lifetime_net_energy_consumption_l1',
@@ -1509,9 +1509,6 @@
       }),
       'name': None,
       'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 3,
-        }),
         'sensor.private': dict({
           'suggested_unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
         }),
@@ -1536,7 +1533,7 @@
       'config_entry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
-      'disabled_by': None,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
       'domain': 'sensor',
       'entity_category': None,
       'entity_id': 'sensor.envoy_1234_lifetime_net_energy_production_l1',
@@ -1548,9 +1545,6 @@
       }),
       'name': None,
       'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 3,
-        }),
         'sensor.private': dict({
           'suggested_unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
         }),
@@ -1575,7 +1569,7 @@
       'config_entry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
-      'disabled_by': None,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
       'domain': 'sensor',
       'entity_category': None,
       'entity_id': 'sensor.envoy_1234_current_net_power_consumption_l1',
@@ -1587,9 +1581,6 @@
       }),
       'name': None,
       'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 3,
-        }),
         'sensor.private': dict({
           'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
         }),
@@ -1751,7 +1742,7 @@
       'config_entry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
-      'disabled_by': None,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
       'domain': 'sensor',
       'entity_category': None,
       'entity_id': 'sensor.envoy_1234_lifetime_net_energy_consumption_l2',
@@ -1763,9 +1754,6 @@
       }),
       'name': None,
       'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 3,
-        }),
         'sensor.private': dict({
           'suggested_unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
         }),
@@ -1790,7 +1778,7 @@
       'config_entry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
-      'disabled_by': None,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
       'domain': 'sensor',
       'entity_category': None,
       'entity_id': 'sensor.envoy_1234_lifetime_net_energy_production_l2',
@@ -1802,9 +1790,6 @@
       }),
       'name': None,
       'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 3,
-        }),
         'sensor.private': dict({
           'suggested_unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
         }),
@@ -1829,7 +1814,7 @@
       'config_entry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
-      'disabled_by': None,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
       'domain': 'sensor',
       'entity_category': None,
       'entity_id': 'sensor.envoy_1234_current_net_power_consumption_l2',
@@ -1841,9 +1826,6 @@
       }),
       'name': None,
       'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 3,
-        }),
         'sensor.private': dict({
           'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
         }),
@@ -2005,7 +1987,7 @@
       'config_entry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
-      'disabled_by': None,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
       'domain': 'sensor',
       'entity_category': None,
       'entity_id': 'sensor.envoy_1234_lifetime_net_energy_consumption_l3',
@@ -2017,9 +1999,6 @@
       }),
       'name': None,
       'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 3,
-        }),
         'sensor.private': dict({
           'suggested_unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
         }),
@@ -2044,7 +2023,7 @@
       'config_entry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
-      'disabled_by': None,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
       'domain': 'sensor',
       'entity_category': None,
       'entity_id': 'sensor.envoy_1234_lifetime_net_energy_production_l3',
@@ -2056,9 +2035,6 @@
       }),
       'name': None,
       'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 3,
-        }),
         'sensor.private': dict({
           'suggested_unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
         }),
@@ -2083,7 +2059,7 @@
       'config_entry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
-      'disabled_by': None,
+      'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
       'domain': 'sensor',
       'entity_category': None,
       'entity_id': 'sensor.envoy_1234_current_net_power_consumption_l3',
@@ -2095,9 +2071,6 @@
       }),
       'name': None,
       'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 3,
-        }),
         'sensor.private': dict({
           'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
         }),
@@ -2604,52 +2577,13 @@
   })
 # ---
 # name: test_sensor[sensor.envoy_1234_current_net_power_consumption_l1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Envoy 1234 Current net power consumption l1',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_current_net_power_consumption_l1',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.021',
-  })
+  None
 # ---
 # name: test_sensor[sensor.envoy_1234_current_net_power_consumption_l2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Envoy 1234 Current net power consumption l2',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_current_net_power_consumption_l2',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.031',
-  })
+  None
 # ---
 # name: test_sensor[sensor.envoy_1234_current_net_power_consumption_l3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Envoy 1234 Current net power consumption l3',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_current_net_power_consumption_l3',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.051',
-  })
+  None
 # ---
 # name: test_sensor[sensor.envoy_1234_current_power_consumption-state]
   StateSnapshot({
@@ -3184,52 +3118,13 @@
   })
 # ---
 # name: test_sensor[sensor.envoy_1234_lifetime_net_energy_consumption_l1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Envoy 1234 Lifetime net energy consumption l1',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_lifetime_net_energy_consumption_l1',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.212341',
-  })
+  None
 # ---
 # name: test_sensor[sensor.envoy_1234_lifetime_net_energy_consumption_l2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Envoy 1234 Lifetime net energy consumption l2',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_lifetime_net_energy_consumption_l2',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.212342',
-  })
+  None
 # ---
 # name: test_sensor[sensor.envoy_1234_lifetime_net_energy_consumption_l3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Envoy 1234 Lifetime net energy consumption l3',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_lifetime_net_energy_consumption_l3',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.212343',
-  })
+  None
 # ---
 # name: test_sensor[sensor.envoy_1234_lifetime_net_energy_production-state]
   StateSnapshot({
@@ -3248,52 +3143,13 @@
   })
 # ---
 # name: test_sensor[sensor.envoy_1234_lifetime_net_energy_production_l1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Envoy 1234 Lifetime net energy production l1',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_lifetime_net_energy_production_l1',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.223451',
-  })
+  None
 # ---
 # name: test_sensor[sensor.envoy_1234_lifetime_net_energy_production_l2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Envoy 1234 Lifetime net energy production l2',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_lifetime_net_energy_production_l2',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.223452',
-  })
+  None
 # ---
 # name: test_sensor[sensor.envoy_1234_lifetime_net_energy_production_l3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Envoy 1234 Lifetime net energy production l3',
-      'icon': 'mdi:flash',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.MEGA_WATT_HOUR: 'MWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.envoy_1234_lifetime_net_energy_production_l3',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.223453',
-  })
+  None
 # ---
 # name: test_sensor[sensor.envoy_1234_meter_status_flags_active_net_consumption_ct-state]
   None
