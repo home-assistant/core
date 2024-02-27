@@ -160,10 +160,10 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
     async def _iterate_packets(self) -> AsyncIterable[bytes]:
         """Iterate over incoming packets."""
-        if not self.is_running:
-            raise RuntimeError("Not running")
-
         while data := await self.queue.get():
+            if not self.is_running:
+                break
+
             yield data
 
     def _event_callback(self, event: PipelineEvent) -> None:
