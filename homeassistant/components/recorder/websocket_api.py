@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import datetime as dt
 import logging
 from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import Any, Literal, cast
 
 import voluptuous as vol
 
@@ -50,8 +51,6 @@ if TYPE_CHECKING:
     from .core import Recorder
 
 
-_LOGGER: logging.Logger = logging.getLogger(__package__)
-
 UNIT_SCHEMA = vol.Schema(
     {
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
@@ -77,8 +76,6 @@ UNIT_SCHEMA = vol.Schema(
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the recorder websocket API."""
     websocket_api.async_register_command(hass, ws_adjust_sum_statistics)
-    websocket_api.async_register_command(hass, ws_backup_end)
-    websocket_api.async_register_command(hass, ws_backup_start)
     websocket_api.async_register_command(hass, ws_change_statistics_unit)
     websocket_api.async_register_command(hass, ws_clear_statistics)
     websocket_api.async_register_command(hass, ws_get_statistic_during_period)
