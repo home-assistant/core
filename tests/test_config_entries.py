@@ -4437,7 +4437,10 @@ async def test_hashable_non_string_unique_id(
 
 RAISES_SINGLE_ENTRY_ERROR = pytest.raises(
     HomeAssistantError,
-    match=r"Cannot start a config flow, the integration supports only a single config entry but already has one",
+    match=(
+        r"Cannot start a config flow, "
+        r"the integration supports only a single config entry but already has one"
+    ),
 )
 
 
