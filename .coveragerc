@@ -766,6 +766,7 @@ omit =
     homeassistant/components/microbees/__init__.py
     homeassistant/components/microbees/api.py
     homeassistant/components/microbees/application_credentials.py
+    homeassistant/components/microbees/button.py
     homeassistant/components/microbees/const.py
     homeassistant/components/microbees/coordinator.py
     homeassistant/components/microbees/entity.py
