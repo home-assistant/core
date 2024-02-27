@@ -155,22 +155,22 @@ DISCOVERY_SCHEMA_JSON = vol.All(
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
     valid_color_configuration,
     cv.deprecated(CONF_COLOR_MODE),
-    cv.deprecated(CONF_BRIGHTNESS, replacement_key=CONF_SUPPORTED_COLOR_MODES),
-    cv.deprecated(CONF_COLOR_TEMP, replacement_key=CONF_SUPPORTED_COLOR_MODES),
-    cv.deprecated(CONF_HS, replacement_key=CONF_SUPPORTED_COLOR_MODES),
-    cv.deprecated(CONF_RGB, replacement_key=CONF_SUPPORTED_COLOR_MODES),
-    cv.deprecated(CONF_XY, replacement_key=CONF_SUPPORTED_COLOR_MODES),
+    cv.deprecated(CONF_BRIGHTNESS),
+    cv.deprecated(CONF_COLOR_TEMP),
+    cv.deprecated(CONF_HS),
+    cv.deprecated(CONF_RGB),
+    cv.deprecated(CONF_XY),
 )
 
 PLATFORM_SCHEMA_MODERN_JSON = vol.All(
     _PLATFORM_SCHEMA_BASE,
     valid_color_configuration,
     cv.deprecated(CONF_COLOR_MODE),
-    cv.deprecated(CONF_BRIGHTNESS, replacement_key=CONF_SUPPORTED_COLOR_MODES),
-    cv.deprecated(CONF_COLOR_TEMP, replacement_key=CONF_SUPPORTED_COLOR_MODES),
-    cv.deprecated(CONF_HS, replacement_key=CONF_SUPPORTED_COLOR_MODES),
-    cv.deprecated(CONF_RGB, replacement_key=CONF_SUPPORTED_COLOR_MODES),
-    cv.deprecated(CONF_XY, replacement_key=CONF_SUPPORTED_COLOR_MODES),
+    cv.deprecated(CONF_BRIGHTNESS),
+    cv.deprecated(CONF_COLOR_TEMP),
+    cv.deprecated(CONF_HS),
+    cv.deprecated(CONF_RGB),
+    cv.deprecated(CONF_XY),
 )
 
 
@@ -493,16 +493,6 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             elif flash == FLASH_SHORT:
                 message["flash"] = self._flash_times[CONF_FLASH_TIME_SHORT]
 
-    def _scale_rgbxx(self, rgbxx: tuple[int, ...], kwargs: Any) -> tuple[int, ...]:
-        # If there's a brightness topic set, we don't want to scale the
-        # RGBxx values given using the brightness.
-        brightness: int
-        if self._config[CONF_BRIGHTNESS]:
-            brightness = 255
-        else:
-            brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        return tuple(round(i / 255 * brightness) for i in rgbxx)
-
     def _supports_color_mode(self, color_mode: ColorMode | str) -> bool:
         """Return True if the light natively supports a color mode."""
         return (
@@ -532,15 +522,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             hs_color = kwargs[ATTR_HS_COLOR]
             message["color"] = {}
             if self._config[CONF_RGB]:
-                # If there's a brightness topic set, we don't want to scale the
-                # RGB values given using the brightness.
-                if self._config[CONF_BRIGHTNESS]:
-                    brightness = 255
-                else:
-                    brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-                rgb = color_util.color_hsv_to_RGB(
-                    hs_color[0], hs_color[1], brightness / 255 * 100
-                )
+                rgb = color_util.color_hsv_to_RGB(hs_color[0], hs_color[1], 100)
                 message["color"]["r"] = rgb[0]
                 message["color"]["g"] = rgb[1]
                 message["color"]["b"] = rgb[2]
@@ -566,7 +548,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 should_update = True
 
         if ATTR_RGB_COLOR in kwargs and self._supports_color_mode(ColorMode.RGB):
-            rgb = self._scale_rgbxx(kwargs[ATTR_RGB_COLOR], kwargs)
+            brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+            rgb = tuple(round(i / 255 * brightness) for i in kwargs[ATTR_RGB_COLOR])
             message["color"] = {"r": rgb[0], "g": rgb[1], "b": rgb[2]}
             if self._optimistic:
                 self._attr_color_mode = ColorMode.RGB
@@ -574,7 +557,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 should_update = True
 
         if ATTR_RGBW_COLOR in kwargs and self._supports_color_mode(ColorMode.RGBW):
-            rgbw = self._scale_rgbxx(kwargs[ATTR_RGBW_COLOR], kwargs)
+            rgbw = kwargs[ATTR_RGBW_COLOR]
             message["color"] = {"r": rgbw[0], "g": rgbw[1], "b": rgbw[2], "w": rgbw[3]}
             if self._optimistic:
                 self._attr_color_mode = ColorMode.RGBW
@@ -582,7 +565,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 should_update = True
 
         if ATTR_RGBWW_COLOR in kwargs and self._supports_color_mode(ColorMode.RGBWW):
-            rgbcw = self._scale_rgbxx(kwargs[ATTR_RGBWW_COLOR], kwargs)
+            rgbcw = kwargs[ATTR_RGBWW_COLOR]
             message["color"] = {
                 "r": rgbcw[0],
                 "g": rgbcw[1],
@@ -605,7 +588,9 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         self._set_flash_and_transition(message, **kwargs)
 
-        if ATTR_BRIGHTNESS in kwargs and self._config[CONF_BRIGHTNESS]:
+        if ATTR_BRIGHTNESS in kwargs and brightness_supported(
+            self.supported_color_modes
+        ):
             device_brightness = color_util.brightness_to_value(
                 (1, self._config[CONF_BRIGHTNESS_SCALE]),
                 kwargs[ATTR_BRIGHTNESS],
