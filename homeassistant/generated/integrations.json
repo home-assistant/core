@@ -2911,12 +2911,6 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
-    "juicenet": {
-      "name": "JuiceNet",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "justnimbus": {
       "name": "JustNimbus",
       "integration_type": "hub",
@@ -6663,10 +6657,22 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "weatherflow_cloud": {
+      "name": "WeatherflowCloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "webhook": {
       "name": "Webhook",
       "integration_type": "hub",
       "config_flow": false
+    },
+    "webmin": {
+      "name": "Webmin",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "wemo": {
       "name": "Belkin WeMo",
