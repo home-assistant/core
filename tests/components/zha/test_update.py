@@ -186,28 +186,33 @@ async def test_firmware_update_notification_from_service_call(
         )
 
     await async_setup_component(hass, HA_DOMAIN, {})
-    cluster.image_notify = AsyncMock(side_effect=_async_image_notify_side_effect)
-    await hass.services.async_call(
-        HA_DOMAIN,
-        SERVICE_UPDATE_ENTITY,
-        service_data={ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    assert cluster.image_notify.await_count == 1
-    assert cluster.image_notify.call_args_list[0] == call(
-        payload_type=cluster.ImageNotifyCommand.PayloadType.QueryJitter,
-        query_jitter=100,
-    )
+    with patch(
+        "zigpy.ota.OTA.broadcast_notify", side_effect=_async_image_notify_side_effect
+    ):
+        await hass.services.async_call(
+            HA_DOMAIN,
+            SERVICE_UPDATE_ENTITY,
+            service_data={ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_ON
-    attrs = state.attributes
-    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
-    assert not attrs[ATTR_IN_PROGRESS]
-    assert (
-        attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.firmware.header.file_version:08x}"
-    )
+        assert cluster.endpoint.device.application.ota.broadcast_notify.await_count == 1
+        assert cluster.endpoint.device.application.ota.broadcast_notify.call_args_list[
+            0
+        ] == call(
+            jitter=100,
+        )
+
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_ON
+        attrs = state.attributes
+        assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
+        assert not attrs[ATTR_IN_PROGRESS]
+        assert (
+            attrs[ATTR_LATEST_VERSION]
+            == f"0x{fw_image.firmware.header.file_version:08x}"
+        )
 
 
 def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
