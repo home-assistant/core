@@ -28,7 +28,8 @@ cached_get_user = cache(getuser)
 
 async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return info about the system."""
-    # pylint: disable=import-outside-toplevel
+    # Local import to avoid circular dependencies
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import hassio
 
     is_hassio = hassio.is_hassio(hass)

@@ -40,7 +40,8 @@ def get_supervisor_network_url(
     hass: HomeAssistant, *, allow_ssl: bool = False
 ) -> str | None:
     """Get URL for home assistant within supervisor network."""
-    # pylint: disable=import-outside-toplevel
+    # Local import to avoid circular dependencies
+    # pylint: disable-next=import-outside-toplevel
     from homeassistant.components.hassio import is_hassio
 
     if hass.config.api is None or not is_hassio(hass):
@@ -128,10 +129,9 @@ def get_url(
     prefer_cloud: bool = False,
 ) -> str:
     """Get a URL to this instance."""
-    from homeassistant.components.hassio import (  # pylint: disable=import-outside-toplevel
-        get_host_info,
-        is_hassio,
-    )
+    # Local import to avoid circular dependencies
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.hassio import get_host_info, is_hassio
 
     if require_current_request and http.current_request.get() is None:
         raise NoURLAvailableError
