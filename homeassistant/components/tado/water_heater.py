@@ -149,7 +149,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         self._min_temperature = min_temp or TADO_DEFAULT_MIN_TEMP
         self._max_temperature = max_temp or TADO_DEFAULT_MAX_TEMP
 
-        self._target_temp: Optional[float] = None
+        self._target_temp: float | None = None
 
         self._attr_supported_features = WaterHeaterEntityFeature.OPERATION_MODE
         if self._supports_temperature_control:
