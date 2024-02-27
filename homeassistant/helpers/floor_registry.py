@@ -5,7 +5,7 @@ from collections import UserDict
 from collections.abc import Iterable, ValuesView
 import dataclasses
 from dataclasses import dataclass
-from typing import Any, Literal, TypedDict, cast
+from typing import TYPE_CHECKING, Literal, TypedDict, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
@@ -97,7 +97,9 @@ class FloorRegistry:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the floor registry."""
         self.hass = hass
-        self._store: Store[dict[str, list[dict[str, Any]]]] = Store(
+        self._store: Store[
+            dict[str, list[dict[str, str | int | list[str] | None]]]
+        ] = Store(
             hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
@@ -231,6 +233,13 @@ class FloorRegistry:
 
         if data is not None:
             for floor in data["floors"]:
+                if TYPE_CHECKING:
+                    assert isinstance(floor["aliases"], list)
+                    assert isinstance(floor["icon"], str)
+                    assert isinstance(floor["level"], int)
+                    assert isinstance(floor["name"], str)
+                    assert isinstance(floor["floor_id"], str)
+
                 normalized_name = _normalize_floor_name(floor["name"])
                 floors[floor["floor_id"]] = FloorEntry(
                     aliases=set(floor["aliases"]),
