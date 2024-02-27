@@ -57,6 +57,7 @@ from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedT
 from .loader import async_suggest_report_issue
 from .setup import DATA_SETUP_DONE, async_process_deps_reqs, async_setup_component
 from .util import uuid as uuid_util
+from .util.async_ import create_eager_task
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
@@ -476,7 +477,7 @@ class ConfigEntry:
 
         if domain_is_integration:
             try:
-                integration.get_platform("config_flow")
+                await integration.async_get_platform("config_flow")
             except ImportError as err:
                 _LOGGER.error(
                     (
@@ -1007,20 +1008,23 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
+        flow_id = uuid_util.random_uuid_hex()
+
         # Avoid starting a config flow on an integration that only supports
         # a single config entry, but which already has an entry
         if (
-            context.get("source") != SOURCE_REAUTH
+            context.get("source") not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_UNIGNORE}
             and await _support_single_config_entry_only(self.hass, handler)
-            and self.config_entries.async_has_entry(handler)
+            and self.config_entries.async_entries(handler, include_ignore=False)
         ):
-            raise HomeAssistantError(
-                "Cannot start a config flow, the integration"
-                " supports only a single config entry"
-                " but already has one"
+            return FlowResult(
+                type=data_entry_flow.FlowResultType.ABORT,
+                flow_id=flow_id,
+                handler=handler,
+                reason="single_instance_allowed",
+                translation_domain=HA_DOMAIN,
             )
 
-        flow_id = uuid_util.random_uuid_hex()
         loop = self.hass.loop
 
         if context["source"] == SOURCE_IMPORT:
@@ -1109,6 +1113,21 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
 
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
             return result
+
+        # Avoid adding a config entry for a integration
+        # that only supports a single config entry, but already has an entry
+        if (
+            await _support_single_config_entry_only(self.hass, flow.handler)
+            and flow.context["source"] != SOURCE_IGNORE
+            and self.config_entries.async_entries(flow.handler, include_ignore=False)
+        ):
+            return FlowResult(
+                type=data_entry_flow.FlowResultType.ABORT,
+                flow_id=flow.flow_id,
+                handler=flow.handler,
+                reason="single_instance_allowed",
+                translation_domain=HA_DOMAIN,
+            )
 
         # Check if config entry exists with unique ID. Unload it.
         existing_entry = None
@@ -1390,26 +1409,11 @@ class ConfigEntries:
         """Return entry for a domain with a matching unique id."""
         return self._entries.get_entry_by_domain_and_unique_id(domain, unique_id)
 
-    @callback
-    def async_has_entry(self, domain: str) -> bool:
-        """Return if there are entries for a domain."""
-        return bool(self.async_entries(domain))
-
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
         if entry.entry_id in self._entries.data:
             raise HomeAssistantError(
                 f"An entry with the id {entry.entry_id} already exists."
-            )
-
-        # Avoid adding a config entry for a integration
-        # that only supports a single config entry, but already has an entry
-        if await _support_single_config_entry_only(
-            self.hass, entry.domain
-        ) and self.async_has_entry(entry.domain):
-            raise HomeAssistantError(
-                f"An entry for {entry.domain} already exists,"
-                f" but integration supports only one config entry"
             )
 
         self._entries[entry.entry_id] = entry
@@ -1729,7 +1733,7 @@ class ConfigEntries:
         """Forward the setup of an entry to platforms."""
         await asyncio.gather(
             *(
-                asyncio.create_task(
+                create_eager_task(
                     self.async_forward_entry_setup(entry, platform),
                     name=f"config entry forward setup {entry.title} {entry.domain} {entry.entry_id} {platform}",
                 )
@@ -1765,7 +1769,7 @@ class ConfigEntries:
         return all(
             await asyncio.gather(
                 *(
-                    asyncio.create_task(
+                    create_eager_task(
                         self.async_forward_entry_unload(entry, platform),
                         name=f"config entry forward unload {entry.title} {entry.domain} {entry.entry_id} {platform}",
                     )
@@ -2427,9 +2431,8 @@ async def _load_integration(
 
     # Make sure requirements and dependencies of component are resolved
     await async_process_deps_reqs(hass, hass_config, integration)
-
     try:
-        integration.get_platform("config_flow")
+        await integration.async_get_platform("config_flow")
     except ImportError as err:
         _LOGGER.error(
             "Error occurred loading flow for integration %s: %s",
