@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import UserDict
 from collections.abc import ValuesView
 from enum import StrEnum
-from functools import partial
+from functools import lru_cache, partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
@@ -321,6 +321,7 @@ class DeletedDeviceEntry:
         )
 
 
+@lru_cache(maxsize=512)
 def format_mac(mac: str) -> str:
     """Format the mac address string for entry into dev reg."""
     to_test = mac
@@ -654,10 +655,6 @@ class DeviceRegistry:
         via_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry | None:
         """Update device attributes."""
-        # Circular dep
-        # pylint: disable-next=import-outside-toplevel
-        from . import area_registry as ar
-
         old = self.devices[device_id]
 
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
@@ -688,6 +685,10 @@ class DeviceRegistry:
             and area_id is UNDEFINED
             and old.area_id is None
         ):
+            # Circular dep
+            # pylint: disable-next=import-outside-toplevel
+            from . import area_registry as ar
+
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
 
