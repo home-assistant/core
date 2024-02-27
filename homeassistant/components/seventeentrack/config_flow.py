@@ -93,7 +93,7 @@ class SeventeenTrackConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data) -> FlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> FlowResult:
         """Import 17Track config from configuration.yaml."""
 
         client = await self._get_client()
