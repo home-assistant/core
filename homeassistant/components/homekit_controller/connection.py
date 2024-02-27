@@ -975,7 +975,6 @@ class HKDevice:
             raise HomeAssistantError("No thread network credentials available")
 
         await self.pairing.thread_provision(dataset)
-        self.pairing.controller.transport_type = TransportType.COAP
 
         try:
             discovery = (

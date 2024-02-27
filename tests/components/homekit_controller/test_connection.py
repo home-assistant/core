@@ -234,8 +234,6 @@ async def test_thread_provision(hass: HomeAssistant, entity_registry: er.EntityR
 
     fake_controller = await setup_platform(hass)
     await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
-    fake_controller.transport_type = TransportType.BLE
-
     config_entry = MockConfigEntry(
         version=1,
         domain="homekit_controller",
@@ -245,6 +243,8 @@ async def test_thread_provision(hass: HomeAssistant, entity_registry: er.EntityR
         unique_id="00:00:00:00:00:00",
     )
     config_entry.add_to_hass(hass)
+
+    fake_controller.transport_type = TransportType.BLE
 
     # Needs a COAP transport to do migration
     fake_controller.transports = {TransportType.COAP: fake_controller}
