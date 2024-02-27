@@ -992,7 +992,7 @@ class EntityPlatform:
                 return
 
             if tasks := [
-                entity.async_update_ha_state(True)
+                create_eager_task(entity.async_update_ha_state(True))
                 for entity in self.entities.values()
                 if entity.should_poll
             ]:
