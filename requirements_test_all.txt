@@ -224,7 +224,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==22.1.0
+aioesphomeapi==23.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1450,7 +1450,7 @@ pyinsteon==1.5.3
 pyipma==3.0.7
 
 # homeassistant.components.ipp
-pyipp==0.14.4
+pyipp==0.14.5
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
