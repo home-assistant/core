@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime
+from decimal import Decimal
 import logging
 
 from py17track import Client as SeventeenTrackClient
@@ -115,25 +117,39 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Initialize 17Track import from config."""
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        is_fixable=False,
-        breaks_in_ha_version="2024.7.0",
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "17Track",
-        },
-    )
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
+    if (
+        result["type"] == FlowResultType.CREATE_ENTRY
+        or result["reason"] == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            is_fixable=False,
+            breaks_in_ha_version="2024.7.0",
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "17Track",
+            },
+        )
+    else:
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_${result['reason']}",
+            breaks_in_ha_version="2024.7.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
+            translation_placeholders=ISSUE_PLACEHOLDER,
+        )
 
 
 async def async_setup_entry(
@@ -163,7 +179,7 @@ class SeventeenTrackSummarySensor(SensorEntity):
     _attr_icon = "mdi:package"
     _attr_native_unit_of_measurement = "packages"
 
-    def __init__(self, data, status, initial_state):
+    def __init__(self, data, status, initial_state) -> None:
         """Initialize."""
         self._attr_extra_state_attributes = {}
         self._data = data
@@ -173,12 +189,14 @@ class SeventeenTrackSummarySensor(SensorEntity):
         self._attr_unique_id = f"summary_{data.account_id}_{slugify(status)}"
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return whether the entity is available."""
         return self._state is not None
 
     @property
-    def native_value(self):
+    def native_value(
+        self,
+    ) -> StateType | str | int | float | None | date | datetime | Decimal:
         """Return the state."""
         return self._state
 
@@ -215,7 +233,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_icon = "mdi:package"
 
-    def __init__(self, data, package):
+    def __init__(self, data, package) -> None:
         """Initialize."""
         self._attr_extra_state_attributes = {
             ATTR_DESTINATION_COUNTRY: package.destination_country,
@@ -242,14 +260,16 @@ class SeventeenTrackPackageSensor(SensorEntity):
         return self._data.packages.get(self._tracking_number) is not None
 
     @property
-    def name(self):
+    def name(self) -> str | UndefinedType | None:
         """Return the name."""
         if not (name := self._friendly_name):
             name = self._tracking_number
         return f"Seventeentrack Package: {name}"
 
     @property
-    def native_value(self):
+    def native_value(
+        self,
+    ) -> StateType | str | int | float | None | date | datetime | Decimal:
         """Return the state."""
         return self._state
 
@@ -324,18 +344,17 @@ class SeventeenTrackData:
         show_archived,
         show_delivered,
         timezone,
-    ):
+    ) -> None:
         """Initialize."""
         self._async_add_entities = async_add_entities
         self._client = client
         self._scan_interval = scan_interval
         self._show_archived = show_archived
         self.account_id = client.profile.account_id
-        self.packages = {}
+        self.packages: dict[str, Package] = {}
         self.show_delivered = show_delivered
         self.timezone = timezone
-        self.summary = {}
-
+        self.summary: dict[str, int] = {}
         self.async_update = Throttle(self._scan_interval)(self._async_update)
         self.first_update = True
 

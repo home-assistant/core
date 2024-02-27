@@ -2,7 +2,6 @@
 
 from py17track import Client as SeventeenTrackClient
 from py17track.errors import SeventeenTrackError
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -10,17 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .config_flow import USER_SCHEMA
 from .const import DOMAIN
 
 PLATFORMS = [Platform.SENSOR]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: USER_SCHEMA,
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 async def _async_import(hass: HomeAssistant, base_config: ConfigType) -> None:
