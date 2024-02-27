@@ -180,6 +180,9 @@ async def ws_list_datasets(
                 "preferred_border_agent_id": dataset.preferred_border_agent_id,
                 "preferred_extended_address": dataset.preferred_extended_address,
                 "source": dataset.source,
+                "tlv": dataset.tlv,
+                "border_agent_id": "",  # where to get this? (not the preferred border agent ID)
+                "mac_extended_address": "",  # where to get this?
             }
         )
 
