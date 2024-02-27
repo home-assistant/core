@@ -623,13 +623,13 @@ class EntityPlatform:
 
         self._async_unsub_polling = async_track_time_interval(
             self.hass,
-            self._async_update_entity_states,
+            self._async_handle_interval_callback,
             self.scan_interval,
             name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
         )
 
     @callback
-    def _async_update_entity_states(self, now: datetime) -> None:
+    def _async_handle_interval_callback(self, now: datetime) -> None:
         """Update all the entity states in a single platform."""
         self.hass.async_create_task(self._update_entity_states(now), eager_start=True)
 
