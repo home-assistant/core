@@ -2,7 +2,23 @@
 
 from unittest.mock import patch
 
+from bleak_retry_connector import bleak_manager
+from dbus_fast.aio import message_bus
 import pytest
+
+
+@pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="session")
+def mock_disable_bluez_manager_socket():
+    """Mock the bluez manager socket."""
+    with patch.object(bleak_manager, "get_global_bluez_manager_with_timeout"):
+        yield
+
+
+@pytest.fixture(name="disable_dbus_socket", autouse=True, scope="session")
+def mock_disable_dbus_socket():
+    """Mock the bluez manager socket."""
+    with patch.object(message_bus, "MessageBus"):
+        yield
 
 
 @pytest.fixture(name="operating_system_85")
