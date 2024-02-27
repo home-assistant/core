@@ -20,7 +20,6 @@ async def async_get_config_entry_diagnostics(
     ]
 
     diagnostics_data = {
-        "config_entry_data": dict(config_entry.data),
         "coordinator_data": coordinator.data,
     }
 
