@@ -32,6 +32,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.generated import languages
 from homeassistant.setup import async_start_setup
+from homeassistant.util.async_ import create_eager_task
 
 from . import (
     config_validation as cv,
@@ -993,7 +994,7 @@ class EntityPlatform:
                 return
 
             if tasks := [
-                entity.async_update_ha_state(True)
+                create_eager_task(entity.async_update_ha_state(True))
                 for entity in self.entities.values()
                 if entity.should_poll
             ]:

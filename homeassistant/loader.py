@@ -837,7 +837,7 @@ class Integration:
     async def async_get_component(self) -> ComponentProtocol:
         """Return the component.
 
-        This method will load the component if it't not already loaded
+        This method will load the component if it's not already loaded
         and will check if import_executor is set and load it in the executor,
         otherwise it will load it in the event loop.
         """
@@ -868,7 +868,7 @@ class Integration:
     def get_component(self) -> ComponentProtocol:
         """Return the component.
 
-        This method must be thread-safe as its called from the executor
+        This method must be thread-safe as it's called from the executor
         and the event loop.
 
         This is mostly a thin wrapper around importlib.import_module
@@ -932,8 +932,8 @@ class Integration:
 
         if debug:
             _LOGGER.debug(
-                "Loaded flow for %s in %.2fs (loaded_executor=%s)",
-                domain,
+                "Importing platform %s took %.2fs (loaded_executor=%s)",
+                full_name,
                 time.perf_counter() - start,
                 load_executor,
             )
@@ -963,7 +963,7 @@ class Integration:
     def _load_platform(self, platform_name: str) -> ModuleType:
         """Load a platform for an integration.
 
-        This method must be thread-safe as its called from the executor
+        This method must be thread-safe as it's called from the executor
         and the event loop.
 
         This is mostly a thin wrapper around importlib.import_module
@@ -998,7 +998,7 @@ class Integration:
     def _import_platform(self, platform_name: str) -> ModuleType:
         """Import the platform.
 
-        This method must be thread-safe as its called from the executor
+        This method must be thread-safe as it's called from the executor
         and the event loop.
         """
         return importlib.import_module(f"{self.pkg_path}.{platform_name}")
