@@ -1011,9 +1011,9 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         # Avoid starting a config flow on an integration that only supports
         # a single config entry, but which already has an entry
         if (
-            context.get("source") != SOURCE_REAUTH
+            context.get("source") not in {SOURCE_IGNORE, SOURCE_REAUTH, SOURCE_UNIGNORE}
             and await _support_single_config_entry_only(self.hass, handler)
-            and self.config_entries.async_has_entry(handler)
+            and self.config_entries.async_entries(handler, include_ignore=False)
         ):
             raise HomeAssistantError(
                 "Cannot start a config flow, the integration"
@@ -1391,11 +1391,6 @@ class ConfigEntries:
         """Return entry for a domain with a matching unique id."""
         return self._entries.get_entry_by_domain_and_unique_id(domain, unique_id)
 
-    @callback
-    def async_has_entry(self, domain: str) -> bool:
-        """Return if there are entries for a domain."""
-        return bool(self.async_entries(domain))
-
     async def async_add(self, entry: ConfigEntry) -> None:
         """Add and setup an entry."""
         if entry.entry_id in self._entries.data:
@@ -1405,9 +1400,11 @@ class ConfigEntries:
 
         # Avoid adding a config entry for a integration
         # that only supports a single config entry, but already has an entry
-        if await _support_single_config_entry_only(
-            self.hass, entry.domain
-        ) and self.async_has_entry(entry.domain):
+        if (
+            await _support_single_config_entry_only(self.hass, entry.domain)
+            and entry.source != SOURCE_IGNORE
+            and self.async_entries(entry.domain, include_ignore=False)
+        ):
             raise HomeAssistantError(
                 f"An entry for {entry.domain} already exists,"
                 f" but integration supports only one config entry"
