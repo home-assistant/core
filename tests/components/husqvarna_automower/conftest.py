@@ -1,10 +1,10 @@
 """Test helpers for Husqvarna Automower."""
-import asyncio
 from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, patch
 
 from aioautomower.utils import mower_list_to_dictionary_dataclass
+from aiohttp import ClientWebSocketResponse
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -84,23 +84,10 @@ def mock_automower_client() -> Generator[AsyncMock, None, None]:
             load_json_value_fixture("mower.json", DOMAIN)
         )
 
-        async def listen(init_ready: asyncio.Event | None) -> None:
+        async def websocket_connect() -> ClientWebSocketResponse:
             """Mock listen."""
-            if init_ready is not None:
-                init_ready.set()
-            listen_block = asyncio.Event()
-            await listen_block.wait()
-            pytest.fail("Listen was not cancelled!")
+            return ClientWebSocketResponse
 
-        client.start_listening = AsyncMock(side_effect=listen)
+        client.auth = AsyncMock(side_effect=websocket_connect)
 
         yield client
-
-
-@pytest.fixture(name="listen_ready_timeout")
-def listen_ready_timeout_fixture() -> Generator[int, None, None]:
-    """Mock the listen ready timeout."""
-    with patch(
-        "homeassistant.components.husqvarna_automower.LISTEN_READY_TIMEOUT", new=0
-    ) as timeout:
-        yield timeout
