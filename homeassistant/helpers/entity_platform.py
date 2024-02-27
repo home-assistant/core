@@ -344,7 +344,7 @@ class EntityPlatform:
             try:
                 awaitable = async_create_setup_awaitable()
                 if asyncio.iscoroutine(awaitable):
-                    awaitable = create_eager_task(async_create_setup_awaitable())
+                    awaitable = create_eager_task(awaitable)
 
                 async with hass.timeout.async_timeout(SLOW_SETUP_MAX_WAIT, self.domain):
                     await asyncio.shield(awaitable)
