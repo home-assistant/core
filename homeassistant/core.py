@@ -2293,6 +2293,7 @@ class ServiceRegistry:
             self._hass.async_create_task(
                 self._run_service_call_catch_exceptions(coro, service_call),
                 f"service call background {service_call.domain}.{service_call.service}",
+                eager_start=True,
             )
             return None
 
