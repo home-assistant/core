@@ -1565,6 +1565,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     # Late imports to avoid loading bleak unless we need it
 
     # pylint: disable-next=import-outside-toplevel
+    from bleak_retry_connector import bleak_manager
     from habluetooth import scanner as bluetooth_scanner
 
     # We need to drop the stop method from the object since we patched
@@ -1574,7 +1575,9 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     with patch.object(
         bluetooth_scanner.OriginalBleakScanner,
         "start",
-    ) as mock_bleak_scanner_start, patch.object(bluetooth_scanner, "HaScanner"):
+    ) as mock_bleak_scanner_start, patch.object(
+        bleak_manager, "get_global_bluez_manager_with_timeout"
+    ), patch.object(bluetooth_scanner, "HaScanner"):
         yield mock_bleak_scanner_start
 
 
