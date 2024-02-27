@@ -137,7 +137,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DOMAIN,
         breaks_in_ha_version="2024.9.0",
         is_fixable=False,
-        severity=ir.IssueSeverity.ERROR,
+        severity=ir.IssueSeverity.WARNING,
         translation_key="integration_removed",
         translation_placeholders={
             "entries": "/config/integrations/integration/logi_circle",
