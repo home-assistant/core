@@ -133,8 +133,8 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         zone_name: str,
         zone_id: int,
         supports_temperature_control: bool,
-        min_temp: Optional[float] = None,
-        max_temp: Optional[float] = None,
+        min_temp: float | None = None,
+        max_temp: float | None = None,
     ) -> None:
         """Initialize of Tado water heater entity."""
         self._tado = tado
