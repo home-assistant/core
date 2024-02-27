@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Generator
-from contextlib import AbstractContextManager
 from datetime import timedelta
 import logging
 from typing import Any
@@ -4469,7 +4468,6 @@ async def test_starting_config_flow_on_single_config_entry(
     manager: config_entries.ConfigEntries,
     source: str,
     user_input: dict,
-    expectation: AbstractContextManager,
     expected_result: dict,
 ) -> None:
     """Test starting a config flow for a single config entry integration.
@@ -4511,7 +4509,7 @@ async def test_starting_config_flow_on_single_config_entry(
     with patch(
         "homeassistant.loader.async_get_integration",
         return_value=integration,
-    ), expectation:
+    ):
         result = await hass.config_entries.flow.async_init(
             "comp", context={"source": source}, data=user_input
         )
@@ -4550,7 +4548,6 @@ async def test_starting_config_flow_on_single_config_entry_2(
     manager: config_entries.ConfigEntries,
     source: str,
     user_input: dict,
-    expectation: AbstractContextManager,
     expected_result: dict,
 ) -> None:
     """Test starting a config flow for a single config entry integration.
@@ -4584,7 +4581,7 @@ async def test_starting_config_flow_on_single_config_entry_2(
     with patch(
         "homeassistant.loader.async_get_integration",
         return_value=integration,
-    ), expectation:
+    ):
         result = await hass.config_entries.flow.async_init(
             "comp", context={"source": source}, data=user_input
         )
