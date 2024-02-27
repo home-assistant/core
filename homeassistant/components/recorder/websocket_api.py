@@ -521,41 +521,6 @@ def ws_info(
     connection.send_result(msg["id"], recorder_info)
 
 
-@websocket_api.ws_require_user(only_supervisor=True)
-@websocket_api.websocket_command({vol.Required("type"): "backup/start"})
-@websocket_api.async_response
-async def ws_backup_start(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Backup start notification."""
-
-    _LOGGER.info("Backup start notification, locking database for writes")
-    instance = get_instance(hass)
-    try:
-        await instance.lock_database()
-    except TimeoutError as err:
-        connection.send_error(msg["id"], "timeout_error", str(err))
-        return
-    connection.send_result(msg["id"])
-
-
-@websocket_api.ws_require_user(only_supervisor=True)
-@websocket_api.websocket_command({vol.Required("type"): "backup/end"})
-@websocket_api.async_response
-async def ws_backup_end(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Backup end notification."""
-
-    instance = get_instance(hass)
-    _LOGGER.info("Backup end notification, releasing write lock")
-    if not instance.unlock_database():
-        connection.send_error(
-            msg["id"], "database_unlock_failed", "Failed to unlock database."
-        )
-    connection.send_result(msg["id"])
-
-
 def _get_recorded_entities(
     hass: HomeAssistant, msg_id: int, instance: Recorder
 ) -> bytes:
