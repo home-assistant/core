@@ -178,27 +178,6 @@ async def test_setup_and_stop_old_bluez(
     }
 
 
-async def test_setup_and_stop_broken_bluetooth(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, macos_adapter: None
-) -> None:
-    """Test we fail gracefully when bluetooth/dbus is broken."""
-    mock_bt = []
-    with patch(
-        "habluetooth.scanner.OriginalBleakScanner.start",
-        side_effect=BleakError,
-    ), patch(
-        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
-    ):
-        await async_setup_with_default_adapter(hass)
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
-    assert "Failed to start Bluetooth" in caplog.text
-    assert len(bluetooth.async_discovered_service_info(hass)) == 0
-
-
 async def test_setup_and_stop_no_bluetooth(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, one_adapter: None
 ) -> None:
@@ -220,6 +199,27 @@ async def test_setup_and_stop_no_bluetooth(
     await hass.async_block_till_done()
     assert len(mock_ha_bleak_scanner.mock_calls) == 1
     assert "Failed to initialize Bluetooth" in caplog.text
+
+
+async def test_setup_and_stop_broken_bluetooth(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, macos_adapter: None
+) -> None:
+    """Test we fail gracefully when bluetooth/dbus is broken."""
+    mock_bt = []
+    with patch(
+        "habluetooth.scanner.OriginalBleakScanner.start",
+        side_effect=BleakError,
+    ), patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ):
+        await async_setup_with_default_adapter(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert "Failed to start Bluetooth" in caplog.text
+    assert len(bluetooth.async_discovered_service_info(hass)) == 0
 
 
 async def test_setup_and_stop_broken_bluetooth_hanging(
