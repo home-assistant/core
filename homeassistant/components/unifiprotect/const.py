@@ -5,6 +5,9 @@ from pyunifiprotect.data import ModelType, Version
 from homeassistant.const import Platform
 
 DOMAIN = "unifiprotect"
+# some UniFi OS consoles have an unknown rate limit on auth
+# if rate limit is triggered a 401 is returned
+AUTH_RETRIES = 11  # ~12 hours of retries with the last waiting ~6 hours
 
 ATTR_EVENT_SCORE = "event_score"
 ATTR_EVENT_ID = "event_id"
@@ -32,7 +35,7 @@ CONFIG_OPTIONS = [
 DEFAULT_PORT = 443
 DEFAULT_ATTRIBUTION = "Powered by UniFi Protect Server"
 DEFAULT_BRAND = "Ubiquiti"
-DEFAULT_SCAN_INTERVAL = 5
+DEFAULT_SCAN_INTERVAL = 20
 DEFAULT_VERIFY_SSL = False
 DEFAULT_MAX_MEDIA = 1000
 

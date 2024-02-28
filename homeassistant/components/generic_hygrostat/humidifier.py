@@ -396,9 +396,12 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         try:
             self._cur_humidity = float(humidity)
         except ValueError as ex:
-            _LOGGER.warning("Unable to update from sensor: %s", ex)
+            if self._active:
+                _LOGGER.warning("Unable to update from sensor: %s", ex)
+                self._active = False
+            else:
+                _LOGGER.debug("Unable to update from sensor: %s", ex)
             self._cur_humidity = None
-            self._active = False
             if self._is_device_active:
                 await self._async_device_turn_off()
 

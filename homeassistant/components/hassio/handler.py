@@ -2,11 +2,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
 from http import HTTPStatus
 import logging
 import os
-from typing import Any
+from typing import Any, ParamSpec
 
 import aiohttp
 from yarl import URL
@@ -19,9 +19,10 @@ from homeassistant.components.http import (
 )
 from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.loader import bind_hass
 
 from .const import ATTR_DISCOVERY, DOMAIN, X_HASS_SOURCE
+
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,10 +31,12 @@ class HassioAPIError(RuntimeError):
     """Return if a API trow a error."""
 
 
-def _api_bool(funct):
+def _api_bool(
+    funct: Callable[_P, Coroutine[Any, Any, dict[str, Any]]],
+) -> Callable[_P, Coroutine[Any, Any, bool]]:
     """Return a boolean."""
 
-    async def _wrapper(*argv, **kwargs):
+    async def _wrapper(*argv: _P.args, **kwargs: _P.kwargs) -> bool:
         """Wrap function."""
         try:
             data = await funct(*argv, **kwargs)
@@ -44,10 +47,12 @@ def _api_bool(funct):
     return _wrapper
 
 
-def api_data(funct):
+def api_data(
+    funct: Callable[_P, Coroutine[Any, Any, dict[str, Any]]],
+) -> Callable[_P, Coroutine[Any, Any, Any]]:
     """Return data of an api."""
 
-    async def _wrapper(*argv, **kwargs):
+    async def _wrapper(*argv: _P.args, **kwargs: _P.kwargs) -> Any:
         """Wrap function."""
         data = await funct(*argv, **kwargs)
         if data["result"] == "ok":
@@ -57,7 +62,6 @@ def api_data(funct):
     return _wrapper
 
 
-@bind_hass
 async def async_get_addon_info(hass: HomeAssistant, slug: str) -> dict:
     """Return add-on info.
 
@@ -79,8 +83,7 @@ async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, method="get")
 
 
-@bind_hass
-async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> dict:
+async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bool:
     """Update Supervisor diagnostics toggle.
 
     The caller of the function should handle HassioAPIError.
@@ -89,7 +92,6 @@ async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> di
     return await hassio.update_diagnostics(diagnostics)
 
 
-@bind_hass
 @api_data
 async def async_install_addon(hass: HomeAssistant, slug: str) -> dict:
     """Install add-on.
@@ -101,7 +103,6 @@ async def async_install_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=None)
 
 
-@bind_hass
 @api_data
 async def async_uninstall_addon(hass: HomeAssistant, slug: str) -> dict:
     """Uninstall add-on.
@@ -113,7 +114,6 @@ async def async_uninstall_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=60)
 
 
-@bind_hass
 @api_data
 async def async_update_addon(
     hass: HomeAssistant,
@@ -133,7 +133,6 @@ async def async_update_addon(
     )
 
 
-@bind_hass
 @api_data
 async def async_start_addon(hass: HomeAssistant, slug: str) -> dict:
     """Start add-on.
@@ -145,7 +144,6 @@ async def async_start_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=60)
 
 
-@bind_hass
 @api_data
 async def async_restart_addon(hass: HomeAssistant, slug: str) -> dict:
     """Restart add-on.
@@ -157,7 +155,6 @@ async def async_restart_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=None)
 
 
-@bind_hass
 @api_data
 async def async_stop_addon(hass: HomeAssistant, slug: str) -> dict:
     """Stop add-on.
@@ -169,7 +166,6 @@ async def async_stop_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=60)
 
 
-@bind_hass
 @api_data
 async def async_set_addon_options(
     hass: HomeAssistant, slug: str, options: dict
@@ -183,7 +179,6 @@ async def async_set_addon_options(
     return await hassio.send_command(command, payload=options)
 
 
-@bind_hass
 async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict | None:
     """Return discovery data for an add-on."""
     hassio: HassIO = hass.data[DOMAIN]
@@ -192,7 +187,6 @@ async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict
     return next((addon for addon in discovered_addons if addon["addon"] == slug), None)
 
 
-@bind_hass
 @api_data
 async def async_create_backup(
     hass: HomeAssistant, payload: dict, partial: bool = False
@@ -207,7 +201,6 @@ async def async_create_backup(
     return await hassio.send_command(command, payload=payload, timeout=None)
 
 
-@bind_hass
 @api_data
 async def async_update_os(hass: HomeAssistant, version: str | None = None) -> dict:
     """Update Home Assistant Operating System.
@@ -223,7 +216,6 @@ async def async_update_os(hass: HomeAssistant, version: str | None = None) -> di
     )
 
 
-@bind_hass
 @api_data
 async def async_update_supervisor(hass: HomeAssistant) -> dict:
     """Update Home Assistant Supervisor.
@@ -235,7 +227,6 @@ async def async_update_supervisor(hass: HomeAssistant) -> dict:
     return await hassio.send_command(command, timeout=None)
 
 
-@bind_hass
 @api_data
 async def async_update_core(
     hass: HomeAssistant, version: str | None = None, backup: bool = False
@@ -253,9 +244,8 @@ async def async_update_core(
     )
 
 
-@bind_hass
 @_api_bool
-async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> bool:
+async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> dict:
     """Apply a suggestion from supervisor's resolution center.
 
     The caller of the function should handle HassioAPIError.
@@ -583,7 +573,7 @@ class HassIO:
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )
 
-            if request.status not in (HTTPStatus.OK, HTTPStatus.BAD_REQUEST):
+            if request.status != HTTPStatus.OK:
                 _LOGGER.error("%s return code %d", command, request.status)
                 raise HassioAPIError()
 
