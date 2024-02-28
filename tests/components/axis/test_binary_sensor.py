@@ -68,6 +68,45 @@ async def test_unsupported_binary_sensors(
         ),
         (
             {
+                "topic": "tnsaxis:CameraApplicationPlatform/FenceGuard/Camera1Profile1",
+                "data_type": "active",
+                "data_value": "1",
+            },
+            {
+                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_fence_guard_profile_1",
+                "state": STATE_ON,
+                "name": f"{NAME} Fence Guard Profile 1",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        ),
+        (
+            {
+                "topic": "tnsaxis:CameraApplicationPlatform/MotionGuard/Camera1Profile1",
+                "data_type": "active",
+                "data_value": "1",
+            },
+            {
+                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_motion_guard_profile_1",
+                "state": STATE_ON,
+                "name": f"{NAME} Motion Guard Profile 1",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        ),
+        (
+            {
+                "topic": "tnsaxis:CameraApplicationPlatform/LoiteringGuard/Camera1Profile1",
+                "data_type": "active",
+                "data_value": "1",
+            },
+            {
+                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_loitering_guard_profile_1",
+                "state": STATE_ON,
+                "name": f"{NAME} Loitering Guard Profile 1",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        ),
+        (
+            {
                 "topic": "tnsaxis:CameraApplicationPlatform/VMD/Camera1Profile1",
                 "data_type": "active",
                 "data_value": "1",
