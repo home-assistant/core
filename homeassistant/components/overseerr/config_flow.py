@@ -5,20 +5,25 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from overseerr_api import ApiClient, AuthApi, Configuration
+from overseerr_api import ApiClient, AuthApi, Configuration, User
 from overseerr_api.exceptions import OpenApiException
-from pydantic import ValidationError
 from urllib3.exceptions import MaxRetryError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_API_KEY, CONF_URL
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_URL, default=DEFAULT_URL): str,
+        vol.Required(CONF_API_KEY): str,
+    }
+)
 
 
 class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -49,61 +54,29 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Handle a flow initiated by the user."""
+        """Handle a user-initiated config flow."""
         errors = {}
 
-        if user_input is None:
-            user_input = dict(self.entry.data) if self.entry else None
-
-        else:
+        if user_input is not None:
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             try:
-                if result := await validate_input(self.hass, user_input):
-                    user_input[CONF_API_KEY] = result[1]
+                await self.hass.async_add_executor_job(self.validate_input, user_input)
             except (OpenApiException, MaxRetryError):
                 errors = {"base": "open_api_exception"}
-            except ValidationError:
-                errors = {"base": "validation_error"}
-            if not errors:
-                if self.entry:
-                    self.hass.config_entries.async_update_entry(
-                        self.entry, data=user_input
-                    )
-                    await self.hass.config_entries.async_reload(self.entry.entry_id)
+            else:
+                return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
-                    return self.async_abort(reason="reauth_successful")
+        schema = self.add_suggested_values_to_schema(USER_DATA_SCHEMA, user_input)
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-                return self.async_create_entry(
-                    title=DEFAULT_NAME,
-                    data=user_input,
-                )
-
-        user_input = user_input or {}
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_URL, default=user_input.get(CONF_URL, DEFAULT_URL)
-                    ): str,
-                    vol.Required(CONF_API_KEY): str,
-                }
-            ),
-            errors=errors,
+    def validate_input(self, data: dict[str, Any]) -> User | None:
+        """Validate the user input allows us to connect to Overseerr."""
+        overseerr_config = Configuration(
+            api_key={"apiKey": data.get(CONF_API_KEY, "")},
+            host=data[CONF_URL],
         )
 
+        overseerr_client = ApiClient(overseerr_config)
+        auth_api = AuthApi(overseerr_client)
 
-async def validate_input(
-    hass: HomeAssistant, data: dict[str, Any]
-) -> tuple[str, str, str] | None:
-    """Validate the user input allows us to connect to Overseerr."""
-    overseerr_config = Configuration(
-        api_key={"apiKey": data.get(CONF_API_KEY, "")},
-        host=data[CONF_URL],
-    )
-
-    overseerr_client = ApiClient(overseerr_config)
-    auth_api = AuthApi(overseerr_client)
-
-    await hass.async_add_executor_job(auth_api.auth_me_get)
-
-    return None
+        return auth_api.auth_me_get()

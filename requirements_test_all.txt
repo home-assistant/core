@@ -1180,7 +1180,7 @@ oralb-ble==0.17.6
 ourgroceries==1.5.4
 
 # homeassistant.components.overseerr
-overseerr-api==1.0.0
+overseerr-api==1.0.1
 
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
