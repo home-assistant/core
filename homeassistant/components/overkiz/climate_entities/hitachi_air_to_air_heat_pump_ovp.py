@@ -83,13 +83,12 @@ FAN_MODES_TO_OVERKIZ: dict[str, str] = {
     FAN_SILENT: OverkizCommandParam.SILENT,
 }
 
-_attr_fan_modes = [*FAN_MODES_TO_OVERKIZ]
-
 
 class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
     """Representation of Hitachi Air To Air HeatPump."""
 
     _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
+    _attr_fan_modes = [*FAN_MODES_TO_OVERKIZ]
     _attr_preset_modes = [PRESET_NONE, PRESET_HOLIDAY_MODE]
     _attr_swing_modes = [*SWING_MODES_TO_OVERKIZ]
     _attr_target_temperature_step = 1.0
