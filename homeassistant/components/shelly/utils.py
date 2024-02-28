@@ -243,7 +243,7 @@ async def get_coap_context(hass: HomeAssistant) -> COAP:
     else:
         port = DEFAULT_COAP_PORT
     LOGGER.info("Starting CoAP context with UDP port %s", port)
-    await context.initialize(ipv4, port)
+    await context.initialize(port, ipv4)
 
     @callback
     def shutdown_listener(ev: Event) -> None:
