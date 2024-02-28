@@ -28,6 +28,10 @@ REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2024.4"
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
 
 
+# hass.data key for logging information.
+DATA_LOGGING = "logging"
+
+
 class Platform(StrEnum):
     """Available entity platforms."""
 
