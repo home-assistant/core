@@ -146,8 +146,17 @@ async def async_add_entities(
     """Add entities helper."""
     if not entities:
         return
+
+    def _maybe_combine_kwargs(kwargs, entity_kwargs):
+        if entity_kwargs and kwargs:
+            return entity_kwargs.update(kwargs)
+        if entity_kwargs and not kwargs:
+            return entity_kwargs
+        return kwargs
+
     to_add = [
-        ent_cls.create_entity(*args, **kwargs) for ent_cls, args, kwargs in entities
+        ent_cls.create_entity(*args, **_maybe_combine_kwargs(kwargs, kw_args))
+        for ent_cls, args, kw_args in entities
     ]
     entities_to_add = [entity for entity in to_add if entity is not None]
     _async_add_entities(entities_to_add, update_before_add=False)
