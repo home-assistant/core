@@ -20,9 +20,9 @@ from homeassistant.components.http import (
 )
 from homeassistant.const import (
     CONTENT_TYPE_JSON,
-    DATA_LOGGING,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
+    KEY_DATA_LOGGING as DATA_LOGGING,
     MATCH_ALL,
     URL_API,
     URL_API_COMPONENTS,

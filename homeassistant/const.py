@@ -1604,7 +1604,7 @@ SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
 
 
 # hass.data key for logging information.
-DATA_LOGGING = "logging"
+KEY_DATA_LOGGING = "logging"
 
 
 # Date/Time formats
