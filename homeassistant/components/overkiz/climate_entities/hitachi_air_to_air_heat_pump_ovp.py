@@ -266,9 +266,8 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
         """
         if value:
             return value
-        state = self.device.states[state_name]
-        if state and state.value_as_str:
-            return state.value_as_str
+        if (state := self.device.states[state_name]) is not None and (value := state.value_as_str) is not None:
+            return value
         return fallback_value
 
     async def _global_control(
