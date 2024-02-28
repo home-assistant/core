@@ -15,6 +15,6 @@
   "import_executor": true,
   "iot_class": "local_push",
   "loggers": ["aiohomekit", "commentjson"],
-  "requirements": ["aiohomekit==3.1.4"],
+  "requirements": ["aiohomekit==3.1.5"],
   "zeroconf": ["_hap._tcp.local.", "_hap._udp.local."]
 }
