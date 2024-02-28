@@ -312,7 +312,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Start WPS',
-      'icon': 'mdi:wifi-plus',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_title_start_wps',
@@ -344,7 +343,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi-plus',
+    'original_icon': None,
     'original_name': 'Start WPS',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,

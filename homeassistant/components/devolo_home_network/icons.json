@@ -25,10 +25,10 @@
       }
     },
     "switch": {
-      "guest_wifi": {
+      "switch_guest_wifi": {
         "default": "mdi:wifi"
       },
-      "leds": {
+      "switch_leds": {
         "default": "mdi:led-off"
       }
     }
