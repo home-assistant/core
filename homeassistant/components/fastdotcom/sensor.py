@@ -36,7 +36,6 @@ class SpeedtestSensor(
     _attr_device_class = SensorDeviceClass.DATA_RATE
     _attr_native_unit_of_measurement = UnitOfDataRate.MEGABITS_PER_SECOND
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_icon = "mdi:speedometer"
     _attr_should_poll = False
     _attr_has_entity_name = True
 
