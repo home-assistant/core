@@ -30,6 +30,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.util.async_ import create_eager_task
 
 from .config_flow import normalize_hkid
 from .const import (
@@ -822,7 +823,10 @@ class HKDevice:
 
         if to_load:
             await asyncio.gather(
-                *[self.async_load_platform(platform) for platform in to_load]
+                *(
+                    create_eager_task(self.async_load_platform(platform))
+                    for platform in to_load
+                )
             )
 
     @callback

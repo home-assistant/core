@@ -41,6 +41,8 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.loader import bind_hass
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import now
 
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # noqa: F401
@@ -282,6 +284,7 @@ def hostname_from_addon_slug(addon_slug: str) -> str:
 
 
 @callback
+@bind_hass
 def get_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return generic information from Supervisor.
 
@@ -291,6 +294,7 @@ def get_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
+@bind_hass
 def get_host_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return generic host information.
 
@@ -300,6 +304,7 @@ def get_host_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
+@bind_hass
 def get_store(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return store information.
 
@@ -309,6 +314,7 @@ def get_store(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
+@bind_hass
 def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return Supervisor information.
 
@@ -318,6 +324,7 @@ def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
+@bind_hass
 def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any]] | None:
     """Return Addons info.
 
@@ -327,6 +334,7 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any]] | None:
 
 
 @callback
+@bind_hass
 def get_addons_stats(hass: HomeAssistant) -> dict[str, Any]:
     """Return Addons stats.
 
@@ -336,6 +344,7 @@ def get_addons_stats(hass: HomeAssistant) -> dict[str, Any]:
 
 
 @callback
+@bind_hass
 def get_core_stats(hass: HomeAssistant) -> dict[str, Any]:
     """Return core stats.
 
@@ -345,6 +354,7 @@ def get_core_stats(hass: HomeAssistant) -> dict[str, Any]:
 
 
 @callback
+@bind_hass
 def get_supervisor_stats(hass: HomeAssistant) -> dict[str, Any]:
     """Return supervisor stats.
 
@@ -354,6 +364,7 @@ def get_supervisor_stats(hass: HomeAssistant) -> dict[str, Any]:
 
 
 @callback
+@bind_hass
 def get_addons_changelogs(hass: HomeAssistant):
     """Return Addons changelogs.
 
@@ -363,6 +374,7 @@ def get_addons_changelogs(hass: HomeAssistant):
 
 
 @callback
+@bind_hass
 def get_os_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return OS information.
 
@@ -372,6 +384,7 @@ def get_os_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
+@bind_hass
 def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return Home Assistant Core information from Supervisor.
 
@@ -381,6 +394,7 @@ def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
+@bind_hass
 def get_issues_info(hass: HomeAssistant) -> SupervisorIssues | None:
     """Return Supervisor issues info.
 
@@ -390,6 +404,7 @@ def get_issues_info(hass: HomeAssistant) -> SupervisorIssues | None:
 
 
 @callback
+@bind_hass
 def is_hassio(hass: HomeAssistant) -> bool:
     """Return true if Hass.io is loaded.
 
@@ -490,7 +505,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config)
 
-    await push_config(None)
+    push_config_task = hass.async_create_task(push_config(None), eager_start=True)
 
     async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
@@ -533,12 +548,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 hass.data[DATA_SUPERVISOR_INFO],
                 hass.data[DATA_OS_INFO],
             ) = await asyncio.gather(
-                hassio.get_info(),
-                hassio.get_host_info(),
-                hassio.get_store(),
-                hassio.get_core_info(),
-                hassio.get_supervisor_info(),
-                hassio.get_os_info(),
+                create_eager_task(hassio.get_info()),
+                create_eager_task(hassio.get_host_info()),
+                create_eager_task(hassio.get_store()),
+                create_eager_task(hassio.get_core_info()),
+                create_eager_task(hassio.get_supervisor_info()),
+                create_eager_task(hassio.get_os_info()),
             )
 
         except HassioAPIError as err:
@@ -552,6 +567,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     # Fetch data
     await update_info_data()
+    await push_config_task
 
     async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
         """Stop or restart home assistant."""
@@ -605,7 +621,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     _async_setup_hardware_integration()
 
     hass.async_create_task(
-        hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
+        hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"}),
+        eager_start=True,
     )
 
     # Start listening for problems with supervisor and making issues

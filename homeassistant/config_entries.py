@@ -929,6 +929,8 @@ class ConfigEntry:
         task = hass.async_create_task(
             target, f"{name} {self.title} {self.domain} {self.entry_id}", eager_start
         )
+        if task.done():
+            return task
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
 
@@ -949,6 +951,8 @@ class ConfigEntry:
         target: target to call.
         """
         task = hass.async_create_background_task(target, name, eager_start)
+        if task.done():
+            return task
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.remove)
         return task

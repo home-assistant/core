@@ -38,6 +38,7 @@ from homeassistant.helpers import (
     storage,
 )
 from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.loader import bind_hass
 from homeassistant.util.location import distance
 
 from .const import ATTR_PASSIVE, ATTR_RADIUS, CONF_PASSIVE, DOMAIN, HOME_ZONE
@@ -61,6 +62,7 @@ CREATE_FIELDS = {
     vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
     vol.Optional(CONF_ICON): cv.icon,
 }
+
 
 UPDATE_FIELDS = {
     vol.Optional(CONF_NAME): cv.string,
@@ -99,7 +101,7 @@ ENTITY_ID_SORTER = attrgetter("entity_id")
 ZONE_ENTITY_IDS = "zone_entity_ids"
 
 
-@callback
+@bind_hass
 def async_active_zone(
     hass: HomeAssistant, latitude: float, longitude: float, radius: int = 0
 ) -> State | None:
