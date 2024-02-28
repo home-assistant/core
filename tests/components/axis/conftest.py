@@ -21,6 +21,8 @@ from homeassistant.const import (
 
 from .const import (
     API_DISCOVERY_RESPONSE,
+    APP_AOA_RESPONSE,
+    APP_VMD4_RESPONSE,
     APPLICATIONS_LIST_RESPONSE,
     BASIC_DEVICE_INFO_RESPONSE,
     BRAND_RESPONSE,
@@ -36,7 +38,6 @@ from .const import (
     PTZ_RESPONSE,
     STREAM_PROFILES_RESPONSE,
     VIEW_AREAS_RESPONSE,
-    VMD4_RESPONSE,
 )
 
 from tests.common import MockConfigEntry
@@ -184,10 +185,11 @@ def default_request_fixture(
             text=APPLICATIONS_LIST_RESPONSE,
             headers={"Content-Type": "text/xml"},
         )
-        respx.post("/local/fenceguard/control.cgi").respond(json=VMD4_RESPONSE)
-        respx.post("/local/loiteringguard/control.cgi").respond(json=VMD4_RESPONSE)
-        respx.post("/local/motionguard/control.cgi").respond(json=VMD4_RESPONSE)
-        respx.post("/local/vmd/control.cgi").respond(json=VMD4_RESPONSE)
+        respx.post("/local/fenceguard/control.cgi").respond(json=APP_VMD4_RESPONSE)
+        respx.post("/local/loiteringguard/control.cgi").respond(json=APP_VMD4_RESPONSE)
+        respx.post("/local/motionguard/control.cgi").respond(json=APP_VMD4_RESPONSE)
+        respx.post("/local/vmd/control.cgi").respond(json=APP_VMD4_RESPONSE)
+        respx.post("/local/objectanalytics/control.cgi").respond(json=APP_AOA_RESPONSE)
 
     return __mock_default_requests
 

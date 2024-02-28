@@ -118,6 +118,19 @@ async def test_unsupported_binary_sensors(
                 "device_class": BinarySensorDeviceClass.MOTION,
             },
         ),
+        (
+            {
+                "topic": "tnsaxis:CameraApplicationPlatform/ObjectAnalytics/Device1Scenario1",
+                "data_type": "active",
+                "data_value": "1",
+            },
+            {
+                "id": f"{BINARY_SENSOR_DOMAIN}.{NAME}_object_analytics_scenario_1",
+                "state": STATE_ON,
+                "name": f"{NAME} Object Analytics Scenario 1",
+                "device_class": BinarySensorDeviceClass.MOTION,
+            },
+        ),
     ],
 )
 async def test_binary_sensors(
