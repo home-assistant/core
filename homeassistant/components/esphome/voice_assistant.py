@@ -121,11 +121,11 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             raise OSError("No free ports")
 
         if UDP_PORT_MIN == 0:
-            UDP_PORT = 0
+            udp_port = 0
         else:
-            UDP_PORT = find_port(UDP_PORT_MIN, UDP_PORT_MAX)
+            udp_port = find_port(UDP_PORT_MIN, UDP_PORT_MAX)
 
-        sock.bind(("", UDP_PORT))
+        sock.bind(("", udp_port))
 
         await asyncio.get_running_loop().create_datagram_endpoint(
             accept_connection, sock=sock
