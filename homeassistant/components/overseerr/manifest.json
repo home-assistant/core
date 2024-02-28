@@ -1,7 +1,7 @@
 {
   "domain": "overseerr",
   "name": "Overseerr",
-  "codeowners": ["@vehjelmtvedt"],
+  "codeowners": ["@vehjelmtvedt", "@l-holter"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/overseerr",

@@ -7,7 +7,7 @@ from typing import Any
 
 from overseerr_api import ApiClient, AuthApi, Configuration
 from overseerr_api.exceptions import OpenApiException
-from pydantic_core import ValidationError
+from pydantic import ValidationError
 from urllib3.exceptions import MaxRetryError
 import voluptuous as vol
 
@@ -59,10 +59,10 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 if result := await validate_input(self.hass, user_input):
                     user_input[CONF_API_KEY] = result[1]
-            except ValidationError:
-                errors = {"base": "validation_error"}
             except (OpenApiException, MaxRetryError):
                 errors = {"base": "open_api_exception"}
+            except ValidationError:
+                errors = {"base": "validation_error"}
             if not errors:
                 if self.entry:
                     self.hass.config_entries.async_update_entry(
