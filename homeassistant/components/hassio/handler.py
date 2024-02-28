@@ -19,6 +19,7 @@ from homeassistant.components.http import (
 )
 from homeassistant.const import SERVER_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.loader import bind_hass
 
 from .const import ATTR_DISCOVERY, DOMAIN, X_HASS_SOURCE
 
@@ -62,6 +63,7 @@ def api_data(
     return _wrapper
 
 
+@bind_hass
 async def async_get_addon_info(hass: HomeAssistant, slug: str) -> dict:
     """Return add-on info.
 
@@ -83,6 +85,7 @@ async def async_get_addon_store_info(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, method="get")
 
 
+@bind_hass
 async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bool:
     """Update Supervisor diagnostics toggle.
 
@@ -92,6 +95,7 @@ async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bo
     return await hassio.update_diagnostics(diagnostics)
 
 
+@bind_hass
 @api_data
 async def async_install_addon(hass: HomeAssistant, slug: str) -> dict:
     """Install add-on.
@@ -103,6 +107,7 @@ async def async_install_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=None)
 
 
+@bind_hass
 @api_data
 async def async_uninstall_addon(hass: HomeAssistant, slug: str) -> dict:
     """Uninstall add-on.
@@ -114,6 +119,7 @@ async def async_uninstall_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=60)
 
 
+@bind_hass
 @api_data
 async def async_update_addon(
     hass: HomeAssistant,
@@ -133,6 +139,7 @@ async def async_update_addon(
     )
 
 
+@bind_hass
 @api_data
 async def async_start_addon(hass: HomeAssistant, slug: str) -> dict:
     """Start add-on.
@@ -144,6 +151,7 @@ async def async_start_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=60)
 
 
+@bind_hass
 @api_data
 async def async_restart_addon(hass: HomeAssistant, slug: str) -> dict:
     """Restart add-on.
@@ -155,6 +163,7 @@ async def async_restart_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=None)
 
 
+@bind_hass
 @api_data
 async def async_stop_addon(hass: HomeAssistant, slug: str) -> dict:
     """Stop add-on.
@@ -166,6 +175,7 @@ async def async_stop_addon(hass: HomeAssistant, slug: str) -> dict:
     return await hassio.send_command(command, timeout=60)
 
 
+@bind_hass
 @api_data
 async def async_set_addon_options(
     hass: HomeAssistant, slug: str, options: dict
@@ -179,6 +189,7 @@ async def async_set_addon_options(
     return await hassio.send_command(command, payload=options)
 
 
+@bind_hass
 async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict | None:
     """Return discovery data for an add-on."""
     hassio: HassIO = hass.data[DOMAIN]
@@ -187,6 +198,7 @@ async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict
     return next((addon for addon in discovered_addons if addon["addon"] == slug), None)
 
 
+@bind_hass
 @api_data
 async def async_create_backup(
     hass: HomeAssistant, payload: dict, partial: bool = False
@@ -201,6 +213,7 @@ async def async_create_backup(
     return await hassio.send_command(command, payload=payload, timeout=None)
 
 
+@bind_hass
 @api_data
 async def async_update_os(hass: HomeAssistant, version: str | None = None) -> dict:
     """Update Home Assistant Operating System.
@@ -216,6 +229,7 @@ async def async_update_os(hass: HomeAssistant, version: str | None = None) -> di
     )
 
 
+@bind_hass
 @api_data
 async def async_update_supervisor(hass: HomeAssistant) -> dict:
     """Update Home Assistant Supervisor.
@@ -227,6 +241,7 @@ async def async_update_supervisor(hass: HomeAssistant) -> dict:
     return await hassio.send_command(command, timeout=None)
 
 
+@bind_hass
 @api_data
 async def async_update_core(
     hass: HomeAssistant, version: str | None = None, backup: bool = False
@@ -244,6 +259,7 @@ async def async_update_core(
     )
 
 
+@bind_hass
 @_api_bool
 async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> dict:
     """Apply a suggestion from supervisor's resolution center.
