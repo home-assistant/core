@@ -1915,7 +1915,7 @@ samsungtvws[async,encrypted]==2.6.0
 screenlogicpy==0.10.0
 
 # homeassistant.components.backup
-securetar==2024.2.0
+securetar==2024.2.1
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
