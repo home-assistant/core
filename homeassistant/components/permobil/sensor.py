@@ -211,14 +211,6 @@ class PermobilSensor(PermobilEntity, SensorEntity):
     _attr_suggested_display_precision = 0
     entity_description: PermobilSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: MyPermobilCoordinator,
-        description: PermobilSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, description)
-
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor."""
