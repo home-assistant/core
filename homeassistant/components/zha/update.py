@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import functools
 import logging
+import math
 from typing import TYPE_CHECKING, Any
 
 from zigpy.ota import OtaImageWithMetadata
@@ -166,7 +167,8 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
         if self._attr_in_progress is False:
             return
 
-        self._attr_in_progress = int(progress)
+        # Remap progress to 1-100 to avoid 0
+        self._attr_in_progress = int(math.ceil(progress))
         self.async_write_ha_state()
 
     async def async_install(
