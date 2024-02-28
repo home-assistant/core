@@ -323,7 +323,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.5
 
 # homeassistant.components.rainforest_raven
-aioraven==0.5.0
+aioraven==0.5.1
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -2270,7 +2270,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.62.3
+zigpy==0.63.2
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.55.3
