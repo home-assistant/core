@@ -339,7 +339,9 @@ class HKDevice:
     @callback
     def _async_schedule_update(self, now: datetime) -> None:
         """Schedule an update."""
-        self._debounced_update.async_schedule_call()
+        self.hass.async_create_task(
+            self._debounced_update.async_call(), eager_start=True
+        )
 
     async def async_add_new_entities(self) -> None:
         """Add new entities to Home Assistant."""
