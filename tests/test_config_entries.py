@@ -1044,7 +1044,7 @@ async def test_reauth_issue(hass: HomeAssistant) -> None:
         learn_more_url=None,
         severity=ir.IssueSeverity.ERROR,
         translation_key="config_entry_reauth",
-        translation_placeholders=None,
+        translation_placeholders={"name": "test_title"},
     )
 
     result = await hass.config_entries.flow.async_configure(issue.data["flow_id"], {})
@@ -4228,11 +4228,16 @@ async def test_task_tracking(hass: HomeAssistant) -> None:
 
     entry.async_on_unload(test_unload)
     entry.async_create_task(hass, test_task())
-    entry.async_create_background_task(hass, test_task(), "background-task-name")
+    entry.async_create_background_task(
+        hass, test_task(), "background-task-name", eager_start=True
+    )
+    entry.async_create_background_task(
+        hass, test_task(), "background-task-name", eager_start=False
+    )
     await asyncio.sleep(0)
     hass.loop.call_soon(event.set)
     await entry._async_process_on_unload(hass)
-    assert results == ["on_unload", "background", "normal"]
+    assert results == ["on_unload", "background", "background", "normal"]
 
 
 async def test_preview_supported(
@@ -4427,6 +4432,279 @@ async def test_hashable_non_string_unique_id(
     del entries[entry.entry_id]
     assert not entries
     assert entries.get_entry_by_domain_and_unique_id("test", unique_id) is None
+
+
+@pytest.mark.parametrize(
+    ("source", "user_input", "expected_result"),
+    [
+        (
+            config_entries.SOURCE_IGNORE,
+            {"unique_id": "blah", "title": "blah"},
+            {"type": data_entry_flow.FlowResultType.CREATE_ENTRY},
+        ),
+        (
+            config_entries.SOURCE_REAUTH,
+            None,
+            {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
+        ),
+        (
+            config_entries.SOURCE_UNIGNORE,
+            None,
+            {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
+        ),
+        (
+            config_entries.SOURCE_USER,
+            None,
+            {
+                "type": data_entry_flow.FlowResultType.ABORT,
+                "reason": "single_instance_allowed",
+                "translation_domain": HA_DOMAIN,
+            },
+        ),
+    ],
+)
+async def test_starting_config_flow_on_single_config_entry(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    user_input: dict,
+    expected_result: dict,
+) -> None:
+    """Test starting a config flow for a single config entry integration.
+
+    In this test, the integration has one ignored flow and one entry added by user.
+    """
+    integration = loader.Integration(
+        hass,
+        "components.comp",
+        None,
+        {
+            "name": "Comp",
+            "dependencies": [],
+            "requirements": [],
+            "domain": "comp",
+            "single_config_entry": True,
+        },
+    )
+    entry = MockConfigEntry(
+        domain="comp",
+        unique_id="1234",
+        title="Test",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
+    )
+    entry.add_to_hass(hass)
+    ignored_entry = MockConfigEntry(
+        domain="comp",
+        unique_id="2345",
+        title="Test",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    ignored_entry.add_to_hass(hass)
+
+    mock_platform(hass, "comp.config_flow", None)
+
+    with patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "comp", context={"source": source}, data=user_input
+        )
+
+    for key in expected_result:
+        assert result[key] == expected_result[key]
+
+
+@pytest.mark.parametrize(
+    ("source", "user_input", "expected_result"),
+    [
+        (
+            config_entries.SOURCE_IGNORE,
+            {"unique_id": "blah", "title": "blah"},
+            {"type": data_entry_flow.FlowResultType.CREATE_ENTRY},
+        ),
+        (
+            config_entries.SOURCE_REAUTH,
+            None,
+            {"type": data_entry_flow.FlowResultType.FORM, "step_id": "reauth_confirm"},
+        ),
+        (
+            config_entries.SOURCE_UNIGNORE,
+            None,
+            {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
+        ),
+        (
+            config_entries.SOURCE_USER,
+            None,
+            {"type": data_entry_flow.FlowResultType.ABORT, "reason": "not_implemented"},
+        ),
+    ],
+)
+async def test_starting_config_flow_on_single_config_entry_2(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source: str,
+    user_input: dict,
+    expected_result: dict,
+) -> None:
+    """Test starting a config flow for a single config entry integration.
+
+    In this test, the integration has one ignored flow but no entry added by user.
+    """
+    integration = loader.Integration(
+        hass,
+        "components.comp",
+        None,
+        {
+            "name": "Comp",
+            "dependencies": [],
+            "requirements": [],
+            "domain": "comp",
+            "single_config_entry": True,
+        },
+    )
+    ignored_entry = MockConfigEntry(
+        domain="comp",
+        unique_id="2345",
+        title="Test",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    ignored_entry.add_to_hass(hass)
+
+    mock_platform(hass, "comp.config_flow", None)
+
+    with patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "comp", context={"source": source}, data=user_input
+        )
+
+    for key in expected_result:
+        assert result[key] == expected_result[key]
+
+
+async def test_avoid_adding_second_config_entry_on_single_config_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test that we cannot add a second entry for a single config entry integration."""
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            if user_input is None:
+                return self.async_show_form(step_id="user")
+
+            return self.async_create_entry(title="yo", data={})
+
+    integration = loader.Integration(
+        hass,
+        "components.comp",
+        None,
+        {
+            "name": "Comp",
+            "dependencies": [],
+            "requirements": [],
+            "domain": "comp",
+            "single_config_entry": True,
+        },
+    )
+    mock_integration(hass, MockModule("comp"))
+    mock_platform(hass, "comp.config_flow", None)
+
+    with patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
+    ), patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Start a flow
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+        # Add a config entry
+        entry = MockConfigEntry(
+            domain="comp",
+            unique_id="1234",
+            title="Test",
+            data={"vendor": "data"},
+            options={"vendor": "options"},
+        )
+        entry.add_to_hass(hass)
+
+        # Finish the in progress flow
+        result = await manager.flow.async_configure(
+            result["flow_id"], user_input={"host": "127.0.0.1"}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["reason"] == "single_instance_allowed"
+        assert result["translation_domain"] == HA_DOMAIN
+
+
+async def test_in_progress_get_canceled_when_entry_is_created(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test that we abort all in progress flows when a new entry is created on a single instance only integration."""
+    integration = loader.Integration(
+        hass,
+        "components.comp",
+        None,
+        {
+            "name": "Comp",
+            "dependencies": [],
+            "requirements": [],
+            "domain": "comp",
+            "single_config_entry": True,
+        },
+    )
+    mock_integration(hass, MockModule("comp"))
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            """Test user step."""
+            if user_input is not None:
+                return self.async_create_entry(title="Test Title", data=user_input)
+
+            return self.async_show_form(step_id="user")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}), patch(
+        "homeassistant.loader.async_get_integration",
+        return_value=integration,
+    ):
+        # Create one to be in progress
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+        # Will be canceled
+        result2 = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
+
+        result = await manager.flow.async_configure(
+            result["flow_id"], user_input={"host": "127.0.0.1"}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+
+    assert len(manager.flow.async_progress()) == 0
+    assert len(manager.async_entries()) == 1
 
 
 async def test_directly_mutating_blocked(

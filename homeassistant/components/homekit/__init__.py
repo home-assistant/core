@@ -256,7 +256,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 DOMAIN,
                 context={"source": SOURCE_IMPORT},
                 data=conf,
-            )
+            ),
+            eager_start=True,
         )
 
     return True

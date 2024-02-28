@@ -147,6 +147,7 @@ class EntityComponent(Generic[_EntityT]):
                 self.hass.async_create_task(
                     self.async_setup_platform(p_type, p_config),
                     f"EntityComponent setup platform {p_type} {self.domain}",
+                    eager_start=True,
                 )
 
         # Generic discovery listener for loading platform dynamically

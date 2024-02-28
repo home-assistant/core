@@ -1336,5 +1336,5 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return if light color mode issues should be reported."""
         if not self.platform:
             return True
-        # philips_js and zha have known issues, we don't need users to open issues
-        return self.platform.platform_name not in {"philips_js", "zha"}
+        # philips_js, tuya and zha have known issues, we don't need users to open issues
+        return self.platform.platform_name not in {"philips_js", "tuya", "zha"}
