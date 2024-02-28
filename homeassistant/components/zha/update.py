@@ -140,11 +140,9 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
     @callback
     def attribute_updated(self, attrid: int, name: str, value: Any) -> None:
         """Handle attribute updates on the OTA cluster."""
-        if attrid != Ota.AttributeDefs.current_file_version.id:
-            return
-
-        self._attr_installed_version = f"0x{value:08x}"
-        self.async_write_ha_state()
+        if attrid == Ota.AttributeDefs.current_file_version.id:
+            self._attr_installed_version = f"0x{value:08x}"
+            self.async_write_ha_state()
 
     @callback
     def device_ota_update_available(
