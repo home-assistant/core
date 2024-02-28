@@ -963,7 +963,7 @@ current_entry: ContextVar[ConfigEntry | None] = ContextVar(
 )
 
 
-class ConfigFlowResult(FlowResult):
+class ConfigFlowResult(FlowResult, total=False):
     """Types result dict for config entry."""
 
     version: int
@@ -1030,7 +1030,7 @@ class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]
             and await _support_single_config_entry_only(self.hass, handler)
             and self.config_entries.async_entries(handler, include_ignore=False)
         ):
-            return FlowResult(
+            return ConfigFlowResult(
                 type=data_entry_flow.FlowResultType.ABORT,
                 flow_id=flow_id,
                 handler=handler,
@@ -1134,7 +1134,7 @@ class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]
             and flow.context["source"] != SOURCE_IGNORE
             and self.config_entries.async_entries(flow.handler, include_ignore=False)
         ):
-            return FlowResult(
+            return ConfigFlowResult(
                 type=data_entry_flow.FlowResultType.ABORT,
                 flow_id=flow.flow_id,
                 handler=flow.handler,
