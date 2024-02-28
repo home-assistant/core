@@ -36,7 +36,7 @@ from .core import (
     HomeAssistant,
     callback,
 )
-from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowResult, FlowResultType
+from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowResult
 from .exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -959,16 +959,9 @@ current_entry: ContextVar[ConfigEntry | None] = ContextVar(
 )
 
 
-class ConfigFlowResultType(FlowResultType):
-    """Types result dict for config entry."""
-
-    CREATE_ENTRY = "create_entry"
-
-
 class ConfigFlowResult(FlowResult):
     """Types result dict for config entry."""
 
-    type: ConfigFlowResultType
     version: int
     minor_version: int
 
