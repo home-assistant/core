@@ -136,14 +136,29 @@
       "advanced_mode": {
         "name": "Advanced mode"
       },
+      "border_switch": {
+        "name": "Border switch"
+      },
       "carpet_auto_fan_boost": {
         "name": "Carpet auto-boost suction"
+      },
+      "child_lock": {
+        "name": "Child lock"
       },
       "clean_preference": {
         "name": "Clean preference"
       },
+      "cross_map_border_warning": {
+        "name": "Cross map border warning"
+      },
       "continuous_cleaning": {
         "name": "Continuous cleaning"
+      },
+      "move_up_warning": {
+        "name": "Move up warning"
+      },
+      "safe_protect": {
+        "name": "Safe protect"
       },
       "true_detect": {
         "name": "True detect"
