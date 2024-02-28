@@ -1,7 +1,7 @@
 """Support for HitachiAirToAirHeatPump."""
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -190,7 +190,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
-        await self._global_control(target_temperature=int(kwargs.get(ATTR_TEMPERATURE)))
+        await self._global_control(target_temperature=int(kwargs[ATTR_TEMPERATURE]))
 
     @property
     def preset_mode(self) -> str | None:
