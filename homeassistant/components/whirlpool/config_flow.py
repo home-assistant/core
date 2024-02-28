@@ -56,7 +56,8 @@ async def validate_input(
 
     appliances_manager = AppliancesManager(backend_selector, auth, session)
     await appliances_manager.fetch_appliances()
-    if appliances_manager.aircons is None and appliances_manager.washer_dryers is None:
+
+    if not appliances_manager.aircons and not appliances_manager.washer_dryers:
         raise NoAppliances
 
     return {"title": data[CONF_USERNAME]}
