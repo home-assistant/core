@@ -1,25 +1,27 @@
 """Tests of the pump fan entity of the balboa integration."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
-from pybalboa.enums import OffLowHighState
+import pytest
+from pybalboa import SpaControl
+from pybalboa.enums import OffLowHighState, UnknownState
 
 from homeassistant.components.fan import ATTR_PERCENTAGE
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
 from tests.components.fan import common
 
-ENTITY_FAN = "fan.fakepa_pump_1"
+from . import init_integration, client_update
+
+ENTITY_FAN = "fan.fakespa_pump_1"
 
 
-async def test_pump(
-    hass: HomeAssistant, client: MagicMock, integration: MockConfigEntry
-) -> None:
-    """Test spa filters."""
-    pump = MagicMock()
+@pytest.fixture
+def mock_pump(client: MagicMock):
+    """Return a mock pump."""
+    pump = MagicMock(SpaControl)
 
     async def set_state(state: OffLowHighState):
         pump.state = state
@@ -31,16 +33,52 @@ async def test_pump(
     pump.options = list(OffLowHighState)
     client.pumps.append(pump)
 
+    yield pump
+
+
+async def test_pump(
+    hass: HomeAssistant, client: MagicMock, mock_pump
+) -> None:
+    """Test spa pump."""
+    await init_integration(hass)
+
+    # check if the initial state is off
     state = hass.states.get(ENTITY_FAN)
     assert state.state == STATE_OFF
 
+    # just call turn on, pump should be at full speed
     await common.async_turn_on(hass, ENTITY_FAN)
+    state = await client_update(hass, client, ENTITY_FAN)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_PERCENTAGE] == 100
 
+    # test setting percentage
     await common.async_set_percentage(hass, ENTITY_FAN, 50)
+    state = await client_update(hass, client, ENTITY_FAN)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_PERCENTAGE] == 50
 
+    # test calling turn off
     await common.async_turn_off(hass, ENTITY_FAN)
+    state = await client_update(hass, client, ENTITY_FAN)
     assert state.state == STATE_OFF
+
+    # test setting percentage to 0
+    await common.async_turn_on(hass, ENTITY_FAN)
+    await client_update(hass, client, ENTITY_FAN)
+
+    await common.async_set_percentage(hass, ENTITY_FAN, 0)
+    state = await client_update(hass, client, ENTITY_FAN)
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_PERCENTAGE] == 0
+
+
+async def test_pump_unknown_state(
+    hass: HomeAssistant, client: MagicMock, mock_pump
+) -> None:
+    """Tests spa pump with unknown state."""
+    await init_integration(hass)
+
+    mock_pump.state = UnknownState.UNKNOWN
+    state = await client_update(hass, client, ENTITY_FAN)
+    assert state.state == STATE_UNKNOWN
