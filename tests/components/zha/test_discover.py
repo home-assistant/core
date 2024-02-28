@@ -681,3 +681,118 @@ async def test_quirks_v2_entity_discovery_e1_curtain(
     state = hass.states.get(error_detected_entity_id)
     assert state is not None
     assert state.state == STATE_OFF
+
+
+def _get_test_device(zigpy_device_mock, manufacturer: str, model: str):
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    zigpy.zcl.clusters.general.PowerConfiguration.cluster_id,
+                    zigpy.zcl.clusters.general.Groups.cluster_id,
+                    zigpy.zcl.clusters.general.OnOff.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [
+                    zigpy.zcl.clusters.general.Scenes.cluster_id,
+                ],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.NON_COLOR_CONTROLLER,
+            }
+        },
+        ieee="01:2d:6f:00:0a:90:69:e8",
+        manufacturer=manufacturer,
+        model=model,
+    )
+
+    (
+        add_to_registry_v2(manufacturer, model, zigpy.quirks._DEVICE_REGISTRY)
+        .replaces(PowerConfig1CRCluster)
+        .replaces(ScenesCluster, cluster_type=ClusterType.Client)
+        .number(
+            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+            zigpy.zcl.clusters.general.OnOff.cluster_id,
+            endpoint_id=3,
+            min_value=1,
+            max_value=100,
+            step=1,
+            unit=UnitOfTime.SECONDS,
+            multiplier=1,
+        )
+        .number(
+            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+            zigpy.zcl.clusters.general.Time.cluster_id,
+            min_value=1,
+            max_value=100,
+            step=1,
+            unit=UnitOfTime.SECONDS,
+            multiplier=1,
+        )
+        .sensor(
+            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+            zigpy.zcl.clusters.general.OnOff.cluster_id,
+            entity_type=EntityType.CONFIG,
+        )
+    )
+
+    zigpy_device = zigpy.quirks._DEVICE_REGISTRY.get_device(zigpy_device)
+    zigpy_device.endpoints[1].power.PLUGGED_ATTR_READS = {
+        "battery_voltage": 3,
+        "battery_percentage_remaining": 100,
+    }
+    update_attribute_cache(zigpy_device.endpoints[1].power)
+    zigpy_device.endpoints[1].on_off.PLUGGED_ATTR_READS = {
+        zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name: 3,
+    }
+    update_attribute_cache(zigpy_device.endpoints[1].on_off)
+    return zigpy_device
+
+
+async def test_quirks_v2_entity_no_metadata(
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    zha_device_joined,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test quirks v2 discovery skipped - no metadata."""
+
+    zigpy_device = _get_test_device(
+        zigpy_device_mock, "Ikea of Sweden2", "TRADFRI remote control2"
+    )
+    setattr(zigpy_device, "_exposes_metadata", {})
+    zha_device = await zha_device_joined(zigpy_device)
+    assert (
+        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not expose any quirks v2 entities"
+        in caplog.text
+    )
+
+
+async def test_quirks_v2_entity_discovery_errors(
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    zha_device_joined,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test quirks v2 discovery skipped - errors."""
+
+    zigpy_device = _get_test_device(
+        zigpy_device_mock, "Ikea of Sweden3", "TRADFRI remote control3"
+    )
+    zha_device = await zha_device_joined(zigpy_device)
+
+    assert (
+        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not have an endpoint with id: 3 - unable to create entity with cluster details: (3, 6, <ClusterType.Server: 0>)"
+        in caplog.text
+    )
+
+    time_cluster_id = zigpy.zcl.clusters.general.Time.cluster_id
+
+    assert (
+        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not have a cluster with id: {time_cluster_id} - unable to create entity with cluster details: (1, {time_cluster_id}, <ClusterType.Server: 0>)"
+        in caplog.text
+    )
+
+    entity_details = "{'cluster_details': (1, 6, <ClusterType.Server: 0>), 'quirk_metadata': EntityMetadata(entity_metadata=ZCLSensorMetadata(attribute_name='off_wait_time', divisor=1, multiplier=1, unit=None, device_class=None, state_class=None), entity_platform=<EntityPlatform.SENSOR: 'sensor'>, entity_type=<EntityType.CONFIG: 'config'>, cluster_id=6, endpoint_id=1, cluster_type=<ClusterType.Server: 0>, initially_disabled=False, attribute_initialized_from_cache=True, translation_key=None)}"
+
+    assert (
+        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} has an entity with details: {entity_details} that does not have an entity class mapping - unable to create entity"
+        in caplog.text
+    )

@@ -249,38 +249,27 @@ class ProbeEndpoint:
                 if cluster_type is ClusterType.Server
                 else endpoint.zigpy_endpoint.out_clusters.get(cluster_id)
             )
+
+            if cluster is None:
+                _LOGGER.debug(
+                    "Device: %s-%s does not have a cluster with id: %s - unable to create entity with cluster details: %s",
+                    str(device.ieee),
+                    device.name,
+                    cluster_id,
+                    cluster_details,
+                )
+                continue
+
             cluster_handler_id = f"{endpoint.id}:0x{cluster.cluster_id:04x}"
             cluster_handler = (
                 endpoint.all_cluster_handlers.get(cluster_handler_id)
                 if cluster_type is ClusterType.Server
                 else endpoint.client_cluster_handlers.get(cluster_handler_id)
             )
-
-            if cluster_handler is None:
-                _LOGGER.debug(
-                    "Device: %s-%s does not have a cluster handler with id: %s - unable to create entity with cluster details: %s",
-                    str(device.ieee),
-                    device.name,
-                    cluster_handler_id,
-                    cluster_details,
-                )
-                continue
+            assert cluster_handler
 
             for quirk_metadata in quirk_metadata_list:
                 platform = Platform(quirk_metadata.entity_platform.value)
-
-                if platform is None:
-                    _LOGGER.debug(
-                        "Device: %s-%s has an entity with details: %s that does not have a platform mapping - unable to create entity",
-                        str(device.ieee),
-                        device.name,
-                        {
-                            zha_const.CLUSTER_DETAILS: cluster_details,
-                            zha_const.QUIRK_METADATA: quirk_metadata,
-                        },
-                    )
-                    continue
-
                 metadata_type = type(quirk_metadata.entity_metadata)
                 entity_class = QUIRKS_ENTITY_META_TO_ENTITY_CLASS.get(
                     (platform, metadata_type, quirk_metadata.entity_type)
