@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from zigpy.ota import OtaImageWithMetadata
+from zigpy.zcl.clusters.general import Ota
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components.update import (
@@ -25,7 +26,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .core import discovery
-from .core.const import CLUSTER_HANDLER_OTA, SIGNAL_ADD_ENTITIES
+from .core.const import CLUSTER_HANDLER_OTA, SIGNAL_ADD_ENTITIES, SIGNAL_ATTR_UPDATED
 from .core.helpers import get_zha_data, get_zha_gateway
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
@@ -139,6 +140,15 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
         return None
 
     @callback
+    def attribute_updated(self, attrid: int, name: str, value: Any) -> None:
+        """Handle attribute updates on the OTA cluster."""
+        if attrid != Ota.AttributeDefs.current_file_version.id:
+            return
+
+        self._attr_installed_version = f"0x{value:08x}"
+        self.async_write_ha_state()
+
+    @callback
     def device_ota_update_available(
         self, image: OtaImageWithMetadata, current_file_version: int
     ) -> None:
@@ -196,7 +206,12 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
+
+        # OTA events are sent by the device
         self.zha_device.device.add_listener(self)
+        self.async_accept_signal(
+            self._ota_cluster_handler, SIGNAL_ATTR_UPDATED, self.attribute_updated
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed."""
