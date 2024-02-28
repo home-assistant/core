@@ -527,3 +527,83 @@ async def test_firmware_update_raises(
             },
             blocking=True,
         )
+
+
+async def test_firmware_update_no_longer_compatible(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device
+) -> None:
+    """Test ZHA update platform - firmware update is no longer valid."""
+    zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
+        zha_device_joined_restored, zigpy_device
+    )
+
+    entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
+    assert entity_id is not None
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # simulate an image available notification
+    await cluster._handle_query_next_image(
+        foundation.ZCLHeader.cluster(
+            tsn=0x12, command_id=general.Ota.ServerCommandDefs.query_next_image.id
+        ),
+        general.QueryNextImageCommand(
+            fw_image.firmware.header.field_control,
+            zha_device.manufacturer_code,
+            fw_image.firmware.header.image_type,
+            installed_fw_version,
+            fw_image.firmware.header.header_version,
+        ),
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    attrs = state.attributes
+    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
+    assert not attrs[ATTR_IN_PROGRESS]
+    assert (
+        attrs[ATTR_LATEST_VERSION] == f"0x{fw_image.firmware.header.file_version:08x}"
+    )
+
+    new_version = 0x99999999
+
+    async def endpoint_reply(cluster_id, tsn, data, command_id):
+        if cluster_id == general.Ota.cluster_id:
+            hdr, cmd = cluster.deserialize(data)
+            if isinstance(cmd, general.Ota.ImageNotifyCommand):
+                zigpy_device.packet_received(
+                    make_packet(
+                        zigpy_device,
+                        cluster,
+                        general.Ota.ServerCommandDefs.query_next_image.name,
+                        field_control=general.Ota.QueryNextImageCommand.FieldControl.HardwareVersion,
+                        manufacturer_code=fw_image.firmware.header.manufacturer_id,
+                        image_type=fw_image.firmware.header.image_type,
+                        # The device reports that it is no longer compatible!
+                        current_file_version=new_version,
+                        hardware_version=1,
+                    )
+                )
+
+    cluster.endpoint.reply = AsyncMock(side_effect=endpoint_reply)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            UPDATE_DOMAIN,
+            SERVICE_INSTALL,
+            {
+                ATTR_ENTITY_ID: entity_id,
+            },
+            blocking=True,
+        )
+
+    # We updated the currently installed firmware version, as it is no longer valid
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+    attrs = state.attributes
+    assert attrs[ATTR_INSTALLED_VERSION] == f"0x{new_version:08x}"
+    assert not attrs[ATTR_IN_PROGRESS]
+    assert attrs[ATTR_LATEST_VERSION] == f"0x{new_version:08x}"
