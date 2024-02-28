@@ -586,21 +586,17 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # Separate call to turn on needed
         if turn_on_needed:
-            hass.async_create_task(
-                hass.services.async_call(
-                    core.DOMAIN,
-                    SERVICE_TURN_ON,
-                    {ATTR_ENTITY_ID: entity_id},
-                    blocking=True,
-                )
+            await hass.services.async_call(
+                core.DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: entity_id},
+                blocking=False,
             )
 
         if service is not None:
             state_will_change = parsed[STATE_ON] != _hass_to_hue_state(entity)
 
-            hass.async_create_task(
-                hass.services.async_call(domain, service, data, blocking=True)
-            )
+            await hass.services.async_call(domain, service, data, blocking=False)
 
             if state_will_change:
                 # Wait for the state to change.
@@ -890,18 +886,11 @@ def create_config_model(config: Config, request: web.Request) -> dict[str, Any]:
 def create_list_of_entities(config: Config, request: web.Request) -> dict[str, Any]:
     """Create a list of all entities."""
     hass: core.HomeAssistant = request.app["hass"]
-
-    json_response: dict[str, Any] = {}
-    for cached_state in config.get_exposed_states():
-        entity_id = cached_state.entity_id
-        state = hass.states.get(entity_id)
-        assert state is not None
-
-        json_response[config.entity_id_to_number(entity_id)] = state_to_json(
-            config, state
-        )
-
-    return json_response
+    return {
+        config.entity_id_to_number(entity_id): state_to_json(config, state)
+        for entity_id in config.get_exposed_entity_ids()
+        if (state := hass.states.get(entity_id))
+    }
 
 
 def hue_brightness_to_hass(value: int) -> int:
@@ -934,7 +923,7 @@ async def wait_for_state_change_or_timeout(
     try:
         async with asyncio.timeout(STATE_CHANGE_WAIT_TIMEOUT):
             await ev.wait()
-    except asyncio.TimeoutError:
+    except TimeoutError:
         pass
     finally:
         unsub()

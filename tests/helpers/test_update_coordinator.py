@@ -1,5 +1,4 @@
 """Tests for the update coordinator."""
-import asyncio
 from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, patch
@@ -22,7 +21,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 _LOGGER = logging.getLogger(__name__)
 
 KNOWN_ERRORS: list[tuple[Exception, type[Exception], str]] = [
-    (asyncio.TimeoutError(), asyncio.TimeoutError, "Timeout fetching test data"),
+    (TimeoutError(), TimeoutError, "Timeout fetching test data"),
     (
         requests.exceptions.Timeout(),
         requests.exceptions.Timeout,

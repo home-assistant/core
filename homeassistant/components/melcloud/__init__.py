@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if isinstance(ex, ClientResponseError) and ex.code == 401:
             raise ConfigEntryAuthFailed from ex
         raise ConfigEntryNotReady from ex
-    except (asyncio.TimeoutError, ClientConnectionError) as ex:
+    except (TimeoutError, ClientConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
     hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_devices})

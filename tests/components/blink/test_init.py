@@ -1,5 +1,4 @@
 """Test the Blink init."""
-import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
@@ -23,7 +22,7 @@ PIN = "1234"
 
 @pytest.mark.parametrize(
     ("the_error", "available"),
-    [(ClientError, False), (asyncio.TimeoutError, False), (None, False)],
+    [(ClientError, False), (TimeoutError, False), (None, False)],
 )
 async def test_setup_not_ready(
     hass: HomeAssistant,
@@ -86,10 +85,10 @@ async def test_migrate_V0(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test migration script version 0."""
-
-    mock_config_entry.version = 0
-
     mock_config_entry.add_to_hass(hass)
+
+    hass.config_entries.async_update_entry(mock_config_entry, version=0)
+
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
@@ -105,11 +104,14 @@ async def test_migrate(
     version,
 ) -> None:
     """Test migration scripts."""
-
-    mock_config_entry.version = version
-    mock_config_entry.data = {**mock_config_entry.data, "login_response": "Blah"}
-
     mock_config_entry.add_to_hass(hass)
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        version=version,
+        data={**mock_config_entry.data, "login_response": "Blah"},
+    )
+
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
