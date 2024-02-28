@@ -637,6 +637,8 @@ class HomeAssistant:
         """
         if eager_start:
             task = create_eager_task(target, name=name, loop=self.loop)
+            if task.done():
+                return task
         else:
             task = self.loop.create_task(target, name=name)
         self._tasks.add(task)
@@ -657,6 +659,8 @@ class HomeAssistant:
         """
         if eager_start:
             task = create_eager_task(target, name=name, loop=self.loop)
+            if task.done():
+                return task
         else:
             task = self.loop.create_task(target, name=name)
         self._background_tasks.add(task)
@@ -2293,6 +2297,7 @@ class ServiceRegistry:
             self._hass.async_create_task(
                 self._run_service_call_catch_exceptions(coro, service_call),
                 f"service call background {service_call.domain}.{service_call.service}",
+                eager_start=True,
             )
             return None
 
