@@ -192,6 +192,7 @@ omit =
     homeassistant/components/comelit/const.py
     homeassistant/components/comelit/cover.py
     homeassistant/components/comelit/coordinator.py
+    homeassistant/components/comelit/humidifier.py
     homeassistant/components/comelit/light.py
     homeassistant/components/comelit/sensor.py
     homeassistant/components/comelit/switch.py
