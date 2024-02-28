@@ -17,8 +17,7 @@ def validate_os() -> None:
     if not sys.platform.startswith(("darwin", "linux")):
         print(
             "Home Assistant only supports Linux, OSX and Windows using WSL",
-            "Home Assistant only supports Linux, OSX and Windows using WSL",
-            "Home Assistant only supports Linux, OSX and Windows using WSL",
+
             file=sys.stderr,
         )
         sys.exit(1)
