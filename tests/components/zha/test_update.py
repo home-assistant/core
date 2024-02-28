@@ -83,6 +83,7 @@ async def setup_test_data(
             file_version=fw_version,
             manufacturer_id=0x1234,
             image_type=0x90,
+            changelog="This is a test firmware image!",
         ),
         firmware=firmware.OTAImage(
             header=firmware.OTAImageHeader(
@@ -243,6 +244,7 @@ def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
     return ota_packet
 
 
+@patch("zigpy.device.AFTER_OTA_ATTR_READ_DELAY", 0.01)
 async def test_firmware_update_success(
     hass: HomeAssistant, zha_device_joined_restored, zigpy_device
 ) -> None:
@@ -250,6 +252,8 @@ async def test_firmware_update_success(
     zha_device, cluster, fw_image, installed_fw_version = await setup_test_data(
         zha_device_joined_restored, zigpy_device
     )
+
+    assert installed_fw_version < fw_image.firmware.header.file_version
 
     entity_id = find_entity_id(Platform.UPDATE, zha_device, hass)
     assert entity_id is not None
@@ -265,11 +269,10 @@ async def test_firmware_update_success(
             tsn=0x12, command_id=general.Ota.ServerCommandDefs.query_next_image.id
         ),
         general.QueryNextImageCommand(
-            fw_image.firmware.header.field_control,
-            zha_device.manufacturer_code,
-            fw_image.firmware.header.image_type,
-            installed_fw_version,
-            fw_image.firmware.header.header_version,
+            field_control=fw_image.firmware.header.field_control,
+            manufacturer_code=zha_device.manufacturer_code,
+            image_type=fw_image.firmware.header.image_type,
+            current_file_version=installed_fw_version,
         ),
     )
 
@@ -366,7 +369,7 @@ async def test_firmware_update_success(
                     assert (
                         attrs[ATTR_INSTALLED_VERSION] == f"0x{installed_fw_version:08x}"
                     )
-                    assert attrs[ATTR_IN_PROGRESS] == 57
+                    assert attrs[ATTR_IN_PROGRESS] == 58
                     assert (
                         attrs[ATTR_LATEST_VERSION]
                         == f"0x{fw_image.firmware.header.file_version:08x}"
@@ -392,6 +395,19 @@ async def test_firmware_update_success(
                 assert cmd.file_version == fw_image.firmware.header.file_version
                 assert cmd.current_time == 0
                 assert cmd.upgrade_time == 0
+
+                def read_new_fw_version(*args, **kwargs):
+                    cluster.update_attribute(
+                        attrid=general.Ota.AttributeDefs.current_file_version.id,
+                        value=fw_image.firmware.header.file_version,
+                    )
+                    return {
+                        general.Ota.AttributeDefs.current_file_version.id: (
+                            fw_image.firmware.header.file_version
+                        )
+                    }, {}
+
+                cluster.read_attributes.side_effect = read_new_fw_version
 
     cluster.endpoint.reply = AsyncMock(side_effect=endpoint_reply)
     await hass.services.async_call(
