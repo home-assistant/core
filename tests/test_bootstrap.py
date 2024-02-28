@@ -95,15 +95,6 @@ async def test_load_hassio(hass: HomeAssistant) -> None:
         assert "hassio" in bootstrap._get_domains(hass, {})
 
 
-async def test_load_backup(hass: HomeAssistant) -> None:
-    """Test that we load the backup integration when not using Supervisor."""
-    with patch.dict(os.environ, {}, clear=True):
-        assert "backup" in bootstrap._get_domains(hass, {})
-
-    with patch.dict(os.environ, {"SUPERVISOR": "1"}):
-        assert "backup" not in bootstrap._get_domains(hass, {})
-
-
 @pytest.mark.parametrize("load_registries", [False])
 async def test_empty_setup(hass: HomeAssistant) -> None:
     """Test an empty set up loads the core."""
@@ -926,7 +917,7 @@ async def test_bootstrap_dependencies(
         """Assert the mqtt config entry was set up."""
         calls.append("mqtt")
         # assert the integration is not yet set up
-        assertions.append(hass.data["setup_done"][integration].is_set() is False)
+        assertions.append(hass.data["setup_done"][integration].done() is False)
         assertions.append(
             all(
                 dependency in hass.config.components
@@ -942,7 +933,7 @@ async def test_bootstrap_dependencies(
         # assert mqtt was already set up
         assertions.append(
             "mqtt" not in hass.data["setup_done"]
-            or hass.data["setup_done"]["mqtt"].is_set()
+            or hass.data["setup_done"]["mqtt"].done()
         )
         assertions.append("mqtt" in hass.config.components)
         return True
@@ -1029,5 +1020,6 @@ async def test_bootstrap_dependencies(
     assert calls == ["mqtt", integration]
 
     assert (
-        f"Dependency {integration} will wait for dependencies ['mqtt']" in caplog.text
+        f"Dependency {integration} will wait for dependencies dict_keys(['mqtt'])"
+        in caplog.text
     )

@@ -293,7 +293,7 @@ async def test_setup_api_push_api_data(
     assert aioclient_mock.call_count == 19
     assert not aioclient_mock.mock_calls[1][2]["ssl"]
     assert aioclient_mock.mock_calls[1][2]["port"] == 9999
-    assert aioclient_mock.mock_calls[1][2]["watchdog"]
+    assert "watchdog" not in aioclient_mock.mock_calls[1][2]
 
 
 async def test_setup_api_push_api_data_server_host(
@@ -615,6 +615,7 @@ async def test_service_calls(
 
     # check backup with different timezone
     await hass.config.async_update(time_zone="Europe/London")
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         "hassio",

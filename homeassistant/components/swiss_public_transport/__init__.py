@@ -107,8 +107,9 @@ async def async_migrate_entry(
             )
 
         # Set a valid unique id for config entries
-        config_entry.minor_version = 2
-        hass.config_entries.async_update_entry(config_entry, unique_id=new_unique_id)
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=new_unique_id, minor_version=2
+        )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",

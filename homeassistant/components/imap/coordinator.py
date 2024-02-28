@@ -30,6 +30,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import (
     SSLCipherList,
     client_context,
@@ -56,6 +57,8 @@ BACKOFF_TIME = 10
 EVENT_IMAP = "imap_content"
 MAX_ERRORS = 3
 MAX_EVENT_DATA_BYTES = 32168
+
+DIAGNOSTICS_ATTRIBUTES = ["date", "initial"]
 
 
 async def connect_to_server(data: Mapping[str, Any]) -> IMAP4_SSL:
@@ -220,6 +223,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         self._last_message_uid: str | None = None
         self._last_message_id: str | None = None
         self.custom_event_template = None
+        self._diagnostics_data: dict[str, Any] = {}
         _custom_event_template = entry.data.get(CONF_CUSTOM_EVENT_DATA_TEMPLATE)
         if _custom_event_template is not None:
             self.custom_event_template = Template(_custom_event_template, hass=hass)
@@ -287,6 +291,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
                     CONF_MAX_MESSAGE_SIZE, DEFAULT_MAX_MESSAGE_SIZE
                 )
             ]
+            self._update_diagnostics(data)
             if (size := len(json_bytes(data))) > MAX_EVENT_DATA_BYTES:
                 _LOGGER.warning(
                     "Custom imap_content event skipped, size (%s) exceeds "
@@ -356,6 +361,23 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
     async def shutdown(self, *_: Any) -> None:
         """Close resources."""
         await self._cleanup(log_error=True)
+
+    def _update_diagnostics(self, data: dict[str, Any]) -> None:
+        """Update the diagnostics."""
+        self._diagnostics_data.update(
+            {key: value for key, value in data.items() if key in DIAGNOSTICS_ATTRIBUTES}
+        )
+        custom: Any | None = data.get("custom")
+        self._diagnostics_data["custom_template_data_type"] = str(type(custom))
+        self._diagnostics_data["custom_template_result_length"] = (
+            None if custom is None else len(f"{custom}")
+        )
+        self._diagnostics_data["event_time"] = dt_util.now().isoformat()
+
+    @property
+    def diagnostics_data(self) -> dict[str, Any]:
+        """Return diagnostics info."""
+        return self._diagnostics_data
 
 
 class ImapPollingDataUpdateCoordinator(ImapDataUpdateCoordinator):

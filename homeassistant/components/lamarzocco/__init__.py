@@ -10,6 +10,7 @@ from .coordinator import LaMarzoccoUpdateCoordinator
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CALENDAR,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

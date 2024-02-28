@@ -4,8 +4,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from python_bring_api.bring import Bring
-from python_bring_api.exceptions import BringAuthException, BringRequestException
+from bring_api.bring import Bring
+from bring_api.exceptions import BringAuthException, BringRequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -50,13 +50,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             session = async_get_clientsession(self.hass)
-            bring = Bring(
-                user_input[CONF_EMAIL], user_input[CONF_PASSWORD], sessionAsync=session
-            )
+            bring = Bring(session, user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
 
             try:
-                await bring.loginAsync()
-                await bring.loadListsAsync()
+                await bring.login()
+                await bring.load_lists()
             except BringRequestException:
                 errors["base"] = "cannot_connect"
             except BringAuthException:
