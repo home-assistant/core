@@ -17,6 +17,7 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -184,7 +185,10 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self.mode == HumidifierComelitMode.OFF:
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="humidity_while_off",
+            )
 
         await self.coordinator.api.set_humidity_status(
             self._device.index, HumidifierComelitAction.MANUAL

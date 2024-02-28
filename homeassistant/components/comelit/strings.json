@@ -54,5 +54,10 @@
         "name": "Dehumidifier"
       }
     }
+  },
+  "exceptions": {
+    "humidity_while_off": {
+      "message": "Cannot change humidity while off"
+    }
   }
 }
