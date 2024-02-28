@@ -217,7 +217,7 @@ async def test_fail_setup_if_color_mode_deprecated(
 ) -> None:
     """Test if setup fails if color mode is combined with deprecated config keys."""
     assert await mqtt_mock_entry()
-    assert "color_mode must not be combined with any of" in caplog.text
+    assert "supported_color_modes must not be combined with any of" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1351,7 +1351,7 @@ async def test_sending_hs_color(
         }
     ],
 )
-async def test_sending_rgb_color(
+async def test_sending_rgb_color_no_brightness(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test light.turn_on with hs color sends rgb color parameters."""
@@ -1373,25 +1373,19 @@ async def test_sending_rgb_color(
         [
             call(
                 "test_light_rgb/set",
-                JsonValidator(
-                    '{"state":"ON","color":{"r":255,"g":56,"b":59},"brightness":50}'
-                ),
+                JsonValidator('{"state": "ON", "color": {"r": 0, "g": 24, "b": 50}}'),
                 0,
                 False,
             ),
             call(
                 "test_light_rgb/set",
-                JsonValidator(
-                    '{"state":"ON","color":{"r":0,"g":123,"b":255},"brightness":50}'
-                ),
+                JsonValidator('{"state": "ON", "color": {"r": 50, "g": 11, "b": 11}}'),
                 0,
                 False,
             ),
             call(
                 "test_light_rgb/set",
-                JsonValidator(
-                    '{"state":"ON","color":{"r":255,"g":128,"b":0},"brightness":255}'
-                ),
+                JsonValidator('{"state": "ON", "color": {"r": 255, "g": 128, "b": 0}}'),
                 0,
                 False,
             ),
@@ -1443,8 +1437,26 @@ async def test_sending_rgb_color_no_brightness2(
         [
             call(
                 "test_light_rgb/set",
+                JsonValidator('{"state": "ON", "color": {"r": 0, "g": 24, "b": 50}}'),
+                0,
+                False,
+            ),
+            call(
+                "test_light_rgb/set",
+                JsonValidator('{"state": "ON", "color": {"r": 50, "g": 11, "b": 12}}'),
+                0,
+                False,
+            ),
+            call(
+                "test_light_rgb/set",
+                JsonValidator('{"state": "ON", "color": {"r": 255, "g": 128, "b": 0}}'),
+                0,
+                False,
+            ),
+            call(
+                "test_light_rgb/set",
                 JsonValidator(
-                    '{"state": "ON", "color": {"r": 0, "g": 24, "b": 50},"brightness":50}'
+                    '{"state": "ON", "color": {"r": 64, "g": 32, "b": 16, "w": 8}}'
                 ),
                 0,
                 False,
@@ -1452,31 +1464,7 @@ async def test_sending_rgb_color_no_brightness2(
             call(
                 "test_light_rgb/set",
                 JsonValidator(
-                    '{"state": "ON", "color": {"r": 50, "g": 11, "b": 12},"brightness":50}'
-                ),
-                0,
-                False,
-            ),
-            call(
-                "test_light_rgb/set",
-                JsonValidator(
-                    '{"state": "ON", "color": {"r": 255, "g": 128, "b": 0},"brightness":255}'
-                ),
-                0,
-                False,
-            ),
-            call(
-                "test_light_rgb/set",
-                JsonValidator(
-                    '{"state": "ON", "color": {"r": 128, "g": 64, "b": 32, "w": 16},"brightness":128}'
-                ),
-                0,
-                False,
-            ),
-            call(
-                "test_light_rgb/set",
-                JsonValidator(
-                    '{"state": "ON", "color": {"r": 128, "g": 64, "b": 32, "c": 16, "w": 8},"brightness":64}'
+                    '{"state": "ON", "color": {"r": 32, "g": 16, "b": 8, "c": 4, "w": 2}}'
                 ),
                 0,
                 False,
