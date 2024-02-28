@@ -90,7 +90,6 @@ SENSOR_TYPES: tuple[EcoforestSensorEntityDescription, ...] = (
         translation_key="alarm",
         device_class=SensorDeviceClass.ENUM,
         options=ALARM_TYPE,
-        icon="mdi:alert",
         value_fn=lambda data: data.alarm.value if data.alarm else "none",
     ),
     EcoforestSensorEntityDescription(

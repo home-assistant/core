@@ -7,6 +7,7 @@
   "homekit": {
     "models": ["Socket", "Wemo"]
   },
+  "import_executor": true,
   "iot_class": "local_push",
   "loggers": ["pywemo"],
   "requirements": ["pywemo==1.4.0"],

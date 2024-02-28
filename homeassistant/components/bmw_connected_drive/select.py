@@ -51,7 +51,6 @@ SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
         remote_service=lambda v, o: v.remote_services.trigger_charging_settings_update(
             ac_limit=int(o)
         ),
-        icon="mdi:current-ac",
         unit_of_measurement=UnitOfElectricCurrent.AMPERE,
     ),
     "charging_mode": BMWSelectEntityDescription(
@@ -63,7 +62,6 @@ SELECT_TYPES: dict[str, BMWSelectEntityDescription] = {
         remote_service=lambda v, o: v.remote_services.trigger_charging_profile_update(
             charging_mode=ChargingMode(o)
         ),
-        icon="mdi:vector-point-select",
     ),
 }
 

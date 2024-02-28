@@ -213,10 +213,11 @@ class USBDiscovery:
         """Start USB Discovery and run a manual scan."""
         await self._async_scan_serial()
 
-    async def async_stop(self, event: Event) -> None:
+    @hass_callback
+    def async_stop(self, event: Event) -> None:
         """Stop USB Discovery."""
         if self._request_debouncer:
-            await self._request_debouncer.async_shutdown()
+            self._request_debouncer.async_shutdown()
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware with pyudev."""

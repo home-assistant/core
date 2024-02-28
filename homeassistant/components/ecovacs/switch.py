@@ -2,7 +2,11 @@
 from dataclasses import dataclass
 from typing import Any
 
-from deebot_client.capabilities import CapabilitySetEnable
+from deebot_client.capabilities import (
+    Capabilities,
+    CapabilitySetEnable,
+    VacuumCapabilities,
+)
 from deebot_client.events import EnableEvent
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -14,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .controller import EcovacsController
 from .entity import (
+    CapabilityDevice,
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
     EcovacsEntity,
@@ -24,41 +29,46 @@ from .util import get_supported_entitites
 @dataclass(kw_only=True, frozen=True)
 class EcovacsSwitchEntityDescription(
     SwitchEntityDescription,
-    EcovacsCapabilityEntityDescription,
+    EcovacsCapabilityEntityDescription[CapabilityDevice, CapabilitySetEnable],
 ):
     """Ecovacs switch entity description."""
 
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSwitchEntityDescription, ...] = (
-    EcovacsSwitchEntityDescription(
+    EcovacsSwitchEntityDescription[Capabilities](
+        device_capabilities=Capabilities,
         capability_fn=lambda c: c.settings.advanced_mode,
         key="advanced_mode",
         translation_key="advanced_mode",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
-    EcovacsSwitchEntityDescription(
+    EcovacsSwitchEntityDescription[VacuumCapabilities](
+        device_capabilities=VacuumCapabilities,
         capability_fn=lambda c: c.clean.continuous,
         key="continuous_cleaning",
         translation_key="continuous_cleaning",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
-    EcovacsSwitchEntityDescription(
+    EcovacsSwitchEntityDescription[VacuumCapabilities](
+        device_capabilities=VacuumCapabilities,
         capability_fn=lambda c: c.settings.carpet_auto_fan_boost,
         key="carpet_auto_fan_boost",
         translation_key="carpet_auto_fan_boost",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
-    EcovacsSwitchEntityDescription(
+    EcovacsSwitchEntityDescription[VacuumCapabilities](
+        device_capabilities=VacuumCapabilities,
         capability_fn=lambda c: c.clean.preference,
         key="clean_preference",
         translation_key="clean_preference",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
-    EcovacsSwitchEntityDescription(
+    EcovacsSwitchEntityDescription[Capabilities](
+        device_capabilities=Capabilities,
         capability_fn=lambda c: c.settings.true_detect,
         key="true_detect",
         translation_key="true_detect",
@@ -83,7 +93,7 @@ async def async_setup_entry(
 
 
 class EcovacsSwitchEntity(
-    EcovacsDescriptionEntity[CapabilitySetEnable],
+    EcovacsDescriptionEntity[CapabilityDevice, CapabilitySetEnable],
     SwitchEntity,
 ):
     """Ecovacs switch entity."""

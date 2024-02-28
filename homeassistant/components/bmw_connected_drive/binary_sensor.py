@@ -130,7 +130,6 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         key="lids",
         translation_key="lids",
         device_class=BinarySensorDeviceClass.OPENING,
-        icon="mdi:car-door-lock",
         # device class opening: On means open, Off means closed
         value_fn=lambda v: not v.doors_and_windows.all_lids_closed,
         attr_fn=lambda v, u: {
@@ -141,7 +140,6 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         key="windows",
         translation_key="windows",
         device_class=BinarySensorDeviceClass.OPENING,
-        icon="mdi:car-door",
         # device class opening: On means open, Off means closed
         value_fn=lambda v: not v.doors_and_windows.all_windows_closed,
         attr_fn=lambda v, u: {
@@ -152,7 +150,6 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         key="door_lock_state",
         translation_key="door_lock_state",
         device_class=BinarySensorDeviceClass.LOCK,
-        icon="mdi:car-key",
         # device class lock: On means unlocked, Off means locked
         # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
         value_fn=lambda v: v.doors_and_windows.door_lock_state
@@ -165,7 +162,6 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         key="condition_based_services",
         translation_key="condition_based_services",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        icon="mdi:wrench",
         # device class problem: On means problem detected, Off means no problem
         value_fn=lambda v: v.condition_based_services.is_service_required,
         attr_fn=_condition_based_services,
@@ -174,7 +170,6 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         key="check_control_messages",
         translation_key="check_control_messages",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        icon="mdi:car-tire-alert",
         # device class problem: On means problem detected, Off means no problem
         value_fn=lambda v: v.check_control_messages.has_check_control_messages,
         attr_fn=lambda v, u: _check_control_messages(v),
@@ -184,7 +179,6 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         key="charging_status",
         translation_key="charging_status",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        icon="mdi:ev-station",
         # device class power: On means power detected, Off means no power
         value_fn=lambda v: v.fuel_and_battery.charging_status == ChargingState.CHARGING,
     ),
@@ -192,13 +186,11 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         key="connection_status",
         translation_key="connection_status",
         device_class=BinarySensorDeviceClass.PLUG,
-        icon="mdi:car-electric",
         value_fn=lambda v: v.fuel_and_battery.is_charger_connected,
     ),
     BMWBinarySensorEntityDescription(
         key="is_pre_entry_climatization_enabled",
         translation_key="is_pre_entry_climatization_enabled",
-        icon="mdi:car-seat-heater",
         value_fn=lambda v: v.charging_profile.is_pre_entry_climatization_enabled
         if v.charging_profile
         else False,

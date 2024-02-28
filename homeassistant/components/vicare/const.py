@@ -1,7 +1,7 @@
 """Constants for the ViCare integration."""
 import enum
 
-from homeassistant.const import Platform, UnitOfEnergy, UnitOfVolume
+from homeassistant.const import Platform
 
 DOMAIN = "vicare"
 
@@ -22,14 +22,12 @@ CONF_HEATING_TYPE = "heating_type"
 
 DEFAULT_CACHE_DURATION = 60
 
-VICARE_CUBIC_METER = "cubicMeter"
+VICARE_PERCENT = "percent"
+VICARE_W = "watt"
+VICARE_KW = "kilowatt"
+VICARE_WH = "wattHour"
 VICARE_KWH = "kilowattHour"
-
-
-VICARE_UNIT_TO_UNIT_OF_MEASUREMENT = {
-    VICARE_KWH: UnitOfEnergy.KILO_WATT_HOUR,
-    VICARE_CUBIC_METER: UnitOfVolume.CUBIC_METERS,
-}
+VICARE_CUBIC_METER = "cubicMeter"
 
 
 class HeatingType(enum.Enum):

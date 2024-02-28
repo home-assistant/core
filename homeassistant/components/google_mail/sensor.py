@@ -22,7 +22,6 @@ SCAN_INTERVAL = timedelta(minutes=15)
 SENSOR_TYPE = SensorEntityDescription(
     key="vacation_end_date",
     translation_key="vacation_end_date",
-    icon="mdi:clock",
     device_class=SensorDeviceClass.TIMESTAMP,
 )
 

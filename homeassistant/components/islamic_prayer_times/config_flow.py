@@ -39,7 +39,7 @@ from .const import (
 
 
 async def async_validate_location(
-    hass: HomeAssistant, lon: float, lat: float
+    hass: HomeAssistant, lat: float, lon: float
 ) -> dict[str, str]:
     """Check if the selected location is valid."""
     errors = {}

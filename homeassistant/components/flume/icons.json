@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "leak": {
+        "default": "mdi:pipe-leak"
+      },
+      "flow": {
+        "default": "mdi:waves"
+      }
+    }
+  },
+  "services": {
+    "list_notifications": "mdi:bell"
+  }
+}

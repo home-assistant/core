@@ -75,6 +75,7 @@ WAKE_WORD_INFO = Info(
                 WakeModel(
                     name="Test Model",
                     description="Test Model",
+                    phrase="Test Phrase",
                     installed=True,
                     attribution=TEST_ATTR,
                     languages=["en-US"],

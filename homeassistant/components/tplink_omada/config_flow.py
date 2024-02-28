@@ -9,13 +9,13 @@ from typing import Any, NamedTuple
 from urllib.parse import urlsplit
 
 from aiohttp import CookieJar
+from tplink_omada_client import OmadaClient, OmadaSite
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
     OmadaClientException,
     UnsupportedControllerVersion,
 )
-from tplink_omada_client.omadaclient import OmadaClient, OmadaSite
 import voluptuous as vol
 
 from homeassistant import config_entries

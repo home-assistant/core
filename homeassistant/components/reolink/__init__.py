@@ -84,6 +84,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
             try:
                 await host.update_states()
+            except CredentialsInvalidError as err:
+                raise ConfigEntryAuthFailed(err) from err
             except ReolinkError as err:
                 raise UpdateFailed(str(err)) from err
 

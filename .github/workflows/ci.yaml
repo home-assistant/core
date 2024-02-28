@@ -1079,7 +1079,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v4.1.1
       - name: Download all coverage artifacts
-        uses: actions/download-artifact@v4.1.2
+        uses: actions/download-artifact@v4.1.3
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov (full coverage)

@@ -83,6 +83,7 @@ async def async_pipeline_from_audio_stream(
     event_callback: PipelineEventCallback,
     stt_metadata: stt.SpeechMetadata,
     stt_stream: AsyncIterable[bytes],
+    wake_word_phrase: str | None = None,
     pipeline_id: str | None = None,
     conversation_id: str | None = None,
     tts_audio_output: str | None = None,
@@ -101,6 +102,7 @@ async def async_pipeline_from_audio_stream(
         device_id=device_id,
         stt_metadata=stt_metadata,
         stt_stream=stt_stream,
+        wake_word_phrase=wake_word_phrase,
         run=PipelineRun(
             hass,
             context=context,

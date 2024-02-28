@@ -94,7 +94,6 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     DaikinSensorEntityDescription(
         key=ATTR_COOL_ENERGY,
         translation_key="cool_energy_consumption",
-        icon="mdi:snowflake",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         entity_registry_enabled_default=False,
@@ -103,7 +102,6 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     DaikinSensorEntityDescription(
         key=ATTR_HEAT_ENERGY,
         translation_key="heat_energy_consumption",
-        icon="mdi:fire",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         entity_registry_enabled_default=False,
@@ -120,7 +118,6 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
     DaikinSensorEntityDescription(
         key=ATTR_COMPRESSOR_FREQUENCY,
         translation_key="compressor_frequency",
-        icon="mdi:fan",
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,

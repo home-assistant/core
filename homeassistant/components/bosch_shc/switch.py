@@ -199,7 +199,6 @@ class SHCSwitch(SHCEntity, SwitchEntity):
 class SHCRoutingSwitch(SHCEntity, SwitchEntity):
     """Representation of a SHC routing switch."""
 
-    _attr_icon = "mdi:wifi"
     _attr_translation_key = "routing"
     _attr_entity_category = EntityCategory.CONFIG
 

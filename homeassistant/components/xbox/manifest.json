@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["auth", "application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/xbox",
+  "import_executor": true,
   "iot_class": "cloud_polling",
   "requirements": ["xbox-webapi==2.0.11"]
 }

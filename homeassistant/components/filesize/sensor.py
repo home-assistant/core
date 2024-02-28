@@ -23,13 +23,10 @@ from .coordinator import FileSizeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = "mdi:file"
-
 SENSOR_TYPES = (
     SensorEntityDescription(
         key="file",
         translation_key="size",
-        icon=ICON,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -38,7 +35,6 @@ SENSOR_TYPES = (
         key="bytes",
         translation_key="size_bytes",
         entity_registry_enabled_default=False,
-        icon=ICON,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -48,7 +44,6 @@ SENSOR_TYPES = (
         key="last_updated",
         translation_key="last_updated",
         entity_registry_enabled_default=False,
-        icon=ICON,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

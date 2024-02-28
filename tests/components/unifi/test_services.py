@@ -144,7 +144,7 @@ async def test_reconnect_client_hub_unavailable(
         hass, aioclient_mock, clients_response=clients
     )
     hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    hub.available = False
+    hub.websocket.available = False
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
@@ -292,7 +292,7 @@ async def test_remove_clients_hub_unavailable(
         hass, aioclient_mock, clients_all_response=clients
     )
     hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
-    hub.available = False
+    hub.websocket.available = False
 
     aioclient_mock.clear_requests()
 

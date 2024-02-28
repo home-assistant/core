@@ -35,7 +35,6 @@ from .const import (
     CONF_TRACKING_NUMBER,
     DEFAULT_NAME,
     DOMAIN,
-    ICON,
     MIN_TIME_BETWEEN_UPDATES,
     REMOVE_TRACKING_SERVICE_SCHEMA,
     SERVICE_ADD_TRACKING,
@@ -135,7 +134,7 @@ class AfterShipSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement: str = "packages"
-    _attr_icon: str = ICON
+    _attr_translation_key = "packages"
 
     def __init__(self, aftership: AfterShip, name: str) -> None:
         """Initialize the sensor."""

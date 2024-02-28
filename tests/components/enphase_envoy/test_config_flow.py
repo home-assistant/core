@@ -4,10 +4,11 @@ from unittest.mock import AsyncMock
 
 from pyenphase import EnvoyAuthenticationError, EnvoyError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.enphase_envoy.const import DOMAIN
+from homeassistant.components.enphase_envoy.const import DOMAIN, PLATFORMS
 from homeassistant.core import HomeAssistant
 
 
@@ -402,3 +403,8 @@ async def test_reauth(hass: HomeAssistant, config_entry, setup_enphase_envoy) ->
     )
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_platforms(snapshot: SnapshotAssertion) -> None:
+    """Test if platform list changed and requires more tests."""
+    assert snapshot == PLATFORMS

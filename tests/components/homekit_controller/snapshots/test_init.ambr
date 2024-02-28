@@ -75,44 +75,6 @@
             'aliases': list([
             ]),
             'area_id': None,
-            'capabilities': None,
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.CONFIG: 'config'>,
-            'entity_id': 'button.airversa_ap2_1808_provision_preferred_thread_credentials',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'Airversa AP2 1808 Provision Preferred Thread Credentials',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_112_119',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'friendly_name': 'Airversa AP2 1808 Provision Preferred Thread Credentials',
-            }),
-            'entity_id': 'button.airversa_ap2_1808_provision_preferred_thread_credentials',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
             }),
@@ -14197,44 +14159,6 @@
               'friendly_name': 'Nanoleaf Strip 3B32 Identify',
             }),
             'entity_id': 'button.nanoleaf_strip_3b32_identify',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.CONFIG: 'config'>,
-            'entity_id': 'button.nanoleaf_strip_3b32_provision_preferred_thread_credentials',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'Nanoleaf Strip 3B32 Provision Preferred Thread Credentials',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_31_119',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'friendly_name': 'Nanoleaf Strip 3B32 Provision Preferred Thread Credentials',
-            }),
-            'entity_id': 'button.nanoleaf_strip_3b32_provision_preferred_thread_credentials',
             'state': 'unknown',
           }),
         }),

@@ -1,4 +1,5 @@
 """Test to verify that we can load components."""
+import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -173,6 +174,20 @@ async def test_get_integration(hass: HomeAssistant) -> None:
     assert hue_light == integration.get_platform("light")
 
 
+async def test_async_get_component(hass: HomeAssistant) -> None:
+    """Test resolving integration."""
+    with pytest.raises(loader.IntegrationNotLoaded):
+        loader.async_get_loaded_integration(hass, "hue")
+
+    integration = await loader.async_get_integration(hass, "hue")
+    assert await integration.async_get_component() == hue
+    assert integration.get_platform("light") == hue_light
+
+    integration = loader.async_get_loaded_integration(hass, "hue")
+    assert await integration.async_get_component() == hue
+    assert integration.get_platform("light") == hue_light
+
+
 async def test_get_integration_exceptions(hass: HomeAssistant) -> None:
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "hue")
@@ -221,6 +236,41 @@ async def test_get_platform_caches_failures_when_component_loaded(
     # Hue is loaded and the last call should have cached the import_module failure
     with pytest.raises(ImportError):
         assert integration.get_platform("light") == hue_light
+
+
+async def test_async_get_platform_caches_failures_when_component_loaded(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_get_platform cache failures only when the component is loaded."""
+    integration = await loader.async_get_integration(hass, "hue")
+
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ImportError("Boom")
+    ):
+        assert integration.get_component() == hue
+
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ImportError("Boom")
+    ):
+        assert await integration.async_get_platform("light") == hue_light
+
+    # Hue is not loaded so we should still hit the import_module path
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ImportError("Boom")
+    ):
+        assert await integration.async_get_platform("light") == hue_light
+
+    assert integration.get_component() == hue
+
+    # Hue is loaded so we should cache the import_module failure now
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ImportError("Boom")
+    ):
+        assert await integration.async_get_platform("light") == hue_light
+
+    # Hue is loaded and the last call should have cached the import_module failure
+    with pytest.raises(ImportError):
+        assert await integration.async_get_platform("light") == hue_light
 
 
 async def test_get_integration_legacy(
@@ -368,7 +418,9 @@ async def test_integrations_only_once(hass: HomeAssistant) -> None:
     assert await int_1 is await int_2
 
 
-def _get_test_integration(hass, name, config_flow):
+def _get_test_integration(
+    hass: HomeAssistant, name: str, config_flow: bool, import_executor: bool = False
+) -> loader.Integration:
     """Return a generated test integration."""
     return loader.Integration(
         hass,
@@ -384,6 +436,7 @@ def _get_test_integration(hass, name, config_flow):
             "homekit": {"models": [name]},
             "ssdp": [{"manufacturer": name, "modelName": name}],
             "mqtt": [f"{name}/discovery"],
+            "import_executor": import_executor,
         },
     )
 
@@ -723,6 +776,35 @@ async def test_get_mqtt(hass: HomeAssistant) -> None:
         mqtt = await loader.async_get_mqtt(hass)
         assert mqtt["test_1"] == ["test_1/discovery"]
         assert mqtt["test_2"] == ["test_2/discovery"]
+
+
+async def test_import_platform_executor(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
+    """Test import a platform in the executor."""
+    integration = await loader.async_get_integration(
+        hass, "test_package_loaded_executor"
+    )
+
+    config_flow_task_1 = asyncio.create_task(
+        integration.async_get_platform("config_flow")
+    )
+    config_flow_task_2 = asyncio.create_task(
+        integration.async_get_platform("config_flow")
+    )
+    config_flow_task_3 = asyncio.create_task(
+        integration.async_get_platform("config_flow")
+    )
+
+    config_flow_task1_result = await config_flow_task_1
+    config_flow_task2_result = await config_flow_task_2
+    config_flow_task3_result = await config_flow_task_3
+
+    assert (
+        config_flow_task1_result == config_flow_task2_result == config_flow_task3_result
+    )
+
+    assert await config_flow_task1_result._async_has_devices(hass) is True
 
 
 async def test_get_custom_components_recovery_mode(hass: HomeAssistant) -> None:

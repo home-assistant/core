@@ -45,8 +45,8 @@
 # name: test_button[identify_device_with_a_blinking_led-plcnet-async_identify_device_start]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'identify',
       'friendly_name': 'Mock Title Identify device with a blinking LED',
-      'icon': 'mdi:led-on',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_title_identify_device_with_a_blinking_led',
@@ -77,8 +77,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
-    'original_icon': 'mdi:led-on',
+    'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
+    'original_icon': None,
     'original_name': 'Identify device with a blinking LED',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
@@ -224,7 +224,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Start PLC pairing',
-      'icon': 'mdi:plus-network-outline',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_title_start_plc_pairing',
@@ -256,7 +255,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:plus-network-outline',
+    'original_icon': None,
     'original_name': 'Start PLC pairing',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
@@ -313,7 +312,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Start WPS',
-      'icon': 'mdi:wifi-plus',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_title_start_wps',
@@ -345,7 +343,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi-plus',
+    'original_icon': None,
     'original_name': 'Start WPS',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,

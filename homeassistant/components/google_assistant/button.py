@@ -51,7 +51,9 @@ class SyncButton(ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         assert self._context
-        agent_user_id = self._google_config.get_agent_user_id(self._context)
+        agent_user_id = self._google_config.get_agent_user_id_from_context(
+            self._context
+        )
         result = await self._google_config.async_sync_entities(agent_user_id)
         if result != 200:
             raise HomeAssistantError(

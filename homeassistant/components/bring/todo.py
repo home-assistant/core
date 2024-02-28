@@ -49,7 +49,7 @@ class BringTodoListEntity(
 ):
     """A To-do List representation of the Bring! Shopping List."""
 
-    _attr_icon = "mdi:cart"
+    _attr_translation_key = "shopping_list"
     _attr_has_entity_name = True
     _attr_supported_features = (
         TodoListEntityFeature.CREATE_TODO_ITEM
@@ -114,7 +114,8 @@ class BringTodoListEntity(
         """Update an item to the To-do list.
 
         Bring has an internal 'recent' list which we want to use instead of a todo list
-        status, therefore completed todo list items are matched to the recent list and pending items to the purchase list
+        status, therefore completed todo list items are matched to the recent list and
+        pending items to the purchase list.
 
         This results in following behaviour:
 

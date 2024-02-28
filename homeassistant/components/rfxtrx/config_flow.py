@@ -634,22 +634,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 def _test_transport(host: str | None, port: int | None, device: str | None) -> bool:
     """Construct a rfx object based on config."""
     if port is not None:
-        try:
-            conn = rfxtrxmod.PyNetworkTransport((host, port))
-        except OSError:
-            return False
-
-        conn.close()
+        conn = rfxtrxmod.PyNetworkTransport((host, port))
     else:
-        try:
-            conn = rfxtrxmod.PySerialTransport(device)
-        except serial.SerialException:
-            return False
+        conn = rfxtrxmod.PySerialTransport(device)
 
-        if conn.serial is None:
-            return False
-
-        conn.close()
+    try:
+        conn.connect()
+    except (rfxtrxmod.RFXtrxTransportError, TimeoutError):
+        return False
 
     return True
 

@@ -8,7 +8,7 @@ from unittest.mock import Mock, call, patch
 import pytest
 
 from homeassistant import loader
-from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_CORE_CONFIG_UPDATE
+from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
@@ -604,20 +604,6 @@ async def test_get_cached_translations(
 async def test_setup(hass: HomeAssistant):
     """Test the setup load listeners helper."""
     translation.async_setup(hass)
-
-    with patch(
-        "homeassistant.helpers.translation._TranslationCache.async_load",
-    ) as mock:
-        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "loaded_component"})
-        await hass.async_block_till_done()
-        mock.assert_called_once_with(hass.config.language, {"loaded_component"})
-
-    with patch(
-        "homeassistant.helpers.translation._TranslationCache.async_load",
-    ) as mock:
-        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {"component": "config.component"})
-        await hass.async_block_till_done()
-        mock.assert_not_called()
 
     # Should not be called if the language is the current language
     with patch(

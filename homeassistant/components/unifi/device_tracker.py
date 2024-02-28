@@ -25,13 +25,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
 import homeassistant.util.dt as dt_util
 
+from .const import DOMAIN as UNIFI_DOMAIN
 from .entity import (
     HandlerT,
     UnifiEntity,
     UnifiEntityDescription,
     async_device_available_fn,
 )
-from .hub import UNIFI_DOMAIN, UnifiHub
+from .hub import UnifiHub
 
 LOGGER = logging.getLogger(__name__)
 

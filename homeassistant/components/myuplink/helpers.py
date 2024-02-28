@@ -2,10 +2,15 @@
 
 from myuplink import DevicePoint
 
+from homeassistant.components.number import NumberEntityDescription
+from homeassistant.components.sensor import SensorEntityDescription
 from homeassistant.const import Platform
 
 
-def find_matching_platform(device_point: DevicePoint) -> Platform:
+def find_matching_platform(
+    device_point: DevicePoint,
+    description: SensorEntityDescription | NumberEntityDescription | None = None,
+) -> Platform:
     """Find entity platform for a DevicePoint."""
     if (
         len(device_point.enum_values) == 2
@@ -15,5 +20,14 @@ def find_matching_platform(device_point: DevicePoint) -> Platform:
         if device_point.writable:
             return Platform.SWITCH
         return Platform.BINARY_SENSOR
+
+    if (
+        description
+        and description.native_unit_of_measurement == "DM"
+        or (device_point.raw["maxValue"] and device_point.raw["minValue"])
+    ):
+        if device_point.writable:
+            return Platform.NUMBER
+        return Platform.SENSOR
 
     return Platform.SENSOR

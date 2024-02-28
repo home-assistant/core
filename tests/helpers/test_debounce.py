@@ -484,7 +484,7 @@ async def test_shutdown(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     # Ensure shutdown during a run doesn't create a cooldown timer
     hass.async_create_task(debouncer.async_call())
     await asyncio.sleep(0.01)
-    await debouncer.async_shutdown()
+    debouncer.async_shutdown()
     future.set_result(True)
     await hass.async_block_till_done()
     assert len(calls) == 1

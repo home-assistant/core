@@ -205,7 +205,7 @@ async def test_issues_created(
                 "learn_more_url": None,
                 "severity": "error",
                 "translation_key": "config_entry_reauth",
-                "translation_placeholders": None,
+                "translation_placeholders": {"name": "Kitchen Sink"},
                 "ignored": False,
             },
         ]
@@ -322,7 +322,7 @@ async def test_issues_created(
                 "learn_more_url": None,
                 "severity": "error",
                 "translation_key": "config_entry_reauth",
-                "translation_placeholders": None,
+                "translation_placeholders": {"name": "Kitchen Sink"},
                 "ignored": False,
             },
         ]

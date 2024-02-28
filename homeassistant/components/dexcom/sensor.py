@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import COORDINATOR, DOMAIN, GLUCOSE_TREND_ICON, GLUCOSE_VALUE_ICON, MG_DL
+from .const import COORDINATOR, DOMAIN, GLUCOSE_TREND_ICON, MG_DL
 
 
 async def async_setup_entry(
@@ -55,7 +55,6 @@ class DexcomSensorEntity(CoordinatorEntity, SensorEntity):
 class DexcomGlucoseValueSensor(DexcomSensorEntity):
     """Representation of a Dexcom glucose value sensor."""
 
-    _attr_icon = GLUCOSE_VALUE_ICON
     _attr_translation_key = "glucose_value"
 
     def __init__(

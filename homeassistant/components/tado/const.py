@@ -204,3 +204,11 @@ TADO_TO_HA_OFFSET_MAP = {
 # Constants for Overlay Default settings
 HA_TERMINATION_TYPE = "default_overlay_type"
 HA_TERMINATION_DURATION = "default_overlay_seconds"
+
+TADO_DEFAULT_MIN_TEMP = 5
+TADO_DEFAULT_MAX_TEMP = 25
+# Constants for service calls
+SERVICE_ADD_METER_READING = "add_meter_reading"
+CONF_CONFIG_ENTRY = "config_entry"
+CONF_READING = "reading"
+ATTR_MESSAGE = "message"

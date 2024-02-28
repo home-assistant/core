@@ -159,7 +159,6 @@ class EufyLifeHeartRateSensorEntity(RestoreSensor, EufyLifeSensorEntity):
     """Representation of an EufyLife heart rate sensor."""
 
     _attr_translation_key = "heart_rate"
-    _attr_icon = "mdi:heart-pulse"
     _attr_native_unit_of_measurement = "bpm"
 
     def __init__(self, data: EufyLifeData) -> None:

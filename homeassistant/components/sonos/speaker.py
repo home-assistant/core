@@ -613,7 +613,9 @@ class SonosSpeaker:
             return
         # Ensure the ping is canceled at shutdown
         self.hass.async_create_background_task(
-            self._async_check_activity(), f"sonos {self.uid} {self.zone_name} ping"
+            self._async_check_activity(),
+            f"sonos {self.uid} {self.zone_name} ping",
+            eager_start=True,
         )
 
     async def _async_check_activity(self) -> None:

@@ -1,7 +1,7 @@
 {
   "domain": "lutron_caseta",
   "name": "Lutron Cas\u00e9ta",
-  "codeowners": ["@swails", "@bdraco", "@danaues"],
+  "codeowners": ["@swails", "@bdraco", "@danaues", "@eclair4151"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lutron_caseta",
   "homekit": {

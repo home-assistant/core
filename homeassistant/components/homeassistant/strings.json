@@ -1,4 +1,10 @@
 {
+  "config": {
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {}
+  },
   "issues": {
     "country_not_configured": {
       "title": "The country has not been configured",

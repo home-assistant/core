@@ -5,7 +5,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'iX xDrive50 AC Charging Limit',
-        'icon': 'mdi:current-ac',
         'options': list([
           '6',
           '7',
@@ -33,7 +32,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'iX xDrive50 Charging Mode',
-        'icon': 'mdi:vector-point-select',
         'options': list([
           'IMMEDIATE_CHARGING',
           'DELAYED_CHARGING',
@@ -49,7 +47,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i4 eDrive40 AC Charging Limit',
-        'icon': 'mdi:current-ac',
         'options': list([
           '6',
           '7',
@@ -77,7 +74,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i4 eDrive40 Charging Mode',
-        'icon': 'mdi:vector-point-select',
         'options': list([
           'IMMEDIATE_CHARGING',
           'DELAYED_CHARGING',
@@ -93,7 +89,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i3 (+ REX) Charging Mode',
-        'icon': 'mdi:vector-point-select',
         'options': list([
           'IMMEDIATE_CHARGING',
           'DELAYED_CHARGING',

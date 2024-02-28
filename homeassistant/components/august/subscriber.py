@@ -44,11 +44,16 @@ class AugustSubscriberMixin:
         """Refresh data."""
 
     @callback
+    def _async_scheduled_refresh(self, now: datetime) -> None:
+        """Call the refresh method."""
+        self._hass.async_create_task(self._async_refresh(now), eager_start=True)
+
+    @callback
     def _async_setup_listeners(self) -> None:
         """Create interval and stop listeners."""
         self._unsub_interval = async_track_time_interval(
             self._hass,
-            self._async_refresh,
+            self._async_scheduled_refresh,
             self._update_interval,
             name="august refresh",
         )

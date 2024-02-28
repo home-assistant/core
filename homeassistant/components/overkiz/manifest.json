@@ -1,7 +1,13 @@
 {
   "domain": "overkiz",
   "name": "Overkiz",
-  "codeowners": ["@imicknl", "@vlebourl", "@tetienne", "@nyroDev"],
+  "codeowners": [
+    "@imicknl",
+    "@vlebourl",
+    "@tetienne",
+    "@nyroDev",
+    "@tronix117"
+  ],
   "config_flow": true,
   "dhcp": [
     {

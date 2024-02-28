@@ -68,7 +68,7 @@
     "config_flow": {
       "title": {
         "oauth2_pick_implementation": "Pick authentication method",
-        "reauth": "Reauthenticate integration",
+        "reauth": "Authentication expired for {name}",
         "via_hassio_addon": "{name} via Home Assistant add-on"
       },
       "description": {

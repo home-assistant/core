@@ -4,9 +4,9 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, NamedTuple
 
+from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.devices import OmadaFirmwareUpdate, OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
-from tplink_omada_client.omadasiteclient import OmadaSiteClient
 
 from homeassistant.components.update import (
     UpdateDeviceClass,

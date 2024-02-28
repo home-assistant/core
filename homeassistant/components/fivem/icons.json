@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "max_players": {
+        "default": "mdi:account-multiple"
+      },
+      "online_players": {
+        "default": "mdi:account-multiple"
+      },
+      "resources": {
+        "default": "mdi:playlist-check"
+      }
+    }
+  }
+}

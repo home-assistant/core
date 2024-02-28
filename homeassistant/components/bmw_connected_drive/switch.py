@@ -56,7 +56,6 @@ NUMBER_TYPES: list[BMWSwitchEntityDescription] = [
         value_fn=lambda v: v.climate.is_climate_on,
         remote_service_on=lambda v: v.remote_services.trigger_remote_air_conditioning(),
         remote_service_off=lambda v: v.remote_services.trigger_remote_air_conditioning_stop(),
-        icon="mdi:fan",
     ),
     BMWSwitchEntityDescription(
         key="charging",
@@ -65,7 +64,6 @@ NUMBER_TYPES: list[BMWSwitchEntityDescription] = [
         value_fn=lambda v: v.fuel_and_battery.charging_status in CHARGING_STATE_ON,
         remote_service_on=lambda v: v.remote_services.trigger_charge_start(),
         remote_service_off=lambda v: v.remote_services.trigger_charge_stop(),
-        icon="mdi:ev-station",
     ),
 ]
 

@@ -331,6 +331,7 @@ class ESPHomeManager:
         conversation_id: str,
         flags: int,
         audio_settings: VoiceAssistantAudioSettings,
+        wake_word_phrase: str | None,
     ) -> int | None:
         """Start a voice assistant pipeline."""
         if self.voice_assistant_udp_server is not None:
@@ -354,6 +355,7 @@ class ESPHomeManager:
                 conversation_id=conversation_id or None,
                 flags=flags,
                 audio_settings=audio_settings,
+                wake_word_phrase=wake_word_phrase,
             ),
             "esphome.voice_assistant_udp_server.run_pipeline",
         )

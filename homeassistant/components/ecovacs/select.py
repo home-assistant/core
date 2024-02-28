@@ -3,7 +3,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Generic
 
-from deebot_client.capabilities import CapabilitySetTypes
+from deebot_client.capabilities import CapabilitySetTypes, VacuumCapabilities
 from deebot_client.device import Device
 from deebot_client.events import WaterInfoEvent, WorkModeEvent
 
@@ -15,7 +15,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .controller import EcovacsController
-from .entity import EcovacsCapabilityEntityDescription, EcovacsDescriptionEntity, EventT
+from .entity import (
+    CapabilityDevice,
+    EcovacsCapabilityEntityDescription,
+    EcovacsDescriptionEntity,
+    EventT,
+)
 from .util import get_supported_entitites
 
 
@@ -33,6 +38,7 @@ class EcovacsSelectEntityDescription(
 
 ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
     EcovacsSelectEntityDescription[WaterInfoEvent](
+        device_capabilities=VacuumCapabilities,
         capability_fn=lambda caps: caps.water,
         current_option_fn=lambda e: e.amount.display_name,
         options_fn=lambda water: [amount.display_name for amount in water.types],
@@ -41,6 +47,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
     ),
     EcovacsSelectEntityDescription[WorkModeEvent](
+        device_capabilities=VacuumCapabilities,
         capability_fn=lambda caps: caps.clean.work_mode,
         current_option_fn=lambda e: e.mode.display_name,
         options_fn=lambda cap: [mode.display_name for mode in cap.types],
@@ -67,7 +74,7 @@ async def async_setup_entry(
 
 
 class EcovacsSelectEntity(
-    EcovacsDescriptionEntity[CapabilitySetTypes[EventT, str]],
+    EcovacsDescriptionEntity[CapabilityDevice, CapabilitySetTypes[EventT, str]],
     SelectEntity,
 ):
     """Ecovacs select entity."""
