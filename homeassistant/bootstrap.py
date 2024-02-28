@@ -308,16 +308,16 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     entity.async_setup(hass)
     template.async_setup(hass)
     await asyncio.gather(
-        area_registry.async_load(hass),
-        device_registry.async_load(hass),
-        entity_registry.async_load(hass),
-        floor_registry.async_load(hass),
-        issue_registry.async_load(hass),
-        label_registry.async_load(hass),
+        create_eager_task(area_registry.async_load(hass)),
+        create_eager_task(device_registry.async_load(hass)),
+        create_eager_task(entity_registry.async_load(hass)),
+        create_eager_task(floor_registry.async_load(hass)),
+        create_eager_task(issue_registry.async_load(hass)),
+        create_eager_task(label_registry.async_load(hass)),
         hass.async_add_executor_job(_cache_uname_processor),
-        template.async_load_custom_templates(hass),
-        restore_state.async_load(hass),
-        hass.config_entries.async_initialize(),
+        create_eager_task(template.async_load_custom_templates(hass)),
+        create_eager_task(restore_state.async_load(hass)),
+        create_eager_task(hass.config_entries.async_initialize()),
     )
 
 
@@ -340,7 +340,7 @@ async def async_from_config_dict(
     if not all(
         await asyncio.gather(
             *(
-                async_setup_component(hass, domain, config)
+                create_eager_task(async_setup_component(hass, domain, config))
                 for domain in CORE_INTEGRATIONS
             )
         )
