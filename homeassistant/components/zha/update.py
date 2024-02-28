@@ -165,12 +165,6 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
         self._attr_in_progress = int(progress)
         self.async_write_ha_state()
 
-    @callback
-    def _reset_progress(self) -> None:
-        """Reset update install progress."""
-        self._attr_in_progress = False
-        self.async_write_ha_state()
-
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -187,18 +181,16 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
                 progress_callback=self._update_progress,
             )
         except Exception as ex:
-            self._reset_progress()
             raise HomeAssistantError(f"Update was not successful: {ex}") from ex
 
         # If the update finished but was not successful, we should also throw an error
         if result != Status.SUCCESS:
-            self._reset_progress()
             raise HomeAssistantError(f"Update was not successful: {result}")
 
         # Clear the state
         self._attr_installed_version = f"0x{self._latest_firmware.version:08x}"
         self._latest_firmware = None
-        self._reset_progress()
+        self._attr_in_progress = False
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
