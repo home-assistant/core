@@ -276,7 +276,7 @@ aiohttp-zlib-ng==0.3.1
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.7.0
+aiohue==4.7.1
 
 # homeassistant.components.imap
 aioimaplib==1.0.1
