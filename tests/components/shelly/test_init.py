@@ -1,5 +1,6 @@
 """Test cases for the Shelly component."""
 
+from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.exceptions import (
@@ -47,6 +48,24 @@ async def test_custom_coap_port(
 
     await init_integration(hass, 1)
     assert "Starting CoAP context with UDP port 7632" in caplog.text
+
+
+async def test_ip_address(
+    hass: HomeAssistant, mock_block_device: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test more local ip addresses."""
+    with patch(
+        "homeassistant.components.network.async_only_default_interface_enabled",
+        return_value=False,
+    ), patch(
+        "homeassistant.components.network.async_get_enabled_source_ips",
+        return_value=[IPv4Address("192.168.1.10"), IPv4Address("10.10.10.10")],
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"coap_port": 7632}})
+        await hass.async_block_till_done()
+
+        await init_integration(hass, 1)
+        assert "Starting CoAP context with UDP port 7632" in caplog.text
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
