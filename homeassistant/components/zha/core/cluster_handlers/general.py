@@ -562,12 +562,12 @@ class OtaClientClusterHandler(ClientClusterHandler):
         self, tsn: int, command_id: int, args: list[Any] | None
     ) -> None:
         """Handle OTA commands."""
-        if command_id in self.cluster.server_commands:
-            cmd_name = self.cluster.server_commands[command_id].name
-        else:
-            cmd_name = command_id
+        if command_id not in self.cluster.server_commands:
+            return
 
         signal_id = self._endpoint.unique_id.split("-")[0]
+        cmd_name = self.cluster.server_commands[command_id].name
+
         if cmd_name == Ota.ServerCommandDefs.query_next_image.name:
             assert args
 
