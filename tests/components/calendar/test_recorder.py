@@ -23,7 +23,6 @@ async def mock_setup_dependencies(
     config_entry: MockConfigEntry,
 ) -> None:
     """Fixture that ensures the recorder is setup in the right order."""
-    config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

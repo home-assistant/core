@@ -108,7 +108,6 @@ async def mock_setup_platform(
     config_entry: MockConfigEntry,
 ) -> None:
     """Fixture to setup platforms used in the test."""
-    config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

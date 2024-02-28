@@ -100,9 +100,11 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
 
 
 @pytest.fixture(name="config_entry")
-async def mock_config_entry() -> MockConfigEntry:
+async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a mock config entry."""
-    return MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry = MockConfigEntry(domain=TEST_DOMAIN)
+    config_entry.add_to_hass(hass)
+    return config_entry
 
 
 @pytest.fixture
