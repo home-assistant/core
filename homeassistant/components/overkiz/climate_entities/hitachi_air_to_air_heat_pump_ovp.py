@@ -190,8 +190,7 @@ class HitachiAirToAirHeatPumpOVP(OverkizEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
-        temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
-        await self._global_control(target_temperature=int(temperature))
+        await self._global_control(target_temperature=int(kwargs.get(ATTR_TEMPERATURE)))
 
     @property
     def preset_mode(self) -> str | None:
