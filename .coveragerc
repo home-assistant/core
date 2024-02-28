@@ -983,6 +983,7 @@ omit =
     homeassistant/components/pencom/switch.py
     homeassistant/components/permobil/__init__.py
     homeassistant/components/permobil/coordinator.py
+    homeassistant/components/permobil/entity.py
     homeassistant/components/permobil/sensor.py
     homeassistant/components/philips_js/__init__.py
     homeassistant/components/philips_js/light.py

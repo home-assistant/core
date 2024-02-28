@@ -34,6 +34,7 @@ class MyPermobilCoordinator(DataUpdateCoordinator[MyPermobilData]):
             update_interval=timedelta(minutes=5),
         )
         self.p_api = p_api
+        self.last_update_success = False
 
     async def _async_update_data(self) -> MyPermobilData:
         """Fetch data from the 3 API endpoints."""
@@ -42,6 +43,7 @@ class MyPermobilCoordinator(DataUpdateCoordinator[MyPermobilData]):
                 battery = await self.p_api.get_battery_info()
                 daily_usage = await self.p_api.get_daily_usage()
                 records = await self.p_api.get_usage_records()
+                self.last_update_success = True
                 return MyPermobilData(
                     battery=battery,
                     daily_usage=daily_usage,
@@ -49,6 +51,7 @@ class MyPermobilCoordinator(DataUpdateCoordinator[MyPermobilData]):
                 )
 
         except MyPermobilAPIException as err:
+            self.last_update_success = False
             _LOGGER.exception(
                 "Error fetching data from MyPermobil API for account %s %s",
                 self.p_api.email,
