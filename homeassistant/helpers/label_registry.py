@@ -10,6 +10,7 @@ from typing import Literal, TypedDict, cast
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 
+from .storage import Store
 from .typing import UNDEFINED, EventType, UndefinedType
 
 DATA_REGISTRY = "label_registry"
@@ -96,7 +97,8 @@ class LabelRegistry:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the label registry."""
         self.hass = hass
-        self._store = hass.helpers.storage.Store(
+        self._store: Store[dict[str, list[dict[str, str | None]]]] = Store(
+            hass,
             STORAGE_VERSION_MAJOR,
             STORAGE_KEY,
             atomic_writes=True,
@@ -230,6 +232,10 @@ class LabelRegistry:
 
         if data is not None:
             for label in data["labels"]:
+                # Check if the necessary keys are present
+                if label["label_id"] is None or label["name"] is None:
+                    continue
+
                 normalized_name = _normalize_label_name(label["name"])
                 labels[label["label_id"]] = LabelEntry(
                     color=label["color"],
