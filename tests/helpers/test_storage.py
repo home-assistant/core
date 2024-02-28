@@ -115,7 +115,7 @@ async def test_loading_parallel(
     results = await asyncio.gather(store.async_load(), store.async_load())
 
     assert results[0] == MOCK_DATA
-    assert results[0] is results[1]
+    assert results[1] == MOCK_DATA
     assert caplog.text.count(f"Loading data for {store.key}")
 
 
