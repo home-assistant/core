@@ -644,9 +644,11 @@ class ManifestJSONView(HomeAssistantView):
     @callback
     def get(self, request: web.Request) -> web.Response:
         """Return the manifest.json."""
-        return web.Response(
+        response = web.Response(
             text=MANIFEST_JSON.json, content_type="application/manifest+json"
         )
+        response.enable_compression()
+        return response
 
 
 @websocket_api.websocket_command(

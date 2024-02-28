@@ -33,7 +33,8 @@ async def async_setup_entry(
     """Set up lights for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         if device.model is ModelType.LIGHT and device.can_write(
             data.api.bootstrap.auth_user
         ):

@@ -1,5 +1,4 @@
 """Test the MELCloud config flow."""
-import asyncio
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -75,7 +74,7 @@ async def test_form(hass: HomeAssistant, mock_login, mock_get_devices) -> None:
 
 @pytest.mark.parametrize(
     ("error", "reason"),
-    [(ClientError(), "cannot_connect"), (asyncio.TimeoutError(), "cannot_connect")],
+    [(ClientError(), "cannot_connect"), (TimeoutError(), "cannot_connect")],
 )
 async def test_form_errors(
     hass: HomeAssistant, mock_login, mock_get_devices, error, reason
@@ -195,7 +194,7 @@ async def test_token_reauthentication(
 @pytest.mark.parametrize(
     ("error", "reason"),
     [
-        (asyncio.TimeoutError(), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
         (AttributeError(name="get"), "invalid_auth"),
     ],
 )

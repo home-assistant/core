@@ -1,5 +1,4 @@
 """Test ESPHome update entities."""
-import asyncio
 from collections.abc import Awaitable, Callable
 import dataclasses
 from unittest.mock import Mock, patch
@@ -280,7 +279,7 @@ async def test_update_entity_dashboard_not_available_startup(
         return_value=Mock(available=True, device_info=mock_device_info),
     ), patch(
         "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         await async_get_dashboard(hass).async_refresh()
         assert await hass.config_entries.async_forward_entry_setup(
@@ -324,7 +323,7 @@ async def test_update_entity_dashboard_discovered_after_startup_but_update_faile
     """Test ESPHome update entity when dashboard is discovered after startup and the first update fails."""
     with patch(
         "esphome_dashboard_api.ESPHomeDashboardAPI.get_devices",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         await async_get_dashboard(hass).async_refresh()
         await hass.async_block_till_done()

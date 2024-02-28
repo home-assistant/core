@@ -18,7 +18,7 @@ from aiohomekit.exceptions import (
     EncryptionError,
 )
 from aiohomekit.model import Accessories, Accessory, Transport
-from aiohomekit.model.characteristics import Characteristic
+from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
@@ -30,6 +30,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.util.async_ import create_eager_task
 
 from .config_flow import normalize_hkid
 from .const import (
@@ -46,6 +47,7 @@ from .const import (
     SUBSCRIBE_COOLDOWN,
 )
 from .device_trigger import async_fire_triggers, async_setup_triggers_for_entry
+from .utils import IidTuple, unique_id_to_iids
 
 RETRY_INTERVAL = 60  # seconds
 MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE = 3
@@ -329,10 +331,17 @@ class HKDevice:
         self.config_entry.async_on_unload(
             async_track_time_interval(
                 self.hass,
-                self.async_request_update,
+                self._async_schedule_update,
                 self.pairing.poll_interval,
                 name=f"HomeKit Device {self.unique_id} availability check poll",
             )
+        )
+
+    @callback
+    def _async_schedule_update(self, now: datetime) -> None:
+        """Schedule an update."""
+        self.hass.async_create_task(
+            self._debounced_update.async_call(), eager_start=True
         )
 
     async def async_add_new_entities(self) -> None:
@@ -514,6 +523,58 @@ class HKDevice:
             device_registry.async_update_device(device.id, new_identifiers=identifiers)
 
     @callback
+    def async_reap_stale_entity_registry_entries(self) -> None:
+        """Delete entity registry entities for removed characteristics, services and accessories."""
+        _LOGGER.debug(
+            "Removing stale entity registry entries for pairing %s",
+            self.unique_id,
+        )
+
+        reg = er.async_get(self.hass)
+
+        # For the current config entry only, visit all registry entity entries
+        # Build a set of (unique_id, aid, sid, iid)
+        # For services, (unique_id, aid, sid, None)
+        # For accessories, (unique_id, aid, None, None)
+        entries = er.async_entries_for_config_entry(reg, self.config_entry.entry_id)
+        existing_entities = {
+            iids: entry.entity_id
+            for entry in entries
+            if (iids := unique_id_to_iids(entry.unique_id))
+        }
+
+        # Process current entity map and produce a similar set
+        current_unique_id: set[IidTuple] = set()
+        for accessory in self.entity_map.accessories:
+            current_unique_id.add((accessory.aid, None, None))
+
+            for service in accessory.services:
+                current_unique_id.add((accessory.aid, service.iid, None))
+
+                for char in service.characteristics:
+                    if self.pairing.transport != Transport.BLE:
+                        if char.type == CharacteristicsTypes.THREAD_CONTROL_POINT:
+                            continue
+
+                    current_unique_id.add(
+                        (
+                            accessory.aid,
+                            service.iid,
+                            char.iid,
+                        )
+                    )
+
+        # Remove the difference
+        if stale := existing_entities.keys() - current_unique_id:
+            for parts in stale:
+                _LOGGER.debug(
+                    "Removing stale entity registry entry %s for pairing %s",
+                    existing_entities[parts],
+                    self.unique_id,
+                )
+                reg.async_remove(existing_entities[parts])
+
+    @callback
     def async_migrate_ble_unique_id(self) -> None:
         """Config entries from step_bluetooth used incorrect identifier for unique_id."""
         unique_id = normalize_hkid(self.unique_id)
@@ -615,6 +676,8 @@ class HKDevice:
 
         self.async_migrate_ble_unique_id()
 
+        self.async_reap_stale_entity_registry_entries()
+
         self.async_create_devices()
 
         # Load any triggers for this config entry
@@ -630,7 +693,9 @@ class HKDevice:
 
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""
-        self.hass.async_create_task(self.async_update_new_accessories_state())
+        self.hass.async_create_task(
+            self.async_update_new_accessories_state(), eager_start=True
+        )
 
     async def async_update_new_accessories_state(self) -> None:
         """Process a change in the pairings accessories state."""
@@ -758,7 +823,10 @@ class HKDevice:
 
         if to_load:
             await asyncio.gather(
-                *[self.async_load_platform(platform) for platform in to_load]
+                *(
+                    create_eager_task(self.async_load_platform(platform))
+                    for platform in to_load
+                )
             )
 
     @callback

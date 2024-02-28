@@ -218,13 +218,13 @@ async def test_subscribe_trigger_does_not_interfere_with_responses(
 ) -> None:
     """Test that subscribing to a trigger from the websocket API does not interfere with responses."""
     websocket_client = await hass_ws_client()
-    await websocket_client.send_json(
+    await websocket_client.send_json_auto_id(
         {
-            "id": 5,
             "type": "subscribe_trigger",
             "trigger": {"platform": "conversation", "command": ["test sentence"]},
         }
     )
+    await websocket_client.receive_json()
 
     service_response = await hass.services.async_call(
         "conversation",

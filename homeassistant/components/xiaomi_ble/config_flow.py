@@ -1,7 +1,6 @@
 """Config flow for Xiaomi Bluetooth integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import dataclasses
 from typing import Any
@@ -96,7 +95,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_info = await self._async_wait_for_full_advertisement(
                 discovery_info, device
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             # This device might have a really long advertising interval
             # So create a config entry for it, and if we discover it has
             # encryption later, we can do a reauth
@@ -220,7 +219,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovery_info = await self._async_wait_for_full_advertisement(
                     discovery.discovery_info, discovery.device
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # This device might have a really long advertising interval
                 # So create a config entry for it, and if we discover
                 # it has encryption later, we can do a reauth
