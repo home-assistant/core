@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
 import contextlib
 from datetime import timedelta
 import logging
@@ -51,6 +50,7 @@ from .setup import (
     async_set_domains_to_be_loaded,
     async_setup_component,
 )
+from .util.async_ import create_eager_task
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_virtual_env
 
@@ -115,6 +115,7 @@ DEFAULT_INTEGRATIONS = {
     #
     # Integrations providing core functionality:
     "application_credentials",
+    "backup",
     "frontend",
     "hardware",
     "logger",
@@ -148,13 +149,20 @@ DEFAULT_INTEGRATIONS_SUPERVISOR = {
     # These integrations are set up if using the Supervisor
     "hassio",
 }
-DEFAULT_INTEGRATIONS_NON_SUPERVISOR = {
-    # These integrations are set up if not using the Supervisor
-    "backup",
-}
 CRITICAL_INTEGRATIONS = {
     # Recovery mode is activated if these integrations fail to set up
     "frontend",
+}
+
+SETUP_ORDER = {
+    # Load logging as soon as possible
+    "logging": LOGGING_INTEGRATIONS,
+    # Setup frontend
+    "frontend": FRONTEND_INTEGRATIONS,
+    # Setup recorder
+    "recorder": RECORDER_INTEGRATIONS,
+    # Start up debuggers. Start these first in case they want to wait.
+    "debugger": DEBUGGER_INTEGRATIONS,
 }
 
 
@@ -541,8 +549,6 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     # Add domains depending on if the Supervisor is used or not
     if "SUPERVISOR" in os.environ:
         domains.update(DEFAULT_INTEGRATIONS_SUPERVISOR)
-    else:
-        domains.update(DEFAULT_INTEGRATIONS_NON_SUPERVISOR)
 
     return domains
 
@@ -622,7 +628,9 @@ async def async_setup_multi_components(
     domains_not_yet_setup = domains - hass.config.components
     futures = {
         domain: hass.async_create_task(
-            async_setup_component(hass, domain, config), f"setup component {domain}"
+            async_setup_component(hass, domain, config),
+            f"setup component {domain}",
+            eager_start=True,
         )
         for domain in domains_not_yet_setup
     }
@@ -665,7 +673,7 @@ async def _async_resolve_domains_to_setup(
             to_get = old_to_resolve
 
         manifest_deps: set[str] = set()
-        resolve_dependencies_tasks: list[Coroutine[Any, Any, bool]] = []
+        resolve_dependencies_tasks: list[asyncio.Task[bool]] = []
         integrations_to_process: list[loader.Integration] = []
 
         for domain, itg in (await loader.async_get_integrations(hass, to_get)).items():
@@ -677,7 +685,13 @@ async def _async_resolve_domains_to_setup(
             manifest_deps.update(itg.after_dependencies)
             needed_requirements.update(itg.requirements)
             if not itg.all_dependencies_resolved:
-                resolve_dependencies_tasks.append(itg.resolve_dependencies())
+                resolve_dependencies_tasks.append(
+                    create_eager_task(
+                        itg.resolve_dependencies(),
+                        name=f"resolve dependencies {domain}",
+                        loop=hass.loop,
+                    )
+                )
 
         if unseen_deps := manifest_deps - integration_cache.keys():
             # If there are dependencies, try to preload all
@@ -710,6 +724,7 @@ async def _async_resolve_domains_to_setup(
     hass.async_create_background_task(
         requirements.async_load_installed_versions(hass, needed_requirements),
         "check installed requirements",
+        eager_start=True,
     )
     # Start loading translations for all integrations we are going to set up
     # in the background so they are ready when we need them. This avoids a
@@ -724,6 +739,7 @@ async def _async_resolve_domains_to_setup(
     hass.async_create_background_task(
         translation.async_load_integrations(hass, {*BASE_PLATFORMS, *domains_to_setup}),
         "load translations",
+        eager_start=True,
     )
 
     return domains_to_setup, integration_cache
@@ -748,25 +764,10 @@ async def _async_set_up_integrations(
     if "recorder" in domains_to_setup:
         recorder.async_initialize_recorder(hass)
 
-    # Load logging as soon as possible
-    if logging_domains := domains_to_setup & LOGGING_INTEGRATIONS:
-        _LOGGER.info("Setting up logging: %s", logging_domains)
-        await async_setup_multi_components(hass, logging_domains, config)
-
-    # Setup frontend
-    if frontend_domains := domains_to_setup & FRONTEND_INTEGRATIONS:
-        _LOGGER.info("Setting up frontend: %s", frontend_domains)
-        await async_setup_multi_components(hass, frontend_domains, config)
-
-    # Setup recorder
-    if recorder_domains := domains_to_setup & RECORDER_INTEGRATIONS:
-        _LOGGER.info("Setting up recorder: %s", recorder_domains)
-        await async_setup_multi_components(hass, recorder_domains, config)
-
-    # Start up debuggers. Start these first in case they want to wait.
-    if debuggers := domains_to_setup & DEBUGGER_INTEGRATIONS:
-        _LOGGER.debug("Setting up debuggers: %s", debuggers)
-        await async_setup_multi_components(hass, debuggers, config)
+    pre_stage_domains: dict[str, set[str]] = {
+        name: domains_to_setup & domain_group
+        for name, domain_group in SETUP_ORDER.items()
+    }
 
     # calculate what components to setup in what stage
     stage_1_domains: set[str] = set()
@@ -790,14 +791,13 @@ async def _async_set_up_integrations(
 
             deps_promotion.update(dep_itg.all_dependencies)
 
-    stage_2_domains = (
-        domains_to_setup
-        - logging_domains
-        - frontend_domains
-        - recorder_domains
-        - debuggers
-        - stage_1_domains
-    )
+    stage_2_domains = domains_to_setup - stage_1_domains
+
+    for name, domain_group in pre_stage_domains.items():
+        if domain_group:
+            stage_2_domains -= domain_group
+            _LOGGER.info("Setting up %s: %s", name, domain_group)
+            await async_setup_multi_components(hass, domain_group, config)
 
     # Enables after dependencies when setting up stage 1 domains
     async_set_domains_to_be_loaded(hass, stage_1_domains)

@@ -976,7 +976,7 @@ async def test_hardware(onboarded, hass: HomeAssistant) -> None:
         "homeassistant.components.onboarding.async_is_onboarded", return_value=onboarded
     ):
         result1 = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "hardware"}, data=data
+            DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
         )
 
     if onboarded:
@@ -1029,7 +1029,7 @@ async def test_hardware_already_setup(hass: HomeAssistant) -> None:
         },
     }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "hardware"}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
     )
 
     assert result["type"] == FlowResultType.ABORT
@@ -1043,7 +1043,7 @@ async def test_hardware_invalid_data(hass: HomeAssistant, data) -> None:
     """Test onboarding flow -- invalid data."""
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "hardware"}, data=data
+        DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
     )
 
     assert result["type"] == FlowResultType.ABORT
