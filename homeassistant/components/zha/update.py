@@ -200,9 +200,9 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
             raise HomeAssistantError(f"Update was not successful: {result}")
 
         # Clear the state
-        self._attr_installed_version = f"0x{self._latest_firmware.version:08x}"
         self._latest_firmware = None
         self._attr_in_progress = False
+        self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
