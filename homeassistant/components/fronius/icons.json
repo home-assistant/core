@@ -28,15 +28,6 @@
       "energy_reactive_ac_produced": {
         "default": "mdi:lightning-bolt-outline"
       },
-      "power_apparent_phase_1": {
-        "default": "mdi:flash-outline"
-      },
-      "power_apparent_phase_2": {
-        "default": "mdi:flash-outline"
-      },
-      "power_apparent_phase_3": {
-        "default": "mdi:flash-outline"
-      },
       "relative_autonomy": {
         "default": "mdi:home-circle-outline"
       },
