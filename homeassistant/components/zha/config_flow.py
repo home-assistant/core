@@ -21,6 +21,7 @@ from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_ZEROCONF,
     ConfigEntry,
+    ConfigEntryBaseFlow,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -29,7 +30,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowHandler
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
 from homeassistant.util import dt as dt_util
@@ -131,7 +131,7 @@ async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
     return ports
 
 
-class BaseZhaFlow(FlowHandler):
+class BaseZhaFlow(ConfigEntryBaseFlow):
     """Mixin for common ZHA flow steps and forms."""
 
     _hass: HomeAssistant

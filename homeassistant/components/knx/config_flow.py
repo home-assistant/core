@@ -20,13 +20,13 @@ from xknx.secure.keyring import Keyring, XMLInterface
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryBaseFlow,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowHandler
 from homeassistant.helpers import selector
 from homeassistant.helpers.typing import UNDEFINED
 
@@ -101,7 +101,7 @@ _PORT_SELECTOR = vol.All(
 )
 
 
-class KNXCommonFlow(ABC, FlowHandler):
+class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
     """Base class for KNX flows."""
 
     def __init__(self, initial_data: KNXConfigEntryData) -> None:

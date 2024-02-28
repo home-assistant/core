@@ -48,7 +48,7 @@ class ConfirmRepairFlow(RepairsFlow):
         )
 
 
-class RepairsFlowManager(data_entry_flow.FlowManager[data_entry_flow.FlowResult]):
+class RepairsFlowManager(data_entry_flow.BaseFlowManager[data_entry_flow.FlowResult]):
     """Manage repairs flows."""
 
     _flow_result = data_entry_flow.FlowResult
@@ -84,7 +84,7 @@ class RepairsFlowManager(data_entry_flow.FlowManager[data_entry_flow.FlowResult]
         return flow
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
+        self, flow: data_entry_flow.BaseFlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Complete a fix flow."""
         if result.get("type") != data_entry_flow.FlowResultType.ABORT:

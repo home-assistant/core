@@ -35,7 +35,7 @@ DATA_SETUP_FLOW_MGR = "auth_mfa_setup_flow_manager"
 _LOGGER = logging.getLogger(__name__)
 
 
-class MfaFlowManager(data_entry_flow.FlowManager[data_entry_flow.FlowResult]):
+class MfaFlowManager(data_entry_flow.BaseFlowManager[data_entry_flow.FlowResult]):
     """Manage multi factor authentication flows."""
 
     _flow_result = data_entry_flow.FlowResult
@@ -56,7 +56,7 @@ class MfaFlowManager(data_entry_flow.FlowManager[data_entry_flow.FlowResult]):
         return await mfa_module.async_setup_flow(user_id)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
+        self, flow: data_entry_flow.BaseFlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Complete an mfs setup flow."""
         _LOGGER.debug("flow_result: %s", result)

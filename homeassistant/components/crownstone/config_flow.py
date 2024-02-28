@@ -16,13 +16,13 @@ import voluptuous as vol
 from homeassistant.components import usb
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryBaseFlow,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowHandler
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
@@ -42,7 +42,7 @@ CONFIG_FLOW = "config_flow"
 OPTIONS_FLOW = "options_flow"
 
 
-class BaseCrownstoneFlowHandler(FlowHandler):
+class BaseCrownstoneFlowHandler(ConfigEntryBaseFlow):
     """Represent the base flow for Crownstone."""
 
     cloud: CrownstoneCloud

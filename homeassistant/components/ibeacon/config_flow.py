@@ -45,10 +45,10 @@ class IBeaconConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlow(config_entry)
+        return IBeaconOptionsFlow(config_entry)
 
 
-class OptionsFlow(OptionsFlow):
+class IBeaconOptionsFlow(OptionsFlow):
     """Handle options."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:

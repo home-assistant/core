@@ -112,7 +112,7 @@ class AuthManagerFlowManager(data_entry_flow.BaseFlowManager[FlowResult]):
         return await auth_provider.async_login_flow(context)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: FlowResult
+        self, flow: data_entry_flow.BaseFlowHandler, result: FlowResult
     ) -> FlowResult:
         """Return a user as result of login flow."""
         flow = cast(LoginFlow, flow)
