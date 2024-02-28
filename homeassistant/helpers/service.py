@@ -43,6 +43,7 @@ from homeassistant.exceptions import (
     UnknownUser,
 )
 from homeassistant.loader import Integration, async_get_integrations, bind_hass
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
@@ -938,7 +939,7 @@ async def entity_service_call(
         # Context expires if the turn on commands took a long time.
         # Set context again so it's there when we update
         entity.async_set_context(call.context)
-        tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
+        tasks.append(create_eager_task(entity.async_update_ha_state(True)))
 
     if tasks:
         done, pending = await asyncio.wait(tasks)

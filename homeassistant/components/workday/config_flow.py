@@ -1,6 +1,7 @@
 """Adds config flow for Workday integration."""
 from __future__ import annotations
 
+from functools import partial
 from typing import Any
 
 from holidays import HolidayBase, country_holidays, list_supported_countries
@@ -141,17 +142,6 @@ def validate_custom_dates(user_input: dict[str, Any]) -> None:
             raise RemoveDatesError("Incorrect date or name")
 
 
-DATA_SCHEMA_SETUP = vol.Schema(
-    {
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
-        vol.Optional(CONF_COUNTRY): CountrySelector(
-            CountrySelectorConfig(
-                countries=list(list_supported_countries(include_aliases=False)),
-            )
-        ),
-    }
-)
-
 DATA_SCHEMA_OPT = vol.Schema(
     {
         vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS): SelectSelector(
@@ -214,12 +204,25 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the user initial step."""
         errors: dict[str, str] = {}
 
+        supported_countries = await self.hass.async_add_executor_job(
+            partial(list_supported_countries, include_aliases=False)
+        )
+
         if user_input is not None:
             self.data = user_input
             return await self.async_step_options()
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA_SETUP,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+                    vol.Optional(CONF_COUNTRY): CountrySelector(
+                        CountrySelectorConfig(
+                            countries=list(supported_countries),
+                        )
+                    ),
+                }
+            ),
             errors=errors,
         )
 

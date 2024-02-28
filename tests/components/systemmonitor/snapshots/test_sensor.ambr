@@ -123,7 +123,7 @@
   })
 # ---
 # name: test_sensor[System Monitor Last boot - state]
-  '2023-12-30T21:55:38+00:00'
+  '2024-02-24T15:00:00+00:00'
 # ---
 # name: test_sensor[System Monitor Load (15m) - attributes]
   ReadOnlyDict({
