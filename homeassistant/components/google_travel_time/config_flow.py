@@ -196,6 +196,8 @@ class GoogleTravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except InvalidApiKeyException:
                 errors["base"] = "invalid_auth"
+            except TimeoutError:
+                errors["base"] = "timeout_connect"
             except UnknownException:
                 errors["base"] = "cannot_connect"
 

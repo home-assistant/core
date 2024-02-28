@@ -189,8 +189,8 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self._user_schema = None
         self._must_show_form: bool | None = None
-        self._ch_type = None
-        self._pairing_token = None
+        self._ch_type: str | None = None
+        self._pairing_token: str | None = None
         self._data: dict[str, Any] | None = None
         self._apps: dict[str, list] = {}
 
@@ -209,7 +209,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
@@ -297,8 +297,8 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             if await self.hass.async_add_executor_job(
                 _host_is_same, entry.data[CONF_HOST], import_config[CONF_HOST]
             ):
-                updated_options = {}
-                updated_data = {}
+                updated_options: dict[str, Any] = {}
+                updated_data: dict[str, Any] = {}
                 remove_apps = False
 
                 if entry.data[CONF_HOST] != import_config[CONF_HOST]:
@@ -396,10 +396,10 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         Ask user for PIN to complete pairing process.
         """
         errors: dict[str, str] = {}
+        assert self._data
 
         # Start pairing process if it hasn't already started
         if not self._ch_type and not self._pairing_token:
-            assert self._data
             dev = VizioAsync(
                 DEVICE_ID,
                 self._data[CONF_HOST],

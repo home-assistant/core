@@ -9,12 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import ssdp
 from homeassistant.components.ssdp import SsdpServiceInfo
-from homeassistant.config_entries import (
-    SOURCE_IGNORE,
-    ConfigEntryState,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -212,20 +207,12 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="discovery_ignored")
 
             LOGGER.debug("Updating entry: %s", entry.entry_id)
-            self.hass.config_entries.async_update_entry(
+            return self.async_update_reload_and_abort(
                 entry,
                 unique_id=unique_id,
                 data={**entry.data, CONFIG_ENTRY_UDN: discovery_info.ssdp_udn},
+                reason="config_entry_updated",
             )
-            if entry.state == ConfigEntryState.LOADED:
-                # Only reload when entry has state LOADED; when entry has state
-                # SETUP_RETRY, another load is started,
-                # causing the entry to be loaded twice.
-                LOGGER.debug("Reloading entry: %s", entry.entry_id)
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
-            return self.async_abort(reason="config_entry_updated")
 
         # Store discovery.
         self._add_discovery(discovery_info)

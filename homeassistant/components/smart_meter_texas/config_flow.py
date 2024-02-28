@@ -1,5 +1,4 @@
 """Config flow for Smart Meter Texas integration."""
-import asyncio
 import logging
 
 from aiohttp import ClientError
@@ -38,7 +37,7 @@ async def validate_input(hass: HomeAssistant, data):
 
     try:
         await client.authenticate()
-    except (asyncio.TimeoutError, ClientError, SmartMeterTexasAPIError) as error:
+    except (TimeoutError, ClientError, SmartMeterTexasAPIError) as error:
         raise CannotConnect from error
     except SmartMeterTexasAuthError as error:
         raise InvalidAuth(error) from error

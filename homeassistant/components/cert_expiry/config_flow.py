@@ -34,7 +34,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _test_connection(
         self,
         user_input: Mapping[str, Any],
-    ):
+    ) -> bool:
         """Test connection to the server and try to get the certificate."""
         try:
             await get_cert_expiry_timestamp(

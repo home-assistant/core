@@ -1,7 +1,6 @@
 """Adds config flow for Tibber integration."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import aiohttp
@@ -45,7 +44,7 @@ class TibberConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await tibber_connection.update_info()
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 errors[CONF_ACCESS_TOKEN] = ERR_TIMEOUT
             except tibber.InvalidLogin:
                 errors[CONF_ACCESS_TOKEN] = ERR_TOKEN

@@ -590,8 +590,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await async_setup_addon_panel(hass, hassio)
 
     # Setup hardware integration for the detected board type
-    async def _async_setup_hardware_integration(_: datetime | None = None) -> None:
-        """Set up hardaware integration for the detected board type."""
+    @callback
+    def _async_setup_hardware_integration(_: datetime | None = None) -> None:
+        """Set up hardware integration for the detected board type."""
         if (os_info := get_os_info(hass)) is None:
             # os info not yet fetched from supervisor, retry later
             async_call_later(
@@ -614,7 +615,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         _async_setup_hardware_integration, cancel_on_shutdown=True
     )
 
-    await _async_setup_hardware_integration()
+    _async_setup_hardware_integration()
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})
@@ -746,7 +747,7 @@ def async_remove_addons_from_dev_reg(
             dev_reg.async_remove_device(dev.id)
 
 
-class HassioDataUpdateCoordinator(DataUpdateCoordinator):
+class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Class to retrieve Hass.io status."""
 
     def __init__(
@@ -1001,12 +1002,18 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         raise_on_entry_error: bool = False,
     ) -> None:
         """Refresh data."""
-        if not scheduled:
+        if not scheduled and not raise_on_auth_failed:
             # Force refreshing updates for non-scheduled updates
+            # If `raise_on_auth_failed` is set, it means this is
+            # the first refresh and we do not want to delay
+            # startup or cause a timeout so we only refresh the
+            # updates if this is not a scheduled refresh and
+            # we are not doing the first refresh.
             try:
                 await self.hassio.refresh_updates()
             except HassioAPIError as err:
                 _LOGGER.warning("Error on Supervisor API: %s", err)
+
         await super()._async_refresh(
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )

@@ -62,7 +62,7 @@ class EvilGeniusLabsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await validate_input(self.hass, user_input)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             errors["base"] = "timeout"
         except CannotConnect:
             errors["base"] = "cannot_connect"

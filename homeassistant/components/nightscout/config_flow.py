@@ -1,5 +1,4 @@
 """Config flow for Nightscout integration."""
-from asyncio import TimeoutError as AsyncIOTimeoutError
 import logging
 from typing import Any
 
@@ -30,7 +29,7 @@ async def _validate_input(data: dict[str, Any]) -> dict[str, str]:
             await api.get_sgvs()
     except ClientResponseError as error:
         raise InputValidationError("invalid_auth") from error
-    except (ClientError, AsyncIOTimeoutError, OSError) as error:
+    except (ClientError, TimeoutError, OSError) as error:
         raise InputValidationError("cannot_connect") from error
 
     # Return info to be stored in the config entry.

@@ -85,6 +85,17 @@ def _entry_is_complete(
     )
 
 
+def _mac_is_same_with_incorrect_formatting(
+    current_unformatted_mac: str, formatted_mac: str
+) -> bool:
+    """Check if two macs are the same but formatted incorrectly."""
+    current_formatted_mac = format_mac(current_unformatted_mac)
+    return (
+        current_formatted_mac == formatted_mac
+        and current_unformatted_mac != current_formatted_mac
+    )
+
+
 class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
@@ -364,7 +375,10 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             and data.get(CONF_SSDP_MAIN_TV_AGENT_LOCATION)
             != self._ssdp_main_tv_agent_location
         )
-        update_mac = self._mac and not data.get(CONF_MAC)
+        update_mac = self._mac and (
+            not (data_mac := data.get(CONF_MAC))
+            or _mac_is_same_with_incorrect_formatting(data_mac, self._mac)
+        )
         update_model = self._model and not data.get(CONF_MODEL)
         if (
             update_ssdp_rendering_control_location
@@ -473,7 +487,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by dhcp discovery."""
         LOGGER.debug("Samsung device found via DHCP: %s", discovery_info)
-        self._mac = discovery_info.macaddress
+        self._mac = format_mac(discovery_info.macaddress)
         self._host = discovery_info.ip
         self._async_start_discovery_with_mac_address()
         await self._async_set_device_unique_id()
@@ -539,11 +553,10 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             if result == RESULT_SUCCESS:
                 new_data = dict(self._reauth_entry.data)
                 new_data[CONF_TOKEN] = bridge.token
-                self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=new_data
+                return self.async_update_reload_and_abort(
+                    self._reauth_entry,
+                    data=new_data,
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
             if result not in (RESULT_AUTH_MISSING, RESULT_CANNOT_CONNECT):
                 return self.async_abort(reason=result)
 
@@ -580,7 +593,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
                 and (token := await self._authenticator.try_pin(pin))
                 and (session_id := await self._authenticator.get_session_id_and_close())
             ):
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     self._reauth_entry,
                     data={
                         **self._reauth_entry.data,
@@ -588,8 +601,6 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_SESSION_ID: session_id,
                     },
                 )
-                await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
             errors = {"base": RESULT_INVALID_PIN}
 

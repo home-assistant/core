@@ -53,7 +53,6 @@ class AnthemAVR(MediaPlayerEntity):
     _attr_name = None
     _attr_should_poll = False
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
-    _attr_icon = "mdi:audio-video"
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 from typing import TYPE_CHECKING, Any
 
 from aiogithubapi import (
@@ -23,7 +22,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import UnknownFlow
 from homeassistant.helpers.aiohttp_client import (
     SERVER_SOFTWARE,
     async_get_clientsession,
@@ -129,22 +127,10 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
                 assert self._device is not None
                 assert self._login_device is not None
 
-            try:
-                response = await self._device.activation(
-                    device_code=self._login_device.device_code
-                )
-                self._login = response.data
-
-            finally:
-
-                async def _progress():
-                    # If the user closes the dialog the flow will no longer exist and it will raise UnknownFlow
-                    with suppress(UnknownFlow):
-                        await self.hass.config_entries.flow.async_configure(
-                            flow_id=self.flow_id
-                        )
-
-                self.hass.async_create_task(_progress())
+            response = await self._device.activation(
+                device_code=self._login_device.device_code
+            )
+            self._login = response.data
 
         if not self._device:
             self._device = GitHubDeviceAPI(
@@ -179,6 +165,7 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
                 "url": OAUTH_USER_LOGIN,
                 "code": self._login_device.user_code,
             },
+            progress_task=self.login_task,
         )
 
     async def async_step_repositories(
@@ -224,13 +211,6 @@ class GitHubConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
-
-    @callback
-    def async_remove(self) -> None:
-        """Handle remove handler callback."""
-        if self.login_task and not self.login_task.done():
-            # Clean up login task if it's still running
-            self.login_task.cancel()
 
 
 class OptionsFlowHandler(OptionsFlow):

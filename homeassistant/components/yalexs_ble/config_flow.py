@@ -118,13 +118,9 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
                 local_name_is_unique(lock_cfg.local_name)
                 and entry.data.get(CONF_LOCAL_NAME) == lock_cfg.local_name
             ):
-                if hass.config_entries.async_update_entry(
-                    entry, data={**entry.data, **new_data}
-                ):
-                    hass.async_create_task(
-                        hass.config_entries.async_reload(entry.entry_id)
-                    )
-                raise AbortFlow(reason="already_configured")
+                return self.async_update_reload_and_abort(
+                    entry, data={**entry.data, **new_data}, reason="already_configured"
+                )
 
         self._discovery_info = async_find_existing_service_info(
             hass, local_name, address
@@ -214,11 +210,9 @@ class YalexsConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_SLOT],
                 )
             ):
-                self.hass.config_entries.async_update_entry(
+                return self.async_update_reload_and_abort(
                     reauth_entry, data={**reauth_entry.data, **user_input}
                 )
-                await self.hass.config_entries.async_reload(reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_validate",

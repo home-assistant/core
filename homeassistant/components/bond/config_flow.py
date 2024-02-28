@@ -1,7 +1,6 @@
 """Config flow for Bond integration."""
 from __future__ import annotations
 
-import asyncio
 import contextlib
 from http import HTTPStatus
 import logging
@@ -15,7 +14,6 @@ from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -87,7 +85,7 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             if not (token := await async_get_token(self.hass, host)):
                 return
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return
 
         self._discovered[CONF_ACCESS_TOKEN] = token
@@ -105,7 +103,6 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
         host: str = discovery_info.host
         bond_id = name.partition(".")[0]
         await self.async_set_unique_id(bond_id)
-        hass = self.hass
         for entry in self._async_current_entries():
             if entry.unique_id != bond_id:
                 continue
@@ -114,13 +111,9 @@ class BondConfigFlow(ConfigFlow, domain=DOMAIN):
                 token := await async_get_token(self.hass, host)
             ):
                 updates[CONF_ACCESS_TOKEN] = token
-            new_data = {**entry.data, **updates}
-            changed = new_data != dict(entry.data)
-            if changed:
-                hass.config_entries.async_update_entry(entry, data=new_data)
-                entry_id = entry.entry_id
-                hass.async_create_task(hass.config_entries.async_reload(entry_id))
-            raise AbortFlow("already_configured")
+            return self.async_update_reload_and_abort(
+                entry, data={**entry.data, **updates}, reason="already_configured"
+            )
 
         self._discovered = {CONF_HOST: host, CONF_NAME: bond_id}
         await self._async_try_automatic_configure()

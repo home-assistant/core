@@ -127,7 +127,7 @@ class DSMRConnection:
             try:
                 async with asyncio.timeout(30):
                     await protocol.wait_closed()
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Timeout (no data received), close transport and return True (if telegram is empty, will result in CannotCommunicate error)
                 transport.close()
                 await protocol.wait_closed()

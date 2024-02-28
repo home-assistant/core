@@ -57,9 +57,3 @@ class PlumLightpadConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=username, data={CONF_USERNAME: username, CONF_PASSWORD: password}
         )
-
-    async def async_step_import(
-        self, import_config: dict[str, Any] | None
-    ) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)

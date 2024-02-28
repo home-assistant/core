@@ -58,7 +58,7 @@ def async_get_schema(
 
     if show_name:
         schema = {
-            vol.Optional(CONF_NAME, default=defaults.get(CONF_NAME)): str,
+            vol.Required(CONF_NAME, default=defaults.get(CONF_NAME)): str,
             **schema,
         }
 

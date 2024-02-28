@@ -121,7 +121,7 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Invoke when a Viessmann MAC address is discovered on the network."""
         formatted_mac = format_mac(discovery_info.macaddress)
-        _LOGGER.info("Found device with mac %s", formatted_mac)
+        _LOGGER.debug("Found device with mac %s", formatted_mac)
 
         await self.async_set_unique_id(formatted_mac)
         self._abort_if_unique_id_configured()

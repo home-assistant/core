@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from .const import DOMAIN
 from .data import WyomingService
 
-_LOGGER = logging.getLogger()
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -63,6 +63,7 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: hassio.HassioServiceInfo
     ) -> ConfigFlowResult:
         """Handle Supervisor add-on discovery."""
+        _LOGGER.debug("Supervisor discovery info: %s", discovery_info)
         await self.async_set_unique_id(discovery_info.uuid)
         self._abort_if_unique_id_configured()
 
@@ -104,7 +105,7 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        _LOGGER.debug("Discovery info: %s", discovery_info)
+        _LOGGER.debug("Zeroconf discovery info: %s", discovery_info)
         if discovery_info.port is None:
             return self.async_abort(reason="no_port")
 

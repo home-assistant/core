@@ -1,5 +1,4 @@
 """Config flow for Nexia integration."""
-import asyncio
 import logging
 
 import aiohttp
@@ -59,7 +58,7 @@ async def validate_input(hass: HomeAssistant, data):
     )
     try:
         await nexia_home.login()
-    except asyncio.TimeoutError as ex:
+    except TimeoutError as ex:
         _LOGGER.error("Unable to connect to Nexia service: %s", ex)
         raise CannotConnect from ex
     except aiohttp.ClientResponseError as http_ex:

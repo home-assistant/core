@@ -1,4 +1,4 @@
-"""Config flow to configure Motion Blinds using their WLAN API."""
+"""Config flow to configure Motionblinds using their WLAN API."""
 from __future__ import annotations
 
 from typing import Any
@@ -66,12 +66,12 @@ class OptionsFlowHandler(OptionsFlow):
 
 
 class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle a Motion Blinds config flow."""
+    """Handle a Motionblinds config flow."""
 
     VERSION = 1
 
     def __init__(self) -> None:
-        """Initialize the Motion Blinds flow."""
+        """Initialize the Motionblinds flow."""
         self._host: str | None = None
         self._ips: list[str] = []
         self._config_settings = None

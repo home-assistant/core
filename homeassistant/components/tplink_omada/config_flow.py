@@ -9,13 +9,13 @@ from typing import Any, NamedTuple
 from urllib.parse import urlsplit
 
 from aiohttp import CookieJar
+from tplink_omada_client import OmadaClient, OmadaSite
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
     OmadaClientException,
     UnsupportedControllerVersion,
 )
-from tplink_omada_client.omadaclient import OmadaClient, OmadaSite
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -60,7 +60,9 @@ async def create_omada_client(
         is not None
     ):
         # TP-Link API uses cookies for login session, so an unsafe cookie jar is required for IP addresses
-        websession = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+        websession = async_create_clientsession(
+            hass, cookie_jar=CookieJar(unsafe=True), verify_ssl=verify_ssl
+        )
     else:
         websession = async_get_clientsession(hass, verify_ssl=verify_ssl)
 

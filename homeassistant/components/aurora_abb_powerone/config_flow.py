@@ -10,13 +10,12 @@ import serial.tools.list_ports
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS, CONF_PORT
+from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
     DEFAULT_ADDRESS,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,

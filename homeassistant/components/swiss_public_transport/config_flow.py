@@ -30,6 +30,7 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
     """Swiss public transport config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -37,12 +38,10 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
         """Async user step to set up the connection."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(
-                {
-                    CONF_START: user_input[CONF_START],
-                    CONF_DESTINATION: user_input[CONF_DESTINATION],
-                }
+            await self.async_set_unique_id(
+                f"{user_input[CONF_START]} {user_input[CONF_DESTINATION]}"
             )
+            self._abort_if_unique_id_configured()
 
             session = async_get_clientsession(self.hass)
             opendata = OpendataTransport(
@@ -72,12 +71,10 @@ class SwissPublicTransportConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_input: dict[str, Any]) -> ConfigFlowResult:
         """Async import step to set up the connection."""
-        self._async_abort_entries_match(
-            {
-                CONF_START: import_input[CONF_START],
-                CONF_DESTINATION: import_input[CONF_DESTINATION],
-            }
+        await self.async_set_unique_id(
+            f"{import_input[CONF_START]} {import_input[CONF_DESTINATION]}"
         )
+        self._abort_if_unique_id_configured()
 
         session = async_get_clientsession(self.hass)
         opendata = OpendataTransport(

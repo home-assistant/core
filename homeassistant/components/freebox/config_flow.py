@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .const import DOMAIN
-from .router import get_api
+from .router import get_api, get_hosts_list_if_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +68,7 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
 
             # Check permissions
             await fbx.system.get_config()
-            await fbx.lan.get_hosts_list()
+            await get_hosts_list_if_supported(fbx)
 
             # Close connection
             await fbx.close()

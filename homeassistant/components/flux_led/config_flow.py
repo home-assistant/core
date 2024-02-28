@@ -134,9 +134,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
                     ConfigEntryState.NOT_LOADED,
                 )
             ) or entry.state == ConfigEntryState.SETUP_RETRY:
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(entry.entry_id)
-                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
             else:
                 async_dispatcher_send(
                     self.hass,

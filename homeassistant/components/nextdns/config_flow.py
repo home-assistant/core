@@ -42,7 +42,7 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
             except InvalidApiKeyError:
                 errors["base"] = "invalid_api_key"
-            except (ApiError, ClientConnectorError, asyncio.TimeoutError):
+            except (ApiError, ClientConnectorError, TimeoutError):
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
