@@ -5,7 +5,6 @@
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/search",
-  "import_executor": true,
   "integration_type": "system",
   "quality_scale": "internal"
 }

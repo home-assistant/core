@@ -3,7 +3,6 @@
   "name": "System Log",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/system_log",
-  "import_executor": true,
   "integration_type": "system",
   "quality_scale": "internal"
 }

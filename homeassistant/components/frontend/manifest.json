@@ -18,7 +18,6 @@
     "websocket_api"
   ],
   "documentation": "https://www.home-assistant.io/integrations/frontend",
-  "import_executor": true,
   "integration_type": "system",
   "quality_scale": "internal",
   "requirements": ["home-assistant-frontend==20240228.0"]

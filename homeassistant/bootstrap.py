@@ -18,7 +18,14 @@ import voluptuous as vol
 import yarl
 
 from . import config as conf_util, config_entries, core, loader, requirements
-from .components import http
+
+# Pre-import config and lovelace which have no requirements here to avoid
+# loading them at run time and blocking the event loop
+from .components import (
+    config as config_pre_import,  # noqa: F401
+    http,
+    lovelace as lovelace_pre_import,  # noqa: F401
+)
 from .const import (
     FORMAT_DATETIME,
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
