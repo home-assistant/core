@@ -63,6 +63,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import BASE_PLATFORMS, async_setup_component
 from homeassistant.util import location
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
@@ -555,7 +556,7 @@ async def hass(
         # to ensure that they could, and to help track lingering tasks and timers.
         await asyncio.gather(
             *(
-                config_entry.async_unload(hass)
+                create_eager_task(config_entry.async_unload(hass))
                 for config_entry in hass.config_entries.async_entries()
             )
         )
