@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_PORT
-from homeassistant.core import DOMAIN as callback
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_DEFAULT_TRANSITION, DOMAIN
