@@ -28,10 +28,6 @@ REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2024.4"
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
 
 
-# hass.data key for logging information.
-DATA_LOGGING = "logging"
-
-
 class Platform(StrEnum):
     """Available entity platforms."""
 
@@ -1605,6 +1601,11 @@ CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
 HASSIO_USER_NAME = "Supervisor"
 
 SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
+
+
+# hass.data key for logging information.
+DATA_LOGGING = "logging"
+
 
 # Date/Time formats
 FORMAT_DATE: Final = "%Y-%m-%d"
