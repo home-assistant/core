@@ -68,7 +68,7 @@ async def async_setup_entry(
     ):
         entities.extend(
             ComelitHumidifierEntity(
-                coordinator, device, config_entry.entry_id, device_class.value
+                coordinator, device, config_entry.entry_id, device_class
             )
             for device in coordinator.data[CLIMATE].values()
         )
@@ -90,7 +90,7 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         coordinator: ComelitSerialBridge,
         device: ComelitSerialBridgeObject,
         config_entry_entry_id: str,
-        device_class: str,
+        device_class: HumidifierDeviceClass,
     ) -> None:
         """Init light entity."""
         self._api = coordinator.api
@@ -100,12 +100,8 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         # because no serial number or mac is available
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}-{device_class}"
         self._attr_device_info = coordinator.platform_device_info(device, device_class)
-        if device_class == HumidifierDeviceClass.DEHUMIDIFIER.value:
-            self._attr_device_class = HumidifierDeviceClass.DEHUMIDIFIER
-            self._attr_translation_key = "dehumidifier"
-        else:
-            self._attr_device_class = HumidifierDeviceClass.HUMIDIFIER
-            self._attr_translation_key = "humidifier"
+        self._attr_device_class = device_class
+        self._attr_translation_key = device_class.value
 
     @property
     def _humidifier(self) -> list[Any]:
