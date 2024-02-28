@@ -217,7 +217,7 @@ class PermobilSensor(PermobilEntity, SensorEntity):
         description: PermobilSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator=coordinator, description=description)
+        super().__init__(coordinator, description)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
