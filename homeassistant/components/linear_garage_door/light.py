@@ -31,21 +31,18 @@ async def async_setup_entry(
     coordinator: LinearUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     data = coordinator.data
 
-    device_list: list[LinearLightEntity] = []
-
-    for device_id in data:
-        device_list.extend(
-            LinearLightEntity(
-                device_id=device_id,
-                device_name=data[device_id]["name"],
-                subdevice=subdev,
-                config_entry=config_entry,
-                coordinator=coordinator,
-            )
-            for subdev in data[device_id]["subdevices"]
-            if subdev in SUPPORTED_SUBDEVICES
+    async_add_entities(
+        LinearLightEntity(
+            device_id=device_id,
+            device_name=data[device_id]["name"],
+            subdevice=subdev,
+            config_entry=config_entry,
+            coordinator=coordinator,
         )
-    async_add_entities(device_list)
+        for device_id in data
+        for subdev in data[device_id]["subdevices"]
+        if subdev in SUPPORTED_SUBDEVICES
+    )
 
 
 class LinearLightEntity(CoordinatorEntity[LinearUpdateCoordinator], LightEntity):
@@ -70,15 +67,10 @@ class LinearLightEntity(CoordinatorEntity[LinearUpdateCoordinator], LightEntity)
         self._attr_unique_id = f"{device_id}-{subdevice}"
         self._config_entry = config_entry
         self._device_id = device_id
-        self._device_name = device_name
         self._subdevice = subdevice
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info of a light."""
-        return DeviceInfo(
+        self.device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
-            name=self._device_name,
+            name=device_name,
             manufacturer="Linear",
             model="Garage Door Opener",
         )
