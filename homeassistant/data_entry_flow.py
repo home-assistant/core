@@ -878,6 +878,8 @@ class BaseFlowHandler(Generic[_FlowResultT]):
 class FlowHandler(BaseFlowHandler[FlowResult]):
     """Handle a data entry flow."""
 
+    _flow_result = FlowResult
+
 
 # These can be removed if no deprecated constant are in this module anymore
 __getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
