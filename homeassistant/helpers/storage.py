@@ -133,12 +133,16 @@ class Store(Generic[_T]):
         Will ensure that when a call comes in while another one is in progress,
         the second call will wait and return the result of the first call.
         """
-        if self._load_task is None:
-            self._load_task = self.hass.async_create_task(
-                self._async_load(), f"Storage load {self.key}", eager_start=True
-            )
+        if self._load_task:
+            return await self._load_task
 
-        return await self._load_task
+        load_task = self.hass.async_create_task(
+            self._async_load(), f"Storage load {self.key}", eager_start=True
+        )
+        if not load_task.done():
+            # Only set the load task if it didn't complete immediately
+            self._load_task = load_task
+        return await load_task
 
     async def _async_load(self) -> _T | None:
         """Load the data and ensure the task is removed."""
