@@ -429,6 +429,14 @@ async def test_firmware_update_success(
     assert not attrs[ATTR_IN_PROGRESS]
     assert attrs[ATTR_LATEST_VERSION] == attrs[ATTR_INSTALLED_VERSION]
 
+    # If we send a progress notification incorrectly, it won't be handled
+    entity = hass.data[UPDATE_DOMAIN].get_entity(entity_id)
+    entity._update_progress(50, 100, 0.50)
+
+    state = hass.states.get(entity_id)
+    assert not attrs[ATTR_IN_PROGRESS]
+    assert state.state == STATE_OFF
+
 
 async def test_firmware_update_raises(
     hass: HomeAssistant, zha_device_joined_restored, zigpy_device
