@@ -217,7 +217,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         period: int,
     ) -> None:
         """Try to update weather forecast."""
-        with contextlib.suppress(asyncio.TimeoutError):
+        with contextlib.suppress(TimeoutError):
             async with asyncio.timeout(10):
                 await self._update_forecast(forecast_type, period, False)
 

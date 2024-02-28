@@ -426,7 +426,9 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         """Return if accessory is available."""
         return self._available
 
-    async def run(self) -> None:
+    @ha_callback
+    @pyhap_callback  # type: ignore[misc]
+    def run(self) -> None:
         """Handle accessory driver started event."""
         if state := self.hass.states.get(self.entity_id):
             self.async_update_state_callback(state)
@@ -608,7 +610,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self.hass.async_create_task(
             self.hass.services.async_call(
                 domain, service, service_data, context=context
-            )
+            ),
+            eager_start=True,
         )
 
     @ha_callback

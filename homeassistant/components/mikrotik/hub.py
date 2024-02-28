@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-import socket
 import ssl
 from typing import Any
 
@@ -227,7 +226,7 @@ class MikrotikData:
         except (
             librouteros.exceptions.ConnectionClosed,
             OSError,
-            socket.timeout,
+            TimeoutError,
         ) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
             # try to reconnect
@@ -243,7 +242,7 @@ class MikrotikData:
             return []
 
 
-class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
+class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Mikrotik Hub Object."""
 
     def __init__(
@@ -330,7 +329,7 @@ def get_api(entry: dict[str, Any]) -> librouteros.Api:
     except (
         librouteros.exceptions.LibRouterosError,
         OSError,
-        socket.timeout,
+        TimeoutError,
     ) as api_error:
         _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)
         if "invalid user name or password" in str(api_error):
