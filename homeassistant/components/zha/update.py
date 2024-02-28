@@ -167,8 +167,8 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
         if self._attr_in_progress is False:
             return
 
-        # Remap progress to 1-100 to avoid 0
-        self._attr_in_progress = int(math.ceil(progress))
+        # Remap progress to 2-100 to avoid 0 and 1
+        self._attr_in_progress = int(math.ceil(2 + 98 * progress / 100))
         self.async_write_ha_state()
 
     async def async_install(
