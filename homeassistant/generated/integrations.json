@@ -610,6 +610,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "bedrock_agent": {
+      "name": "Amazon Bedrock Agent",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "beewi_smartclim": {
       "name": "BeeWi SmartClim BLE sensor",
       "integration_type": "hub",

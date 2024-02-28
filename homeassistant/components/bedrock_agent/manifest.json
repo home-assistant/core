@@ -1,0 +1,13 @@
+{
+  "domain": "bedrock_agent",
+  "name": "Amazon Bedrock Agent",
+  "codeowners": ["@paul-enno"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/bedrock_agent",
+  "homekit": {},
+  "iot_class": "cloud_push",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
