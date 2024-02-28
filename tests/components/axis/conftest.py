@@ -99,7 +99,9 @@ def options_fixture(request):
 
 
 @pytest.fixture(name="mock_vapix_requests")
-def default_request_fixture(respx_mock):
+def default_request_fixture(
+    respx_mock, port_management_payload, param_properties_payload, param_ports_payload
+):
     """Mock default Vapix requests responses."""
 
     def __mock_default_requests(host):
@@ -113,7 +115,7 @@ def default_request_fixture(respx_mock):
             json=BASIC_DEVICE_INFO_RESPONSE,
         )
         respx.post(f"{path}/axis-cgi/io/portmanagement.cgi").respond(
-            json=PORT_MANAGEMENT_RESPONSE,
+            json=port_management_payload,
         )
         respx.post(f"{path}/axis-cgi/mqtt/client.cgi").respond(
             json=MQTT_CLIENT_RESPONSE,
@@ -124,38 +126,58 @@ def default_request_fixture(respx_mock):
         respx.post(f"{path}/axis-cgi/viewarea/info.cgi").respond(
             json=VIEW_AREAS_RESPONSE
         )
-        respx.get(f"{path}/axis-cgi/param.cgi?action=list&group=root.Brand").respond(
+        respx.post(
+            f"{path}/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.Brand"},
+        ).respond(
             text=BRAND_RESPONSE,
             headers={"Content-Type": "text/plain"},
         )
-        respx.get(f"{path}/axis-cgi/param.cgi?action=list&group=root.Image").respond(
+        respx.post(
+            f"{path}/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.Image"},
+        ).respond(
             text=IMAGE_RESPONSE,
             headers={"Content-Type": "text/plain"},
         )
-        respx.get(f"{path}/axis-cgi/param.cgi?action=list&group=root.Input").respond(
-            text=PORTS_RESPONSE,
-            headers={"Content-Type": "text/plain"},
-        )
-        respx.get(f"{path}/axis-cgi/param.cgi?action=list&group=root.IOPort").respond(
-            text=PORTS_RESPONSE,
-            headers={"Content-Type": "text/plain"},
-        )
-        respx.get(f"{path}/axis-cgi/param.cgi?action=list&group=root.Output").respond(
-            text=PORTS_RESPONSE,
-            headers={"Content-Type": "text/plain"},
-        )
-        respx.get(
-            f"{path}/axis-cgi/param.cgi?action=list&group=root.Properties"
+        respx.post(
+            f"{path}/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.Input"},
         ).respond(
-            text=PROPERTIES_RESPONSE,
+            text=PORTS_RESPONSE,
             headers={"Content-Type": "text/plain"},
         )
-        respx.get(f"{path}/axis-cgi/param.cgi?action=list&group=root.PTZ").respond(
+        respx.post(
+            f"{path}/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.IOPort"},
+        ).respond(
+            text=param_ports_payload,
+            headers={"Content-Type": "text/plain"},
+        )
+        respx.post(
+            f"{path}/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.Output"},
+        ).respond(
+            text=PORTS_RESPONSE,
+            headers={"Content-Type": "text/plain"},
+        )
+        respx.post(
+            f"{path}/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.Properties"},
+        ).respond(
+            text=param_properties_payload,
+            headers={"Content-Type": "text/plain"},
+        )
+        respx.post(
+            f"{path}/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.PTZ"},
+        ).respond(
             text=PTZ_RESPONSE,
             headers={"Content-Type": "text/plain"},
         )
-        respx.get(
-            f"{path}/axis-cgi/param.cgi?action=list&group=root.StreamProfile"
+        respx.post(
+            f"{path}/axis-cgi/param.cgi",
+            data={"action": "list", "group": "root.StreamProfile"},
         ).respond(
             text=STREAM_PROFILES_RESPONSE,
             headers={"Content-Type": "text/plain"},
@@ -182,6 +204,24 @@ def api_discovery_fixture(api_discovery_items):
     if api_discovery_items:
         data["data"]["apiList"].append(api_discovery_items)
     respx.post(f"http://{DEFAULT_HOST}:80/axis-cgi/apidiscovery.cgi").respond(json=data)
+
+
+@pytest.fixture(name="port_management_payload")
+def io_port_management_data_fixture():
+    """Property parameter data."""
+    return PORT_MANAGEMENT_RESPONSE
+
+
+@pytest.fixture(name="param_properties_payload")
+def param_properties_data_fixture():
+    """Property parameter data."""
+    return PROPERTIES_RESPONSE
+
+
+@pytest.fixture(name="param_ports_payload")
+def param_ports_data_fixture():
+    """Property parameter data."""
+    return PORTS_RESPONSE
 
 
 @pytest.fixture(name="setup_default_vapix_requests")
