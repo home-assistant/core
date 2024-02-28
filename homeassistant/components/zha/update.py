@@ -43,9 +43,6 @@ CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.UPDATE
 )
 
-# don't let homeassistant check for updates button hammer the zigbee network
-PARALLEL_UPDATES = 1
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
