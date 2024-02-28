@@ -28,7 +28,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 
-from . import init_integration, client_update
+from . import client_update, init_integration
 
 from tests.common import MockConfigEntry
 from tests.components.climate import common

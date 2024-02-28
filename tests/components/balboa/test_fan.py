@@ -1,19 +1,19 @@
 """Tests of the pump fan entity of the balboa integration."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 from pybalboa import SpaControl
 from pybalboa.enums import OffLowHighState, UnknownState
+import pytest
 
 from homeassistant.components.fan import ATTR_PERCENTAGE
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from tests.components.fan import common
+from . import client_update, init_integration
 
-from . import init_integration, client_update
+from tests.components.fan import common
 
 ENTITY_FAN = "fan.fakespa_pump_1"
 
@@ -33,12 +33,10 @@ def mock_pump(client: MagicMock):
     pump.options = list(OffLowHighState)
     client.pumps.append(pump)
 
-    yield pump
+    return pump
 
 
-async def test_pump(
-    hass: HomeAssistant, client: MagicMock, mock_pump
-) -> None:
+async def test_pump(hass: HomeAssistant, client: MagicMock, mock_pump) -> None:
     """Test spa pump."""
     await init_integration(hass)
 
