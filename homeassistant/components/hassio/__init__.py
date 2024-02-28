@@ -41,6 +41,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import now
 
@@ -283,6 +284,7 @@ def hostname_from_addon_slug(addon_slug: str) -> str:
 
 
 @callback
+@bind_hass
 def get_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return generic information from Supervisor.
 
@@ -292,6 +294,7 @@ def get_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
+@bind_hass
 def get_host_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return generic host information.
 
@@ -301,6 +304,7 @@ def get_host_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
+@bind_hass
 def get_store(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return store information.
 
@@ -310,6 +314,7 @@ def get_store(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
+@bind_hass
 def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return Supervisor information.
 
@@ -319,6 +324,7 @@ def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
+@bind_hass
 def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any]] | None:
     """Return Addons info.
 
@@ -328,6 +334,7 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any]] | None:
 
 
 @callback
+@bind_hass
 def get_addons_stats(hass: HomeAssistant) -> dict[str, Any]:
     """Return Addons stats.
 
@@ -337,6 +344,7 @@ def get_addons_stats(hass: HomeAssistant) -> dict[str, Any]:
 
 
 @callback
+@bind_hass
 def get_core_stats(hass: HomeAssistant) -> dict[str, Any]:
     """Return core stats.
 
@@ -346,6 +354,7 @@ def get_core_stats(hass: HomeAssistant) -> dict[str, Any]:
 
 
 @callback
+@bind_hass
 def get_supervisor_stats(hass: HomeAssistant) -> dict[str, Any]:
     """Return supervisor stats.
 
@@ -355,6 +364,7 @@ def get_supervisor_stats(hass: HomeAssistant) -> dict[str, Any]:
 
 
 @callback
+@bind_hass
 def get_addons_changelogs(hass: HomeAssistant):
     """Return Addons changelogs.
 
@@ -364,6 +374,7 @@ def get_addons_changelogs(hass: HomeAssistant):
 
 
 @callback
+@bind_hass
 def get_os_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return OS information.
 
@@ -373,6 +384,7 @@ def get_os_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
+@bind_hass
 def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return Home Assistant Core information from Supervisor.
 
@@ -382,6 +394,7 @@ def get_core_info(hass: HomeAssistant) -> dict[str, Any] | None:
 
 
 @callback
+@bind_hass
 def get_issues_info(hass: HomeAssistant) -> SupervisorIssues | None:
     """Return Supervisor issues info.
 
@@ -391,6 +404,7 @@ def get_issues_info(hass: HomeAssistant) -> SupervisorIssues | None:
 
 
 @callback
+@bind_hass
 def is_hassio(hass: HomeAssistant) -> bool:
     """Return true if Hass.io is loaded.
 

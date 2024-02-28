@@ -10,6 +10,7 @@ from typing import Any
 
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
+from homeassistant.loader import bind_hass
 from homeassistant.util.package import is_docker_env, is_virtual_env
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,13 +27,10 @@ def is_official_image() -> bool:
 cached_get_user = cache(getuser)
 
 
+@bind_hass
 async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     """Return info about the system."""
-    # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import hassio
-
-    is_hassio = hassio.is_hassio(hass)
+    is_hassio = hass.components.hassio.is_hassio()
 
     info_object = {
         "installation_type": "Unknown",
@@ -70,11 +68,11 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
 
     # Enrich with Supervisor information
     if is_hassio:
-        if not (info := hassio.get_info(hass)):
+        if not (info := hass.components.hassio.get_info()):
             _LOGGER.warning("No Home Assistant Supervisor info available")
             info = {}
 
-        host = hassio.get_host_info(hass) or {}
+        host = hass.components.hassio.get_host_info() or {}
         info_object["supervisor"] = info.get("supervisor")
         info_object["host_os"] = host.get("operating_system")
         info_object["docker_version"] = info.get("docker")
