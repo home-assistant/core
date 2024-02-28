@@ -162,6 +162,10 @@ class ZHAFirmwareUpdateEntity(ZhaEntity, CoordinatorEntity, UpdateEntity):
     @callback
     def _update_progress(self, current: int, total: int, progress: float) -> None:
         """Update install progress on event."""
+        # If we are not supposed to be updating, do nothing
+        if self._attr_in_progress is False:
+            return
+
         self._attr_in_progress = int(progress)
         self.async_write_ha_state()
 
