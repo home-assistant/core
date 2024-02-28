@@ -98,13 +98,13 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}-{device_class}"
-        self._attr_name = f"{device_class.capitalize()}"
         self._attr_device_info = coordinator.platform_device_info(device, device_class)
-        self._attr_device_class = (
-            HumidifierDeviceClass.DEHUMIDIFIER
-            if device_class == HumidifierDeviceClass.DEHUMIDIFIER.value
-            else HumidifierDeviceClass.HUMIDIFIER
-        )
+        if device_class == HumidifierDeviceClass.DEHUMIDIFIER.value:
+            self._attr_device_class = HumidifierDeviceClass.DEHUMIDIFIER
+            self._attr_translation_key = "dehumidifier"
+        else:
+            self._attr_device_class = HumidifierDeviceClass.HUMIDIFIER
+            self._attr_translation_key = "humidifier"
 
     @property
     def _humidifier(self) -> list[Any]:

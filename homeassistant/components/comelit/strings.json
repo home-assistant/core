@@ -46,6 +46,12 @@
           "rest": "Rest",
           "sabotated": "Sabotated"
         }
+      },
+      "humidifier": {
+        "name": "Humidifier"
+      },
+      "dehumidifier": {
+        "name": "Dehumidifier"
       }
     }
   }
