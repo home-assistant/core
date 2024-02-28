@@ -50,6 +50,7 @@ class BedrockAgent(conversation.AbstractConversationAgent):
     ) -> agent.ConversationResult:
         """Process a sentence."""
         _LOGGER.info("User input")
+        _LOGGER.info(user_input)
         response = intent.IntentResponse(language=user_input.language)
         response.async_set_speech("Test response")
         return agent.ConversationResult(conversation_id=None, response=response)
