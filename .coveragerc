@@ -192,6 +192,7 @@ omit =
     homeassistant/components/comelit/const.py
     homeassistant/components/comelit/cover.py
     homeassistant/components/comelit/coordinator.py
+    homeassistant/components/comelit/humidifier.py
     homeassistant/components/comelit/light.py
     homeassistant/components/comelit/sensor.py
     homeassistant/components/comelit/switch.py
@@ -766,6 +767,7 @@ omit =
     homeassistant/components/microbees/__init__.py
     homeassistant/components/microbees/api.py
     homeassistant/components/microbees/application_credentials.py
+    homeassistant/components/microbees/button.py
     homeassistant/components/microbees/const.py
     homeassistant/components/microbees/coordinator.py
     homeassistant/components/microbees/entity.py

@@ -197,7 +197,7 @@ aiobafi6==0.9.0
 aiobotocore==2.9.1
 
 # homeassistant.components.comelit
-aiocomelit==0.8.3
+aiocomelit==0.9.0
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==0.8.0
@@ -239,7 +239,7 @@ aioguardian==2022.07.0
 aioharmony==0.2.10
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.1.4
+aiohomekit==3.1.5
 
 # homeassistant.components.http
 aiohttp-fast-url-dispatcher==0.3.0
@@ -341,7 +341,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==8.0.2
+aioshelly==8.1.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -365,7 +365,7 @@ aiotankerkoenig==0.4.1
 aiotractive==0.5.6
 
 # homeassistant.components.unifi
-aiounifi==71
+aiounifi==72
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -454,7 +454,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.axis
-axis==48
+axis==49
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -484,7 +484,7 @@ bleak-retry-connector==3.4.0
 bleak==0.21.1
 
 # homeassistant.components.blebox
-blebox-uniapi==2.2.0
+blebox-uniapi==2.2.2
 
 # homeassistant.components.blink
 blinkpy==0.22.6
@@ -1390,7 +1390,7 @@ pyeconet==0.1.22
 pyefergy==22.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.19.0
+pyenphase==1.19.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1655,7 +1655,7 @@ pyserial==3.5
 pysiaalarm==3.1.1
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.3.18
+pysignalclirestapi==0.3.23
 
 # homeassistant.components.sma
 pysma==0.7.3
@@ -2195,7 +2195,7 @@ wiffi==1.1.2
 wled==0.17.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.4
+wolf-comm==0.0.6
 
 # homeassistant.components.wyoming
 wyoming==1.5.3

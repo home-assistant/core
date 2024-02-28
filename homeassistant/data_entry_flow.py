@@ -160,6 +160,7 @@ class FlowResult(TypedDict, total=False):
     result: Any
     step_id: str
     title: str
+    translation_domain: str
     type: FlowResultType
     url: str
 
