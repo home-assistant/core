@@ -62,15 +62,28 @@ async def async_setup_entry(
     coordinator: ComelitSerialBridge = hass.data[DOMAIN][config_entry.entry_id]
 
     entities: list[ComelitHumidifierEntity] = []
-    for device_class in (
-        HumidifierDeviceClass.HUMIDIFIER,
-        HumidifierDeviceClass.DEHUMIDIFIER,
-    ):
-        entities.extend(
+    for device in coordinator.data[CLIMATE].values():
+        entities.append(
             ComelitHumidifierEntity(
-                coordinator, device, config_entry.entry_id, device_class
+                coordinator,
+                device,
+                config_entry.entry_id,
+                active_mode=HumidifierComelitMode.LOWER,
+                active_action=HumidifierAction.DRYING,
+                set_action=HumidifierComelitAction.LOWER,
+                device_class=HumidifierDeviceClass.DEHUMIDIFIER,
             )
-            for device in coordinator.data[CLIMATE].values()
+        )
+        entities.append(
+            ComelitHumidifierEntity(
+                coordinator,
+                device,
+                config_entry.entry_id,
+                active_mode=HumidifierComelitMode.UPPER,
+                active_action=HumidifierAction.HUMIDIFYING,
+                set_action=HumidifierComelitAction.UPPER,
+                device_class=HumidifierDeviceClass.HUMIDIFIER,
+            ),
         )
 
     async_add_entities(entities)
@@ -90,6 +103,9 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         coordinator: ComelitSerialBridge,
         device: ComelitSerialBridgeObject,
         config_entry_entry_id: str,
+        active_mode: HumidifierComelitMode,
+        active_action: HumidifierAction,
+        set_action: HumidifierComelitAction,
         device_class: HumidifierDeviceClass,
     ) -> None:
         """Init light entity."""
@@ -102,6 +118,9 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         self._attr_device_info = coordinator.platform_device_info(device, device_class)
         self._attr_device_class = device_class
         self._attr_translation_key = device_class.value
+        self._active_mode = active_mode
+        self._active_action = active_action
+        self._set_action = set_action
 
     @property
     def _humidifier(self) -> list[Any]:
@@ -128,22 +147,6 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         return self._humidifier[3] == HumidifierComelitMode.AUTO
 
     @property
-    def _is_dehumidifier(self) -> bool:
-        """Return true if device is set as dehumidifier."""
-        return (
-            self._api_mode == HumidifierComelitMode.LOWER
-            and self._attr_device_class == HumidifierDeviceClass.DEHUMIDIFIER
-        )
-
-    @property
-    def _is_humidifier(self) -> bool:
-        """Return true if device is set as humidifier."""
-        return (
-            self._api_mode == HumidifierComelitMode.UPPER
-            and self._attr_device_class == HumidifierDeviceClass.HUMIDIFIER
-        )
-
-    @property
     def target_humidity(self) -> int:
         """Set target humidity."""
         return self._humidifier[4] / 10
@@ -156,7 +159,7 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
     @property
     def is_on(self) -> bool | None:
         """Return true is humidifier is on."""
-        return self._is_dehumidifier or self._is_humidifier
+        return self._api_mode == self._active_mode
 
     @property
     def mode(self) -> str | None:
@@ -170,11 +173,8 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         if self._api_mode == HumidifierComelitMode.OFF:
             return HumidifierAction.OFF
 
-        if self._api_active and self._is_dehumidifier:
-            return HumidifierAction.DRYING
-
-        if self._api_active and self._is_humidifier:
-            return HumidifierAction.HUMIDIFYING
+        if self._api_active and self._api_mode == self._active_mode:
+            return self._active_action
 
         return HumidifierAction.IDLE
 
@@ -201,12 +201,9 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
-        mode = (
-            HumidifierComelitAction.LOWER
-            if self._attr_device_class == HumidifierDeviceClass.DEHUMIDIFIER
-            else HumidifierComelitAction.UPPER
+        await self.coordinator.api.set_humidity_status(
+            self._device.index, self._set_action
         )
-        await self.coordinator.api.set_humidity_status(self._device.index, mode)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
