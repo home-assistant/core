@@ -62,6 +62,12 @@ class FlowManagerIndexView(_BaseFlowManagerView):
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle a POST request."""
+        return await self._post_impl(request, data)
+
+    async def _post_impl(
+        self, request: web.Request, data: dict[str, Any]
+    ) -> web.Response:
+        """Handle a POST request."""
         if isinstance(data["handler"], list):
             handler = tuple(data["handler"])
         else:

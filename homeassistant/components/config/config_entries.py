@@ -146,7 +146,6 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
 
     url = "/api/config/config_entries/flow"
     name = "api:config:config_entries:flow"
-    _data: dict[str, Any] = {}
 
     async def get(self, request: web.Request) -> NoReturn:
         """Not implemented."""
@@ -167,9 +166,14 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle a POST request."""
-        self._data = data
+        return await self._post_impl(request, data)
+
+    async def _post_impl(
+        self, request: web.Request, data: dict[str, Any]
+    ) -> web.Response:
+        """Handle a POST request."""
         try:
-            return await super().post(request)
+            return await super()._post_impl(request, data)
         except DependencyError as exc:
             return web.Response(
                 text=f"Failed dependencies {', '.join(exc.failed_dependencies)}",
@@ -179,7 +183,6 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
         context = super().get_context(data)
-        data = self._data
         context["source"] = config_entries.SOURCE_USER
         if entry_id := data.get("entry_id"):
             context["source"] = config_entries.SOURCE_RECONFIGURE
