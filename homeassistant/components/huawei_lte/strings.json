@@ -309,33 +309,7 @@
       }
     }
   },
-  "issues": {
-    "service_changed_to_button": {
-      "title": "Service changed to a button",
-      "description": "The {service} service is deprecated, use the corresponding {button} button instead."
-    }
-  },
   "services": {
-    "clear_traffic_statistics": {
-      "name": "Clear traffic statistics",
-      "description": "Clears traffic statistics.",
-      "fields": {
-        "url": {
-          "name": "[%key:common::config_flow::data::url%]",
-          "description": "URL of router to clear; optional when only one is configured."
-        }
-      }
-    },
-    "reboot": {
-      "name": "Reboot",
-      "description": "Reboots router.",
-      "fields": {
-        "url": {
-          "name": "[%key:common::config_flow::data::url%]",
-          "description": "URL of router to reboot; optional when only one is configured."
-        }
-      }
-    },
     "resume_integration": {
       "name": "Resume integration",
       "description": "Resumes suspended integration.",

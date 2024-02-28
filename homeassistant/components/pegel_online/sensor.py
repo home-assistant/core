@@ -42,7 +42,6 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         measurement_key="air_temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        icon="mdi:thermometer-lines",
         entity_registry_enabled_default=False,
     ),
     PegelOnlineSensorEntityDescription(
@@ -51,14 +50,12 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         measurement_key="clearance_height",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
-        icon="mdi:bridge",
     ),
     PegelOnlineSensorEntityDescription(
         key="oxygen_level",
         translation_key="oxygen_level",
         measurement_key="oxygen_level",
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:water-opacity",
         entity_registry_enabled_default=False,
     ),
     PegelOnlineSensorEntityDescription(
@@ -74,7 +71,6 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         measurement_key="water_speed",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.SPEED,
-        icon="mdi:waves-arrow-right",
         entity_registry_enabled_default=False,
     ),
     PegelOnlineSensorEntityDescription(
@@ -82,7 +78,6 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         translation_key="water_flow",
         measurement_key="water_flow",
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:waves",
         entity_registry_enabled_default=False,
     ),
     PegelOnlineSensorEntityDescription(
@@ -90,7 +85,6 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         translation_key="water_level",
         measurement_key="water_level",
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:waves-arrow-up",
     ),
     PegelOnlineSensorEntityDescription(
         key="water_temperature",
@@ -98,7 +92,6 @@ SENSORS: tuple[PegelOnlineSensorEntityDescription, ...] = (
         measurement_key="water_temperature",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        icon="mdi:thermometer-water",
         entity_registry_enabled_default=False,
     ),
 )

@@ -38,7 +38,6 @@ UNIT_BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (
     AsekoBinarySensorEntityDescription(
         key="water_flow",
         translation_key="water_flow",
-        icon="mdi:waves-arrow-right",
         value_fn=lambda unit: unit.water_flow,
     ),
     AsekoBinarySensorEntityDescription(

@@ -56,10 +56,10 @@ async def async_setup_entry(
                 unit_of_measurement=UnitOfTemperature.CELSIUS,
                 preset=None,
                 current_temperature=22,
-                fan_mode="On High",
+                fan_mode="on_high",
                 target_humidity=67,
                 current_humidity=54,
-                swing_mode="Off",
+                swing_mode="off",
                 hvac_mode=HVACMode.COOL,
                 hvac_action=HVACAction.COOLING,
                 aux=False,
@@ -75,10 +75,10 @@ async def async_setup_entry(
                 preset="home",
                 preset_modes=["home", "eco", "away"],
                 current_temperature=23,
-                fan_mode="Auto Low",
+                fan_mode="auto_low",
                 target_humidity=None,
                 current_humidity=None,
-                swing_mode="Auto",
+                swing_mode="auto",
                 hvac_mode=HVACMode.HEAT_COOL,
                 hvac_action=None,
                 aux=None,
@@ -97,6 +97,7 @@ class DemoClimate(ClimateEntity):
     _attr_name = None
     _attr_should_poll = False
     _attr_translation_key = "ubercool"
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -137,6 +138,9 @@ class DemoClimate(ClimateEntity):
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
+        self._attr_supported_features |= (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
         self._target_temperature = target_temperature
         self._target_humidity = target_humidity
         self._unit_of_measurement = unit_of_measurement

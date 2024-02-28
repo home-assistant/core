@@ -324,7 +324,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         """Handle child updates."""
         # Delay to ensure that we get updates from all members before updating the group
         assert self._change_listener_debouncer
-        self.hass.create_task(self._change_listener_debouncer.async_call())
+        self._change_listener_debouncer.async_schedule_call()
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal from Home Assistant."""

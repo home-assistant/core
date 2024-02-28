@@ -27,11 +27,11 @@ from .const import DOMAIN
 from .coordinator import RAVEnDataCoordinator
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RAVEnSensorEntityDescription(SensorEntityDescription):
     """A class that describes RAVEn sensor entities."""
 
-    message_key: str | None = None
+    message_key: str
     attribute_keys: list[str] | None = None
 
 

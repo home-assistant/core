@@ -13,9 +13,9 @@ from .coordinator import V2CUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.NUMBER,
 ]
 
 

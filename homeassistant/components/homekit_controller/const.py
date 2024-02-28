@@ -1,5 +1,4 @@
 """Constants for the homekit_controller component."""
-import asyncio
 
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
@@ -56,6 +55,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     ServicesTypes.DOORBELL: "event",
     ServicesTypes.STATELESS_PROGRAMMABLE_SWITCH: "event",
     ServicesTypes.SERVICE_LABEL: "event",
+    ServicesTypes.AIR_PURIFIER: "fan",
 }
 
 CHARACTERISTIC_PLATFORMS = {
@@ -105,10 +105,12 @@ CHARACTERISTIC_PLATFORMS = {
     CharacteristicsTypes.FILTER_LIFE_LEVEL: "sensor",
     CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE: "switch",
     CharacteristicsTypes.TEMPERATURE_UNITS: "select",
+    CharacteristicsTypes.AIR_PURIFIER_STATE_CURRENT: "sensor",
+    CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET: "select",
 }
 
 STARTUP_EXCEPTIONS = (
-    asyncio.TimeoutError,
+    TimeoutError,
     AccessoryNotFoundError,
     EncryptionError,
     AccessoryDisconnectedError,

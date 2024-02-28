@@ -29,6 +29,14 @@ TO_REDACT = {
     "longitude_i",
     # Cloud connectivity info
     "username",
+    # SMART devices
+    "device_id",
+    "hw_id",
+    "fw_id",
+    "oem_id",
+    "ssid",
+    "nickname",
+    "ip",
 }
 
 

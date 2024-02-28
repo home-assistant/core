@@ -188,7 +188,10 @@ async def test_intent_set_mode_tests_feature(hass: HomeAssistant) -> None:
     assert len(mode_calls) == 0
 
 
-async def test_intent_set_unknown_mode(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("available_modes", (["home", "away"], None))
+async def test_intent_set_unknown_mode(
+    hass: HomeAssistant, available_modes: list[str] | None
+) -> None:
     """Test the set mode intent for unsupported mode."""
     hass.states.async_set(
         "humidifier.bedroom_humidifier",
@@ -196,8 +199,8 @@ async def test_intent_set_unknown_mode(hass: HomeAssistant) -> None:
         {
             ATTR_HUMIDITY: 40,
             ATTR_SUPPORTED_FEATURES: 1,
-            ATTR_AVAILABLE_MODES: ["home", "away"],
-            ATTR_MODE: "home",
+            ATTR_AVAILABLE_MODES: available_modes,
+            ATTR_MODE: None,
         },
     )
     mode_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_MODE)

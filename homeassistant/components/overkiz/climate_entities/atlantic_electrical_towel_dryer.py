@@ -45,6 +45,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
     _attr_preset_modes = [*PRESET_MODE_TO_OVERKIZ]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -55,7 +56,11 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
             TEMPERATURE_SENSOR_DEVICE_INDEX
         )
 
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
 
         # Not all AtlanticElectricalTowelDryer models support presets, thus we need to check if the command is available
         if self.executor.has_command(OverkizCommand.SET_TOWEL_DRYER_TEMPORARY_STATE):

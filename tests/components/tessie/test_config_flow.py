@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.tessie.const import DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -132,9 +132,9 @@ async def test_reauth(hass: HomeAssistant, mock_get_state_of_all_vehicles) -> No
 async def test_reauth_errors(
     hass: HomeAssistant, mock_get_state_of_all_vehicles, side_effect, error
 ) -> None:
-    """Test reauth flows that failscript/."""
+    """Test reauth flows that fail."""
 
-    mock_entry = await setup_platform(hass)
+    mock_entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
     mock_get_state_of_all_vehicles.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(

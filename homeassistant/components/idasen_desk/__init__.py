@@ -29,7 +29,7 @@ PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
+class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):  # pylint: disable=hass-enforce-coordinator-module
     """Class to manage updates for the Idasen Desk."""
 
     def __init__(

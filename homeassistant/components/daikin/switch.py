@@ -11,9 +11,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as DAIKIN_DOMAIN, DaikinApi
 
-ZONE_ICON = "mdi:home-circle"
-STREAMER_ICON = "mdi:air-filter"
-TOGGLE_ICON = "mdi:power"
 DAIKIN_ATTR_ADVANCED = "adv"
 DAIKIN_ATTR_STREAMER = "streamer"
 DAIKIN_ATTR_MODE = "mode"
@@ -58,10 +55,10 @@ async def async_setup_entry(
 class DaikinZoneSwitch(SwitchEntity):
     """Representation of a zone."""
 
-    _attr_icon = ZONE_ICON
     _attr_has_entity_name = True
+    _attr_translation_key = "zone"
 
-    def __init__(self, api: DaikinApi, zone_id) -> None:
+    def __init__(self, api: DaikinApi, zone_id: int) -> None:
         """Initialize the zone."""
         self._api = api
         self._zone_id = zone_id
@@ -94,9 +91,9 @@ class DaikinZoneSwitch(SwitchEntity):
 class DaikinStreamerSwitch(SwitchEntity):
     """Streamer state."""
 
-    _attr_icon = STREAMER_ICON
     _attr_name = "Streamer"
     _attr_has_entity_name = True
+    _attr_translation_key = "streamer"
 
     def __init__(self, api: DaikinApi) -> None:
         """Initialize streamer switch."""
@@ -127,8 +124,8 @@ class DaikinStreamerSwitch(SwitchEntity):
 class DaikinToggleSwitch(SwitchEntity):
     """Switch state."""
 
-    _attr_icon = TOGGLE_ICON
     _attr_has_entity_name = True
+    _attr_translation_key = "toggle"
 
     def __init__(self, api: DaikinApi) -> None:
         """Initialize switch."""

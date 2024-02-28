@@ -1,5 +1,4 @@
 """Test the Somfy MyLink config flow."""
-import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -123,7 +122,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.somfy_mylink.config_flow.SomfyMyLinkSynergy.status_info",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -255,7 +254,7 @@ async def test_form_user_already_configured_from_dhcp(hass: HomeAssistant) -> No
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="somfy_eeff",
             ),
         )
@@ -279,7 +278,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbccddeeff",
             hostname="somfy_eeff",
         ),
     )
@@ -294,7 +293,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbccddeeff",
             hostname="somfy_eeff",
         ),
     )

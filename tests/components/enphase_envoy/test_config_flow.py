@@ -4,10 +4,11 @@ from unittest.mock import AsyncMock
 
 from pyenphase import EnvoyAuthenticationError, EnvoyError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.enphase_envoy.const import DOMAIN
+from homeassistant.components.enphase_envoy.const import DOMAIN, PLATFORMS
 from homeassistant.core import HomeAssistant
 
 
@@ -249,26 +250,67 @@ async def test_zeroconf_token_firmware(
     }
 
 
+@pytest.mark.parametrize(
+    "mock_authenticate",
+    [
+        AsyncMock(
+            side_effect=[
+                None,
+                EnvoyAuthenticationError("fail authentication"),
+                None,
+            ]
+        ),
+    ],
+)
 async def test_form_host_already_exists(
     hass: HomeAssistant, config_entry, setup_enphase_envoy
 ) -> None:
-    """Test host already exists."""
+    """Test changing credentials for existing host."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["errors"] == {}
 
+    # existing config
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "test-password"
+
+    # mock failing authentication on first try
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "host": "1.1.1.1",
+            "host": "1.1.1.2",
             "username": "test-username",
-            "password": "test-password",
+            "password": "wrong-password",
         },
     )
-    assert result2["type"] == "abort"
-    assert result2["reason"] == "already_configured"
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+    # still original config after failure
+    assert config_entry.data["host"] == "1.1.1.1"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "test-password"
+
+    # mock successful authentication and update of credentials
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "host": "1.1.1.2",
+            "username": "test-username",
+            "password": "changed-password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result3["type"] == "abort"
+    assert result3["reason"] == "reauth_successful"
+
+    # updated config with new ip and changed pw
+    assert config_entry.data["host"] == "1.1.1.2"
+    assert config_entry.data["username"] == "test-username"
+    assert config_entry.data["password"] == "changed-password"
 
 
 async def test_zeroconf_serial_already_exists(
@@ -361,3 +403,8 @@ async def test_reauth(hass: HomeAssistant, config_entry, setup_enphase_envoy) ->
     )
     assert result2["type"] == "abort"
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_platforms(snapshot: SnapshotAssertion) -> None:
+    """Test if platform list changed and requires more tests."""
+    assert snapshot == PLATFORMS

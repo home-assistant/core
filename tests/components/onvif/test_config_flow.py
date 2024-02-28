@@ -40,18 +40,14 @@ DISCOVERY = [
         config_flow.CONF_NAME: "TestCamera2",
         config_flow.CONF_HOST: "5.6.7.8",
         config_flow.CONF_PORT: PORT,
-        "MAC": "ee:dd:cc:bb:aa",
+        "MAC": "ff:ee:dd:cc:bb:aa",
     },
 ]
 DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
-    hostname="any",
-    ip="5.6.7.8",
-    macaddress=MAC,
+    hostname="any", ip="5.6.7.8", macaddress=MAC.lower().replace(":", "")
 )
 DHCP_DISCOVERY_SAME_IP = dhcp.DhcpServiceInfo(
-    hostname="any",
-    ip="1.2.3.4",
-    macaddress=MAC,
+    hostname="any", ip="1.2.3.4", macaddress=MAC.lower().replace(":", "")
 )
 
 

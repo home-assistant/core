@@ -1,6 +1,7 @@
 """Tests for the Bluetooth integration."""
 
 
+from collections.abc import Iterable
 from contextlib import contextmanager
 import itertools
 import time
@@ -295,7 +296,20 @@ class MockBleakClient(BleakClient):
         return True
 
 
-class FakeScanner(BaseHaScanner):
+class FakeScannerMixin:
+    def get_discovered_device_advertisement_data(
+        self, address: str
+    ) -> tuple[BLEDevice, AdvertisementData] | None:
+        """Return the advertisement data for a discovered device."""
+        return self.discovered_devices_and_advertisement_data.get(address)
+
+    @property
+    def discovered_addresses(self) -> Iterable[str]:
+        """Return an iterable of discovered devices."""
+        return self.discovered_devices_and_advertisement_data
+
+
+class FakeScanner(FakeScannerMixin, BaseHaScanner):
     """Fake scanner."""
 
     @property

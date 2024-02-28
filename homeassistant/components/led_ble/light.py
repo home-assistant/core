@@ -38,7 +38,7 @@ async def async_setup_entry(
     async_add_entities([LEDBLEEntity(data.coordinator, data.device, entry.title)])
 
 
-class LEDBLEEntity(CoordinatorEntity, LightEntity):
+class LEDBLEEntity(CoordinatorEntity[DataUpdateCoordinator[None]], LightEntity):
     """Representation of LEDBLE device."""
 
     _attr_supported_color_modes = {ColorMode.RGB, ColorMode.WHITE}
@@ -47,7 +47,7 @@ class LEDBLEEntity(CoordinatorEntity, LightEntity):
     _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, device: LEDBLE, name: str
+        self, coordinator: DataUpdateCoordinator[None], device: LEDBLE, name: str
     ) -> None:
         """Initialize an ledble light."""
         super().__init__(coordinator)

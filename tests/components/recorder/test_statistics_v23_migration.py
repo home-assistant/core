@@ -28,8 +28,6 @@ from .common import (
 
 from tests.common import get_test_home_assistant
 
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
-
 SCHEMA_VERSION_POSTFIX = "23_with_newer_columns"
 SCHEMA_MODULE = get_schema_module_path(SCHEMA_VERSION_POSTFIX)
 
@@ -169,8 +167,7 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> 
             create_engine_test_for_schema_version_postfix,
             schema_version_postfix=SCHEMA_VERSION_POSTFIX,
         ),
-    ):
-        hass = get_test_home_assistant()
+    ), get_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -195,17 +192,15 @@ def test_delete_duplicates(caplog: pytest.LogCaptureFixture, tmp_path: Path) -> 
                 session.add(recorder.db_schema.Statistics.from_stats(3, stat))
 
         hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+    with get_test_home_assistant() as hass:
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
 
     assert "Deleted 2 duplicated statistics rows" in caplog.text
     assert "Found non identical" not in caplog.text
@@ -349,8 +344,7 @@ def test_delete_duplicates_many(
             create_engine_test_for_schema_version_postfix,
             schema_version_postfix=SCHEMA_VERSION_POSTFIX,
         ),
-    ):
-        hass = get_test_home_assistant()
+    ), get_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -381,17 +375,15 @@ def test_delete_duplicates_many(
                 session.add(recorder.db_schema.Statistics.from_stats(3, stat))
 
         hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+    with get_test_home_assistant() as hass:
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
 
     assert "Deleted 3002 duplicated statistics rows" in caplog.text
     assert "Found non identical" not in caplog.text
@@ -506,8 +498,7 @@ def test_delete_duplicates_non_identical(
             create_engine_test_for_schema_version_postfix,
             schema_version_postfix=SCHEMA_VERSION_POSTFIX,
         ),
-    ):
-        hass = get_test_home_assistant()
+    ), get_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -527,18 +518,16 @@ def test_delete_duplicates_non_identical(
                 session.add(recorder.db_schema.Statistics.from_stats(2, stat))
 
         hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    hass.config.config_dir = tmp_path
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+    with get_test_home_assistant() as hass:
+        hass.config.config_dir = tmp_path
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
 
     assert "Deleted 2 duplicated statistics rows" in caplog.text
     assert "Deleted 1 non identical" in caplog.text
@@ -618,8 +607,7 @@ def test_delete_duplicates_short_term(
             create_engine_test_for_schema_version_postfix,
             schema_version_postfix=SCHEMA_VERSION_POSTFIX,
         ),
-    ):
-        hass = get_test_home_assistant()
+    ), get_test_home_assistant() as hass:
         recorder_helper.async_initialize_recorder(hass)
         setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
         wait_recording_done(hass)
@@ -638,18 +626,16 @@ def test_delete_duplicates_short_term(
             )
 
         hass.stop()
-        dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
 
     # Test that the duplicates are removed during migration from schema 23
-    hass = get_test_home_assistant()
-    hass.config.config_dir = tmp_path
-    recorder_helper.async_initialize_recorder(hass)
-    setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
-    hass.start()
-    wait_recording_done(hass)
-    wait_recording_done(hass)
-    hass.stop()
-    dt_util.DEFAULT_TIME_ZONE = ORIG_TZ
+    with get_test_home_assistant() as hass:
+        hass.config.config_dir = tmp_path
+        recorder_helper.async_initialize_recorder(hass)
+        setup_component(hass, "recorder", {"recorder": {"db_url": dburl}})
+        hass.start()
+        wait_recording_done(hass)
+        wait_recording_done(hass)
+        hass.stop()
 
     assert "duplicated statistics rows" not in caplog.text
     assert "Found non identical" not in caplog.text

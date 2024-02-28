@@ -54,6 +54,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
             self._attr_color_mode = ColorMode.COLOR_TEMP
         elif self.device["hiveType"] == "colourtuneablelight":
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+            self._attr_color_mode = ColorMode.UNKNOWN
 
         self._attr_min_mireds = 153
         self._attr_max_mireds = 370

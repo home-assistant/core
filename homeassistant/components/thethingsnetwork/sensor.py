@@ -136,7 +136,7 @@ class TtnDataStorage:
             async with asyncio.timeout(DEFAULT_TIMEOUT):
                 response = await session.get(self._url, headers=self._headers)
 
-        except (asyncio.TimeoutError, aiohttp.ClientError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while accessing: %s", self._url)
             return None
 

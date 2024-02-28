@@ -41,9 +41,7 @@ class ValloxSwitchEntity(ValloxEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         if (
-            value := self.coordinator.data.get_metric(
-                self.entity_description.metric_key
-            )
+            value := self.coordinator.data.get(self.entity_description.metric_key)
         ) is None:
             return None
         return value == 1
@@ -93,12 +91,12 @@ async def async_setup_entry(
     """Set up the switches."""
 
     data = hass.data[DOMAIN][entry.entry_id]
-    client = data["client"]
-    client.set_settable_address("A_CYC_BYPASS_LOCKED", int)
 
     async_add_entities(
         [
-            ValloxSwitchEntity(data["name"], data["coordinator"], description, client)
+            ValloxSwitchEntity(
+                data["name"], data["coordinator"], description, data["client"]
+            )
             for description in SWITCH_ENTITIES
         ]
     )

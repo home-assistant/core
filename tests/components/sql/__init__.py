@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
+    UnitOfInformation,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger_template_entity import (
@@ -170,10 +171,10 @@ YAML_CONFIG = {
         CONF_NAME: "Get Value",
         CONF_QUERY: "SELECT 5 as value",
         CONF_COLUMN_NAME: "value",
-        CONF_UNIT_OF_MEASUREMENT: "MiB",
+        CONF_UNIT_OF_MEASUREMENT: UnitOfInformation.MEBIBYTES,
         CONF_UNIQUE_ID: "unique_id_12345",
         CONF_VALUE_TEMPLATE: "{{ value }}",
-        CONF_DEVICE_CLASS: SensorDeviceClass.DATA_RATE,
+        CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
         CONF_STATE_CLASS: SensorStateClass.MEASUREMENT,
     }
 }

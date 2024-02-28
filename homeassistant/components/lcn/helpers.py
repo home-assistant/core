@@ -286,7 +286,8 @@ def purge_device_registry(
 
     # Find all devices that are referenced in the entity registry.
     references_entities = {
-        entry.device_id for entry in entity_registry.entities.values()
+        entry.device_id
+        for entry in entity_registry.entities.get_entries_for_config_entry_id(entry_id)
     }
 
     # Find device that references the host.

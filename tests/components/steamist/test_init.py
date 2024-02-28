@@ -1,7 +1,6 @@
 """Tests for the steamist component."""
 from __future__ import annotations
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from discovery30303 import AIODiscovery30303
@@ -60,7 +59,7 @@ async def test_config_entry_retry_later(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.steamist.Steamist.async_get_status",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         await async_setup_component(hass, steamist.DOMAIN, {steamist.DOMAIN: {}})
         await hass.async_block_till_done()

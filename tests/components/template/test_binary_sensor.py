@@ -764,7 +764,7 @@ async def test_no_update_template_match_all(
 ) -> None:
     """Test that we do not update sensors that match on all."""
 
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     await setup.async_setup_component(
         hass,

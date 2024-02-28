@@ -149,7 +149,7 @@ class MjpegCamera(Camera):
                 image = await response.read()
                 return image
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             LOGGER.error("Timeout getting camera image from %s", self.name)
 
         except aiohttp.ClientError as err:
@@ -169,7 +169,7 @@ class MjpegCamera(Camera):
         try:
             if self._still_image_url:
                 # Fallback to MJPEG stream if still image URL is not available
-                with suppress(asyncio.TimeoutError, httpx.HTTPError):
+                with suppress(TimeoutError, httpx.HTTPError):
                     return (
                         await client.get(
                             self._still_image_url, auth=auth, timeout=TIMEOUT
@@ -183,7 +183,7 @@ class MjpegCamera(Camera):
                     stream.aiter_bytes(BUFFER_SIZE)
                 )
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             LOGGER.error("Timeout getting camera image from %s", self.name)
 
         except httpx.HTTPError as err:
@@ -201,7 +201,7 @@ class MjpegCamera(Camera):
             response = web.StreamResponse(headers=stream.headers)
             await response.prepare(request)
             # Stream until we are done or client disconnects
-            with suppress(asyncio.TimeoutError, httpx.HTTPError):
+            with suppress(TimeoutError, httpx.HTTPError):
                 async for chunk in stream.aiter_bytes(BUFFER_SIZE):
                     if not self.hass.is_running:
                         break

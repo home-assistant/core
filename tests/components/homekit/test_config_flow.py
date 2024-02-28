@@ -889,7 +889,7 @@ async def test_options_flow_include_mode_with_cameras(
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
-            "include_domains": ["fan", "vacuum", "climate"],
+            "include_domains": ["climate", "fan", "vacuum"],
             "include_entities": ["camera.native_h264", "camera.transcode_h264"],
         },
         "entity_config": {"camera.native_h264": {"video_codec": "copy"}},
@@ -904,15 +904,15 @@ async def test_options_flow_include_mode_with_cameras(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["data_schema"]({}) == {
-        "domains": ["fan", "vacuum", "climate", "camera"],
+        "domains": ["climate", "fan", "vacuum", "camera"],
         "mode": "bridge",
         "include_exclude_mode": "include",
     }
     schema = result["data_schema"].schema
     assert _get_schema_default(schema, "domains") == [
+        "climate",
         "fan",
         "vacuum",
-        "climate",
         "camera",
     ]
     assert _get_schema_default(schema, "mode") == "bridge"
@@ -921,7 +921,7 @@ async def test_options_flow_include_mode_with_cameras(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "domains": ["fan", "vacuum", "climate", "camera"],
+            "domains": ["climate", "fan", "vacuum", "camera"],
             "include_exclude_mode": "exclude",
         },
     )
@@ -959,11 +959,11 @@ async def test_options_flow_include_mode_with_cameras(
 
     assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        "entity_config": {"camera.native_h264": {}},
+        "entity_config": {},
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old", "camera.excluded"],
-            "include_domains": ["fan", "vacuum", "climate", "camera"],
+            "include_domains": ["climate", "fan", "vacuum", "camera"],
             "include_entities": [],
         },
         "mode": "bridge",
@@ -1025,7 +1025,7 @@ async def test_options_flow_with_camera_audio(
         "filter": {
             "exclude_domains": [],
             "exclude_entities": [],
-            "include_domains": ["fan", "vacuum", "climate"],
+            "include_domains": ["climate", "fan", "vacuum"],
             "include_entities": ["camera.audio", "camera.no_audio"],
         },
         "entity_config": {"camera.audio": {"support_audio": True}},
@@ -1040,15 +1040,15 @@ async def test_options_flow_with_camera_audio(
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["data_schema"]({}) == {
-        "domains": ["fan", "vacuum", "climate", "camera"],
+        "domains": ["climate", "fan", "vacuum", "camera"],
         "mode": "bridge",
         "include_exclude_mode": "include",
     }
     schema = result["data_schema"].schema
     assert _get_schema_default(schema, "domains") == [
+        "climate",
         "fan",
         "vacuum",
-        "climate",
         "camera",
     ]
     assert _get_schema_default(schema, "mode") == "bridge"
@@ -1058,7 +1058,7 @@ async def test_options_flow_with_camera_audio(
         result["flow_id"],
         user_input={
             "include_exclude_mode": "exclude",
-            "domains": ["fan", "vacuum", "climate", "camera"],
+            "domains": ["climate", "fan", "vacuum", "camera"],
         },
     )
 
@@ -1095,11 +1095,11 @@ async def test_options_flow_with_camera_audio(
 
     assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        "entity_config": {"camera.audio": {}},
+        "entity_config": {},
         "filter": {
             "exclude_domains": [],
             "exclude_entities": ["climate.old", "camera.excluded"],
-            "include_domains": ["fan", "vacuum", "climate", "camera"],
+            "include_domains": ["climate", "fan", "vacuum", "camera"],
             "include_entities": [],
         },
         "mode": "bridge",
@@ -1444,7 +1444,7 @@ async def test_options_flow_exclude_mode_skips_category_entities(
 
     # sonos_config_switch.entity_id is a config category entity
     # so it should not be selectable since it will always be excluded
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(vol.error.Invalid):
         await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"entities": [sonos_config_switch.entity_id]},
@@ -1539,7 +1539,7 @@ async def test_options_flow_exclude_mode_skips_hidden_entities(
 
     # sonos_hidden_switch.entity_id is a hidden entity
     # so it should not be selectable since it will always be excluded
-    with pytest.raises(vol.error.MultipleInvalid):
+    with pytest.raises(vol.error.Invalid):
         await hass.config_entries.options.async_configure(
             result2["flow_id"],
             user_input={"entities": [sonos_hidden_switch.entity_id]},

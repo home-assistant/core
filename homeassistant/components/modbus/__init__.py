@@ -133,12 +133,12 @@ from .const import (  # noqa: F401
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
-    duplicate_entity_validator,
+    check_config,
+    check_hvac_target_temp_registers,
     duplicate_fan_mode_validator,
-    duplicate_modbus_validator,
+    hvac_fixedsize_reglist_validator,
     nan_validator,
-    number_validator,
-    scan_interval_validator,
+    register_int_list_validator,
     struct_validator,
 )
 
@@ -188,8 +188,8 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
             ]
         ),
         vol.Optional(CONF_STRUCTURE): cv.string,
-        vol.Optional(CONF_SCALE, default=1): number_validator,
-        vol.Optional(CONF_OFFSET, default=0): number_validator,
+        vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
+        vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
         vol.Optional(CONF_PRECISION): cv.positive_int,
         vol.Optional(
             CONF_SWAP,
@@ -241,10 +241,10 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 CLIMATE_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
         {
-            vol.Required(CONF_TARGET_TEMP): cv.positive_int,
+            vol.Required(CONF_TARGET_TEMP): hvac_fixedsize_reglist_validator,
             vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
-            vol.Optional(CONF_MAX_TEMP, default=35): number_validator,
-            vol.Optional(CONF_MIN_TEMP, default=5): number_validator,
+            vol.Optional(CONF_MAX_TEMP, default=35): vol.Coerce(float),
+            vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(float),
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
@@ -281,7 +281,7 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_FAN_MODE_REGISTER): vol.Maybe(
                 vol.All(
                     {
-                        CONF_ADDRESS: cv.positive_int,
+                        vol.Required(CONF_ADDRESS): register_int_list_validator,
                         CONF_FAN_MODE_VALUES: {
                             vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
                             vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
@@ -298,8 +298,9 @@ CLIMATE_SCHEMA = vol.All(
                     duplicate_fan_mode_validator,
                 ),
             ),
-        }
+        },
     ),
+    check_hvac_target_temp_registers,
 )
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
@@ -344,10 +345,10 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Exclusive(CONF_VIRTUAL_COUNT, "vir_sen_count"): cv.positive_int,
             vol.Exclusive(CONF_SLAVE_COUNT, "vir_sen_count"): cv.positive_int,
-            vol.Optional(CONF_MIN_VALUE): number_validator,
-            vol.Optional(CONF_MAX_VALUE): number_validator,
+            vol.Optional(CONF_MIN_VALUE): vol.Coerce(float),
+            vol.Optional(CONF_MAX_VALUE): vol.Coerce(float),
             vol.Optional(CONF_NAN_VALUE): nan_validator,
-            vol.Optional(CONF_ZERO_SUPPRESS): number_validator,
+            vol.Optional(CONF_ZERO_SUPPRESS): cv.positive_float,
         }
     ),
 )
@@ -417,12 +418,10 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
-            scan_interval_validator,
-            duplicate_entity_validator,
-            duplicate_modbus_validator,
             [
                 vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA),
             ],
+            check_config,
         ),
     },
     extra=vol.ALLOW_EXTRA,

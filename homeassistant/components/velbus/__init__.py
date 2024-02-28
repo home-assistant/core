@@ -211,7 +211,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if os.path.isdir(cache_path):
             await hass.async_add_executor_job(shutil.rmtree, cache_path)
         # set the new version
-        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, version=2)
 
     _LOGGER.debug("Migration to version %s successful", config_entry.version)
     return True

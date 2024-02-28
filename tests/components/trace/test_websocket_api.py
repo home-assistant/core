@@ -426,7 +426,7 @@ async def test_restore_traces(
     hass: HomeAssistant, hass_storage: dict[str, Any], hass_ws_client, domain
 ) -> None:
     """Test restored traces."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     id = 1
 
     def next_id():
@@ -598,7 +598,7 @@ async def test_restore_traces_overflow(
     num_restored_moon_traces,
 ) -> None:
     """Test restored traces are evicted first."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     id = 1
 
     trace_uuids = []
@@ -679,7 +679,7 @@ async def test_restore_traces_late_overflow(
     restored_run_id,
 ) -> None:
     """Test restored traces are evicted first."""
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
     id = 1
 
     trace_uuids = []

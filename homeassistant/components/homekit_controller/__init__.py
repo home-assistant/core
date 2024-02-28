@@ -43,13 +43,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await conn.async_setup()
     except (
-        asyncio.TimeoutError,
+        TimeoutError,
         AccessoryNotFoundError,
         EncryptionError,
         AccessoryDisconnectedError,
     ) as ex:
         del hass.data[KNOWN_DEVICES][conn.unique_id]
-        with contextlib.suppress(asyncio.TimeoutError):
+        with contextlib.suppress(TimeoutError):
             await conn.pairing.close()
         raise ConfigEntryNotReady from ex
 

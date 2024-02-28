@@ -71,9 +71,9 @@ async def test_form_user(hass: HomeAssistant, mock_zeroconf: None) -> None:
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
-        "boschshcpy.session.SHCSession.authenticate"
-    ) as mock_authenticate, patch(
+    ), patch("os.mkdir"), patch(
+        "homeassistant.components.bosch_shc.config_flow.open"
+    ), patch("boschshcpy.session.SHCSession.authenticate") as mock_authenticate, patch(
         "homeassistant.components.bosch_shc.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -219,7 +219,9 @@ async def test_form_user_invalid_auth(hass: HomeAssistant, mock_zeroconf: None) 
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
+    ), patch("os.mkdir"), patch(
+        "homeassistant.components.bosch_shc.config_flow.open"
+    ), patch(
         "boschshcpy.session.SHCSession.authenticate",
         side_effect=SHCAuthenticationError,
     ):
@@ -270,7 +272,9 @@ async def test_form_validate_connection_error(
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
+    ), patch("os.mkdir"), patch(
+        "homeassistant.components.bosch_shc.config_flow.open"
+    ), patch(
         "boschshcpy.session.SHCSession.authenticate",
         side_effect=SHCConnectionError,
     ):
@@ -321,7 +325,9 @@ async def test_form_validate_session_error(
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
+    ), patch("os.mkdir"), patch(
+        "homeassistant.components.bosch_shc.config_flow.open"
+    ), patch(
         "boschshcpy.session.SHCSession.authenticate",
         side_effect=SHCSessionError(""),
     ):
@@ -372,7 +378,9 @@ async def test_form_validate_exception(
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
+    ), patch("os.mkdir"), patch(
+        "homeassistant.components.bosch_shc.config_flow.open"
+    ), patch(
         "boschshcpy.session.SHCSession.authenticate",
         side_effect=Exception,
     ):
@@ -469,7 +477,9 @@ async def test_zeroconf(hass: HomeAssistant, mock_zeroconf: None) -> None:
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
+    ), patch("os.mkdir"), patch(
+        "homeassistant.components.bosch_shc.config_flow.open"
+    ), patch(
         "boschshcpy.session.SHCSession.authenticate",
     ), patch(
         "homeassistant.components.bosch_shc.async_setup_entry",
@@ -614,9 +624,9 @@ async def test_reauth(hass: HomeAssistant, mock_zeroconf: None) -> None:
             "cert": b"content_cert",
             "key": b"content_key",
         },
-    ), patch("os.mkdir"), patch("builtins.open"), patch(
-        "boschshcpy.session.SHCSession.authenticate"
-    ), patch(
+    ), patch("os.mkdir"), patch(
+        "homeassistant.components.bosch_shc.config_flow.open"
+    ), patch("boschshcpy.session.SHCSession.authenticate"), patch(
         "homeassistant.components.bosch_shc.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -641,7 +651,9 @@ async def test_tls_assets_writer(hass: HomeAssistant) -> None:
         "cert": b"content_cert",
         "key": b"content_key",
     }
-    with patch("os.mkdir"), patch("builtins.open", mock_open()) as mocked_file:
+    with patch("os.mkdir"), patch(
+        "homeassistant.components.bosch_shc.config_flow.open", mock_open()
+    ) as mocked_file:
         write_tls_asset(hass, CONF_SHC_CERT, assets["cert"])
         mocked_file.assert_called_with(
             hass.config.path(DOMAIN, CONF_SHC_CERT), "w", encoding="utf8"

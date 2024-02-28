@@ -31,7 +31,7 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
 
     discovery_service = await async_start_discovery_service(hass)
 
-    with suppress(asyncio.TimeoutError):
+    with suppress(TimeoutError):
         async with asyncio.timeout(TIMEOUT_DISCOVERY):
             await controller_ready.wait()
 

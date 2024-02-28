@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = 30
+SCAN_INTERVAL = 300
 
 
 class BlinkUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):

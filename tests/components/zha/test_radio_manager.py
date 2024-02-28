@@ -224,7 +224,7 @@ async def test_migrate_matching_port_config_entry_not_loaded(
         title="Test",
     )
     config_entry.add_to_hass(hass)
-    config_entry.state = config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS)
 
     migration_data = {
         "new_discovery_info": {
@@ -284,7 +284,7 @@ async def test_migrate_matching_port_retry(
         title="Test",
     )
     config_entry.add_to_hass(hass)
-    config_entry.state = config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS)
 
     migration_data = {
         "new_discovery_info": {
@@ -389,7 +389,7 @@ async def test_migrate_initiate_failure(
         title="Test",
     )
     config_entry.add_to_hass(hass)
-    config_entry.state = config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS)
 
     migration_data = {
         "new_discovery_info": {

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.vacuum import (
     STATE_CLEANING,
@@ -15,7 +15,6 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -62,12 +61,12 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya vacuum."""
         entities: list[TuyaVacuumEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if device.category == "sd":
-                entities.append(TuyaVacuumEntity(device, hass_data.device_manager))
+                entities.append(TuyaVacuumEntity(device, hass_data.manager))
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -81,7 +80,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     _battery_level: IntegerTypeData | None = None
     _attr_name = None
 
-    def __init__(self, device: TuyaDevice, device_manager: TuyaDeviceManager) -> None:
+    def __init__(self, device: CustomerDevice, device_manager: Manager) -> None:
         """Init Tuya vacuum."""
         super().__init__(device, device_manager)
 
@@ -93,22 +92,19 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
-        if self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True):
-            self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
-        elif (
-            enum_type := self.find_dpcode(
-                DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        if (
+            self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True)
+            or (
+                enum_type := self.find_dpcode(
+                    DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+                )
             )
-        ) and TUYA_MODE_RETURN_HOME in enum_type.range:
+            and TUYA_MODE_RETURN_HOME in enum_type.range
+        ):
             self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
 
         if self.find_dpcode(DPCode.SEEK, prefer_function=True):
             self._attr_supported_features |= VacuumEntityFeature.LOCATE
-
-        if self.find_dpcode(DPCode.POWER, prefer_function=True):
-            self._attr_supported_features |= (
-                VacuumEntityFeature.TURN_ON | VacuumEntityFeature.TURN_OFF
-            )
 
         if self.find_dpcode(DPCode.POWER_GO, prefer_function=True):
             self._attr_supported_features |= (
@@ -150,34 +146,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if not (status := self.device.status.get(DPCode.STATUS)):
             return None
         return TUYA_STATUS_TO_HA.get(status)
-
-    def turn_on(self, **kwargs: Any) -> None:
-        """Turn the device on."""
-        self._send_command([{"code": DPCode.POWER, "value": True}])
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "service_deprecation_turn_on",
-            breaks_in_ha_version="2024.2.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="service_deprecation_turn_on",
-        )
-
-    def turn_off(self, **kwargs: Any) -> None:
-        """Turn the device off."""
-        self._send_command([{"code": DPCode.POWER, "value": False}])
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            "service_deprecation_turn_off",
-            breaks_in_ha_version="2024.2.0",
-            is_fixable=True,
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="service_deprecation_turn_off",
-        )
 
     def start(self, **kwargs: Any) -> None:
         """Start the device."""

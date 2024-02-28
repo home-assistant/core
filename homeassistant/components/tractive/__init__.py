@@ -129,6 +129,13 @@ async def _generate_trackables(
     if not trackable["device_id"]:
         return None
 
+    if "details" not in trackable:
+        _LOGGER.info(
+            "Tracker %s has no details and will be skipped. This happens for shared trackers",
+            trackable["device_id"],
+        )
+        return None
+
     tracker = client.tracker(trackable["device_id"])
 
     tracker_details, hw_info, pos_report = await asyncio.gather(

@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DATA_DEVICE, DOMAIN
 
-TO_REDACT = {"device_id", "ip_address", "mac_address"}
+TO_REDACT = {"device_id", "device_key", "ip_address", "mac_address"}
 
 
 async def async_get_config_entry_diagnostics(

@@ -1,7 +1,6 @@
 """Test the Sensibo config flow."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 from unittest.mock import patch
 
@@ -60,7 +59,7 @@ async def test_form(hass: HomeAssistant) -> None:
     ("error_message", "p_error"),
     [
         (aiohttp.ClientConnectionError, "cannot_connect"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (AuthenticationError, "invalid_auth"),
         (SensiboError, "cannot_connect"),
     ],
@@ -219,7 +218,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     ("sideeffect", "p_error"),
     [
         (aiohttp.ClientConnectionError, "cannot_connect"),
-        (asyncio.TimeoutError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (AuthenticationError, "invalid_auth"),
         (SensiboError, "cannot_connect"),
     ],

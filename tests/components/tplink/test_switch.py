@@ -20,8 +20,8 @@ from . import (
     _mocked_dimmer,
     _mocked_plug,
     _mocked_strip,
+    _patch_connect,
     _patch_discovery,
-    _patch_single_discovery,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -34,7 +34,7 @@ async def test_plug(hass: HomeAssistant) -> None:
     )
     already_migrated_config_entry.add_to_hass(hass)
     plug = _mocked_plug()
-    with _patch_discovery(device=plug), _patch_single_discovery(device=plug):
+    with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -69,7 +69,7 @@ async def test_led_switch(hass: HomeAssistant, dev, domain: str) -> None:
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
-    with _patch_discovery(device=dev), _patch_single_discovery(device=dev):
+    with _patch_discovery(device=dev), _patch_connect(device=dev):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -100,7 +100,7 @@ async def test_plug_unique_id(hass: HomeAssistant) -> None:
     )
     already_migrated_config_entry.add_to_hass(hass)
     plug = _mocked_plug()
-    with _patch_discovery(device=plug), _patch_single_discovery(device=plug):
+    with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -116,7 +116,7 @@ async def test_plug_update_fails(hass: HomeAssistant) -> None:
     )
     already_migrated_config_entry.add_to_hass(hass)
     plug = _mocked_plug()
-    with _patch_discovery(device=plug), _patch_single_discovery(device=plug):
+    with _patch_discovery(device=plug), _patch_connect(device=plug):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -138,7 +138,7 @@ async def test_strip(hass: HomeAssistant) -> None:
     )
     already_migrated_config_entry.add_to_hass(hass)
     strip = _mocked_strip()
-    with _patch_discovery(device=strip), _patch_single_discovery(device=strip):
+    with _patch_discovery(device=strip), _patch_connect(device=strip):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -186,7 +186,7 @@ async def test_strip_unique_ids(hass: HomeAssistant) -> None:
     )
     already_migrated_config_entry.add_to_hass(hass)
     strip = _mocked_strip()
-    with _patch_discovery(device=strip), _patch_single_discovery(device=strip):
+    with _patch_discovery(device=strip), _patch_connect(device=strip):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 

@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 _DESCRIPTION = BinarySensorEntityDescription(
     key="statflag",
     name="UPS Online Status",
-    icon="mdi:heart",
+    translation_key="online_status",
 )
 # The bit in STATFLAG that indicates the online status of the APC UPS.
 _VALUE_ONLINE_MASK: Final = 0b1000

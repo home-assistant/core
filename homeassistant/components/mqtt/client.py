@@ -216,6 +216,10 @@ def subscribe(
 
     def remove() -> None:
         """Remove listener convert."""
+        # MQTT messages tend to be high volume,
+        # and since they come in via a thread and need to be processed in the event loop,
+        # we want to avoid hass.add_job since most of the time is spent calling
+        # inspect to figure out how to run the callback.
         hass.loop.call_soon_threadsafe(async_remove)
 
     return remove
@@ -413,7 +417,7 @@ class MQTT:
         )
         self._pending_unsubscribes: set[str] = set()  # topic
 
-        if self.hass.state == CoreState.running:
+        if self.hass.state is CoreState.running:
             self._ha_started.set()
         else:
 
@@ -796,6 +800,10 @@ class MQTT:
         self, _mqttc: mqtt.Client, _userdata: None, msg: mqtt.MQTTMessage
     ) -> None:
         """Message received callback."""
+        # MQTT messages tend to be high volume,
+        # and since they come in via a thread and need to be processed in the event loop,
+        # we want to avoid hass.add_job since most of the time is spent calling
+        # inspect to figure out how to run the callback.
         self.loop.call_soon_threadsafe(self._mqtt_handle_message, msg)
 
     @lru_cache(None)  # pylint: disable=method-cache-max-size-none
@@ -810,25 +818,29 @@ class MQTT:
 
     @callback
     def _mqtt_handle_message(self, msg: mqtt.MQTTMessage) -> None:
+        topic = msg.topic
+        # msg.topic is a property that decodes the topic to a string
+        # every time it is accessed. Save the result to avoid
+        # decoding the same topic multiple times.
         _LOGGER.debug(
             "Received%s message on %s (qos=%s): %s",
             " retained" if msg.retain else "",
-            msg.topic,
+            topic,
             msg.qos,
             msg.payload[0:8192],
         )
         timestamp = dt_util.utcnow()
 
-        subscriptions = self._matching_subscriptions(msg.topic)
+        subscriptions = self._matching_subscriptions(topic)
 
         for subscription in subscriptions:
             if msg.retain:
                 retained_topics = self._retained_topics.setdefault(subscription, set())
                 # Skip if the subscription already received a retained message
-                if msg.topic in retained_topics:
+                if topic in retained_topics:
                     continue
                 # Remember the subscription had an initial retained message
-                self._retained_topics[subscription].add(msg.topic)
+                self._retained_topics[subscription].add(topic)
 
             payload: SubscribePayloadType = msg.payload
             if subscription.encoding is not None:
@@ -838,7 +850,7 @@ class MQTT:
                     _LOGGER.warning(
                         "Can't decode payload %s on %s with encoding %s (for %s)",
                         msg.payload[0:8192],
-                        msg.topic,
+                        topic,
                         subscription.encoding,
                         subscription.job,
                     )
@@ -846,7 +858,7 @@ class MQTT:
             self.hass.async_run_hass_job(
                 subscription.job,
                 ReceiveMessage(
-                    msg.topic,
+                    topic,
                     payload,
                     msg.qos,
                     msg.retain,
@@ -909,7 +921,7 @@ class MQTT:
         try:
             async with asyncio.timeout(TIMEOUT_ACK):
                 await self._pending_operations[mid].wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning(
                 "No ACK from MQTT server in %s seconds (mid: %s)", TIMEOUT_ACK, mid
             )

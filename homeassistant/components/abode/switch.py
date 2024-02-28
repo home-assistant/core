@@ -17,8 +17,6 @@ from .const import DOMAIN
 
 DEVICE_TYPES = [CONST.TYPE_SWITCH, CONST.TYPE_VALVE]
 
-ICON = "mdi:robot"
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -63,7 +61,7 @@ class AbodeSwitch(AbodeDevice, SwitchEntity):
 class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     """A switch implementation for Abode automations."""
 
-    _attr_icon = ICON
+    _attr_translation_key = "automation"
 
     async def async_added_to_hass(self) -> None:
         """Set up trigger automation service."""

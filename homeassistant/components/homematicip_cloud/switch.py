@@ -69,16 +69,15 @@ async def async_setup_entry(
         elif isinstance(device, AsyncOpenCollector8Module):
             for channel in range(1, 9):
                 entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
-        elif isinstance(device, AsyncHeatingSwitch2):
-            for channel in range(1, 3):
-                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
-        elif isinstance(device, AsyncMultiIOBox):
-            for channel in range(1, 3):
-                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
-        elif isinstance(device, AsyncPrintedCircuitBoardSwitch2):
-            for channel in range(1, 3):
-                entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
-        elif isinstance(device, AsyncBrandSwitch2):
+        elif isinstance(
+            device,
+            (
+                AsyncBrandSwitch2,
+                AsyncPrintedCircuitBoardSwitch2,
+                AsyncHeatingSwitch2,
+                AsyncMultiIOBox,
+            ),
+        ):
             for channel in range(1, 3):
                 entities.append(HomematicipMultiSwitch(hap, device, channel=channel))
 

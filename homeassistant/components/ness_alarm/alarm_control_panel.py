@@ -100,9 +100,7 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
             self._attr_state = None
         elif arming_state == ArmingState.DISARMED:
             self._attr_state = STATE_ALARM_DISARMED
-        elif arming_state == ArmingState.ARMING:
-            self._attr_state = STATE_ALARM_ARMING
-        elif arming_state == ArmingState.EXIT_DELAY:
+        elif arming_state in (ArmingState.ARMING, ArmingState.EXIT_DELAY):
             self._attr_state = STATE_ALARM_ARMING
         elif arming_state == ArmingState.ARMED:
             self._attr_state = ARMING_MODE_TO_STATE.get(

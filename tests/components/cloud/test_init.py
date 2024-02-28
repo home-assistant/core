@@ -19,7 +19,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockUser
+from tests.common import MockConfigEntry, MockUser
 
 
 async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
@@ -103,8 +103,8 @@ async def test_remote_services(
     assert mock_disconnect.called is False
 
 
-async def test_startup_shutdown_events(hass: HomeAssistant, mock_cloud_fixture) -> None:
-    """Test if the cloud will start on startup event."""
+async def test_shutdown_event(hass: HomeAssistant, mock_cloud_fixture) -> None:
+    """Test if the cloud will stop on shutdown event."""
     with patch("hass_nabucasa.Cloud.stop") as mock_stop:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
@@ -230,6 +230,7 @@ async def test_async_get_or_create_cloudhook(
     """Test async_get_or_create_cloudhook."""
     assert await async_setup_component(hass, "cloud", {"cloud": {}})
     await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
 
     webhook_id = "mock-webhook-id"
     cloudhook_url = "https://cloudhook.nabu.casa/abcdefg"
@@ -262,7 +263,7 @@ async def test_async_get_or_create_cloudhook(
         async_create_cloudhook_mock.assert_not_called()
 
     # Simulate logged out
-    cloud.id_token = None
+    await cloud.logout()
 
     # Not logged in
     with pytest.raises(CloudNotAvailable):
@@ -274,3 +275,18 @@ async def test_async_get_or_create_cloudhook(
     # Not connected
     with pytest.raises(CloudNotConnected):
         await async_get_or_create_cloudhook(hass, webhook_id)
+
+
+async def test_cloud_logout(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+) -> None:
+    """Test cloud setup with existing config entry when user is logged out."""
+    assert cloud.is_logged_in is False
+
+    mock_config_entry = MockConfigEntry(domain=DOMAIN)
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+
+    assert cloud.is_logged_in is False

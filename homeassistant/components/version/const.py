@@ -71,6 +71,7 @@ BOARD_MAP: Final[dict[str, str]] = {
     "ODROID C2": "odroid-c2",
     "ODROID C4": "odroid-c4",
     "ODROID M1": "odroid-m1",
+    "ODROID M1S": "odroid-m1s",
     "ODROID N2": "odroid-n2",
     "ODROID XU4": "odroid-xu4",
     "Generic AArch64": "generic-aarch64",

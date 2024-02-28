@@ -1,13 +1,13 @@
 """Test the TP-Link Omada config flows."""
 from unittest.mock import patch
 
+from tplink_omada_client import OmadaSite
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     LoginFailed,
     OmadaClientException,
     UnsupportedControllerVersion,
 )
-from tplink_omada_client.omadaclient import OmadaSite
 
 from homeassistant import config_entries
 from homeassistant.components.tplink_omada.config_flow import (
@@ -401,7 +401,7 @@ async def test_create_omada_client_with_ip_creates_clientsession(
             hass,
             {
                 "host": "10.10.10.10",
-                "verify_ssl": True,  # Verify is meaningless for IP
+                "verify_ssl": True,
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -412,5 +412,5 @@ async def test_create_omada_client_with_ip_creates_clientsession(
         "https://10.10.10.10", "test-username", "test-password", "ws"
     )
     mock_create_clientsession.assert_called_once_with(
-        hass, cookie_jar=mock_jar.return_value
+        hass, cookie_jar=mock_jar.return_value, verify_ssl=True
     )

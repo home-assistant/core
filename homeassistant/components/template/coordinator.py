@@ -42,7 +42,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
 
     async def async_setup(self, hass_config: ConfigType) -> None:
         """Set up the trigger and create entities."""
-        if self.hass.state == CoreState.running:
+        if self.hass.state is CoreState.running:
             await self._attach_triggers()
         else:
             self._unsub_start = self.hass.bus.async_listen_once(
@@ -74,21 +74,28 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         if start_event is not None:
             self._unsub_start = None
 
+        if self._script:
+            action: Callable = self._handle_triggered_with_script
+        else:
+            action = self._handle_triggered
+
         self._unsub_trigger = await trigger_helper.async_initialize_triggers(
             self.hass,
             self.config[CONF_TRIGGER],
-            self._handle_triggered,
+            action,
             DOMAIN,
             self.name,
             self.logger.log,
             start_event is not None,
         )
 
-    async def _handle_triggered(self, run_variables, context=None):
-        if self._script:
-            script_result = await self._script.async_run(run_variables, context)
-            if script_result:
-                run_variables = script_result.variables
+    async def _handle_triggered_with_script(self, run_variables, context=None):
+        if script_result := await self._script.async_run(run_variables, context):
+            run_variables = script_result.variables
+        self._handle_triggered(run_variables, context)
+
+    @callback
+    def _handle_triggered(self, run_variables, context=None):
         self.async_set_updated_data(
             {"run_variables": run_variables, "context": context}
         )

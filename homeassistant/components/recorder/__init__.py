@@ -12,7 +12,7 @@ from homeassistant.const import (
     EVENT_RECORDER_HOURLY_STATISTICS_GENERATED,  # noqa: F401
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -178,7 +178,8 @@ async def _async_setup_integration_platform(
 ) -> None:
     """Set up a recorder integration platform."""
 
-    async def _process_recorder_platform(
+    @callback
+    def _process_recorder_platform(
         hass: HomeAssistant, domain: str, platform: Any
     ) -> None:
         """Process a recorder platform."""

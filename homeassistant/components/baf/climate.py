@@ -33,10 +33,15 @@ async def async_setup_entry(
 class BAFAutoComfort(BAFEntity, ClimateEntity):
     """BAF climate auto comfort."""
 
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.FAN_ONLY]
     _attr_translation_key = "auto_comfort"
+    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _async_update_attrs(self) -> None:

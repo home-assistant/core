@@ -18,6 +18,7 @@ from tests.common import MockConfigEntry
 HOST = "1.2.3.4"
 PASSWORD = "123456"
 MAC = format_mac("AA:BB:CC:DD:EE:FF")
+DHCP_FORMATTED_MAC = MAC.replace(":", "")
 USERNAME = "admin"
 
 CONF_DHCP_DATA = {
@@ -30,22 +31,22 @@ CONF_DATA = CONF_DHCP_DATA | {CONF_HOST: HOST}
 
 CONF_DHCP_FLOW = dhcp.DhcpServiceInfo(
     ip=HOST,
-    macaddress=MAC,
+    macaddress=DHCP_FORMATTED_MAC,
     hostname="dsp-w215",
 )
 
 CONF_DHCP_FLOW_NEW_IP = dhcp.DhcpServiceInfo(
     ip="5.6.7.8",
-    macaddress=MAC,
+    macaddress=DHCP_FORMATTED_MAC,
     hostname="dsp-w215",
 )
 
 ComponentSetup = Callable[[], Awaitable[None]]
 
 
-def create_entry(hass: HomeAssistant) -> MockConfigEntry:
+def create_entry(hass: HomeAssistant, unique_id: str | None = None) -> MockConfigEntry:
     """Create fixture for adding config entry in Home Assistant."""
-    entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA)
+    entry = MockConfigEntry(domain=DOMAIN, data=CONF_DATA, unique_id=unique_id)
     entry.add_to_hass(hass)
     return entry
 
@@ -59,9 +60,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 @pytest.fixture
 def config_entry_with_uid(hass: HomeAssistant) -> MockConfigEntry:
     """Add config entry with unique ID in Home Assistant."""
-    config_entry = create_entry(hass)
-    config_entry.unique_id = "aa:bb:cc:dd:ee:ff"
-    return config_entry
+    return create_entry(hass, unique_id="aabbccddeeff")
 
 
 @pytest.fixture

@@ -12,11 +12,11 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [
-    Platform.SWITCH,
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.LIGHT,
-    Platform.CLIMATE,
-    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
 ]
 
 

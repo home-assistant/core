@@ -14,6 +14,7 @@ TO_REDACT = {
     "location",
     "ssid",
     "id",
+    "mac",
     "macAddress",
     "parentDeviceUid",
     "qrId",

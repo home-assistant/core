@@ -139,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             async with asyncio.timeout(10):
                 response = await session.get(url)
 
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Failed to get ColorThief image due to HTTPError: %s", err)
             return None
 

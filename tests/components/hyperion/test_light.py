@@ -705,6 +705,7 @@ async def test_setup_entry_no_token_reauth(hass: HomeAssistant) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         assert client.async_client_disconnect.called
         mock_flow_init.assert_called_once_with(
             DOMAIN,
@@ -734,6 +735,7 @@ async def test_setup_entry_bad_token_reauth(hass: HomeAssistant) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         assert client.async_client_disconnect.called
         mock_flow_init.assert_called_once_with(
             DOMAIN,

@@ -33,7 +33,6 @@ IGNORE_VIOLATIONS = {
     "blink",
     "ezviz",
     "hdmi_cec",
-    "juicenet",
     "lupusec",
     "rainbird",
     "slide",

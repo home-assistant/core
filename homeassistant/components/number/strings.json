@@ -148,6 +148,9 @@
     "volume_storage": {
       "name": "[%key:component::sensor::entity_component::volume_storage::name%]"
     },
+    "volume_flow_rate": {
+      "name": "[%key:component::sensor::entity_component::volume_flow_rate::name%]"
+    },
     "water": {
       "name": "[%key:component::sensor::entity_component::water::name%]"
     },

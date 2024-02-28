@@ -75,13 +75,6 @@ class FloSwitch(FloEntity, SwitchEntity):
         super().__init__("shutoff_valve", device)
         self._attr_is_on = device.last_known_valve_state == "open"
 
-    @property
-    def icon(self):
-        """Return the icon to use for the valve."""
-        if self.is_on:
-            return "mdi:valve-open"
-        return "mdi:valve-closed"
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Open the valve."""
         await self._device.api_client.device.open_valve(self._device.id)

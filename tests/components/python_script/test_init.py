@@ -596,3 +596,48 @@ output = f"hello {data.get('name', 'World')}"
             blocking=True,
             return_response=True,
         )
+
+
+async def test_augmented_assignment_operations(hass: HomeAssistant) -> None:
+    """Test that augmented assignment operations work."""
+    source = """
+a = 10
+a += 20
+a *= 5
+a -= 8
+b = "foo"
+b += "bar"
+b *= 2
+c = []
+c += [1, 2, 3]
+c *= 2
+hass.states.set('hello.a', a)
+hass.states.set('hello.b', b)
+hass.states.set('hello.c', c)
+    """
+
+    hass.async_add_executor_job(execute, hass, "aug_assign.py", source, {})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("hello.a").state == str(((10 + 20) * 5) - 8)
+    assert hass.states.get("hello.b").state == ("foo" + "bar") * 2
+    assert hass.states.get("hello.c").state == str([1, 2, 3] * 2)
+
+
+@pytest.mark.parametrize(
+    ("case", "error"),
+    [
+        pytest.param(
+            "d = datetime.date(2024, 1, 1); d += 5",
+            "The '+=' operation is not allowed",
+            id="datetime.date",
+        ),
+    ],
+)
+async def test_prohibited_augmented_assignment_operations(
+    hass: HomeAssistant, case: str, error: str, caplog
+) -> None:
+    """Test that prohibited augmented assignment operations raise an error."""
+    hass.async_add_executor_job(execute, hass, "aug_assign_prohibited.py", case, {})
+    await hass.async_block_till_done()
+    assert error in caplog.text

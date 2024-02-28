@@ -19,7 +19,7 @@ from .errors import (
 
 
 @cache
-def _get_default_ssl_context():
+def _get_default_ssl_context() -> ssl.SSLContext:
     """Return the default SSL context."""
     return ssl.create_default_context()
 
@@ -40,7 +40,7 @@ async def async_get_cert(
             server_hostname=host,
         )
     try:
-        return transport.get_extra_info("peercert")
+        return transport.get_extra_info("peercert")  # type: ignore[no-any-return]
     finally:
         transport.close()
 
@@ -55,7 +55,7 @@ async def get_cert_expiry_timestamp(
         cert = await async_get_cert(hass, hostname, port)
     except socket.gaierror as err:
         raise ResolveFailed(f"Cannot resolve hostname: {hostname}") from err
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise ConnectionTimeout(
             f"Connection timeout with server: {hostname}:{port}"
         ) from err

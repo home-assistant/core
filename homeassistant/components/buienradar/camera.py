@@ -128,7 +128,7 @@ class BuienradarCam(Camera):
                 _LOGGER.debug("HTTP 200 - Last-Modified: %s", last_modified)
 
                 return True
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Failed to fetch image, %s", type(err))
             return False
 

@@ -85,9 +85,10 @@ class VeraSensor(VeraDevice[veraApi.VeraSensor], SensorEntity):
             else:
                 self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
-        elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
-            self._attr_native_value = self.vera_device.light
-        elif self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
+        elif self.vera_device.category in (
+            veraApi.CATEGORY_LIGHT_SENSOR,
+            veraApi.CATEGORY_UV_SENSOR,
+        ):
             self._attr_native_value = self.vera_device.light
         elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             self._attr_native_value = self.vera_device.humidity

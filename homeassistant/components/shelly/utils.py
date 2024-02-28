@@ -22,7 +22,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import singleton
+from homeassistant.helpers import issue_registry as ir, singleton
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     async_get as dr_async_get,
@@ -38,6 +38,7 @@ from .const import (
     DEFAULT_COAP_PORT,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
+    FIRMWARE_UNSUPPORTED_ISSUE_ID,
     GEN1_RELEASE_URL,
     GEN2_RELEASE_URL,
     LOGGER,
@@ -366,6 +367,11 @@ def is_rpc_channel_type_light(config: dict[str, Any], channel: int) -> bool:
     return cast(str, con_types[channel]).lower().startswith("light")
 
 
+def is_rpc_thermostat_internal_actuator(status: dict[str, Any]) -> bool:
+    """Return true if the thermostat uses an internal relay."""
+    return cast(bool, status["sys"].get("relay_in_thermostat", False))
+
+
 def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
     """Return list of input triggers for RPC device."""
     triggers = []
@@ -426,3 +432,33 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
         return None
 
     return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL
+
+
+@callback
+def async_create_issue_unsupported_firmware(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Create a repair issue if the device runs an unsupported firmware."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        FIRMWARE_UNSUPPORTED_ISSUE_ID.format(unique=entry.unique_id),
+        is_fixable=False,
+        is_persistent=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="unsupported_firmware",
+        translation_placeholders={
+            "device_name": entry.title,
+            "ip_address": entry.data["host"],
+        },
+    )
+
+
+def is_rpc_wifi_stations_disabled(
+    config: dict[str, Any], _status: dict[str, Any], key: str
+) -> bool:
+    """Return true if rpc all WiFi stations are disabled."""
+    if config[key]["sta"]["enable"] is True or config[key]["sta1"]["enable"] is True:
+        return False
+
+    return True

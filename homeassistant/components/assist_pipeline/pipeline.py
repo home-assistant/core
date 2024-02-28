@@ -55,10 +55,11 @@ from .const import (
     CONF_DEBUG_RECORDING_DIR,
     DATA_CONFIG,
     DATA_LAST_WAKE_UP,
-    DEFAULT_WAKE_WORD_COOLDOWN,
     DOMAIN,
+    WAKE_WORD_COOLDOWN,
 )
 from .error import (
+    DuplicateWakeUpDetectedError,
     IntentRecognitionError,
     PipelineError,
     PipelineNotFound,
@@ -453,9 +454,6 @@ class WakeWordSettings:
     audio_seconds_to_buffer: float = 0
     """Seconds of audio to buffer before detection and forward to STT."""
 
-    cooldown_seconds: float = DEFAULT_WAKE_WORD_COOLDOWN
-    """Seconds after a wake word detection where other detections are ignored."""
-
 
 @dataclass(frozen=True)
 class AudioSettings:
@@ -742,16 +740,22 @@ class PipelineRun:
             wake_word_output: dict[str, Any] = {}
         else:
             # Avoid duplicate detections by checking cooldown
-            wake_up_key = f"{self.wake_word_entity_id}.{result.wake_word_id}"
-            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(wake_up_key)
+            last_wake_up = self.hass.data[DATA_LAST_WAKE_UP].get(
+                result.wake_word_phrase
+            )
             if last_wake_up is not None:
                 sec_since_last_wake_up = time.monotonic() - last_wake_up
-                if sec_since_last_wake_up < wake_word_settings.cooldown_seconds:
-                    _LOGGER.debug("Duplicate wake word detection occurred")
-                    raise WakeWordDetectionAborted
+                if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
+                    _LOGGER.debug(
+                        "Duplicate wake word detection occurred for %s",
+                        result.wake_word_phrase,
+                    )
+                    raise DuplicateWakeUpDetectedError(result.wake_word_phrase)
 
             # Record last wake up time to block duplicate detections
-            self.hass.data[DATA_LAST_WAKE_UP][wake_up_key] = time.monotonic()
+            self.hass.data[DATA_LAST_WAKE_UP][
+                result.wake_word_phrase
+            ] = time.monotonic()
 
             if result.queued_audio:
                 # Add audio that was pending at detection.
@@ -1308,6 +1312,9 @@ class PipelineInput:
     stt_stream: AsyncIterable[bytes] | None = None
     """Input audio for stt. Required when start_stage = stt."""
 
+    wake_word_phrase: str | None = None
+    """Optional key used to de-duplicate wake-ups for local wake word detection."""
+
     intent_input: str | None = None
     """Input for conversation agent. Required when start_stage = intent."""
 
@@ -1351,6 +1358,25 @@ class PipelineInput:
             if current_stage == PipelineStage.STT:
                 assert self.stt_metadata is not None
                 assert stt_processed_stream is not None
+
+                if self.wake_word_phrase is not None:
+                    # Avoid duplicate wake-ups by checking cooldown
+                    last_wake_up = self.run.hass.data[DATA_LAST_WAKE_UP].get(
+                        self.wake_word_phrase
+                    )
+                    if last_wake_up is not None:
+                        sec_since_last_wake_up = time.monotonic() - last_wake_up
+                        if sec_since_last_wake_up < WAKE_WORD_COOLDOWN:
+                            _LOGGER.debug(
+                                "Speech-to-text cancelled to avoid duplicate wake-up for %s",
+                                self.wake_word_phrase,
+                            )
+                            raise DuplicateWakeUpDetectedError(self.wake_word_phrase)
+
+                    # Record last wake up time to block duplicate detections
+                    self.run.hass.data[DATA_LAST_WAKE_UP][
+                        self.wake_word_phrase
+                    ] = time.monotonic()
 
                 stt_input_stream = stt_processed_stream
 
@@ -1703,7 +1729,7 @@ class PipelineRuns:
                 pipeline_run.abort_wake_word_detection = True
 
 
-@dataclass
+@dataclass(slots=True)
 class DeviceAudioQueue:
     """Audio capture queue for a satellite device."""
 
@@ -1717,6 +1743,14 @@ class DeviceAudioQueue:
     """Flag to be set if audio samples were dropped because the queue was full."""
 
 
+@dataclass(slots=True)
+class AssistDevice:
+    """Assist device."""
+
+    domain: str
+    unique_id_prefix: str
+
+
 class PipelineData:
     """Store and debug data stored in hass.data."""
 
@@ -1724,12 +1758,12 @@ class PipelineData:
         """Initialize."""
         self.pipeline_store = pipeline_store
         self.pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]] = {}
-        self.pipeline_devices: set[str] = set()
+        self.pipeline_devices: dict[str, AssistDevice] = {}
         self.pipeline_runs = PipelineRuns(pipeline_store)
         self.device_audio_queues: dict[str, DeviceAudioQueue] = {}
 
 
-@dataclass
+@dataclass(slots=True)
 class PipelineRunDebug:
     """Debug data for a pipelinerun."""
 

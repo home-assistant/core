@@ -106,7 +106,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         try:
             await self._validate_device(dev_path)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return self.async_abort(reason="timeout_connect")
         except RAVEnConnectionError:
             return self.async_abort(reason="cannot_connect")
@@ -147,7 +147,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             try:
                 await self._validate_device(dev_path)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 errors[CONF_DEVICE] = "timeout_connect"
             except RAVEnConnectionError:
                 errors[CONF_DEVICE] = "cannot_connect"

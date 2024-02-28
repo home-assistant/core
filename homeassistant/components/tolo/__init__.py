@@ -63,7 +63,7 @@ class ToloSaunaData(NamedTuple):
     settings: SettingsInfo
 
 
-class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
+class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):  # pylint: disable=hass-enforce-coordinator-module
     """DataUpdateCoordinator for TOLO Sauna."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -92,7 +92,7 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
         return ToloSaunaData(status, settings)
 
 
-class ToloSaunaCoordinatorEntity(CoordinatorEntity[ToloSaunaUpdateCoordinator]):
+class ToloSaunaCoordinatorEntity(CoordinatorEntity[ToloSaunaUpdateCoordinator]):  # pylint: disable=hass-enforce-coordinator-module
     """CoordinatorEntity for TOLO Sauna."""
 
     _attr_has_entity_name = True

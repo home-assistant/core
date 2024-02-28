@@ -19,7 +19,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
       'friendly_name': 'My water heater Hot water availability',
-      'icon': 'mdi:water-thermometer',
       'options': list([
         'low',
         'medium',

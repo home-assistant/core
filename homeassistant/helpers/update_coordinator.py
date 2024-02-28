@@ -84,6 +84,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.logger = logger
         self.name = name
         self.update_method = update_method
+        self._update_interval_seconds: float | None = None
         self.update_interval = update_interval
         self._shutdown_requested = False
         self.config_entry = config_entries.current_entry.get()
@@ -111,9 +112,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         if entry := self.config_entry:
             job_name += f" {entry.title} {entry.domain} {entry.entry_id}"
         self._job = HassJob(
-            self._handle_refresh_interval,
+            self.__wrap_handle_refresh_interval,
             job_name,
-            job_type=HassJobType.Coroutinefunction,
+            job_type=HassJobType.Callback,
         )
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_shutdown: CALLBACK_TYPE | None = None
@@ -186,7 +187,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._shutdown_requested = True
         self._async_unsub_refresh()
         self._async_unsub_shutdown()
-        await self._debounced_refresh.async_shutdown()
+        self._debounced_refresh.async_shutdown()
 
     @callback
     def _unschedule_refresh(self) -> None:
@@ -212,10 +213,21 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self._unsub_shutdown()
             self._unsub_shutdown = None
 
+    @property
+    def update_interval(self) -> timedelta | None:
+        """Interval between updates."""
+        return self._update_interval
+
+    @update_interval.setter
+    def update_interval(self, value: timedelta | None) -> None:
+        """Set interval between updates."""
+        self._update_interval = value
+        self._update_interval_seconds = value.total_seconds() if value else None
+
     @callback
     def _schedule_refresh(self) -> None:
         """Schedule a refresh."""
-        if self.update_interval is None:
+        if self._update_interval_seconds is None:
             return
 
         if self.config_entry and self.config_entry.pref_disable_polling:
@@ -225,19 +237,25 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         # than the debouncer cooldown, this would cause the debounce to never be called
         self._async_unsub_refresh()
 
-        # We use event.async_call_at because DataUpdateCoordinator does
-        # not need an exact update interval.
-        now = self.hass.loop.time()
+        # We use loop.call_at because DataUpdateCoordinator does
+        # not need an exact update interval which also avoids
+        # calling dt_util.utcnow() on every update.
+        hass = self.hass
+        loop = hass.loop
 
-        next_refresh = int(now) + self._microsecond
-        next_refresh += self.update_interval.total_seconds()
-        self._unsub_refresh = event.async_call_at(
-            self.hass,
-            self._job,
-            next_refresh,
+        next_refresh = (
+            int(loop.time()) + self._microsecond + self._update_interval_seconds
         )
+        self._unsub_refresh = loop.call_at(
+            next_refresh, hass.async_run_hass_job, self._job
+        ).cancel
 
-    async def _handle_refresh_interval(self, _now: datetime) -> None:
+    @callback
+    def __wrap_handle_refresh_interval(self) -> None:
+        """Handle a refresh interval occurrence."""
+        self.hass.async_create_task(self._handle_refresh_interval(), eager_start=True)
+
+    async def _handle_refresh_interval(self, _now: datetime | None = None) -> None:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
         await self._async_refresh(log_failures=True, scheduled=True)
@@ -299,7 +317,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         try:
             self.data = await self._async_update_data()
 
-        except (asyncio.TimeoutError, requests.exceptions.Timeout) as err:
+        except (TimeoutError, requests.exceptions.Timeout) as err:
             self.last_exception = err
             if self.last_update_success:
                 if log_failures:

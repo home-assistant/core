@@ -21,7 +21,7 @@ from .const import CONF_STATION_UPDATES, DEFAULT_NAME, DOMAIN
 
 OPTIONS_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_STATION_UPDATES): bool,
+        vol.Required(CONF_STATION_UPDATES, default=True): bool,
     }
 )
 OPTIONS_FLOW = {
@@ -45,7 +45,7 @@ class AemetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
-            options = ConnectionOptions(user_input[CONF_API_KEY], False, True)
+            options = ConnectionOptions(user_input[CONF_API_KEY], False)
             aemet = AEMET(aiohttp_client.async_get_clientsession(self.hass), options)
             try:
                 await aemet.select_coordinates(latitude, longitude)

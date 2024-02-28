@@ -32,10 +32,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from .const import DEFAULT_HOST, MAC, MODEL, NAME
 
 from tests.common import MockConfigEntry
+
+DHCP_FORMATTED_MAC = dr.format_mac(MAC).replace(":", "")
 
 
 @pytest.fixture(name="mock_config_entry")
@@ -253,7 +256,7 @@ async def test_reauth_flow_update_configuration(
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip=DEFAULT_HOST,
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
         ),
         (
@@ -360,7 +363,7 @@ async def test_discovery_flow(
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip=DEFAULT_HOST,
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
         ),
         (
@@ -412,7 +415,7 @@ async def test_discovered_device_already_configured(
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip="2.3.4.5",
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
             80,
         ),
@@ -488,7 +491,7 @@ async def test_discovery_flow_updated_configuration(
             dhcp.DhcpServiceInfo(
                 hostname="",
                 ip="",
-                macaddress="01234567890",
+                macaddress=dr.format_mac("01234567890").replace(":", ""),
             ),
         ),
         (
@@ -537,7 +540,7 @@ async def test_discovery_flow_ignore_non_axis_device(
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip="169.254.3.4",
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
         ),
         (

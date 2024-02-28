@@ -18,6 +18,8 @@ from tests.typing import ClientSessionGenerator
         "HWE-WTR",
         "SDM230",
         "SDM630",
+        "HWE-KWH1",
+        "HWE-KWH3",
     ],
 )
 async def test_diagnostics(

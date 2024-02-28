@@ -27,7 +27,7 @@ async def test_watching(
     assert state
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "JELLYFIN-SERVER"
-    assert state.attributes.get(ATTR_ICON) == "mdi:television-play"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Watching"
     assert state.state == "3"

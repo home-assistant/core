@@ -1,4 +1,5 @@
 """Test service helpers."""
+import asyncio
 from collections.abc import Iterable
 from copy import deepcopy
 from typing import Any
@@ -19,7 +20,13 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
 )
-from homeassistant.core import Context, HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.core import (
+    Context,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    SupportsResponse,
+)
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -776,6 +783,84 @@ async def test_async_get_all_descriptions_dynamically_created_services(
     }
 
 
+async def test_async_get_all_descriptions_new_service_added_while_loading(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_get_all_descriptions when a new service is added while loading translations."""
+    group = hass.components.group
+    group_config = {group.DOMAIN: {}}
+    await async_setup_component(hass, group.DOMAIN, group_config)
+    descriptions = await service.async_get_all_descriptions(hass)
+
+    assert len(descriptions) == 1
+
+    assert "description" in descriptions["group"]["reload"]
+    assert "fields" in descriptions["group"]["reload"]
+
+    logger = hass.components.logger
+    logger_domain = logger.DOMAIN
+    logger_config = {logger_domain: {}}
+
+    translations_called = asyncio.Event()
+    translations_wait = asyncio.Event()
+
+    async def async_get_translations(
+        hass: HomeAssistant,
+        language: str,
+        category: str,
+        integrations: Iterable[str] | None = None,
+        config_flow: bool | None = None,
+    ) -> dict[str, Any]:
+        """Return all backend translations."""
+        translations_called.set()
+        await translations_wait.wait()
+        translation_key_prefix = f"component.{logger_domain}.services.set_default_level"
+        return {
+            f"{translation_key_prefix}.name": "Translated name",
+            f"{translation_key_prefix}.description": "Translated description",
+            f"{translation_key_prefix}.fields.level.name": "Field name",
+            f"{translation_key_prefix}.fields.level.description": "Field description",
+            f"{translation_key_prefix}.fields.level.example": "Field example",
+        }
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        side_effect=async_get_translations,
+    ):
+        await async_setup_component(hass, logger_domain, logger_config)
+        task = asyncio.create_task(service.async_get_all_descriptions(hass))
+        await translations_called.wait()
+        # Now register a new service while translations are being loaded
+        hass.services.async_register(logger_domain, "new_service", lambda x: None, None)
+        service.async_set_service_schema(
+            hass, logger_domain, "new_service", {"description": "new service"}
+        )
+        translations_wait.set()
+        descriptions = await task
+
+    # Two domains should be present
+    assert len(descriptions) == 2
+
+    logger_descriptions = descriptions[logger_domain]
+
+    # The new service was loaded after the translations were loaded
+    # so it should not appear until the next time we fetch
+    assert "new_service" not in logger_descriptions
+
+    set_default_level = logger_descriptions["set_default_level"]
+
+    assert set_default_level["name"] == "Translated name"
+    assert set_default_level["description"] == "Translated description"
+    set_default_level_fields = set_default_level["fields"]
+    assert set_default_level_fields["level"]["name"] == "Field name"
+    assert set_default_level_fields["level"]["description"] == "Field description"
+    assert set_default_level_fields["level"]["example"] == "Field example"
+
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "description" in descriptions[logger_domain]["new_service"]
+    assert descriptions[logger_domain]["new_service"]["description"] == "new service"
+
+
 async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
     """Test registering a service with mixed case.
 
@@ -803,7 +888,7 @@ async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -
     await service.entity_service_call(
         hass,
         mock_entities,
-        test_service_mock,
+        HassJob(test_service_mock),
         ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
         required_features=[SUPPORT_A],
     )
@@ -822,7 +907,7 @@ async def test_call_with_required_features(hass: HomeAssistant, mock_entities) -
         await service.entity_service_call(
             hass,
             mock_entities,
-            test_service_mock,
+            HassJob(test_service_mock),
             ServiceCall(
                 "test_domain", "test_service", {"entity_id": "light.living_room"}
             ),
@@ -839,7 +924,7 @@ async def test_call_with_both_required_features(
     await service.entity_service_call(
         hass,
         mock_entities,
-        test_service_mock,
+        HassJob(test_service_mock),
         ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
         required_features=[SUPPORT_A | SUPPORT_B],
     )
@@ -858,7 +943,7 @@ async def test_call_with_one_of_required_features(
     await service.entity_service_call(
         hass,
         mock_entities,
-        test_service_mock,
+        HassJob(test_service_mock),
         ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
         required_features=[SUPPORT_A, SUPPORT_C],
     )
@@ -879,7 +964,7 @@ async def test_call_with_sync_func(hass: HomeAssistant, mock_entities) -> None:
     await service.entity_service_call(
         hass,
         mock_entities,
-        test_service_mock,
+        HassJob(test_service_mock),
         ServiceCall("test_domain", "test_service", {"entity_id": "light.kitchen"}),
     )
     assert test_service_mock.call_count == 1

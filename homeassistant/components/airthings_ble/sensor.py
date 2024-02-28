@@ -52,24 +52,20 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         translation_key="radon_1day_avg",
         native_unit_of_measurement=VOLUME_BECQUEREL,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:radioactive",
     ),
     "radon_longterm_avg": SensorEntityDescription(
         key="radon_longterm_avg",
         translation_key="radon_longterm_avg",
         native_unit_of_measurement=VOLUME_BECQUEREL,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:radioactive",
     ),
     "radon_1day_level": SensorEntityDescription(
         key="radon_1day_level",
         translation_key="radon_1day_level",
-        icon="mdi:radioactive",
     ),
     "radon_longterm_level": SensorEntityDescription(
         key="radon_longterm_level",
         translation_key="radon_longterm_level",
-        icon="mdi:radioactive",
     ),
     "temperature": SensorEntityDescription(
         key="temperature",
@@ -107,7 +103,6 @@ SENSORS_MAPPING_TEMPLATE: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:cloud",
     ),
     "illuminance": SensorEntityDescription(
         key="illuminance",
