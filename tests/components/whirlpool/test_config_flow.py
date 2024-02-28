@@ -182,7 +182,7 @@ async def test_form_already_configured(hass: HomeAssistant, region, brand) -> No
 
 
 async def test_no_appliances_flow(hass: HomeAssistant, region, brand) -> None:
-    """Test we get and error with no appliances."""
+    """Test we get an error with no appliances."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
