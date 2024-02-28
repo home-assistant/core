@@ -806,6 +806,7 @@ async def _async_set_up_integrations(
             pre_stage_domains,
         ),
         "preload slow imports",
+        eager_start=True,
     )
 
     # calculate what components to setup in what stage
