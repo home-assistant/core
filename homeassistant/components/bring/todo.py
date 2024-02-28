@@ -146,10 +146,12 @@ class BringTodoListEntity(
             None,
         )
 
+        current_item = bring_purchase_item or bring_recently_item
+
         if TYPE_CHECKING:
             assert item.uid
+            assert current_item
 
-        current_item = bring_purchase_item or bring_recently_item
         if item.summary == current_item["itemId"]:
             try:
                 await self.coordinator.bring.batch_update_list(
