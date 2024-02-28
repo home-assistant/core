@@ -900,7 +900,7 @@ class ConfigEntry:
     @callback
     def async_get_active_flows(
         self, hass: HomeAssistant, sources: set[str]
-    ) -> Generator[FlowResult, None, None]:
+    ) -> Generator[ConfigFlowResult, None, None]:
         """Get any active flows of certain sources for this entry."""
         return (
             flow
@@ -977,7 +977,7 @@ class FlowCancelledError(Exception):
     """Error to indicate that a flow has been cancelled."""
 
 
-class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
+class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
     """Manage all the config entry flows that are in progress."""
 
     _flow_result = ConfigFlowResult
@@ -1071,7 +1071,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         handler: str,
         context: dict,
         data: Any,
-    ) -> tuple[data_entry_flow.FlowHandler, ConfigFlowResult]:
+    ) -> tuple[ConfigFlow, ConfigFlowResult]:
         """Run the init in a task to allow it to be canceled at shutdown."""
         flow = await self.async_create_flow(handler, context=context, data=data)
         if not flow:
@@ -1099,7 +1099,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: ConfigFlowResult
+        self, flow: data_entry_flow.BaseFlowHandler, result: ConfigFlowResult
     ) -> ConfigFlowResult:
         """Finish a config flow and add an entry."""
         flow = cast(ConfigFlow, flow)
@@ -1204,7 +1204,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         return flow
 
     async def async_post_init(
-        self, flow: data_entry_flow.FlowHandler, result: ConfigFlowResult
+        self, flow: data_entry_flow.BaseFlowHandler, result: ConfigFlowResult
     ) -> None:
         """After a flow is initialised trigger new flow notifications."""
         source = flow.context["source"]
@@ -1855,7 +1855,7 @@ def _async_abort_entries_match(
             raise data_entry_flow.AbortFlow("already_configured")
 
 
-class ConfigEntryBaseFlow(data_entry_flow.FlowHandler[ConfigFlowResult]):
+class ConfigEntryBaseFlow(data_entry_flow.BaseFlowHandler[ConfigFlowResult]):
     """Base class for config and option flows."""
 
     _flow_result = ConfigFlowResult
@@ -2193,7 +2193,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         reason: str = "reauth_successful",
-    ) -> data_entry_flow.FlowResult:
+    ) -> data_entry_flow.ConfigFlowResult:
         """Update config entry, reload config entry and finish config flow."""
         result = self.hass.config_entries.async_update_entry(
             entry=entry,
@@ -2207,7 +2207,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return self.async_abort(reason=reason)
 
 
-class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
+class OptionsFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
     """Flow to set options for a configuration entry."""
 
     _flow_result = ConfigFlowResult
@@ -2236,7 +2236,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         return handler.async_get_options_flow(entry)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: ConfigFlowResult
+        self, flow: data_entry_flow.BaseFlowHandler, result: ConfigFlowResult
     ) -> ConfigFlowResult:
         """Finish an options flow and update options for configuration entry.
 
@@ -2256,7 +2256,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
         result["result"] = True
         return result
 
-    async def _async_setup_preview(self, flow: data_entry_flow.FlowHandler) -> None:
+    async def _async_setup_preview(self, flow: data_entry_flow.BaseFlowHandler) -> None:
         """Set up preview for an option flow handler."""
         entry = self._async_get_config_entry(flow.handler)
         await _load_integration(self.hass, entry.domain, {})

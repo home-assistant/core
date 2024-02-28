@@ -181,7 +181,7 @@ async def load_auth_provider_module(
     return module
 
 
-class LoginFlow(data_entry_flow.FlowHandler[FlowResult]):
+class LoginFlow(data_entry_flow.FlowHandler):
     """Handler for the login flow."""
 
     _flow_result = FlowResult

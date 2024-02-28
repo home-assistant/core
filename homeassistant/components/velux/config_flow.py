@@ -23,7 +23,9 @@ DATA_SCHEMA = vol.Schema(
 class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for velux."""
 
-    async def async_step_import(self, config: dict[str, Any]) -> onfig_entries.ConfigFlowResult:
+    async def async_step_import(
+        self, config: dict[str, Any]
+    ) -> config_entries.ConfigFlowResult:
         """Import a config entry."""
 
         def create_repair(error: str | None = None) -> None:
@@ -78,7 +80,7 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> onfig_entries.ConfigFlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
