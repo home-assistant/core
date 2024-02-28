@@ -834,8 +834,8 @@ async def _async_set_up_integrations(
     stage_2_domains = domains_to_setup - stage_1_domains
 
     for name, domain_group in pre_stage_domains.items():
-        stage_2_domains -= domain_group
         if domain_group:
+            stage_2_domains -= domain_group
             _LOGGER.info("Setting up %s: %s", name, domain_group)
             await async_setup_multi_components(hass, domain_group, config)
 
