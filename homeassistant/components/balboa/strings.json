@@ -52,6 +52,11 @@
           }
         }
       }
+    },
+    "fan": {
+      "pump": {
+        "name": "Pump {index}"
+      }
     }
   }
 }
