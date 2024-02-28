@@ -165,13 +165,13 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
         )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
-        """Handle a POST request."""
+        """Initialize a POST request for a config entry flow."""
         return await self._post_impl(request, data)
 
     async def _post_impl(
         self, request: web.Request, data: dict[str, Any]
     ) -> web.Response:
-        """Handle a POST request."""
+        """Handle a POST request for a config entry flow."""
         try:
             return await super()._post_impl(request, data)
         except DependencyError as exc:

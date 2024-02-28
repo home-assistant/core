@@ -61,7 +61,11 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
-        """Handle a POST request."""
+        """Initialize a POST request.
+
+        Implement `_post_impl` for subclasses which needs
+        to implement their own `RequestDataValidator`
+        """
         return await self._post_impl(request, data)
 
     async def _post_impl(
