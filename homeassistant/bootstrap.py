@@ -771,6 +771,7 @@ async def _async_resolve_domains_to_setup(
         "load translations",
         eager_start=True,
     )
+
     return domains_to_setup, integration_cache
 
 
