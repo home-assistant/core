@@ -36,7 +36,7 @@ from .core import (
     HomeAssistant,
     callback,
 )
-from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowResult, UnknownHandler
+from .data_entry_flow import FLOW_NOT_COMPLETE_STEPS, FlowResult
 from .exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -343,7 +343,7 @@ class ConfigEntry:
         self._supports_options: bool | None = None
 
         # Supports reconfigure
-        self.supports_reconfigure: bool | None = None
+        self._supports_reconfigure: bool | None = None
 
         # Listeners to call on update
         self.update_listeners: list[UpdateListenerType] = []
@@ -418,6 +418,20 @@ class ConfigEntry:
             )
         return self._supports_options or False
 
+    @property
+    def supports_reconfigure(self) -> bool:
+        """Return if entry supports config options."""
+        if self._supports_reconfigure is None and (
+            handler := HANDLERS.get(self.domain)
+        ):
+            # work out if handler has support for reconfigure step
+            object.__setattr__(
+                self,
+                "_supports_reconfigure",
+                hasattr(handler, "async_step_reconfigure"),
+            )
+        return self._supports_reconfigure or False
+
     def clear_cache(self) -> None:
         """Clear cached properties."""
         with contextlib.suppress(AttributeError):
@@ -435,7 +449,7 @@ class ConfigEntry:
             "supports_options": self.supports_options,
             "supports_remove_device": self.supports_remove_device or False,
             "supports_unload": self.supports_unload or False,
-            "supports_reconfigure": self.supports_reconfigure or False,
+            "supports_reconfigure": self._supports_reconfigure or False,
             "pref_disable_new_entities": self.pref_disable_new_entities,
             "pref_disable_polling": self.pref_disable_polling,
             "disabled_by": self.disabled_by,
@@ -468,11 +482,6 @@ class ConfigEntry:
             self.supports_remove_device = await support_remove_from_device(
                 hass, self.domain
             )
-        if self.supports_reconfigure is None:
-            self.supports_reconfigure = await support_entry_reconfigure(
-                hass, self.domain
-            )
-
         try:
             component = integration.get_component()
         except ImportError as err:
@@ -2470,15 +2479,6 @@ async def _support_single_config_entry_only(hass: HomeAssistant, domain: str) ->
     """Test if a domain supports only a single config entry."""
     integration = await loader.async_get_integration(hass, domain)
     return integration.single_config_entry
-
-
-async def support_entry_reconfigure(hass: HomeAssistant, domain: str) -> bool:
-    """Test if a domain supports reconfigure flow."""
-    try:
-        handler = await _async_get_flow_handler(hass, domain, {})
-    except UnknownHandler:
-        return False
-    return bool(handler and hasattr(handler, "async_step_reconfigure"))
 
 
 async def _load_integration(
