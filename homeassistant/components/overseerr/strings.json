@@ -16,7 +16,8 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "overseerr_error": "Failed to connect to Overseerr. Please check your settings.",
+      "open_api_exception": "Connection failed. Please re-check your API key and host name.",
+      "validation_error": "Invalid URL. Did you forget /api/v1?",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -31,5 +32,26 @@
       }
     }
   },
-  "entity": {}
+  "entity": {
+    "sensor": {
+      "requested_movies": {
+        "name": "Movie requests"
+      },
+      "requested_tv": {
+        "name": "TV Show Requests"
+      },
+      "requested_pending": {
+        "name": "Pending Requests"
+      },
+      "requested_approved": {
+        "name": "Approved Requests"
+      },
+      "requested_available": {
+        "name": "Available Requests"
+      },
+      "requested_total": {
+        "name": "Total Requests"
+      }
+    }
+  }
 }

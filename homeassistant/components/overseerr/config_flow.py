@@ -5,12 +5,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aiohttp import ClientConnectionError
-from overseerr import ApiClient, Configuration, RequestApi, exceptions
+from overseerr_api import ApiClient, AuthApi, Configuration
+from overseerr_api.exceptions import OpenApiException
+from pydantic_core import ValidationError
+from urllib3.exceptions import MaxRetryError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
@@ -29,7 +31,7 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
         self.entry: ConfigEntry | None = None
 
     async def async_step_reauth(self, _: Mapping[str, Any]) -> FlowResult:
-        """Handle configuration by re-auth."""
+        """Handle re-auth of Overseerr configuration."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
         return await self.async_step_reauth_confirm()
@@ -57,12 +59,10 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 if result := await validate_input(self.hass, user_input):
                     user_input[CONF_API_KEY] = result[1]
-            except exceptions.UnauthorizedException:
-                errors = {"base": "invalid_auth"}
-            except ClientConnectionError:
-                errors = {"base": "cannot_connect"}
-            except exceptions.OpenApiException:
-                errors = {"base": "unknown"}
+            except ValidationError:
+                errors = {"base": "validation_error"}
+            except (OpenApiException, MaxRetryError):
+                errors = {"base": "open_api_exception"}
             if not errors:
                 if self.entry:
                     self.hass.config_entries.async_update_entry(
@@ -85,11 +85,7 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_URL, default=user_input.get(CONF_URL, DEFAULT_URL)
                     ): str,
-                    vol.Optional(CONF_API_KEY): str,
-                    vol.Optional(
-                        CONF_VERIFY_SSL,
-                        default=user_input.get(CONF_VERIFY_SSL, False),
-                    ): bool,
+                    vol.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -99,15 +95,15 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
 async def validate_input(
     hass: HomeAssistant, data: dict[str, Any]
 ) -> tuple[str, str, str] | None:
-    """Validate the user input allows us to connect."""
-    host_configuration = Configuration(
+    """Validate the user input allows us to connect to Overseerr."""
+    overseerr_config = Configuration(
         api_key={"apiKey": data.get(CONF_API_KEY, "")},
-        ssl_ca_cert=data[CONF_VERIFY_SSL],
         host=data[CONF_URL],
     )
 
-    async with ApiClient(configuration=host_configuration) as overseerr_api_client:
-        request_api = RequestApi(overseerr_api_client)
-        await request_api.request_count_get()
+    overseerr_client = ApiClient(overseerr_config)
+    auth_api = AuthApi(overseerr_client)
+
+    await hass.async_add_executor_job(auth_api.auth_me_get)
 
     return None

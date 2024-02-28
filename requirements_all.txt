@@ -1494,6 +1494,9 @@ orvibo==1.1.2
 # homeassistant.components.ourgroceries
 ourgroceries==1.5.4
 
+# homeassistant.components.overseerr
+overseerr-api==1.0.0
+
 # homeassistant.components.ovo_energy
 ovoenergy==1.2.0
 
