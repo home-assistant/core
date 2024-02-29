@@ -1,8 +1,12 @@
 """The Bedrock Agent integration."""
 from __future__ import annotations
 
+from functools import partial
+import json
 import logging
 from typing import Literal
+
+import boto3
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import agent
@@ -18,10 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bedrock Agent from a config entry."""
-
     hass.data.setdefault(DOMAIN, {})
     conversation.async_set_agent(hass, entry, BedrockAgent(hass, entry))
-
     return True
 
 
@@ -45,12 +47,45 @@ class BedrockAgent(conversation.AbstractConversationAgent):
         """Return a list of supported languages."""
         return MATCH_ALL
 
+    async def async_call_bedrock(self, question) -> str:
+        """Return result from Amazon Bedrock."""
+        bedrock = boto3.client(
+            service_name="bedrock-runtime",
+            region_name="us-west-2",
+            aws_access_key_id="",
+            aws_secret_access_key="",
+        )
+        body = json.dumps(
+            {
+                "prompt": f"\n\nHuman:{question}\n\nAssistant:",
+                "max_tokens_to_sample": 300,
+                "temperature": 0.1,
+                "top_p": 0.9,
+            }
+        )
+        modelId = "anthropic.claude-v2"
+        accept = "application/json"
+        contentType = "application/json"
+
+        bedrock_response = await self.hass.async_add_executor_job(
+            partial(
+                bedrock.invoke_model,
+                body=body,
+                modelId=modelId,
+                accept=accept,
+                contentType=contentType,
+            ),
+        )
+
+        response_body = json.loads(bedrock_response.get("body").read())
+        return response_body["completion"]
+
     async def async_process(
         self, user_input: agent.ConversationInput
     ) -> agent.ConversationResult:
         """Process a sentence."""
-        _LOGGER.info("User input")
-        _LOGGER.info(user_input)
+        answer = await self.async_call_bedrock("Test")
+
         response = intent.IntentResponse(language=user_input.language)
-        response.async_set_speech("Test response")
+        response.async_set_speech(answer)
         return agent.ConversationResult(conversation_id=None, response=response)
