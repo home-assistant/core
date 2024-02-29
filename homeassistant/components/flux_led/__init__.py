@@ -11,7 +11,7 @@ from flux_led.const import ATTR_ID, WhiteChannelType
 from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED, Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -103,9 +103,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     _async_start_background_discovery()
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STARTED, _async_start_background_discovery
-    )
     async_track_time_interval(
         hass,
         _async_start_background_discovery,
