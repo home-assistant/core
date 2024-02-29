@@ -555,8 +555,7 @@ class InfluxThread(threading.Thread):
                     age = time.monotonic() - timestamp
 
                     if age < queue_seconds:
-                        event_json = self.event_to_json(event)
-                        if event_json:
+                        if event_json := self.event_to_json(event):
                             json.append(event_json)
                     else:
                         dropped += 1
@@ -598,6 +597,7 @@ class InfluxThread(threading.Thread):
 
     def block_till_done(self):
         """Block till all events processed."""
-        event = threading.Event()
-        self.queue.put(event)
-        event.wait()
+        for _ in range(self.max_tries + 1):
+            event = threading.Event()
+            self.queue.put(event)
+            event.wait()
