@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import ValuesView
+from collections.abc import Mapping, ValuesView
 from enum import StrEnum
 from functools import lru_cache, partial
 import logging
@@ -15,12 +15,13 @@ from yarl import URL
 
 from homeassistant.backports.functools import cached_property
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, get_release_channel
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
-from . import storage
+from . import storage, translation
 from .debounce import Debouncer
 from .deprecation import (
     DeprecatedConstantEnum,
@@ -94,6 +95,8 @@ class DeviceInfo(TypedDict, total=False):
     suggested_area: str | None
     sw_version: str | None
     hw_version: str | None
+    translation_key: str | None
+    translation_placeholders: Mapping[str, str] | None
     via_device: tuple[str, str]
 
 
@@ -497,6 +500,33 @@ class DeviceRegistry:
         """Check if device is deleted."""
         return self.deleted_devices.get_entry(identifiers, connections)
 
+    def _substitute_name_placeholders(
+        self,
+        domain: str,
+        name: str,
+        translation_placeholders: Mapping[str, str],
+    ) -> str:
+        """Substitute placeholders in entity name."""
+        try:
+            return name.format(**translation_placeholders)
+        except KeyError as err:
+            if get_release_channel() != "stable":
+                raise HomeAssistantError("Missing placeholder %s" % err) from err
+            report_issue = async_suggest_report_issue(
+                self.hass, integration_domain=domain
+            )
+            _LOGGER.warning(
+                (
+                    "Device from integration %s has translation placeholders '%s' "
+                    "which do not match the name '%s', please %s"
+                ),
+                domain,
+                translation_placeholders,
+                name,
+                report_issue,
+            )
+            return name
+
     @callback
     def async_get_or_create(
         self,
@@ -518,11 +548,31 @@ class DeviceRegistry:
         serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
+        translation_key: str | None = None,
+        translation_placeholders: Mapping[str, str] | None = None,
         via_device: tuple[str, str] | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
         if configuration_url is not UNDEFINED:
             configuration_url = _validate_configuration_url(configuration_url)
+
+        config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
+        if config_entry is None:
+            raise HomeAssistantError(
+                f"Can't link device to unknown config entry {config_entry_id}"
+            )
+
+        if translation_key:
+            full_translation_key = (
+                f"component.{config_entry.domain}.device.{translation_key}.name"
+            )
+            translations = translation.async_get_cached_translations(
+                self.hass, self.hass.config.language, "device", config_entry.domain
+            )
+            translated_name = translations.get(full_translation_key, translation_key)
+            name = self._substitute_name_placeholders(
+                config_entry.domain, translated_name, translation_placeholders or {}
+            )
 
         # Reconstruct a DeviceInfo dict from the arguments.
         # When we upgrade to Python 3.12, we can change this method to instead
@@ -549,11 +599,6 @@ class DeviceRegistry:
                 continue
             device_info[key] = val  # type: ignore[literal-required]
 
-        config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
-        if config_entry is None:
-            raise HomeAssistantError(
-                f"Can't link device to unknown config entry {config_entry_id}"
-            )
         device_info_type = _validate_device_info(config_entry, device_info)
 
         if identifiers is None or identifiers is UNDEFINED:

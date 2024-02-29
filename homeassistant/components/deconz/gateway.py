@@ -301,7 +301,10 @@ class DeconzGateway:
 
         entity_registry = er.async_get(self.hass)
 
-        for entity_id, deconz_id in self.deconz_ids.items():
+        # Copy the ids since calling async_remove will modify the dict
+        # and will cause a runtime error because the dict size changes
+        # during iteration
+        for entity_id, deconz_id in self.deconz_ids.copy().items():
             if deconz_id in deconz_ids and entity_registry.async_is_registered(
                 entity_id
             ):

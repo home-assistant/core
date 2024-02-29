@@ -5,7 +5,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'iX xDrive50 Flash lights',
-        'icon': 'mdi:car-light-alert',
       }),
       'context': <ANY>,
       'entity_id': 'button.ix_xdrive50_flash_lights',
@@ -17,7 +16,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'iX xDrive50 Sound horn',
-        'icon': 'mdi:bullhorn',
       }),
       'context': <ANY>,
       'entity_id': 'button.ix_xdrive50_sound_horn',
@@ -29,7 +27,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'iX xDrive50 Activate air conditioning',
-        'icon': 'mdi:hvac',
       }),
       'context': <ANY>,
       'entity_id': 'button.ix_xdrive50_activate_air_conditioning',
@@ -41,7 +38,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'iX xDrive50 Deactivate air conditioning',
-        'icon': 'mdi:hvac-off',
       }),
       'context': <ANY>,
       'entity_id': 'button.ix_xdrive50_deactivate_air_conditioning',
@@ -53,7 +49,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'iX xDrive50 Find vehicle',
-        'icon': 'mdi:crosshairs-question',
       }),
       'context': <ANY>,
       'entity_id': 'button.ix_xdrive50_find_vehicle',
@@ -65,7 +60,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i4 eDrive40 Flash lights',
-        'icon': 'mdi:car-light-alert',
       }),
       'context': <ANY>,
       'entity_id': 'button.i4_edrive40_flash_lights',
@@ -77,7 +71,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i4 eDrive40 Sound horn',
-        'icon': 'mdi:bullhorn',
       }),
       'context': <ANY>,
       'entity_id': 'button.i4_edrive40_sound_horn',
@@ -89,7 +82,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i4 eDrive40 Activate air conditioning',
-        'icon': 'mdi:hvac',
       }),
       'context': <ANY>,
       'entity_id': 'button.i4_edrive40_activate_air_conditioning',
@@ -101,7 +93,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i4 eDrive40 Deactivate air conditioning',
-        'icon': 'mdi:hvac-off',
       }),
       'context': <ANY>,
       'entity_id': 'button.i4_edrive40_deactivate_air_conditioning',
@@ -113,7 +104,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i4 eDrive40 Find vehicle',
-        'icon': 'mdi:crosshairs-question',
       }),
       'context': <ANY>,
       'entity_id': 'button.i4_edrive40_find_vehicle',
@@ -125,7 +115,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'M340i xDrive Flash lights',
-        'icon': 'mdi:car-light-alert',
       }),
       'context': <ANY>,
       'entity_id': 'button.m340i_xdrive_flash_lights',
@@ -137,7 +126,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'M340i xDrive Sound horn',
-        'icon': 'mdi:bullhorn',
       }),
       'context': <ANY>,
       'entity_id': 'button.m340i_xdrive_sound_horn',
@@ -149,7 +137,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'M340i xDrive Activate air conditioning',
-        'icon': 'mdi:hvac',
       }),
       'context': <ANY>,
       'entity_id': 'button.m340i_xdrive_activate_air_conditioning',
@@ -161,7 +148,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'M340i xDrive Deactivate air conditioning',
-        'icon': 'mdi:hvac-off',
       }),
       'context': <ANY>,
       'entity_id': 'button.m340i_xdrive_deactivate_air_conditioning',
@@ -173,7 +159,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'M340i xDrive Find vehicle',
-        'icon': 'mdi:crosshairs-question',
       }),
       'context': <ANY>,
       'entity_id': 'button.m340i_xdrive_find_vehicle',
@@ -185,7 +170,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i3 (+ REX) Flash lights',
-        'icon': 'mdi:car-light-alert',
       }),
       'context': <ANY>,
       'entity_id': 'button.i3_rex_flash_lights',
@@ -197,7 +181,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i3 (+ REX) Sound horn',
-        'icon': 'mdi:bullhorn',
       }),
       'context': <ANY>,
       'entity_id': 'button.i3_rex_sound_horn',
@@ -209,7 +192,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i3 (+ REX) Activate air conditioning',
-        'icon': 'mdi:hvac',
       }),
       'context': <ANY>,
       'entity_id': 'button.i3_rex_activate_air_conditioning',
@@ -221,7 +203,6 @@
       'attributes': ReadOnlyDict({
         'attribution': 'Data provided by MyBMW',
         'friendly_name': 'i3 (+ REX) Find vehicle',
-        'icon': 'mdi:crosshairs-question',
       }),
       'context': <ANY>,
       'entity_id': 'button.i3_rex_find_vehicle',

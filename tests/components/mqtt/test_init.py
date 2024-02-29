@@ -16,7 +16,11 @@ from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.client import EnsureJobAfterCooldown
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
-from homeassistant.components.mqtt.models import MessageCallbackType, ReceiveMessage
+from homeassistant.components.mqtt.models import (
+    MessageCallbackType,
+    MqttCommandTemplateException,
+    ReceiveMessage,
+)
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -30,7 +34,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -369,6 +373,15 @@ async def test_command_template_variables(
         assert state and state.state == "milk"
 
 
+async def test_command_template_fails(hass: HomeAssistant) -> None:
+    """Test the exception handling of an MQTT command template."""
+    tpl = template.Template("{{ value * 2 }}")
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
+    with pytest.raises(MqttCommandTemplateException) as exc:
+        cmd_tpl.async_render(None)
+    assert "unsupported operand type(s) for *: 'NoneType' and 'int'" in str(exc.value)
+
+
 async def test_value_template_value(hass: HomeAssistant) -> None:
     """Test the rendering of MQTT value template."""
 
@@ -497,14 +510,20 @@ async def test_service_call_with_invalid_topic_template_does_not_publish(
 ) -> None:
     """Test the service call with a problematic topic template."""
     mqtt_mock = await mqtt_mock_entry()
-    await hass.services.async_call(
-        mqtt.DOMAIN,
-        mqtt.SERVICE_PUBLISH,
-        {
-            mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ 1 | no_such_filter }}",
-            mqtt.ATTR_PAYLOAD: "payload",
-        },
-        blocking=True,
+    with pytest.raises(MqttCommandTemplateException) as exc:
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ 1 | no_such_filter }}",
+                mqtt.ATTR_PAYLOAD: "payload",
+            },
+            blocking=True,
+        )
+    assert str(exc.value) == (
+        "TemplateError: TemplateAssertionError: No filter named 'no_such_filter'. "
+        "rendering template, template: "
+        "'test/{{ 1 | no_such_filter }}' and payload: None"
     )
     assert not mqtt_mock.async_publish.called
 
@@ -538,14 +557,20 @@ async def test_service_call_with_template_topic_renders_invalid_topic(
     If a wildcard topic is rendered, then fail.
     """
     mqtt_mock = await mqtt_mock_entry()
-    await hass.services.async_call(
-        mqtt.DOMAIN,
-        mqtt.SERVICE_PUBLISH,
-        {
-            mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ '+' if True else 'topic' }}/topic",
-            mqtt.ATTR_PAYLOAD: "payload",
-        },
-        blocking=True,
+    with pytest.raises(ServiceValidationError) as exc:
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC_TEMPLATE: "test/{{ '+' if True else 'topic' }}/topic",
+                mqtt.ATTR_PAYLOAD: "payload",
+            },
+            blocking=True,
+        )
+    assert str(exc.value) == (
+        "Unable to publish: topic template 'test/{{ '+' if True else 'topic' }}/topic' "
+        "produced an invalid topic 'test/+/topic' after rendering "
+        "(Wildcards cannot be used in topic names)"
     )
     assert not mqtt_mock.async_publish.called
 
@@ -611,13 +636,21 @@ async def test_service_call_with_bad_template(
 ) -> None:
     """Test the service call with a bad template does not publish."""
     mqtt_mock = await mqtt_mock_entry()
-    await hass.services.async_call(
-        mqtt.DOMAIN,
-        mqtt.SERVICE_PUBLISH,
-        {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 1 | bad }}"},
-        blocking=True,
-    )
+    with pytest.raises(MqttCommandTemplateException) as exc:
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC: "test/topic",
+                mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 1 | bad }}",
+            },
+            blocking=True,
+        )
     assert not mqtt_mock.async_publish.called
+    assert str(exc.value) == (
+        "TemplateError: TemplateAssertionError: No filter named 'bad'. "
+        "rendering template, template: '{{ 1 | bad }}' and payload: None"
+    )
 
 
 async def test_service_call_with_payload_doesnt_render_template(

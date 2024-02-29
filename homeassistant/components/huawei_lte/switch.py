@@ -107,11 +107,6 @@ class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
         self._raw_state = str(value)
         self.schedule_update_ha_state()
 
-    @property
-    def icon(self) -> str:
-        """Return switch icon."""
-        return "mdi:signal" if self.is_on else "mdi:signal-off"
-
 
 class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
     """Huawei LTE WiFi guest network switch device."""
@@ -134,11 +129,6 @@ class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
         self.router.client.wlan.wifi_guest_network_switch(state)
         self._raw_state = "1" if state else "0"
         self.schedule_update_ha_state()
-
-    @property
-    def icon(self) -> str:
-        """Return switch icon."""
-        return "mdi:wifi" if self.is_on else "mdi:wifi-off"
 
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:
