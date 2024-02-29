@@ -627,8 +627,9 @@ class ClientClusterHandler(ClusterHandler):
     """ClusterHandler for Zigbee client (output) clusters."""
 
     @callback
-    def attribute_updated(self, attrid: int, value: Any, _: Any) -> None:
+    def attribute_updated(self, attrid: int, value: Any, timestamp: Any) -> None:
         """Handle an attribute updated on this cluster."""
+        super().attribute_updated(attrid, value, timestamp)
 
         try:
             attr_name = self._cluster.attributes[attrid].name
