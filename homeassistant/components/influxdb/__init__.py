@@ -512,7 +512,7 @@ class InfluxThread(threading.Thread):
     def __init__(self, hass, influx, event_to_json, max_tries):
         """Initialize the listener."""
         threading.Thread.__init__(self, name=DOMAIN)
-        self.queue = queue.Queue()
+        self.queue = queue.SimpleQueue()
         self.influx = influx
         self.event_to_json = event_to_json
         self.max_tries = max_tries
@@ -548,6 +548,8 @@ class InfluxThread(threading.Thread):
 
                 if item is None:
                     self.shutdown = True
+                elif isinstance(item, threading.Event):
+                    item.set()
                 else:
                     timestamp, event = item
                     age = time.monotonic() - timestamp
@@ -590,12 +592,12 @@ class InfluxThread(threading.Thread):
     def run(self):
         """Process incoming events."""
         while not self.shutdown:
-            count, json = self.get_events_json()
+            _, json = self.get_events_json()
             if json:
                 self.write_to_influxdb(json)
-            for _ in range(count):
-                self.queue.task_done()
 
     def block_till_done(self):
         """Block till all events processed."""
-        self.queue.join()
+        event = threading.Event()
+        self.queue.put(event)
+        event.wait()
