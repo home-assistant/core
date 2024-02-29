@@ -15,13 +15,8 @@ from bluecurrent_api.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_NAME,
-    CONF_API_TOKEN,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import ATTR_NAME, CONF_API_TOKEN, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -50,19 +45,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryAuthFailed("Invalid API token.") from err
     except BlueCurrentException as err:
         raise ConfigEntryNotReady from err
-
-    hass.async_create_background_task(connector.connect(), "blue_current-websocket")
+    config_entry.async_create_background_task(
+        hass, connector.run_task(), "blue_current-websocket"
+    )
 
     await client.wait_for_charge_points()
     hass.data[DOMAIN][config_entry.entry_id] = connector
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    config_entry.async_on_unload(connector.disconnect)
-
-    async def _async_disconnect_websocket(_: Event) -> None:
-        await connector.disconnect()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect_websocket)
 
     return True
 
@@ -148,35 +137,37 @@ class Connector:
         """Dispatch a grid signal."""
         async_dispatcher_send(self.hass, f"{DOMAIN}_grid_update")
 
-    async def connect(self) -> None:
+    async def run_task(self) -> None:
         """Start the receive loop."""
         try:
-            await self.client.connect(self.on_data)
-        except RequestLimitReached:
-            LOGGER.warning(
-                "Request limit reached. reconnecting at 00:00 (Europe/Amsterdam)"
-            )
-            self.on_disconnect()
-            delay = self.client.get_next_reset_delta()
-            await asyncio.sleep(delay.seconds)
-            await self.connect()
-        except WebsocketError:
-            LOGGER.debug("Disconnected, retrying in background")
-            self.on_disconnect()
-            await asyncio.sleep(DELAY)
-            await self.connect()
+            while True:
+                try:
+                    await self.client.connect(self.on_data)
+                except RequestLimitReached:
+                    LOGGER.warning(
+                        "Request limit reached. reconnecting at 00:00 (Europe/Amsterdam)"
+                    )
+                    delay = self.client.get_next_reset_delta().seconds
+                except WebsocketError:
+                    LOGGER.debug("Disconnected, retrying in background")
+                    delay = DELAY
 
-    def on_disconnect(self) -> None:
+                self._on_disconnect()
+                await asyncio.sleep(delay)
+        finally:
+            await self._disconnect()
+
+    def _on_disconnect(self) -> None:
         """Dispatch signals to update entity states."""
         for evse_id in self.charge_points:
             self.dispatch_value_update_signal(evse_id)
         self.dispatch_grid_update_signal()
 
-    async def disconnect(self) -> None:
+    async def _disconnect(self) -> None:
         """Disconnect from the websocket."""
         with suppress(WebsocketError):
             await self.client.disconnect()
-            self.on_disconnect()
+            self._on_disconnect()
 
     @property
     def connected(self) -> bool:

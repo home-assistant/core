@@ -29,15 +29,22 @@ async def test_load_unload_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test load and unload entry."""
-    with patch("homeassistant.components.blue_current.Client", autospec=True):
+    with patch(
+        "homeassistant.components.blue_current.Client.validate_api_token"
+    ), patch(
+        "homeassistant.components.blue_current.Client.wait_for_charge_points"
+    ), patch("homeassistant.components.blue_current.Client.disconnect"), patch(
+        "homeassistant.components.blue_current.Client.connect",
+        lambda self, on_data: hass.loop.create_future(),
+    ):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.LOADED
+        assert config_entry.state == ConfigEntryState.LOADED
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
