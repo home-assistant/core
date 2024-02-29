@@ -97,3 +97,4 @@ async def test_satellite_with_wake_word(hass: HomeAssistant) -> None:
         service = await WyomingService.create("localhost", 1234)
         assert service is not None
         assert service.get_name() == satellite_info.satellite.name
+        assert not service.platforms

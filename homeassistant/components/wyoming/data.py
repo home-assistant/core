@@ -24,14 +24,19 @@ class WyomingService:
         self.host = host
         self.port = port
         self.info = info
-        platforms = []
+        self.platforms = []
+
+        if (self.info.satellite is not None) and self.info.satellite.installed:
+            # Don't load platforms for satellite services, such as local wake
+            # word detection.
+            return
+
         if any(asr.installed for asr in info.asr):
-            platforms.append(Platform.STT)
+            self.platforms.append(Platform.STT)
         if any(tts.installed for tts in info.tts):
-            platforms.append(Platform.TTS)
+            self.platforms.append(Platform.TTS)
         if any(wake.installed for wake in info.wake):
-            platforms.append(Platform.WAKE_WORD)
-        self.platforms = platforms
+            self.platforms.append(Platform.WAKE_WORD)
 
     def has_services(self) -> bool:
         """Return True if services are installed that Home Assistant can use."""
