@@ -12,11 +12,11 @@ from whirlpool.auth import Auth
 from whirlpool.backendselector import BackendSelector
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.const import CONF_BRAND, CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_BRANDS_MAP, CONF_REGIONS_MAP, DOMAIN
+from .const import CONF_BRAND, CONF_BRANDS_MAP, CONF_REGIONS_MAP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
