@@ -10,9 +10,11 @@ import voluptuous as vol
 
 from homeassistant.components import http
 from homeassistant.components.cover import (
+    ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
+    SERVICE_SET_COVER_POSITION,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.lock import (
@@ -24,6 +26,7 @@ from homeassistant.components.valve import (
     DOMAIN as VALVE_DOMAIN,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
+    SERVICE_SET_VALVE_POSITION,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -75,6 +78,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass,
         NevermindIntentHandler(),
     )
+    intent.async_register(
+        hass,
+        SetPositionIntentHandler(
+            intent.INTENT_SET_POSITION,
+            HA_DOMAIN,
+            service=None,  # depends on domain
+            extra_slots={ATTR_POSITION: vol.All(vol.Range(min=0, max=100))},
+        ),
+    )
 
     return True
 
@@ -89,9 +101,21 @@ class IntentPlatformProtocol(Protocol):
 class OnOffIntentHandler(intent.ServiceIntentHandler):
     """Intent handler for on/off that also supports covers, valves, locks, etc."""
 
+    def __init__(
+        self,
+        intent_type: str,
+        domain: str,
+        service: str,
+    ) -> None:
+        """Create on/off intent handler."""
+        super().__init__(intent_type, domain, service)
+
     async def async_call_service(self, intent_obj: intent.Intent, state: State) -> None:
         """Call service on entity with handling for special cases."""
         hass = intent_obj.hass
+
+        # Required to be a str in constructor
+        assert self.service is not None
 
         if state.domain == COVER_DOMAIN:
             # on = open
@@ -294,6 +318,34 @@ class NevermindIntentHandler(intent.IntentHandler):
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Doe not do anything, and produces an empty response."""
         return intent_obj.create_response()
+
+
+class SetPositionIntentHandler(intent.ServiceIntentHandler):
+    """Intent handler for setting positions."""
+
+    async def async_call_service(self, intent_obj: intent.Intent, state: State) -> None:
+        """Call service on entity with handling for special cases."""
+        hass = intent_obj.hass
+        position = intent_obj.slots[ATTR_POSITION]["value"]
+
+        if state.domain == COVER_DOMAIN:
+            service_name = SERVICE_SET_COVER_POSITION
+        elif state.domain == VALVE_DOMAIN:
+            service_name = SERVICE_SET_VALVE_POSITION
+        else:
+            raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
+
+        await self._run_then_background(
+            hass.async_create_task(
+                hass.services.async_call(
+                    state.domain,
+                    service_name,
+                    {ATTR_ENTITY_ID: state.entity_id, ATTR_POSITION: position},
+                    context=intent_obj.context,
+                    blocking=True,
+                )
+            )
+        )
 
 
 async def _async_process_intent(

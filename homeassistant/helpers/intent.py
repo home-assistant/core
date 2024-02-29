@@ -389,6 +389,7 @@ class ServiceIntentHandler(IntentHandler):
     """Service Intent handler registration.
 
     Service specific intent handler that calls a service by name/entity_id.
+    If service name is None (dynamic), it must be before async_call_service is called.
     """
 
     slot_schema = {
@@ -405,7 +406,7 @@ class ServiceIntentHandler(IntentHandler):
         self,
         intent_type: str,
         domain: str,
-        service: str,
+        service: str | None,
         speech: str | None = None,
         extra_slots: dict[str, vol.Schema] | None = None,
     ) -> None:
@@ -577,6 +578,9 @@ class ServiceIntentHandler(IntentHandler):
     async def async_call_service(self, intent_obj: Intent, state: State) -> None:
         """Call service on entity."""
         hass = intent_obj.hass
+
+        if self.service is None:
+            raise ValueError("Service is not set")
 
         service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
         if self.extra_slots:
