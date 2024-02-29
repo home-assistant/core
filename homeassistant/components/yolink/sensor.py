@@ -56,7 +56,7 @@ class YoLinkSensorEntityDescription(SensorEntityDescription):
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
     should_update_entity: Callable = lambda state: True
-    value: Callable = lambda state, device: state
+    value: Callable = lambda state: state
 
 
 SENSOR_DEVICE_TYPE = [
@@ -104,7 +104,7 @@ MCU_DEV_TEMPERATURE_SENSOR = [
 ]
 
 
-def cvt_battery(val: int | None, device: YoLinkDevice) -> int | None:
+def cvt_battery(val: int | None) -> int | None:
     """Convert battery to percentage."""
     if val is None:
         return None
@@ -113,21 +113,12 @@ def cvt_battery(val: int | None, device: YoLinkDevice) -> int | None:
     return 0
 
 
-def cvt_volume(val: int | None, device: YoLinkDevice) -> str | None:
+def cvt_volume(val: int | None) -> str | None:
     """Convert volume to string."""
     if val is None:
         return None
     volume_level = {1: "low", 2: "medium", 3: "high"}
     return volume_level.get(val, None)
-
-
-def cvt_distance(val: int | None, device: YoLinkDevice) -> float | None:
-    """Distance conversion."""
-    if device.device_attrs is not None and val is not None:
-        dev_range = device.device_attrs["range"]["range"]
-        dev_density = device.device_attrs["range"]["density"]
-        return round((dev_range * (val / 1000)) / dev_density, 2)
-    return None
 
 
 SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
@@ -188,7 +179,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         icon="mdi:volume-mute",
         options=["muted", "unmuted"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
-        value=lambda value, device: "muted" if value is True else "unmuted",
+        value=lambda value: "muted" if value is True else "unmuted",
     ),
     YoLinkSensorEntityDescription(
         key="sound",
@@ -206,14 +197,13 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         icon="mdi:bullhorn",
         options=["enabled", "disabled"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
-        value=lambda value, device: "enabled" if value is True else "disabled",
+        value=lambda value: "enabled" if value is True else "disabled",
     ),
     YoLinkSensorEntityDescription(
         key="waterDepth",
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.METERS,
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_WATER_DEPTH_SENSOR,
-        value=cvt_distance,
     ),
 )
 
@@ -267,7 +257,7 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         """Update HA Entity State."""
         if (
             attr_val := self.entity_description.value(
-                state.get(self.entity_description.key), self.coordinator.device
+                state.get(self.entity_description.key)
             )
         ) is None and self.entity_description.should_update_entity(attr_val) is False:
             return

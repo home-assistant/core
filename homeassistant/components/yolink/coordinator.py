@@ -6,11 +6,7 @@ from datetime import UTC, datetime, timedelta
 import logging
 
 from yolink.device import YoLinkDevice
-from yolink.exception import (
-    YoLinkAuthFailError,
-    YoLinkClientError,
-    YoLinkUnSupportedMethodError,
-)
+from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -56,14 +52,6 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
                         - datetime.strptime(device_reporttime, "%Y-%m-%dT%H:%M:%S.%fZ")
                     ).total_seconds()
                     self.dev_online = rpt_time_delta < YOLINK_OFFLINE_TIME
-                try:
-                    dev_external_data_resp = await self.device.get_external_data()
-                    self.device.device_attrs = dev_external_data_resp.data["extData"]
-                except YoLinkUnSupportedMethodError:
-                    _LOGGER.error(
-                        "GetExternalData is not supported for device type: %s",
-                        self.device.device_type,
-                    )
                 if self.paired_device is not None and device_state is not None:
                     paried_device_state_resp = await self.paired_device.fetch_state()
                     paried_device_state = paried_device_state_resp.data.get(
