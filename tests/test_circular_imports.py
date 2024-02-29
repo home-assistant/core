@@ -5,6 +5,7 @@ import sys
 import pytest
 
 
+@pytest.mark.timeout(30)  # cloud can take > 9s
 @pytest.mark.parametrize(
     "component",
     (
