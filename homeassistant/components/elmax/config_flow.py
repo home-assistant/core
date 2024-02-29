@@ -25,7 +25,6 @@ from .const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
     CONF_ELMAX_MODE_DIRECT,
-    CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS,
     CONF_ELMAX_MODE_DIRECT_HOST,
     CONF_ELMAX_MODE_DIRECT_PORT,
     CONF_ELMAX_MODE_DIRECT_SSL,
@@ -62,7 +61,6 @@ DIRECT_SETUP_SCHEMA = vol.Schema(
         vol.Required(CONF_ELMAX_MODE_DIRECT_HOST): str,
         vol.Required(CONF_ELMAX_MODE_DIRECT_PORT, default=443): int,
         vol.Required(CONF_ELMAX_MODE_DIRECT_SSL, default=True): bool,
-        vol.Required(CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS, default=True): bool,
         vol.Required(CONF_ELMAX_PANEL_PIN): str,
     }
 )
@@ -199,7 +197,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ELMAX_MODE_DIRECT_HOST: self._panel_direct_hostname,
                 CONF_ELMAX_MODE_DIRECT_PORT: self._panel_direct_port,
                 CONF_ELMAX_MODE_DIRECT_SSL: self._panel_direct_use_ssl,
-                CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: self._panel_direct_follow_mdns,
                 CONF_ELMAX_PANEL_PIN: self._panel_pin,
                 CONF_ELMAX_PANEL_ID: panel_status.panel_id,
                 CONF_ELMAX_MODE_DIRECT_SSL_CERT: self._panel_direct_ssl_cert,
@@ -220,7 +217,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._panel_direct_port = user_input[CONF_ELMAX_MODE_DIRECT_PORT]
         self._panel_direct_use_ssl = user_input[CONF_ELMAX_MODE_DIRECT_SSL]
         self._panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
-        self._panel_direct_follow_mdns = user_input[CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS]
+        self._panel_direct_follow_mdns = True
 
         tmp_schema = vol.Schema(
             {
@@ -232,10 +229,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ): int,
                 vol.Required(
                     CONF_ELMAX_MODE_DIRECT_SSL, default=self._panel_direct_use_ssl
-                ): bool,
-                vol.Required(
-                    CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS,
-                    default=self._panel_direct_follow_mdns,
                 ): bool,
                 vol.Required(CONF_ELMAX_PANEL_PIN, default=self._panel_pin): str,
             }
@@ -484,7 +477,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     entry.data.get(CONF_ELMAX_MODE, CONF_ELMAX_MODE_CLOUD)
                     == CONF_ELMAX_MODE_DIRECT
                     and entry.data[CONF_ELMAX_MODE_DIRECT_HOST] != host
-                    and entry.data.get(CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS, False)
                 ):
                     new_data: dict[str, Any] = {}
                     new_data.update(entry.data)

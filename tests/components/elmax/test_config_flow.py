@@ -9,7 +9,6 @@ from homeassistant.components.elmax.const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
     CONF_ELMAX_MODE_DIRECT,
-    CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS,
     CONF_ELMAX_MODE_DIRECT_HOST,
     CONF_ELMAX_MODE_DIRECT_PORT,
     CONF_ELMAX_MODE_DIRECT_SSL,
@@ -26,7 +25,6 @@ from homeassistant.core import HomeAssistant
 
 from . import (
     MOCK_DIRECT_CERT,
-    MOCK_DIRECT_FOLLOW_MDNS,
     MOCK_DIRECT_HOST,
     MOCK_DIRECT_HOST_CHANGED,
     MOCK_DIRECT_PORT,
@@ -113,7 +111,6 @@ async def test_direct_setup(hass: HomeAssistant) -> None:
                 CONF_ELMAX_MODE_DIRECT_HOST: MOCK_DIRECT_HOST,
                 CONF_ELMAX_MODE_DIRECT_PORT: MOCK_DIRECT_PORT,
                 CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
-                CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: MOCK_DIRECT_FOLLOW_MDNS,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
             },
         )
@@ -242,7 +239,6 @@ async def test_zeroconf_already_configured(hass):
             CONF_ELMAX_MODE_DIRECT_HOST: MOCK_DIRECT_HOST,
             CONF_ELMAX_MODE_DIRECT_PORT: MOCK_DIRECT_PORT,
             CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
-            CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: MOCK_DIRECT_FOLLOW_MDNS,
             CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
             CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
             CONF_ELMAX_MODE_DIRECT_SSL_CERT: MOCK_DIRECT_CERT,
@@ -270,7 +266,6 @@ async def test_zeroconf_panel_changed_ip(hass):
             CONF_ELMAX_MODE_DIRECT_HOST: MOCK_DIRECT_HOST,
             CONF_ELMAX_MODE_DIRECT_PORT: MOCK_DIRECT_PORT,
             CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
-            CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: MOCK_DIRECT_FOLLOW_MDNS,
             CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
             CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
             CONF_ELMAX_MODE_DIRECT_SSL_CERT: MOCK_DIRECT_CERT,
@@ -407,7 +402,6 @@ async def test_direct_connection_error(hass: HomeAssistant) -> None:
                 CONF_ELMAX_MODE_DIRECT_HOST: MOCK_DIRECT_HOST,
                 CONF_ELMAX_MODE_DIRECT_PORT: MOCK_DIRECT_PORT,
                 CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
-                CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: MOCK_DIRECT_FOLLOW_MDNS,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
             },
         )
@@ -435,7 +429,6 @@ async def test_direct_wrong_panel_code(hass: HomeAssistant) -> None:
                 CONF_ELMAX_MODE_DIRECT_HOST: MOCK_DIRECT_HOST,
                 CONF_ELMAX_MODE_DIRECT_PORT: MOCK_DIRECT_PORT,
                 CONF_ELMAX_MODE_DIRECT_SSL: MOCK_DIRECT_SSL,
-                CONF_ELMAX_MODE_DIRECT_FOLLOW_MDNS: MOCK_DIRECT_FOLLOW_MDNS,
                 CONF_ELMAX_PANEL_PIN: MOCK_WRONG_PANEL_PIN,
             },
         )
