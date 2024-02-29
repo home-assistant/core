@@ -64,19 +64,26 @@ async def async_setup_entry(
     coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Setup device point number entities
-    for device_id, point_data in coordinator.data.points.items():
-        for point_id, device_point in point_data.items():
-            description = get_description(device_point)
-            if find_matching_platform(device_point, description) == Platform.NUMBER:
-                entities.append(
-                    MyUplinkNumber(
-                        coordinator=coordinator,
-                        device_id=device_id,
-                        device_point=device_point,
-                        entity_description=description,
-                        unique_id_suffix=point_id,
-                    )
-                )
+    for system in coordinator.data.systems:
+        for device in system.devices:
+            for device_id, point_data in coordinator.data.points.items():
+                if device_id != device.deviceId:
+                    continue
+                for point_id, device_point in point_data.items():
+                    description = get_description(device_point)
+                    if (
+                        find_matching_platform(device_point, description)
+                        == Platform.NUMBER
+                    ):
+                        entities.append(
+                            MyUplinkNumber(
+                                coordinator=coordinator,
+                                device_id=device_id,
+                                device_point=device_point,
+                                entity_description=description,
+                                unique_id_suffix=point_id,
+                            )
+                        )
 
     async_add_entities(entities)
 

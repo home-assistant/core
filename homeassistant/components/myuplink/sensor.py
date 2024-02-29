@@ -99,6 +99,10 @@ MARKER_FOR_UNKNOWN_VALUE = -32768
 
 CATEGORY_BASED_DESCRIPTIONS: dict[str, dict[str, SensorEntityDescription]] = {
     "NIBEF": {
+        "40940": SensorEntityDescription(
+            key="degree_minutes",
+            native_unit_of_measurement="DM",
+        ),
         "43108": SensorEntityDescription(
             key="fan_mode",
             icon="mdi:fan",
@@ -153,35 +157,42 @@ async def async_setup_entry(
     coordinator: MyUplinkDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     # Setup device point sensors
-    for device_id, point_data in coordinator.data.points.items():
-        for point_id, device_point in point_data.items():
-            if find_matching_platform(device_point) == Platform.SENSOR:
-                description = get_description(device_point)
-                entity_class = MyUplinkDevicePointSensor
-                if (
-                    description is not None
-                    and description.device_class == SensorDeviceClass.ENUM
-                ):
+    for system in coordinator.data.systems:
+        for device in system.devices:
+            for device_id, point_data in coordinator.data.points.items():
+                if device_id != device.deviceId:
+                    continue
+                for point_id, device_point in point_data.items():
+                    description = get_description(device_point)
+                    if (
+                        find_matching_platform(device_point, description)
+                        != Platform.SENSOR
+                    ):
+                        continue
+                    entity_class = MyUplinkDevicePointSensor
+                    if (
+                        description is not None
+                        and description.device_class == SensorDeviceClass.ENUM
+                    ):
+                        entities.append(
+                            MyUplinkEnumRawSensor(
+                                coordinator=coordinator,
+                                device_id=device_id,
+                                device_point=device_point,
+                                entity_description=description,
+                                unique_id_suffix=f"{point_id}-raw",
+                            )
+                        )
+                        entity_class = MyUplinkEnumSensor
                     entities.append(
-                        MyUplinkEnumRawSensor(
+                        entity_class(
                             coordinator=coordinator,
                             device_id=device_id,
                             device_point=device_point,
                             entity_description=description,
-                            unique_id_suffix=f"{point_id}-raw",
+                            unique_id_suffix=point_id,
                         )
                     )
-                    entity_class = MyUplinkEnumSensor
-
-                entities.append(
-                    entity_class(
-                        coordinator=coordinator,
-                        device_id=device_id,
-                        device_point=device_point,
-                        entity_description=description,
-                        unique_id_suffix=point_id,
-                    )
-                )
 
     async_add_entities(entities)
 
