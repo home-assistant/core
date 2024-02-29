@@ -48,8 +48,10 @@ class ConfirmRepairFlow(RepairsFlow):
         )
 
 
-class RepairsFlowManager(data_entry_flow.FlowManager):
+class RepairsFlowManager(data_entry_flow.BaseFlowManager[data_entry_flow.FlowResult]):
     """Manage repairs flows."""
+
+    _flow_result = data_entry_flow.FlowResult
 
     async def async_create_flow(
         self,
@@ -82,7 +84,7 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         return flow
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
+        self, flow: data_entry_flow.BaseFlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Complete a fix flow."""
         if result.get("type") != data_entry_flow.FlowResultType.ABORT:
@@ -105,7 +107,8 @@ async def async_process_repairs_platforms(hass: HomeAssistant) -> None:
     await async_process_integration_platforms(hass, DOMAIN, _register_repairs_platform)
 
 
-async def _register_repairs_platform(
+@callback
+def _register_repairs_platform(
     hass: HomeAssistant, integration_domain: str, platform: RepairsProtocol
 ) -> None:
     """Register a repairs platform."""

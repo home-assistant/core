@@ -6,7 +6,6 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -14,10 +13,14 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.components.network import MDNS_TARGET_IP
-from homeassistant.config_entries import ConfigEntry, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -133,16 +136,16 @@ async def _async_build_schema_with_user_input(
     return vol.Schema(schema)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for homekit."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.options = dict(config_entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         errors = {}
         if user_input is not None:
@@ -163,7 +166,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Nmap Tracker."""
 
     VERSION = 1
@@ -174,7 +177,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

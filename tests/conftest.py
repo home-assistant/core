@@ -55,12 +55,15 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     issue_registry as ir,
+    label_registry as lr,
     recorder as recorder_helper,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import BASE_PLATFORMS, async_setup_component
 from homeassistant.util import location
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
@@ -553,7 +556,7 @@ async def hass(
         # to ensure that they could, and to help track lingering tasks and timers.
         await asyncio.gather(
             *(
-                config_entry.async_unload(hass)
+                create_eager_task(config_entry.async_unload(hass))
                 for config_entry in hass.config_entries.async_entries()
             )
         )
@@ -1577,6 +1580,33 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
 
 
 @pytest.fixture
+def mock_integration_frame() -> Generator[Mock, None, None]:
+    """Mock as if we're calling code from inside an integration."""
+    correct_frame = Mock(
+        filename="/home/paulus/homeassistant/components/hue/light.py",
+        lineno="23",
+        line="self.light.is_on",
+    )
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            correct_frame,
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        yield correct_frame
+
+
+@pytest.fixture
 def mock_bluetooth(
     mock_bleak_scanner_start: MagicMock, mock_bluetooth_adapters: None
 ) -> None:
@@ -1602,9 +1632,21 @@ def entity_registry(hass: HomeAssistant) -> er.EntityRegistry:
 
 
 @pytest.fixture
+def floor_registry(hass: HomeAssistant) -> fr.FloorRegistry:
+    """Return the floor registry from the current hass instance."""
+    return fr.async_get(hass)
+
+
+@pytest.fixture
 def issue_registry(hass: HomeAssistant) -> ir.IssueRegistry:
     """Return the issue registry from the current hass instance."""
     return ir.async_get(hass)
+
+
+@pytest.fixture
+def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
+    """Return the label registry from the current hass instance."""
+    return lr.async_get(hass)
 
 
 @pytest.fixture

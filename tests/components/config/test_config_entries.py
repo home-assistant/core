@@ -42,7 +42,7 @@ def mock_test_component(hass):
 async def client(hass, hass_client):
     """Fixture that can interact with the config manager API."""
     await async_setup_component(hass, "http", {})
-    await config_entries.async_setup(hass)
+    config_entries.async_setup(hass)
     return await hass_client()
 
 
@@ -941,10 +941,8 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
             "handler": "test1",
             "type": "create_entry",
             "title": "Enable disable",
-            "version": 1,
             "description": None,
             "description_placeholders": None,
-            "minor_version": 1,
         }
 
 
