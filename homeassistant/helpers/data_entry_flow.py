@@ -18,7 +18,7 @@ from . import config_validation as cv
 class _BaseFlowManagerView(HomeAssistantView):
     """Foundation for flow manager views."""
 
-    def __init__(self, flow_mgr: data_entry_flow.FlowManager) -> None:
+    def __init__(self, flow_mgr: data_entry_flow.BaseFlowManager) -> None:
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
 
@@ -69,7 +69,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 
         try:
             result = await self._flow_mgr.async_init(
-                handler,
+                handler,  # type: ignore[arg-type]
                 context=self.get_context(data),
             )
         except data_entry_flow.UnknownHandler:
