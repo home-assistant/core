@@ -52,7 +52,7 @@ BINARY_SENSOR_SIREN_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = (
         name="Sounding",
         netatmo_name="status",
         device_class=BinarySensorDeviceClass.SOUND,
-        icon="mdi:alarm-light",
+        icon="mdi:home-sound-int",
     ),
     NetatmoBinarySensorEntityDescription(
         key="monitoring",
@@ -78,14 +78,14 @@ BINARY_SENSOR_OPENING_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = 
         name="Motion",
         netatmo_name="status",
         device_class=BinarySensorDeviceClass.MOTION,
-        icon="mdi:window-closed-variant",
+        icon="mdi:motion-sensor",
     ),
     NetatmoBinarySensorEntityDescription(
         key="vibration",
         name="Vibration",
         netatmo_name="status",
         device_class=BinarySensorDeviceClass.VIBRATION,
-        icon="mdi:window-closed-variant",
+        icon="mdi:vibrate",
     ),
 )
 
