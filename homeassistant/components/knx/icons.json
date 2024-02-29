@@ -24,7 +24,7 @@
   "services": {
     "send": "mdi:upload-network",
     "read": "mdi:download-network",
-    "event_register": "mdi:calendar-star-four-points",
+    "event_register": "mdi:home-import-outline",
     "exposure_register": "mdi:eye",
     "reload": "mdi:reload"
   }
