@@ -14,6 +14,9 @@ import threading
 from time import monotonic
 from typing import TYPE_CHECKING, Any
 
+# Import cryptography early since import openssl is not thread-safe
+# _frozen_importlib._DeadlockError: deadlock detected by _ModuleLock('cryptography.hazmat.backends.openssl.backend')
+import cryptography  # noqa: F401
 import voluptuous as vol
 import yarl
 
