@@ -1727,7 +1727,7 @@ python-izone==1.2.9
 python-kasa[speedups]==0.6.2.1
 
 # homeassistant.components.matter
-python-matter-server==5.5.0
+python-matter-server==5.7.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
