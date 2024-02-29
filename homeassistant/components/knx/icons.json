@@ -23,7 +23,7 @@
   },
   "services": {
     "send": "mdi:email-arrow-right",
-    "read": "mdi:download-network",
+    "read": "mdi:email-search",
     "event_register": "mdi:home-import-outline",
     "exposure_register": "mdi:home-import-outline",
     "reload": "mdi:reload"
