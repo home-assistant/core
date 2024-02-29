@@ -4,7 +4,7 @@
       "device_tracker": {
         "default": "mdi:bluetooth-off",
         "state": {
-          "not_home": "mdi:bluetooth-connect"
+          "home": "mdi:bluetooth-connect"
         }
       }
     },
