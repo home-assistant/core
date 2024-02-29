@@ -60,7 +60,7 @@
     }),
     'positions': '**REDACTED**',
     'statistics': dict({
-      'cutting_blade_usage_time': None,
+      'cutting_blade_usage_time': 123,
       'number_of_charging_cycles': 1380,
       'number_of_collisions': 11396,
       'total_charging_time': 4334400,
