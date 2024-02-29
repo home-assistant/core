@@ -209,9 +209,9 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
     def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
         """Init this entity from the quirks metadata."""
         super()._init_from_quirks_metadata(entity_metadata)
-        zcl_enum__metadata: ZCLEnumMetadata = entity_metadata.entity_metadata
-        self._attribute_name = zcl_enum__metadata.attribute_name
-        self._enum = zcl_enum__metadata.enum
+        zcl_enum_metadata: ZCLEnumMetadata = entity_metadata.entity_metadata
+        self._attribute_name = zcl_enum_metadata.attribute_name
+        self._enum = zcl_enum_metadata.enum
 
     @property
     def current_option(self) -> str | None:
