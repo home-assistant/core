@@ -265,17 +265,13 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         """Turn the entity on or off."""
         if self.inverted:
             state = not state
-        if state and self._on_value != 1:
+        if state:
             await self._cluster_handler.write_attributes_safe(
                 {self._attribute_name: self._on_value}
             )
-        elif not state and self._off_value != 0:
-            await self._cluster_handler.write_attributes_safe(
-                {self._attribute_name: self._off_value}
-            )
         else:
             await self._cluster_handler.write_attributes_safe(
-                {self._attribute_name: state}
+                {self._attribute_name: self._off_value}
             )
         self.async_write_ha_state()
 
