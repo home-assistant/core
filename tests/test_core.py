@@ -2883,3 +2883,5 @@ async def test_async_add_import_executor_job(hass: HomeAssistant) -> None:
     future = hass.async_add_import_executor_job(executor_func)
     await loop.run_in_executor(None, evt.wait)
     assert await future is evt
+
+    assert hass.import_executor._max_workers == 1
