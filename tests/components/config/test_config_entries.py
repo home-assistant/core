@@ -941,10 +941,8 @@ async def test_two_step_options_flow(hass: HomeAssistant, client) -> None:
             "handler": "test1",
             "type": "create_entry",
             "title": "Enable disable",
-            "version": 1,
             "description": None,
             "description_placeholders": None,
-            "minor_version": 1,
         }
 
 
