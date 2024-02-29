@@ -1,4 +1,4 @@
-"""Test the Advantage Air Diagnostics."""
+"""Test the Husqvarna Automower Diagnostics."""
 import datetime
 import os
 import time
