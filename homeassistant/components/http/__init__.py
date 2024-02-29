@@ -32,7 +32,11 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.http import HomeAssistantView, current_request
+from homeassistant.helpers.http import (
+    KEY_AUTHENTICATED,  # noqa: F401
+    HomeAssistantView,
+    current_request,
+)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
