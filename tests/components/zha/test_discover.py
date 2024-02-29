@@ -40,6 +40,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import EntityPlatform
 
+from .common import find_entity_id, update_attribute_cache
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from .zha_devices_list import (
     DEV_SIG_ATTRIBUTES,
@@ -50,8 +51,6 @@ from .zha_devices_list import (
     DEV_SIG_EVT_CLUSTER_HANDLERS,
     DEVICES,
 )
-
-from tests.components.zha.common import find_entity_id, update_attribute_cache
 
 NO_TAIL_ID = re.compile("_\\d$")
 UNIQUE_ID_HD = re.compile(r"^(([\da-fA-F]{2}:){7}[\da-fA-F]{2}-\d{1,3})", re.X)
