@@ -1205,11 +1205,7 @@ class OppleCluster(CustomCluster, ManufacturerSpecificCluster):
         """Initialize."""
         super().__init__(*args, **kwargs)
         # populate cache to create config entity
-        self._attr_cache.update(
-            {
-                0x010C: 10,
-            }
-        )
+        self._attr_cache.update({0x010C: 10})
 
 
 (
