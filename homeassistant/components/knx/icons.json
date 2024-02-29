@@ -25,7 +25,7 @@
     "send": "mdi:upload-network",
     "read": "mdi:download-network",
     "event_register": "mdi:home-import-outline",
-    "exposure_register": "mdi:eye",
+    "exposure_register": "mdi:home-import-outline",
     "reload": "mdi:reload"
   }
 }
