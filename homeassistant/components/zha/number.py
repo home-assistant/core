@@ -953,7 +953,10 @@ class AqaraThermostatAwayTemp(ZHANumberConfigurationEntity):
     _attr_icon: str = ICONS[0]
 
 
-@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT)
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
+)
 # pylint: disable-next=hass-invalid-inheritance # needs fixing
 class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
     """Local temperature calibration."""
@@ -969,6 +972,20 @@ class ThermostatLocalTempCalibration(ZHANumberConfigurationEntity):
     _attr_mode: NumberMode = NumberMode.SLIDER
     _attr_native_unit_of_measurement: str = UnitOfTemperature.CELSIUS
     _attr_icon: str = ICONS[0]
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
+    models={"TRVZB"},
+    stop_on_match_group=CLUSTER_HANDLER_THERMOSTAT,
+)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class SonoffThermostatLocalTempCalibration(ThermostatLocalTempCalibration):
+    """Local temperature calibration for the Sonoff TRVZB."""
+
+    _attr_native_min_value: float = -7
+    _attr_native_max_value: float = 7
+    _attr_native_step: float = 0.2
 
 
 @CONFIG_DIAGNOSTIC_MATCH(

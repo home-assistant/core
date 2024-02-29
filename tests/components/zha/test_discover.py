@@ -24,7 +24,8 @@ from homeassistant.components.zha.core.helpers import get_zha_gateway
 import homeassistant.components.zha.core.registries as zha_regs
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import EntityPlatform
 
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from .zha_devices_list import (
@@ -80,8 +81,6 @@ async def test_devices(
     zha_device_joined_restored,
 ) -> None:
     """Test device discovery."""
-    entity_registry = er.async_get(hass_disable_services)
-
     zigpy_device = zigpy_device_mock(
         endpoints=device[SIG_ENDPOINTS],
         ieee="00:11:22:33:44:55:66:77",
@@ -96,14 +95,13 @@ async def test_devices(
     if cluster_identify:
         cluster_identify.request.reset_mock()
 
-    orig_new_entity = Endpoint.async_new_entity
-    _dispatch = mock.MagicMock(wraps=orig_new_entity)
-    try:
-        Endpoint.async_new_entity = lambda *a, **kw: _dispatch(*a, **kw)
+    with patch(
+        "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities_for_entry",
+        side_effect=EntityPlatform._async_schedule_add_entities_for_entry,
+        autospec=True,
+    ) as mock_add_entities:
         zha_dev = await zha_device_joined_restored(zigpy_device)
         await hass_disable_services.async_block_till_done()
-    finally:
-        Endpoint.async_new_entity = orig_new_entity
 
     if cluster_identify:
         # We only identify on join
@@ -136,60 +134,38 @@ async def test_devices(
         for ch in endpoint.client_cluster_handlers.values()
     }
     assert event_cluster_handlers == set(device[DEV_SIG_EVT_CLUSTER_HANDLERS])
-    # we need to probe the class create entity factory so we need to reset this to get accurate results
-    zha_regs.ZHA_ENTITIES.clean_up()
-    # build a dict of entity_class -> (platform, unique_id, cluster_handlers) tuple
-    ha_ent_info = {}
-    created_entity_count = 0
-    for call in _dispatch.call_args_list:
-        _, platform, entity_cls, unique_id, cluster_handlers = call[0]
-        # the factory can return None. We filter these out to get an accurate created entity count
-        response = entity_cls.create_entity(unique_id, zha_dev, cluster_handlers)
-        if response and not contains_ignored_suffix(response.unique_id):
-            created_entity_count += 1
-            unique_id_head = UNIQUE_ID_HD.match(unique_id).group(
-                0
-            )  # ieee + endpoint_id
-            ha_ent_info[(unique_id_head, entity_cls.__name__)] = (
-                platform,
-                unique_id,
-                cluster_handlers,
-            )
 
-    for comp_id, ent_info in device[DEV_SIG_ENT_MAP].items():
-        platform, unique_id = comp_id
+    # Keep track of unhandled entities: they should always be ones we explicitly ignore
+    created_entities = {
+        entity.entity_id: entity
+        for mock_call in mock_add_entities.mock_calls
+        for entity in mock_call.args[1]
+    }
+    unhandled_entities = set(created_entities.keys())
+    entity_registry = er.async_get(hass_disable_services)
+
+    for (platform, unique_id), ent_info in device[DEV_SIG_ENT_MAP].items():
         no_tail_id = NO_TAIL_ID.sub("", ent_info[DEV_SIG_ENT_MAP_ID])
         ha_entity_id = entity_registry.async_get_entity_id(platform, "zha", unique_id)
         assert ha_entity_id is not None
         assert ha_entity_id.startswith(no_tail_id)
 
-        test_ent_class = ent_info[DEV_SIG_ENT_MAP_CLASS]
-        test_unique_id_head = UNIQUE_ID_HD.match(unique_id).group(0)
-        assert (test_unique_id_head, test_ent_class) in ha_ent_info
+        entity = created_entities[ha_entity_id]
+        unhandled_entities.remove(ha_entity_id)
 
-        ha_comp, ha_unique_id, ha_cluster_handlers = ha_ent_info[
-            (test_unique_id_head, test_ent_class)
-        ]
-        assert platform is ha_comp.value
+        assert entity.platform.domain == platform
+        assert type(entity).__name__ == ent_info[DEV_SIG_ENT_MAP_CLASS]
         # unique_id used for discover is the same for "multi entities"
-        assert unique_id.startswith(ha_unique_id)
-        assert {ch.name for ch in ha_cluster_handlers} == set(
+        assert unique_id == entity.unique_id
+        assert {ch.name for ch in entity.cluster_handlers.values()} == set(
             ent_info[DEV_SIG_CLUSTER_HANDLERS]
         )
 
-    assert created_entity_count == len(device[DEV_SIG_ENT_MAP])
-
-    entity_ids = hass_disable_services.states.async_entity_ids()
-    await hass_disable_services.async_block_till_done()
-
-    zha_entity_ids = {
-        ent
-        for ent in entity_ids
-        if not contains_ignored_suffix(ent) and ent.split(".")[0] in zha_const.PLATFORMS
-    }
-    assert zha_entity_ids == {
-        e[DEV_SIG_ENT_MAP_ID] for e in device[DEV_SIG_ENT_MAP].values()
-    }
+    # All unhandled entities should be ones we explicitly ignore
+    for entity_id in unhandled_entities:
+        domain = entity_id.split(".")[0]
+        assert domain in zha_const.PLATFORMS
+        assert contains_ignored_suffix(entity_id)
 
 
 def _get_first_identify_cluster(zigpy_device):
