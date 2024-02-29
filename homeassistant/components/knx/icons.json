@@ -22,7 +22,7 @@
     }
   },
   "services": {
-    "send": "mdi:upload-network",
+    "send": "mdi:email-arrow-right",
     "read": "mdi:download-network",
     "event_register": "mdi:home-import-outline",
     "exposure_register": "mdi:home-import-outline",
