@@ -9,7 +9,7 @@
       }
     },
     "progress": {
-      "wait_for_device": "1. Open {url} \n2.Paste the following key to authorize the integration: \n```\n{code}\n```\n"
+      "wait_for_device": "Open {url}, and paste the following code to authorize the integration: \n```\n{code}\n```\n"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",

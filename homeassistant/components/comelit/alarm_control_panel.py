@@ -127,14 +127,12 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
                 return STATE_ALARM_ARMED_NIGHT
             return STATE_ALARM_ARMED_HOME
 
-        {
+        return {
             AlarmAreaState.DISARMED: STATE_ALARM_DISARMED,
             AlarmAreaState.ENTRY_DELAY: STATE_ALARM_DISARMING,
             AlarmAreaState.EXIT_DELAY: STATE_ALARM_ARMING,
             AlarmAreaState.TRIGGERED: STATE_ALARM_TRIGGERED,
         }.get(self._area.human_status)
-
-        return None
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""

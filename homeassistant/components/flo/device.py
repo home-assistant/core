@@ -7,6 +7,7 @@ from typing import Any
 
 from aioflo.api import API
 from aioflo.errors import RequestError
+from orjson import JSONDecodeError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -15,8 +16,10 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN as FLO_DOMAIN, LOGGER
 
 
-class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
+class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
     """Flo device object."""
+
+    _failure_count: int = 0
 
     def __init__(
         self, hass: HomeAssistant, api_client: API, location_id: str, device_id: str
@@ -43,8 +46,11 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
                 await self.send_presence_ping()
                 await self._update_device()
                 await self._update_consumption_data()
-        except RequestError as error:
-            raise UpdateFailed(error) from error
+                self._failure_count = 0
+        except (RequestError, TimeoutError, JSONDecodeError) as error:
+            self._failure_count += 1
+            if self._failure_count > 3:
+                raise UpdateFailed(error) from error
 
     @property
     def location_id(self) -> str:

@@ -88,7 +88,12 @@ class MetEireannWeather(
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
 
-    def __init__(self, coordinator, config, hourly):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[MetEireannWeatherData],
+        config: MappingProxyType[str, Any],
+        hourly: bool,
+    ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
         self._attr_unique_id = _calculate_unique_id(config, hourly)
@@ -103,41 +108,41 @@ class MetEireannWeather(
         self._attr_device_info = DeviceInfo(
             name="Forecast",
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN,)},
+            identifiers={(DOMAIN,)},  # type: ignore[arg-type]
             manufacturer="Met Éireann",
             model="Forecast",
             configuration_url="https://www.met.ie",
         )
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
         return format_condition(
             self.coordinator.data.current_weather_data.get("condition")
         )
 
     @property
-    def native_temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data.current_weather_data.get("temperature")
 
     @property
-    def native_pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
         return self.coordinator.data.current_weather_data.get("pressure")
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
         return self.coordinator.data.current_weather_data.get("humidity")
 
     @property
-    def native_wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self.coordinator.data.current_weather_data.get("wind_speed")
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | None:
         """Return the wind direction."""
         return self.coordinator.data.current_weather_data.get("wind_bearing")
 

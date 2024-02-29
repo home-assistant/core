@@ -6,6 +6,10 @@ from collections.abc import Callable
 import logging
 from typing import TYPE_CHECKING, cast
 
+from slugify import slugify
+from zigpy.state import State
+from zigpy.zcl.clusters.general import Ota
+
 from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -32,6 +36,7 @@ from .. import (  # noqa: F401
     sensor,
     siren,
     switch,
+    update,
 )
 from . import const as zha_const, registries as zha_regs
 
@@ -70,11 +75,12 @@ async def async_add_entities(
             tuple[str, ZHADevice, list[ClusterHandler]],
         ]
     ],
+    **kwargs,
 ) -> None:
     """Add entities helper."""
     if not entities:
         return
-    to_add = [ent_cls.create_entity(*args) for ent_cls, args in entities]
+    to_add = [ent_cls.create_entity(*args, **kwargs) for ent_cls, args in entities]
     entities_to_add = [entity for entity in to_add if entity is not None]
     _async_add_entities(entities_to_add, update_before_add=False)
     entities.clear()
@@ -99,6 +105,52 @@ class ProbeEndpoint:
         self.discover_multi_entities(endpoint)
         self.discover_by_cluster_id(endpoint)
         self.discover_multi_entities(endpoint, config_diagnostic_entities=True)
+        zha_regs.ZHA_ENTITIES.clean_up()
+
+    @callback
+    def discover_device_entities(self, device: ZHADevice) -> None:
+        """Discover entities for a ZHA device."""
+        _LOGGER.debug(
+            "Discovering entities for device: %s-%s",
+            str(device.ieee),
+            device.name,
+        )
+
+        if device.is_coordinator:
+            self.discover_coordinator_device_entities(device)
+
+    @callback
+    def discover_coordinator_device_entities(self, device: ZHADevice) -> None:
+        """Discover entities for the coordinator device."""
+        _LOGGER.debug(
+            "Discovering entities for coordinator device: %s-%s",
+            str(device.ieee),
+            device.name,
+        )
+        state: State = device.gateway.application_controller.state
+        platforms: dict[Platform, list] = get_zha_data(device.hass).platforms
+
+        @callback
+        def process_counters(counter_groups: str) -> None:
+            for counter_group, counters in getattr(state, counter_groups).items():
+                for counter in counters:
+                    platforms[Platform.SENSOR].append(
+                        (
+                            sensor.DeviceCounterSensor,
+                            (
+                                f"{slugify(str(device.ieee))}_{counter_groups}_{counter_group}_{counter}",
+                                device,
+                                counter_groups,
+                                counter_group,
+                                counter,
+                            ),
+                        )
+                    )
+
+        process_counters("counters")
+        process_counters("broadcast_counters")
+        process_counters("device_counters")
+        process_counters("group_counters")
         zha_regs.ZHA_ENTITIES.clean_up()
 
     @callback
@@ -203,9 +255,20 @@ class ProbeEndpoint:
             if platform is None:
                 continue
 
-            cluster_handler_class = zha_regs.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
-                cluster_id, ClusterHandler
+            cluster_handler_classes = zha_regs.ZIGBEE_CLUSTER_HANDLER_REGISTRY.get(
+                cluster_id, {None: ClusterHandler}
             )
+
+            quirk_id = (
+                endpoint.device.quirk_id
+                if endpoint.device.quirk_id in cluster_handler_classes
+                else None
+            )
+
+            cluster_handler_class = cluster_handler_classes.get(
+                quirk_id, ClusterHandler
+            )
+
             cluster_handler = cluster_handler_class(cluster, endpoint)
             self.probe_single_cluster(platform, cluster_handler, endpoint)
 
@@ -222,10 +285,16 @@ class ProbeEndpoint:
         cmpt_by_dev_type = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
 
         if config_diagnostic_entities:
+            cluster_handlers = list(endpoint.all_cluster_handlers.values())
+            ota_handler_id = f"{endpoint.id}:0x{Ota.cluster_id:04x}"
+            if ota_handler_id in endpoint.client_cluster_handlers:
+                cluster_handlers.append(
+                    endpoint.client_cluster_handlers[ota_handler_id]
+                )
             matches, claimed = zha_regs.ZHA_ENTITIES.get_config_diagnostic_entity(
                 endpoint.device.manufacturer,
                 endpoint.device.model,
-                list(endpoint.all_cluster_handlers.values()),
+                cluster_handlers,
                 endpoint.device.quirk_id,
             )
         else:

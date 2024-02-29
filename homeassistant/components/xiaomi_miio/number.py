@@ -417,7 +417,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
     async def async_set_fan_level(self, level: int = 1) -> bool:
         """Set the fan level."""
         return await self._try_command(
-            "Setting the favorite level of the miio device failed.",
+            "Setting the fan level of the miio device failed.",
             self._device.set_fan_level,
             level,
         )

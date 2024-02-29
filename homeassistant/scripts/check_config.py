@@ -27,7 +27,7 @@ import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==6.7.0",)
+REQUIREMENTS = ("colorlog==6.8.2",)
 
 _LOGGER = logging.getLogger(__name__)
 MOCKS: dict[str, tuple[str, Callable]] = {

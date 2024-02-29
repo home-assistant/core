@@ -15,7 +15,7 @@ from zigpy.types.named import EUI64
 
 from homeassistant.const import Platform
 
-from .decorators import DictRegistry, SetRegistry
+from .decorators import DictRegistry, NestedDictRegistry, SetRegistry
 
 if TYPE_CHECKING:
     from ..entity import ZhaEntity, ZhaGroupEntity
@@ -110,7 +110,9 @@ CLUSTER_HANDLER_ONLY_CLUSTERS = SetRegistry()
 CLIENT_CLUSTER_HANDLER_REGISTRY: DictRegistry[
     type[ClientClusterHandler]
 ] = DictRegistry()
-ZIGBEE_CLUSTER_HANDLER_REGISTRY: DictRegistry[type[ClusterHandler]] = DictRegistry()
+ZIGBEE_CLUSTER_HANDLER_REGISTRY: NestedDictRegistry[
+    type[ClusterHandler]
+] = NestedDictRegistry()
 
 WEIGHT_ATTR = attrgetter("weight")
 

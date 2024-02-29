@@ -31,7 +31,7 @@ async def test_if_fires_on_hass_start(
 ) -> None:
     """Test the firing when Home Assistant starts."""
     calls = async_mock_service(hass, "test", "automation")
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     assert await async_setup_component(hass, automation.DOMAIN, hass_config)
     assert automation.is_on(hass, "automation.hello")
@@ -54,7 +54,7 @@ async def test_if_fires_on_hass_start(
 async def test_if_fires_on_hass_shutdown(hass: HomeAssistant) -> None:
     """Test the firing when Home Assistant shuts down."""
     calls = async_mock_service(hass, "test", "automation")
-    hass.state = CoreState.not_running
+    hass.set_state(CoreState.not_running)
 
     assert await async_setup_component(
         hass,

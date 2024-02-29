@@ -2,7 +2,31 @@
 
 from unittest.mock import patch
 
+from bleak_retry_connector import bleak_manager
+from dbus_fast.aio import message_bus
+import habluetooth.util as habluetooth_utils
 import pytest
+
+
+@pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="session")
+def disable_bluez_manager_socket():
+    """Mock the bluez manager socket."""
+    with patch.object(bleak_manager, "get_global_bluez_manager_with_timeout"):
+        yield
+
+
+@pytest.fixture(name="disable_dbus_socket", autouse=True, scope="session")
+def disable_dbus_socket():
+    """Mock the dbus message bus to avoid creating a socket."""
+    with patch.object(message_bus, "MessageBus"):
+        yield
+
+
+@pytest.fixture(name="disable_bluetooth_auto_recovery", autouse=True, scope="session")
+def disable_bluetooth_auto_recovery():
+    """Mock out auto recovery."""
+    with patch.object(habluetooth_utils, "recover_adapter"):
+        yield
 
 
 @pytest.fixture(name="operating_system_85")
@@ -55,7 +79,7 @@ def macos_adapter():
     ), patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Darwin",
-    ):
+    ), patch("habluetooth.scanner.SYSTEM", "Darwin"):
         yield
 
 
@@ -65,7 +89,7 @@ def windows_adapter():
     with patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Windows",
-    ):
+    ), patch("habluetooth.scanner.SYSTEM", "Windows"):
         yield
 
 
@@ -81,7 +105,7 @@ def no_adapter_fixture():
     ), patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Linux",
-    ), patch(
+    ), patch("habluetooth.scanner.SYSTEM", "Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",
@@ -102,7 +126,7 @@ def one_adapter_fixture():
     ), patch(
         "bluetooth_adapters.systems.platform.system",
         return_value="Linux",
-    ), patch(
+    ), patch("habluetooth.scanner.SYSTEM", "Linux"), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.refresh",
     ), patch(
         "bluetooth_adapters.systems.linux.LinuxAdapters.adapters",

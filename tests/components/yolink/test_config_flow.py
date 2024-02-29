@@ -1,5 +1,4 @@
 """Test yolink config flow."""
-import asyncio
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -127,7 +126,7 @@ async def test_abort_if_authorization_timeout(
     with patch(
         "homeassistant.components.yolink.config_entry_oauth2_flow."
         "LocalOAuth2Implementation.async_generate_authorize_url",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}

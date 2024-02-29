@@ -430,7 +430,7 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
     @cached_property
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature in native units."""
-        return self._attr_native_temperature
+        return self._attr_native_apparent_temperature
 
     @cached_property
     def native_temperature(self) -> float | None:

@@ -97,7 +97,7 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(
             f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         raise ConfigEntryNotReady(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
@@ -117,7 +117,7 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(
             f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         raise ConfigEntryNotReady(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
@@ -134,7 +134,7 @@ async def async_setup_entry(
                     entry.data[CONF_HOST],
                 )
                 await asyncio.sleep(1)
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         raise ConfigEntryNotReady(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception

@@ -6,6 +6,14 @@ from unittest.mock import patch
 from aioairzone_cloud.common import OperationMode
 from aioairzone_cloud.const import (
     API_ACTIVE,
+    API_AQ_ACTIVE,
+    API_AQ_MODE_CONF,
+    API_AQ_MODE_VALUES,
+    API_AQ_PM_1,
+    API_AQ_PM_2P5,
+    API_AQ_PM_10,
+    API_AQ_PRESENT,
+    API_AQ_QUALITY,
     API_AZ_AIDOO,
     API_AZ_AIDOO_PRO,
     API_AZ_SYSTEM,
@@ -291,6 +299,12 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
         }
     if device.get_id() == "system1":
         return {
+            API_AQ_MODE_VALUES: ["off", "on", "auto"],
+            API_AQ_PM_1: 3,
+            API_AQ_PM_2P5: 4,
+            API_AQ_PM_10: 3,
+            API_AQ_PRESENT: True,
+            API_AQ_QUALITY: "good",
             API_ERRORS: [
                 {
                     API_OLD_ID: "error-id",
@@ -310,6 +324,14 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
     if device.get_id() == "zone1":
         return {
             API_ACTIVE: True,
+            API_AQ_ACTIVE: False,
+            API_AQ_MODE_CONF: "auto",
+            API_AQ_MODE_VALUES: ["off", "on", "auto"],
+            API_AQ_PM_1: 3,
+            API_AQ_PM_2P5: 4,
+            API_AQ_PM_10: 3,
+            API_AQ_PRESENT: True,
+            API_AQ_QUALITY: "good",
             API_HUMIDITY: 30,
             API_MODE: OperationMode.COOLING.value,
             API_MODE_AVAIL: [
@@ -346,6 +368,14 @@ def mock_get_device_status(device: Device) -> dict[str, Any]:
     if device.get_id() == "zone2":
         return {
             API_ACTIVE: False,
+            API_AQ_ACTIVE: False,
+            API_AQ_MODE_CONF: "auto",
+            API_AQ_MODE_VALUES: ["off", "on", "auto"],
+            API_AQ_PM_1: 3,
+            API_AQ_PM_2P5: 4,
+            API_AQ_PM_10: 3,
+            API_AQ_PRESENT: True,
+            API_AQ_QUALITY: "good",
             API_HUMIDITY: 24,
             API_MODE: OperationMode.COOLING.value,
             API_MODE_AVAIL: [],
