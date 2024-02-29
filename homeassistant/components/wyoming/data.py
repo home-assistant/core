@@ -55,10 +55,7 @@ class WyomingService:
         satellite_installed: Satellite | None = None
 
         if (self.info.satellite is not None) and self.info.satellite.installed:
-            satellite_installed = self.info.satellite
-
-        if satellite_installed:
-            return satellite_installed.name
+            return self.info.satellite.name
 
         # ASR = automated speech recognition (speech-to-text)
         asr_installed = [asr for asr in self.info.asr if asr.installed]
