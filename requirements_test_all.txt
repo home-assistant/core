@@ -197,7 +197,7 @@ aiobafi6==0.9.0
 aiobotocore==2.9.1
 
 # homeassistant.components.comelit
-aiocomelit==0.8.3
+aiocomelit==0.9.0
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==0.8.0
@@ -252,7 +252,7 @@ aiohttp-zlib-ng==0.3.1
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==4.7.0
+aiohue==4.7.1
 
 # homeassistant.components.imap
 aioimaplib==1.0.1
@@ -323,7 +323,7 @@ aiopyarr==23.4.0
 aioqsw==0.3.5
 
 # homeassistant.components.rainforest_raven
-aioraven==0.5.0
+aioraven==0.5.1
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -454,7 +454,7 @@ auroranoaa==0.0.3
 aurorapy==0.2.7
 
 # homeassistant.components.axis
-axis==48
+axis==49
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -484,7 +484,7 @@ bleak-retry-connector==3.4.0
 bleak==0.21.1
 
 # homeassistant.components.blebox
-blebox-uniapi==2.2.0
+blebox-uniapi==2.2.2
 
 # homeassistant.components.blink
 blinkpy==0.22.6
@@ -873,7 +873,7 @@ hole==0.8.0
 holidays==0.43
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240207.1
+home-assistant-frontend==20240228.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.2.2
@@ -1727,7 +1727,7 @@ python-izone==1.2.9
 python-kasa[speedups]==0.6.2.1
 
 # homeassistant.components.matter
-python-matter-server==5.5.0
+python-matter-server==5.7.0
 
 # homeassistant.components.xiaomi_miio
 python-miio==0.5.12
@@ -1915,7 +1915,7 @@ samsungtvws[async,encrypted]==2.6.0
 screenlogicpy==0.10.0
 
 # homeassistant.components.backup
-securetar==2024.2.0
+securetar==2024.2.1
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
@@ -2270,7 +2270,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.62.3
+zigpy==0.63.2
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.55.3

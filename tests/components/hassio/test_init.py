@@ -15,9 +15,7 @@ from homeassistant.components.hassio import (
     DOMAIN,
     STORAGE_KEY,
     async_get_addon_store_info,
-    get_core_info,
     hostname_from_addon_slug,
-    is_hassio,
 )
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.components.hassio.handler import HassioAPIError
@@ -248,8 +246,8 @@ async def test_setup_api_ping(
 
     assert result
     assert aioclient_mock.call_count == 19
-    assert get_core_info(hass)["version_latest"] == "1.0.0"
-    assert is_hassio(hass)
+    assert hass.components.hassio.get_core_info()["version_latest"] == "1.0.0"
+    assert hass.components.hassio.is_hassio()
 
 
 async def test_setup_api_panel(
@@ -467,7 +465,7 @@ async def test_warn_when_cannot_connect(
         result = await async_setup_component(hass, "hassio", {})
         assert result
 
-    assert is_hassio(hass)
+    assert hass.components.hassio.is_hassio()
     assert "Not connected with the supervisor / system too busy!" in caplog.text
 
 

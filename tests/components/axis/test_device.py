@@ -227,7 +227,7 @@ async def test_shutdown(config) -> None:
 async def test_get_device_fails(hass: HomeAssistant, config) -> None:
     """Device unauthorized yields authentication required error."""
     with patch(
-        "axis.vapix.vapix.Vapix.request", side_effect=axislib.Unauthorized
+        "axis.vapix.vapix.Vapix.initialize", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
         await axis.device.get_axis_device(hass, config)
 

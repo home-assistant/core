@@ -25,11 +25,6 @@ from .entity import DROPEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON_VALVE_OPEN = "mdi:valve-open"
-ICON_VALVE_CLOSED = "mdi:valve-closed"
-ICON_VALVE_UNKNOWN = "mdi:valve"
-ICON_VALVE = {False: ICON_VALVE_CLOSED, True: ICON_VALVE_OPEN, None: ICON_VALVE_UNKNOWN}
-
 SWITCH_VALUE: dict[int | None, bool] = {0: False, 1: True}
 
 # Switch type constants
@@ -49,14 +44,12 @@ SWITCHES: list[DROPSwitchEntityDescription] = [
     DROPSwitchEntityDescription(
         key=WATER_SWITCH,
         translation_key=WATER_SWITCH,
-        icon=ICON_VALVE_UNKNOWN,
         value_fn=lambda device: device.drop_api.water(),
         set_fn=lambda device, value: device.set_water(value),
     ),
     DROPSwitchEntityDescription(
         key=BYPASS_SWITCH,
         translation_key=BYPASS_SWITCH,
-        icon=ICON_VALVE_UNKNOWN,
         value_fn=lambda device: device.drop_api.bypass(),
         set_fn=lambda device, value: device.set_bypass(value),
     ),
@@ -117,8 +110,3 @@ class DROPSwitch(DROPEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self.entity_description.set_fn(self.coordinator, 0)
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use for dynamic states."""
-        return ICON_VALVE[self.is_on]

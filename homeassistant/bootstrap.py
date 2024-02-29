@@ -14,6 +14,9 @@ import threading
 from time import monotonic
 from typing import TYPE_CHECKING, Any
 
+# Import cryptography early since import openssl is not thread-safe
+# _frozen_importlib._DeadlockError: deadlock detected by _ModuleLock('cryptography.hazmat.backends.openssl.backend')
+import cryptography  # noqa: F401
 import voluptuous as vol
 import yarl
 
@@ -21,6 +24,7 @@ from . import config as conf_util, config_entries, core, loader, requirements
 from .components import http
 from .const import (
     FORMAT_DATETIME,
+    KEY_DATA_LOGGING as DATA_LOGGING,
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
     REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -62,7 +66,6 @@ _LOGGER = logging.getLogger(__name__)
 ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
-DATA_LOGGING = "logging"
 DATA_REGISTRIES_LOADED = "bootstrap_registries_loaded"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
@@ -308,16 +311,16 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
     entity.async_setup(hass)
     template.async_setup(hass)
     await asyncio.gather(
-        area_registry.async_load(hass),
-        device_registry.async_load(hass),
-        entity_registry.async_load(hass),
-        floor_registry.async_load(hass),
-        issue_registry.async_load(hass),
-        label_registry.async_load(hass),
+        create_eager_task(area_registry.async_load(hass)),
+        create_eager_task(device_registry.async_load(hass)),
+        create_eager_task(entity_registry.async_load(hass)),
+        create_eager_task(floor_registry.async_load(hass)),
+        create_eager_task(issue_registry.async_load(hass)),
+        create_eager_task(label_registry.async_load(hass)),
         hass.async_add_executor_job(_cache_uname_processor),
-        template.async_load_custom_templates(hass),
-        restore_state.async_load(hass),
-        hass.config_entries.async_initialize(),
+        create_eager_task(template.async_load_custom_templates(hass)),
+        create_eager_task(restore_state.async_load(hass)),
+        create_eager_task(hass.config_entries.async_initialize()),
     )
 
 
@@ -340,7 +343,7 @@ async def async_from_config_dict(
     if not all(
         await asyncio.gather(
             *(
-                async_setup_component(hass, domain, config)
+                create_eager_task(async_setup_component(hass, domain, config))
                 for domain in CORE_INTEGRATIONS
             )
         )

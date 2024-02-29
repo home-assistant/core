@@ -30,6 +30,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.util.async_ import create_eager_task
 
 from .config_flow import normalize_hkid
 from .const import (
@@ -330,10 +331,17 @@ class HKDevice:
         self.config_entry.async_on_unload(
             async_track_time_interval(
                 self.hass,
-                self.async_request_update,
+                self._async_schedule_update,
                 self.pairing.poll_interval,
                 name=f"HomeKit Device {self.unique_id} availability check poll",
             )
+        )
+
+    @callback
+    def _async_schedule_update(self, now: datetime) -> None:
+        """Schedule an update."""
+        self.hass.async_create_task(
+            self._debounced_update.async_call(), eager_start=True
         )
 
     async def async_add_new_entities(self) -> None:
@@ -685,7 +693,9 @@ class HKDevice:
 
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""
-        self.hass.async_create_task(self.async_update_new_accessories_state())
+        self.hass.async_create_task(
+            self.async_update_new_accessories_state(), eager_start=True
+        )
 
     async def async_update_new_accessories_state(self) -> None:
         """Process a change in the pairings accessories state."""
@@ -813,7 +823,10 @@ class HKDevice:
 
         if to_load:
             await asyncio.gather(
-                *[self.async_load_platform(platform) for platform in to_load]
+                *(
+                    create_eager_task(self.async_load_platform(platform))
+                    for platform in to_load
+                )
             )
 
     @callback
