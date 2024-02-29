@@ -2620,7 +2620,6 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["device_id"] = self.globals["device_id"]
 
         self.globals["areas"] = hassfunction(areas)
-        self.filters["areas"] = self.globals["areas"]
 
         self.globals["area_id"] = hassfunction(area_id)
         self.filters["area_id"] = self.globals["area_id"]
