@@ -45,7 +45,7 @@
           "standby": "[%key:common::state::standby%]"
           "on": "[%key:common::state::on%]",
           "warming": "Warming",
-          "cooling" : "Cooling",
+          "cooling": "Cooling",
           "error": "Error"
         }
       }
