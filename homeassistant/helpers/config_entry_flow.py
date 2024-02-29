@@ -7,6 +7,13 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding
+from homeassistant.components.cloud import (
+    async_active_subscription,
+    async_create_cloudhook,
+    async_delete_cloudhook,
+    async_is_connected,
+)
+from homeassistant.components.webhook import async_generate_id, async_generate_url
 from homeassistant.core import HomeAssistant
 
 from .typing import DiscoveryInfoType
@@ -220,21 +227,18 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         if user_input is None:
             return self.async_show_form(step_id="user")
 
-        webhook_id = self.hass.components.webhook.async_generate_id()
+        webhook_id = async_generate_id()
 
-        if (
-            "cloud" in self.hass.config.components
-            and self.hass.components.cloud.async_active_subscription()
+        if "cloud" in self.hass.config.components and async_active_subscription(
+            self.hass
         ):
-            if not self.hass.components.cloud.async_is_connected():
+            if not async_is_connected(self.hass):
                 return self.async_abort(reason="cloud_not_connected")
 
-            webhook_url = await self.hass.components.cloud.async_create_cloudhook(
-                webhook_id
-            )
+            webhook_url = await async_create_cloudhook(self.hass, webhook_id)
             cloudhook = True
         else:
-            webhook_url = self.hass.components.webhook.async_generate_url(webhook_id)
+            webhook_url = async_generate_url(self.hass, webhook_id)
             cloudhook = False
 
         self._description_placeholder["webhook_url"] = webhook_url
@@ -267,4 +271,4 @@ async def webhook_async_remove_entry(
     if not entry.data.get("cloudhook") or "cloud" not in hass.config.components:
         return
 
-    await hass.components.cloud.async_delete_cloudhook(entry.data["webhook_id"])
+    await async_delete_cloudhook(hass, entry.data["webhook_id"])
