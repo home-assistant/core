@@ -42,7 +42,7 @@
       "jvc_power_status": {
         "name": "Power status",
         "state": {
-          "standby": "StandBy",
+          "standby": "[%key:common::state::standby%]"
           "on" : "On",
           "warming": "Warming",
           "cooling" : "Cooling",
