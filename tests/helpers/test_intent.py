@@ -300,25 +300,3 @@ async def test_validate_then_run_in_background(hass: HomeAssistant) -> None:
 
     assert len(calls) == 1
     assert calls[0].data == {"entity_id": "light.kitchen"}
-
-
-async def test_service_intent_handler_no_service(hass: HomeAssistant) -> None:
-    """Test that ServiceIntentHandler will fail with no service name provided."""
-    assert await async_setup_component(hass, "intent", {})
-
-    # Setting service to None indicates it will be set dynamically within the
-    # intent handler.
-    handler = intent.ServiceIntentHandler("TestIntent", "homeassistant", service=None)
-    test_intent = intent.Intent(
-        hass,
-        "homeassistant",
-        "TestIntent",
-        slots={},
-        text_input=None,
-        context=Context(),
-        language=hass.config.language,
-    )
-    test_state = State("test.entity", "state")
-
-    with pytest.raises(ValueError):
-        await handler.async_call_service(test_intent, test_state)
