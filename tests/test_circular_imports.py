@@ -62,7 +62,7 @@ import pytest
     ),
 )
 async def test_circular_imports(component: str) -> None:
-    """Test if we can detect circular dependencies of components."""
+    """Check that components can be imported without circular imports."""
     process = await asyncio.create_subprocess_exec(
         sys.executable, "-c", f"import homeassistant.components.{component}"
     )
