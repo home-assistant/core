@@ -7,7 +7,24 @@ import pytest
 
 @pytest.mark.parametrize(
     "component",
-    ("api", "auth", "camera", "config", "cloud", "http", "frontend", "websocket_api"),
+    (
+        "api",
+        "auth",
+        "camera",
+        "cloud",
+        "config",
+        "device_automation",
+        "diagnostics",
+        "file_upload",
+        "frontend",
+        "http",
+        "lovelace",
+        "onboarding",
+        "repairs",
+        "search",
+        "system_log",
+        "websocket_api",
+    ),
 )
 async def test_circular_imports(component: str) -> None:
     """Test if we can detect circular dependencies of components."""
