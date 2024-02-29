@@ -15,6 +15,7 @@ from zigpy.device import Device as ZigpyDevice
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
 import zigpy.quirks
+from zigpy.quirks.v2 import CustomDeviceV2
 from zigpy.types.named import EUI64, NWK
 from zigpy.zcl.clusters import Cluster
 from zigpy.zcl.clusters.general import Groups, Identify
@@ -582,6 +583,9 @@ class ZHADevice(LogMixin):
         await asyncio.gather(
             *(endpoint.async_configure() for endpoint in self._endpoints.values())
         )
+        if isinstance(self._zigpy_device, CustomDeviceV2):
+            self.debug("applying quirks v2 custom device configuration")
+            await self._zigpy_device.apply_custom_configuration()
         async_dispatcher_send(
             self.hass,
             const.ZHA_CLUSTER_HANDLER_MSG,
