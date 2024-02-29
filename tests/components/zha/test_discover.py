@@ -779,20 +779,33 @@ async def test_quirks_v2_entity_discovery_errors(
     zha_device = await zha_device_joined(zigpy_device)
 
     assert (
-        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not have an endpoint with id: 3 - unable to create entity with cluster details: (3, 6, <ClusterType.Server: 0>)"
-        in caplog.text
+        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not have an"
+        " endpoint with id: 3 - unable to create entity with cluster"
+        " details: (3, 6, <ClusterType.Server: 0>)" in caplog.text
     )
 
     time_cluster_id = zigpy.zcl.clusters.general.Time.cluster_id
 
     assert (
-        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not have a cluster with id: {time_cluster_id} - unable to create entity with cluster details: (1, {time_cluster_id}, <ClusterType.Server: 0>)"
+        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not have a"
+        f" cluster with id: {time_cluster_id} - unable to create entity with "
+        f"cluster details: (1, {time_cluster_id}, <ClusterType.Server: 0>)"
         in caplog.text
     )
 
-    entity_details = "{'cluster_details': (1, 6, <ClusterType.Server: 0>), 'quirk_metadata': EntityMetadata(entity_metadata=ZCLSensorMetadata(attribute_name='off_wait_time', divisor=1, multiplier=1, unit=None, device_class=None, state_class=None), entity_platform=<EntityPlatform.SENSOR: 'sensor'>, entity_type=<EntityType.CONFIG: 'config'>, cluster_id=6, endpoint_id=1, cluster_type=<ClusterType.Server: 0>, initially_disabled=False, attribute_initialized_from_cache=True, translation_key=None)}"
+    entity_details = (
+        "{'cluster_details': (1, 6, <ClusterType.Server: 0>), "
+        "'quirk_metadata': EntityMetadata(entity_metadata=ZCLSensorMetadata("
+        "attribute_name='off_wait_time', divisor=1, multiplier=1, unit=None, "
+        "device_class=None, state_class=None), entity_platform=<EntityPlatform."
+        "SENSOR: 'sensor'>, entity_type=<EntityType.CONFIG: 'config'>, "
+        "cluster_id=6, endpoint_id=1, cluster_type=<ClusterType.Server: 0>, "
+        "initially_disabled=False, attribute_initialized_from_cache=True, "
+        "translation_key=None)}"
+    )
 
     assert (
-        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} has an entity with details: {entity_details} that does not have an entity class mapping - unable to create entity"
-        in caplog.text
+        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} has an entity with "
+        f"details: {entity_details} that does not have an entity class mapping - "
+        "unable to create entity" in caplog.text
     )
