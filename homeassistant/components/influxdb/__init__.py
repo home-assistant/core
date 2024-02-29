@@ -596,7 +596,10 @@ class InfluxThread(threading.Thread):
                 self.write_to_influxdb(json)
 
     def block_till_done(self):
-        """Block till all events processed."""
+        """Block till all events processed.
+
+        Currently only used for testing.
+        """
         for _ in range(self.max_tries + 1):
             event = threading.Event()
             self.queue.put(event)
