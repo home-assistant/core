@@ -1,5 +1,5 @@
 """Handle a config flow for Plexamp Media Player."""
-import asyncio
+
 import logging
 import xml.etree.ElementTree as ET
 
@@ -41,6 +41,7 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     device_name,
                     device_id,
                 ) = await self.async_test_connection(self.hass, host)
+
                 if not connection_successful:
                     _LOGGER.error(
                         "Couldn't connect to Plexamp, connection was not successful"
@@ -70,7 +71,9 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"host": "Host (IP address or domain name)"},
         )
 
-    async def async_test_connection(self, hass: HomeAssistant, host: str):
+    async def async_test_connection(
+        self, hass: HomeAssistant, host: str
+    ) -> (bool, str, str):
         """Return True if connection to the provided host is successful."""
 
         url = f"http://{host}:32500/resources"
@@ -96,7 +99,7 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     device_name,
                 )
                 return response.status == 200, device_name, device_id
-        except (aiohttp.ClientError, asyncio.TimeoutError):
+        except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout trying to connect to Plexamp")
 
         return False, None

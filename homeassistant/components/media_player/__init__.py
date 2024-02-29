@@ -1,4 +1,5 @@
 """Component to interface with various media players."""
+
 from __future__ import annotations
 
 import asyncio
@@ -521,7 +522,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _access_token: str | None = None
 
     _attr_app_id: str | None = None
-    _attr_app_name: str | None = None
+    _name: str | None = None
     _attr_device_class: MediaPlayerDeviceClass | None
     _attr_group_members: list[str] | None = None
     _attr_is_volume_muted: bool | None = None
@@ -724,7 +725,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @cached_property
     def app_name(self) -> str | None:
         """Name of the current running app."""
-        return self._attr_app_name
+        return self._name
 
     @cached_property
     def source(self) -> str | None:
@@ -1214,7 +1215,8 @@ class MediaPlayerImageView(HomeAssistantView):
     extra_urls = [
         # Need to modify the default regex for media_content_id as it may
         # include arbitrary characters including '/','{', or '}'
-        url + "/browse_media/{media_content_type}/{media_content_id:.+}",
+        url
+        + "/browse_media/{media_content_type}/{media_content_id:.+}",
     ]
 
     def __init__(self, component: EntityComponent[MediaPlayerEntity]) -> None:
