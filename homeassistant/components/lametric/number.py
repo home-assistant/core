@@ -30,8 +30,8 @@ class LaMetricNumberEntityDescription(NumberEntityDescription):
 NUMBERS = [
     LaMetricNumberEntityDescription(
         key="brightness",
+        translation_key="brightness",
         name="Brightness",
-        icon="mdi:brightness-6",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -42,8 +42,8 @@ NUMBERS = [
     ),
     LaMetricNumberEntityDescription(
         key="volume",
+        translation_key="volume",
         name="Volume",
-        icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
