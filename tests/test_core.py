@@ -2872,7 +2872,7 @@ def test_one_time_listener_repr(hass: HomeAssistant) -> None:
 
 
 async def test_async_add_import_executor_job(hass: HomeAssistant) -> None:
-    """Test async_add_import_executor_job."""
+    """Test async_add_import_executor_job works and is limited to one thread."""
     evt = threading.Event()
     loop = asyncio.get_running_loop()
 
