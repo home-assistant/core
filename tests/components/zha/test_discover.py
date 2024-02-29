@@ -162,9 +162,9 @@ async def test_devices(
     for (platform, unique_id), ent_info in device[DEV_SIG_ENT_MAP].items():
         no_tail_id = NO_TAIL_ID.sub("", ent_info[DEV_SIG_ENT_MAP_ID])
         ha_entity_id = entity_registry.async_get_entity_id(platform, "zha", unique_id)
-        assert (
-            ha_entity_id is not None
-        ), f"No entity found for platform[{platform}] unique_id[{unique_id}] no_tail_id[{no_tail_id}] with entity_id[{ha_entity_id}]"
+        message1 = f"No entity found for platform[{platform}] unique_id[{unique_id}]"
+        message2 = f"no_tail_id[{no_tail_id}] with entity_id[{ha_entity_id}]"
+        assert ha_entity_id is not None, f"{message1} {message2}"
         assert ha_entity_id.startswith(no_tail_id)
 
         entity = created_entities[ha_entity_id]
@@ -778,21 +778,19 @@ async def test_quirks_v2_entity_discovery_errors(
     )
     zha_device = await zha_device_joined(zigpy_device)
 
-    assert (
-        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not have an"
-        " endpoint with id: 3 - unable to create entity with cluster"
-        " details: (3, 6, <ClusterType.Server: 0>)" in caplog.text
-    )
+    m1 = f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not have an"
+    m2 = " endpoint with id: 3 - unable to create entity with cluster"
+    m3 = " details: (3, 6, <ClusterType.Server: 0>)"
+    assert f"{m1}{m2}{m3}" in caplog.text
 
     time_cluster_id = zigpy.zcl.clusters.general.Time.cluster_id
 
-    assert (
-        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not have a"
-        f" cluster with id: {time_cluster_id} - unable to create entity with "
-        f"cluster details: (1, {time_cluster_id}, <ClusterType.Server: 0>)"
-        in caplog.text
-    )
+    m1 = f"Device: {str(zigpy_device.ieee)}-{zha_device.name} does not have a"
+    m2 = f" cluster with id: {time_cluster_id} - unable to create entity with "
+    m3 = f"cluster details: (1, {time_cluster_id}, <ClusterType.Server: 0>)"
+    assert f"{m1}{m2}{m3}" in caplog.text
 
+    # fmt: off
     entity_details = (
         "{'cluster_details': (1, 6, <ClusterType.Server: 0>), "
         "'quirk_metadata': EntityMetadata(entity_metadata=ZCLSensorMetadata("
@@ -803,9 +801,9 @@ async def test_quirks_v2_entity_discovery_errors(
         "initially_disabled=False, attribute_initialized_from_cache=True, "
         "translation_key=None)}"
     )
+    # fmt: on
 
-    assert (
-        f"Device: {str(zigpy_device.ieee)}-{zha_device.name} has an entity with "
-        f"details: {entity_details} that does not have an entity class mapping - "
-        "unable to create entity" in caplog.text
-    )
+    m1 = f"Device: {str(zigpy_device.ieee)}-{zha_device.name} has an entity with "
+    m2 = f"details: {entity_details} that does not have an entity class mapping - "
+    m3 = "unable to create entity"
+    assert f"{m1}{m2}{m3}" in caplog.text
