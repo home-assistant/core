@@ -46,7 +46,8 @@ async def async_setup_entry(
     """Discover cameras with speakers on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         if isinstance(device, Camera) and (
             device.has_speaker or device.has_removable_speaker
         ):

@@ -1,6 +1,9 @@
 """Constants used by multiple MQTT modules."""
 
+import jinja2
+
 from homeassistant.const import CONF_PAYLOAD, Platform
+from homeassistant.exceptions import TemplateError
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
@@ -194,3 +197,5 @@ RELOADABLE_PLATFORMS = [
     Platform.VALVE,
     Platform.WATER_HEATER,
 ]
+
+TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)

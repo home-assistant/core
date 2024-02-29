@@ -4,9 +4,9 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any, NamedTuple
 
+from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.devices import OmadaFirmwareUpdate, OmadaListDevice
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
-from tplink_omada_client.omadasiteclient import OmadaSiteClient
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -34,7 +34,7 @@ class FirmwareUpdateStatus(NamedTuple):
     firmware: OmadaFirmwareUpdate | None
 
 
-class OmadaFirmwareUpdateCoodinator(OmadaCoordinator[FirmwareUpdateStatus]):
+class OmadaFirmwareUpdateCoodinator(OmadaCoordinator[FirmwareUpdateStatus]):  # pylint: disable=hass-enforce-coordinator-module
     """Coordinator for getting details about ports on a switch."""
 
     def __init__(self, hass: HomeAssistant, omada_client: OmadaSiteClient) -> None:

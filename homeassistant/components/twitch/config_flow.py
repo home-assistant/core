@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 from twitchAPI.helper import first
 from twitchAPI.twitch import Twitch
@@ -14,6 +14,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_TOKEN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import LocalOAuth2Implementation
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_CHANNELS, CONF_REFRESH_TOKEN, DOMAIN, LOGGER, OAUTH_SCOPES
@@ -47,9 +48,13 @@ class OAuth2FlowHandler(
         data: dict[str, Any],
     ) -> FlowResult:
         """Handle the initial step."""
+        implementation = cast(
+            LocalOAuth2Implementation,
+            self.flow_impl,
+        )
 
         client = await Twitch(
-            app_id=self.flow_impl.__dict__[CONF_CLIENT_ID],
+            app_id=implementation.client_id,
             authenticate_app=False,
         )
         client.auto_refresh_auth = False

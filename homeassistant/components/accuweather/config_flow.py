@@ -1,7 +1,6 @@
 """Adds config flow for AccuWeather."""
 from __future__ import annotations
 
-import asyncio
 from asyncio import timeout
 from typing import Any
 
@@ -61,7 +60,7 @@ class AccuWeatherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         longitude=user_input[CONF_LONGITUDE],
                     )
                     await accuweather.async_get_location()
-            except (ApiError, ClientConnectorError, asyncio.TimeoutError, ClientError):
+            except (ApiError, ClientConnectorError, TimeoutError, ClientError):
                 errors["base"] = "cannot_connect"
             except InvalidApiKeyError:
                 errors[CONF_API_KEY] = "invalid_api_key"

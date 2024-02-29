@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from asyncio import Lock, TimeoutError as AsyncIOTimeoutError
+from asyncio import Lock
 from datetime import datetime
 import logging
 
@@ -139,7 +139,7 @@ class BondEntity(Entity):
         """Fetch via the API."""
         try:
             state: dict = await self._hub.bond.device_state(self._device_id)
-        except (ClientError, AsyncIOTimeoutError, OSError) as error:
+        except (ClientError, TimeoutError, OSError) as error:
             if self.available:
                 _LOGGER.warning(
                     "Entity %s has become unavailable", self.entity_id, exc_info=error

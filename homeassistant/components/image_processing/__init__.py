@@ -179,7 +179,7 @@ class ImageProcessingEntity(Entity):
 
         try:
             image: Image = await camera.async_get_image(
-                self.camera_entity, timeout=self.timeout
+                self.hass, self.camera_entity, timeout=self.timeout
             )
 
         except HomeAssistantError as err:
@@ -262,7 +262,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                 continue
 
             face.update({ATTR_ENTITY_ID: self.entity_id})
-            self.hass.bus.async_fire(EVENT_DETECT_FACE, face)  # type: ignore[arg-type]
+            self.hass.bus.async_fire(EVENT_DETECT_FACE, face)
 
         # Update entity store
         self.faces = faces
