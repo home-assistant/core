@@ -40,7 +40,14 @@
     },
     "sensor": {
       "jvc_power_status": {
-        "name": "Power status"
+        "name": "Power status",
+        "state": {
+          "standby": "StandBy",
+          "on" : "On",
+          "warming": "Warming",
+          "cooling" : "Cooling",
+          "error": "Error"
+        }
       }
     }
   }
