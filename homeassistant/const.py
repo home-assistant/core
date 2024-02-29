@@ -1602,6 +1602,11 @@ HASSIO_USER_NAME = "Supervisor"
 
 SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
 
+
+# hass.data key for logging information.
+KEY_DATA_LOGGING = "logging"
+
+
 # Date/Time formats
 FORMAT_DATE: Final = "%Y-%m-%d"
 FORMAT_TIME: Final = "%H:%M:%S"
