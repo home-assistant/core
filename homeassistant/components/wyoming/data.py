@@ -1,4 +1,5 @@
 """Base class for Wyoming providers."""
+
 from __future__ import annotations
 
 import asyncio
@@ -43,6 +44,17 @@ class WyomingService:
 
     def get_name(self) -> str | None:
         """Return name of first installed usable service."""
+
+        # Wyoming satellite
+        # Must be checked first because satellites may contain wake services, etc.
+        satellite_installed: Satellite | None = None
+
+        if (self.info.satellite is not None) and self.info.satellite.installed:
+            satellite_installed = self.info.satellite
+
+        if satellite_installed:
+            return satellite_installed.name
+
         # ASR = automated speech recognition (speech-to-text)
         asr_installed = [asr for asr in self.info.asr if asr.installed]
         if asr_installed:
@@ -57,15 +69,6 @@ class WyomingService:
         wake_installed = [wake for wake in self.info.wake if wake.installed]
         if wake_installed:
             return wake_installed[0].name
-
-        # satellite
-        satellite_installed: Satellite | None = None
-
-        if (self.info.satellite is not None) and self.info.satellite.installed:
-            satellite_installed = self.info.satellite
-
-        if satellite_installed:
-            return satellite_installed.name
 
         return None
 
