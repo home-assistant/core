@@ -84,7 +84,7 @@
       'auth_implementation': 'husqvarna_automower',
       'token': dict({
         'access_token': '**REDACTED**',
-        'expires_at': 1709224052.700601,
+        'expires_at': 1709208000.0,
         'expires_in': 86399,
         'provider': 'husqvarna',
         'refresh_token': '**REDACTED**',

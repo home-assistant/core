@@ -1,6 +1,10 @@
 """Test the Advantage Air Diagnostics."""
+import datetime
+import os
+import time
 from unittest.mock import AsyncMock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN
@@ -17,6 +21,7 @@ from tests.components.diagnostics import (
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.freeze_time(datetime.datetime(2024, 2, 29, 11))
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -25,6 +30,11 @@ async def test_entry_diagnostics(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry diagnostics."""
+
+    # Make sure that local timezone for test is UTC
+    os.environ["TZ"] = "UTC"
+    time.tzset()
+
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
