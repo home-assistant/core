@@ -9,10 +9,14 @@ import aiodns
 from aiodns.error import DNSError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -72,7 +76,7 @@ async def async_validate_hostname(
     return result
 
 
-class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for dnsip integration."""
 
     VERSION = 1
@@ -80,14 +84,14 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> DnsIPOptionsFlowHandler:
         """Return Option handler."""
         return DnsIPOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         errors = {}
@@ -141,16 +145,16 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class DnsIPOptionsFlowHandler(config_entries.OptionsFlow):
+class DnsIPOptionsFlowHandler(OptionsFlow):
     """Handle a option config flow for dnsip integration."""
 
-    def __init__(self, entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.entry = entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         errors = {}
         if user_input is not None:
