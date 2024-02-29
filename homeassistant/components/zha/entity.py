@@ -7,9 +7,9 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Self
 
-from zigpy.quirks.v2 import EntityMetadata
+from zigpy.quirks.v2 import EntityMetadata, EntityType
 
-from homeassistant.const import ATTR_NAME
+from homeassistant.const import ATTR_NAME, EntityCategory
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import entity
 from homeassistant.helpers.debounce import Debouncer
@@ -197,6 +197,10 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
                     entity_metadata.entity_metadata.command_name
                 )
             self._unique_id_suffix = entity_metadata.entity_metadata.command_name
+        if entity_metadata.entity_type is EntityType.CONFIG:
+            self._attr_entity_category = EntityCategory.CONFIG
+        elif entity_metadata.entity_type is EntityType.DIAGNOSTIC:
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def available(self) -> bool:
