@@ -7,6 +7,7 @@ from contextvars import ContextVar
 from aiohttp.web import Application, Request, StreamResponse, middleware
 
 from homeassistant.core import callback
+from homeassistant.helpers.http import current_request  # noqa: F401
 
 
 @callback
