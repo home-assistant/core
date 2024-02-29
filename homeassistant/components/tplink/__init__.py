@@ -28,7 +28,6 @@ from homeassistant.const import (
     CONF_MODEL,
     CONF_PASSWORD,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STARTED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -119,7 +118,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_background_task(
         _async_discovery(), "tplink first discovery", eager_start=True
     )
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
     async_track_time_interval(
         hass, _async_discovery, DISCOVERY_INTERVAL, cancel_on_shutdown=True
     )
