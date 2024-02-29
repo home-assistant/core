@@ -2791,7 +2791,7 @@ def test_report_invalid_color_mode(
         (
             light.ColorMode.ONOFF,
             {light.ColorMode.ONOFF, light.ColorMode.BRIGHTNESS},
-            "zha",  # We don't log issues for zha
+            "tuya",  # We don't log issues for tuya
             False,
         ),
     ],

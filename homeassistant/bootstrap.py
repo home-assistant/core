@@ -14,6 +14,9 @@ import threading
 from time import monotonic
 from typing import TYPE_CHECKING, Any
 
+# Import cryptography early since import openssl is not thread-safe
+# _frozen_importlib._DeadlockError: deadlock detected by _ModuleLock('cryptography.hazmat.backends.openssl.backend')
+import cryptography  # noqa: F401
 import voluptuous as vol
 import yarl
 
@@ -31,6 +34,7 @@ from .components import (
 )
 from .const import (
     FORMAT_DATETIME,
+    KEY_DATA_LOGGING as DATA_LOGGING,
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
     REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -72,7 +76,6 @@ _LOGGER = logging.getLogger(__name__)
 ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
-DATA_LOGGING = "logging"
 DATA_REGISTRIES_LOADED = "bootstrap_registries_loaded"
 
 LOG_SLOW_STARTUP_INTERVAL = 60
