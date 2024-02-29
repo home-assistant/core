@@ -54,7 +54,7 @@ class HomeConnectLightEntityDescription(LightEntityDescription):
 
 LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
     HomeConnectLightEntityDescription(
-        key="InternalLight",
+        key="Internal Light",
         on_key=REFRIGERATION_INTERNAL_LIGHT_POWER,
         brightness_key=REFRIGERATION_INTERNAL_LIGHT_BRIGHTNESS,
         exists_fn=lambda device: bool(
@@ -62,7 +62,7 @@ LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
         ),
     ),
     HomeConnectLightEntityDescription(
-        key="ExternalLight",
+        key="External Light",
         on_key=REFRIGERATION_EXTERNAL_LIGHT_POWER,
         brightness_key=REFRIGERATION_EXTERNAL_LIGHT_BRIGHTNESS,
         exists_fn=lambda device: bool(
