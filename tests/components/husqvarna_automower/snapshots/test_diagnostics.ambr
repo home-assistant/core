@@ -1,34 +1,5 @@
 # serializer version: 1
-# name: test_entry_diagnostics
-  dict({
-    'data': dict({
-      'auth_implementation': 'husqvarna_automower',
-      'token': dict({
-        'access_token': '**REDACTED**',
-        'expires_at': 1709209248.8323493,
-        'expires_in': 86399,
-        'provider': 'husqvarna',
-        'refresh_token': '**REDACTED**',
-        'scope': 'iam:read amc:api',
-        'token_type': 'Bearer',
-        'user_id': '123',
-      }),
-    }),
-    'disabled_by': None,
-    'domain': 'husqvarna_automower',
-    'entry_id': 'automower_test',
-    'minor_version': 1,
-    'options': dict({
-    }),
-    'pref_disable_new_entities': False,
-    'pref_disable_polling': False,
-    'source': 'user',
-    'title': 'Husqvarna Automower of Erika Mustermann',
-    'unique_id': '123',
-    'version': 1,
-  })
-# ---
-# name: test_select_async_setup_entry
+# name: test_device_diagnostics
   dict({
     'battery': dict({
       'battery_percent': 100,
@@ -105,5 +76,34 @@
       'serial_number': 123,
     }),
     'work_areas': None,
+  })
+# ---
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'auth_implementation': 'husqvarna_automower',
+      'token': dict({
+        'access_token': '**REDACTED**',
+        'expires_at': 1709224052.700601,
+        'expires_in': 86399,
+        'provider': 'husqvarna',
+        'refresh_token': '**REDACTED**',
+        'scope': 'iam:read amc:api',
+        'token_type': 'Bearer',
+        'user_id': '123',
+      }),
+    }),
+    'disabled_by': None,
+    'domain': 'husqvarna_automower',
+    'entry_id': 'automower_test',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'title': 'Husqvarna Automower of Erika Mustermann',
+    'unique_id': '123',
+    'version': 1,
   })
 # ---
