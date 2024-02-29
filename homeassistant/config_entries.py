@@ -33,6 +33,7 @@ from .core import (
     CoreState,
     Event,
     HassJob,
+    HassJobType,
     HomeAssistant,
     callback,
 )
@@ -363,7 +364,6 @@ class ConfigEntry:
 
         self._integration_for_domain: loader.Integration | None = None
         self._tries = 0
-        self._setup_again_job: HassJob | None = None
 
     def __repr__(self) -> str:
         """Representation of ConfigEntry."""
@@ -555,12 +555,18 @@ class ConfigEntry:
 
             if hass.state is CoreState.running:
                 self._async_cancel_retry_setup = async_call_later(
-                    hass, wait_time, self._async_get_setup_again_job(hass)
+                    hass,
+                    wait_time,
+                    HassJob(
+                        functools.partial(self._async_setup_again, hass),
+                        job_type=HassJobType.Callback,
+                    ),
                 )
             else:
-                self._async_cancel_retry_setup = hass.bus.async_listen_once(
+                self._async_cancel_retry_setup = hass.bus.async_listen(
                     EVENT_HOMEASSISTANT_STARTED,
                     functools.partial(self._async_setup_again, hass),
+                    run_immediately=True,
                 )
 
             await self._async_process_on_unload(hass)
@@ -585,28 +591,25 @@ class ConfigEntry:
         if not domain_is_integration:
             return
 
+        self.async_cancel_retry_setup()
+
         if result:
             self._async_set_state(hass, ConfigEntryState.LOADED, None)
         else:
             self._async_set_state(hass, ConfigEntryState.SETUP_ERROR, error_reason)
 
-    async def _async_setup_again(self, hass: HomeAssistant, *_: Any) -> None:
-        """Run setup again."""
+    @callback
+    def _async_setup_again(self, hass: HomeAssistant, *_: Any) -> None:
+        """Schedule setup again.
+
+        This method is a callback to ensure that _async_cancel_retry_setup
+        is unset as soon as its callback is called.
+        """
+        self._async_cancel_retry_setup = None
         # Check again when we fire in case shutdown
         # has started so we do not block shutdown
         if not hass.is_stopping:
-            self._async_cancel_retry_setup = None
-            await self.async_setup(hass)
-
-    @callback
-    def _async_get_setup_again_job(self, hass: HomeAssistant) -> HassJob:
-        """Get a job that will call setup again."""
-        if not self._setup_again_job:
-            self._setup_again_job = HassJob(
-                functools.partial(self._async_setup_again, hass),
-                cancel_on_shutdown=True,
-            )
-        return self._setup_again_job
+            hass.async_create_task(self.async_setup(hass), eager_start=True)
 
     @callback
     def async_shutdown(self) -> None:
