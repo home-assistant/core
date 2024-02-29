@@ -1070,6 +1070,7 @@ async def test_async_get_component_deadlock_fallback(
         "Detected deadlock trying to import homeassistant.components.executor_import"
         in caplog.text
     )
+    assert "loaded_executor=False" in caplog.text
     assert module is module_mock
 
 
@@ -1106,4 +1107,5 @@ async def test_async_get_platform_deadlock_fallback(
         "Detected deadlock trying to import homeassistant.components.executor_import"
         in caplog.text
     )
+    assert "loaded_executor=False" in caplog.text
     assert module is module_mock

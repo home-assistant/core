@@ -855,6 +855,7 @@ class Integration:
             try:
                 comp = await self.hass.async_add_executor_job(self.get_component)
             except ImportError as ex:
+                load_executor = False
                 _LOGGER.debug("Failed to import %s in executor", domain, exc_info=ex)
                 # If importing in the executor deadlocks because there is a circular
                 # dependency, we fall back to the event loop.
@@ -930,6 +931,7 @@ class Integration:
                     _LOGGER.debug(
                         "Failed to import %s in executor", domain, exc_info=ex
                     )
+                    load_executor = False
                     # If importing in the executor deadlocks because there is a circular
                     # dependency, we fall back to the event loop.
                     platform = self._load_platform(platform_name)
