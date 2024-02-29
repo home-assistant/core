@@ -104,9 +104,7 @@ def report(
             _LOGGER.warning(msg, stack_info=True)
         return
 
-    if not log_custom_component_only or (
-        integration_frame.custom_integration and log_custom_component_only
-    ):
+    if not log_custom_component_only or integration_frame.custom_integration:
         _report_integration(what, integration_frame, level)
 
 

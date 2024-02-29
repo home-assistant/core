@@ -1247,6 +1247,7 @@ class Components:
         if component is None:
             raise ImportError(f"Unable to load {comp_name}")
 
+        # Local import to avoid circular dependencies
         from .helpers.frame import report  # pylint: disable=import-outside-toplevel
 
         report(
