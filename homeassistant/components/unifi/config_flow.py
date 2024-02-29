@@ -17,8 +17,13 @@ from urllib.parse import urlparse
 from aiounifi.interfaces.sites import Sites
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -27,7 +32,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 
@@ -61,7 +65,7 @@ MODEL_PORTS = {
 }
 
 
-class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
+class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
     """Handle a UniFi Network config flow."""
 
     VERSION = 1
@@ -71,7 +75,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> UnifiOptionsFlowHandler:
         """Get the options flow for this handler."""
         return UnifiOptionsFlowHandler(config_entry)
@@ -79,12 +83,12 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
     def __init__(self) -> None:
         """Initialize the UniFi Network flow."""
         self.config: dict[str, Any] = {}
-        self.reauth_config_entry: config_entries.ConfigEntry | None = None
+        self.reauth_config_entry: ConfigEntry | None = None
         self.reauth_schema: dict[vol.Marker, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -144,7 +148,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
     async def async_step_site(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select site to control."""
         if user_input is not None:
             unique_id = user_input[CONF_SITE_ID]
@@ -181,7 +185,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_SITE_ID): vol.In(site_names)}),
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Trigger a reauthentication flow."""
         config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -206,7 +212,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a discovered UniFi device."""
         parsed_url = urlparse(discovery_info.ssdp_location)
         model_description = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_DESCRIPTION]
@@ -235,19 +243,19 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
         return await self.async_step_user()
 
 
-class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
+class UnifiOptionsFlowHandler(OptionsFlow):
     """Handle Unifi Network options."""
 
     hub: UnifiHub
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize UniFi Network options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the UniFi Network options."""
         if self.config_entry.entry_id not in self.hass.data[UNIFI_DOMAIN]:
             return self.async_abort(reason="integration_not_setup")
@@ -261,7 +269,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_simple_options(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """For users without advanced settings enabled."""
         if user_input is not None:
             self.options.update(user_input)
@@ -296,7 +304,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_configure_entity_sources(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select sources for entities."""
         if user_input is not None:
             self.options.update(user_input)
@@ -329,7 +337,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_device_tracker(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the device tracker options."""
         if user_input is not None:
             self.options.update(user_input)
@@ -390,7 +398,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_client_control(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage configuration of network access controlled clients."""
         if user_input is not None:
             self.options.update(user_input)
@@ -429,7 +437,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_statistics_sensors(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the statistics sensors options."""
         if user_input is not None:
             self.options.update(user_input)
@@ -452,7 +460,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             last_step=True,
         )
 
-    async def _update_options(self) -> FlowResult:
+    async def _update_options(self) -> ConfigFlowResult:
         """Update config entry options."""
         return self.async_create_entry(title="", data=self.options)
 
