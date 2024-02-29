@@ -42,7 +42,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import ViCareDevice
+from .types import HeatingProgram, ViCareDevice
 from .utils import get_burners, get_circuits, get_compressors
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,15 +57,6 @@ VICARE_MODE_DHWANDHEATINGCOOLING = "dhwAndHeatingCooling"
 VICARE_MODE_FORCEDREDUCED = "forcedReduced"
 VICARE_MODE_FORCEDNORMAL = "forcedNormal"
 VICARE_MODE_OFF = "standby"
-
-VICARE_PROGRAM_ACTIVE = "active"
-VICARE_PROGRAM_COMFORT = "comfort"
-VICARE_PROGRAM_ECO = "eco"
-VICARE_PROGRAM_EXTERNAL = "external"
-VICARE_PROGRAM_HOLIDAY = "holiday"
-VICARE_PROGRAM_NORMAL = "normal"
-VICARE_PROGRAM_REDUCED = "reduced"
-VICARE_PROGRAM_STANDBY = "standby"
 
 VICARE_HOLD_MODE_AWAY = "away"
 VICARE_HOLD_MODE_HOME = "home"
@@ -85,18 +76,13 @@ VICARE_TO_HA_HVAC_HEATING: dict[str, HVACMode] = {
 }
 
 VICARE_TO_HA_PRESET_HEATING = {
-    VICARE_PROGRAM_COMFORT: PRESET_COMFORT,
-    VICARE_PROGRAM_ECO: PRESET_ECO,
-    VICARE_PROGRAM_NORMAL: PRESET_HOME,
-    VICARE_PROGRAM_REDUCED: PRESET_SLEEP,
+    HeatingProgram.COMFORT: PRESET_COMFORT,
+    HeatingProgram.ECO: PRESET_ECO,
+    HeatingProgram.NORMAL: PRESET_HOME,
+    HeatingProgram.REDUCED: PRESET_SLEEP,
 }
 
-HA_TO_VICARE_PRESET_HEATING = {
-    PRESET_COMFORT: VICARE_PROGRAM_COMFORT,
-    PRESET_ECO: VICARE_PROGRAM_ECO,
-    PRESET_HOME: VICARE_PROGRAM_NORMAL,
-    PRESET_SLEEP: VICARE_PROGRAM_REDUCED,
-}
+HA_TO_VICARE_PRESET_HEATING = {v: k for k, v in VICARE_TO_HA_PRESET_HEATING.items()}
 
 
 def _build_entities(
@@ -319,9 +305,9 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
         _LOGGER.debug("Current preset %s", self._current_program)
         if self._current_program and self._current_program not in [
-            VICARE_PROGRAM_NORMAL,
-            VICARE_PROGRAM_REDUCED,
-            VICARE_PROGRAM_STANDBY,
+            HeatingProgram.NORMAL,
+            HeatingProgram.REDUCED,
+            HeatingProgram.STANDBY,
         ]:
             # We can't deactivate "normal", "reduced" or "standby"
             _LOGGER.debug("deactivating %s", self._current_program)
@@ -338,9 +324,9 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
 
         _LOGGER.debug("Setting preset to %s / %s", preset_mode, target_program)
         if target_program not in [
-            VICARE_PROGRAM_NORMAL,
-            VICARE_PROGRAM_REDUCED,
-            VICARE_PROGRAM_STANDBY,
+            HeatingProgram.NORMAL,
+            HeatingProgram.REDUCED,
+            HeatingProgram.STANDBY,
         ]:
             # And we can't explicitly activate "normal", "reduced" or "standby", either
             _LOGGER.debug("activating %s", target_program)

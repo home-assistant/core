@@ -1,39 +1,11 @@
 """Test the frame helper."""
 
-from collections.abc import Generator
 from unittest.mock import ANY, Mock, patch
 
 import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import frame
-
-
-@pytest.fixture
-def mock_integration_frame() -> Generator[Mock, None, None]:
-    """Mock as if we're calling code from inside an integration."""
-    correct_frame = Mock(
-        filename="/home/paulus/homeassistant/components/hue/light.py",
-        lineno="23",
-        line="self.light.is_on",
-    )
-    with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            correct_frame,
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
-    ):
-        yield correct_frame
 
 
 async def test_extract_frame_integration(
@@ -174,3 +146,8 @@ async def test_report_missing_integration_frame(
         frame.report(what, error_if_core=False)
         assert what in caplog.text
         assert caplog.text.count(what) == 1
+
+        caplog.clear()
+
+        frame.report(what, error_if_core=False, log_custom_component_only=True)
+        assert caplog.text == ""

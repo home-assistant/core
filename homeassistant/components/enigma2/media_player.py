@@ -1,9 +1,12 @@
 """Support for Enigma2 media players."""
 from __future__ import annotations
 
-from aiohttp.client_exceptions import ClientConnectorError
+import contextlib
+from logging import getLogger
+
+from aiohttp.client_exceptions import ClientConnectorError, ServerDisconnectedError
 from openwebif.api import OpenWebIfDevice
-from openwebif.enums import RemoteControlCodes, SetVolumeOption
+from openwebif.enums import PowerState, RemoteControlCodes, SetVolumeOption
 import voluptuous as vol
 from yarl import URL
 
@@ -49,6 +52,8 @@ ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"
 ATTR_MEDIA_END_TIME = "media_end_time"
 ATTR_MEDIA_START_TIME = "media_start_time"
+
+_LOGGER = getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -143,7 +148,12 @@ class Enigma2Device(MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn off media player."""
-        await self._device.turn_off()
+        if self._device.turn_off_to_deep:
+            with contextlib.suppress(ServerDisconnectedError):
+                await self._device.set_powerstate(PowerState.DEEP_STANDBY)
+            self._attr_available = False
+        else:
+            await self._device.set_powerstate(PowerState.STANDBY)
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
@@ -191,8 +201,19 @@ class Enigma2Device(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Update state of the media_player."""
-        await self._device.update()
-        self._attr_available = not self._device.is_offline
+        try:
+            await self._device.update()
+        except ClientConnectorError as err:
+            if self._attr_available:
+                _LOGGER.warning(
+                    "%s is unavailable. Error: %s", self._device.base.host, err
+                )
+                self._attr_available = False
+            return
+
+        if not self._attr_available:
+            _LOGGER.debug("%s is available", self._device.base.host)
+            self._attr_available = True
 
         if not self._device.status.in_standby:
             self._attr_extra_state_attributes = {

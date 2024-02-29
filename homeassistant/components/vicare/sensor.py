@@ -42,8 +42,11 @@ from .const import (
     DEVICE_LIST,
     DOMAIN,
     VICARE_CUBIC_METER,
+    VICARE_KW,
     VICARE_KWH,
-    VICARE_UNIT_TO_UNIT_OF_MEASUREMENT,
+    VICARE_PERCENT,
+    VICARE_W,
+    VICARE_WH,
 )
 from .entity import ViCareEntity
 from .types import ViCareDevice, ViCareRequiredKeysMixin
@@ -52,8 +55,20 @@ from .utils import get_burners, get_circuits, get_compressors, is_supported
 _LOGGER = logging.getLogger(__name__)
 
 VICARE_UNIT_TO_DEVICE_CLASS = {
+    VICARE_WH: SensorDeviceClass.ENERGY,
     VICARE_KWH: SensorDeviceClass.ENERGY,
+    VICARE_W: SensorDeviceClass.POWER,
+    VICARE_KW: SensorDeviceClass.POWER,
     VICARE_CUBIC_METER: SensorDeviceClass.GAS,
+}
+
+VICARE_UNIT_TO_HA_UNIT = {
+    VICARE_PERCENT: PERCENTAGE,
+    VICARE_W: UnitOfPower.WATT,
+    VICARE_KW: UnitOfPower.KILO_WATT,
+    VICARE_WH: UnitOfEnergy.WATT_HOUR,
+    VICARE_KWH: UnitOfEnergy.KILO_WATT_HOUR,
+    VICARE_CUBIC_METER: UnitOfVolume.CUBIC_METERS,
 }
 
 
@@ -581,7 +596,82 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    ViCareSensorEntityDescription(
+        key="ess_state_of_charge",
+        icon="mdi:home-battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getElectricalEnergySystemSOC(),
+        unit_getter=lambda api: api.getElectricalEnergySystemSOCUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_power_current",
+        translation_key="ess_power_current",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getElectricalEnergySystemPower(),
+        unit_getter=lambda api: api.getElectricalEnergySystemPowerUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="ess_state",
+        translation_key="ess_state",
+        device_class=SensorDeviceClass.ENUM,
+        options=["charge", "discharge", "standby"],
+        value_getter=lambda api: api.getElectricalEnergySystemOperationState(),
+    ),
+    ViCareSensorEntityDescription(
+        key="pcc_transfer_power_exchange",
+        translation_key="pcc_transfer_power_exchange",
+        icon="mdi:transmission-tower",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getPointOfCommonCouplingTransferPowerExchange(),
+    ),
+    ViCareSensorEntityDescription(
+        key="pcc_energy_consumption",
+        translation_key="pcc_energy_consumption",
+        icon="mdi:transmission-tower-export",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getPointOfCommonCouplingTransferConsumptionTotal(),
+        unit_getter=lambda api: api.getPointOfCommonCouplingTransferConsumptionTotalUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="pcc_energy_feed_in",
+        translation_key="pcc_energy_feed_in",
+        icon="mdi:transmission-tower-import",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getPointOfCommonCouplingTransferFeedInTotal(),
+        unit_getter=lambda api: api.getPointOfCommonCouplingTransferFeedInTotalUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_power_production_current",
+        translation_key="photovoltaic_power_production_current",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getPhotovoltaicProductionCurrent(),
+        unit_getter=lambda api: api.getPhotovoltaicProductionCurrentUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_energy_production_today",
+        translation_key="photovoltaic_energy_production_today",
+        icon="mdi:solar-power",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_getter=lambda api: api.getPhotovoltaicProductionCumulatedCurrentDay(),
+        unit_getter=lambda api: api.getPhotovoltaicProductionCumulatedUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="photovoltaic_status",
+        translation_key="photovoltaic_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=["ready", "production"],
+        value_getter=lambda api: _filter_pv_states(api.getPhotovoltaicStatus()),
+    ),
 )
+
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
@@ -700,6 +790,10 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
+def _filter_pv_states(state: str) -> str | None:
+    return None if state in ("nothing", "unknown") else state
+
+
 def _build_entities(
     device_list: list[ViCareDevice],
 ) -> list[ViCareSensor]:
@@ -800,6 +894,7 @@ class ViCareSensor(ViCareEntity, SensorEntity):
 
     def update(self) -> None:
         """Update state of sensor."""
+        vicare_unit = None
         try:
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_native_value = self.entity_description.value_getter(
@@ -808,13 +903,6 @@ class ViCareSensor(ViCareEntity, SensorEntity):
 
                 if self.entity_description.unit_getter:
                     vicare_unit = self.entity_description.unit_getter(self._api)
-                    if vicare_unit is not None:
-                        self._attr_device_class = VICARE_UNIT_TO_DEVICE_CLASS.get(
-                            vicare_unit
-                        )
-                        self._attr_native_unit_of_measurement = (
-                            VICARE_UNIT_TO_UNIT_OF_MEASUREMENT.get(vicare_unit)
-                        )
         except requests.exceptions.ConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
         except ValueError:
@@ -823,3 +911,12 @@ class ViCareSensor(ViCareEntity, SensorEntity):
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+
+        if vicare_unit is not None:
+            if (
+                device_class := VICARE_UNIT_TO_DEVICE_CLASS.get(vicare_unit)
+            ) is not None:
+                self._attr_device_class = device_class
+            self._attr_native_unit_of_measurement = VICARE_UNIT_TO_HA_UNIT.get(
+                vicare_unit
+            )

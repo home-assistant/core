@@ -160,10 +160,10 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
     async def _iterate_packets(self) -> AsyncIterable[bytes]:
         """Iterate over incoming packets."""
-        if not self.is_running:
-            raise RuntimeError("Not running")
-
         while data := await self.queue.get():
+            if not self.is_running:
+                break
+
             yield data
 
     def _event_callback(self, event: PipelineEvent) -> None:
@@ -237,6 +237,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         conversation_id: str | None,
         flags: int = 0,
         audio_settings: VoiceAssistantAudioSettings | None = None,
+        wake_word_phrase: str | None = None,
     ) -> None:
         """Run the Voice Assistant pipeline."""
         if audio_settings is None or audio_settings.volume_multiplier == 0:
@@ -273,6 +274,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
                 tts_audio_output=tts_audio_output,
                 start_stage=start_stage,
                 wake_word_settings=WakeWordSettings(timeout=5),
+                wake_word_phrase=wake_word_phrase,
                 audio_settings=AudioSettings(
                     noise_suppression_level=audio_settings.noise_suppression_level,
                     auto_gain_dbfs=audio_settings.auto_gain,
