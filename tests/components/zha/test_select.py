@@ -490,9 +490,8 @@ async def test_on_off_select_attribute_report_v2(
     assert hass.states.get(entity_id).state == AqaraMotionSensitivities.Low.name
 
     entity_registry = er.async_get(hass)
-    entity_entry = entity_registry.async_get(
-        "select.fake_manufacturer_fake_model_none"  # none in id because the translation key does not exist
-    )
+    # none in id because the translation key does not exist
+    entity_entry = entity_registry.async_get("select.fake_manufacturer_fake_model_none")
     assert entity_entry
     assert entity_entry.entity_category == EntityCategory.CONFIG
     assert entity_entry.disabled is True
