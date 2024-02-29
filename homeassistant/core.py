@@ -95,6 +95,7 @@ from .util.async_ import (
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
+from .util.executor import InterruptibleThreadPoolExecutor
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
@@ -394,6 +395,9 @@ class HomeAssistant:
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
         self._shutdown_jobs: list[HassJobWithArgs] = []
+        self.import_executor = InterruptibleThreadPoolExecutor(
+            max_workers=1, thread_name_prefix="ImportExecutor"
+        )
 
     @cached_property
     def is_running(self) -> bool:
@@ -676,6 +680,16 @@ class HomeAssistant:
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
 
+        return task
+
+    @callback
+    def async_add_import_executor_job(
+        self, target: Callable[..., _T], *args: Any
+    ) -> asyncio.Future[_T]:
+        """Add an import executor job from within the event loop."""
+        task = self.loop.run_in_executor(self.import_executor, target, *args)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
         return task
 
     @overload
@@ -992,6 +1006,7 @@ class HomeAssistant:
             self._async_log_running_tasks("close")
 
         self.set_state(CoreState.stopped)
+        self.import_executor.shutdown()
 
         if self._stopped is not None:
             self._stopped.set()
