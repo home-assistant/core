@@ -600,7 +600,6 @@ class InfluxThread(threading.Thread):
 
         Currently only used for testing.
         """
-        for _ in range(self.max_tries + 1):
-            event = threading.Event()
-            self.queue.put(event)
-            event.wait()
+        event = threading.Event()
+        self.queue.put(event)
+        event.wait()

@@ -1567,6 +1567,7 @@ async def test_invalid_inputs_error(
         hass.states.async_set("fake.something", 1)
         await hass.async_block_till_done()
         hass.data[influxdb.DOMAIN].block_till_done()
+        await hass.async_block_till_done()
 
         write_api.assert_called_once()
         assert (
