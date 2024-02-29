@@ -1698,8 +1698,6 @@ async def test_subscribe_entries_ws(
 ) -> None:
     """Test subscribe entries with the websocket api."""
     assert await async_setup_component(hass, "config", {})
-    mock_platform(hass, "comp1.config_flow", None)
-    HANDLERS["comp1"] = ConfigFlow
     mock_integration(hass, MockModule("comp1"))
     mock_integration(
         hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
@@ -1874,8 +1872,6 @@ async def test_subscribe_entries_ws_filtered(
 ) -> None:
     """Test subscribe entries with the websocket api with a type filter."""
     assert await async_setup_component(hass, "config", {})
-    mock_platform(hass, "comp1.config_flow", None)
-    HANDLERS["comp1"] = ConfigFlow
     mock_integration(hass, MockModule("comp1"))
     mock_integration(
         hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
