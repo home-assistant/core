@@ -193,6 +193,8 @@ def _map_error_to_schema_errors(
 class BaseFlowManager(abc.ABC, Generic[_FlowResultT]):
     """Manage all the flows that are in progress."""
 
+    _flow_result: Callable[..., _FlowResultT]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -203,8 +205,6 @@ class BaseFlowManager(abc.ABC, Generic[_FlowResultT]):
         self._progress: dict[str, BaseFlowHandler] = {}
         self._handler_progress_index: dict[str, set[BaseFlowHandler]] = {}
         self._init_data_process_index: dict[type, set[BaseFlowHandler]] = {}
-
-    _flow_result: Callable[..., _FlowResultT]
 
     @abc.abstractmethod
     async def async_create_flow(
