@@ -493,12 +493,28 @@ async def async_setup_entry(  # noqa: C901
 
     def get_arguments() -> dict[str, Any]:
         """Return startup information."""
+        start_get_arguments = time.monotonic()
         disk_arguments = get_all_disk_mounts(hass)
+        done_disk_arguments = time.monotonic()
+        _LOGGER.debug(
+            "Setup disk arguments took: %s",
+            done_disk_arguments - start_get_arguments,
+        )
         network_arguments = get_all_network_interfaces(hass)
+        done_network_arguments = time.monotonic()
+        _LOGGER.debug(
+            "Setup network arguments took: %s",
+            done_network_arguments - done_disk_arguments,
+        )
         try:
             cpu_temperature = read_cpu_temperature(hass)
         except AttributeError:
             cpu_temperature = 0.0
+        done_cpu_temperature = time.monotonic()
+        _LOGGER.debug(
+            "Setup cpu temperature took: %s",
+            done_cpu_temperature - done_network_arguments,
+        )
         return {
             "disk_arguments": disk_arguments,
             "network_arguments": network_arguments,
@@ -764,7 +780,13 @@ async def async_setup_entry(  # noqa: C901
     hass.data[DOMAIN_COORDINATORS]["system_load"] = system_load_coordinator
 
     for coordinator in hass.data[DOMAIN_COORDINATORS].values():
+        start_refresh = time.monotonic()
         await coordinator.async_request_refresh()
+        _LOGGER.debug(
+            "Refresh coordinator %s took: %s",
+            coordinator.name,
+            time.monotonic() - start_refresh,
+        )
 
     @callback
     def clean_obsolete_entities() -> None:

@@ -1,6 +1,7 @@
 """The System Monitor integration."""
 
 import logging
+import time
 
 import psutil_home_assistant as ha_psutil
 
@@ -19,7 +20,9 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up System Monitor from a config entry."""
+    start = time.monotonic()
     psutil_wrapper = await hass.async_add_executor_job(ha_psutil.PsutilWrapper)
+    _LOGGER.debug("Setup psutil wrapper took: %s", time.monotonic() - start)
     hass.data[DOMAIN] = psutil_wrapper
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(update_listener))
