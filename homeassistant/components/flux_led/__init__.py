@@ -37,7 +37,6 @@ from .const import (
     FLUX_LED_DISCOVERY_SIGNAL,
     FLUX_LED_EXCEPTIONS,
     SIGNAL_STATE_UPDATED,
-    STARTUP_SCAN_TIMEOUT,
 )
 from .coordinator import FluxLedUpdateCoordinator
 from .discovery import (
@@ -89,21 +88,21 @@ def async_wifi_bulb_for_host(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
     domain_data = hass.data.setdefault(DOMAIN, {})
-    domain_data[FLUX_LED_DISCOVERY] = await async_discover_devices(
-        hass, STARTUP_SCAN_TIMEOUT
-    )
+    domain_data[FLUX_LED_DISCOVERY] = []
 
     @callback
     def _async_start_background_discovery(*_: Any) -> None:
         """Run discovery in the background."""
-        hass.async_create_background_task(_async_discovery(), "flux_led-discovery")
+        hass.async_create_background_task(
+            _async_discovery(), "flux_led-discovery", eager_start=True
+        )
 
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
             hass, await async_discover_devices(hass, DISCOVER_SCAN_TIMEOUT)
         )
 
-    async_trigger_discovery(hass, domain_data[FLUX_LED_DISCOVERY])
+    _async_start_background_discovery()
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STARTED, _async_start_background_discovery
     )
