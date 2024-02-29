@@ -35,7 +35,11 @@ API_DISCOVERY_PORT_MANAGEMENT = {
 }
 
 APPLICATIONS_LIST_RESPONSE = """<reply result="ok">
+ <application Name="fenceguard" NiceName="AXIS Fence Guard" Vendor="Axis Communications" Version="2.2-6" ApplicationID="47775" License="None" Status="Running" ConfigurationPage="local/fenceguard/config.html" VendorHomePage="http://www.axis.com" LicenseName="Proprietary" />
+ <application Name="loiteringguard" NiceName="AXIS Loitering Guard" Vendor="Axis Communications" Version="2.2-6" ApplicationID="46775" License="None" Status="Running" ConfigurationPage="local/loiteringguard/config.html" VendorHomePage="http://www.axis.com" LicenseName="Proprietary" />
+ <application Name="motionguard" NiceName="AXIS Motion Guard" Vendor="Axis Communications" Version="2.2-6" ApplicationID="48170" License="None" Status="Running" ConfigurationPage="local/motionguard/config.html" VendorHomePage="http://www.axis.com" LicenseName="Proprietary" />
  <application Name="vmd" NiceName="AXIS Video Motion Detection" Vendor="Axis Communications" Version="4.2-0" ApplicationID="143440" License="None" Status="Running" ConfigurationPage="local/vmd/config.html" VendorHomePage="http://www.axis.com" />
+ <application Name="objectanalytics" NiceName="AXIS Object Analytics" Vendor="Axis Communications" Version="1.0-0" ApplicationID="143440" License="None" Status="Running" ConfigurationPage="local/vmd/config.html" VendorHomePage="http://www.axis.com" />
 </reply>"""
 
 BASIC_DEVICE_INFO_RESPONSE = {
@@ -95,7 +99,7 @@ PORT_MANAGEMENT_RESPONSE = {
     },
 }
 
-VMD4_RESPONSE = {
+APP_VMD4_RESPONSE = {
     "apiVersion": "1.4",
     "method": "getConfiguration",
     "context": CONTEXT,
@@ -107,6 +111,46 @@ VMD4_RESPONSE = {
         "configurationStatus": 2,
     },
 }
+
+APP_AOA_RESPONSE = {
+    "apiVersion": "1.0",
+    "context": "Axis library",
+    "data": {
+        "devices": [{"id": 1, "rotation": 180, "type": "camera"}],
+        "metadataOverlay": [],
+        "perspectives": [],
+        "scenarios": [
+            {
+                "devices": [{"id": 1}],
+                "filters": [
+                    {"distance": 5, "type": "distanceSwayingObject"},
+                    {"time": 1, "type": "timeShortLivedLimit"},
+                    {"height": 3, "type": "sizePercentage", "width": 3},
+                ],
+                "id": 1,
+                "name": "Scenario 1",
+                "objectClassifications": [],
+                "perspectives": [],
+                "presets": [],
+                "triggers": [
+                    {
+                        "type": "includeArea",
+                        "vertices": [
+                            [-0.97, -0.97],
+                            [-0.97, 0.97],
+                            [0.97, 0.97],
+                            [0.97, -0.97],
+                        ],
+                    }
+                ],
+                "type": "motion",
+            },
+        ],
+        "status": {},
+    },
+    "method": "getConfiguration",
+}
+
 
 BRAND_RESPONSE = """root.Brand.Brand=AXIS
 root.Brand.ProdFullName=AXIS M1065-LW Network Camera
