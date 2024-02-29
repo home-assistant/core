@@ -24,8 +24,10 @@ def manager():
     handlers = Registry()
     entries = []
 
-    class FlowManager(data_entry_flow.FlowManager):
+    class FlowManager(data_entry_flow.BaseFlowManager):
         """Test flow manager."""
+
+        _flow_result = data_entry_flow.FlowResult
 
         async def async_create_flow(self, handler_key, *, context, data):
             """Test create flow."""
@@ -79,7 +81,7 @@ async def test_configure_reuses_handler_instance(manager) -> None:
     assert len(manager.mock_created_entries) == 0
 
 
-async def test_configure_two_steps(manager: data_entry_flow.FlowManager) -> None:
+async def test_configure_two_steps(manager: data_entry_flow.BaseFlowManager) -> None:
     """Test that we reuse instances."""
 
     @manager.mock_reg_handler("test")
@@ -211,7 +213,6 @@ async def test_create_saves_data(manager) -> None:
     assert len(manager.mock_created_entries) == 1
 
     entry = manager.mock_created_entries[0]
-    assert entry["version"] == 5
     assert entry["handler"] == "test"
     assert entry["title"] == "Test Title"
     assert entry["data"] == "Test Data"
@@ -237,7 +238,6 @@ async def test_discovery_init_flow(manager) -> None:
     assert len(manager.mock_created_entries) == 1
 
     entry = manager.mock_created_entries[0]
-    assert entry["version"] == 5
     assert entry["handler"] == "test"
     assert entry["title"] == "hello"
     assert entry["data"] == data
@@ -258,7 +258,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
                 step_id="init", data_schema=vol.Schema({"count": int})
             )
 
-    class FlowManager(data_entry_flow.FlowManager):
+    class FlowManager(data_entry_flow.BaseFlowManager):
         async def async_create_flow(self, handler_name, *, context, data):
             """Create a test flow."""
             return TestFlow()
@@ -775,7 +775,7 @@ async def test_async_get_unknown_flow(manager) -> None:
 
 
 async def test_async_has_matching_flow(
-    hass: HomeAssistant, manager: data_entry_flow.FlowManager
+    hass: HomeAssistant, manager: data_entry_flow.BaseFlowManager
 ) -> None:
     """Test we can check for matching flows."""
     manager.hass = hass
@@ -951,7 +951,7 @@ async def test_show_menu(hass: HomeAssistant, manager, menu_options) -> None:
 
 
 async def test_find_flows_by_init_data_type(
-    manager: data_entry_flow.FlowManager,
+    manager: data_entry_flow.BaseFlowManager,
 ) -> None:
     """Test we can find flows by init data type."""
 

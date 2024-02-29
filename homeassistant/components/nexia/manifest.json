@@ -10,6 +10,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/nexia",
+  "import_executor": true,
   "iot_class": "cloud_polling",
   "loggers": ["nexia"],
   "requirements": ["nexia==2.0.8"]
