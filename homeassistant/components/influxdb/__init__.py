@@ -550,9 +550,7 @@ class InfluxThread(threading.Thread):
 
                 if item is None:
                     self.shutdown = True
-                elif isinstance(item, threading.Event):
-                    item.set()
-                else:
+                elif type(item) is tuple:  # noqa: E721
                     timestamp, event = item
                     age = time.monotonic() - timestamp
 
@@ -561,6 +559,8 @@ class InfluxThread(threading.Thread):
                             json.append(event_json)
                     else:
                         dropped += 1
+                elif isinstance(item, threading.Event):
+                    item.set()
 
         if dropped:
             _LOGGER.warning(CATCHING_UP_MESSAGE, dropped)
