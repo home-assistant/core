@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 
 from wyoming.client import AsyncTcpClient
-from wyoming.info import Describe, Info, Satellite
+from wyoming.info import Describe, Info
 
 from homeassistant.const import Platform
 
@@ -52,8 +52,6 @@ class WyomingService:
 
         # Wyoming satellite
         # Must be checked first because satellites may contain wake services, etc.
-        satellite_installed: Satellite | None = None
-
         if (self.info.satellite is not None) and self.info.satellite.installed:
             return self.info.satellite.name
 
