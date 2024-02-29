@@ -18,15 +18,17 @@ from homeassistant.bootstrap import (
 @pytest.mark.timeout(30)  # cloud can take > 9s
 @pytest.mark.parametrize(
     "component",
-    {
-        *DEBUGGER_INTEGRATIONS,
-        *CORE_INTEGRATIONS,
-        *LOGGING_INTEGRATIONS,
-        *FRONTEND_INTEGRATIONS,
-        *RECORDER_INTEGRATIONS,
-        *STAGE_1_INTEGRATIONS,
-        *DEFAULT_INTEGRATIONS,
-    },
+    sorted(
+        {
+            *DEBUGGER_INTEGRATIONS,
+            *CORE_INTEGRATIONS,
+            *LOGGING_INTEGRATIONS,
+            *FRONTEND_INTEGRATIONS,
+            *RECORDER_INTEGRATIONS,
+            *STAGE_1_INTEGRATIONS,
+            *DEFAULT_INTEGRATIONS,
+        }
+    ),
 )
 async def test_circular_imports(component: str) -> None:
     """Check that components can be imported without circular imports."""
