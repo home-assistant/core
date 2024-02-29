@@ -211,7 +211,8 @@ class ProbeEndpoint:
 
         if not isinstance(device.device, CustomDeviceV2):
             _LOGGER.debug(
-                "Device: %s-%s is not a quirks v2 device - skipping discover_quirks_v2_entities",
+                "Device: %s-%s is not a quirks v2 device - skipping "
+                "discover_quirks_v2_entities",
                 str(device.ieee),
                 device.name,
             )
@@ -234,8 +235,9 @@ class ProbeEndpoint:
             endpoint_id, cluster_id, cluster_type = cluster_details
 
             if endpoint_id not in device.endpoints:
-                _LOGGER.debug(
-                    "Device: %s-%s does not have an endpoint with id: %s - unable to create entity with cluster details: %s",
+                _LOGGER.warning(
+                    "Device: %s-%s does not have an endpoint with id: %s - unable to "
+                    "create entity with cluster details: %s",
                     str(device.ieee),
                     device.name,
                     endpoint_id,
@@ -251,8 +253,9 @@ class ProbeEndpoint:
             )
 
             if cluster is None:
-                _LOGGER.debug(
-                    "Device: %s-%s does not have a cluster with id: %s - unable to create entity with cluster details: %s",
+                _LOGGER.warning(
+                    "Device: %s-%s does not have a cluster with id: %s - "
+                    "unable to create entity with cluster details: %s",
                     str(device.ieee),
                     device.name,
                     cluster_id,
@@ -276,8 +279,9 @@ class ProbeEndpoint:
                 )
 
                 if entity_class is None:
-                    _LOGGER.debug(
-                        "Device: %s-%s has an entity with details: %s that does not have an entity class mapping - unable to create entity",
+                    _LOGGER.warning(
+                        "Device: %s-%s has an entity with details: %s that does not"
+                        " have an entity class mapping - unable to create entity",
                         str(device.ieee),
                         device.name,
                         {
@@ -287,8 +291,8 @@ class ProbeEndpoint:
                     )
                     continue
 
-                # automatically add the attribute to ZCL_INIT_ATTRS for the cluster handler if it
-                # is not already in the list
+                # automatically add the attribute to ZCL_INIT_ATTRS for the cluster
+                # handler if it is not already in the list
                 if (
                     hasattr(quirk_metadata.entity_metadata, "attribute_name")
                     and quirk_metadata.entity_metadata.attribute_name
@@ -519,7 +523,8 @@ class ProbeEndpoint:
         for platform, ent_n_handler_list in matches.items():
             for entity_and_handler in ent_n_handler_list:
                 if platform == cmpt_by_dev_type:
-                    # for well known device types, like thermostats we'll take only 1st class
+                    # for well known device types,
+                    # like thermostats we'll take only 1st class
                     endpoint.async_new_entity(
                         platform,
                         entity_and_handler.entity_class,
