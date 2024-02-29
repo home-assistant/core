@@ -892,7 +892,7 @@ class Integration:
         except ImportError:
             raise
         except RuntimeError as err:
-            #  _DeadlockError inherits from RuntimeError
+            # _DeadlockError inherits from RuntimeError
             raise ImportError(f"RuntimeError importing {self.pkg_path}: {err}") from err
         except Exception as err:
             _LOGGER.exception(
@@ -1001,7 +1001,7 @@ class Integration:
                 missing_platforms_cache[full_name] = ex
             raise
         except RuntimeError as err:
-            #  _DeadlockError inherits from RuntimeError
+            # _DeadlockError inherits from RuntimeError
             raise ImportError(
                 f"RuntimeError importing {self.pkg_path}.{platform_name}: {err}"
             ) from err
