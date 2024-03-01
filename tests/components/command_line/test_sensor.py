@@ -22,6 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
+from . import mock_asyncio_subprocess_run
+
 from tests.common import async_fire_time_changed
 
 
@@ -132,10 +134,7 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"Works\n",
-    ) as check_output:
+    with mock_asyncio_subprocess_run(b"Works\n") as mock_subprocess_run:
         # Give time for template to load
         async_fire_time_changed(
             hass,
@@ -143,11 +142,10 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert len(check_output.mock_calls) == 1
-        check_output.assert_called_with(
+        assert len(mock_subprocess_run.mock_calls) == 1
+        mock_subprocess_run.assert_called_with(
             'echo "sensor_value" "3 4"',
-            shell=True,  # noqa: S604 # shell by design
-            timeout=15,
+            stdout=-1,
             close_fds=False,
         )
 
@@ -747,10 +745,7 @@ async def test_availability(
 
     hass.states.async_set("sensor.input1", "off")
     await hass.async_block_till_done()
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"January 17, 2022",
-    ):
+    with mock_asyncio_subprocess_run(b"January 17, 2022"):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

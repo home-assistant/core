@@ -138,6 +138,7 @@ class CommandSensor(ManualTriggerSensorEntity):
         """Update the state of the entity."""
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()
+
         if self._process_updates.locked():
             LOGGER.warning(
                 "Updating Command Line Sensor %s took longer than the scheduled update interval %s",
@@ -231,7 +232,7 @@ class CommandSensorData:
         if args_compiled:
             try:
                 args_to_render = {"arguments": args}
-                rendered_args = args_compiled.render(args_to_render)
+                rendered_args = args_compiled.async_render(args_to_render)
             except TemplateError as ex:
                 LOGGER.exception("Error rendering command template: %s", ex)
                 return
