@@ -150,7 +150,6 @@ COLOR_MODES_CONFIG = {
     mqtt.DOMAIN: {
         light.DOMAIN: {
             "brightness": True,
-            "color_mode": True,
             "effect": True,
             "command_topic": "test_light_rgb/set",
             "name": "test",
@@ -253,8 +252,9 @@ async def test_warning_if_color_mode_flags_are_used(
         assert await mqtt_mock_entry()
     assert any(
         (
-            f"MQTT json light config uses deprecated flags [{color_modes_case}] "
-            "for handling color mode, `supported_color_modes` not found." in caplog.text
+            f"Deprecated flags [{color_modes_case}] used in MQTT JSON light config "
+            "for handling color mode, please use `supported_color_modes` instead."
+            in caplog.text
         )
         for color_modes_case in color_modes
     )
@@ -288,22 +288,86 @@ async def test_warning_on_discovery_if_color_mode_flags_are_used(
     color_modes: tuple[str,],
 ) -> None:
     """Test warnings deprecated config keys with discovery."""
-    assert await mqtt_mock_entry()
+    with patch(
+        "homeassistant.components.mqtt.light.schema_json.async_create_issue"
+    ) as mock_async_create_issue:
+        assert await mqtt_mock_entry()
 
-    config_payload = json_dumps(config[mqtt.DOMAIN][light.DOMAIN][0])
-    async_fire_mqtt_message(
-        hass,
-        "homeassistant/light/bla/config",
-        config_payload,
-    )
-    await hass.async_block_till_done()
+        config_payload = json_dumps(config[mqtt.DOMAIN][light.DOMAIN][0])
+        async_fire_mqtt_message(
+            hass,
+            "homeassistant/light/bla/config",
+            config_payload,
+        )
+        await hass.async_block_till_done()
     assert any(
         (
-            f"MQTT json light config uses deprecated flags [{color_modes_case}] "
-            "for handling color mode, `supported_color_modes` not found." in caplog.text
+            f"Deprecated flags [{color_modes_case}] used in MQTT JSON light config "
+            "for handling color mode, please "
+            "use `supported_color_modes` instead" in caplog.text
         )
         for color_modes_case in color_modes
     )
+    mock_async_create_issue.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            light.DOMAIN,
+            DEFAULT_CONFIG,
+            ({"color_mode": True, "supported_color_modes": ["color_temp"]},),
+        ),
+    ],
+    ids=["color_temp"],
+)
+async def test_warning_if_color_mode_option_flag_is_used(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test warning deprecated color_mode option flag is used."""
+    with patch(
+        "homeassistant.components.mqtt.light.schema_json.async_create_issue"
+    ) as mock_async_create_issue:
+        assert await mqtt_mock_entry()
+    assert "Deprecated flag `color_mode` used in MQTT JSON light config" in caplog.text
+    mock_async_create_issue.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        help_custom_config(
+            light.DOMAIN,
+            DEFAULT_CONFIG,
+            ({"color_mode": True, "supported_color_modes": ["color_temp"]},),
+        ),
+    ],
+    ids=["color_temp"],
+)
+async def test_warning_on_discovery_if_color_mode_option_flag_is_used(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+    config: dict[str, Any],
+) -> None:
+    """Test warning deprecated color_mode option flag is used."""
+    with patch(
+        "homeassistant.components.mqtt.light.schema_json.async_create_issue"
+    ) as mock_async_create_issue:
+        assert await mqtt_mock_entry()
+
+        config_payload = json_dumps(config[mqtt.DOMAIN][light.DOMAIN][0])
+        async_fire_mqtt_message(
+            hass,
+            "homeassistant/light/bla/config",
+            config_payload,
+        )
+        await hass.async_block_till_done()
+    assert "Deprecated flag `color_mode` used in MQTT JSON light config" in caplog.text
+    mock_async_create_issue.assert_not_called()
 
 
 @pytest.mark.parametrize(

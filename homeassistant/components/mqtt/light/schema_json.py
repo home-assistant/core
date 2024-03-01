@@ -122,8 +122,8 @@ def valid_color_configuration(
         elif deprecated_flags_used:
             deprecated_flags = ", ".join(key for key in deprecated if key in config)
             _LOGGER.warning(
-                "MQTT json light config uses deprecated flags [%s] for "
-                "handling color mode, `supported_color_modes` not found. "
+                "Deprecated flags [%s] used in MQTT JSON light config "
+                "for handling color mode, please use `supported_color_modes` instead. "
                 "Got: %s. This will stop working in Home Assistant Core 2025.3",
                 deprecated_flags,
                 config,
@@ -151,6 +151,38 @@ def valid_color_configuration(
                 },
                 translation_key="deprecated_color_handling",
             )
+
+        if CONF_COLOR_MODE in config:
+            _LOGGER.warning(
+                "Deprecated flag `color_mode` used in MQTT JSON light config "
+                ", the `color_mode` flag is not used anymore and should be removed. "
+                "Got: %s. This will stop working in Home Assistant Core 2025.3",
+                config,
+            )
+            if not setup_from_yaml:
+                return config
+            issue_id = hex(hash(frozenset(config)))
+            yaml_config_str = yaml_dump(config)
+            learn_more_url = (
+                "https://www.home-assistant.io/integrations/"
+                f"{LIGHT_DOMAIN}.mqtt/#json-schema"
+            )
+            hass = async_get_hass()
+            async_create_issue(
+                hass,
+                MQTT_DOMAIN,
+                issue_id,
+                breaks_in_ha_version="2025.3.0",
+                issue_domain=LIGHT_DOMAIN,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                learn_more_url=learn_more_url,
+                translation_placeholders={
+                    "config": yaml_config_str,
+                },
+                translation_key="deprecated_color_mode_flag",
+            )
+
         return config
 
     return _valid_color_configuration
