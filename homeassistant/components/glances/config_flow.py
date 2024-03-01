@@ -10,7 +10,7 @@ from glances_api.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.data_entry_flow import FlowResult
 
 from . import ServerVersionMismatch, get_api
 from .const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
@@ -36,13 +35,15 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GlancesFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Glances config flow."""
 
     VERSION = 1
-    _reauth_entry: config_entries.ConfigEntry | None
+    _reauth_entry: ConfigEntry | None
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -51,7 +52,7 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
         assert self._reauth_entry
@@ -85,7 +86,7 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

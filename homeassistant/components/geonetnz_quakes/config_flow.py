@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -34,7 +34,7 @@ DATA_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-class GeonetnzQuakesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class GeonetnzQuakesFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a GeoNet NZ Quakes config flow."""
 
     async def _show_form(self, errors=None):

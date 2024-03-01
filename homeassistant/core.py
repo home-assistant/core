@@ -91,9 +91,11 @@ from .helpers.json import json_bytes, json_fragment
 from .util import dt as dt_util, location
 from .util.async_ import (
     cancelling,
+    create_eager_task,
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
+from .util.executor import InterruptibleThreadPoolExecutor
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
@@ -393,6 +395,9 @@ class HomeAssistant:
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
         self._shutdown_jobs: list[HassJobWithArgs] = []
+        self.import_executor = InterruptibleThreadPoolExecutor(
+            max_workers=1, thread_name_prefix="ImportExecutor"
+        )
 
     @cached_property
     def is_running(self) -> bool:
@@ -622,7 +627,10 @@ class HomeAssistant:
 
     @callback
     def async_create_task(
-        self, target: Coroutine[Any, Any, _R], name: str | None = None
+        self,
+        target: Coroutine[Any, Any, _R],
+        name: str | None = None,
+        eager_start: bool = False,
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -631,16 +639,19 @@ class HomeAssistant:
 
         target: target to call.
         """
-        task = self.loop.create_task(target, name=name)
+        if eager_start:
+            task = create_eager_task(target, name=name, loop=self.loop)
+            if task.done():
+                return task
+        else:
+            task = self.loop.create_task(target, name=name)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
         return task
 
     @callback
     def async_create_background_task(
-        self,
-        target: Coroutine[Any, Any, _R],
-        name: str,
+        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = False
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
@@ -650,7 +661,12 @@ class HomeAssistant:
 
         This method must be run in the event loop.
         """
-        task = self.loop.create_task(target, name=name)
+        if eager_start:
+            task = create_eager_task(target, name=name, loop=self.loop)
+            if task.done():
+                return task
+        else:
+            task = self.loop.create_task(target, name=name)
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.remove)
         return task
@@ -664,6 +680,16 @@ class HomeAssistant:
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
 
+        return task
+
+    @callback
+    def async_add_import_executor_job(
+        self, target: Callable[..., _T], *args: Any
+    ) -> asyncio.Future[_T]:
+        """Add an import executor job from within the event loop."""
+        task = self.loop.run_in_executor(self.import_executor, target, *args)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
         return task
 
     @overload
@@ -980,6 +1006,7 @@ class HomeAssistant:
             self._async_log_running_tasks("close")
 
         self.set_state(CoreState.stopped)
+        self.import_executor.shutdown()
 
         if self._stopped is not None:
             self._stopped.set()
@@ -2285,6 +2312,7 @@ class ServiceRegistry:
             self._hass.async_create_task(
                 self._run_service_call_catch_exceptions(coro, service_call),
                 f"service call background {service_call.domain}.{service_call.service}",
+                eager_start=True,
             )
             return None
 

@@ -46,10 +46,10 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS: list[str] = [
-    Platform.SENSOR,
-    Platform.FAN,
     Platform.BINARY_SENSOR,
+    Platform.FAN,
     Platform.NUMBER,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 
