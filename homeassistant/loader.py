@@ -853,7 +853,7 @@ class Integration:
         # So we do it before validating config to catch these errors.
         if load_executor:
             try:
-                comp = await self.hass.async_add_executor_job(self.get_component)
+                comp = await self.hass.async_add_import_executor_job(self.get_component)
             except ImportError as ex:
                 load_executor = False
                 _LOGGER.debug("Failed to import %s in executor", domain, exc_info=ex)
@@ -924,7 +924,7 @@ class Integration:
         try:
             if load_executor:
                 try:
-                    platform = await self.hass.async_add_executor_job(
+                    platform = await self.hass.async_add_import_executor_job(
                         self._load_platform, platform_name
                     )
                 except ImportError as ex:
