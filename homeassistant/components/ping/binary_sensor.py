@@ -31,6 +31,8 @@ ATTR_ROUND_TRIP_TIME_MAX = "round_trip_time_max"
 ATTR_ROUND_TRIP_TIME_MDEV = "round_trip_time_mdev"
 ATTR_ROUND_TRIP_TIME_MIN = "round_trip_time_min"
 
+ATTR_PACKET_LOSS = "packet_loss"
+
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -120,4 +122,5 @@ class PingBinarySensor(CoordinatorEntity[PingUpdateCoordinator], BinarySensorEnt
             ATTR_ROUND_TRIP_TIME_MAX: self.coordinator.data.data["max"],
             ATTR_ROUND_TRIP_TIME_MDEV: self.coordinator.data.data["mdev"],
             ATTR_ROUND_TRIP_TIME_MIN: self.coordinator.data.data["min"],
+            ATTR_PACKET_LOSS: self.coordinator.data.data["loss"],
         }
