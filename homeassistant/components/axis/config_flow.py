@@ -71,9 +71,9 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 
         if user_input is not None:
             try:
-                device = await get_axis_api(self.hass, MappingProxyType(user_input))
+                api = await get_axis_api(self.hass, MappingProxyType(user_input))
 
-                serial = device.vapix.serial_number
+                serial = api.vapix.serial_number
                 await self.async_set_unique_id(format_mac(serial))
 
                 self._abort_if_unique_id_configured(
@@ -90,7 +90,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_MODEL: device.vapix.product_number,
+                    CONF_MODEL: api.vapix.product_number,
                 }
 
                 return await self._create_entry(serial)
