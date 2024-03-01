@@ -7,7 +7,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .config_flow import get_master_gateway
+from .config_flow import get_master_hub
 from .const import CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
@@ -80,7 +80,7 @@ async def async_update_master_gateway(
     Makes sure there is always one master available.
     """
     try:
-        master_gateway = get_master_gateway(hass)
+        master_gateway = get_master_hub(hass)
         master = master_gateway.config_entry == config_entry
     except ValueError:
         master = True
