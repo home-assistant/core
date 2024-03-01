@@ -8,11 +8,10 @@ from aiosteamist import Steamist
 from discovery30303 import Device30303, normalize_mac
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -28,7 +27,7 @@ from .discovery import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SteamistConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Steamist."""
 
     VERSION = 1
@@ -38,7 +37,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, Device30303] = {}
         self._discovered_device: Device30303 | None = None
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         self._discovered_device = Device30303(
             ipaddress=discovery_info.ip,
@@ -50,7 +51,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle integration discovery."""
         self._discovered_device = Device30303(
             ipaddress=discovery_info["ipaddress"],
@@ -60,7 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self._async_handle_discovery()
 
-    async def _async_handle_discovery(self) -> FlowResult:
+    async def _async_handle_discovery(self) -> ConfigFlowResult:
         """Handle any discovery."""
         device = self._discovered_device
         assert device is not None
@@ -91,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self._discovered_device is not None
         device = self._discovered_device
@@ -108,7 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_create_entry_from_device(self, device: Device30303) -> FlowResult:
+    def _async_create_entry_from_device(self, device: Device30303) -> ConfigFlowResult:
         """Create a config entry from a device."""
         self._async_abort_entries_match({CONF_HOST: device.ipaddress})
         data = {CONF_HOST: device.ipaddress, CONF_NAME: device.name}
@@ -121,7 +122,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick_device(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the step to pick discovered device."""
         if user_input is not None:
             mac = user_input[CONF_DEVICE]
@@ -153,7 +154,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -170,6 +171,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if discovery := await async_discover_device(self.hass, host):
+                    await self.async_set_unique_id(
+                        dr.format_mac(discovery.mac), raise_on_progress=False
+                    )
                     return self._async_create_entry_from_device(discovery)
                 self._async_abort_entries_match({CONF_HOST: host})
                 return self.async_create_entry(title=host, data=user_input)

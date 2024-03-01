@@ -17,7 +17,7 @@ from .const import CONF_SYNC_TIME, DEFAULT_SYNC_TIME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.FAN, Platform.LIGHT]
 
 
 KEEP_ALIVE_INTERVAL = timedelta(minutes=1)

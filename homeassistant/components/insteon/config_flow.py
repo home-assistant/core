@@ -5,20 +5,48 @@ import logging
 
 from pyinsteon import async_connect
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp, usb
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import (
+    DEFAULT_DISCOVERY_UNIQUE_ID,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+)
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_NAME,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import CONF_HUB_VERSION, DOMAIN
-from .schemas import build_hub_schema, build_plm_manual_schema, build_plm_schema
+from .const import (
+    CONF_HOUSECODE,
+    CONF_HUB_VERSION,
+    CONF_OVERRIDE,
+    CONF_UNITCODE,
+    CONF_X10,
+    DOMAIN,
+)
+from .schemas import (
+    build_hub_schema,
+    build_plm_manual_schema,
+    build_plm_schema,
+)
 from .utils import async_get_usb_ports
 
 STEP_PLM = "plm"
 STEP_PLM_MANUALLY = "plm_manually"
 STEP_HUB_V1 = "hubv1"
 STEP_HUB_V2 = "hubv2"
+STEP_CHANGE_HUB_CONFIG = "change_hub_config"
+STEP_CHANGE_PLM_CONFIG = "change_plm_config"
+STEP_ADD_X10 = "add_x10"
+STEP_ADD_OVERRIDE = "add_override"
+STEP_REMOVE_OVERRIDE = "remove_override"
+STEP_REMOVE_X10 = "remove_x10"
+MODEM_TYPE = "modem_type"
 PLM_MANUAL = "manual"
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +63,7 @@ async def _async_connect(**kwargs):
         return False
 
 
-class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     """Insteon config flow handler."""
 
     _device_path: str | None = None
@@ -106,7 +134,9 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id=step_id, data_schema=data_schema, errors=errors
         )
 
-    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
+    async def async_step_usb(
+        self, discovery_info: usb.UsbServiceInfo
+    ) -> ConfigFlowResult:
         """Handle USB discovery."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -124,10 +154,10 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             CONF_NAME: f"Insteon PLM {self._device_name}"
         }
-        await self.async_set_unique_id(config_entries.DEFAULT_DISCOVERY_UNIQUE_ID)
+        await self.async_set_unique_id(DEFAULT_DISCOVERY_UNIQUE_ID)
         return await self.async_step_confirm_usb()
 
-    async def async_step_confirm_usb(self, user_input=None) -> FlowResult:
+    async def async_step_confirm_usb(self, user_input=None) -> ConfigFlowResult:
         """Confirm a USB discovery."""
         if user_input is not None:
             return await self.async_step_plm({CONF_DEVICE: self._device_path})
@@ -137,7 +167,9 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: self._device_name},
         )
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a DHCP discovery."""
         self.discovered_conf = {CONF_HOST: discovery_info.ip}
         self.context["title_placeholders"] = {

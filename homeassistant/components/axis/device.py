@@ -9,6 +9,7 @@ from axis.configuration import Configuration
 from axis.errors import Unauthorized
 from axis.stream_manager import Signal, State
 from axis.vapix.interfaces.mqtt import mqtt_json_to_event
+from axis.vapix.models.mqtt import ClientState
 
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
@@ -188,9 +189,8 @@ class AxisNetworkDevice:
             status = await self.api.vapix.mqtt.get_client_status()
         except Unauthorized:
             # This means the user has too low privileges
-            status = {}
-
-        if status.get("data", {}).get("status", {}).get("state") == "active":
+            return
+        if status.status.state == ClientState.ACTIVE:
             self.config_entry.async_on_unload(
                 await mqtt.async_subscribe(
                     hass, f"{self.api.vapix.serial_number}/#", self.mqtt_message
@@ -209,7 +209,6 @@ class AxisNetworkDevice:
 
     def async_setup_events(self) -> None:
         """Set up the device events."""
-
         if self.option_events:
             self.api.stream.connection_status_callback.append(
                 self.async_connection_status_callback
@@ -217,7 +216,7 @@ class AxisNetworkDevice:
             self.api.enable_events()
             self.api.stream.start()
 
-            if self.api.vapix.mqtt:
+            if self.api.vapix.mqtt.supported:
                 async_when_setup(self.hass, MQTT_DOMAIN, self.async_use_mqtt)
 
     @callback

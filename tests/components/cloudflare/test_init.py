@@ -66,6 +66,7 @@ async def test_async_setup_raises_entry_auth_failed(
 
     instance.list_zones.side_effect = pycfdns.AuthenticationException()
     await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
 

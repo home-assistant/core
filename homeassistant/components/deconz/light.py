@@ -63,6 +63,7 @@ FLASH_TO_DECONZ = {FLASH_SHORT: LightAlert.SHORT, FLASH_LONG: LightAlert.LONG}
 
 DECONZ_TO_COLOR_MODE = {
     LightColorMode.CT: ColorMode.COLOR_TEMP,
+    LightColorMode.GRADIENT: ColorMode.XY,
     LightColorMode.HS: ColorMode.HS,
     LightColorMode.XY: ColorMode.XY,
 }

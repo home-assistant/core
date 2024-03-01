@@ -694,7 +694,11 @@ def _coerce_none(value: str) -> None:
 
 @dataclasses.dataclass
 class Profile:
-    """Representation of a profile."""
+    """Representation of a profile.
+
+    The light profiles feature is in a frozen development state
+    until otherwise decided in an architecture discussion.
+    """
 
     name: str
     color_x: float | None = dataclasses.field(repr=False)
@@ -742,7 +746,11 @@ class Profile:
 
 
 class Profiles:
-    """Representation of available color profiles."""
+    """Representation of available color profiles.
+
+    The light profiles feature is in a frozen development state
+    until otherwise decided in an architecture discussion.
+    """
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize profiles."""
@@ -1328,5 +1336,5 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return if light color mode issues should be reported."""
         if not self.platform:
             return True
-        # philips_js and zha have known issues, we don't need users to open issues
-        return self.platform.platform_name not in {"philips_js", "zha"}
+        # philips_js and tuya have known issues, we don't need users to open issues
+        return self.platform.platform_name not in {"philips_js", "tuya"}

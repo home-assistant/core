@@ -320,49 +320,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         qos: int = call.data[ATTR_QOS]
         retain: bool = call.data[ATTR_RETAIN]
         if msg_topic_template is not None:
+            rendered_topic: Any = MqttCommandTemplate(
+                template.Template(msg_topic_template),
+                hass=hass,
+            ).async_render()
             try:
-                rendered_topic: Any = template.Template(
-                    msg_topic_template, hass
-                ).async_render(parse_result=False)
                 msg_topic = valid_publish_topic(rendered_topic)
-            except TEMPLATE_ERRORS as exc:
-                _LOGGER.error(
-                    (
-                        "Unable to publish: rendering topic template of %s "
-                        "failed because %s"
-                    ),
-                    msg_topic_template,
-                    exc,
-                )
-                return
             except vol.Invalid as err:
-                _LOGGER.error(
-                    (
-                        "Unable to publish: topic template '%s' produced an "
-                        "invalid topic '%s' after rendering (%s)"
-                    ),
-                    msg_topic_template,
-                    rendered_topic,
-                    err,
-                )
-                return
+                err_str = str(err)
+                raise ServiceValidationError(
+                    f"Unable to publish: topic template '{msg_topic_template}' produced an "
+                    f"invalid topic '{rendered_topic}' after rendering ({err_str})",
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_publish_topic",
+                    translation_placeholders={
+                        "error": err_str,
+                        "topic": str(rendered_topic),
+                        "topic_template": str(msg_topic_template),
+                    },
+                ) from err
 
         if payload_template is not None:
-            try:
-                payload = MqttCommandTemplate(
-                    template.Template(payload_template), hass=hass
-                ).async_render()
-            except TEMPLATE_ERRORS as exc:
-                _LOGGER.error(
-                    (
-                        "Unable to publish to %s: rendering payload template of "
-                        "%s failed because %s"
-                    ),
-                    msg_topic,
-                    payload_template,
-                    exc,
-                )
-                return
+            payload = MqttCommandTemplate(
+                template.Template(payload_template), hass=hass
+            ).async_render()
 
         if TYPE_CHECKING:
             assert msg_topic is not None

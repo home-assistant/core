@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "setpoint_status": {
+        "default": "mdi:thermostat"
+      }
+    }
+  },
+  "services": {
+    "set_hold_time": "mdi:timer-pause"
+  }
+}
