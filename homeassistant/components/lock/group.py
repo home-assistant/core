@@ -2,7 +2,8 @@
 
 from typing import TYPE_CHECKING
 
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.components.group import GroupIntegrationRegistry
+from homeassistant.const import STATE_LOCKED, STATE_OPEN, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN

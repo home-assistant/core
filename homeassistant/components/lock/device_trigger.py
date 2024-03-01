@@ -16,6 +16,8 @@ from homeassistant.const import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
@@ -86,6 +88,10 @@ async def async_attach_trigger(
         to_state = STATE_JAMMED
     elif config[CONF_TYPE] == "locking":
         to_state = STATE_LOCKING
+    elif config[CONF_TYPE] == "opening":
+        to_state = STATE_OPENING
+    elif config[CONF_TYPE] == "open":
+        to_state = STATE_OPEN
     elif config[CONF_TYPE] == "unlocking":
         to_state = STATE_UNLOCKING
     elif config[CONF_TYPE] == "locked":
