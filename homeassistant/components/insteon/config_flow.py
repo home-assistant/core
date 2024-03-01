@@ -8,32 +8,14 @@ from pyinsteon import async_connect
 from homeassistant.components import dhcp, usb
 from homeassistant.config_entries import (
     DEFAULT_DISCOVERY_UNIQUE_ID,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_NAME,
-)
-from homeassistant.core import callback
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import (
-    CONF_HOUSECODE,
-    CONF_HUB_VERSION,
-    CONF_OVERRIDE,
-    CONF_UNITCODE,
-    CONF_X10,
-    DOMAIN,
-)
-from .schemas import (
-    build_hub_schema,
-    build_plm_manual_schema,
-    build_plm_schema,
-)
+from .const import CONF_HUB_VERSION, DOMAIN
+from .schemas import build_hub_schema, build_plm_manual_schema, build_plm_schema
 from .utils import async_get_usb_ports
 
 STEP_PLM = "plm"
