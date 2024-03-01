@@ -6,7 +6,9 @@ from unittest.mock import MagicMock, patch
 
 
 @contextmanager
-def mock_asyncio_subprocess_run(response: bytes, returncode: int = 0):
+def mock_asyncio_subprocess_run(
+    response: bytes = b"", returncode: int = 0, exception: Exception = None
+):
     """Mock create_subprocess_shell."""
 
     class MockProcess(asyncio.subprocess.Process):
@@ -15,6 +17,8 @@ def mock_asyncio_subprocess_run(response: bytes, returncode: int = 0):
             return returncode
 
         async def communicate(self):
+            if exception:
+                raise exception
             return response, b""
 
     mock_process = MockProcess(MagicMock(), MagicMock(), MagicMock())

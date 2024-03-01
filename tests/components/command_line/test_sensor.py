@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-import subprocess
 from typing import Any
 from unittest.mock import patch
 
@@ -677,10 +676,7 @@ async def test_template_not_error_when_data_is_none(
 ) -> None:
     """Test command sensor with template not logging error when data is None."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        side_effect=subprocess.CalledProcessError,
-    ):
+    with mock_asyncio_subprocess_run(returncode=1):
         await setup.async_setup_component(
             hass,
             DOMAIN,

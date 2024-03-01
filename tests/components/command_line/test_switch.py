@@ -5,7 +5,6 @@ import asyncio
 from datetime import timedelta
 import json
 import os
-import subprocess
 import tempfile
 from unittest.mock import patch
 
@@ -376,13 +375,7 @@ async def test_switch_command_state_code_exceptions(
 ) -> None:
     """Test that switch state code exceptions are handled correctly."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        side_effect=[
-            subprocess.TimeoutExpired("cmd", 10),
-            subprocess.SubprocessError(),
-        ],
-    ) as check_output:
+    with mock_asyncio_subprocess_run(exception=asyncio.TimeoutError) as run:
         await setup.async_setup_component(
             hass,
             DOMAIN,
@@ -403,12 +396,13 @@ async def test_switch_command_state_code_exceptions(
 
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
-        assert check_output.called
+        assert run.called
         assert "Timeout for command" in caplog.text
 
+    with mock_asyncio_subprocess_run(returncode=1) as run:
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
         await hass.async_block_till_done()
-        assert check_output.called
+        assert run.called
         assert "Error trying to exec command" in caplog.text
 
 
@@ -417,13 +411,7 @@ async def test_switch_command_state_value_exceptions(
 ) -> None:
     """Test that switch state value exceptions are handled correctly."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        side_effect=[
-            subprocess.TimeoutExpired("cmd", 10),
-            subprocess.SubprocessError(),
-        ],
-    ) as check_output:
+    with mock_asyncio_subprocess_run(exception=asyncio.TimeoutError) as run:
         await setup.async_setup_component(
             hass,
             DOMAIN,
@@ -445,12 +433,13 @@ async def test_switch_command_state_value_exceptions(
 
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
-        assert check_output.call_count == 1
+        assert run.call_count == 1
         assert "Timeout for command" in caplog.text
 
+    with mock_asyncio_subprocess_run(returncode=1) as run:
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
         await hass.async_block_till_done()
-        assert check_output.call_count == 2
+        assert run.call_count == 2
         assert "Error trying to exec command" in caplog.text
 
 
