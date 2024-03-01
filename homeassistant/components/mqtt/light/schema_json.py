@@ -1,6 +1,7 @@
 """Support for MQTT JSON lights."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, Any, cast
@@ -20,6 +21,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_WHITE,
     ATTR_XY_COLOR,
+    DOMAIN as LIGHT_DOMAIN,
     ENTITY_ID_FORMAT,
     FLASH_LONG,
     FLASH_SHORT,
@@ -43,13 +45,15 @@ from homeassistant.const import (
     CONF_XY,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import async_get_hass, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 from homeassistant.util.json import json_loads_object
+from homeassistant.util.yaml import dump as yaml_dump
 
 from .. import subscription
 from ..config import DEFAULT_QOS, DEFAULT_RETAIN, MQTT_RW_SCHEMA
@@ -59,6 +63,7 @@ from ..const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
+    DOMAIN as MQTT_DOMAIN,
 )
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, write_state_on_attr_change
@@ -100,16 +105,55 @@ CONF_MAX_MIREDS = "max_mireds"
 CONF_MIN_MIREDS = "min_mireds"
 
 
-def valid_color_configuration(config: ConfigType) -> ConfigType:
+def valid_color_configuration(
+    setup_from_yaml: bool,
+) -> Callable[[dict[str, Any]], dict[str, Any]]:
     """Test color_mode is not combined with deprecated config."""
-    deprecated = {CONF_COLOR_TEMP, CONF_HS, CONF_RGB, CONF_XY}
-    if config.get(CONF_SUPPORTED_COLOR_MODES) and any(
-        config.get(key) for key in deprecated
-    ):
-        raise vol.Invalid(
-            f"supported_color_modes must not be combined with any of {deprecated}"
-        )
-    return config
+
+    def _valid_color_configuration(config: ConfigType) -> ConfigType:
+        deprecated = {CONF_COLOR_TEMP, CONF_HS, CONF_RGB, CONF_XY}
+        deprecated_flags_used = any(config.get(key) for key in deprecated)
+        if config.get(CONF_SUPPORTED_COLOR_MODES):
+            if deprecated_flags_used:
+                raise vol.Invalid(
+                    "supported_color_modes must not "
+                    f"be combined with any of {deprecated}"
+                )
+        elif deprecated_flags_used:
+            deprecated_flags = ", ".join(key for key in deprecated if key in config)
+            _LOGGER.warning(
+                "MQTT json light config uses deprecated flags [%s] for "
+                "handling color mode, `supported_color_modes` not found. "
+                "Got: %s. This will stop working in Home Assistant Core 2025.3",
+                deprecated_flags,
+                config,
+            )
+            if not setup_from_yaml:
+                return config
+            issue_id = hex(hash(frozenset(config)))
+            yaml_config_str = yaml_dump(config)
+            learn_more_url = (
+                "https://www.home-assistant.io/integrations/"
+                f"{LIGHT_DOMAIN}.mqtt/#json-schema"
+            )
+            hass = async_get_hass()
+            async_create_issue(
+                hass,
+                MQTT_DOMAIN,
+                issue_id,
+                issue_domain=LIGHT_DOMAIN,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                learn_more_url=learn_more_url,
+                translation_placeholders={
+                    "deprecated_flags": deprecated_flags,
+                    "config": yaml_config_str,
+                },
+                translation_key="deprecated_color_handling",
+            )
+        return config
+
+    return _valid_color_configuration
 
 
 _PLATFORM_SCHEMA_BASE = (
@@ -120,10 +164,10 @@ _PLATFORM_SCHEMA_BASE = (
                 CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE
             ): vol.All(vol.Coerce(int), vol.Range(min=1)),
             # CONF_COLOR_MODE was deprecated with HA Core 2024.4 and will be
-            # removed with HA Core 2024.10
+            # removed with HA Core 2025.3
             vol.Optional(CONF_COLOR_MODE): cv.boolean,
             # CONF_COLOR_TEMP was deprecated with HA Core 2024.4 and will be
-            # removed with HA Core 2024.10
+            # removed with HA Core 2025.3
             vol.Optional(CONF_COLOR_TEMP, default=DEFAULT_COLOR_TEMP): cv.boolean,
             vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
@@ -134,7 +178,7 @@ _PLATFORM_SCHEMA_BASE = (
                 CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT
             ): cv.positive_int,
             # CONF_HS was deprecated with HA Core 2024.4 and will be
-            # removed with HA Core 2024.10
+            # removed with HA Core 2025.3
             vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
@@ -144,7 +188,7 @@ _PLATFORM_SCHEMA_BASE = (
             ),
             vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
             # CONF_RGB was deprecated with HA Core 2024.4 and will be
-            # removed with HA Core 2024.10
+            # removed with HA Core 2025.3
             vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
             vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_SUPPORTED_COLOR_MODES): vol.All(
@@ -157,7 +201,7 @@ _PLATFORM_SCHEMA_BASE = (
                 vol.Coerce(int), vol.Range(min=1)
             ),
             # CONF_XY was deprecated with HA Core 2024.4 and will be
-            # removed with HA Core 2024.10
+            # removed with HA Core 2025.3
             vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
         },
     )
@@ -166,8 +210,8 @@ _PLATFORM_SCHEMA_BASE = (
 )
 
 DISCOVERY_SCHEMA_JSON = vol.All(
+    valid_color_configuration(False),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-    valid_color_configuration,
     cv.deprecated(CONF_COLOR_MODE),
     cv.deprecated(CONF_COLOR_TEMP),
     cv.deprecated(CONF_HS),
@@ -176,8 +220,8 @@ DISCOVERY_SCHEMA_JSON = vol.All(
 )
 
 PLATFORM_SCHEMA_MODERN_JSON = vol.All(
+    valid_color_configuration(True),
     _PLATFORM_SCHEMA_BASE,
-    valid_color_configuration,
     cv.deprecated(CONF_COLOR_MODE),
     cv.deprecated(CONF_COLOR_TEMP),
     cv.deprecated(CONF_HS),
