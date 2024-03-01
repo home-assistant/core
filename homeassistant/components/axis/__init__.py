@@ -8,7 +8,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN as AXIS_DOMAIN, PLATFORMS
 from .errors import AuthenticationRequired, CannotConnect
-from .hub import AxisNetworkDevice, get_axis_device
+from .hub import AxisHub, get_axis_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except AuthenticationRequired as err:
         raise ConfigEntryAuthFailed from err
 
-    device = AxisNetworkDevice(hass, config_entry, api)
+    device = AxisHub(hass, config_entry, api)
     hass.data[AXIS_DOMAIN][config_entry.entry_id] = device
     await device.async_update_device_registry()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Axis device config entry."""
-    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN].pop(config_entry.entry_id)
+    device: AxisHub = hass.data[AXIS_DOMAIN].pop(config_entry.entry_id)
     return await device.async_reset()
 
 

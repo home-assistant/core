@@ -38,7 +38,7 @@ from .const import (
     DOMAIN as AXIS_DOMAIN,
 )
 from .errors import AuthenticationRequired, CannotConnect
-from .hub import AxisNetworkDevice, get_axis_device
+from .hub import AxisHub, get_axis_device
 
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
 DEFAULT_PORT = 80
@@ -238,7 +238,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle Axis device options."""
 
-    device: AxisNetworkDevice
+    device: AxisHub
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

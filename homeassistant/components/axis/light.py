@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as AXIS_DOMAIN
 from .entity import AxisEventEntity
-from .hub import AxisNetworkDevice
+from .hub import AxisHub
 
 
 async def async_setup_entry(
@@ -19,7 +19,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Axis light."""
-    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    device: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     if (
         device.api.vapix.light_control is None
@@ -44,7 +44,7 @@ class AxisLight(AxisEventEntity, LightEntity):
 
     _attr_should_poll = True
 
-    def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
+    def __init__(self, event: Event, device: AxisHub) -> None:
         """Initialize the Axis light."""
         super().__init__(event, device)
 

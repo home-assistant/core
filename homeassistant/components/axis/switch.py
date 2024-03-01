@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as AXIS_DOMAIN
 from .entity import AxisEventEntity
-from .hub import AxisNetworkDevice
+from .hub import AxisHub
 
 
 async def async_setup_entry(
@@ -19,7 +19,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Axis switch."""
-    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    device: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     @callback
     def async_create_entity(event: Event) -> None:
@@ -36,7 +36,7 @@ async def async_setup_entry(
 class AxisSwitch(AxisEventEntity, SwitchEntity):
     """Representation of a Axis switch."""
 
-    def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
+    def __init__(self, event: Event, device: AxisHub) -> None:
         """Initialize the Axis switch."""
         super().__init__(event, device)
         if event.id and device.api.vapix.ports[event.id].name:

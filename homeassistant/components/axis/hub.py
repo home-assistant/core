@@ -47,7 +47,7 @@ from .const import (
 from .errors import AuthenticationRequired, CannotConnect
 
 
-class AxisNetworkDevice:
+class AxisHub:
     """Manages a Axis device."""
 
     def __init__(
@@ -165,7 +165,7 @@ class AxisNetworkDevice:
         This is a static method because a class method (bound method),
         cannot be used with weak references.
         """
-        device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][entry.entry_id]
+        device: AxisHub = hass.data[AXIS_DOMAIN][entry.entry_id]
         device.api.config.host = device.host
         async_dispatcher_send(hass, device.signal_new_address)
 

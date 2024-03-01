@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEFAULT_STREAM_PROFILE, DEFAULT_VIDEO_SOURCE, DOMAIN as AXIS_DOMAIN
 from .entity import AxisEntity
-from .hub import AxisNetworkDevice
+from .hub import AxisHub
 
 
 async def async_setup_entry(
@@ -22,7 +22,7 @@ async def async_setup_entry(
     """Set up the Axis camera video stream."""
     filter_urllib3_logging()
 
-    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    device: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     if (
         not (prop := device.api.vapix.params.property_handler.get("0"))
@@ -42,7 +42,7 @@ class AxisCamera(AxisEntity, MjpegCamera):
     _mjpeg_url: str
     _stream_source: str
 
-    def __init__(self, device: AxisNetworkDevice) -> None:
+    def __init__(self, device: AxisHub) -> None:
         """Initialize Axis Communications camera component."""
         AxisEntity.__init__(self, device)
 

@@ -217,7 +217,7 @@ async def test_shutdown(config) -> None:
     entry = Mock()
     entry.data = config
 
-    axis_device = axis.hub.AxisNetworkDevice(hass, entry, Mock())
+    axis_device = axis.hub.AxisHub(hass, entry, Mock())
 
     await axis_device.shutdown(None)
 

@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN as AXIS_DOMAIN
 from .entity import AxisEventEntity
-from .hub import AxisNetworkDevice
+from .hub import AxisHub
 
 DEVICE_CLASS = {
     EventGroup.INPUT: BinarySensorDeviceClass.CONNECTIVITY,
@@ -52,7 +52,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Axis binary sensor."""
-    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    device: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     @callback
     def async_create_entity(event: Event) -> None:
@@ -69,7 +69,7 @@ async def async_setup_entry(
 class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
     """Representation of a binary Axis event."""
 
-    def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
+    def __init__(self, event: Event, device: AxisHub) -> None:
         """Initialize the Axis binary sensor."""
         super().__init__(event, device)
         self.cancel_scheduled_update: Callable[[], None] | None = None

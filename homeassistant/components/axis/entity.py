@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as AXIS_DOMAIN
-from .hub import AxisNetworkDevice
+from .hub import AxisHub
 
 TOPIC_TO_EVENT_TYPE = {
     EventTopic.DAY_NIGHT_VISION: "DayNight",
@@ -37,7 +37,7 @@ class AxisEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, device: AxisNetworkDevice) -> None:
+    def __init__(self, device: AxisHub) -> None:
         """Initialize the Axis event."""
         self.device = device
 
@@ -68,7 +68,7 @@ class AxisEventEntity(AxisEntity):
 
     _attr_should_poll = False
 
-    def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
+    def __init__(self, event: Event, device: AxisHub) -> None:
         """Initialize the Axis event."""
         super().__init__(device)
 
