@@ -242,7 +242,11 @@ UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
 }
 
 
-ConfigFlowResult = FlowResult
+class ConfigFlowResult(FlowResult, total=False):
+    """Typed result dict."""
+
+    minor_version: int
+    version: int
 
 
 class ConfigEntry:
