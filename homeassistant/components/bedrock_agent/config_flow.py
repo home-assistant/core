@@ -4,32 +4,30 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import boto3
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import CONST_KEY_ID, CONST_KEY_SECRET, CONST_MODEL_ID, CONST_REGION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONST_REGION): str,
+        vol.Required(CONST_KEY_ID): str,
+        vol.Required(CONST_KEY_SECRET): str,
+        vol.Required(CONST_MODEL_ID): str,
     }
 )
 
 
 class PlaceholderHub:
-    """Placeholder class to make tests pass.
-
-    TODO Remove this placeholder class and replace with things from your PyPI package.
-    """
+    """Placeholder class to make tests pass."""
 
     def __init__(self, host: str) -> None:
         """Initialize."""
@@ -41,28 +39,25 @@ class PlaceholderHub:
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
+    """Validate the user input allows us to connect."""
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
+    bedrock = boto3.client(
+        service_name="bedrock",
+        region_name=data[CONST_REGION],
+        aws_access_key_id=data[CONST_KEY_ID],
+        aws_secret_access_key=data[CONST_KEY_SECRET],
+    )
 
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data[CONF_USERNAME], data[CONF_PASSWORD]
-    # )
+    response = None
 
-    hub = PlaceholderHub(data[CONF_HOST])
+    try:
+        response = await hass.async_add_executor_job(bedrock.list_foundation_models)
+    finally:
+        bedrock.close()
 
-    if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
-        raise InvalidAuth
+    if response is None or response["ResponseMetadata"]["HTTPStatusCode"] != 200:
+        raise CannotConnect
 
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
     return {"title": "Bedrock"}
 
 

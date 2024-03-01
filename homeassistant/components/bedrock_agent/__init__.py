@@ -15,7 +15,7 @@ from homeassistant.const import MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from .const import DOMAIN
+from .const import CONST_KEY_ID, CONST_KEY_SECRET, CONST_MODEL_ID, CONST_REGION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +41,12 @@ class BedrockAgent(conversation.AbstractConversationAgent):
         self.hass = hass
         self.entry = entry
         self.history: dict[str, list[dict]] = {}
+        self.bedrock = boto3.client(
+            service_name="bedrock-runtime",
+            region_name=self.entry.data[CONST_REGION],
+            aws_access_key_id=self.entry.data[CONST_KEY_ID],
+            aws_secret_access_key=self.entry.data[CONST_KEY_SECRET],
+        )
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
@@ -49,12 +55,7 @@ class BedrockAgent(conversation.AbstractConversationAgent):
 
     async def async_call_bedrock(self, question) -> str:
         """Return result from Amazon Bedrock."""
-        bedrock = boto3.client(
-            service_name="bedrock-runtime",
-            region_name="us-west-2",
-            aws_access_key_id="",
-            aws_secret_access_key="",
-        )
+
         body = json.dumps(
             {
                 "prompt": f"\n\nHuman:{question}\n\nAssistant:",
@@ -63,13 +64,13 @@ class BedrockAgent(conversation.AbstractConversationAgent):
                 "top_p": 0.9,
             }
         )
-        modelId = "anthropic.claude-v2"
+        modelId = self.entry.data[CONST_MODEL_ID]
         accept = "application/json"
         contentType = "application/json"
 
         bedrock_response = await self.hass.async_add_executor_job(
             partial(
-                bedrock.invoke_model,
+                self.bedrock.invoke_model,
                 body=body,
                 modelId=modelId,
                 accept=accept,
@@ -84,7 +85,7 @@ class BedrockAgent(conversation.AbstractConversationAgent):
         self, user_input: agent.ConversationInput
     ) -> agent.ConversationResult:
         """Process a sentence."""
-        answer = await self.async_call_bedrock("Test")
+        answer = await self.async_call_bedrock(user_input.text)
 
         response = intent.IntentResponse(language=user_input.language)
         response.async_set_speech(answer)
