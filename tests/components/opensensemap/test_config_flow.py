@@ -1,5 +1,6 @@
 """Test openSenseMap config flow."""
 from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -9,23 +10,19 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import (
-    VALID_STATION_ID,
-    VALID_STATION_NAME,
-    patch_opensensemap_connection_failed,
-    patch_opensensemap_get_data,
-    patch_setup_entry,
-)
+from . import VALID_STATION_ID, VALID_STATION_NAME
 
 from tests.common import MockConfigEntry
 
 TEST_STATION_ID_INVALID = "Invalid-StationId"
 
 
-async def test_user_flow(hass: HomeAssistant) -> None:
+async def test_user_flow(
+    hass: HomeAssistant, setup_entry_mock: AsyncMock, osm_api_mock: AsyncMock
+) -> None:
     """Test configuration flow initialized by the user."""
 
-    with patch_setup_entry(), patch_opensensemap_get_data():
+    with setup_entry_mock, osm_api_mock:
         result1 = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -59,10 +56,14 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         }
 
 
-async def test_user_flow_cant_connect_failure(hass: HomeAssistant) -> None:
+async def test_user_flow_cant_connect_failure(
+    hass: HomeAssistant,
+    setup_entry_mock: AsyncMock,
+    osm_api_failed_mock: AsyncMock,
+) -> None:
     """Test configuration flow with server not accesable error."""
 
-    with patch_setup_entry(), patch_opensensemap_connection_failed():
+    with setup_entry_mock, osm_api_failed_mock:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -73,14 +74,20 @@ async def test_user_flow_cant_connect_failure(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert result["type"] == FlowResultType.FORM
         assert result["errors"]["base"] == "cannot_connect"
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_STATION_ID: VALID_STATION_ID}
+        )
 
 
 async def test_already_exists_flow(
-    hass: HomeAssistant, valid_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    setup_entry_mock: AsyncMock,
+    osm_api_mock: AsyncMock,
+    valid_config_entry: MockConfigEntry,
 ) -> None:
     """Test the flow when same id already exists."""
     valid_config_entry.add_to_hass(hass)
-    with patch_setup_entry(), patch_opensensemap_get_data():
+    with setup_entry_mock, osm_api_mock:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -124,9 +131,11 @@ async def test_import_flow(
     config: dict[str, Any],
     title: str,
     data: dict[str, Any],
+    setup_entry_mock: AsyncMock,
+    osm_api_mock: AsyncMock,
 ) -> None:
     """Test the import flow."""
-    with patch_setup_entry(), patch_opensensemap_get_data():
+    with setup_entry_mock, osm_api_mock:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=config
         )
@@ -137,10 +146,10 @@ async def test_import_flow(
 
 
 async def test_import_flow_failures(
-    hass: HomeAssistant,
+    hass: HomeAssistant, setup_entry_mock: AsyncMock, osm_api_mock: AsyncMock
 ) -> None:
     """Test the import flow."""
-    with patch_setup_entry(), patch_opensensemap_get_data():
+    with setup_entry_mock, osm_api_mock:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data={}
         )
@@ -150,11 +159,14 @@ async def test_import_flow_failures(
 
 
 async def test_importing_already_exists_flow(
-    hass: HomeAssistant, valid_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    valid_config_entry: MockConfigEntry,
+    setup_entry_mock: AsyncMock,
+    osm_api_mock: AsyncMock,
 ) -> None:
     """Test the import flow when same location already exists."""
     valid_config_entry.add_to_hass(hass)
-    with patch_setup_entry(), patch_opensensemap_get_data():
+    with setup_entry_mock, osm_api_mock:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -169,9 +181,11 @@ async def test_importing_already_exists_flow(
 
 async def test_import_flow_cant_connect(
     hass: HomeAssistant,
+    setup_entry_mock: AsyncMock,
+    osm_api_failed_mock: AsyncMock,
 ) -> None:
     """Test the import flow."""
-    with patch_setup_entry(), patch_opensensemap_connection_failed():
+    with setup_entry_mock, osm_api_failed_mock:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data={}
         )

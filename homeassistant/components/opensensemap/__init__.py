@@ -11,7 +11,7 @@ from .coordinator import OpenSenseMapDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a openSenseMap station from config entry."""
+    """Set up a opensensemap station from config entry."""
 
     station_id = entry.data[CONF_STATION_ID]
     station_api = OpenSenseMap(station_id, async_get_clientsession(hass))
@@ -26,6 +26,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload opensky config entry."""
+    """Unload opensensemap config entry."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    if not hass.data[DOMAIN]:
+        hass.data.pop(DOMAIN)
+    return unload_ok

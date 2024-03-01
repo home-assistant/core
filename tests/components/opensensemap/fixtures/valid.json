@@ -1,7 +1,7 @@
 {
   "_id": "6107df25c4aab8001b94e043",
   "createdAt": "2021-08-02T12:03:49.808Z",
-  "updatedAt": "2023-12-08T13:08:47.724Z",
+  "updatedAt": "2024-03-01T01:11:43.969Z",
   "name": "Stadtb\u00fccherei M\u00fcnster",
   "currentLocation": {
     "timestamp": "2021-08-02T12:03:49.802Z",
@@ -17,8 +17,8 @@
       "icon": "osem-thermometer",
       "_id": "6107df25c4aab8001b94e04a",
       "lastMeasurement": {
-        "value": "4.9",
-        "createdAt": "2023-12-08T13:08:47.652Z"
+        "value": "9.3",
+        "createdAt": "2024-03-01T01:11:43.908Z"
       }
     },
     {
@@ -28,8 +28,8 @@
       "icon": "osem-humidity",
       "_id": "6107df25c4aab8001b94e049",
       "lastMeasurement": {
-        "value": "100",
-        "createdAt": "2023-12-08T13:08:47.652Z"
+        "value": "61.9",
+        "createdAt": "2024-03-01T01:11:43.908Z"
       }
     },
     {
@@ -39,8 +39,8 @@
       "icon": "osem-barometer",
       "_id": "6107df25c4aab8001b94e048",
       "lastMeasurement": {
-        "value": "1000.8",
-        "createdAt": "2023-12-08T13:08:47.652Z"
+        "value": "996.4",
+        "createdAt": "2024-03-01T01:11:43.908Z"
       }
     },
     {
@@ -50,8 +50,8 @@
       "icon": "osem-brightness",
       "_id": "6107df25c4aab8001b94e047",
       "lastMeasurement": {
-        "value": "350",
-        "createdAt": "2023-12-08T13:08:47.652Z"
+        "value": "0",
+        "createdAt": "2024-03-01T01:11:43.908Z"
       }
     },
     {
@@ -61,8 +61,8 @@
       "icon": "osem-brightness",
       "_id": "6107df25c4aab8001b94e046",
       "lastMeasurement": {
-        "value": "11",
-        "createdAt": "2023-12-08T13:08:47.652Z"
+        "value": "0",
+        "createdAt": "2024-03-01T01:11:43.908Z"
       }
     },
     {
@@ -72,8 +72,8 @@
       "icon": "osem-cloud",
       "_id": "6107df25c4aab8001b94e045",
       "lastMeasurement": {
-        "value": "39.3",
-        "createdAt": "2023-12-08T13:08:47.652Z"
+        "value": "16.9",
+        "createdAt": "2024-03-01T01:11:43.908Z"
       }
     },
     {
@@ -83,13 +83,13 @@
       "icon": "osem-cloud",
       "_id": "6107df25c4aab8001b94e044",
       "lastMeasurement": {
-        "value": "11.4",
-        "createdAt": "2023-12-08T13:08:47.652Z"
+        "value": "6.2",
+        "createdAt": "2024-03-01T01:11:43.908Z"
       }
     }
   ],
   "model": "homeV2Lora",
-  "lastMeasurementAt": "2023-12-08T13:08:47.652Z",
+  "lastMeasurementAt": "2024-03-01T01:11:43.908Z",
   "loc": [
     {
       "geometry": {
