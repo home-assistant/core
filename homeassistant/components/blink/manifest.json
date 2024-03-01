@@ -18,6 +18,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/blink",
+  "import_executor": true,
   "iot_class": "cloud_polling",
   "loggers": ["blinkpy"],
   "requirements": ["blinkpy==0.22.6"]

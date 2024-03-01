@@ -91,6 +91,8 @@ async def auth_manager_from_config(
 class AuthManagerFlowManager(data_entry_flow.FlowManager):
     """Manage authentication flows."""
 
+    _flow_result = FlowResult
+
     def __init__(self, hass: HomeAssistant, auth_manager: AuthManager) -> None:
         """Init auth manager flows."""
         super().__init__(hass)
@@ -110,7 +112,7 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
         return await auth_provider.async_login_flow(context)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: FlowResult
+        self, flow: data_entry_flow.BaseFlowHandler, result: FlowResult
     ) -> FlowResult:
         """Return a user as result of login flow."""
         flow = cast(LoginFlow, flow)

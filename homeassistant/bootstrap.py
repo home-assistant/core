@@ -14,13 +14,28 @@ import threading
 from time import monotonic
 from typing import TYPE_CHECKING, Any
 
+# Import cryptography early since import openssl is not thread-safe
+# _frozen_importlib._DeadlockError: deadlock detected by _ModuleLock('cryptography.hazmat.backends.openssl.backend')
+import cryptography.hazmat.backends.openssl.backend  # noqa: F401
 import voluptuous as vol
 import yarl
 
 from . import config as conf_util, config_entries, core, loader, requirements
-from .components import http
+
+# Pre-import config and lovelace which have no requirements here to avoid
+# loading them at run time and blocking the event loop. We do this ahead
+# of time so that we do not have to flag frontends deps with `import_executor`
+# as it would create a thundering heard of executor jobs trying to import
+# frontend deps at the same time.
+from .components import (
+    api as api_pre_import,  # noqa: F401
+    config as config_pre_import,  # noqa: F401
+    http,
+    lovelace as lovelace_pre_import,  # noqa: F401
+)
 from .const import (
     FORMAT_DATETIME,
+    KEY_DATA_LOGGING as DATA_LOGGING,
     REQUIRED_NEXT_PYTHON_HA_RELEASE,
     REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
@@ -62,7 +77,6 @@ _LOGGER = logging.getLogger(__name__)
 ERROR_LOG_FILENAME = "home-assistant.log"
 
 # hass.data key for logging information.
-DATA_LOGGING = "logging"
 DATA_REGISTRIES_LOADED = "bootstrap_registries_loaded"
 
 LOG_SLOW_STARTUP_INTERVAL = 60

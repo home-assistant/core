@@ -1174,7 +1174,8 @@ async def test_setup_raise_not_ready(
     mock_setup_entry.side_effect = None
     mock_setup_entry.return_value = True
 
-    await hass.async_run_hass_job(p_setup, None)
+    hass.async_run_hass_job(p_setup, None)
+    await hass.async_block_till_done()
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert entry.reason is None
 
