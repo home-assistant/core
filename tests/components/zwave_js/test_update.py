@@ -1,7 +1,6 @@
 """Test the Z-Wave JS update entities."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 from zwave_js_server.event import Event
@@ -311,8 +310,7 @@ async def test_update_entity_ha_not_running(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test update occurs only after HA is running."""
-    with patch.object(hass.import_executor, "shutdown"):
-        await hass.async_stop()
+    hass.set_state(CoreState.not_running)
 
     client.async_send_command.return_value = {"updates": []}
 
@@ -345,8 +343,6 @@ async def test_update_entity_ha_not_running(
     args = client.async_send_command.call_args_list[1][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
     assert args["nodeId"] == zen_31.node_id
-
-    hass.import_executor.shutdown()
 
 
 async def test_update_entity_update_failure(
@@ -636,8 +632,7 @@ async def test_update_entity_delay(
     """Test update occurs on a delay after HA starts."""
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"updates": []}
-    with patch.object(hass.import_executor, "shutdown"):
-        await hass.async_stop()
+    hass.set_state(CoreState.not_running)
 
     entry = MockConfigEntry(domain="zwave_js", data={"url": "ws://test.org"})
     entry.add_to_hass(hass)
@@ -666,7 +661,6 @@ async def test_update_entity_delay(
     args = client.async_send_command.call_args_list[3][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
     assert args["nodeId"] == zen_31.node_id
-    hass.import_executor.shutdown()
 
 
 async def test_update_entity_partial_restore_data(
