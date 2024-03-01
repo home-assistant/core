@@ -31,7 +31,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.setup import async_when_setup
 
-from .const import (
+from ..const import (
     ATTR_MANUFACTURER,
     CONF_EVENTS,
     CONF_STREAM_PROFILE,
@@ -44,7 +44,7 @@ from .const import (
     LOGGER,
     PLATFORMS,
 )
-from .errors import AuthenticationRequired, CannotConnect
+from ..errors import AuthenticationRequired, CannotConnect
 
 
 class AxisHub:
