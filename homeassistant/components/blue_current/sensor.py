@@ -267,7 +267,7 @@ class ChargePointSensor(ChargepointEntity, SensorEntity):
 class ChargePointTimestampSensor(ChargePointSensor):
     """Define a timestamp sensor."""
 
-    device_class = SensorDeviceClass.TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     @callback
     def update_from_latest_data(self) -> None:
