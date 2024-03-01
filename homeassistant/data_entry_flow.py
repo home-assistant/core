@@ -151,7 +151,6 @@ class FlowResult(TypedDict, total=False):
     handler: Required[str]
     last_step: bool | None
     menu_options: list[str] | dict[str, str]
-    minor_version: int
     options: Mapping[str, Any]
     preview: str | None
     progress_action: str
@@ -164,7 +163,6 @@ class FlowResult(TypedDict, total=False):
     translation_domain: str
     type: FlowResultType
     url: str
-    version: int
 
 
 def _map_error_to_schema_errors(

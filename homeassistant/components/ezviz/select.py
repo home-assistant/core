@@ -37,7 +37,6 @@ class EzvizSelectEntityDescription(
 SELECT_TYPE = EzvizSelectEntityDescription(
     key="alarm_sound_mod",
     translation_key="alarm_sound_mode",
-    icon="mdi:alarm",
     entity_category=EntityCategory.CONFIG,
     options=["soft", "intensive", "silent"],
     supported_switch=DeviceSwitchType.ALARM_TONE.value,

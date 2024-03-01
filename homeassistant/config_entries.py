@@ -104,6 +104,9 @@ SOURCE_UNIGNORE = "unignore"
 # This is used to signal that re-authentication is required by the user.
 SOURCE_REAUTH = "reauth"
 
+# This is used to initiate a reconfigure flow by the user.
+SOURCE_RECONFIGURE = "reconfigure"
+
 HANDLERS: Registry[str, type[ConfigFlow]] = Registry()
 
 STORAGE_KEY = "core.config_entries"
@@ -242,7 +245,11 @@ UPDATE_ENTRY_CONFIG_ENTRY_ATTRS = {
 }
 
 
-ConfigFlowResult = FlowResult
+class ConfigFlowResult(FlowResult, total=False):
+    """Typed result dict for config flow."""
+
+    minor_version: int
+    version: int
 
 
 class ConfigEntry:
@@ -343,6 +350,9 @@ class ConfigEntry:
         # Supports options
         self._supports_options: bool | None = None
 
+        # Supports reconfigure
+        self._supports_reconfigure: bool | None = None
+
         # Listeners to call on update
         self.update_listeners: list[UpdateListenerType] = []
 
@@ -361,6 +371,8 @@ class ConfigEntry:
         self.reload_lock = asyncio.Lock()
         # Reauth lock to prevent concurrent reauth flows
         self._reauth_lock = asyncio.Lock()
+        # Reconfigure lock to prevent concurrent reconfigure flows
+        self._reconfigure_lock = asyncio.Lock()
 
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
@@ -413,6 +425,20 @@ class ConfigEntry:
             )
         return self._supports_options or False
 
+    @property
+    def supports_reconfigure(self) -> bool:
+        """Return if entry supports config options."""
+        if self._supports_reconfigure is None and (
+            handler := HANDLERS.get(self.domain)
+        ):
+            # work out if handler has support for reconfigure step
+            object.__setattr__(
+                self,
+                "_supports_reconfigure",
+                hasattr(handler, "async_step_reconfigure"),
+            )
+        return self._supports_reconfigure or False
+
     def clear_cache(self) -> None:
         """Clear cached properties."""
         with contextlib.suppress(AttributeError):
@@ -430,6 +456,7 @@ class ConfigEntry:
             "supports_options": self.supports_options,
             "supports_remove_device": self.supports_remove_device or False,
             "supports_unload": self.supports_unload or False,
+            "supports_reconfigure": self.supports_reconfigure or False,
             "pref_disable_new_entities": self.pref_disable_new_entities,
             "pref_disable_polling": self.pref_disable_polling,
             "disabled_by": self.disabled_by,
@@ -462,7 +489,6 @@ class ConfigEntry:
             self.supports_remove_device = await support_remove_from_device(
                 hass, self.domain
             )
-
         try:
             component = integration.get_component()
         except ImportError as err:
@@ -856,8 +882,8 @@ class ConfigEntry:
         """Start a reauth flow."""
         # We will check this again in the task when we hold the lock,
         # but we also check it now to try to avoid creating the task.
-        if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
-            # Reauth flow already in progress for this entry
+        if any(self.async_get_active_flows(hass, {SOURCE_RECONFIGURE, SOURCE_REAUTH})):
+            # Reauth or Reconfigure flow already in progress for this entry
             return
         hass.async_create_task(
             self._async_init_reauth(hass, context, data),
@@ -872,8 +898,10 @@ class ConfigEntry:
     ) -> None:
         """Start a reauth flow."""
         async with self._reauth_lock:
-            if any(self.async_get_active_flows(hass, {SOURCE_REAUTH})):
-                # Reauth flow already in progress for this entry
+            if any(
+                self.async_get_active_flows(hass, {SOURCE_RECONFIGURE, SOURCE_REAUTH})
+            ):
+                # Reauth or Reconfigure flow already in progress for this entry
                 return
             result = await hass.config_entries.flow.async_init(
                 self.domain,
@@ -902,6 +930,49 @@ class ConfigEntry:
             translation_key="config_entry_reauth",
             translation_placeholders={"name": self.title},
         )
+
+    @callback
+    def async_start_reconfigure(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Start a reconfigure flow."""
+        # We will check this again in the task when we hold the lock,
+        # but we also check it now to try to avoid creating the task.
+        if any(self.async_get_active_flows(hass, {SOURCE_RECONFIGURE, SOURCE_REAUTH})):
+            # Reconfigure or reauth flow already in progress for this entry
+            return
+        hass.async_create_task(
+            self._async_init_reconfigure(hass, context, data),
+            f"config entry reconfigure {self.title} {self.domain} {self.entry_id}",
+        )
+
+    async def _async_init_reconfigure(
+        self,
+        hass: HomeAssistant,
+        context: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> None:
+        """Start a reconfigure flow."""
+        async with self._reconfigure_lock:
+            if any(
+                self.async_get_active_flows(hass, {SOURCE_RECONFIGURE, SOURCE_REAUTH})
+            ):
+                # Reconfigure or reauth flow already in progress for this entry
+                return
+            await hass.config_entries.flow.async_init(
+                self.domain,
+                context={
+                    "source": SOURCE_RECONFIGURE,
+                    "entry_id": self.entry_id,
+                    "title_placeholders": {"name": self.title},
+                    "unique_id": self.unique_id,
+                }
+                | (context or {}),
+                data=self.data | (data or {}),
+            )
 
     @callback
     def async_get_active_flows(
