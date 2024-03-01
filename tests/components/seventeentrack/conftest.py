@@ -52,6 +52,8 @@ DEFAULT_SUMMARY = {
     "Returned": 0,
 }
 
+ACCOUNT_ID = "1234"
+
 NEW_SUMMARY_DATA = {
     "Not Found": 1,
     "In Transit": 1,
@@ -74,7 +76,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_seventeentrack():
     """Build a fixture for the 17Track API."""
-    mock_seventeentrack_profile = AsyncMock(account_id="1234")
+    mock_seventeentrack_profile = AsyncMock(account_id=ACCOUNT_ID)
     mock_seventeentrack_api = AsyncMock(profile=mock_seventeentrack_profile)
     with (
         patch(
