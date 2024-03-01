@@ -20,7 +20,7 @@
         "default": "mdi:radio-tower"
       },
       "register_network_display": {
-        "default": "mdi:radio-tower"
+        "default": "mdi:web"
       },
       "band": {
         "default": "mdi:radio-tower"
