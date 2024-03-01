@@ -975,6 +975,7 @@ omit =
     homeassistant/components/overkiz/switch.py
     homeassistant/components/overkiz/water_heater.py
     homeassistant/components/overkiz/water_heater_entities/*
+    homeassistant/components/overseerr/__init__.py
     homeassistant/components/ovo_energy/__init__.py
     homeassistant/components/ovo_energy/sensor.py
     homeassistant/components/panasonic_bluray/media_player.py
