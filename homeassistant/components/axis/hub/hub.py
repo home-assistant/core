@@ -1,11 +1,8 @@
 """Axis network device abstraction."""
 
-from asyncio import timeout
-from types import MappingProxyType
 from typing import Any
 
 import axis
-from axis.configuration import Configuration
 from axis.errors import Unauthorized
 from axis.stream_manager import Signal, State
 from axis.vapix.interfaces.mqtt import mqtt_json_to_event
@@ -28,7 +25,6 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.setup import async_when_setup
 
 from ..const import (
@@ -41,10 +37,8 @@ from ..const import (
     DEFAULT_TRIGGER_TIME,
     DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
-    LOGGER,
     PLATFORMS,
 )
-from ..errors import AuthenticationRequired, CannotConnect
 
 
 class AxisHub:
@@ -237,41 +231,3 @@ class AxisHub:
         return await self.hass.config_entries.async_unload_platforms(
             self.config_entry, PLATFORMS
         )
-
-
-async def get_axis_api(
-    hass: HomeAssistant,
-    config: MappingProxyType[str, Any],
-) -> axis.AxisDevice:
-    """Create a Axis device API."""
-    session = get_async_client(hass, verify_ssl=False)
-
-    device = axis.AxisDevice(
-        Configuration(
-            session,
-            config[CONF_HOST],
-            port=config[CONF_PORT],
-            username=config[CONF_USERNAME],
-            password=config[CONF_PASSWORD],
-        )
-    )
-
-    try:
-        async with timeout(30):
-            await device.vapix.initialize()
-
-        return device
-
-    except axis.Unauthorized as err:
-        LOGGER.warning(
-            "Connected to device at %s but not registered", config[CONF_HOST]
-        )
-        raise AuthenticationRequired from err
-
-    except (TimeoutError, axis.RequestError) as err:
-        LOGGER.error("Error connecting to the Axis device at %s", config[CONF_HOST])
-        raise CannotConnect from err
-
-    except axis.AxisException as err:
-        LOGGER.exception("Unknown Axis communication error occurred")
-        raise AuthenticationRequired from err
