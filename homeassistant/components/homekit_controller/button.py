@@ -41,7 +41,7 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
     CharacteristicsTypes.VENDOR_HAA_SETUP: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.VENDOR_HAA_SETUP,
         name="Setup",
-        icon="mdi:cog",
+        translation_key="setup",
         entity_category=EntityCategory.CONFIG,
         write_value="#HAA@trcmd",
     ),
