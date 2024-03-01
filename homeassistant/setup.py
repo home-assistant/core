@@ -25,9 +25,11 @@ from .core import (
     callback,
 )
 from .exceptions import DependencyError, HomeAssistantError
+from .helpers import translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType, EventType
 from .util import ensure_unique_string
+from .util.async_ import create_eager_task
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,7 +160,7 @@ async def async_setup_component(
         if setup_done_future := setup_done_futures.pop(domain, None):
             setup_done_future.set_result(result)
         return result
-    except BaseException as err:  # pylint: disable=broad-except
+    except BaseException as err:
         futures = [setup_future]
         if setup_done_future := setup_done_futures.pop(domain, None):
             futures.append(setup_done_future)
@@ -191,7 +193,7 @@ async def _async_process_dependencies(
 
     dependencies_tasks = {
         dep: setup_futures.get(dep)
-        or hass.loop.create_task(
+        or create_eager_task(
             async_setup_component(hass, dep, config),
             name=f"setup {dep} as dependency of {integration.domain}",
         )
@@ -244,7 +246,7 @@ async def _async_process_dependencies(
     return failed
 
 
-async def _async_setup_component(
+async def _async_setup_component(  # noqa: C901
     hass: core.HomeAssistant, domain: str, config: ConfigType
 ) -> bool:
     """Set up a component for Home Assistant.
@@ -291,7 +293,7 @@ async def _async_setup_component(
     # Some integrations fail on import because they call functions incorrectly.
     # So we do it before validating config to catch these errors.
     try:
-        component = integration.get_component()
+        component = await integration.async_get_component()
     except ImportError as err:
         log_error(f"Unable to import component: {err}", err)
         return False
@@ -343,7 +345,19 @@ async def _async_setup_component(
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
-    with async_start_setup(hass, [domain]):
+    integration_set = {domain}
+
+    load_translations_task: asyncio.Task[None] | None = None
+    if not translation.async_translations_loaded(hass, integration_set):
+        # For most cases we expect the translations are already
+        # loaded since we try to load them in bootstrap ahead of time.
+        # If for some reason the background task in bootstrap was too slow
+        # or the integration was added after bootstrap, we will load them here.
+        load_translations_task = create_eager_task(
+            translation.async_load_integrations(hass, integration_set)
+        )
+
+    with async_start_setup(hass, integration_set):
         if hasattr(component, "PLATFORM_SCHEMA"):
             # Entity components have their own warning
             warn_task = None
@@ -409,6 +423,8 @@ async def _async_setup_component(
         await asyncio.sleep(0)
         await hass.config_entries.flow.async_wait_import_flow_initialized(domain)
 
+        if load_translations_task:
+            await load_translations_task
         # Add to components before the entry.async_setup
         # call to avoid a deadlock when forwarding platforms
         hass.config.components.add(domain)
@@ -418,7 +434,7 @@ async def _async_setup_component(
         ):
             await asyncio.gather(
                 *(
-                    asyncio.create_task(
+                    create_eager_task(
                         entry.async_setup(hass, integration=integration),
                         name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
                     )
@@ -554,7 +570,9 @@ def _async_when_setup(
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
     if component in hass.config.components:
-        hass.async_create_task(when_setup(), f"when setup {component}")
+        hass.async_create_task(
+            when_setup(), f"when setup {component}", eager_start=True
+        )
         return
 
     listeners: list[CALLBACK_TYPE] = []
