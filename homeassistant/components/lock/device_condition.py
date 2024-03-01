@@ -14,6 +14,8 @@ from homeassistant.const import (
     STATE_JAMMED,
     STATE_LOCKED,
     STATE_LOCKING,
+    STATE_OPEN,
+    STATE_OPENING,
     STATE_UNLOCKED,
     STATE_UNLOCKING,
 )
@@ -36,6 +38,8 @@ CONDITION_TYPES = {
     "is_locking",
     "is_unlocking",
     "is_jammed",
+    "is_open",
+    "is_opening",
 }
 
 CONDITION_SCHEMA = DEVICE_CONDITION_BASE_SCHEMA.extend(
@@ -80,6 +84,10 @@ def async_condition_from_config(
         state = STATE_JAMMED
     elif config[CONF_TYPE] == "is_locking":
         state = STATE_LOCKING
+    elif config[CONF_TYPE] == "is_opening":
+        state = STATE_OPENING
+    elif config[CONF_TYPE] == "is_open":
+        state = STATE_OPEN
     elif config[CONF_TYPE] == "is_unlocking":
         state = STATE_UNLOCKING
     elif config[CONF_TYPE] == "is_locked":
