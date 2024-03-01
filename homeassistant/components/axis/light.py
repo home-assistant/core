@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as AXIS_DOMAIN
-from .device import AxisNetworkDevice
 from .entity import AxisEventEntity
+from .hub import AxisNetworkDevice
 
 
 async def async_setup_entry(

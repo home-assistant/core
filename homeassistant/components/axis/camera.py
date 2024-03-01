@@ -10,8 +10,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DEFAULT_STREAM_PROFILE, DEFAULT_VIDEO_SOURCE, DOMAIN as AXIS_DOMAIN
-from .device import AxisNetworkDevice
 from .entity import AxisEntity
+from .hub import AxisNetworkDevice
 
 
 async def async_setup_entry(

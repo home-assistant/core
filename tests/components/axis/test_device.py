@@ -217,7 +217,7 @@ async def test_shutdown(config) -> None:
     entry = Mock()
     entry.data = config
 
-    axis_device = axis.device.AxisNetworkDevice(hass, entry, Mock())
+    axis_device = axis.hub.AxisNetworkDevice(hass, entry, Mock())
 
     await axis_device.shutdown(None)
 
@@ -229,7 +229,7 @@ async def test_get_device_fails(hass: HomeAssistant, config) -> None:
     with patch(
         "axis.vapix.vapix.Vapix.initialize", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.device.get_axis_device(hass, config)
+        await axis.hub.get_axis_device(hass, config)
 
 
 async def test_get_device_device_unavailable(hass: HomeAssistant, config) -> None:
@@ -237,7 +237,7 @@ async def test_get_device_device_unavailable(hass: HomeAssistant, config) -> Non
     with patch(
         "axis.vapix.vapix.Vapix.request", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
-        await axis.device.get_axis_device(hass, config)
+        await axis.hub.get_axis_device(hass, config)
 
 
 async def test_get_device_unknown_error(hass: HomeAssistant, config) -> None:
@@ -245,4 +245,4 @@ async def test_get_device_unknown_error(hass: HomeAssistant, config) -> None:
     with patch(
         "axis.vapix.vapix.Vapix.request", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.device.get_axis_device(hass, config)
+        await axis.hub.get_axis_device(hass, config)

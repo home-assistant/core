@@ -10,7 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN as AXIS_DOMAIN
-from .device import AxisNetworkDevice
+from .hub import AxisNetworkDevice
 
 TOPIC_TO_EVENT_TYPE = {
     EventTopic.DAY_NIGHT_VISION: "DayNight",

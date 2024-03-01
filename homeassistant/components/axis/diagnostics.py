@@ -9,7 +9,7 @@ from homeassistant.const import CONF_MAC, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_US
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN as AXIS_DOMAIN
-from .device import AxisNetworkDevice
+from .hub import AxisNetworkDevice
 
 REDACT_CONFIG = {CONF_MAC, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME}
 REDACT_BASIC_DEVICE_INFO = {"SerialNumber", "SocSerialNumber"}

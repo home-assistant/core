@@ -37,8 +37,8 @@ from .const import (
     DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
 )
-from .device import AxisNetworkDevice, get_axis_device
 from .errors import AuthenticationRequired, CannotConnect
+from .hub import AxisNetworkDevice, get_axis_device
 
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
 DEFAULT_PORT = 80

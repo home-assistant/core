@@ -7,8 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN as AXIS_DOMAIN, PLATFORMS
-from .device import AxisNetworkDevice, get_axis_device
 from .errors import AuthenticationRequired, CannotConnect
+from .hub import AxisNetworkDevice, get_axis_device
 
 _LOGGER = logging.getLogger(__name__)
 

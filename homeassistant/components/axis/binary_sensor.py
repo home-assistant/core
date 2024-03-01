@@ -20,8 +20,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN as AXIS_DOMAIN
-from .device import AxisNetworkDevice
 from .entity import AxisEventEntity
+from .hub import AxisNetworkDevice
 
 DEVICE_CLASS = {
     EventGroup.INPUT: BinarySensorDeviceClass.CONNECTIVITY,
