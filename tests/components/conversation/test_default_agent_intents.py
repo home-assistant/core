@@ -8,7 +8,6 @@ from homeassistant.components.cover import intent as cover_intent
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.media_player import intent as media_player_intent
 from homeassistant.components.vacuum import intent as vaccum_intent
-from homeassistant.components.valve import intent as valve_intent
 from homeassistant.const import STATE_CLOSED
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
@@ -84,8 +83,6 @@ async def test_valve_intents(
     init_components,
 ) -> None:
     """Test open/close/set position for valves."""
-    await valve_intent.async_setup_intents(hass)
-
     entity_id = f"{valve.DOMAIN}.main_valve"
     hass.states.async_set(entity_id, STATE_CLOSED)
     async_expose_entity(hass, conversation.DOMAIN, entity_id, True)
