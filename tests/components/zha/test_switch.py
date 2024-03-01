@@ -11,7 +11,8 @@ from zhaquirks.const import (
 )
 from zigpy.exceptions import ZigbeeException
 import zigpy.profiles.zha as zha
-from zigpy.quirks import CustomCluster, CustomDevice
+from zigpy.quirks import _DEVICE_REGISTRY, CustomCluster, CustomDevice
+from zigpy.quirks.v2 import CustomDeviceV2, add_to_registry_v2
 import zigpy.types as t
 import zigpy.zcl.clusters.closures as closures
 import zigpy.zcl.clusters.general as general
@@ -562,6 +563,272 @@ async def test_switch_configurable(
 
     # test joining a new switch to the network and HA
     await async_test_rejoin(hass, zigpy_device_tuya, [cluster], (0,))
+
+
+async def test_switch_configurable_custom_on_off_values(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device_mock
+) -> None:
+    """Test ZHA configurable switch platform."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+            }
+        },
+        manufacturer="manufacturer",
+        model="model",
+    )
+
+    (
+        add_to_registry_v2(zigpy_device.manufacturer, zigpy_device.model)
+        .adds(WindowDetectionFunctionQuirk.TuyaManufCluster)
+        .switch(
+            "window_detection_function",
+            WindowDetectionFunctionQuirk.TuyaManufCluster.cluster_id,
+            on_value=3,
+            off_value=5,
+        )
+    )
+
+    zigpy_device = _DEVICE_REGISTRY.get_device(zigpy_device)
+
+    assert isinstance(zigpy_device, CustomDeviceV2)
+    cluster = zigpy_device.endpoints[1].tuya_manufacturer
+    cluster.PLUGGED_ATTR_READS = {"window_detection_function": 5}
+    update_attribute_cache(cluster)
+
+    zha_device = await zha_device_joined_restored(zigpy_device)
+
+    entity_id = find_entity_id(Platform.SWITCH, zha_device, hass)
+    assert entity_id is not None
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+    await async_enable_traffic(hass, [zha_device], enabled=False)
+    # test that the switch was created and that its state is unavailable
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    # test that the state has changed from unavailable to off
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # turn on at switch
+    await send_attributes_report(hass, cluster, {"window_detection_function": 3})
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # turn off at switch
+    await send_attributes_report(hass, cluster, {"window_detection_function": 5})
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # turn on from HA
+    with patch(
+        "zigpy.zcl.Cluster.write_attributes",
+        return_value=[zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]],
+    ):
+        # turn on via UI
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
+        )
+        assert cluster.write_attributes.mock_calls == [
+            call({"window_detection_function": 3}, manufacturer=None)
+        ]
+        cluster.write_attributes.reset_mock()
+
+    # turn off from HA
+    with patch(
+        "zigpy.zcl.Cluster.write_attributes",
+        return_value=[zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]],
+    ):
+        # turn off via UI
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
+        )
+        assert cluster.write_attributes.mock_calls == [
+            call({"window_detection_function": 5}, manufacturer=None)
+        ]
+
+
+async def test_switch_configurable_custom_on_off_values_force_inverted(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device_mock
+) -> None:
+    """Test ZHA configurable switch platform."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+            }
+        },
+        manufacturer="manufacturer2",
+        model="model2",
+    )
+
+    (
+        add_to_registry_v2(zigpy_device.manufacturer, zigpy_device.model)
+        .adds(WindowDetectionFunctionQuirk.TuyaManufCluster)
+        .switch(
+            "window_detection_function",
+            WindowDetectionFunctionQuirk.TuyaManufCluster.cluster_id,
+            on_value=3,
+            off_value=5,
+            force_inverted=True,
+        )
+    )
+
+    zigpy_device = _DEVICE_REGISTRY.get_device(zigpy_device)
+
+    assert isinstance(zigpy_device, CustomDeviceV2)
+    cluster = zigpy_device.endpoints[1].tuya_manufacturer
+    cluster.PLUGGED_ATTR_READS = {"window_detection_function": 5}
+    update_attribute_cache(cluster)
+
+    zha_device = await zha_device_joined_restored(zigpy_device)
+
+    entity_id = find_entity_id(Platform.SWITCH, zha_device, hass)
+    assert entity_id is not None
+
+    assert hass.states.get(entity_id).state == STATE_ON
+    await async_enable_traffic(hass, [zha_device], enabled=False)
+    # test that the switch was created and that its state is unavailable
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    # test that the state has changed from unavailable to off
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # turn on at switch
+    await send_attributes_report(hass, cluster, {"window_detection_function": 3})
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # turn off at switch
+    await send_attributes_report(hass, cluster, {"window_detection_function": 5})
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # turn on from HA
+    with patch(
+        "zigpy.zcl.Cluster.write_attributes",
+        return_value=[zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]],
+    ):
+        # turn on via UI
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
+        )
+        assert cluster.write_attributes.mock_calls == [
+            call({"window_detection_function": 5}, manufacturer=None)
+        ]
+        cluster.write_attributes.reset_mock()
+
+    # turn off from HA
+    with patch(
+        "zigpy.zcl.Cluster.write_attributes",
+        return_value=[zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]],
+    ):
+        # turn off via UI
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
+        )
+        assert cluster.write_attributes.mock_calls == [
+            call({"window_detection_function": 3}, manufacturer=None)
+        ]
+
+
+async def test_switch_configurable_custom_on_off_values_inverter_attribute(
+    hass: HomeAssistant, zha_device_joined_restored, zigpy_device_mock
+) -> None:
+    """Test ZHA configurable switch platform."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [general.Basic.cluster_id],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_SWITCH,
+            }
+        },
+        manufacturer="manufacturer3",
+        model="model3",
+    )
+
+    (
+        add_to_registry_v2(zigpy_device.manufacturer, zigpy_device.model)
+        .adds(WindowDetectionFunctionQuirk.TuyaManufCluster)
+        .switch(
+            "window_detection_function",
+            WindowDetectionFunctionQuirk.TuyaManufCluster.cluster_id,
+            on_value=3,
+            off_value=5,
+            invert_attribute_name="window_detection_function_inverter",
+        )
+    )
+
+    zigpy_device = _DEVICE_REGISTRY.get_device(zigpy_device)
+
+    assert isinstance(zigpy_device, CustomDeviceV2)
+    cluster = zigpy_device.endpoints[1].tuya_manufacturer
+    cluster.PLUGGED_ATTR_READS = {
+        "window_detection_function": 5,
+        "window_detection_function_inverter": t.Bool(True),
+    }
+    update_attribute_cache(cluster)
+
+    zha_device = await zha_device_joined_restored(zigpy_device)
+
+    entity_id = find_entity_id(Platform.SWITCH, zha_device, hass)
+    assert entity_id is not None
+
+    assert hass.states.get(entity_id).state == STATE_ON
+    await async_enable_traffic(hass, [zha_device], enabled=False)
+    # test that the switch was created and that its state is unavailable
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # allow traffic to flow through the gateway and device
+    await async_enable_traffic(hass, [zha_device])
+
+    # test that the state has changed from unavailable to off
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # turn on at switch
+    await send_attributes_report(hass, cluster, {"window_detection_function": 3})
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # turn off at switch
+    await send_attributes_report(hass, cluster, {"window_detection_function": 5})
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # turn on from HA
+    with patch(
+        "zigpy.zcl.Cluster.write_attributes",
+        return_value=[zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]],
+    ):
+        # turn on via UI
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
+        )
+        assert cluster.write_attributes.mock_calls == [
+            call({"window_detection_function": 5}, manufacturer=None)
+        ]
+        cluster.write_attributes.reset_mock()
+
+    # turn off from HA
+    with patch(
+        "zigpy.zcl.Cluster.write_attributes",
+        return_value=[zcl_f.WriteAttributesResponse.deserialize(b"\x00")[0]],
+    ):
+        # turn off via UI
+        await hass.services.async_call(
+            SWITCH_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
+        )
+        assert cluster.write_attributes.mock_calls == [
+            call({"window_detection_function": 3}, manufacturer=None)
+        ]
 
 
 WCAttrs = closures.WindowCovering.AttributeDefs

@@ -37,6 +37,7 @@ CAMERA_SWITCHES_BASIC = [
         not d.name.startswith("Detections:")
         and d.name != "SSH Enabled"
         and d.name != "Color Night Vision"
+        and d.name != "Tracking: Person"
     )
     or d.name == "Detections: Motion"
     or d.name == "Detections: Person"

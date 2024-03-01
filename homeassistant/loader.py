@@ -852,7 +852,14 @@ class Integration:
         # Some integrations fail on import because they call functions incorrectly.
         # So we do it before validating config to catch these errors.
         if load_executor:
-            comp = await self.hass.async_add_executor_job(self.get_component)
+            try:
+                comp = await self.hass.async_add_import_executor_job(self.get_component)
+            except ImportError as ex:
+                load_executor = False
+                _LOGGER.debug("Failed to import %s in executor", domain, exc_info=ex)
+                # If importing in the executor deadlocks because there is a circular
+                # dependency, we fall back to the event loop.
+                comp = self.get_component()
         else:
             comp = self.get_component()
 
@@ -885,6 +892,9 @@ class Integration:
             )
         except ImportError:
             raise
+        except RuntimeError as err:
+            # _DeadlockError inherits from RuntimeError
+            raise ImportError(f"RuntimeError importing {self.pkg_path}: {err}") from err
         except Exception as err:
             _LOGGER.exception(
                 "Unexpected exception importing component %s", self.pkg_path
@@ -913,9 +923,18 @@ class Integration:
         )
         try:
             if load_executor:
-                platform = await self.hass.async_add_executor_job(
-                    self._load_platform, platform_name
-                )
+                try:
+                    platform = await self.hass.async_add_import_executor_job(
+                        self._load_platform, platform_name
+                    )
+                except ImportError as ex:
+                    _LOGGER.debug(
+                        "Failed to import %s in executor", domain, exc_info=ex
+                    )
+                    load_executor = False
+                    # If importing in the executor deadlocks because there is a circular
+                    # dependency, we fall back to the event loop.
+                    platform = self._load_platform(platform_name)
             else:
                 platform = self._load_platform(platform_name)
             import_future.set_result(platform)
@@ -983,6 +1002,11 @@ class Integration:
                 ]
                 missing_platforms_cache[full_name] = ex
             raise
+        except RuntimeError as err:
+            # _DeadlockError inherits from RuntimeError
+            raise ImportError(
+                f"RuntimeError importing {self.pkg_path}.{platform_name}: {err}"
+            ) from err
         except Exception as err:
             _LOGGER.exception(
                 "Unexpected exception importing platform %s.%s",
@@ -1246,6 +1270,19 @@ class Components:
 
         if component is None:
             raise ImportError(f"Unable to load {comp_name}")
+
+        # Local import to avoid circular dependencies
+        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+
+        report(
+            (
+                f"accesses hass.components.{comp_name}."
+                " This is deprecated and will stop working in Home Assistant 2024.9, it"
+                f" should be updated to import functions used from {comp_name} directly"
+            ),
+            error_if_core=False,
+            log_custom_component_only=True,
+        )
 
         wrapped = ModuleWrapper(self._hass, component)
         setattr(self, comp_name, wrapped)
