@@ -5,6 +5,7 @@ import asyncio
 import logging
 
 _LOGGER = logging.getLogger(__name__)
+_EXEC_FAILED_CODE = 127
 
 
 async def async_call_shell_with_timeout(
@@ -24,7 +25,9 @@ async def async_call_shell_with_timeout(
         async with asyncio.timeout(timeout):
             await proc.communicate()
         return_code = proc.returncode
-        if log_return_code and return_code != 0:
+        if return_code == _EXEC_FAILED_CODE:
+            _LOGGER.error("Error trying to exec command: %s", command)
+        elif log_return_code and return_code != 0:
             _LOGGER.error(
                 "Command failed (with return code %s): %s",
                 proc.returncode,

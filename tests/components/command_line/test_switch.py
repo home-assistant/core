@@ -399,7 +399,7 @@ async def test_switch_command_state_code_exceptions(
         assert run.called
         assert "Timeout for command" in caplog.text
 
-    with mock_asyncio_subprocess_run(returncode=1) as run:
+    with mock_asyncio_subprocess_run(returncode=127) as run:
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
         await hass.async_block_till_done()
         assert run.called
@@ -436,11 +436,11 @@ async def test_switch_command_state_value_exceptions(
         assert run.call_count == 1
         assert "Timeout for command" in caplog.text
 
-    with mock_asyncio_subprocess_run(returncode=1) as run:
+    with mock_asyncio_subprocess_run(returncode=127) as run:
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL * 2)
         await hass.async_block_till_done()
-        assert run.call_count == 2
-        assert "Error trying to exec command" in caplog.text
+        assert run.call_count == 1
+        assert "Command failed (with return code 127)" in caplog.text
 
 
 async def test_unique_id(
