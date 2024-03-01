@@ -13,6 +13,6 @@
     }
   },
   "services": {
-    "ptz": "mdi:abc"
+    "ptz": "mdi:pan"
   }
 }
