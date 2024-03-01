@@ -5,14 +5,14 @@ from meteoclimatic import MeteoclimaticClient
 from meteoclimatic.exceptions import MeteoclimaticError, StationNotFound
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow
 
 from .const import CONF_STATION_CODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class MeteoclimaticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class MeteoclimaticFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Meteoclimatic config flow."""
 
     VERSION = 1

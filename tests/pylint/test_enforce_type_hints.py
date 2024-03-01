@@ -346,7 +346,7 @@ def test_invalid_config_flow_step(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
-            args=("FlowResult", "async_step_zeroconf"),
+            args=(["ConfigFlowResult", "FlowResult"], "async_step_zeroconf"),
             line=11,
             col_offset=4,
             end_line=11,
@@ -374,7 +374,7 @@ def test_valid_config_flow_step(
         async def async_step_zeroconf(
             self,
             device_config: ZeroconfServiceInfo
-        ) -> FlowResult:
+        ) -> ConfigFlowResult:
             pass
     """,
         "homeassistant.components.pylint_test.config_flow",

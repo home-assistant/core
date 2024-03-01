@@ -45,7 +45,7 @@ def manager_fixture():
     handlers = Registry()
     entries = []
 
-    class FlowManager(data_entry_flow.FlowManager):
+    class FlowManager(data_entry_flow.BaseFlowManager):
         """Test flow manager."""
 
         async def async_create_flow(self, handler_key, *, context, data):
@@ -105,7 +105,7 @@ async def test_name(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> 
 
 @pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
 async def test_config_flow_advanced_option(
-    hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
+    hass: HomeAssistant, manager: data_entry_flow.BaseFlowManager, marker
 ) -> None:
     """Test handling of advanced options in config flow."""
     manager.hass = hass
@@ -200,7 +200,7 @@ async def test_config_flow_advanced_option(
 
 @pytest.mark.parametrize("marker", (vol.Required, vol.Optional))
 async def test_options_flow_advanced_option(
-    hass: HomeAssistant, manager: data_entry_flow.FlowManager, marker
+    hass: HomeAssistant, manager: data_entry_flow.BaseFlowManager, marker
 ) -> None:
     """Test handling of advanced options in options flow."""
     manager.hass = hass
@@ -475,7 +475,7 @@ async def test_next_step_function(hass: HomeAssistant) -> None:
 
 
 async def test_suggested_values(
-    hass: HomeAssistant, manager: data_entry_flow.FlowManager
+    hass: HomeAssistant, manager: data_entry_flow.BaseFlowManager
 ) -> None:
     """Test suggested_values handling in SchemaFlowFormStep."""
     manager.hass = hass
@@ -667,7 +667,7 @@ async def test_options_flow_state(hass: HomeAssistant) -> None:
 
 
 async def test_options_flow_omit_optional_keys(
-    hass: HomeAssistant, manager: data_entry_flow.FlowManager
+    hass: HomeAssistant, manager: data_entry_flow.BaseFlowManager
 ) -> None:
     """Test handling of advanced options in options flow."""
     manager.hass = hass
