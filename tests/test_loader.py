@@ -1029,7 +1029,7 @@ async def test_hass_components_use_reported(
         "homeassistant.components.http.start_http_server_and_save_config",
         return_value=None,
     ):
-        hass.components.http.start_http_server_and_save_config(hass, [], None)
+        await hass.components.http.start_http_server_and_save_config(hass, [], None)
 
         assert (
             "Detected that custom integration 'test_integration_frame'"
