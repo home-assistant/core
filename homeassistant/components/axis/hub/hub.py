@@ -239,11 +239,11 @@ class AxisHub:
         )
 
 
-async def get_axis_device(
+async def get_axis_api(
     hass: HomeAssistant,
     config: MappingProxyType[str, Any],
 ) -> axis.AxisDevice:
-    """Create a Axis device."""
+    """Create a Axis device API."""
     session = get_async_client(hass, verify_ssl=False)
 
     device = axis.AxisDevice(

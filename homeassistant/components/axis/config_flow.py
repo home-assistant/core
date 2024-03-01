@@ -38,7 +38,7 @@ from .const import (
     DOMAIN as AXIS_DOMAIN,
 )
 from .errors import AuthenticationRequired, CannotConnect
-from .hub import AxisHub, get_axis_device
+from .hub import AxisHub, get_axis_api
 
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
 DEFAULT_PORT = 80
@@ -71,7 +71,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 
         if user_input is not None:
             try:
-                device = await get_axis_device(self.hass, MappingProxyType(user_input))
+                device = await get_axis_api(self.hass, MappingProxyType(user_input))
 
                 serial = device.vapix.serial_number
                 await self.async_set_unique_id(format_mac(serial))

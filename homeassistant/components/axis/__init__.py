@@ -8,7 +8,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN as AXIS_DOMAIN, PLATFORMS
 from .errors import AuthenticationRequired, CannotConnect
-from .hub import AxisHub, get_axis_device
+from .hub import AxisHub, get_axis_api
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data.setdefault(AXIS_DOMAIN, {})
 
     try:
-        api = await get_axis_device(hass, config_entry.data)
+        api = await get_axis_api(hass, config_entry.data)
     except CannotConnect as err:
         raise ConfigEntryNotReady from err
     except AuthenticationRequired as err:
