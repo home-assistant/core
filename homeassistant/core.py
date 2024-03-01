@@ -513,6 +513,11 @@ class HomeAssistant:
         """
         if target is None:
             raise ValueError("Don't call add_job with None")
+        if asyncio.iscoroutine(target):
+            self.loop.call_soon_threadsafe(self.async_add_job, target)
+            return
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Any], target)
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     @overload
