@@ -17,7 +17,6 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "open_api_exception": "Connection failed. Please re-check your API key and host name.",
-      "validation_error": "Invalid URL. Did you forget /api/v1?",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

@@ -23,10 +23,8 @@ def create_overseerr_client(overseerr_config: Configuration):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Overseerr from a config entry."""
     overseerr_config = Configuration(
-        host=entry.data[CONF_URL],  # Adjust 'CONF_URL' as necessary
-        api_key={
-            "apiKey": entry.data[CONF_API_KEY]
-        },  # Adjust 'CONF_API_KEY' as necessary
+        host=entry.data[CONF_URL],
+        api_key={"apiKey": entry.data[CONF_API_KEY]},
     )
 
     overseerr_client = await hass.async_add_executor_job(
@@ -38,7 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await overseerr_coordinator.async_config_entry_first_refresh()
 
     # Set coordinator in Home Assistant's data structure for later access
-    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = overseerr_coordinator
 
     # Forward the entry setup to the relevant platforms

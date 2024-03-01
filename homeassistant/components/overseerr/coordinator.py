@@ -48,7 +48,7 @@ class OverseerrUpdateCoordinator(DataUpdateCoordinator[OverseerrRequestData]):
         self.overseerr_client = OverseerrRequestData(api_client, hass)
         self._api_client = api_client
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
+            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=5)
         )
 
     async def _async_update_data(self) -> OverseerrRequestData:

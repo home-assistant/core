@@ -1,7 +1,6 @@
 """Config flow for Overseerr integration."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -35,22 +34,6 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the flow."""
         self.entry: ConfigEntry | None = None
 
-    async def async_step_reauth(self, _: Mapping[str, Any]) -> FlowResult:
-        """Handle re-auth of Overseerr configuration."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
-        """Confirm reauth dialog."""
-        if user_input is not None:
-            return await self.async_step_user()
-
-        self._set_confirm_only()
-        return self.async_show_form(step_id="reauth_confirm")
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -61,8 +44,12 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             try:
                 await self.hass.async_add_executor_job(self.validate_input, user_input)
-            except (OpenApiException, MaxRetryError):
+            except (OpenApiException, MaxRetryError) as exception:
+                _LOGGER.error("Error connecting to the Overseerr API: %s", exception)
                 errors = {"base": "open_api_exception"}
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.error("Unexpected exception")
+                errors = {"base": "unknown"}
             else:
                 return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
