@@ -148,7 +148,10 @@ async def async_resolve_media(
         raise Unresolvable("Media Source not loaded")
 
     if target_media_player is UNDEFINED:
-        report("calls media_source.async_resolve_media without passing an entity_id")
+        report(
+            "calls media_source.async_resolve_media without passing an entity_id",
+            {DOMAIN},
+        )
         target_media_player = None
 
     try:
