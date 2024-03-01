@@ -318,6 +318,14 @@ class InovelliConfigEntityClusterHandler(ClusterHandler):
                 "quick_start_time": False,
                 "button_delay": False,
                 "smart_fan_mode": False,
+                "fan_single_tap_behavior": False,
+                "fan_timer_display": False,
+                "fan_breeze_mode": False,
+                "fan_module_binding_control": False,
+                "low_for_bound_control": False,
+                "medium_for_bound_control": False,
+                "high_for_bound_control": False,
+                "led_color_for_bound_control": False,
                 "double_tap_up_enabled": True,
                 "double_tap_down_enabled": True,
                 "double_tap_up_level": True,
@@ -332,6 +340,26 @@ class InovelliConfigEntityClusterHandler(ClusterHandler):
                 "on_off_led_mode": True,
                 "firmware_progress_led": True,
                 "smart_fan_led_display_levels": True,
+            }
+        elif self.cluster.endpoint.model == "VZM36":
+            self.ZCL_INIT_ATTRS = {
+                "dimming_speed_up_remote": True,
+                "ramp_rate_off_to_on_remote": True,
+                "dimming_speed_down_remote": True,
+                "ramp_rate_on_to_off_remote": True,
+                "minimum_level": True,
+                "maximum_level": True,
+                "auto_off_timer": True,
+                "default_level_remote": True,
+                "state_after_power_restored": True,
+                "power_type": False,
+                "quick_start_time": False,
+                "smart_bulb_mode": False,
+                "smart_fan_mode": False,
+                "breeze_mode": False,
+                "led_color_when_on": True,
+                "led_intensity_when_on": True,
+                "output_mode": False,
             }
 
     async def issue_all_led_effect(

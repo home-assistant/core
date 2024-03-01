@@ -917,6 +917,62 @@ class InovelliDoubleTapDownLevel(ZHANumberConfigurationEntity):
     _attr_translation_key: str = "double_tap_down_level"
 
 
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class InovelliLowBoundControl(ZHANumberConfigurationEntity):
+    """Inovelli fan speed for bound low control."""
+
+    _unique_id_suffix = "low_for_bound_control"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 2
+    _attr_native_max_value: float = 254
+    _attribute_name = "low_for_bound_control"
+    _attr_translation_key: str = "low_for_bound_control"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class InovelliMediumBoundControl(ZHANumberConfigurationEntity):
+    """Inovelli fan speed for bound medium control."""
+
+    _unique_id_suffix = "medium_for_bound_control"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 2
+    _attr_native_max_value: float = 254
+    _attribute_name = "medium_for_bound_control"
+    _attr_translation_key: str = "medium_for_bound_control"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class InovelliHighBoundControl(ZHANumberConfigurationEntity):
+    """Inovelli fan speed for bound high control."""
+
+    _unique_id_suffix = "high_for_bound_control"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[3]
+    _attr_native_min_value: float = 2
+    _attr_native_max_value: float = 254
+    _attribute_name = "high_for_bound_control"
+    _attr_translation_key: str = "high_for_bound_control"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_INOVELLI)
+# pylint: disable-next=hass-invalid-inheritance # needs fixing
+class InovelliLEDColorBoundControl(ZHANumberConfigurationEntity):
+    """Inovelli default all led color when controlling bound configuration entity."""
+
+    _unique_id_suffix = "led_color_for_bound_control"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[15]
+    _attr_native_min_value: float = 0
+    _attr_native_max_value: float = 255
+    _attribute_name = "led_color_for_bound_control"
+    _attr_translation_key: str = "led_color_for_bound_control"
+
+
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names="opple_cluster", models={"aqara.feeder.acn001"}
 )

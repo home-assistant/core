@@ -393,7 +393,7 @@ class InovelliSmartBulbMode(ZHASwitchConfigurationEntity):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM35-SN"}
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI, models={"VZM35-SN", "VZM36"}
 )
 class InovelliSmartFanMode(ZHASwitchConfigurationEntity):
     """Inovelli smart fan mode control."""
@@ -500,6 +500,17 @@ class InovelliDisableDoubleTapClearNotificationsMode(ZHASwitchConfigurationEntit
     _unique_id_suffix = "disable_clear_notifications_double_tap"
     _attribute_name = "disable_clear_notifications_double_tap"
     _attr_translation_key = "disable_clear_notifications_double_tap"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    cluster_handler_names=CLUSTER_HANDLER_INOVELLI,
+)
+class InovelliFanTimerDisplay(ZHASwitchConfigurationEntity):
+    """Inovelli display fan timer on LED bar."""
+
+    _unique_id_suffix = "fan_timer_display"
+    _attribute_name = "fan_timer_display"
+    _attr_translation_key = "fan_timer_display"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
