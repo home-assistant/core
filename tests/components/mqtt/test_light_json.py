@@ -1346,7 +1346,6 @@ async def test_sending_hs_color(
                     "name": "test",
                     "command_topic": "test_light_rgb/set",
                     "rgb": True,
-                    "brightness": "False",
                 }
             }
         }
@@ -1406,7 +1405,6 @@ async def test_sending_rgb_color_no_brightness(
                     "name": "test",
                     "schema": "json",
                     "supported_color_modes": ["rgb", "rgbw", "rgbww"],
-                    "brightness": "False",
                 }
             }
         }
