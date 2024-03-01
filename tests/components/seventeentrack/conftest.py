@@ -74,10 +74,15 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_seventeentrack():
     """Build a fixture for the 17Track API."""
-    mock_seventeentrack_api = AsyncMock()
+    mock_seventeentrack_profile = AsyncMock(account_id="1234")
+    mock_seventeentrack_api = AsyncMock(profile=mock_seventeentrack_profile)
     with (
         patch(
-            "homeassistant.components.seventeentrack.sensor.SeventeenTrackClient",
+            "homeassistant.components.seventeentrack.SeventeenTrackClient",
+            return_value=mock_seventeentrack_api,
+        ),
+        patch(
+            "homeassistant.components.seventeentrack.config_flow.SeventeenTrackClient",
             return_value=mock_seventeentrack_api,
         ) as mock_seventeentrack_api,
     ):

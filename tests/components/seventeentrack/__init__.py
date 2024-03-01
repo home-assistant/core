@@ -12,10 +12,24 @@ from homeassistant.setup import async_setup_component
 from tests.common import async_fire_time_changed
 
 
-async def init_integration(hass: HomeAssistant, config: ConfigType):
-    """Set up the seventeentrack integration in Home Assistant."""
-    assert await async_setup_component(hass, "sensor", config)
+async def init_integration(hass, config, options=None) -> MockConfigEntry:
+    """Set up the 17Track integration in Home Assistant."""
+
+    if options is None:
+        options = {}
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="17Track",
+        unique_id="0123456",
+        data=config,
+        options=options,
+    )
+
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+
+    return entry
 
 
 async def goto_future(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
