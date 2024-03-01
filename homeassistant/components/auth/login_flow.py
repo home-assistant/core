@@ -81,6 +81,7 @@ from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
 from homeassistant.auth.models import Credentials
 from homeassistant.components import onboarding
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import (
     log_invalid_auth,
@@ -144,7 +145,7 @@ class AuthProvidersView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Get available auth providers."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         if not onboarding.async_is_user_onboarded(hass):
             return self.json_message(
                 message="Onboarding not finished",
@@ -255,7 +256,7 @@ class LoginFlowBaseView(HomeAssistantView):
                 await process_wrong_login(request)
             return self.json(_prepare_result_json(result))
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         if not await indieauth.verify_redirect_uri(
             hass, client_id, result["context"]["redirect_uri"]

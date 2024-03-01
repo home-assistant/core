@@ -21,6 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util, yaml
 
+from .const import KEY_HASS
 from .view import HomeAssistantView
 
 _HassViewT = TypeVar("_HassViewT", bound=HomeAssistantView)
@@ -105,7 +106,7 @@ async def process_wrong_login(request: Request) -> None:
     Increase failed login attempts counter for remote IP address.
     Add ip ban entry if failed login attempts exceeds threshold.
     """
-    hass = request.app["hass"]
+    hass = request.app[KEY_HASS]
 
     remote_addr = ip_address(request.remote)  # type: ignore[arg-type]
     remote_host = request.remote
