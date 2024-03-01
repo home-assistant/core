@@ -50,6 +50,7 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import EventType
+from homeassistant.util.async_ import create_eager_task
 
 from .bluetooth import async_connect_scanner
 from .const import (
@@ -390,8 +391,8 @@ class ESPHomeManager:
         stored_device_name = entry.data.get(CONF_DEVICE_NAME)
         unique_id_is_mac_address = unique_id and ":" in unique_id
         results = await asyncio.gather(
-            cli.device_info(),
-            cli.list_entities_services(),
+            create_eager_task(cli.device_info()),
+            create_eager_task(cli.list_entities_services()),
         )
 
         device_info: EsphomeDeviceInfo = results[0]
