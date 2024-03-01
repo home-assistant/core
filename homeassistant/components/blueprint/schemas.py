@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from .const import (
     CONF_AUTHOR,
     CONF_BLUEPRINT,
-    CONF_DEFAULT_COLLAPSED,
+    CONF_COLLAPSED,
     CONF_HOMEASSISTANT,
     CONF_INPUT,
     CONF_INPUT_SECTIONS,
@@ -73,10 +73,10 @@ BLUEPRINT_INPUT_SCHEMA = vol.Schema(
 
 BLUEPRINT_INPUT_SECTION_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): str,
+        vol.Optional(CONF_NAME): str,
         vol.Optional(CONF_ICON): str,
         vol.Optional(CONF_DESCRIPTION): str,
-        vol.Optional(CONF_DEFAULT_COLLAPSED): bool,
+        vol.Optional(CONF_COLLAPSED): bool,
     }
 )
 
