@@ -23,13 +23,14 @@ async def async_call_shell_with_timeout(
         )
         async with asyncio.timeout(timeout):
             await proc.communicate()
-        if log_return_code and proc.returncode != 0:
+        return_code = proc.returncode
+        if log_return_code and return_code != 0:
             _LOGGER.error(
                 "Command failed (with return code %s): %s",
                 proc.returncode,
                 command,
             )
-        return proc.returncode or -1
+        return return_code or -1
     except TimeoutError:
         _LOGGER.error("Timeout for command: %s", command)
         return -1
@@ -41,6 +42,7 @@ async def async_check_output_or_log(command: str, timeout: int) -> str | None:
         proc = await asyncio.create_subprocess_shell(  # noqa: S602 # shell by design
             command,
             close_fds=False,  # required for posix_spawn
+            stdout=asyncio.subprocess.PIPE,
         )
         async with asyncio.timeout(timeout):
             stdout, _ = await proc.communicate()
