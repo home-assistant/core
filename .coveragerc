@@ -124,6 +124,7 @@ omit =
     homeassistant/components/bang_olufsen/websocket.py
     homeassistant/components/bbox/device_tracker.py
     homeassistant/components/bbox/sensor.py
+    homeassistant/components/bedrock_agent/__init__.py
     homeassistant/components/beewi_smartclim/sensor.py
     homeassistant/components/bitcoin/sensor.py
     homeassistant/components/bizkaibus/sensor.py
