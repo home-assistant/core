@@ -3,11 +3,7 @@
   "name": "Overseerr",
   "codeowners": ["@vehjelmtvedt", "@l-holter"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/overseerr",
-  "homekit": {},
   "iot_class": "local_polling",
-  "requirements": ["overseerr-api==1.0.1"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["overseerr-api==1.0.1"]
 }
