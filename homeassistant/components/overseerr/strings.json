@@ -34,7 +34,7 @@
   "entity": {
     "sensor": {
       "requested_movies": {
-        "name": "Movie requests"
+        "name": "Movie Requests"
       },
       "requested_tv": {
         "name": "TV Show Requests"

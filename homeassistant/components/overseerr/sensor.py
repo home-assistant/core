@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -15,8 +14,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import OverseerrUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPE_MOVIE_REQUESTS = "requested_movies"
 SENSOR_TYPE_TV_REQUESTS = "requested_tv"

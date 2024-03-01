@@ -3,5 +3,3 @@ DOMAIN = "overseerr"
 
 DEFAULT_NAME = "Overseerr"
 DEFAULT_URL = "http://localhost:5055/api/v1"
-
-CONF_API_VERSION = "v1"
