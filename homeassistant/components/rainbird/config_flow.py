@@ -14,11 +14,14 @@ from pyrainbird.async_client import (
 from pyrainbird.data import WifiParams
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -53,7 +56,7 @@ class ConfigFlowError(Exception):
         self.error_code = error_code
 
 
-class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rain Bird."""
 
     @staticmethod
@@ -66,7 +69,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Configure the Rain Bird device."""
         error_code: str | None = None
         if user_input:
@@ -129,7 +132,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self,
         data: dict[str, Any],
         options: dict[str, Any],
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create the config entry."""
         # The integration has historically used a serial number, but not all devices
         # historically had a valid one. Now the mac address is used as a unique id
@@ -156,7 +159,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class RainBirdOptionsFlowHandler(config_entries.OptionsFlow):
+class RainBirdOptionsFlowHandler(OptionsFlow):
     """Handle a RainBird options flow."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
@@ -165,7 +168,7 @@ class RainBirdOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)

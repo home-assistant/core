@@ -2869,3 +2869,19 @@ def test_one_time_listener_repr(hass: HomeAssistant) -> None:
     assert "OneTimeListener" in repr_str
     assert "test_core" in repr_str
     assert "_listener" in repr_str
+
+
+async def test_async_add_import_executor_job(hass: HomeAssistant) -> None:
+    """Test async_add_import_executor_job works and is limited to one thread."""
+    evt = threading.Event()
+    loop = asyncio.get_running_loop()
+
+    def executor_func() -> None:
+        evt.set()
+        return evt
+
+    future = hass.async_add_import_executor_job(executor_func)
+    await loop.run_in_executor(None, evt.wait)
+    assert await future is evt
+
+    assert hass.import_executor._max_workers == 1
