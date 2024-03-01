@@ -196,7 +196,7 @@ class SeventeenTrackSummarySensor(SensorEntity):
     @property
     def native_value(
         self,
-    ) -> StateType | str | int | float | None | date | datetime | Decimal:
+    ) -> StateType:
         """Return the state."""
         return self._state
 
