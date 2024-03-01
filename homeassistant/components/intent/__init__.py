@@ -93,23 +93,11 @@ class IntentPlatformProtocol(Protocol):
 class OnOffIntentHandler(intent.ServiceIntentHandler):
     """Intent handler for on/off that also supports covers, valves, locks, etc."""
 
-    def __init__(
-        self,
-        intent_type: str,
-        domain: str,
-        service: str,
-    ) -> None:
-        """Create on/off intent handler."""
-        super().__init__(intent_type, domain, service)
-
     async def async_call_service(
         self, domain: str, service: str, intent_obj: intent.Intent, state: State
     ) -> None:
         """Call service on entity with handling for special cases."""
         hass = intent_obj.hass
-
-        # Required to be a str in constructor
-        assert self.service is not None
 
         if state.domain == COVER_DOMAIN:
             # on = open
