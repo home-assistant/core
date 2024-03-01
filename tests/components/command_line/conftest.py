@@ -1,34 +1,12 @@
 """Fixtures for command_line."""
 
-import asyncio
-from contextlib import contextmanager
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 
 from homeassistant import setup
 from homeassistant.components.command_line.const import DOMAIN
 from homeassistant.core import HomeAssistant
-
-
-@contextmanager
-def mock_asyncio_subprocess_run(response: str, returncode: int = 0):
-    """Mock subprocess.run."""
-
-    class MockProcess(asyncio.subprocess.Process):
-        @property
-        def returncode(self):
-            return returncode
-
-        async def communicate(self):
-            return response.encode(), b""
-
-    with patch(
-        "homeassistant.components.command_line.utils.async.create_subprocess_shell",
-        MockProcess,
-    ):
-        yield
 
 
 @pytest.fixture(name="get_config")
