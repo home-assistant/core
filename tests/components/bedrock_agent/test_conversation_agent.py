@@ -28,7 +28,7 @@ async def test_default_prompt(
 def mock_config_entry(hass):
     """Mock a config entry."""
     entry = MockConfigEntry(
-        domain="bedrock_assistant",
+        domain="bedrock_agent",
         data={
             "api_key": "bla",
         },

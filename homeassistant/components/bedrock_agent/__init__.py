@@ -24,6 +24,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Bedrock Agent from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     conversation.async_set_agent(hass, entry, BedrockAgent(hass, entry))
+
+    hass_data = dict(entry.data)
+    unsub_options_update_listener = entry.add_update_listener(options_update_listener)
+    # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
+    hass_data["unsub_options_update_listener"] = unsub_options_update_listener
+    hass.data[DOMAIN][entry.entry_id] = hass_data
     return True
 
 
@@ -31,6 +37,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     conversation.async_unset_agent(hass, entry)
     return True
+
+
+async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 class BedrockAgent(conversation.AbstractConversationAgent):
