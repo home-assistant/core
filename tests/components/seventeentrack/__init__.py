@@ -22,7 +22,7 @@ async def init_integration(
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="17Track",
-        unique_id="0123456",
+        unique_id=ACCOUNT_ID,
         data=config,
         options=options,
     )

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
-from decimal import Decimal
 import logging
 
 from py17track.errors import SeventeenTrackError
@@ -25,12 +23,7 @@ from homeassistant.helpers import config_validation as cv, entity, entity_regist
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import (
-    ConfigType,
-    DiscoveryInfoType,
-    StateType,
-    UndefinedType,
-)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 from homeassistant.util import Throttle, slugify
 
 from .const import (
@@ -233,7 +226,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
         return self._data.packages.get(self._tracking_number) is not None
 
     @property
-    def name(self) -> str | UndefinedType | None:
+    def name(self) -> str:
         """Return the name."""
         if not (name := self._friendly_name):
             name = self._tracking_number
@@ -242,7 +235,7 @@ class SeventeenTrackPackageSensor(SensorEntity):
     @property
     def native_value(
         self,
-    ) -> StateType | str | int | float | None | date | datetime | Decimal:
+    ) -> StateType:
         """Return the state."""
         return self._state
 
