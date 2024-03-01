@@ -61,6 +61,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         """Listen with the client."""
         try:
             await automower_client.auth.websocket_connect()
+            reconnect_time = 2
             await automower_client.start_listening()
         except HusqvarnaWSServerHandshakeError as err:
             _LOGGER.debug(

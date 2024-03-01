@@ -38,12 +38,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ClientError as err:
         raise ConfigEntryNotReady from err
     coordinator = AutomowerDataUpdateCoordinator(hass, automower_api, entry)
+    await coordinator.async_config_entry_first_refresh()
     entry.async_create_background_task(
         hass,
         coordinator.client_listen(hass, entry, automower_api),
         "websocket_task",
     )
-    await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
