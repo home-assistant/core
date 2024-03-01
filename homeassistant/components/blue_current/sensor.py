@@ -23,8 +23,6 @@ from . import Connector
 from .const import DOMAIN
 from .entity import BlueCurrentEntity, ChargepointEntity
 
-TIMESTAMP_KEYS = ("start_datetime", "stop_datetime", "offline_since")
-
 SENSORS = (
     SensorEntityDescription(
         key="actual_v1",
