@@ -151,7 +151,6 @@ async def async_resolve_media(
         report(
             "calls media_source.async_resolve_media without passing an entity_id",
             {DOMAIN},
-            error_if_core=True,
         )
         target_media_player = None
 
