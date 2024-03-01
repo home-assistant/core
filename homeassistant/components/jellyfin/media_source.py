@@ -6,9 +6,6 @@ import mimetypes
 import os
 from typing import Any
 
-from jellyfin_apiclient_python.api import jellyfin_url
-from jellyfin_apiclient_python.client import JellyfinClient
-
 from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.components.media_source.models import (
     BrowseMediaSource,
@@ -17,6 +14,7 @@ from homeassistant.components.media_source.models import (
     PlayMedia,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import NoEntitySpecifiedError
 
 from .const import (
     COLLECTION_TYPE_MOVIES,
@@ -53,10 +51,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Jellyfin media source."""
     # Currently only a single Jellyfin server is supported
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
+    if len(hass.config_entries.async_entries(DOMAIN)) < 1:
+        raise NoEntitySpecifiedError()
 
-    return JellyfinSource(hass, jellyfin_data.jellyfin_client)
+    return JellyfinSource(hass)
 
 
 class JellyfinSource(MediaSource):
@@ -64,20 +62,27 @@ class JellyfinSource(MediaSource):
 
     name: str = "Jellyfin"
 
-    def __init__(self, hass: HomeAssistant, client: JellyfinClient) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the Jellyfin media source."""
         super().__init__(DOMAIN)
 
         self.hass = hass
+        self._api_cache = None
 
-        self.client = client
-        self.api = client.jellyfin
-        self.url = jellyfin_url(client, "")
+    @property
+    def _api(self) -> Any:
+        # Store the first result on the object.
+        # This guarantees the same instance is used over the lifetime of the media_source
+        if self._api_cache is None:
+            entries: dict[str, JellyfinData] = self.hass.data[DOMAIN]
+            self._api_cache = list(entries.values())[0].jellyfin_client.jellyfin
+
+        return self._api_cache
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Return a streamable URL and associated mime type."""
         media_item = await self.hass.async_add_executor_job(
-            self.api.get_item, item.identifier
+            self._api.get_item, item.identifier
         )
 
         stream_url = self._get_stream_url(media_item)
@@ -94,7 +99,7 @@ class JellyfinSource(MediaSource):
             return await self._build_libraries()
 
         media_item = await self.hass.async_add_executor_job(
-            self.api.get_item, item.identifier
+            self._api.get_item, item.identifier
         )
 
         item_type = media_item["Type"]
@@ -135,7 +140,7 @@ class JellyfinSource(MediaSource):
 
     async def _get_libraries(self) -> list[dict[str, Any]]:
         """Return all supported libraries a user has access to."""
-        response = await self.hass.async_add_executor_job(self.api.get_media_folders)
+        response = await self.hass.async_add_executor_job(self._api.get_media_folders)
         libraries = response["Items"]
         result = []
         for library in libraries:
@@ -510,7 +515,9 @@ class JellyfinSource(MediaSource):
         if item_type in PLAYABLE_ITEM_TYPES:
             params["Fields"] = ITEM_KEY_MEDIA_SOURCES
 
-        result = await self.hass.async_add_executor_job(self.api.user_items, "", params)
+        result = await self.hass.async_add_executor_job(
+            self._api.user_items, "", params
+        )
         return result["Items"]  # type: ignore[no-any-return]
 
     def _get_thumbnail_url(self, media_item: dict[str, Any]) -> str | None:
@@ -521,7 +528,7 @@ class JellyfinSource(MediaSource):
             return None
 
         item_id = media_item[ITEM_KEY_ID]
-        return str(self.api.artwork(item_id, "Primary", MAX_IMAGE_WIDTH))
+        return str(self._api.artwork(item_id, "Primary", MAX_IMAGE_WIDTH))
 
     def _get_stream_url(self, media_item: dict[str, Any]) -> str:
         """Return the stream URL for a media item."""
@@ -529,9 +536,9 @@ class JellyfinSource(MediaSource):
         item_id = media_item[ITEM_KEY_ID]
 
         if media_type == MEDIA_TYPE_AUDIO:
-            return self.api.audio_url(item_id)  # type: ignore[no-any-return]
+            return self._api.audio_url(item_id)  # type: ignore[no-any-return]
         if media_type == MEDIA_TYPE_VIDEO:
-            return self.api.video_url(item_id)  # type: ignore[no-any-return]
+            return self._api.video_url(item_id)  # type: ignore[no-any-return]
 
         raise BrowseError(f"Unsupported media type {media_type}")
 
