@@ -161,7 +161,7 @@ def event_forwarder_filtered(
 def async_subscribe_events(
     hass: HomeAssistant,
     subscriptions: list[CALLBACK_TYPE],
-    target: Callable[[Event], None],
+    target: Callable[[Event[Any]], None],
     event_types: tuple[str, ...],
     entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
