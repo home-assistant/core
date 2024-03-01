@@ -36,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await overseerr_coordinator.async_config_entry_first_refresh()
 
     # Set coordinator in Home Assistant's data structure for later access
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = overseerr_coordinator
 
     # Forward the entry setup to the relevant platforms
