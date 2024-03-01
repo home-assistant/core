@@ -7,6 +7,7 @@ DOMAIN = "plexamp"
 # constants for optional configuration entries
 CONF_PLEX_TOKEN = "plex_token"
 CONF_PLEX_IP_ADDRESS = "plex_ip_address"
+ADD_SONOS = "add_sonos"
 
 
 # media player configurations

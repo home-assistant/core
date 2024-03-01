@@ -8,7 +8,8 @@
         "data": {
           "host": "Host (IP address or domain name)",
           "plex_token": "(Optional) Insert a valid plex token to see album image",
-          "plex_ip_address": "(Optional) Add local IP address of your plex instance to see album image"
+          "plex_ip_address": "(Optional) Add local IP address of your plex instance to see album image",
+          "add_sonos": "(Optional) If selected, add a plex ip and token"
         }
       }
     },
@@ -17,7 +18,8 @@
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "error": {
-      "invalid_host": "Couldn't connect to Plexamp. Is the right host?"
+      "invalid_host": "Couldn't connect to Plexamp. Is the right host?",
+      "non_unique_device": "The device is already integrated!"
     }
   }
 }
