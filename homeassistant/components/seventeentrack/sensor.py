@@ -6,8 +6,8 @@ from datetime import date, datetime
 from decimal import Decimal
 import logging
 
-from py17track import Client as SeventeenTrackClient
 from py17track.errors import SeventeenTrackError
+from py17track.package import Package
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -19,16 +19,18 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_validation as cv,
-    entity,
-    entity_registry as er,
-)
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, entity, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.typing import (
+    ConfigType,
+    DiscoveryInfoType,
+    StateType,
+    UndefinedType,
+)
 from homeassistant.util import Throttle, slugify
 
 from .const import (
@@ -78,36 +80,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Configure the platform and add the sensors."""
-
-    session = aiohttp_client.async_get_clientsession(hass)
-
-    client = SeventeenTrackClient(session=session)
-
-    try:
-        login_result = await client.profile.login(
-            config[CONF_USERNAME], config[CONF_PASSWORD]
-        )
-
-        if not login_result:
-            _LOGGER.error("Invalid username and password provided")
-            return
-    except SeventeenTrackError as err:
-        _LOGGER.error("There was an error while logging in: %s", err)
-        return
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
+ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=seventeentrack"}
 
 
 async def async_setup_platform(
