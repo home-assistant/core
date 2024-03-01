@@ -24,15 +24,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except AuthenticationRequired as err:
         raise ConfigEntryAuthFailed from err
 
-    device = AxisHub(hass, config_entry, api)
-    hass.data[AXIS_DOMAIN][config_entry.entry_id] = device
-    await device.async_update_device_registry()
+    hub = AxisHub(hass, config_entry, api)
+    hass.data[AXIS_DOMAIN][config_entry.entry_id] = hub
+    await hub.async_update_device_registry()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    device.async_setup_events()
+    hub.async_setup_events()
 
-    config_entry.add_update_listener(device.async_new_address_callback)
+    config_entry.add_update_listener(hub.async_new_address_callback)
     config_entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.shutdown)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.shutdown)
     )
 
     return True
@@ -40,8 +40,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload Axis device config entry."""
-    device: AxisHub = hass.data[AXIS_DOMAIN].pop(config_entry.entry_id)
-    return await device.async_reset()
+    hub: AxisHub = hass.data[AXIS_DOMAIN].pop(config_entry.entry_id)
+    return await hub.async_reset()
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

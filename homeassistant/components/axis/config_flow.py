@@ -238,13 +238,13 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle Axis device options."""
 
-    device: AxisHub
+    hub: AxisHub
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the Axis device options."""
-        self.device = self.hass.data[AXIS_DOMAIN][self.config_entry.entry_id]
+        self.hub = self.hass.data[AXIS_DOMAIN][self.config_entry.entry_id]
         return await self.async_step_configure_stream()
 
     async def async_step_configure_stream(
@@ -257,7 +257,7 @@ class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         schema = {}
 
-        vapix = self.device.api.vapix
+        vapix = self.hub.api.vapix
 
         # Stream profiles
 
@@ -271,7 +271,7 @@ class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
             schema[
                 vol.Optional(
-                    CONF_STREAM_PROFILE, default=self.device.option_stream_profile
+                    CONF_STREAM_PROFILE, default=self.hub.option_stream_profile
                 )
             ] = vol.In(stream_profiles)
 
@@ -290,7 +290,7 @@ class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 video_sources[int(idx) + 1] = video_source.name
 
             schema[
-                vol.Optional(CONF_VIDEO_SOURCE, default=self.device.option_video_source)
+                vol.Optional(CONF_VIDEO_SOURCE, default=self.hub.option_video_source)
             ] = vol.In(video_sources)
 
         return self.async_show_form(

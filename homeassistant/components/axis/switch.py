@@ -19,14 +19,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Axis switch."""
-    device: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    hub: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
 
     @callback
     def async_create_entity(event: Event) -> None:
         """Create Axis switch entity."""
-        async_add_entities([AxisSwitch(event, device)])
+        async_add_entities([AxisSwitch(event, hub)])
 
-    device.api.event.subscribe(
+    hub.api.event.subscribe(
         async_create_entity,
         topic_filter=EventTopic.RELAY,
         operation_filter=EventOperation.INITIALIZED,
@@ -36,11 +36,11 @@ async def async_setup_entry(
 class AxisSwitch(AxisEventEntity, SwitchEntity):
     """Representation of a Axis switch."""
 
-    def __init__(self, event: Event, device: AxisHub) -> None:
+    def __init__(self, event: Event, hub: AxisHub) -> None:
         """Initialize the Axis switch."""
-        super().__init__(event, device)
-        if event.id and device.api.vapix.ports[event.id].name:
-            self._attr_name = device.api.vapix.ports[event.id].name
+        super().__init__(event, hub)
+        if event.id and hub.api.vapix.ports[event.id].name:
+            self._attr_name = hub.api.vapix.ports[event.id].name
         self._attr_is_on = event.is_tripped
 
     @callback
@@ -51,8 +51,8 @@ class AxisSwitch(AxisEventEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self.device.api.vapix.ports.close(self._event_id)
+        await self.hub.api.vapix.ports.close(self._event_id)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self.device.api.vapix.ports.open(self._event_id)
+        await self.hub.api.vapix.ports.open(self._event_id)

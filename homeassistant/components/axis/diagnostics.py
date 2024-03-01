@@ -20,26 +20,26 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    device: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
-    diag: dict[str, Any] = device.additional_diagnostics.copy()
+    hub: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    diag: dict[str, Any] = hub.additional_diagnostics.copy()
 
     diag["config"] = async_redact_data(config_entry.as_dict(), REDACT_CONFIG)
 
-    if device.api.vapix.api_discovery:
+    if hub.api.vapix.api_discovery:
         diag["api_discovery"] = [
             {"id": api.id, "name": api.name, "version": api.version}
-            for api in device.api.vapix.api_discovery.values()
+            for api in hub.api.vapix.api_discovery.values()
         ]
 
-    if device.api.vapix.basic_device_info:
+    if hub.api.vapix.basic_device_info:
         diag["basic_device_info"] = async_redact_data(
-            device.api.vapix.basic_device_info["0"],
+            hub.api.vapix.basic_device_info["0"],
             REDACT_BASIC_DEVICE_INFO,
         )
 
-    if device.api.vapix.params:
+    if hub.api.vapix.params:
         diag["params"] = async_redact_data(
-            device.api.vapix.params.items(),
+            hub.api.vapix.params.items(),
             REDACT_VAPIX_PARAMS,
         )
 
