@@ -191,7 +191,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.3.8
 
 # homeassistant.components.airzone
-aioairzone==0.7.4
+aioairzone==0.7.5
 
 # homeassistant.components.ambient_station
 aioambient==2024.01.0
@@ -1031,7 +1031,7 @@ ha-philipsjs==3.1.1
 habitipy==0.2.0
 
 # homeassistant.components.bluetooth
-habluetooth==2.4.1
+habluetooth==2.4.2
 
 # homeassistant.components.cloud
 hass-nabucasa==0.78.0
@@ -1074,7 +1074,7 @@ hole==0.8.0
 holidays==0.43
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240228.0
+home-assistant-frontend==20240228.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.2.28
@@ -1758,7 +1758,7 @@ pydaikin==2.11.1
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==114
+pydeconz==115
 
 # homeassistant.components.delijn
 pydelijn==1.1.0

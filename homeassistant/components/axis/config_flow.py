@@ -9,9 +9,14 @@ from urllib.parse import urlsplit
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp, zeroconf
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithConfigEntry,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -22,7 +27,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_link_local
 
@@ -40,7 +44,7 @@ AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
 DEFAULT_PORT = 80
 
 
-class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
+class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
     """Handle a Axis config flow."""
 
     VERSION = 3
@@ -58,7 +62,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a Axis config flow start.
 
         Manage device specific parameters.
@@ -111,7 +115,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             errors=errors,
         )
 
-    async def _create_entry(self, serial: str) -> FlowResult:
+    async def _create_entry(self, serial: str) -> ConfigFlowResult:
         """Create entry for device.
 
         Generate a name to be used as a prefix for device entities.
@@ -134,7 +138,9 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         title = f"{model} - {serial}"
         return self.async_create_entry(title=title, data=self.device_config)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Trigger a reauthentication flow."""
         self.context["title_placeholders"] = {
             CONF_NAME: entry_data[CONF_NAME],
@@ -150,7 +156,9 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Prepare configuration for a DHCP discovered Axis device."""
         return await self._process_discovered_device(
             {
@@ -161,7 +169,9 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Prepare configuration for a SSDP discovered Axis device."""
         url = urlsplit(discovery_info.upnp[ssdp.ATTR_UPNP_PRESENTATION_URL])
         return await self._process_discovered_device(
@@ -175,7 +185,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Prepare configuration for a Zeroconf discovered Axis device."""
         return await self._process_discovered_device(
             {
@@ -186,7 +196,9 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
-    async def _process_discovered_device(self, device: dict[str, Any]) -> FlowResult:
+    async def _process_discovered_device(
+        self, device: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Prepare configuration for a discovered Axis device."""
         if device[CONF_MAC][:8] not in AXIS_OUI:
             return self.async_abort(reason="not_axis_device")
@@ -223,21 +235,21 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         return await self.async_step_user()
 
 
-class AxisOptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle Axis device options."""
 
     device: AxisNetworkDevice
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the Axis device options."""
         self.device = self.hass.data[AXIS_DOMAIN][self.config_entry.entry_id]
         return await self.async_step_configure_stream()
 
     async def async_step_configure_stream(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the Axis device stream options."""
         if user_input is not None:
             self.options.update(user_input)
