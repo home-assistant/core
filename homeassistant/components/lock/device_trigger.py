@@ -28,7 +28,15 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-TRIGGER_TYPES = {"locked", "unlocked", "locking", "unlocking", "jammed"}
+TRIGGER_TYPES = {
+    "locked",
+    "unlocked",
+    "locking",
+    "unlocking",
+    "jammed",
+    "open",
+    "opening",
+}
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
