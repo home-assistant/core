@@ -30,7 +30,7 @@ async def async_call_shell_with_timeout(
                 proc.returncode,
                 command,
             )
-        return return_code or -1
+        return return_code or 0
     except TimeoutError:
         _LOGGER.error("Timeout for command: %s", command)
         return -1
