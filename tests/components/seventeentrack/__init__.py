@@ -12,7 +12,9 @@ from homeassistant.setup import async_setup_component
 from tests.common import async_fire_time_changed
 
 
-async def init_integration(hass, config, options=None) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant, config, options=None
+) -> MockConfigEntry:
     """Set up the 17Track integration in Home Assistant."""
 
     if options is None:
