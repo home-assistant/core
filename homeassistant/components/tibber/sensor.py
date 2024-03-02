@@ -454,7 +454,9 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
         self._device_name = f"{self._model} {self._home_name}"
 
         self._attr_native_value = initial_state
-        self._attr_unique_id = f"{self._tibber_home.home_id}_rt_{description.name}"
+        self._attr_unique_id = (
+            f"{self._tibber_home.home_id}_rt_{description.translation_key}"
+        )
 
         if description.key in ("accumulatedCost", "accumulatedReward"):
             self._attr_native_unit_of_measurement = tibber_home.currency
