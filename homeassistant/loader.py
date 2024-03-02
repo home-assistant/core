@@ -988,7 +988,7 @@ class Integration:
         exists before having to import it since with integration_platforms
         most of them do not exist.
 
-        By checking if the file exists ahead of time we avoid `stat`ing
+        By checking if the file/dir exists ahead of time we avoid `stat`ing
         every possible place the platform file could be in `sys.path`
         and the `importlib` machinery that goes along with it.
         """
