@@ -219,7 +219,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(logging_namespace).setLevel(logging.ERROR)
 
     # This will load av so we run it in the executor
-    await hass.async_add_executor_job(set_pyav_logging, debug_enabled)
+    await hass.async_add_import_executor_job(set_pyav_logging, debug_enabled)
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable-next=import-outside-toplevel
