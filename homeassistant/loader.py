@@ -983,7 +983,9 @@ class Integration:
         Returns True if the platform exists, False if it does not.
 
         If it cannot be determined if the platform exists without attempting
-        to import it, returns None.
+        to import the component, it returns None. This will only happen
+        if this function is called before get_component or async_get_component
+        has been called for the integration or the integration failed to load.
         """
         full_name = f"{self.domain}.{platform_name}"
 
