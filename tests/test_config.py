@@ -1430,7 +1430,7 @@ async def test_component_config_exceptions(
     # Config validator
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(
+        get_integration_platform=Mock(
             return_value=Mock(
                 async_validate_config=AsyncMock(side_effect=ValueError("broken"))
             )
@@ -1455,7 +1455,7 @@ async def test_component_config_exceptions(
 
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(
+        get_integration_platform=Mock(
             return_value=Mock(
                 async_validate_config=AsyncMock(
                     side_effect=HomeAssistantError("broken")
@@ -1482,7 +1482,7 @@ async def test_component_config_exceptions(
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
+        get_integration_platform=Mock(return_value=None),
         get_component=Mock(
             return_value=Mock(CONFIG_SCHEMA=Mock(side_effect=ValueError("broken")))
         ),
@@ -1511,7 +1511,7 @@ async def test_component_config_exceptions(
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
+        get_integration_platform=Mock(return_value=None),
         get_component=Mock(
             return_value=Mock(
                 spec=["PLATFORM_SCHEMA_BASE"],
@@ -1551,7 +1551,7 @@ async def test_component_config_exceptions(
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
+        get_integration_platform=Mock(return_value=None),
         get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
     )
     with patch(
@@ -1644,7 +1644,7 @@ async def test_component_config_exceptions(
     caplog.clear()
     test_integration = Mock(
         domain="test_domain",
-        get_platform=Mock(return_value=None),
+        get_integration_platform=Mock(return_value=None),
         get_component=Mock(return_value=Mock(spec=["PLATFORM_SCHEMA_BASE"])),
     )
     import_error = ImportError(
@@ -1693,7 +1693,7 @@ async def test_component_config_exceptions(
     test_integration = Mock(
         pkg_path="homeassistant.components.test_domain",
         domain="test_domain",
-        get_platform=Mock(
+        get_integration_platform=Mock(
             side_effect=ImportError(
                 ("ModuleNotFoundError: No module named 'not_installed_something'"),
                 name="not_installed_something",
