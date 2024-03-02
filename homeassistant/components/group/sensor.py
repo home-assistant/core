@@ -66,6 +66,7 @@ ATTR_MEDIAN = "median"
 ATTR_LAST = "last"
 ATTR_LAST_ENTITY_ID = "last_entity_id"
 ATTR_RANGE = "range"
+ATTR_STDEV = "stdev"
 ATTR_SUM = "sum"
 ATTR_PRODUCT = "product"
 SENSOR_TYPES = {
@@ -75,6 +76,7 @@ SENSOR_TYPES = {
     ATTR_MEDIAN: "median",
     ATTR_LAST: "last",
     ATTR_RANGE: "range",
+    ATTR_STDEV: "stdev",
     ATTR_SUM: "sum",
     ATTR_PRODUCT: "product",
 }
@@ -250,6 +252,16 @@ def calc_range(
     return {}, value
 
 
+def calc_stdev(
+    sensor_values: list[tuple[str, float, State]],
+) -> tuple[dict[str, str | None], float]:
+    """Calculate standard deviation value."""
+    result = (sensor_value for _, sensor_value, _ in sensor_values)
+
+    value: float = statistics.stdev(result)
+    return {}, value
+
+
 def calc_sum(
     sensor_values: list[tuple[str, float, State]],
 ) -> tuple[dict[str, str | None], float]:
@@ -284,6 +296,7 @@ CALC_TYPES: dict[
     "median": calc_median,
     "last": calc_last,
     "range": calc_range,
+    "stdev": calc_stdev,
     "sum": calc_sum,
     "product": calc_product,
 }
