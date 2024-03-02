@@ -1418,7 +1418,7 @@ async def async_process_component_config(  # noqa: C901
     config_exceptions: list[ConfigExceptionInfo] = []
 
     try:
-        component = integration.get_component()
+        component = await integration.async_get_component()
     except LOAD_EXCEPTIONS as exc:
         exc_info = ConfigExceptionInfo(
             exc,
@@ -1433,7 +1433,7 @@ async def async_process_component_config(  # noqa: C901
     # Check if the integration has a custom config validator
     config_validator = None
     try:
-        config_validator = integration.get_integration_platform("config")
+        config_validator = await integration.async_get_platform("config")
     except ImportError as err:
         # Filter out import error of the config platform.
         # If the config platform contains bad imports, make sure
@@ -1557,7 +1557,7 @@ async def async_process_component_config(  # noqa: C901
             continue
 
         try:
-            platform = p_integration.get_platform(domain)
+            platform = await p_integration.async_get_platform(domain)
         except LOAD_EXCEPTIONS as exc:
             exc_info = ConfigExceptionInfo(
                 exc,

@@ -845,13 +845,11 @@ class Integration:
         if debug := _LOGGER.isEnabledFor(logging.DEBUG):
             start = time.perf_counter()
         domain = self.domain
-        load_executor = (
-            self.import_executor
-            and f"hass.components.{domain}" not in sys.modules
-            and f"custom_components.{domain}" not in sys.modules
-        )
         # Some integrations fail on import because they call functions incorrectly.
         # So we do it before validating config to catch these errors.
+        load_executor = (
+            self.import_executor and f"{self.pkg_path}.{domain}" not in sys.modules
+        )
         if load_executor:
             try:
                 comp = await self.hass.async_add_import_executor_job(self.get_component)
@@ -919,8 +917,7 @@ class Integration:
         load_executor = (
             self.import_executor
             and domain not in self.hass.config.components
-            and f"hass.components.{domain}" not in sys.modules
-            and f"custom_components.{domain}" not in sys.modules
+            and f"{self.pkg_path}.{domain}" not in sys.modules
         )
         try:
             if load_executor:

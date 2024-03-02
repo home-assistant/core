@@ -46,6 +46,9 @@ async def test_coordinator_client_connector_error(hass: HomeAssistant) -> None:
     ) as mock_webserver, patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
         return_value=None,
+    ), patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi._update_websockets",
+        return_value=False,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
