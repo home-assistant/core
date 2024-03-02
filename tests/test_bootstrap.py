@@ -1033,6 +1033,8 @@ async def test_frontend_deps_pre_import_no_requirements(hass: HomeAssistant) -> 
         if name.endswith("_pre_import")
     ]
 
+    assert len(pre_imports) > 3
+
     for pre_import in pre_imports:
         integration = await loader.async_get_integration(hass, pre_import)
         assert not integration.requirements
