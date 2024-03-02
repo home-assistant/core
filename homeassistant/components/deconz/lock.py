@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
-from .hub import get_hub_from_config_entry
+from .hub import DeconzHub
 
 
 async def async_setup_entry(
@@ -23,7 +23,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up locks for deCONZ component."""
-    hub = get_hub_from_config_entry(hass, config_entry)
+    hub = DeconzHub.get_hub(hass, config_entry)
     hub.entities[DOMAIN] = set()
 
     @callback

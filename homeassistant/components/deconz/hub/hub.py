@@ -94,6 +94,12 @@ class DeconzHub:
         self.deconz_groups: set[tuple[Callable[[EventType, str], None], str]] = set()
         self.ignored_devices: set[tuple[Callable[[EventType, str], None], str]] = set()
 
+    @callback
+    @staticmethod
+    def get_hub(hass: HomeAssistant, config_entry: ConfigEntry) -> DeconzHub:
+        """Return hub with a matching config entry ID."""
+        return cast(DeconzHub, hass.data[DECONZ_DOMAIN][config_entry.entry_id])
+
     @property
     def bridgeid(self) -> str:
         """Return the unique identifier of the gateway."""
@@ -215,7 +221,7 @@ class DeconzHub:
             # A race condition can occur if multiple config entries are
             # unloaded in parallel
             return
-        hub = get_hub_from_config_entry(hass, config_entry)
+        hub = DeconzHub.get_hub(hass, config_entry)
         previous_config = hub.config
         hub.config = DeconzConfig.from_config_entry(config_entry)
         if previous_config.host != hub.config.host:
@@ -292,11 +298,3 @@ class DeconzHub:
 
         self.deconz_ids = {}
         return True
-
-
-@callback
-def get_hub_from_config_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> DeconzHub:
-    """Return gateway with a matching config entry ID."""
-    return cast(DeconzHub, hass.data[DECONZ_DOMAIN][config_entry.entry_id])

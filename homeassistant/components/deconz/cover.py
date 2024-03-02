@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
-from .hub import DeconzHub, get_hub_from_config_entry
+from .hub import DeconzHub
 
 DECONZ_TYPE_TO_DEVICE_CLASS = {
     ResourceType.LEVEL_CONTROLLABLE_OUTPUT.value: CoverDeviceClass.DAMPER,
@@ -37,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up covers for deCONZ component."""
-    hub = get_hub_from_config_entry(hass, config_entry)
+    hub = DeconzHub.get_hub(hass, config_entry)
     hub.entities[DOMAIN] = set()
 
     @callback
@@ -56,11 +56,7 @@ class DeconzCover(DeconzDevice[Cover], CoverEntity):
 
     TYPE = DOMAIN
 
-<<<<<<< HEAD
-    def __init__(self, cover_id: str, gateway: DeconzHub) -> None:
-=======
     def __init__(self, cover_id: str, hub: DeconzHub) -> None:
->>>>>>> 69d60dcabd (Rename gateway to hub)
         """Set up cover device."""
         super().__init__(cover := hub.api.lights.covers[cover_id], hub)
 

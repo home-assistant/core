@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import POWER_PLUGS
 from .deconz_device import DeconzDevice
-from .hub import get_hub_from_config_entry
+from .hub import DeconzHub
 
 
 async def async_setup_entry(
@@ -26,7 +26,7 @@ async def async_setup_entry(
 
     Switches are based on the same device class as lights in deCONZ.
     """
-    hub = get_hub_from_config_entry(hass, config_entry)
+    hub = DeconzHub.get_hub(hass, config_entry)
     hub.entities[DOMAIN] = set()
 
     @callback

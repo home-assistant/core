@@ -31,7 +31,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
-from .hub import DeconzHub, get_hub_from_config_entry
+from .hub import DeconzHub
 
 _SensorDeviceT = TypeVar("_SensorDeviceT", bound=PydeconzSensorBase)
 
@@ -168,7 +168,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the deCONZ binary sensor."""
-    hub = get_hub_from_config_entry(hass, config_entry)
+    hub = DeconzHub.get_hub(hass, config_entry)
     hub.entities[DOMAIN] = set()
 
     @callback

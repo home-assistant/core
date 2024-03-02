@@ -53,7 +53,7 @@ import homeassistant.util.dt as dt_util
 
 from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
-from .hub import DeconzHub, get_hub_from_config_entry
+from .hub import DeconzHub
 
 PROVIDES_EXTRA_ATTRIBUTES = (
     "battery",
@@ -295,7 +295,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the deCONZ sensors."""
-    hub = get_hub_from_config_entry(hass, config_entry)
+    hub = DeconzHub.get_hub(hass, config_entry)
     hub.entities[DOMAIN] = set()
 
     known_device_entities: dict[str, set[str]] = {

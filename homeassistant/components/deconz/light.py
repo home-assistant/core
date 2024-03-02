@@ -36,7 +36,7 @@ from homeassistant.util.color import color_hs_to_xy
 
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
 from .deconz_device import DeconzDevice
-from .hub import DeconzHub, get_hub_from_config_entry
+from .hub import DeconzHub
 
 DECONZ_GROUP = "is_deconz_group"
 EFFECT_TO_DECONZ = {
@@ -111,7 +111,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the deCONZ lights and groups from a config entry."""
-    hub = get_hub_from_config_entry(hass, config_entry)
+    hub = DeconzHub.get_hub(hass, config_entry)
     hub.entities[DOMAIN] = set()
 
     entity_registry = er.async_get(hass)

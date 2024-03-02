@@ -35,7 +35,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE
 from .deconz_device import DeconzDevice
-from .hub import DeconzHub, get_hub_from_config_entry
+from .hub import DeconzHub
 
 DECONZ_FAN_SMART = "smart"
 
@@ -80,7 +80,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the deCONZ climate devices."""
-    hub = get_hub_from_config_entry(hass, config_entry)
+    hub = DeconzHub.get_hub(hass, config_entry)
     hub.entities[DOMAIN] = set()
 
     @callback
@@ -103,11 +103,7 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False
 
-<<<<<<< HEAD
-    def __init__(self, device: Thermostat, gateway: DeconzHub) -> None:
-=======
     def __init__(self, device: Thermostat, hub: DeconzHub) -> None:
->>>>>>> 69d60dcabd (Rename gateway to hub)
         """Set up thermostat device."""
         super().__init__(device, hub)
 

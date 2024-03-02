@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
-from .hub import get_hub_from_config_entry
+from .hub import DeconzHub
 
 REDACT_CONFIG = {CONF_API_KEY, CONF_UNIQUE_ID}
 REDACT_DECONZ_CONFIG = {"bridgeid", "mac", "panid"}
@@ -19,7 +19,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    hub = get_hub_from_config_entry(hass, config_entry)
+    hub = DeconzHub.get_hub(hass, config_entry)
     diag: dict[str, Any] = {}
 
     diag["config"] = async_redact_data(config_entry.as_dict(), REDACT_CONFIG)
