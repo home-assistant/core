@@ -35,10 +35,12 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 
 from .const import (
+    CONF_CURTAIN_SPEED,
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
+    DEFAULT_CURTAIN_SPEED,
     DEFAULT_RETRY_COUNT,
     DOMAIN,
     NON_CONNECTABLE_SUPPORTED_MODEL_TYPES,
@@ -355,5 +357,14 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
                 ),
             ): int
         }
+        if self.config_entry.data.get(CONF_SENSOR_TYPE) == "curtain":
+            options[
+                vol.Required(
+                    CONF_CURTAIN_SPEED,
+                    default=self.config_entry.options.get(
+                        CONF_CURTAIN_SPEED, DEFAULT_CURTAIN_SPEED
+                    ),
+                )
+            ] = vol.All(int, vol.Range(min=1, max=255))
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

@@ -150,6 +150,7 @@ _DEPRECATED_SUPPORT_SET_TILT_POSITION = DeprecatedConstantEnum(
 ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
 ATTR_POSITION = "position"
+ATTR_SPEED = "speed"
 ATTR_TILT_POSITION = "tilt_position"
 
 
@@ -168,11 +169,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await component.async_setup(config)
 
     component.async_register_entity_service(
-        SERVICE_OPEN_COVER, {}, "async_open_cover", [CoverEntityFeature.OPEN]
+        SERVICE_OPEN_COVER,
+        {vol.Optional(ATTR_SPEED): vol.All(vol.Coerce(int), vol.Range(min=1, max=255))},
+        "async_open_cover",
+        [CoverEntityFeature.OPEN],
     )
 
     component.async_register_entity_service(
-        SERVICE_CLOSE_COVER, {}, "async_close_cover", [CoverEntityFeature.CLOSE]
+        SERVICE_CLOSE_COVER,
+        {vol.Optional(ATTR_SPEED): vol.All(vol.Coerce(int), vol.Range(min=1, max=255))},
+        "async_close_cover",
+        [CoverEntityFeature.CLOSE],
     )
 
     component.async_register_entity_service(
@@ -180,7 +187,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {
             vol.Required(ATTR_POSITION): vol.All(
                 vol.Coerce(int), vol.Range(min=0, max=100)
-            )
+            ),
+            vol.Optional(ATTR_SPEED): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=255)
+            ),
         },
         "async_set_cover_position",
         [CoverEntityFeature.SET_POSITION],

@@ -54,7 +54,8 @@
     "step": {
       "init": {
         "data": {
-          "retry_count": "Retry count"
+          "retry_count": "Retry count",
+          "curtain_speed": "Curtain speed"
         }
       }
     }

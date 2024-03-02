@@ -59,9 +59,11 @@ HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
 
 # Config Defaults
 DEFAULT_RETRY_COUNT = 3
+DEFAULT_CURTAIN_SPEED = 255
 
 # Config Options
 CONF_RETRY_COUNT = "retry_count"
+CONF_CURTAIN_SPEED = "curtain_speed"
 CONF_KEY_ID = "key_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
 
