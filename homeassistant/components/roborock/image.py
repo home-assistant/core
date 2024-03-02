@@ -9,18 +9,21 @@ from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.config.size import Sizes
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
-from homeassistant.components.image import ImageEntity
+from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN, ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity, async_get
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN, IMAGE_CACHE_INTERVAL, IMAGE_DRAWABLES, MAP_SLEEP
 from .coordinator import RoborockDataUpdateCoordinator
 from .device import RoborockCoordinatedEntity
+from .models import RoborockImageExtraStoredData
 
 
 async def async_setup_entry(
@@ -36,14 +39,17 @@ async def async_setup_entry(
     entities = list(
         chain.from_iterable(
             await asyncio.gather(
-                *(create_coordinator_maps(coord) for coord in coordinators.values())
+                *(
+                    create_coordinator_maps(coord, hass)
+                    for coord in coordinators.values()
+                )
             )
         )
     )
     async_add_entities(entities)
 
 
-class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
+class RoborockMap(RoborockCoordinatedEntity, ImageEntity, RestoreEntity):
     """A class to let you visualize the map."""
 
     _attr_has_entity_name = True
@@ -53,7 +59,7 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         map_flag: int,
-        starting_map: bytes,
+        starting_map: bytes | None,
         map_name: str,
     ) -> None:
         """Initialize a Roborock map."""
@@ -65,8 +71,29 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
         )
         self._attr_image_last_updated = dt_util.utcnow()
         self.map_flag = map_flag
-        self.cached_map = self._create_image(starting_map)
+        self.cached_map = (
+            self._create_image(starting_map) if starting_map is not None else None
+        )
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def extra_restore_state_data(self) -> RoborockImageExtraStoredData:
+        """Return number specific state data to be restored."""
+        # Cached map should never be None at this point. It is only None when it is
+        # being restored from the stored data and that happens before this step.
+        assert self.cached_map is not None
+        return RoborockImageExtraStoredData(self.map_flag, self.cached_map)
+
+    async def async_added_to_hass(self) -> None:
+        """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
+        extra_stored_data = await self.async_get_last_extra_data()
+        if extra_stored_data:
+            roborock_extra_stored_data = RoborockImageExtraStoredData.from_dict(
+                extra_stored_data.as_dict()
+            )
+            self.cached_map = roborock_extra_stored_data.cached_image
+            self.map_flag = roborock_extra_stored_data.map_flag
+        await super().async_added_to_hass()
 
     @property
     def is_selected(self) -> bool:
@@ -114,14 +141,14 @@ class RoborockMap(RoborockCoordinatedEntity, ImageEntity):
 
 
 async def create_coordinator_maps(
-    coord: RoborockDataUpdateCoordinator,
+    coord: RoborockDataUpdateCoordinator, hass: HomeAssistant
 ) -> list[RoborockMap]:
     """Get the starting map information for all maps for this device. The following steps must be done synchronously.
 
     Only one map can be loaded at a time per device.
     """
     entities = []
-
+    entity_registry = er.async_get(hass)
     cur_map = coord.current_map
     # This won't be None at this point as the coordinator will have run first.
     assert cur_map is not None
@@ -131,18 +158,31 @@ async def create_coordinator_maps(
         coord.maps.items(), key=lambda data: data[0] == cur_map, reverse=True
     )
     for map_flag, map_name in maps_info:
+        unique_id = f"{slugify(coord.roborock_device_info.device.duid)}_map_{map_name}"
         # Load the map - so we can access it with get_map_v1
-        if map_flag != cur_map:
-            # Only change the map and sleep if we have multiple maps.
-            await coord.api.send_command(RoborockCommand.LOAD_MULTI_MAP, [map_flag])
-            # We cannot get the map until the roborock servers fully process the
-            # map change.
-            await asyncio.sleep(MAP_SLEEP)
-        # Get the map data
-        api_data: bytes = await coord.cloud_api.get_map_v1()
+        api_data: bytes | None = None
+        if (
+            not (
+                entity_id := entity_registry.async_get_entity_id(
+                    IMAGE_DOMAIN, DOMAIN, unique_id
+                )
+            )
+            or (restore_data := async_get(hass).last_states.get(entity_id)) is None
+            or restore_data.extra_data is None
+        ):
+            # Only get the map data on startup if a) we haven't added the entity before
+            # b) The entity does not have the needed restore data.
+            if map_flag != cur_map:
+                # Only change the map and sleep if we have multiple maps.
+                await coord.api.send_command(RoborockCommand.LOAD_MULTI_MAP, [map_flag])
+                # We cannot get the map until the roborock servers fully process the
+                # map change.
+                await asyncio.sleep(MAP_SLEEP)
+            # Get the map data
+            api_data = await coord.cloud_api.get_map_v1()
         entities.append(
             RoborockMap(
-                f"{slugify(coord.roborock_device_info.device.duid)}_map_{map_name}",
+                unique_id,
                 coord,
                 map_flag,
                 api_data,
