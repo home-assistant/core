@@ -8,8 +8,7 @@ from aiohttp import ClientResponseError
 from odp_amsterdam import ODPAmsterdam, VehicleType
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -17,7 +16,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class GaragesAmsterdamConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Garages Amsterdam."""
 
     VERSION = 1
@@ -25,7 +24,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._options is None:
             self._options = []
