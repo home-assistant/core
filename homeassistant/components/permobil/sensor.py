@@ -177,6 +177,7 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         key="record_distance",
         translation_key="record_distance",
         icon="mdi:map-marker-distance",
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
