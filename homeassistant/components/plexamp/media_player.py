@@ -104,9 +104,9 @@ class PlexampMediaPlayer(MediaPlayerEntity):
             | MediaPlayerEntityFeature.VOLUME_STEP
         )
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Retrieve the latest data from the device."""
-        device_information = self._plexamp_service.get_device_information()
+        device_information = await self._plexamp_service.get_device_information()
         _LOGGER.debug("device_information: %s", device_information)
 
         if device_information:
@@ -116,44 +116,47 @@ class PlexampMediaPlayer(MediaPlayerEntity):
             self._attr_media_album_name = device_information.get("parent_title")
             self._attr_media_artist = device_information.get("grandparent_title")
 
-    def media_play(self) -> None:
+    async def async_media_play(self) -> None:
         """Send play command."""
-        self._plexamp_service.send_playback_command(action="play")
+        await self._plexamp_service.send_playback_command(action="play")
 
-    def media_pause(self) -> None:
+    async def async_media_pause(self) -> None:
         """Send pause command."""
-        self._plexamp_service.send_playback_command(action="pause")
+        await self._plexamp_service.send_playback_command(action="pause")
 
-    def media_stop(self) -> None:
+    async def async_media_stop(self) -> None:
         """Send pause command."""
-        self._plexamp_service.send_playback_command("stop")
+        await self._plexamp_service.send_playback_command("stop")
 
-    def media_next_track(self) -> None:
+    async def async_media_next_track(self) -> None:
         """Send next command."""
-        self._plexamp_service.send_playback_command("skipNext")
+        await self._plexamp_service.send_playback_command("skipNext")
 
-    def media_previous_track(self) -> None:
+    async def async_media_previous_track(self) -> None:
         """Send previous command."""
-        self._plexamp_service.send_playback_command("skipPrevious")
+        await self._plexamp_service.send_playback_command("skipPrevious")
 
-    def set_shuffle(self, shuffle: bool) -> None:
+    async def async_set_shuffle(self, shuffle: bool) -> None:
         """Send shuffle command based on the specified mode."""
         should_shuffle = "1" if shuffle else "0"
-        self._plexamp_service.send_set_parameter_command(f"shuffle={should_shuffle}")
+        await self._plexamp_service.send_set_parameter_command(
+            f"shuffle={should_shuffle}"
+        )
 
-    def set_repeat(self, repeat: RepeatMode) -> None:
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Send repeat command based on the specified mode."""
-
         repeat_value = REPEAT_MODE_TO_NUMBER.get(
             repeat, "0"
         )  # Default to "0" (OFF) if repeat mode is unknown
-        self._plexamp_service.send_set_parameter_command(f"repeat={repeat_value}")
+        await self._plexamp_service.send_set_parameter_command(f"repeat={repeat_value}")
 
-    def mute_volume(self, mute: bool) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        self._plexamp_service.send_set_parameter_command("volume=0")
+        await self._plexamp_service.send_set_parameter_command("volume=0")
 
-    def set_volume_level(self, volume: float) -> None:
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         converted_volume = volume * 100
-        self._plexamp_service.send_set_parameter_command(f"volume={converted_volume}")
+        await self._plexamp_service.send_set_parameter_command(
+            f"volume={converted_volume}"
+        )
