@@ -1025,15 +1025,15 @@ class Integration:
         """
         full_name = f"{self.domain}.{platform_name}"
         cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
-
         try:
             cache[full_name] = self._import_platform(platform_name)
         except ImportError as ex:
             if self.domain in cache:
                 # If the domain is loaded, cache that the platform
                 # does not exist so we do not try to load it again
-                missing_platforms_cache: dict[str, ImportError]
-                missing_platforms_cache = self.hass.data[DATA_MISSING_PLATFORMS]
+                missing_platforms_cache: dict[str, ImportError] = self.hass.data[
+                    DATA_MISSING_PLATFORMS
+                ]
                 missing_platforms_cache[full_name] = ex
             raise
         except RuntimeError as err:
