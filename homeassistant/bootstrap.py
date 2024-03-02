@@ -22,16 +22,23 @@ import yarl
 
 from . import config as conf_util, config_entries, core, loader, requirements
 
-# Pre-import config and lovelace which have no requirements here to avoid
+# Pre-import frontend deps which have no requirements here to avoid
 # loading them at run time and blocking the event loop. We do this ahead
-# of time so that we do not have to flag frontends deps with `import_executor`
+# of time so that we do not have to flag frontend deps with `import_executor`
 # as it would create a thundering heard of executor jobs trying to import
 # frontend deps at the same time.
 from .components import (
     api as api_pre_import,  # noqa: F401
+    auth as auth_pre_import,  # noqa: F401
     config as config_pre_import,  # noqa: F401
+    device_automation as device_automation_pre_import,  # noqa: F401
+    diagnostics as diagnostics_pre_import,  # noqa: F401
     http,
     lovelace as lovelace_pre_import,  # noqa: F401
+    onboarding as onboarding_pre_import,  # noqa: F401
+    repairs as repairs_pre_import,  # noqa: F401
+    search as search_pre_import,  # noqa: F401
+    system_log as system_log_pre_import,  # noqa: F401
 )
 from .const import (
     FORMAT_DATETIME,
