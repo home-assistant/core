@@ -1007,7 +1007,6 @@ class Integration:
         if os.path.exists(path.with_suffix(".py")) or os.path.exists(path):
             return True
 
-        full_name = f"{self.domain}.{platform_name}"
         exc = ModuleNotFoundError(
             f"Platform {full_name} not found",
             name=f"{self.pkg_path}.{platform_name}",
