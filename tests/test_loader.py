@@ -1238,3 +1238,6 @@ async def test_get_integration_platform(
 
     # The get_integration_platform call should cache the failure
     assert mock_import.call_count == 0
+
+    platform = integration.get_integration_platform("group")
+    assert platform.MAGIC == 1
