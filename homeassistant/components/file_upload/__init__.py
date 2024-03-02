@@ -172,10 +172,10 @@ class FileUploadView(HomeAssistantView):
         fut: asyncio.Future[None] | None = None
         try:
             fut = hass.async_add_executor_job(_sync_queue_consumer)
-            megabytes_sent = 0
+            megabytes_sending = 0
             while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
-                megabytes_sent += 1
-                if megabytes_sent % 5 != 0:
+                megabytes_sending += 1
+                if megabytes_sending % 5 != 0:
                     queue.put_nowait((chunk, None))
                     continue
 
