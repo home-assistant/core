@@ -666,6 +666,9 @@ async def _async_resolve_domains_to_setup(
     base_platforms_loaded = False
     domains_to_setup = _get_domains(hass, config)
     needed_requirements: set[str] = set()
+    platform_integrations = conf_util.extract_platform_integrations(
+        config, BASE_PLATFORMS
+    )
 
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start rightaway
@@ -682,7 +685,7 @@ async def _async_resolve_domains_to_setup(
             # to avoid the lock contention when multiple
             # integrations try to resolve them at once
             base_platforms_loaded = True
-            to_get = {*old_to_resolve, *BASE_PLATFORMS}
+            to_get = {*old_to_resolve, *BASE_PLATFORMS, *platform_integrations}
         else:
             to_get = old_to_resolve
 

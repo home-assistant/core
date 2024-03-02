@@ -1388,6 +1388,24 @@ def config_per_platform(
             yield platform, item
 
 
+def extract_platform_integrations(config: ConfigType, domains: set[str]) -> set[str]:
+    """Find all the platforms in a configuration."""
+    for key, domain_config in config.items():
+        try:
+            domain = cv.domain_key(key)
+        except vol.Invalid:
+            continue
+        if domain not in domains:
+            continue
+        for item in domain_config:
+            try:
+                platform = item.get(CONF_PLATFORM)
+            except AttributeError:
+                continue
+            domains.add(platform)
+    return domains
+
+
 def extract_domain_configs(config: ConfigType, domain: str) -> Sequence[str]:
     """Extract keys from config for given domain name.
 
