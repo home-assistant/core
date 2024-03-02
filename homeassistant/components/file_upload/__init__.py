@@ -131,16 +131,17 @@ class FileUploadView(HomeAssistantView):
 
         reader = await request.multipart()
         file_field_reader = await reader.next()
+        filename: str | None
 
         if (
             not isinstance(file_field_reader, BodyPartReader)
             or file_field_reader.name != "file"
-            or file_field_reader.filename is None
+            or (filename := file_field_reader.filename) is None
         ):
             raise vol.Invalid("Expected a file")
 
         try:
-            raise_if_invalid_filename(file_field_reader.filename)
+            raise_if_invalid_filename(filename)
         except ValueError as err:
             raise web.HTTPBadRequest from err
 
@@ -156,14 +157,11 @@ class FileUploadView(HomeAssistantView):
             tuple[bytes, asyncio.Future[None] | None] | None
         ] = SimpleQueue()
 
-        def _sync_queue_consumer(
-            sync_q: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None],
-            _file_name: str,
-        ) -> None:
+        def _sync_queue_consumer() -> None:
             file_dir.mkdir()
-            with (file_dir / _file_name).open("wb") as file_handle:
+            with (file_dir / filename).open("wb") as file_handle:
                 while True:
-                    _chunk_future = sync_q.get()
+                    _chunk_future = queue.get()
                     if _chunk_future is None:
                         break
                     _chunk, _future = _chunk_future
@@ -173,12 +171,7 @@ class FileUploadView(HomeAssistantView):
 
         fut: asyncio.Future[None] | None = None
         try:
-            fut = hass.async_add_executor_job(
-                _sync_queue_consumer,
-                queue,
-                file_field_reader.filename,
-            )
-
+            fut = hass.async_add_executor_job(_sync_queue_consumer)
             megabytes_sent = 0
             while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
                 megabytes_sent += 1
@@ -200,7 +193,7 @@ class FileUploadView(HomeAssistantView):
             if fut is not None:
                 await fut
 
-        file_upload_data.files[file_id] = file_field_reader.filename
+        file_upload_data.files[file_id] = filename
 
         return self.json({"file_id": file_id})
 
