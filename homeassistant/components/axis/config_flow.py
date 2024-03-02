@@ -37,8 +37,8 @@ from .const import (
     DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
 )
-from .device import AxisNetworkDevice, get_axis_device
 from .errors import AuthenticationRequired, CannotConnect
+from .hub import AxisHub, get_axis_api
 
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
 DEFAULT_PORT = 80
@@ -71,9 +71,9 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 
         if user_input is not None:
             try:
-                device = await get_axis_device(self.hass, MappingProxyType(user_input))
+                api = await get_axis_api(self.hass, MappingProxyType(user_input))
 
-                serial = device.vapix.serial_number
+                serial = api.vapix.serial_number
                 await self.async_set_unique_id(format_mac(serial))
 
                 self._abort_if_unique_id_configured(
@@ -90,7 +90,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_MODEL: device.vapix.product_number,
+                    CONF_MODEL: api.vapix.product_number,
                 }
 
                 return await self._create_entry(serial)
@@ -238,13 +238,13 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
     """Handle Axis device options."""
 
-    device: AxisNetworkDevice
+    hub: AxisHub
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the Axis device options."""
-        self.device = self.hass.data[AXIS_DOMAIN][self.config_entry.entry_id]
+        self.hub = AxisHub.get_hub(self.hass, self.config_entry)
         return await self.async_step_configure_stream()
 
     async def async_step_configure_stream(
@@ -257,7 +257,7 @@ class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
         schema = {}
 
-        vapix = self.device.api.vapix
+        vapix = self.hub.api.vapix
 
         # Stream profiles
 
@@ -271,7 +271,7 @@ class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
 
             schema[
                 vol.Optional(
-                    CONF_STREAM_PROFILE, default=self.device.option_stream_profile
+                    CONF_STREAM_PROFILE, default=self.hub.option_stream_profile
                 )
             ] = vol.In(stream_profiles)
 
@@ -290,7 +290,7 @@ class AxisOptionsFlowHandler(OptionsFlowWithConfigEntry):
                 video_sources[int(idx) + 1] = video_source.name
 
             schema[
-                vol.Optional(CONF_VIDEO_SOURCE, default=self.device.option_video_source)
+                vol.Optional(CONF_VIDEO_SOURCE, default=self.hub.option_video_source)
             ] = vol.In(video_sources)
 
         return self.async_show_form(

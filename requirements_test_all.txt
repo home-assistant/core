@@ -167,7 +167,7 @@ aio-georss-gdacs==0.9
 aioairq==0.3.2
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.3.8
+aioairzone-cloud==0.4.5
 
 # homeassistant.components.airzone
 aioairzone==0.7.5
@@ -933,9 +933,6 @@ intellifire4py==2.2.2
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.1
-
-# homeassistant.components.file_upload
-janus==1.0.0
 
 # homeassistant.components.abode
 jaraco.abode==3.3.0
@@ -2111,7 +2108,7 @@ uasiren==0.0.1
 ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.7
+unifi-discovery==1.1.8
 
 # homeassistant.components.zha
 universal-silabs-flasher==0.0.18
@@ -2174,7 +2171,7 @@ wallbox==0.6.0
 watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.1.11
+weatherflow4py==0.1.12
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.1
