@@ -972,51 +972,46 @@ class Integration:
         return None
 
     def get_platform(self, platform_name: str) -> ModuleType:
-        """Return a platform for an integration.
-
-        If the platform is likely to not exist, use get_integration_platform
-        instead as its optimized for the failure case.
-        """
+        """Return a platform for an integration."""
         if platform := self._get_platform_cached(f"{self.domain}.{platform_name}"):
             return platform
         return self._load_platform(platform_name)
 
-    def get_integration_platform(self, platform_name: str) -> ModuleType:
-        """Return an integration platform for an integration.
+    def platform_exists(self, platform_name: str) -> bool | None:
+        """Check if a platform exists for an integration.
 
-        This is similar to get_platform, but it will also check if the
-        if the integration is already loaded and if the platform file
-        exists before having to import it since with integration_platforms
-        most of them do not exist.
+        Returns True if the platform exists, False if it does not.
 
-        By checking if the file/dir exists ahead of time we avoid `stat`ing
-        every possible place the platform file could be in `sys.path`
-        and the `importlib` machinery that goes along with it.
-
-        Unlike get_platform which is optimized for the success case, this
-        method is optimized for the failure case as most of the time the
-        platform will not exist.
+        If it cannot be determined if the platform exists without attempting
+        to import it, returns None.
         """
-        if platform := self._get_platform_cached(f"{self.domain}.{platform_name}"):
-            return platform
+        full_name = f"{self.domain}.{platform_name}"
 
         cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
-        if (component := cache.get(self.domain)) and (
+        if full_name in cache:
+            return True
+
+        missing_platforms_cache: dict[str, ImportError]
+        missing_platforms_cache = self.hass.data[DATA_MISSING_PLATFORMS]
+        if full_name in missing_platforms_cache:
+            return False
+
+        if not (component := cache.get(self.domain)) or not (
             file := getattr(component, "__file__", None)
         ):
-            path: pathlib.Path = pathlib.Path(file).parent.joinpath(platform_name)
-            if not os.path.exists(f"{path}.py") and not os.path.exists(path):
-                full_name = f"{self.domain}.{platform_name}"
-                missing_platforms_cache: dict[str, ImportError]
-                missing_platforms_cache = self.hass.data[DATA_MISSING_PLATFORMS]
-                exc = ModuleNotFoundError(
-                    f"Platform {full_name} not found",
-                    name=f"{self.pkg_path}.{platform_name}",
-                )
-                missing_platforms_cache[full_name] = exc
-                raise exc
+            return None
 
-        return self._load_platform(platform_name)
+        path: pathlib.Path = pathlib.Path(file).parent.joinpath(platform_name)
+        if os.path.exists(path.with_suffix(".py")) or os.path.exists(path):
+            return True
+
+        full_name = f"{self.domain}.{platform_name}"
+        exc = ModuleNotFoundError(
+            f"Platform {full_name} not found",
+            name=f"{self.pkg_path}.{platform_name}",
+        )
+        missing_platforms_cache[full_name] = exc
+        return False
 
     def _load_platform(self, platform_name: str) -> ModuleType:
         """Load a platform for an integration.
