@@ -1196,10 +1196,10 @@ async def test_async_get_platform_raises_after_import_failure(
     assert "loaded_executor=False" not in caplog.text
 
 
-async def test_get_platform_exists(
+async def test_platform_exists(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
-    """Test the integration platform loader."""
+    """Test platform_exists."""
     integration = await loader.async_get_integration(hass, "test_integration_platform")
     assert integration.domain == "test_integration_platform"
 
