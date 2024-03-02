@@ -9,7 +9,10 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     RepeatMode,
+    BrowseMedia,
 )
+from homeassistant.components.media_player.const import MEDIA_CLASS_ALBUM, MEDIA_CLASS_ARTIST, MEDIA_CLASS_PLAYLIST
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_IDLE
 from homeassistant.core import HomeAssistant
@@ -18,6 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_PLEX_IP_ADDRESS, CONF_PLEX_TOKEN, DOMAIN, REPEAT_MODE_TO_NUMBER
 from .services import PlexampService
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,16 +102,18 @@ class PlexampMediaPlayer(MediaPlayerEntity):
             | MediaPlayerEntityFeature.NEXT_TRACK
             | MediaPlayerEntityFeature.PREVIOUS_TRACK
             | MediaPlayerEntityFeature.SHUFFLE_SET
+            | MediaPlayerEntityFeature.SHUFFLE_SET
             | MediaPlayerEntityFeature.REPEAT_SET
             | MediaPlayerEntityFeature.VOLUME_SET
             | MediaPlayerEntityFeature.VOLUME_MUTE
             | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.PLAY_MEDIA
+            | MediaPlayerEntityFeature.BROWSE_MEDIA
         )
 
     async def async_update(self) -> None:
         """Retrieve the latest data from the device."""
         device_information = await self._plexamp_service.get_device_information()
-        _LOGGER.debug("device_information: %s", device_information)
 
         if device_information:
             self._attr_state = device_information["state"]
@@ -160,3 +166,72 @@ class PlexampMediaPlayer(MediaPlayerEntity):
         await self._plexamp_service.send_set_parameter_command(
             f"volume={converted_volume}"
         )
+
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Implement media playback."""
+        # Handle playlist selection
+        if media_type == "playlist":
+            # Send command to start playing the selected playlist
+            _LOGGER.debug("WE ARE STARTING A PLAYLIST MEDIA!!! %s %s %s", media_type, media_id, kwargs)
+            pass
+        # Handle track selection
+        elif media_type == "track":
+            # Send command to start playing the selected track
+            pass
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None) -> BrowseMedia:
+        """Implement the browsing media method."""
+
+        # Root level browsing
+        if media_content_id is None:
+            # Define your root level content here
+            return BrowseMedia(
+                title="Plexamp Media",
+                media_class=MEDIA_CLASS_ARTIST,
+                media_content_id="root",
+                media_content_type="artist",
+                can_expand=True,
+                can_play=False,
+                children=[
+                    BrowseMedia(
+                        title="Albums",
+                        media_class=MEDIA_CLASS_ALBUM,
+                        media_content_id="albums",
+                        media_content_type="albums",
+                        can_expand=True,
+                        can_play=False
+                    )
+                ]
+            )
+
+        # Handle browsing for specific categories (e.g., albums)
+        if media_content_id == "albums":
+            # Fetch album data from your integration
+            playlists = await self._plexamp_service.get_playlists()
+
+            # Construct browse media response
+            album_items = []
+            for playlist in playlists:
+                album_items.append(BrowseMedia(
+                    title=playlist["title"],
+                    media_class=MEDIA_CLASS_PLAYLIST,
+                    media_content_id=playlist["id"],
+                    media_content_type=MEDIA_CLASS_PLAYLIST,
+                    can_expand=False,
+                    can_play=True,
+                ))
+
+            return BrowseMedia(
+                title="Albums",
+                media_class=MEDIA_CLASS_ALBUM,
+                media_content_id="album",
+                media_content_type="library",
+                can_expand=True,
+                can_play=False,
+                children=album_items,
+            )
+
+        # Handle other specific media_content_ids as needed
+        # You can add more conditionals for different categories
+
+        return BrowseMedia(media_content_type="library")

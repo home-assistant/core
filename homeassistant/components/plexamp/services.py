@@ -15,16 +15,18 @@ _LOGGER = logging.getLogger(__name__)
 
 class PlexampService:
     def __init__(
-        self,
-        plex_token: str | None,
-        plex_identifier: str | None,
-        plex_ip_address: str | None,
-        host: str,
-        device_name: str,
+            self,
+            plex_token: str | None,
+            plex_identifier: str | None,
+            plex_ip_address: str | None,
+            host: str,
+            device_name: str,
     ) -> None:
         self._plex_token = plex_token
         self._plex_identifier = plex_identifier
         self._plex_ip_address = plex_ip_address
+        # Since we get the docker internal url, we need to use the user provided plex url
+        self._metadata_base_url = None
         self._host = host
         self._device_name = device_name
         self._command_id = 1
@@ -32,6 +34,8 @@ class PlexampService:
             "X-Plex-Token": plex_token,
             "X-Plex-Target-Client-Identifier": plex_identifier,
             "Accept": "application/json",
+            "X-Plex-Product": "Plex_HomeAssistant",
+            "X-Plex-Version": "4.9.3"
         }
 
         _LOGGER.debug("Starting PlexampService for: %s", device_name)
@@ -44,9 +48,9 @@ class PlexampService:
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.get(
-                    url,
-                    headers=self.headers,
-                    timeout=10,
+                        url,
+                        headers=self.headers,
+                        timeout=10,
                 ) as response:
                     response.raise_for_status()
             except aiohttp.ClientError as e:
@@ -65,9 +69,9 @@ class PlexampService:
         async with aiohttp.ClientSession() as session:
             try:
                 async with session.get(
-                    url,
-                    headers=self.headers,
-                    timeout=10,
+                        url,
+                        headers=self.headers,
+                        timeout=10,
                 ) as response:
                     response.raise_for_status()
             except aiohttp.ClientError as e:
@@ -114,9 +118,9 @@ class PlexampService:
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    url,
-                    headers=self.headers,
-                    timeout=10,
+                        url,
+                        headers=self.headers,
+                        timeout=10,
                 ) as response:
                     response.raise_for_status()
                     self._command_id += 1
@@ -136,10 +140,10 @@ class PlexampService:
                             }.get(status)
 
                             device_information["shuffle"] = (
-                                timeline.get("shuffle", 0) != "0"
+                                    timeline.get("shuffle", 0) != "0"
                             )
                             device_information["volume"] = (
-                                float(timeline.get("volume", 1.0)) / 100
+                                    float(timeline.get("volume", 1.0)) / 100
                             )
 
                             repeat_mode_value = timeline.get("repeat", 0)
@@ -155,26 +159,23 @@ class PlexampService:
                                 )
                                 return device_information
 
-                            # Since we get the docker internal url, we need to use the user provided plex url
-                            formatted_ip_address = self._plex_ip_address.replace(
-                                ".", "-"
-                            )
                             play_queue = timeline.get("containerKey")
-
-                            if not play_queue:
-                                break
-
+                            formatted_ip_address = self._plex_ip_address.replace(".", "-")
                             address = replace_ip_prefix(
                                 timeline.get("address", ""), formatted_ip_address
                             )
                             protocol = timeline.get("protocol")
                             port = timeline.get("port")
-                            metadata_base_url = f"{protocol}://{address}:{port}"
-                            play_queue_url = f"{metadata_base_url}{play_queue}"
+                            self._metadata_base_url = f"{protocol}://{address}:{port}"
+
+                            if not play_queue:
+                                break
+
+                            play_queue_url = f"{self._metadata_base_url}{play_queue}"
 
                             try:
                                 async with session.get(
-                                    play_queue_url, timeout=10, headers=self.headers
+                                        play_queue_url, timeout=10, headers=self.headers
                                 ) as queue_data:
                                     queue = (
                                         await queue_data.json()
@@ -197,7 +198,7 @@ class PlexampService:
                                                 item
                                                 for item in metadata
                                                 if item.get("playQueueItemID")
-                                                == currently_playing_id
+                                                   == currently_playing_id
                                             ),
                                             None,
                                         )
@@ -208,7 +209,7 @@ class PlexampService:
                                         thumb_size = "width=300&height=300"
                                         thumb_parameters = f"url={thumb_url}&quality=90&format=jpeg&X-Plex-Token={self._plex_token}"
                                         thumb = (
-                                            f"{metadata_base_url}/photo/:/transcode?{thumb_size}&{thumb_parameters}"
+                                            f"{self._metadata_base_url}/photo/:/transcode?{thumb_size}&{thumb_parameters}"
                                             if thumb_url
                                             else None
                                         )
@@ -231,7 +232,7 @@ class PlexampService:
                                         return device_information
 
                             except (
-                                aiohttp.ClientError | aiohttp.ServerTimeoutError
+                                    aiohttp.ClientError | aiohttp.ServerTimeoutError
                             ) as e:
                                 _LOGGER.error(
                                     "Couldn't update metadata for %s: %s. Error: %s",
@@ -245,3 +246,39 @@ class PlexampService:
         except aiohttp.ClientError | aiohttp.ServerTimeoutError as e:
             _LOGGER.error("Error updating device %s, error: %s", self._device_name, e)
             return device_information
+
+    async def play_media(self) -> None:
+        base_url = f"{self._metadata_base_url}/playQueues"
+
+    async def get_playlists(self) -> list[dict]:
+        base_url = f"{self._metadata_base_url}/playlists/all"
+        exclude_fields = "summary"
+        exclude_elements = "Media,Director,Country"
+        include_fields = "thumbBlurHash"
+        parameters = f"playlistType=audio&excludeFields={exclude_fields}&excludeElements={exclude_elements}&includeFields={include_fields}"
+        url = f"{base_url}?{parameters}"
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                        url,
+                        headers=self.headers,
+                        timeout=10,
+                ) as response:
+                    if response.status == 200:
+                        playlists = await response.json()
+                        playlist_mapped = []
+                        for playlist in playlists.get("MediaContainer", {}).get("Metadata") or []:
+                            playlist_mapped.append({
+                                "title": playlist.get("title"),
+                                "id": playlist.get("composite")
+                            })
+
+                        return playlist_mapped
+
+                    return []
+
+        except aiohttp.ClientError | aiohttp.ServerTimeoutError as e:
+            _LOGGER.error("Error retrieving playlists for %s, error: %s", self._device_name, e)
+            return []
+
+
