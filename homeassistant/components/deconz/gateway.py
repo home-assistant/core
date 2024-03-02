@@ -301,7 +301,10 @@ class DeconzGateway:
 
         entity_registry = er.async_get(self.hass)
 
-        for entity_id, deconz_id in self.deconz_ids.items():
+        # Copy the ids since calling async_remove will modify the dict
+        # and will cause a runtime error because the dict size changes
+        # during iteration
+        for entity_id, deconz_id in self.deconz_ids.copy().items():
             if deconz_id in deconz_ids and entity_registry.async_is_registered(
                 entity_id
             ):
@@ -360,6 +363,6 @@ async def get_deconz_session(
         LOGGER.warning("Invalid key for deCONZ at %s", config[CONF_HOST])
         raise AuthenticationRequired from err
 
-    except (asyncio.TimeoutError, errors.RequestError, errors.ResponseError) as err:
+    except (TimeoutError, errors.RequestError, errors.ResponseError) as err:
         LOGGER.error("Error connecting to deCONZ gateway at %s", config[CONF_HOST])
         raise CannotConnect from err

@@ -7,11 +7,8 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aemet.const import ATTRIBUTION, DOMAIN
-from homeassistant.components.aemet.weather_update_coordinator import (
-    WEATHER_UPDATE_INTERVAL,
-)
+from homeassistant.components.aemet.coordinator import WEATHER_UPDATE_INTERVAL
 from homeassistant.components.weather import (
-    ATTR_CONDITION_PARTLYCLOUDY,
     ATTR_CONDITION_SNOWY,
     ATTR_FORECAST,
     ATTR_FORECAST_CONDITION,
@@ -29,7 +26,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    SERVICE_GET_FORECAST,
+    LEGACY_SERVICE_GET_FORECAST,
+    SERVICE_GET_FORECASTS,
 )
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
@@ -62,17 +60,17 @@ async def test_aemet_weather(
     assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 12.2
     assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 3.2
     forecast = state.attributes[ATTR_FORECAST][0]
-    assert forecast[ATTR_FORECAST_CONDITION] == ATTR_CONDITION_PARTLYCLOUDY
+    assert forecast[ATTR_FORECAST_CONDITION] == ATTR_CONDITION_SNOWY
     assert ATTR_FORECAST_PRECIPITATION not in forecast
-    assert forecast[ATTR_FORECAST_PRECIPITATION_PROBABILITY] == 30
-    assert forecast[ATTR_FORECAST_TEMP] == 4
-    assert forecast[ATTR_FORECAST_TEMP_LOW] == -4
+    assert forecast[ATTR_FORECAST_PRECIPITATION_PROBABILITY] == 0
+    assert forecast[ATTR_FORECAST_TEMP] == 2
+    assert forecast[ATTR_FORECAST_TEMP_LOW] == -1
     assert (
         forecast[ATTR_FORECAST_TIME]
-        == dt_util.parse_datetime("2021-01-10 00:00:00+00:00").isoformat()
+        == dt_util.parse_datetime("2021-01-08 23:00:00+00:00").isoformat()
     )
-    assert forecast[ATTR_FORECAST_WIND_BEARING] == 45.0
-    assert forecast[ATTR_FORECAST_WIND_SPEED] == 20.0  # 5.56 m/s -> km/h
+    assert forecast[ATTR_FORECAST_WIND_BEARING] == 90.0
+    assert forecast[ATTR_FORECAST_WIND_SPEED] == 0.0
 
     state = hass.states.get("weather.aemet_hourly")
     assert state is None
@@ -81,11 +79,11 @@ async def test_aemet_weather(
 async def test_aemet_weather_legacy(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test states of legacy weather."""
 
-    registry = er.async_get(hass)
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         WEATHER_DOMAIN,
         DOMAIN,
         "None hourly",
@@ -106,26 +104,34 @@ async def test_aemet_weather_legacy(
     assert state.attributes[ATTR_WEATHER_WIND_GUST_SPEED] == 12.2
     assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 3.2
     forecast = state.attributes[ATTR_FORECAST][0]
-    assert forecast[ATTR_FORECAST_CONDITION] == ATTR_CONDITION_PARTLYCLOUDY
+    assert forecast[ATTR_FORECAST_CONDITION] == ATTR_CONDITION_SNOWY
     assert ATTR_FORECAST_PRECIPITATION not in forecast
-    assert forecast[ATTR_FORECAST_PRECIPITATION_PROBABILITY] == 30
-    assert forecast[ATTR_FORECAST_TEMP] == 4
-    assert forecast[ATTR_FORECAST_TEMP_LOW] == -4
+    assert forecast[ATTR_FORECAST_PRECIPITATION_PROBABILITY] == 0
+    assert forecast[ATTR_FORECAST_TEMP] == 2
+    assert forecast[ATTR_FORECAST_TEMP_LOW] == -1
     assert (
         forecast[ATTR_FORECAST_TIME]
-        == dt_util.parse_datetime("2021-01-10 00:00:00+00:00").isoformat()
+        == dt_util.parse_datetime("2021-01-08 23:00:00+00:00").isoformat()
     )
-    assert forecast[ATTR_FORECAST_WIND_BEARING] == 45.0
-    assert forecast[ATTR_FORECAST_WIND_SPEED] == 20.0  # 5.56 m/s -> km/h
+    assert forecast[ATTR_FORECAST_WIND_BEARING] == 90.0
+    assert forecast[ATTR_FORECAST_WIND_SPEED] == 0.0
 
     state = hass.states.get("weather.aemet_hourly")
     assert state is None
 
 
+@pytest.mark.parametrize(
+    ("service"),
+    [
+        SERVICE_GET_FORECASTS,
+        LEGACY_SERVICE_GET_FORECAST,
+    ],
+)
 async def test_forecast_service(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
+    service: str,
 ) -> None:
     """Test multiple forecast."""
 
@@ -135,7 +141,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": "weather.aemet",
             "type": "daily",
@@ -147,7 +153,7 @@ async def test_forecast_service(
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        SERVICE_GET_FORECAST,
+        service,
         {
             "entity_id": "weather.aemet",
             "type": "hourly",

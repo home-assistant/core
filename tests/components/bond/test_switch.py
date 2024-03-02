@@ -14,7 +14,6 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import utcnow
 
 from .common import (
@@ -33,7 +32,10 @@ def generic_device(name: str):
     return {"name": name, "type": DeviceType.GENERIC_DEVICE}
 
 
-async def test_entity_registry(hass: HomeAssistant) -> None:
+async def test_entity_registry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(
         hass,
@@ -43,8 +45,7 @@ async def test_entity_registry(hass: HomeAssistant) -> None:
         bond_device_id="test-device-id",
     )
 
-    registry: EntityRegistry = er.async_get(hass)
-    entity = registry.entities["switch.name_1"]
+    entity = entity_registry.entities["switch.name_1"]
     assert entity.unique_id == "test-hub-id_test-device-id"
 
 

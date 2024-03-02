@@ -5,7 +5,6 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from plugwise import Smile
-from plugwise.constants import SelectOptionsType, SelectType
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -13,40 +12,30 @@ from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, SelectOptionsType, SelectType
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 
-@dataclass
-class PlugwiseSelectDescriptionMixin:
-    """Mixin values for Plugwise Select entities."""
-
-    command: Callable[[Smile, str, str], Awaitable[None]]
-    options_key: SelectOptionsType
-
-
-@dataclass
-class PlugwiseSelectEntityDescription(
-    SelectEntityDescription, PlugwiseSelectDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class PlugwiseSelectEntityDescription(SelectEntityDescription):
     """Class describing Plugwise Select entities."""
 
+    command: Callable[[Smile, str, str], Awaitable[None]]
     key: SelectType
+    options_key: SelectOptionsType
 
 
 SELECT_TYPES = (
     PlugwiseSelectEntityDescription(
         key="select_schedule",
         translation_key="select_schedule",
-        icon="mdi:calendar-clock",
         command=lambda api, loc, opt: api.set_schedule_state(loc, STATE_ON, opt),
         options_key="available_schedules",
     ),
     PlugwiseSelectEntityDescription(
         key="select_regulation_mode",
         translation_key="regulation_mode",
-        icon="mdi:hvac",
         entity_category=EntityCategory.CONFIG,
         command=lambda api, loc, opt: api.set_regulation_mode(opt),
         options_key="regulation_modes",
@@ -54,10 +43,16 @@ SELECT_TYPES = (
     PlugwiseSelectEntityDescription(
         key="select_dhw_mode",
         translation_key="dhw_mode",
-        icon="mdi:shower",
         entity_category=EntityCategory.CONFIG,
         command=lambda api, loc, opt: api.set_dhw_mode(opt),
         options_key="dhw_modes",
+    ),
+    PlugwiseSelectEntityDescription(
+        key="select_gateway_mode",
+        translation_key="gateway_mode",
+        entity_category=EntityCategory.CONFIG,
+        command=lambda api, loc, opt: api.set_gateway_mode(opt),
+        options_key="gateway_modes",
     ),
 )
 

@@ -39,14 +39,14 @@ BINARY_SENSOR_DESCRIPTION_CONNECTED = BinarySensorEntityDescription(
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class FlumeBinarySensorRequiredKeysMixin:
     """Mixin for required keys."""
 
     event_rule: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class FlumeBinarySensorEntityDescription(
     BinarySensorEntityDescription, FlumeBinarySensorRequiredKeysMixin
 ):
@@ -59,14 +59,12 @@ FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...
         translation_key="leak",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_rule=NOTIFICATION_LEAK_DETECTED,
-        icon="mdi:pipe-leak",
     ),
     FlumeBinarySensorEntityDescription(
         key="flow",
         translation_key="flow",
         entity_category=EntityCategory.DIAGNOSTIC,
         event_rule=NOTIFICATION_HIGH_FLOW,
-        icon="mdi:waves",
     ),
     FlumeBinarySensorEntityDescription(
         key="low_battery",

@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 import datetime
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import Mock, patch
 
 from aiohttp.client_exceptions import ClientError
+from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 from oauth2client.client import (
     DeviceFlowInfo,
     FlowExchangeError,
@@ -21,9 +25,14 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.google.const import DOMAIN
+from homeassistant.components.google.const import (
+    CONF_CREDENTIAL_TYPE,
+    DOMAIN,
+    CredentialType,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -31,9 +40,13 @@ from homeassistant.util.dt import utcnow
 from .conftest import CLIENT_ID, CLIENT_SECRET, EMAIL_ADDRESS, YieldFixture
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CODE_CHECK_INTERVAL = 1
 CODE_CHECK_ALARM_TIMEDELTA = datetime.timedelta(seconds=CODE_CHECK_INTERVAL * 2)
+OAUTH2_AUTHORIZE = "https://accounts.google.com/o/oauth2/v2/auth"
+OAUTH2_TOKEN = "https://oauth2.googleapis.com/token"
 
 
 @pytest.fixture(autouse=True)
@@ -120,7 +133,7 @@ async def primary_calendar(
 
 async def fire_alarm(hass, point_in_time):
     """Fire an alarm and wait for callbacks to run."""
-    with patch("homeassistant.util.dt.utcnow", return_value=point_in_time):
+    with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
         await hass.async_block_till_done()
 
@@ -175,6 +188,7 @@ async def test_full_flow_application_creds(
             "scope": "https://www.googleapis.com/auth/calendar",
             "token_type": "Bearer",
         },
+        "credential_type": "device_auth",
     }
     assert result.get("options") == {"calendar_access": "read_write"}
 
@@ -230,7 +244,9 @@ async def test_expired_after_exchange(
 ) -> None:
     """Test credential exchange expires."""
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -259,10 +275,13 @@ async def test_exchange_error(
     hass: HomeAssistant,
     mock_code_flow: Mock,
     mock_exchange: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an error while exchanging the code for credentials."""
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "device_auth"
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -274,14 +293,19 @@ async def test_exchange_error(
     assert "url" in result["description_placeholders"]
 
     # Run one tick to invoke the credential exchange check
-    now = utcnow()
+    step2_exchange_called = asyncio.Event()
+
+    def step2_exchange(*args, **kwargs):
+        hass.loop.call_soon_threadsafe(step2_exchange_called.set)
+        raise FlowExchangeError
+
     with patch(
         "homeassistant.components.google.api.OAuth2WebServerFlow.step2_exchange",
-        side_effect=FlowExchangeError(),
+        side_effect=step2_exchange,
     ):
-        now += CODE_CHECK_ALARM_TIMEDELTA
-        await fire_alarm(hass, now)
-        await hass.async_block_till_done()
+        freezer.tick(CODE_CHECK_ALARM_TIMEDELTA)
+        async_fire_time_changed(hass, utcnow())
+        await step2_exchange_called.wait()
 
     # Status has not updated, will retry
     result = await hass.config_entries.flow.async_configure(flow_id=result["flow_id"])
@@ -292,8 +316,8 @@ async def test_exchange_error(
     with patch(
         "homeassistant.components.google.async_setup_entry", return_value=True
     ) as mock_setup:
-        now += CODE_CHECK_ALARM_TIMEDELTA
-        await fire_alarm(hass, now)
+        freezer.tick(CODE_CHECK_ALARM_TIMEDELTA)
+        async_fire_time_changed(hass, utcnow())
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"]
@@ -307,13 +331,14 @@ async def test_exchange_error(
     data["token"].pop("expires_at")
     data["token"].pop("expires_in")
     assert data == {
-        "auth_implementation": "device_auth",
+        "auth_implementation": DOMAIN,
         "token": {
             "access_token": "ACCESS_TOKEN",
             "refresh_token": "REFRESH_TOKEN",
             "scope": "https://www.googleapis.com/auth/calendar",
             "token_type": "Bearer",
         },
+        "credential_type": "device_auth",
     }
 
     assert len(mock_setup.mock_calls) == 1
@@ -329,7 +354,7 @@ async def test_duplicate_config_entries(
 ) -> None:
     """Test that the same account cannot be setup twice."""
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
     # Load a config entry
@@ -371,7 +396,7 @@ async def test_multiple_config_entries(
 ) -> None:
     """Test that multiple config entries can be set at once."""
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
     )
 
     # Load a config entry
@@ -455,17 +480,19 @@ async def test_reauth_flow(
     mock_code_flow: Mock,
     mock_exchange: Mock,
 ) -> None:
-    """Test can't configure when config entry already exists."""
+    """Test reauth of an existing config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            "auth_implementation": "device_auth",
+            "auth_implementation": DOMAIN,
             "token": {"access_token": "OLD_ACCESS_TOKEN"},
         },
     )
     config_entry.add_to_hass(hass)
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "device_auth"
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -512,13 +539,14 @@ async def test_reauth_flow(
     data["token"].pop("expires_at")
     data["token"].pop("expires_in")
     assert data == {
-        "auth_implementation": "device_auth",
+        "auth_implementation": DOMAIN,
         "token": {
             "access_token": "ACCESS_TOKEN",
             "refresh_token": "REFRESH_TOKEN",
             "scope": "https://www.googleapis.com/auth/calendar",
             "token_type": "Bearer",
         },
+        "credential_type": "device_auth",
     }
 
     assert len(mock_setup.mock_calls) == 1
@@ -540,7 +568,9 @@ async def test_calendar_lookup_failure(
 ) -> None:
     """Test successful config flow and title fetch fails gracefully."""
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "device_auth"
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -624,3 +654,189 @@ async def test_options_flow_no_changes(
     )
     assert result["type"] == "create_entry"
     assert config_entry.options == {"calendar_access": "read_write"}
+
+
+async def test_web_auth_compatibility(
+    hass: HomeAssistant,
+    current_request_with_host: None,
+    mock_code_flow: Mock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """Test that we can callback to web auth tokens."""
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+    )
+
+    with patch(
+        "homeassistant.components.google.api.OAuth2WebServerFlow.step1_get_device_and_user_codes",
+        side_effect=OAuth2DeviceCodeError(
+            "Invalid response 401. Error: invalid_client"
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    assert result["type"] == "external"
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        "&scope=https://www.googleapis.com/auth/calendar"
+        "&access_type=offline&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "scope": "https://www.googleapis.com/auth/calendar",
+        },
+    )
+
+    with patch(
+        "homeassistant.components.google.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    token = result.get("data", {}).get("token", {})
+    del token["expires_at"]
+    assert token == {
+        "access_token": "mock-access-token",
+        "expires_in": 60,
+        "refresh_token": "mock-refresh-token",
+        "type": "Bearer",
+        "scope": "https://www.googleapis.com/auth/calendar",
+    }
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "entry_data",
+    [
+        {},
+        {CONF_CREDENTIAL_TYPE: CredentialType.WEB_AUTH},
+    ],
+)
+async def test_web_reauth_flow(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    mock_exchange: Mock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+    entry_data: dict[str, Any],
+) -> None:
+    """Test reauth of an existing config entry with a web credential."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            **entry_data,
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "OLD_ACCESS_TOKEN"},
+        },
+    )
+    config_entry.add_to_hass(hass)
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET)
+    )
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+        },
+        data=config_entry.data,
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.google.api.OAuth2WebServerFlow.step1_get_device_and_user_codes",
+        side_effect=OAuth2DeviceCodeError(
+            "Invalid response 401. Error: invalid_client"
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"],
+            user_input={},
+        )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    assert result.get("type") == "external"
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        "&scope=https://www.googleapis.com/auth/calendar"
+        "&access_type=offline&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "token_type": "Bearer",
+            "expires_in": 60,
+            "scope": "https://www.googleapis.com/auth/calendar",
+        },
+    )
+
+    with patch(
+        "homeassistant.components.google.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    data = dict(entries[0].data)
+    data["token"].pop("expires_at")
+    data["token"].pop("expires_in")
+    assert data == {
+        "auth_implementation": DOMAIN,
+        "token": {
+            "access_token": "mock-access-token",
+            "refresh_token": "mock-refresh-token",
+            "scope": "https://www.googleapis.com/auth/calendar",
+            "token_type": "Bearer",
+        },
+        "credential_type": "web_auth",
+    }
+
+    assert len(mock_setup.mock_calls) == 1

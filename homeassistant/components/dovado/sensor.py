@@ -30,14 +30,14 @@ SENSOR_NETWORK = "network"
 SENSOR_SMS_UNREAD = "sms"
 
 
-@dataclass
+@dataclass(frozen=True)
 class DovadoRequiredKeysMixin:
     """Mixin for required keys."""
 
     identifier: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class DovadoSensorEntityDescription(SensorEntityDescription, DovadoRequiredKeysMixin):
     """Describes Dovado sensor entity."""
 

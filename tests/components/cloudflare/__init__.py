@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-from pycfdns import CFRecord
+import pycfdns
 
 from homeassistant.components.cloudflare.const import CONF_RECORDS, DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
@@ -26,9 +26,8 @@ USER_INPUT_ZONE = {CONF_ZONE: "mock.com"}
 
 USER_INPUT_RECORDS = {CONF_RECORDS: ["ha.mock.com", "homeassistant.mock.com"]}
 
-MOCK_ZONE = "mock.com"
-MOCK_ZONE_ID = "mock-zone-id"
-MOCK_ZONE_RECORDS = [
+MOCK_ZONE: pycfdns.ZoneModel = {"name": "mock.com", "id": "mock-zone-id"}
+MOCK_ZONE_RECORDS: list[pycfdns.RecordModel] = [
     {
         "id": "zone-record-id",
         "type": "A",
@@ -58,7 +57,7 @@ async def init_integration(
     *,
     data: dict = ENTRY_CONFIG,
     options: dict = ENTRY_OPTIONS,
-    unique_id: str = MOCK_ZONE,
+    unique_id: str = MOCK_ZONE["name"],
     skip_setup: bool = False,
 ) -> MockConfigEntry:
     """Set up the Cloudflare integration in Home Assistant."""
@@ -77,21 +76,12 @@ async def init_integration(
     return entry
 
 
-def _get_mock_cfupdate(
-    zone: str = MOCK_ZONE,
-    zone_id: str = MOCK_ZONE_ID,
-    records: list = MOCK_ZONE_RECORDS,
-):
-    client = AsyncMock()
+def _get_mock_client(zone: str = MOCK_ZONE, records: list = MOCK_ZONE_RECORDS):
+    client: pycfdns.Client = AsyncMock()
 
-    zone_records = [record["name"] for record in records]
-    cf_records = [CFRecord(record) for record in records]
-
-    client.get_zones = AsyncMock(return_value=[zone])
-    client.get_zone_records = AsyncMock(return_value=zone_records)
-    client.get_record_info = AsyncMock(return_value=cf_records)
-    client.get_zone_id = AsyncMock(return_value=zone_id)
-    client.update_records = AsyncMock(return_value=None)
+    client.list_zones = AsyncMock(return_value=[zone])
+    client.list_dns_records = AsyncMock(return_value=records)
+    client.update_dns_record = AsyncMock(return_value=None)
 
     return client
 

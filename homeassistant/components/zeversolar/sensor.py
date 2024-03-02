@@ -22,14 +22,14 @@ from .coordinator import ZeversolarCoordinator
 from .entity import ZeversolarEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZeversolarEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[zeversolar.ZeverSolarData], zeversolar.kWh | zeversolar.Watt]
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZeversolarEntityDescription(
     SensorEntityDescription, ZeversolarEntityDescriptionMixin
 ):

@@ -11,14 +11,14 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
-    FREQUENCY_GIGAHERTZ,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE,
     POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
-    VOLUME_CUBIC_METERS,
+    UnitOfApparentPower,
+    UnitOfFrequency,
     UnitOfPressure,
+    UnitOfVolume,
 )
 
 from tests.common import MockEntity
@@ -26,7 +26,7 @@ from tests.common import MockEntity
 DEVICE_CLASSES.append("none")
 
 UNITS_OF_MEASUREMENT = {
-    SensorDeviceClass.APPARENT_POWER: POWER_VOLT_AMPERE,  # apparent power (VA)
+    SensorDeviceClass.APPARENT_POWER: UnitOfApparentPower.VOLT_AMPERE,  # apparent power (VA)
     SensorDeviceClass.BATTERY: PERCENTAGE,  # % of battery that is left
     SensorDeviceClass.CO: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO concentration
     SensorDeviceClass.CO2: CONCENTRATION_PARTS_PER_MILLION,  # ppm of CO2 concentration
@@ -47,12 +47,12 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.POWER: "kW",  # power (W/kW)
     SensorDeviceClass.CURRENT: "A",  # current (A)
     SensorDeviceClass.ENERGY: "kWh",  # energy (Wh/kWh/MWh)
-    SensorDeviceClass.FREQUENCY: FREQUENCY_GIGAHERTZ,  # energy (Hz/kHz/MHz/GHz)
+    SensorDeviceClass.FREQUENCY: UnitOfFrequency.GIGAHERTZ,  # energy (Hz/kHz/MHz/GHz)
     SensorDeviceClass.POWER_FACTOR: PERCENTAGE,  # power factor (no unit, min: -1.0, max: 1.0)
     SensorDeviceClass.REACTIVE_POWER: POWER_VOLT_AMPERE_REACTIVE,  # reactive power (var)
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of vocs
     SensorDeviceClass.VOLTAGE: "V",  # voltage (V)
-    SensorDeviceClass.GAS: VOLUME_CUBIC_METERS,  # gas (m³)
+    SensorDeviceClass.GAS: UnitOfVolume.CUBIC_METERS,  # gas (m³)
 }
 
 ENTITIES = {}

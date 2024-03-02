@@ -94,7 +94,6 @@ async def test_supervisor_issue_repair_flow(
 
     flow_id = data["flow_id"]
     assert data == {
-        "version": 1,
         "type": "create_entry",
         "flow_id": flow_id,
         "handler": "hassio",
@@ -189,7 +188,6 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
 
     flow_id = data["flow_id"]
     assert data == {
-        "version": 1,
         "type": "create_entry",
         "flow_id": flow_id,
         "handler": "hassio",
@@ -303,7 +301,6 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
 
     flow_id = data["flow_id"]
     assert data == {
-        "version": 1,
         "type": "create_entry",
         "flow_id": flow_id,
         "handler": "hassio",
@@ -383,7 +380,6 @@ async def test_supervisor_issue_repair_flow_skip_confirmation(
 
     flow_id = data["flow_id"]
     assert data == {
-        "version": 1,
         "type": "create_entry",
         "flow_id": flow_id,
         "handler": "hassio",
@@ -482,7 +478,6 @@ async def test_mount_failed_repair_flow(
 
     flow_id = data["flow_id"]
     assert data == {
-        "version": 1,
         "type": "create_entry",
         "flow_id": flow_id,
         "handler": "hassio",
@@ -593,7 +588,6 @@ async def test_supervisor_issue_docker_config_repair_flow(
 
     flow_id = data["flow_id"]
     assert data == {
-        "version": 1,
         "type": "create_entry",
         "flow_id": flow_id,
         "handler": "hassio",

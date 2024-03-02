@@ -45,14 +45,14 @@ from .const import (
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class AccuWeatherSensorDescriptionMixin:
     """Mixin for AccuWeather sensor."""
 
     value_fn: Callable[[dict[str, Any]], str | int | float | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class AccuWeatherSensorDescription(
     SensorEntityDescription, AccuWeatherSensorDescriptionMixin
 ):

@@ -1,9 +1,9 @@
 """Renson ventilation unit buttons."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
-from _collections_abc import Callable
 from renson_endura_delta.renson import RensonVentilation
 
 from homeassistant.components.button import (
@@ -21,14 +21,14 @@ from .const import DOMAIN
 from .entity import RensonEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RensonButtonEntityDescriptionMixin:
     """Action function called on press."""
 
     action_fn: Callable[[RensonVentilation], None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RensonButtonEntityDescription(
     ButtonEntityDescription, RensonButtonEntityDescriptionMixin
 ):

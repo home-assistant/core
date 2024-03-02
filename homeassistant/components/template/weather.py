@@ -57,7 +57,8 @@ from .template_entity import TemplateEntity, rewrite_common_legacy_to_modern_con
 from .trigger_entity import TriggerEntity
 
 CHECK_FORECAST_KEYS = (
-    set().union(Forecast.__annotations__.keys())
+    set()
+    .union(Forecast.__annotations__.keys())
     # Manually add the forecast resulting attributes that only exists
     #  as native_* in the Forecast definition
     .union(("apparent_temperature", "wind_gust_speed", "dew_point"))

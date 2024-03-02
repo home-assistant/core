@@ -29,7 +29,7 @@ from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class SHCSwitchRequiredKeysMixin:
     """Mixin for SHC switch required keys."""
 
@@ -38,7 +38,7 @@ class SHCSwitchRequiredKeysMixin:
     should_poll: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class SHCSwitchEntityDescription(
     SwitchEntityDescription,
     SHCSwitchRequiredKeysMixin,
@@ -199,7 +199,6 @@ class SHCSwitch(SHCEntity, SwitchEntity):
 class SHCRoutingSwitch(SHCEntity, SwitchEntity):
     """Representation of a SHC routing switch."""
 
-    _attr_icon = "mdi:wifi"
     _attr_translation_key = "routing"
     _attr_entity_category = EntityCategory.CONFIG
 

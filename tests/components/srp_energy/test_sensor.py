@@ -28,7 +28,7 @@ async def test_loading_sensors(hass: HomeAssistant, init_integration) -> None:
 
 async def test_srp_entity(hass: HomeAssistant, init_integration) -> None:
     """Test the SrpEntity."""
-    usage_state = hass.states.get("sensor.srp_energy_energy_usage")
+    usage_state = hass.states.get("sensor.srp_energy_mock_title_energy_usage")
     assert usage_state.state == "150.8"
 
     # Validate attributions
@@ -61,7 +61,7 @@ async def test_srp_entity_update_failed(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    usage_state = hass.states.get("sensor.home_energy_usage")
+    usage_state = hass.states.get("sensor.srp_energy_mock_title_energy_usage")
     assert usage_state is None
 
 
@@ -84,5 +84,5 @@ async def test_srp_entity_timeout(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    usage_state = hass.states.get("sensor.home_energy_usage")
+    usage_state = hass.states.get("sensor.srp_energy_mock_title_energy_usage")
     assert usage_state is None

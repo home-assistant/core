@@ -7,7 +7,6 @@ import pytest
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -22,16 +21,15 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_switch_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the creation and values of the Modern Forms switches."""
     await init_integration(hass, aioclient_mock)
 
-    entity_registry = er.async_get(hass)
-
     state = hass.states.get("switch.modernformsfan_away_mode")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:airplane-takeoff"
     assert state.state == STATE_OFF
 
     entry = entity_registry.async_get("switch.modernformsfan_away_mode")
@@ -40,7 +38,6 @@ async def test_switch_state(
 
     state = hass.states.get("switch.modernformsfan_adaptive_learning")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:school-outline"
     assert state.state == STATE_OFF
 
     entry = entity_registry.async_get("switch.modernformsfan_adaptive_learning")

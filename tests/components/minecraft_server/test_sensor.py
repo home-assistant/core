@@ -55,17 +55,25 @@ BEDROCK_SENSOR_ENTITIES_DISABLED_BY_DEFAULT: list[str] = [
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("mock_config_entry", "server", "status_response", "entity_ids"),
+    (
+        "mock_config_entry",
+        "server",
+        "lookup_function_name",
+        "status_response",
+        "entity_ids",
+    ),
     [
         (
             "java_mock_config_entry",
             JavaServer,
+            "async_lookup",
             TEST_JAVA_STATUS_RESPONSE,
             JAVA_SENSOR_ENTITIES,
         ),
         (
             "bedrock_mock_config_entry",
             BedrockServer,
+            "lookup",
             TEST_BEDROCK_STATUS_RESPONSE,
             BEDROCK_SENSOR_ENTITIES,
         ),
@@ -75,6 +83,7 @@ async def test_sensor(
     hass: HomeAssistant,
     mock_config_entry: str,
     server: JavaServer | BedrockServer,
+    lookup_function_name: str,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     entity_ids: list[str],
     request: pytest.FixtureRequest,
@@ -85,7 +94,7 @@ async def test_sensor(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.lookup",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
@@ -98,17 +107,25 @@ async def test_sensor(
 
 
 @pytest.mark.parametrize(
-    ("mock_config_entry", "server", "status_response", "entity_ids"),
+    (
+        "mock_config_entry",
+        "server",
+        "lookup_function_name",
+        "status_response",
+        "entity_ids",
+    ),
     [
         (
             "java_mock_config_entry",
             JavaServer,
+            "async_lookup",
             TEST_JAVA_STATUS_RESPONSE,
             JAVA_SENSOR_ENTITIES_DISABLED_BY_DEFAULT,
         ),
         (
             "bedrock_mock_config_entry",
             BedrockServer,
+            "lookup",
             TEST_BEDROCK_STATUS_RESPONSE,
             BEDROCK_SENSOR_ENTITIES_DISABLED_BY_DEFAULT,
         ),
@@ -118,6 +135,7 @@ async def test_sensor_disabled_by_default(
     hass: HomeAssistant,
     mock_config_entry: str,
     server: JavaServer | BedrockServer,
+    lookup_function_name: str,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     entity_ids: list[str],
     request: pytest.FixtureRequest,
@@ -127,7 +145,7 @@ async def test_sensor_disabled_by_default(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.lookup",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
@@ -141,17 +159,25 @@ async def test_sensor_disabled_by_default(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("mock_config_entry", "server", "status_response", "entity_ids"),
+    (
+        "mock_config_entry",
+        "server",
+        "lookup_function_name",
+        "status_response",
+        "entity_ids",
+    ),
     [
         (
             "java_mock_config_entry",
             JavaServer,
+            "async_lookup",
             TEST_JAVA_STATUS_RESPONSE,
             JAVA_SENSOR_ENTITIES,
         ),
         (
             "bedrock_mock_config_entry",
             BedrockServer,
+            "lookup",
             TEST_BEDROCK_STATUS_RESPONSE,
             BEDROCK_SENSOR_ENTITIES,
         ),
@@ -161,6 +187,7 @@ async def test_sensor_update(
     hass: HomeAssistant,
     mock_config_entry: str,
     server: JavaServer | BedrockServer,
+    lookup_function_name: str,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     entity_ids: list[str],
     request: pytest.FixtureRequest,
@@ -172,7 +199,7 @@ async def test_sensor_update(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.lookup",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",
@@ -189,17 +216,25 @@ async def test_sensor_update(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("mock_config_entry", "server", "status_response", "entity_ids"),
+    (
+        "mock_config_entry",
+        "server",
+        "lookup_function_name",
+        "status_response",
+        "entity_ids",
+    ),
     [
         (
             "java_mock_config_entry",
             JavaServer,
+            "async_lookup",
             TEST_JAVA_STATUS_RESPONSE,
             JAVA_SENSOR_ENTITIES,
         ),
         (
             "bedrock_mock_config_entry",
             BedrockServer,
+            "lookup",
             TEST_BEDROCK_STATUS_RESPONSE,
             BEDROCK_SENSOR_ENTITIES,
         ),
@@ -209,6 +244,7 @@ async def test_sensor_update_failure(
     hass: HomeAssistant,
     mock_config_entry: str,
     server: JavaServer | BedrockServer,
+    lookup_function_name: str,
     status_response: JavaStatusResponse | BedrockStatusResponse,
     entity_ids: list[str],
     request: pytest.FixtureRequest,
@@ -219,7 +255,7 @@ async def test_sensor_update_failure(
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        f"homeassistant.components.minecraft_server.api.{server.__name__}.lookup",
+        f"homeassistant.components.minecraft_server.api.{server.__name__}.{lookup_function_name}",
         return_value=server(host=TEST_HOST, port=TEST_PORT),
     ), patch(
         f"homeassistant.components.minecraft_server.api.{server.__name__}.async_status",

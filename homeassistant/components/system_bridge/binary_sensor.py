@@ -19,13 +19,9 @@ from .coordinator import SystemBridgeDataUpdateCoordinator
 from .entity import SystemBridgeEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class SystemBridgeBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing System Bridge binary sensor entities."""
-
-    # SystemBridgeBinarySensor does not support UNDEFINED or None,
-    # restrict the type to str.
-    name: str = ""
 
     value: Callable = round
 

@@ -106,9 +106,7 @@ async def setup_watttime_fixture(hass, client, config_auth, config_coordinates):
     ), patch(
         "homeassistant.components.watttime.config_flow.Client.async_login",
         return_value=client,
-    ), patch(
-        "homeassistant.components.watttime.PLATFORMS", []
-    ):
+    ), patch("homeassistant.components.watttime.PLATFORMS", []):
         assert await async_setup_component(
             hass, DOMAIN, {**config_auth, **config_coordinates}
         )

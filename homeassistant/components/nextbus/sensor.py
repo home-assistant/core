@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_STOP
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,7 +22,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import CONF_AGENCY, CONF_ROUTE, CONF_STOP, DOMAIN
+from .const import CONF_AGENCY, CONF_ROUTE, DOMAIN
 from .coordinator import NextBusDataUpdateCoordinator
 from .util import listify, maybe_first
 

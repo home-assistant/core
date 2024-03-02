@@ -1,7 +1,7 @@
 """Support for Tuya select."""
 from __future__ import annotations
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -73,6 +73,16 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             key=DPCode.LEVEL,
             translation_key="temperature_level",
             icon="mdi:thermometer-lines",
+        ),
+    ),
+    # Smart Water Timer
+    "sfkzq": (
+        # Irrigation will not be run within this set delay period
+        SelectEntityDescription(
+            key=DPCode.WEATHER_DELAY,
+            translation_key="weather_delay",
+            icon="mdi:weather-cloudy-clock",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
     # Siren Alarm
@@ -346,19 +356,17 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya select."""
         entities: list[TuyaSelectEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if descriptions := SELECTS.get(device.category):
                 for description in descriptions:
                     if description.key in device.status:
                         entities.append(
-                            TuyaSelectEntity(
-                                device, hass_data.device_manager, description
-                            )
+                            TuyaSelectEntity(device, hass_data.manager, description)
                         )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -370,8 +378,8 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
         description: SelectEntityDescription,
     ) -> None:
         """Init Tuya sensor."""

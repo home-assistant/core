@@ -154,6 +154,7 @@ class SonosSpeaker:
         self.dialog_level: bool | None = None
         self.night_mode: bool | None = None
         self.sub_enabled: bool | None = None
+        self.sub_crossover: int | None = None
         self.sub_gain: int | None = None
         self.surround_enabled: bool | None = None
         self.surround_mode: bool | None = None
@@ -561,6 +562,7 @@ class SonosSpeaker:
             "audio_delay",
             "bass",
             "treble",
+            "sub_crossover",
             "sub_gain",
             "surround_level",
             "music_surround_level",
@@ -611,7 +613,9 @@ class SonosSpeaker:
             return
         # Ensure the ping is canceled at shutdown
         self.hass.async_create_background_task(
-            self._async_check_activity(), f"sonos {self.uid} {self.zone_name} ping"
+            self._async_check_activity(),
+            f"sonos {self.uid} {self.zone_name} ping",
+            eager_start=True,
         )
 
     async def _async_check_activity(self) -> None:
@@ -1124,7 +1128,7 @@ class SonosSpeaker:
             async with asyncio.timeout(5):
                 while not _test_groups(groups):
                     await hass.data[DATA_SONOS].topology_condition.wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.warning("Timeout waiting for target groups %s", groups)
 
         any_speaker = next(iter(hass.data[DATA_SONOS].discovered.values()))

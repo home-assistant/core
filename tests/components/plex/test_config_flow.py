@@ -442,7 +442,8 @@ async def test_option_flow_new_users_available(
     OPTIONS_OWNER_ONLY[Platform.MEDIA_PLAYER][CONF_MONITORED_USERS] = {
         "User 1": {"enabled": True}
     }
-    entry.options = OPTIONS_OWNER_ONLY
+    entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(entry, options=OPTIONS_OWNER_ONLY)
 
     mock_plex_server = await setup_plex_server(config_entry=entry)
     await hass.async_block_till_done()
@@ -851,7 +852,7 @@ async def test_client_header_issues(
     ), patch(
         "homeassistant.components.http.current_request.get", return_value=MockRequest()
     ), pytest.raises(
-        RuntimeError
+        RuntimeError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}

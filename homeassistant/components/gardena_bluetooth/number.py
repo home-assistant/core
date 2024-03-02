@@ -29,7 +29,7 @@ from .coordinator import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class GardenaBluetoothNumberEntityDescription(NumberEntityDescription):
     """Description of entity."""
 

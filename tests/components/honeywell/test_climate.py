@@ -28,7 +28,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.components.honeywell.climate import RETRY, SCAN_INTERVAL
+from homeassistant.components.honeywell.climate import PRESET_HOLD, RETRY, SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -46,7 +46,6 @@ from . import init_integration, reset_mock
 from tests.common import async_fire_time_changed
 
 FAN_ACTION = "fan_action"
-PRESET_HOLD = "Hold"
 
 
 async def test_no_thermostat_options(
@@ -62,6 +61,7 @@ async def test_no_thermostat_options(
 
 async def test_static_attributes(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     device: MagicMock,
     config_entry: MagicMock,
     snapshot: SnapshotAssertion,
@@ -70,7 +70,7 @@ async def test_static_attributes(
     await init_integration(hass, config_entry)
 
     entity_id = f"climate.{device.name}"
-    entry = er.async_get(hass).async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
 
     state = hass.states.get(entity_id)
@@ -1200,7 +1200,10 @@ async def test_async_update_errors(
 
 
 async def test_aux_heat_off_service_call(
-    hass: HomeAssistant, device: MagicMock, config_entry: MagicMock
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device: MagicMock,
+    config_entry: MagicMock,
 ) -> None:
     """Test aux heat off turns of system when no heat configured."""
     device.raw_ui_data["SwitchHeatAllowed"] = False
@@ -1210,7 +1213,7 @@ async def test_aux_heat_off_service_call(
     await init_integration(hass, config_entry)
 
     entity_id = f"climate.{device.name}"
-    entry = er.async_get(hass).async_get(entity_id)
+    entry = entity_registry.async_get(entity_id)
     assert entry
 
     state = hass.states.get(entity_id)

@@ -8,7 +8,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.fully_kiosk.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -24,6 +30,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_HOST: "127.0.0.1",
             CONF_PASSWORD: "mocked-password",
             CONF_MAC: "aa:bb:cc:dd:ee:ff",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: False,
         },
         unique_id="12345",
     )

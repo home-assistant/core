@@ -41,7 +41,11 @@ def hass_mock_forward_entry_setup(hass):
 
 
 async def test_device_setup(
-    hass: HomeAssistant, forward_entry_setup, config, setup_config_entry
+    hass: HomeAssistant,
+    forward_entry_setup,
+    config,
+    setup_config_entry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
     device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
@@ -62,7 +66,6 @@ async def test_device_setup(
     assert device.name == config[CONF_NAME]
     assert device.unique_id == FORMATTED_MAC
 
-    device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_device(
         identifiers={(AXIS_DOMAIN, device.unique_id)}
     )
@@ -179,7 +182,7 @@ async def test_device_not_accessible(
     hass: HomeAssistant, config_entry, setup_default_vapix_requests
 ) -> None:
     """Failed setup schedules a retry of setup."""
-    with patch.object(axis, "get_axis_device", side_effect=axis.errors.CannotConnect):
+    with patch.object(axis, "get_axis_api", side_effect=axis.errors.CannotConnect):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     assert hass.data[AXIS_DOMAIN] == {}
@@ -190,7 +193,7 @@ async def test_device_trigger_reauth_flow(
 ) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch.object(
-        axis, "get_axis_device", side_effect=axis.errors.AuthenticationRequired
+        axis, "get_axis_api", side_effect=axis.errors.AuthenticationRequired
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -202,7 +205,7 @@ async def test_device_unknown_error(
     hass: HomeAssistant, config_entry, setup_default_vapix_requests
 ) -> None:
     """Unknown errors are handled."""
-    with patch.object(axis, "get_axis_device", side_effect=Exception):
+    with patch.object(axis, "get_axis_api", side_effect=Exception):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     assert hass.data[AXIS_DOMAIN] == {}
@@ -214,7 +217,7 @@ async def test_shutdown(config) -> None:
     entry = Mock()
     entry.data = config
 
-    axis_device = axis.device.AxisNetworkDevice(hass, entry, Mock())
+    axis_device = axis.hub.AxisHub(hass, entry, Mock())
 
     await axis_device.shutdown(None)
 
@@ -224,9 +227,9 @@ async def test_shutdown(config) -> None:
 async def test_get_device_fails(hass: HomeAssistant, config) -> None:
     """Device unauthorized yields authentication required error."""
     with patch(
-        "axis.vapix.vapix.Vapix.request", side_effect=axislib.Unauthorized
+        "axis.vapix.vapix.Vapix.initialize", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.device.get_axis_device(hass, config)
+        await axis.hub.get_axis_api(hass, config)
 
 
 async def test_get_device_device_unavailable(hass: HomeAssistant, config) -> None:
@@ -234,7 +237,7 @@ async def test_get_device_device_unavailable(hass: HomeAssistant, config) -> Non
     with patch(
         "axis.vapix.vapix.Vapix.request", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
-        await axis.device.get_axis_device(hass, config)
+        await axis.hub.get_axis_api(hass, config)
 
 
 async def test_get_device_unknown_error(hass: HomeAssistant, config) -> None:
@@ -242,4 +245,4 @@ async def test_get_device_unknown_error(hass: HomeAssistant, config) -> None:
     with patch(
         "axis.vapix.vapix.Vapix.request", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.device.get_axis_device(hass, config)
+        await axis.hub.get_axis_api(hass, config)

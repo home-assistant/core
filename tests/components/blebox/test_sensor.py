@@ -56,7 +56,9 @@ def tempsensor_fixture():
     return (feature, "sensor.tempsensor_0_temperature")
 
 
-async def test_init(tempsensor, hass: HomeAssistant) -> None:
+async def test_init(
+    tempsensor, hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test sensor default state."""
 
     _, entity_id = tempsensor
@@ -70,7 +72,6 @@ async def test_init(tempsensor, hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTemperature.CELSIUS
     assert state.state == STATE_UNKNOWN
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My temperature sensor"
@@ -110,7 +111,9 @@ async def test_update_failure(
     assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
 
 
-async def test_airsensor_init(airsensor, hass: HomeAssistant) -> None:
+async def test_airsensor_init(
+    airsensor, hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test airSensor default state."""
 
     _, entity_id = airsensor
@@ -123,7 +126,6 @@ async def test_airsensor_init(airsensor, hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.PM1
     assert state.state == STATE_UNKNOWN
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get(entry.device_id)
 
     assert device.name == "My air sensor"

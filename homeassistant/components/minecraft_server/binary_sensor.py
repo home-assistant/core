@@ -14,12 +14,10 @@ from .const import DOMAIN
 from .coordinator import MinecraftServerCoordinator
 from .entity import MinecraftServerEntity
 
-ICON_STATUS = "mdi:lan"
-
 KEY_STATUS = "status"
 
 
-@dataclass
+@dataclass(frozen=True)
 class MinecraftServerBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing Minecraft Server binary sensor entities."""
 
@@ -29,7 +27,6 @@ BINARY_SENSOR_DESCRIPTIONS = [
         key=KEY_STATUS,
         translation_key=KEY_STATUS,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        icon=ICON_STATUS,
     ),
 ]
 

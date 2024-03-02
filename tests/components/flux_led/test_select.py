@@ -14,6 +14,7 @@ from homeassistant.components.flux_led.const import CONF_WHITE_CHANNEL_TYPE, DOM
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -68,7 +69,9 @@ async def test_switch_power_restore_state(hass: HomeAssistant) -> None:
     )
 
 
-async def test_power_restored_unique_id(hass: HomeAssistant) -> None:
+async def test_power_restored_unique_id(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a select unique id."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -82,14 +85,15 @@ async def test_power_restored_unique_id(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     entity_id = "select.bulb_rgbcw_ddeeff_power_restored"
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get(entity_id).unique_id
         == f"{MAC_ADDRESS}_power_restored"
     )
 
 
-async def test_power_restored_unique_id_no_discovery(hass: HomeAssistant) -> None:
+async def test_power_restored_unique_id_no_discovery(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test a select unique id."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -102,7 +106,6 @@ async def test_power_restored_unique_id_no_discovery(hass: HomeAssistant) -> Non
         await hass.async_block_till_done()
 
     entity_id = "select.bulb_rgbcw_ddeeff_power_restored"
-    entity_registry = er.async_get(hass)
     assert (
         entity_registry.async_get(entity_id).unique_id
         == f"{config_entry.entry_id}_power_restored"
@@ -131,7 +134,7 @@ async def test_select_addressable_strip_config(hass: HomeAssistant) -> None:
     state = hass.states.get(ic_type_entity_id)
     assert state.state == "WS2812B"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             "select_option",
@@ -147,7 +150,7 @@ async def test_select_addressable_strip_config(hass: HomeAssistant) -> None:
     bulb.async_set_device_config.assert_called_once_with(wiring="GRBW")
     bulb.async_set_device_config.reset_mock()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             "select_option",
@@ -189,7 +192,7 @@ async def test_select_mutable_0x25_strip_config(hass: HomeAssistant) -> None:
     state = hass.states.get(operating_mode_entity_id)
     assert state.state == "RGBWW"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             "select_option",
@@ -224,7 +227,7 @@ async def test_select_24ghz_remote_config(hass: HomeAssistant) -> None:
     state = hass.states.get(remote_config_entity_id)
     assert state.state == "Open"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             "select_option",
@@ -273,7 +276,7 @@ async def test_select_white_channel_type(hass: HomeAssistant) -> None:
     state = hass.states.get(operating_mode_entity_id)
     assert state.state == WhiteChannelType.WARM.name.title()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             "select_option",

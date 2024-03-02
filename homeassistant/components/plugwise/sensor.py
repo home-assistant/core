@@ -32,7 +32,7 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class PlugwiseSensorEntityDescription(SensorEntityDescription):
     """Describes Plugwise sensor entity."""
 
@@ -315,7 +315,6 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
     PlugwiseSensorEntityDescription(
         key="gas_consumed_interval",
         translation_key="gas_consumed_interval",
-        icon="mdi:meter-gas",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -357,7 +356,6 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
     PlugwiseSensorEntityDescription(
         key="modulation_level",
         translation_key="modulation_level",
-        icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -365,7 +363,6 @@ SENSORS: tuple[PlugwiseSensorEntityDescription, ...] = (
     PlugwiseSensorEntityDescription(
         key="valve_position",
         translation_key="valve_position",
-        icon="mdi:valve",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,

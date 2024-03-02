@@ -22,7 +22,7 @@ from . import async_setup_entry_platform
 from .coordinator import FjaraskupanCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class EntityDescription(BinarySensorEntityDescription):
     """Entity description."""
 

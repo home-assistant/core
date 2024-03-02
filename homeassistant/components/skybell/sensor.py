@@ -22,14 +22,14 @@ from homeassistant.helpers.typing import StateType
 from .entity import DOMAIN, SkybellEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class SkybellSensorEntityDescriptionMixIn:
     """Mixin for Skybell sensor."""
 
     value_fn: Callable[[SkybellDevice], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SkybellSensorEntityDescription(
     SensorEntityDescription, SkybellSensorEntityDescriptionMixIn
 ):

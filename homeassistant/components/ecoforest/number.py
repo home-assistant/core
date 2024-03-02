@@ -16,14 +16,14 @@ from .coordinator import EcoforestCoordinator
 from .entity import EcoforestEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class EcoforestRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Device], float | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class EcoforestNumberEntityDescription(
     NumberEntityDescription, EcoforestRequiredKeysMixin
 ):

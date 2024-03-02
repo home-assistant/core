@@ -29,7 +29,7 @@ from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
 from .coordinator import EasyEnergyData, EasyEnergyDataUpdateCoordinator
 
 
-@dataclass
+@dataclass(frozen=True)
 class EasyEnergySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -37,7 +37,7 @@ class EasyEnergySensorEntityDescriptionMixin:
     service_type: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class EasyEnergySensorEntityDescription(
     SensorEntityDescription, EasyEnergySensorEntityDescriptionMixin
 ):
@@ -117,7 +117,6 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         translation_key="percentage_of_max",
         service_type="today_energy_usage",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:percent",
         value_fn=lambda data: data.energy_today.pct_of_max_usage,
     ),
     EasyEnergySensorEntityDescription(
@@ -177,7 +176,6 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         translation_key="percentage_of_max",
         service_type="today_energy_return",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:percent",
         value_fn=lambda data: data.energy_today.pct_of_max_return,
     ),
     EasyEnergySensorEntityDescription(
@@ -185,7 +183,6 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         translation_key="hours_priced_equal_or_lower",
         service_type="today_energy_usage",
         native_unit_of_measurement=UnitOfTime.HOURS,
-        icon="mdi:clock",
         value_fn=lambda data: data.energy_today.hours_priced_equal_or_lower_usage,
     ),
     EasyEnergySensorEntityDescription(
@@ -193,7 +190,6 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         translation_key="hours_priced_equal_or_higher",
         service_type="today_energy_return",
         native_unit_of_measurement=UnitOfTime.HOURS,
-        icon="mdi:clock",
         value_fn=lambda data: data.energy_today.hours_priced_equal_or_higher_return,
     ),
 )
@@ -208,6 +204,7 @@ def get_gas_price(data: EasyEnergyData, hours: int) -> float | None:
 
     Returns:
         The gas market price value.
+
     """
     if data.gas_today is None:
         return None

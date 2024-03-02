@@ -9,11 +9,11 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.models.keyboard_key import KeyboardKey
-from systembridgeconnector.models.keyboard_text import KeyboardText
-from systembridgeconnector.models.open_path import OpenPath
-from systembridgeconnector.models.open_url import OpenUrl
 from systembridgeconnector.version import SUPPORTED_VERSION, Version
+from systembridgemodels.keyboard_key import KeyboardKey
+from systembridgemodels.keyboard_text import KeyboardText
+from systembridgemodels.open_path import OpenPath
+from systembridgemodels.open_url import OpenUrl
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -97,7 +97,7 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(
             f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         raise ConfigEntryNotReady(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
@@ -117,7 +117,7 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(
             f"Could not connect to {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         raise ConfigEntryNotReady(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
@@ -134,7 +134,7 @@ async def async_setup_entry(
                     entry.data[CONF_HOST],
                 )
                 await asyncio.sleep(1)
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         raise ConfigEntryNotReady(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception

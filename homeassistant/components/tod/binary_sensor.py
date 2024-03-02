@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, TypeGuard
 
 import voluptuous as vol
 
@@ -35,6 +35,8 @@ from .const import (
     CONF_BEFORE_TIME,
 )
 
+SunEventType = Literal["sunrise", "sunset"]
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_AFTER = "after"
@@ -60,7 +62,7 @@ async def async_setup_entry(
 ) -> None:
     """Initialize Times of the Day config entry."""
     if hass.config.time_zone is None:
-        _LOGGER.error("Timezone is not set in Home Assistant configuration")
+        _LOGGER.error("Timezone is not set in Home Assistant configuration")  # type: ignore[unreachable]
         return
 
     after = cv.time(config_entry.options[CONF_AFTER_TIME])
@@ -83,7 +85,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the ToD sensors."""
     if hass.config.time_zone is None:
-        _LOGGER.error("Timezone is not set in Home Assistant configuration")
+        _LOGGER.error("Timezone is not set in Home Assistant configuration")  # type: ignore[unreachable]
         return
 
     after = config[CONF_AFTER]
@@ -97,7 +99,7 @@ async def async_setup_platform(
     async_add_entities([sensor])
 
 
-def _is_sun_event(sun_event):
+def _is_sun_event(sun_event: time | SunEventType) -> TypeGuard[SunEventType]:
     """Return true if event is sun event not time."""
     return sun_event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 
@@ -172,8 +174,8 @@ class TodSensor(BinarySensorEntity):
             # Calculate the today's event utc time or
             # if not available take next
             after_event_date = get_astral_event_date(
-                self.hass, str(self._after), nowutc
-            ) or get_astral_event_next(self.hass, str(self._after), nowutc)
+                self.hass, self._after, nowutc
+            ) or get_astral_event_next(self.hass, self._after, nowutc)
         else:
             # Convert local time provided to UTC today
             # datetime.combine(date, time, tzinfo) is not supported
@@ -188,13 +190,13 @@ class TodSensor(BinarySensorEntity):
             # Calculate the today's event utc time or  if not available take
             # next
             before_event_date = get_astral_event_date(
-                self.hass, str(self._before), nowutc
-            ) or get_astral_event_next(self.hass, str(self._before), nowutc)
+                self.hass, self._before, nowutc
+            ) or get_astral_event_next(self.hass, self._before, nowutc)
             # Before is earlier than after
             if before_event_date < after_event_date:
                 # Take next day for before
                 before_event_date = get_astral_event_next(
-                    self.hass, str(self._before), after_event_date
+                    self.hass, self._before, after_event_date
                 )
         else:
             # Convert local time provided to UTC today, see above
@@ -226,6 +228,21 @@ class TodSensor(BinarySensorEntity):
         self._time_after += self._after_offset
         self._time_before += self._before_offset
 
+    def _add_one_dst_aware_day(self, a_date: datetime, target_time: time) -> datetime:
+        """Add 24 hours (1 day) but account for DST."""
+        tentative_new_date = a_date + timedelta(days=1)
+        tentative_new_date = dt_util.as_local(tentative_new_date)
+        tentative_new_date = tentative_new_date.replace(
+            hour=target_time.hour, minute=target_time.minute
+        )
+        # The following call addresses missing time during DST jumps
+        return dt_util.find_next_time_expression_time(
+            tentative_new_date,
+            dt_util.parse_time_expression("*", 0, 59),
+            dt_util.parse_time_expression("*", 0, 59),
+            dt_util.parse_time_expression("*", 0, 23),
+        )
+
     def _turn_to_next_day(self) -> None:
         """Turn to to the next day."""
         if TYPE_CHECKING:
@@ -233,21 +250,25 @@ class TodSensor(BinarySensorEntity):
             assert self._time_before is not None
         if _is_sun_event(self._after):
             self._time_after = get_astral_event_next(
-                self.hass, str(self._after), self._time_after - self._after_offset
+                self.hass, self._after, self._time_after - self._after_offset
             )
             self._time_after += self._after_offset
         else:
             # Offset is already there
-            self._time_after += timedelta(days=1)
+            self._time_after = self._add_one_dst_aware_day(
+                self._time_after, self._after
+            )
 
         if _is_sun_event(self._before):
             self._time_before = get_astral_event_next(
-                self.hass, str(self._before), self._time_before - self._before_offset
+                self.hass, self._before, self._time_before - self._before_offset
             )
             self._time_before += self._before_offset
         else:
             # Offset is already there
-            self._time_before += timedelta(days=1)
+            self._time_before = self._add_one_dst_aware_day(
+                self._time_before, self._before
+            )
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
@@ -255,7 +276,7 @@ class TodSensor(BinarySensorEntity):
         self._calculate_next_update()
 
         @callback
-        def _clean_up_listener():
+        def _clean_up_listener() -> None:
             if self._unsub_update is not None:
                 self._unsub_update()
                 self._unsub_update = None

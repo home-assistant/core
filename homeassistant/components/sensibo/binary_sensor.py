@@ -24,28 +24,28 @@ from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class MotionBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
     value_fn: Callable[[MotionSensor], bool | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboMotionBinarySensorEntityDescription(
     BinarySensorEntityDescription, MotionBaseEntityDescriptionMixin
 ):
     """Describes Sensibo Motion sensor entity."""
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboDeviceBinarySensorEntityDescription(
     BinarySensorEntityDescription, DeviceBaseEntityDescriptionMixin
 ):

@@ -8,7 +8,7 @@ from aiohttp import web
 import voluptuous as vol
 import voluptuous_serialize
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
@@ -18,7 +18,7 @@ from . import config_validation as cv
 class _BaseFlowManagerView(HomeAssistantView):
     """Foundation for flow manager views."""
 
-    def __init__(self, flow_mgr: data_entry_flow.FlowManager) -> None:
+    def __init__(self, flow_mgr: data_entry_flow.BaseFlowManager) -> None:
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
 
@@ -61,6 +61,16 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+        """Initialize a POST request.
+
+        Override `_post_impl` in subclasses which need
+        to implement their own `RequestDataValidator`
+        """
+        return await self._post_impl(request, data)
+
+    async def _post_impl(
+        self, request: web.Request, data: dict[str, Any]
+    ) -> web.Response:
         """Handle a POST request."""
         if isinstance(data["handler"], list):
             handler = tuple(data["handler"])
@@ -70,21 +80,20 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         try:
             result = await self._flow_mgr.async_init(
                 handler,  # type: ignore[arg-type]
-                context={
-                    "source": config_entries.SOURCE_USER,
-                    "show_advanced_options": data["show_advanced_options"],
-                },
+                context=self.get_context(data),
             )
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
-        except data_entry_flow.UnknownStep:
-            return self.json_message(
-                "Handler does not support user", HTTPStatus.BAD_REQUEST
-            )
+        except data_entry_flow.UnknownStep as err:
+            return self.json_message(str(err), HTTPStatus.BAD_REQUEST)
 
         result = self._prepare_result_json(result)
 
         return self.json(result)
+
+    def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Return context."""
+        return {"show_advanced_options": data["show_advanced_options"]}
 
 
 class FlowManagerResourceView(_BaseFlowManagerView):
@@ -110,10 +119,8 @@ class FlowManagerResourceView(_BaseFlowManagerView):
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message("Invalid flow specified", HTTPStatus.NOT_FOUND)
-        except vol.Invalid as ex:
-            return self.json_message(
-                f"User input malformed: {ex}", HTTPStatus.BAD_REQUEST
-            )
+        except data_entry_flow.InvalidData as ex:
+            return self.json({"errors": ex.schema_errors}, HTTPStatus.BAD_REQUEST)
 
         result = self._prepare_result_json(result)
 

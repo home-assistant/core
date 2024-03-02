@@ -6,6 +6,9 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "The prefix to be used for your Solar-Log sensors"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Solar-Log device."
         }
       }
     },

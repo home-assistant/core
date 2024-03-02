@@ -15,7 +15,7 @@ _P = ParamSpec("_P")
 
 
 def wled_exception_handler(
-    func: Callable[Concatenate[_WLEDEntityT, _P], Coroutine[Any, Any, Any]]
+    func: Callable[Concatenate[_WLEDEntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_WLEDEntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate WLED calls to handle WLED exceptions.
 

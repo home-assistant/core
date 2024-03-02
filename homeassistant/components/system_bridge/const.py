@@ -10,5 +10,6 @@ MODULES = [
     "gpu",
     "media",
     "memory",
+    "processes",
     "system",
 ]

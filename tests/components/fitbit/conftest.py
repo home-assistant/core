@@ -32,6 +32,15 @@ PROFILE_USER_ID = "fitbit-api-user-id-1"
 FAKE_ACCESS_TOKEN = "some-access-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
 FAKE_AUTH_IMPL = "conftest-imported-cred"
+FULL_NAME = "First Last"
+DISPLAY_NAME = "First L."
+PROFILE_DATA = {
+    "fullName": FULL_NAME,
+    "displayName": DISPLAY_NAME,
+    "displayNameSetting": "name",
+    "firstName": "First",
+    "lastName": "Last",
+}
 
 PROFILE_API_URL = "https://api.fitbit.com/1/user/-/profile.json"
 DEVICES_API_URL = "https://api.fitbit.com/1/user/-/devices.json"
@@ -214,20 +223,34 @@ def mock_profile_locale() -> str:
     return "en_US"
 
 
+@pytest.fixture(name="profile_data")
+def mock_profile_data() -> dict[str, Any]:
+    """Fixture to return other profile data fields."""
+    return PROFILE_DATA
+
+
+@pytest.fixture(name="profile_response")
+def mock_profile_response(
+    profile_id: str, profile_locale: str, profile_data: dict[str, Any]
+) -> dict[str, Any]:
+    """Fixture to construct the fake profile API response."""
+    return {
+        "user": {
+            "encodedId": profile_id,
+            "locale": profile_locale,
+            **profile_data,
+        },
+    }
+
+
 @pytest.fixture(name="profile", autouse=True)
-def mock_profile(requests_mock: Mocker, profile_id: str, profile_locale: str) -> None:
+def mock_profile(requests_mock: Mocker, profile_response: dict[str, Any]) -> None:
     """Fixture to setup fake requests made to Fitbit API during config flow."""
     requests_mock.register_uri(
         "GET",
         PROFILE_API_URL,
         status_code=HTTPStatus.OK,
-        json={
-            "user": {
-                "encodedId": profile_id,
-                "fullName": "My name",
-                "locale": profile_locale,
-            },
-        },
+        json=profile_response,
     )
 
 

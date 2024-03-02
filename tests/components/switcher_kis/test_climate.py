@@ -25,7 +25,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.util import slugify
 
 from . import init_integration
@@ -336,9 +336,8 @@ async def test_climate_control_errors(
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 24},
             blocking=True,
         )
-
     # Test exception when trying set fan level
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
@@ -347,7 +346,7 @@ async def test_climate_control_errors(
         )
 
     # Test exception when trying set swing mode
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_SWING_MODE,

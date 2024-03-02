@@ -35,12 +35,12 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_fan_state(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the creation and values of the Modern Forms fans."""
     await init_integration(hass, aioclient_mock)
-
-    entity_registry = er.async_get(hass)
 
     state = hass.states.get("fan.modernformsfan_fan")
     assert state

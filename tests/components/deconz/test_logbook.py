@@ -27,7 +27,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_humanifying_deconz_alarm_event(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test humanifying deCONZ event."""
     data = {
@@ -60,8 +62,6 @@ async def test_humanifying_deconz_alarm_event(
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
-
-    device_registry = dr.async_get(hass)
 
     keypad_event_id = slugify(data["sensors"]["1"]["name"])
     keypad_serial = serial_from_unique_id(data["sensors"]["1"]["uniqueid"])
@@ -112,7 +112,9 @@ async def test_humanifying_deconz_alarm_event(
 
 
 async def test_humanifying_deconz_event(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test humanifying deCONZ event."""
     data = {
@@ -151,8 +153,6 @@ async def test_humanifying_deconz_event(
     }
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
-
-    device_registry = dr.async_get(hass)
 
     switch_event_id = slugify(data["sensors"]["1"]["name"])
     switch_serial = serial_from_unique_id(data["sensors"]["1"]["uniqueid"])

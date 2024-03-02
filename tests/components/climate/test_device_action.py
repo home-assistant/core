@@ -220,7 +220,7 @@ async def test_action(
     assert set_hvac_mode_calls[0].service == "set_hvac_mode"
     assert set_hvac_mode_calls[0].data == {
         "entity_id": entry.entity_id,
-        "hvac_mode": const.HVAC_MODE_OFF,
+        "hvac_mode": const.HVACMode.OFF,
     }
     assert set_preset_mode_calls[0].domain == DOMAIN
     assert set_preset_mode_calls[0].service == "set_preset_mode"
@@ -287,7 +287,7 @@ async def test_action_legacy(
     assert set_hvac_mode_calls[0].service == "set_hvac_mode"
     assert set_hvac_mode_calls[0].data == {
         "entity_id": entry.entity_id,
-        "hvac_mode": const.HVAC_MODE_OFF,
+        "hvac_mode": const.HVACMode.OFF,
     }
 
 

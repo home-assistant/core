@@ -25,14 +25,14 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWRequiredKeysMixin:
     """Mixin for required keys."""
 
     remote_function: Callable[[MyBMWVehicle], Coroutine[Any, Any, RemoteServiceStatus]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWButtonEntityDescription(ButtonEntityDescription, BMWRequiredKeysMixin):
     """Class describing BMW button entities."""
 
@@ -44,24 +44,21 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
     BMWButtonEntityDescription(
         key="light_flash",
         translation_key="light_flash",
-        icon="mdi:car-light-alert",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_light_flash(),
     ),
     BMWButtonEntityDescription(
         key="sound_horn",
         translation_key="sound_horn",
-        icon="mdi:bullhorn",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_horn(),
     ),
     BMWButtonEntityDescription(
         key="activate_air_conditioning",
         translation_key="activate_air_conditioning",
-        icon="mdi:hvac",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning(),
     ),
     BMWButtonEntityDescription(
         key="deactivate_air_conditioning",
-        icon="mdi:hvac-off",
+        translation_key="deactivate_air_conditioning",
         name="Deactivate air conditioning",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_air_conditioning_stop(),
         is_available=lambda vehicle: vehicle.is_remote_climate_stop_enabled,
@@ -69,7 +66,6 @@ BUTTON_TYPES: tuple[BMWButtonEntityDescription, ...] = (
     BMWButtonEntityDescription(
         key="find_vehicle",
         translation_key="find_vehicle",
-        icon="mdi:crosshairs-question",
         remote_function=lambda vehicle: vehicle.remote_services.trigger_remote_vehicle_finder(),
     ),
 )

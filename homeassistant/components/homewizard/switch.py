@@ -23,23 +23,14 @@ from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
 
 
-@dataclass
-class HomeWizardEntityDescriptionMixin:
-    """Mixin values for HomeWizard entities."""
-
-    create_fn: Callable[[HWEnergyDeviceUpdateCoordinator], bool]
-    available_fn: Callable[[DeviceResponseEntry], bool]
-    is_on_fn: Callable[[DeviceResponseEntry], bool | None]
-    set_fn: Callable[[HomeWizardEnergy, bool], Awaitable[Any]]
-
-
-@dataclass
-class HomeWizardSwitchEntityDescription(
-    SwitchEntityDescription, HomeWizardEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class HomeWizardSwitchEntityDescription(SwitchEntityDescription):
     """Class describing HomeWizard switch entities."""
 
-    icon_off: str | None = None
+    available_fn: Callable[[DeviceResponseEntry], bool]
+    create_fn: Callable[[HWEnergyDeviceUpdateCoordinator], bool]
+    is_on_fn: Callable[[DeviceResponseEntry], bool | None]
+    set_fn: Callable[[HomeWizardEnergy, bool], Awaitable[Any]]
 
 
 SWITCHES = [
@@ -56,8 +47,6 @@ SWITCHES = [
         key="switch_lock",
         translation_key="switch_lock",
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:lock",
-        icon_off="mdi:lock-open",
         create_fn=lambda coordinator: coordinator.supports_state(),
         available_fn=lambda data: data.state is not None,
         is_on_fn=lambda data: data.state.switch_lock if data.state else None,
@@ -67,8 +56,6 @@ SWITCHES = [
         key="cloud_connection",
         translation_key="cloud_connection",
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:cloud",
-        icon_off="mdi:cloud-off-outline",
         create_fn=lambda coordinator: coordinator.supports_system(),
         available_fn=lambda data: data.system is not None,
         is_on_fn=lambda data: data.system.cloud_enabled if data.system else None,
@@ -106,13 +93,6 @@ class HomeWizardSwitchEntity(HomeWizardEntity, SwitchEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon."""
-        if self.entity_description.icon_off and self.is_on is False:
-            return self.entity_description.icon_off
-        return super().icon
 
     @property
     def available(self) -> bool:

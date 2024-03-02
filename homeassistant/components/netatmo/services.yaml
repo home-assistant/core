@@ -46,6 +46,56 @@ set_preset_mode_with_end_datetime:
       selector:
         datetime:
 
+set_temperature_with_end_datetime:
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+  fields:
+    target_temperature:
+      required: true
+      example: "19.5"
+      selector:
+        number:
+          min: 7
+          max: 30
+          step: 0.5
+    end_datetime:
+      required: true
+      example: '"2019-04-20 05:04:20"'
+      selector:
+        datetime:
+
+set_temperature_with_time_period:
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+  fields:
+    target_temperature:
+      required: true
+      example: "19.5"
+      selector:
+        number:
+          min: 7
+          max: 30
+          step: 0.5
+    time_period:
+      required: true
+      default:
+        hours: 3
+        minutes: 0
+        seconds: 0
+        days: 0
+      selector:
+        duration:
+
+clear_temperature_setting:
+  target:
+    entity:
+      integration: netatmo
+      domain: climate
+
 set_persons_home:
   target:
     entity:

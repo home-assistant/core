@@ -23,14 +23,14 @@ from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class MinutPointRequiredKeysMixin:
     """Mixin for required keys."""
 
     precision: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class MinutPointSensorEntityDescription(
     SensorEntityDescription, MinutPointRequiredKeysMixin
 ):

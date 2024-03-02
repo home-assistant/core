@@ -1,0 +1,14 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'energy_consumption': 1000.0,
+    'energy_generation': 500.0,
+    'normalized_output': 0.5,
+    'power_consumption': 2500.0,
+    'power_generation': 1500.0,
+    'reported_date': '20210101',
+    'reported_time': '22:37:00',
+    'temperature': 20.2,
+    'voltage': 220.5,
+  })
+# ---

@@ -24,7 +24,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     # convert title and unique_id to string
     if config_entry.version == 1:
         if isinstance(config_entry.unique_id, int):
-            hass.config_entries.async_update_entry(
+            hass.config_entries.async_update_entry(  # type: ignore[unreachable]
                 config_entry,
                 unique_id=str(config_entry.unique_id),
                 title=str(config_entry.title),

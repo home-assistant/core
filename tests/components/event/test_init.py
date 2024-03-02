@@ -56,6 +56,9 @@ async def test_event() -> None:
         event_types=["short_press", "long_press"],
         device_class=EventDeviceClass.DOORBELL,
     )
+    # Delete the cache since we changed the entity description
+    # at run time
+    del event.device_class
     assert event.event_types == ["short_press", "long_press"]
     assert event.device_class == EventDeviceClass.DOORBELL
 

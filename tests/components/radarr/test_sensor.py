@@ -14,6 +14,7 @@ from . import setup_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
 @pytest.mark.parametrize(
     ("windows", "single", "root_folder"),
     [
@@ -65,6 +66,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.TOTAL
 
 
+@pytest.mark.freeze_time("2021-12-03 00:00:00+00:00")
 async def test_windows(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

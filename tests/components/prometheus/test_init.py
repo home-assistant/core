@@ -20,6 +20,7 @@ from homeassistant.components import (
     input_number,
     light,
     lock,
+    number,
     person,
     prometheus,
     sensor,
@@ -293,6 +294,30 @@ async def test_input_number(client, input_number_entities) -> None:
 
 
 @pytest.mark.parametrize("namespace", [""])
+async def test_number(client, number_entities) -> None:
+    """Test prometheus metrics for number."""
+    body = await generate_latest_metrics(client)
+
+    assert (
+        'number_state{domain="number",'
+        'entity="number.threshold",'
+        'friendly_name="Threshold"} 5.2' in body
+    )
+
+    assert (
+        'number_state{domain="number",'
+        'entity="number.brightness",'
+        'friendly_name="None"} 60.0' in body
+    )
+
+    assert (
+        'number_state_celsius{domain="number",'
+        'entity="number.target_temperature",'
+        'friendly_name="Target temperature"} 22.7' in body
+    )
+
+
+@pytest.mark.parametrize("namespace", [""])
 async def test_battery(client, sensor_entities) -> None:
     """Test prometheus metrics for battery."""
     body = await generate_latest_metrics(client)
@@ -464,6 +489,12 @@ async def test_light(client, light_entities) -> None:
         'light_brightness_percent{domain="light",'
         'entity="light.pc",'
         'friendly_name="PC"} 70.58823529411765' in body
+    )
+
+    assert (
+        'light_brightness_percent{domain="light",'
+        'entity="light.hallway",'
+        'friendly_name="Hallway"} 100.0' in body
     )
 
 
@@ -1321,7 +1352,7 @@ async def cover_fixture(
         suggested_object_id="position_shade",
         original_name="Position Shade",
     )
-    cover_position_attributes = {cover.ATTR_POSITION: 50}
+    cover_position_attributes = {cover.ATTR_CURRENT_POSITION: 50}
     set_state_with_entry(hass, cover_position, STATE_OPEN, cover_position_attributes)
     data["cover_position"] = cover_position
 
@@ -1332,7 +1363,7 @@ async def cover_fixture(
         suggested_object_id="tilt_position_shade",
         original_name="Tilt Position Shade",
     )
-    cover_tilt_position_attributes = {cover.ATTR_TILT_POSITION: 50}
+    cover_tilt_position_attributes = {cover.ATTR_CURRENT_TILT_POSITION: 50}
     set_state_with_entry(
         hass, cover_tilt_position, STATE_OPEN, cover_tilt_position_attributes
     )
@@ -1377,6 +1408,46 @@ async def input_number_fixture(
     )
     set_state_with_entry(hass, input_number_3, 22.7)
     data["input_number_3"] = input_number_3
+
+    await hass.async_block_till_done()
+    return data
+
+
+@pytest.fixture(name="number_entities")
+async def number_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry]:
+    """Simulate number entities."""
+    data = {}
+    number_1 = entity_registry.async_get_or_create(
+        domain=number.DOMAIN,
+        platform="test",
+        unique_id="number_1",
+        suggested_object_id="threshold",
+        original_name="Threshold",
+    )
+    set_state_with_entry(hass, number_1, 5.2)
+    data["number_1"] = number_1
+
+    number_2 = entity_registry.async_get_or_create(
+        domain=number.DOMAIN,
+        platform="test",
+        unique_id="number_2",
+        suggested_object_id="brightness",
+    )
+    set_state_with_entry(hass, number_2, 60)
+    data["number_2"] = number_2
+
+    number_3 = entity_registry.async_get_or_create(
+        domain=number.DOMAIN,
+        platform="test",
+        unique_id="number_3",
+        suggested_object_id="target_temperature",
+        original_name="Target temperature",
+        unit_of_measurement=UnitOfTemperature.CELSIUS,
+    )
+    set_state_with_entry(hass, number_3, 22.7)
+    data["number_3"] = number_3
 
     await hass.async_block_till_done()
     return data
@@ -1492,6 +1563,19 @@ async def light_fixture(
     data["light_4"] = light_4
     data["light_4_attributes"] = light_4_attributes
 
+    light_5 = entity_registry.async_get_or_create(
+        domain=light.DOMAIN,
+        platform="test",
+        unique_id="light_5",
+        suggested_object_id="hallway",
+        original_name="Hallway",
+    )
+    # Light is on, but brightness is unset; expect metrics to report
+    # brightness of 100%.
+    light_5_attributes = {light.ATTR_BRIGHTNESS: None}
+    set_state_with_entry(hass, light_5, STATE_ON, light_5_attributes)
+    data["light_5"] = light_5
+    data["light_5_attributes"] = light_5_attributes
     await hass.async_block_till_done()
     return data
 

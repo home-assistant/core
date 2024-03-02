@@ -17,15 +17,10 @@ from homeassistant.core import Context, HomeAssistant, State
 
 from . import (
     ATTR_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
-    ATTR_FLASH,
     ATTR_HS_COLOR,
-    ATTR_KELVIN,
-    ATTR_PROFILE,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -40,13 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 
 VALID_STATES = {STATE_ON, STATE_OFF}
 
-ATTR_GROUP = [
-    ATTR_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT,
-    ATTR_EFFECT,
-    ATTR_FLASH,
-    ATTR_TRANSITION,
-]
+ATTR_GROUP = [ATTR_BRIGHTNESS, ATTR_EFFECT]
 
 COLOR_GROUP = [
     ATTR_HS_COLOR,
@@ -55,10 +44,6 @@ COLOR_GROUP = [
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_XY_COLOR,
-    # The following color attributes are deprecated
-    ATTR_PROFILE,
-    ATTR_COLOR_NAME,
-    ATTR_KELVIN,
 ]
 
 
@@ -78,21 +63,6 @@ COLOR_MODE_TO_ATTRIBUTE = {
     ColorMode.WHITE: ColorModeAttr(ATTR_WHITE, ATTR_BRIGHTNESS),
     ColorMode.XY: ColorModeAttr(ATTR_XY_COLOR, ATTR_XY_COLOR),
 }
-
-DEPRECATED_GROUP = [
-    ATTR_BRIGHTNESS_PCT,
-    ATTR_COLOR_NAME,
-    ATTR_FLASH,
-    ATTR_KELVIN,
-    ATTR_PROFILE,
-    ATTR_TRANSITION,
-]
-
-DEPRECATION_WARNING = (
-    "The use of other attributes than device state attributes is deprecated and will be"
-    " removed in a future release. Invalid attributes are %s. Read the logs for further"
-    " details: https://www.home-assistant.io/integrations/scene/"
-)
 
 
 def _color_mode_same(cur_state: State, state: State) -> bool:
@@ -123,11 +93,6 @@ async def _async_reproduce_state(
             "Invalid state specified for %s: %s", state.entity_id, state.state
         )
         return
-
-    # Warn if deprecated attributes are used
-    deprecated_attrs = [attr for attr in state.attributes if attr in DEPRECATED_GROUP]
-    if deprecated_attrs:
-        _LOGGER.warning(DEPRECATION_WARNING, deprecated_attrs)
 
     # Return if we are already at the right state.
     if (

@@ -33,7 +33,6 @@ CONF_IGNORE_ATTRIBUTES = "ignore_attributes"
 CONF_PRECISION = "precision"
 CONF_SSL_CA_CERT = "ssl_ca_cert"
 
-CONF_LANGUAGE = "language"
 CONF_QUERIES = "queries"
 CONF_QUERIES_FLUX = "queries_flux"
 CONF_GROUP_FUNCTION = "group_function"

@@ -22,14 +22,14 @@ import homeassistant.util.dt as dt_util
 from . import DOMAIN
 
 
-@dataclass
+@dataclass(frozen=True)
 class JewishCalendarBinarySensorMixIns(BinarySensorEntityDescription):
     """Binary Sensor description mixin class for Jewish Calendar."""
 
     is_on: Callable[..., bool] = lambda _: False
 
 
-@dataclass
+@dataclass(frozen=True)
 class JewishCalendarBinarySensorEntityDescription(
     JewishCalendarBinarySensorMixIns, BinarySensorEntityDescription
 ):

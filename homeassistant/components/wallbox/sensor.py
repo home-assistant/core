@@ -51,7 +51,7 @@ UPDATE_INTERVAL = 30
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class WallboxSensorEntityDescription(SensorEntityDescription):
     """Describes Wallbox sensor entity."""
 

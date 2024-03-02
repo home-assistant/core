@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from . import AmcrestDevice
 
 
-@dataclass
+@dataclass(frozen=True)
 class AmcrestSensorEntityDescription(BinarySensorEntityDescription):
     """Describe Amcrest sensor entity."""
 

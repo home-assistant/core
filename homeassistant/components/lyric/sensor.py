@@ -41,7 +41,7 @@ LYRIC_SETPOINT_STATUS_NAMES = {
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class LyricSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
@@ -49,7 +49,7 @@ class LyricSensorEntityDescriptionMixin:
     suitable_fn: Callable[[LyricDevice], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class LyricSensorEntityDescription(
     SensorEntityDescription, LyricSensorEntityDescriptionMixin
 ):
@@ -105,7 +105,6 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
     LyricSensorEntityDescription(
         key="setpoint_status",
         translation_key="setpoint_status",
-        icon="mdi:thermostat",
         value_fn=lambda device: get_setpoint_status(
             device.changeableValues.thermostatSetpointStatus,
             device.changeableValues.nextPeriodTime,

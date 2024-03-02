@@ -11,6 +11,9 @@
         "description": "Enter the IP address of the device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Lutron Caseta Smart Bridge."
         }
       },
       "link": {

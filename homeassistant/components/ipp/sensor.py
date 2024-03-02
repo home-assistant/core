@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCATION, PERCENTAGE, EntityCategory
@@ -36,14 +37,14 @@ from .coordinator import IPPDataUpdateCoordinator
 from .entity import IPPEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class IPPSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[Printer], StateType | datetime]
 
 
-@dataclass
+@dataclass(frozen=True)
 class IPPSensorEntityDescription(
     SensorEntityDescription, IPPSensorEntityDescriptionMixin
 ):
@@ -69,7 +70,6 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
         key="printer",
         name=None,
         translation_key="printer",
-        icon="mdi:printer",
         device_class=SensorDeviceClass.ENUM,
         options=["idle", "printing", "stopped"],
         attributes_fn=lambda printer: {
@@ -86,7 +86,6 @@ PRINTER_SENSORS: tuple[IPPSensorEntityDescription, ...] = (
     IPPSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        icon="mdi:clock-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -117,8 +116,9 @@ async def async_setup_entry(
                 IPPSensorEntityDescription(
                     key=f"marker_{index}",
                     name=marker.name,
-                    icon="mdi:water",
+                    translation_key="marker",
                     native_unit_of_measurement=PERCENTAGE,
+                    state_class=SensorStateClass.MEASUREMENT,
                     attributes_fn=_get_marker_attributes_fn(
                         index,
                         lambda marker: {

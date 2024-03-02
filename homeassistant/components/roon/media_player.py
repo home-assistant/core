@@ -207,13 +207,14 @@ class RoonDevice(MediaPlayerEntity):
         try:
             volume_max = volume_data["max"]
             volume_min = volume_data["min"]
+
             raw_level = convert(volume_data["value"], float, 0)
 
             volume_range = volume_max - volume_min
             volume_percentage_factor = volume_range / 100
 
             level = (raw_level - volume_min) / volume_percentage_factor
-            volume["level"] = convert(level, int, 0) / 100
+            volume["level"] = round(level) / 100
         except KeyError:
             pass
 
@@ -267,9 +268,10 @@ class RoonDevice(MediaPlayerEntity):
                     break
         # determine player state
         if not new_state:
-            if self.player_data["state"] == "playing":
-                new_state = MediaPlayerState.PLAYING
-            elif self.player_data["state"] == "loading":
+            if (
+                self.player_data["state"] == "playing"
+                or self.player_data["state"] == "loading"
+            ):
                 new_state = MediaPlayerState.PLAYING
             elif self.player_data["state"] == "stopped":
                 new_state = MediaPlayerState.IDLE
@@ -373,14 +375,14 @@ class RoonDevice(MediaPlayerEntity):
     def volume_up(self) -> None:
         """Send new volume_level to device."""
         if self._volume_incremental:
-            self._server.roonapi.change_volume_raw(self.output_id, 1, "relative_step")
+            self._server.roonapi.change_volume_raw(self.output_id, 1, "relative")
         else:
             self._server.roonapi.change_volume_percent(self.output_id, 3)
 
     def volume_down(self) -> None:
         """Send new volume_level to device."""
         if self._volume_incremental:
-            self._server.roonapi.change_volume_raw(self.output_id, -1, "relative_step")
+            self._server.roonapi.change_volume_raw(self.output_id, -1, "relative")
         else:
             self._server.roonapi.change_volume_percent(self.output_id, -3)
 

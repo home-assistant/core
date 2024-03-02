@@ -15,6 +15,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -84,7 +85,7 @@ async def test_select_invalid_option(hass: HomeAssistant) -> None:
     assert state
     assert state.state == "60"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,

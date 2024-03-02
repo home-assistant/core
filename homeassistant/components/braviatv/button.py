@@ -19,14 +19,14 @@ from .coordinator import BraviaTVCoordinator
 from .entity import BraviaTVEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class BraviaTVButtonDescriptionMixin:
     """Mixin to describe a Bravia TV Button entity."""
 
     press_action: Callable[[BraviaTVCoordinator], Coroutine]
 
 
-@dataclass
+@dataclass(frozen=True)
 class BraviaTVButtonDescription(
     ButtonEntityDescription, BraviaTVButtonDescriptionMixin
 ):

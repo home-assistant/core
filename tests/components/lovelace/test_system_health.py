@@ -39,7 +39,7 @@ async def test_system_health_info_yaml(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
     await hass.async_block_till_done()
     with patch(
-        "homeassistant.components.lovelace.dashboard.load_yaml",
+        "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"views": [{"cards": []}]},
     ):
         info = await get_system_health_info(hass, "lovelace")

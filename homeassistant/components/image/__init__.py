@@ -8,14 +8,14 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from random import SystemRandom
-from typing import Final, final
+from typing import TYPE_CHECKING, Final, final
 
 from aiohttp import hdrs, web
 import httpx
 
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONTENT_TYPE_MULTIPART, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -24,11 +24,21 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    EventStateChangedData,
+    async_track_state_change_event,
+    async_track_time_interval,
+)
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, EventType, UndefinedType
 
 from .const import DOMAIN, IMAGE_TIMEOUT  # noqa: F401
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,9 +53,12 @@ _RND: Final = SystemRandom()
 
 GET_IMAGE_TIMEOUT: Final = 10
 
+FRAME_BOUNDARY = "frame-boundary"
+FRAME_SEPARATOR = bytes(f"\r\n--{FRAME_BOUNDARY}\r\n", "utf-8")
+LAST_FRAME_MARKER = bytes(f"\r\n--{FRAME_BOUNDARY}--\r\n", "utf-8")
 
-@dataclass
-class ImageEntityDescription(EntityDescription):
+
+class ImageEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes image entities."""
 
 
@@ -70,7 +83,7 @@ def valid_image_content_type(content_type: str | None) -> str:
 
 async def _async_get_image(image_entity: ImageEntity, timeout: int) -> Image:
     """Fetch image from an image entity."""
-    with suppress(asyncio.CancelledError, asyncio.TimeoutError, ImageContentTypeError):
+    with suppress(asyncio.CancelledError, TimeoutError, ImageContentTypeError):
         async with asyncio.timeout(timeout):
             if image_bytes := await image_entity.async_image():
                 content_type = valid_image_content_type(image_entity.content_type)
@@ -87,6 +100,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     hass.http.register_view(ImageView(component))
+    hass.http.register_view(ImageStreamView(component))
 
     await component.async_setup(config)
 
@@ -123,7 +137,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-class ImageEntity(Entity):
+CACHED_PROPERTIES_WITH_ATTR_ = {
+    "content_type",
+    "image_last_updated",
+    "image_url",
+}
+
+
+class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for image entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
@@ -144,7 +165,7 @@ class ImageEntity(Entity):
         self.access_tokens: collections.deque = collections.deque([], 2)
         self.async_update_token()
 
-    @property
+    @cached_property
     def content_type(self) -> str:
         """Image content type."""
         return self._attr_content_type
@@ -156,12 +177,12 @@ class ImageEntity(Entity):
             return self._attr_entity_picture
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
-    @property
+    @cached_property
     def image_last_updated(self) -> datetime | None:
-        """The time when the image was last updated."""
+        """Time the image was last updated."""
         return self._attr_image_last_updated
 
-    @property
+    @cached_property
     def image_url(self) -> str | None | UndefinedType:
         """Return URL of image."""
         return self._attr_image_url
@@ -283,3 +304,71 @@ class ImageView(HomeAssistantView):
             raise web.HTTPInternalServerError() from ex
 
         return web.Response(body=image.content, content_type=image.content_type)
+
+
+async def async_get_still_stream(
+    request: web.Request,
+    image_entity: ImageEntity,
+) -> web.StreamResponse:
+    """Generate an HTTP multipart stream from the Image."""
+    response = web.StreamResponse()
+    response.content_type = CONTENT_TYPE_MULTIPART.format(FRAME_BOUNDARY)
+    await response.prepare(request)
+
+    async def _write_frame() -> bool:
+        img_bytes = await image_entity.async_image()
+        if img_bytes is None:
+            await response.write(LAST_FRAME_MARKER)
+            return False
+        frame = bytearray(FRAME_SEPARATOR)
+        header = bytes(
+            f"Content-Type: {image_entity.content_type}\r\n"
+            f"Content-Length: {len(img_bytes)}\r\n\r\n",
+            "utf-8",
+        )
+        frame.extend(header)
+        frame.extend(img_bytes)
+        # Chrome shows the n-1 frame so send the frame twice
+        # https://issues.chromium.org/issues/41199053
+        # https://issues.chromium.org/issues/40791855
+        # While this results in additional bandwidth usage,
+        # given the low frequency of image updates, it is acceptable.
+        frame.extend(frame)
+        await response.write(frame)
+        # Drain to ensure that the latest frame is available to the client
+        await response.drain()
+        return True
+
+    event = asyncio.Event()
+
+    async def image_state_update(_event: EventType[EventStateChangedData]) -> None:
+        """Write image to stream."""
+        event.set()
+
+    hass: HomeAssistant = request.app["hass"]
+    remove = async_track_state_change_event(
+        hass,
+        image_entity.entity_id,
+        image_state_update,
+    )
+    try:
+        while True:
+            if not await _write_frame():
+                return response
+            await event.wait()
+            event.clear()
+    finally:
+        remove()
+
+
+class ImageStreamView(ImageView):
+    """Image View to serve an multipart stream."""
+
+    url = "/api/image_proxy_stream/{entity_id}"
+    name = "api:image:stream"
+
+    async def handle(
+        self, request: web.Request, image_entity: ImageEntity
+    ) -> web.StreamResponse:
+        """Serve image stream."""
+        return await async_get_still_stream(request, image_entity)

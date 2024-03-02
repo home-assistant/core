@@ -1,4 +1,5 @@
 """Tests for Intent component."""
+
 import pytest
 
 from homeassistant.components.cover import SERVICE_OPEN_COVER
@@ -119,14 +120,14 @@ async def test_turn_on_intent(hass: HomeAssistant) -> None:
     assert call.data == {"entity_id": ["light.test_light"]}
 
 
-async def test_translated_turn_on_intent(hass: HomeAssistant) -> None:
+async def test_translated_turn_on_intent(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test HassTurnOn intent on domains which don't have the intent."""
     result = await async_setup_component(hass, "homeassistant", {})
     result = await async_setup_component(hass, "intent", {})
     await hass.async_block_till_done()
     assert result
-
-    entity_registry = er.async_get(hass)
 
     cover = entity_registry.async_get_or_create("cover", "test", "cover_uid")
     lock = entity_registry.async_get_or_create("lock", "test", "lock_uid")
@@ -223,6 +224,30 @@ async def test_turn_on_multiple_intent(hass: HomeAssistant) -> None:
     assert call.domain == "light"
     assert call.service == "turn_on"
     assert call.data == {"entity_id": ["light.test_lights_2"]}
+
+
+async def test_turn_on_all(hass: HomeAssistant) -> None:
+    """Test HassTurnOn intent with "all" name."""
+    result = await async_setup_component(hass, "homeassistant", {})
+    result = await async_setup_component(hass, "intent", {})
+    assert result
+
+    hass.states.async_set("light.test_light", "off")
+    hass.states.async_set("light.test_light_2", "off")
+    calls = async_mock_service(hass, "light", SERVICE_TURN_ON)
+
+    await intent.async_handle(hass, "test", "HassTurnOn", {"name": {"value": "all"}})
+    await hass.async_block_till_done()
+
+    # All lights should be on now
+    assert len(calls) == 2
+    entity_ids = set()
+    for call in calls:
+        assert call.domain == "light"
+        assert call.service == "turn_on"
+        entity_ids.update(call.data.get("entity_id", []))
+
+    assert entity_ids == {"light.test_light", "light.test_light_2"}
 
 
 async def test_get_state_intent(
@@ -406,4 +431,21 @@ async def test_get_state_intent(
                 "area": {"value": "does-not-exist"},
                 "domain": {"value": "light"},
             },
+        )
+
+
+async def test_set_position_intent_unsupported_domain(hass: HomeAssistant) -> None:
+    """Test that HassSetPosition intent fails with unsupported domain."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    # Can't set position of lights
+    hass.states.async_set("light.test_light", "off")
+
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            "HassSetPosition",
+            {"name": {"value": "test light"}, "position": {"value": 100}},
         )

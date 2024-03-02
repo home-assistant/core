@@ -9,7 +9,7 @@ from devolo_plc_api.device_api import (
     NeighborAPInfo,
     WifiGuestAccessGet,
 )
-from devolo_plc_api.plcnet_api import LogicalNetwork
+from devolo_plc_api.plcnet_api import DataRate, LogicalNetwork
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -25,6 +25,7 @@ _DataT = TypeVar(
     "_DataT",
     bound=(
         LogicalNetwork
+        | DataRate
         | list[ConnectedStationInfo]
         | list[NeighborAPInfo]
         | WifiGuestAccessGet
