@@ -529,7 +529,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.5.0
+bthome-ble==3.6.0
 
 # homeassistant.components.buienradar
 buienradar==1.0.5
@@ -933,9 +933,6 @@ intellifire4py==2.2.2
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.1
-
-# homeassistant.components.file_upload
-janus==1.0.0
 
 # homeassistant.components.abode
 jaraco.abode==3.3.0
@@ -2111,7 +2108,7 @@ uasiren==0.0.1
 ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.7
+unifi-discovery==1.1.8
 
 # homeassistant.components.zha
 universal-silabs-flasher==0.0.18
