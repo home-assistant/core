@@ -16,7 +16,7 @@ async def test_bootstrap_does_not_preload_discovery_integrations(
     loaded too soon and will not get their requirements updated
     before they are loaded at runtime.
     """
-    # Ensure no stage1 integrations have been imported
+    # Ensure no discovery integrations have been imported
     # as a side effect of importing the pre-imports
     for integration in bootstrap.DISCOVERY_INTEGRATIONS:
         assert f"homeassistant.components.{integration}" not in sys.modules
