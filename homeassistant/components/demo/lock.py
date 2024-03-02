@@ -109,5 +109,8 @@ class DemoLock(LockEntity):
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
+        self._state = STATE_OPENING
+        self.async_write_ha_state()
+        await asyncio.sleep(LOCK_UNLOCK_DELAY)
         self._state = STATE_OPEN
         self.async_write_ha_state()
