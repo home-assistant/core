@@ -991,6 +991,10 @@ class Integration:
         By checking if the file/dir exists ahead of time we avoid `stat`ing
         every possible place the platform file could be in `sys.path`
         and the `importlib` machinery that goes along with it.
+
+        Unlike get_platform which is optimized for the success case, this
+        method is optimized for the failure case as most of the time the
+        platform will not exist.
         """
         if platform := self._get_platform_cached(f"{self.domain}.{platform_name}"):
             return platform
