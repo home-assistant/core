@@ -161,8 +161,7 @@ class FileUploadView(HomeAssistantView):
             file_dir.mkdir()
             with (file_dir / filename).open("wb") as file_handle:
                 while True:
-                    _chunk_future = queue.get()
-                    if _chunk_future is None:
+                    if (_chunk_future := queue.get()) is None:
                         break
                     _chunk, _future = _chunk_future
                     if _future is not None:
