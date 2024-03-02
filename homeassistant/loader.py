@@ -915,8 +915,8 @@ class Integration:
         self._import_futures[full_name] = import_future
         load_executor = (
             self.import_executor
-            and domain not in self.hass.config.components
-            and f"{self.pkg_path}.{domain}" not in sys.modules
+            and full_name not in self.hass.config.components
+            and f"{self.pkg_path}.{domain}.{platform_name}" not in sys.modules
         )
         try:
             if load_executor:
