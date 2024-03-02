@@ -308,6 +308,12 @@
           "production": "Producing"
         }
       },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "room_humidity": {
+        "name": "Room humidity"
+      },
       "supply_temperature": {
         "name": "Supply temperature"
       },
