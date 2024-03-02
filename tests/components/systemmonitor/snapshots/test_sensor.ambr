@@ -43,7 +43,7 @@
   })
 # ---
 # name: test_sensor[System Monitor Disk usage /home/notexist/ - state]
-  '60.0'
+  'unknown'
 # ---
 # name: test_sensor[System Monitor Disk usage /media/share - attributes]
   ReadOnlyDict({

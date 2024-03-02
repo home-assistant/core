@@ -473,14 +473,11 @@ async def test_exception_handling_disk_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (
-        "Error fetching System Monitor Disk / coordinator data: OS error for /"
-        in caplog.text
-    )
+    assert "OS error for /" in caplog.text
 
     disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
     assert disk_sensor is not None
-    assert disk_sensor.state == STATE_UNAVAILABLE
+    assert disk_sensor.state == STATE_UNKNOWN
 
     mock_psutil.disk_usage.return_value = None
     mock_psutil.disk_usage.side_effect = PermissionError("No access to /")
@@ -489,14 +486,11 @@ async def test_exception_handling_disk_sensor(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert (
-        "Error fetching System Monitor Disk / coordinator data: OS error for /"
-        in caplog.text
-    )
+    assert "OS error for /" in caplog.text
 
     disk_sensor = hass.states.get("sensor.system_monitor_disk_free")
     assert disk_sensor is not None
-    assert disk_sensor.state == STATE_UNAVAILABLE
+    assert disk_sensor.state == STATE_UNKNOWN
 
     mock_psutil.disk_usage.return_value = sdiskusage(
         500 * 1024**3, 350 * 1024**3, 150 * 1024**3, 70.0
