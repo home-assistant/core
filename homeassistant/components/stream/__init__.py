@@ -195,15 +195,19 @@ def set_pyav_logging(enable: bool) -> None:
     av.logging.set_level(av.logging.VERBOSE if enable else av.logging.FATAL)
 
 
-@callback
-def update_pyav_logging(_event: Event | None = None) -> None:
-    """Adjust libav logging to only log when the stream logger is at DEBUG."""
-    # enable PyAV logging iff Stream logger is set to debug
-    set_pyav_logging(_LOGGER.isEnabledFor(logging.DEBUG))
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up stream."""
+    debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
+
+    @callback
+    def update_pyav_logging(_event: Event | None = None) -> None:
+        """Adjust libav logging to only log when the stream logger is at DEBUG."""
+        nonlocal debug_enabled
+        if (new_debug_enabled := _LOGGER.isEnabledFor(logging.DEBUG)) == debug_enabled:
+            return
+        debug_enabled = new_debug_enabled
+        # enable PyAV logging iff Stream logger is set to debug
+        set_pyav_logging(new_debug_enabled)
 
     # Only pass through PyAV log messages if stream logging is above DEBUG
     cancel_logging_listener = hass.bus.async_listen(
@@ -215,9 +219,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         logging.getLogger(logging_namespace).setLevel(logging.ERROR)
 
     # This will load av so we run it in the executor
-    await hass.async_add_executor_job(
-        set_pyav_logging, _LOGGER.isEnabledFor(logging.DEBUG)
-    )
+    await hass.async_add_executor_job(set_pyav_logging, debug_enabled)
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable-next=import-outside-toplevel
