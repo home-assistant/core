@@ -151,6 +151,7 @@ class SysMonitorSensorEntityDescription(SensorEntityDescription):
     """Describes System Monitor sensor entities."""
 
     value_fn: Callable[[SystemMonitorSensor], StateType | datetime]
+    add_to_update: Callable[[SystemMonitorSensor], tuple[str, str]]
     none_is_unavailable: bool = False
     mandatory_arg: bool = False
     placeholder: str | None = None
@@ -171,6 +172,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         if entity.argument in entity.coordinator.data.disk_usage
         else None,
         none_is_unavailable=True,
+        add_to_update=lambda entity: ("disks", entity.argument),
     ),
     "disk_use": SysMonitorSensorEntityDescription(
         key="disk_use",
@@ -186,6 +188,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         if entity.argument in entity.coordinator.data.disk_usage
         else None,
         none_is_unavailable=True,
+        add_to_update=lambda entity: ("disks", entity.argument),
     ),
     "disk_use_percent": SysMonitorSensorEntityDescription(
         key="disk_use_percent",
@@ -200,6 +203,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         if entity.argument in entity.coordinator.data.disk_usage
         else None,
         none_is_unavailable=True,
+        add_to_update=lambda entity: ("disks", entity.argument),
     ),
     "ipv4_address": SysMonitorSensorEntityDescription(
         key="ipv4_address",
@@ -208,6 +212,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:ip-network",
         mandatory_arg=True,
         value_fn=get_ip_address,
+        add_to_update=lambda entity: ("addresses", ""),
     ),
     "ipv6_address": SysMonitorSensorEntityDescription(
         key="ipv6_address",
@@ -216,12 +221,14 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:ip-network",
         mandatory_arg=True,
         value_fn=get_ip_address,
+        add_to_update=lambda entity: ("addresses", ""),
     ),
     "last_boot": SysMonitorSensorEntityDescription(
         key="last_boot",
         translation_key="last_boot",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda entity: entity.coordinator.data.boot_time,
+        add_to_update=lambda entity: ("boot", ""),
     ),
     "load_15m": SysMonitorSensorEntityDescription(
         key="load_15m",
@@ -229,6 +236,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: round(entity.coordinator.data.load[2], 2),
+        add_to_update=lambda entity: ("load", ""),
     ),
     "load_1m": SysMonitorSensorEntityDescription(
         key="load_1m",
@@ -236,6 +244,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: round(entity.coordinator.data.load[0], 2),
+        add_to_update=lambda entity: ("load", ""),
     ),
     "load_5m": SysMonitorSensorEntityDescription(
         key="load_5m",
@@ -243,6 +252,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon=get_cpu_icon(),
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: round(entity.coordinator.data.load[1], 2),
+        add_to_update=lambda entity: ("load", ""),
     ),
     "memory_free": SysMonitorSensorEntityDescription(
         key="memory_free",
@@ -254,6 +264,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         value_fn=lambda entity: round(
             entity.coordinator.data.memory.available / 1024**2, 1
         ),
+        add_to_update=lambda entity: ("memory", ""),
     ),
     "memory_use": SysMonitorSensorEntityDescription(
         key="memory_use",
@@ -270,6 +281,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
             / 1024**2,
             1,
         ),
+        add_to_update=lambda entity: ("memory", ""),
     ),
     "memory_use_percent": SysMonitorSensorEntityDescription(
         key="memory_use_percent",
@@ -278,6 +290,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: entity.coordinator.data.memory.percent,
+        add_to_update=lambda entity: ("memory", ""),
     ),
     "network_in": SysMonitorSensorEntityDescription(
         key="network_in",
@@ -289,6 +302,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
         value_fn=get_network,
+        add_to_update=lambda entity: ("io_counters", ""),
     ),
     "network_out": SysMonitorSensorEntityDescription(
         key="network_out",
@@ -300,6 +314,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
         value_fn=get_network,
+        add_to_update=lambda entity: ("io_counters", ""),
     ),
     "packets_in": SysMonitorSensorEntityDescription(
         key="packets_in",
@@ -309,6 +324,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
         value_fn=get_packets,
+        add_to_update=lambda entity: ("io_counters", ""),
     ),
     "packets_out": SysMonitorSensorEntityDescription(
         key="packets_out",
@@ -318,6 +334,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         mandatory_arg=True,
         value_fn=get_packets,
+        add_to_update=lambda entity: ("io_counters", ""),
     ),
     "throughput_network_in": SysMonitorSensorEntityDescription(
         key="throughput_network_in",
@@ -328,6 +345,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         mandatory_arg=True,
         value_fn=get_throughput,
+        add_to_update=lambda entity: ("io_counters", ""),
     ),
     "throughput_network_out": SysMonitorSensorEntityDescription(
         key="throughput_network_out",
@@ -338,6 +356,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         mandatory_arg=True,
         value_fn=get_throughput,
+        add_to_update=lambda entity: ("io_counters", ""),
     ),
     "process": SysMonitorSensorEntityDescription(
         key="process",
@@ -346,6 +365,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon=get_cpu_icon(),
         mandatory_arg=True,
         value_fn=get_process,
+        add_to_update=lambda entity: ("processes", ""),
     ),
     "processor_use": SysMonitorSensorEntityDescription(
         key="processor_use",
@@ -358,6 +378,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
             if entity.coordinator.data.cpu_percent
             else None
         ),
+        add_to_update=lambda entity: ("cpu_percent", ""),
     ),
     "processor_temperature": SysMonitorSensorEntityDescription(
         key="processor_temperature",
@@ -367,6 +388,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_processor_temperature,
         none_is_unavailable=True,
+        add_to_update=lambda entity: ("temperatures", ""),
     ),
     "swap_free": SysMonitorSensorEntityDescription(
         key="swap_free",
@@ -376,6 +398,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: round(entity.coordinator.data.swap.free / 1024**2, 1),
+        add_to_update=lambda entity: ("swap", ""),
     ),
     "swap_use": SysMonitorSensorEntityDescription(
         key="swap_use",
@@ -385,6 +408,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: round(entity.coordinator.data.swap.used / 1024**2, 1),
+        add_to_update=lambda entity: ("swap", ""),
     ),
     "swap_use_percent": SysMonitorSensorEntityDescription(
         key="swap_use_percent",
@@ -393,6 +417,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         icon="mdi:harddisk",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: entity.coordinator.data.swap.percent,
+        add_to_update=lambda entity: ("swap", ""),
     ),
 }
 
@@ -771,6 +796,16 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         self.argument = argument
         self.value: int | None = None
         self.update_time: float | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """When added to hass."""
+        self.coordinator.update_list.append(self.entity_description.add_to_update(self))
+        return await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When removed from hass."""
+        self.coordinator.update_list.remove(self.entity_description.add_to_update(self))
+        return await super().async_will_remove_from_hass()
 
     @property
     def native_value(self) -> StateType | datetime:
