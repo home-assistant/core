@@ -483,9 +483,7 @@ class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"])
         self._device_name = f"{self._model} {self._home_name}"
 
         self._attr_native_value = initial_state
-        self._attr_unique_id = (
-            f"{self._tibber_home.home_id}_rt_{description.translation_key}"
-        )
+        self._attr_unique_id = f"{self._tibber_home.home_id}_rt_{description.key}"
 
         if description.key in ("accumulatedCost", "accumulatedReward"):
             self._attr_native_unit_of_measurement = tibber_home.currency
@@ -565,31 +563,37 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-en
     @callback
     def _migrate_unique_id(self, sensor_description: SensorEntityDescription) -> None:
         """Migrate unique id if needed."""
+        home_id = self._tibber_home.home_id
         translation_key = sensor_description.translation_key
+        description_key = sensor_description.key
         entity_id: str | None = None
         if translation_key in RT_SENSORS_UNIQUE_ID_MIGRATION_SIMPLE:
             entity_id = self.entity_registry.async_get_entity_id(
                 "sensor",
                 TIBBER_DOMAIN,
-                f"{self._tibber_home.home_id}_rt_{translation_key.replace('_', ' ')}",
+                f"{home_id}_rt_{translation_key.replace('_', ' ')}",
             )
         elif translation_key in RT_SENSORS_UNIQUE_ID_MIGRATION:
             entity_id = self.entity_registry.async_get_entity_id(
                 "sensor",
                 TIBBER_DOMAIN,
-                f"{self._tibber_home.home_id}_rt_{RT_SENSORS_UNIQUE_ID_MIGRATION[translation_key]}",
+                f"{home_id}_rt_{RT_SENSORS_UNIQUE_ID_MIGRATION[translation_key]}",
+            )
+        elif translation_key != description_key:
+            entity_id = self.entity_registry.async_get_entity_id(
+                "sensor",
+                TIBBER_DOMAIN,
+                f"{home_id}_rt_{translation_key}",
             )
 
         if entity_id is None:
             return
 
-        new_unique_id = (
-            f"{self._tibber_home.home_id}_rt_{sensor_description.translation_key}"
-        )
+        new_unique_id = f"{home_id}_rt_{description_key}"
 
         _LOGGER.debug(
             "Migrating unique id for %s to %s",
-            sensor_description.translation_key,
+            entity_id,
             new_unique_id,
         )
         try:
