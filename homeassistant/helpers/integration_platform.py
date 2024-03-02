@@ -49,7 +49,7 @@ def _get_platform(
         return None
 
     try:
-        return integration.get_platform(platform_name)
+        return integration.get_integration_platform(platform_name)
     except ImportError as err:
         if f"{component_name}.{platform_name}" not in str(err):
             _LOGGER.exception(
