@@ -9,6 +9,9 @@ CONF_PLEX_TOKEN = "plex_token"
 CONF_PLEX_IP_ADDRESS = "plex_ip_address"
 ADD_SONOS = "add_sonos"
 
+DEFAULT_PORT = 32500
+DEFAULT_SSL = False
+DEFAULT_VERIFY_SSL = True
 
 # media player configurations
 POLL_WAIT = 0

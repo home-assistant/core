@@ -16,12 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONF_PLEX_IP_ADDRESS,
-    CONF_PLEX_TOKEN,
-    DOMAIN,
-    REPEAT_MODE_TO_NUMBER,
-)
+from .const import CONF_PLEX_IP_ADDRESS, CONF_PLEX_TOKEN, DOMAIN, REPEAT_MODE_TO_NUMBER
 from .services import PlexampService
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,10 +37,18 @@ async def async_setup_entry(
     devices: list[dict] = entry.data["devices"]
     entities: list[PlexampMediaPlayer] = []
 
+    _LOGGER.debug("Found devices %s", devices)
+
     for device in devices:
-        plex_token = entry.data.get(CONF_PLEX_TOKEN)
-        plex_ip_address = entry.data.get(CONF_PLEX_IP_ADDRESS)
-        entity = PlexampMediaPlayer(device.get('name'), device.get('host'), plex_token, plex_ip_address, device.get('identifier'))
+        plex_token = entry.data.get(CONF_PLEX_TOKEN, None)
+        plex_ip_address = entry.data.get(CONF_PLEX_IP_ADDRESS, None)
+        entity = PlexampMediaPlayer(
+            device.get("name"),
+            device.get("host"),
+            plex_token,
+            plex_ip_address,
+            device.get("identifier"),
+        )
         entities.append(entity)
 
     async_add_entities(entities, update_before_add=True)
@@ -55,12 +58,17 @@ class PlexampMediaPlayer(MediaPlayerEntity):
     """Representation of a Plexamp media player."""
 
     def __init__(
-        self, name: str, host: str, plex_token: str | None, plex_ip_address: str | None, plex_identifier: str
+        self,
+        name: str,
+        host: str,
+        plex_token: str | None,
+        plex_ip_address: str | None,
+        plex_identifier: str,
     ) -> None:
         """Initialize the Plexamp device."""
         self._attr_unique_id = f"Plexamp_{name}"
         self._plex_identifier = plex_identifier
-        self._attr_name = name
+        self._attr_name = f"Plexamp {name}"
         self._attr_state = STATE_IDLE
         self._host = host
         self._plex_token = plex_token
@@ -70,7 +78,7 @@ class PlexampMediaPlayer(MediaPlayerEntity):
             plex_identifier=plex_identifier,
             plex_ip_address=plex_ip_address,
             host=host,
-            device_name=name
+            device_name=name,
         )
 
         _LOGGER.debug("Creating new device: %s", name)
@@ -149,5 +157,3 @@ class PlexampMediaPlayer(MediaPlayerEntity):
         """Set volume level, range 0..1."""
         converted_volume = volume * 100
         self._plexamp_service.send_set_parameter_command(f"volume={converted_volume}")
-
-
