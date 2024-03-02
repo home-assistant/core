@@ -34,9 +34,7 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input["option"] == "new_device_without_metadata":
             return await self.async_step_add_plexamp_device(errors=errors)
         if user_input["option"] == "new_device_with_metadata":
-            return await self.async_step_add_plexamp_device(
-                errors=errors, with_metadata=True
-            )
+            return await self.async_step_add_plexamp_device_with_metadata(errors=errors)
         if user_input["option"] == "sonos_devices":
             return await self.async_step_add_sonos_devices(errors=errors)
 
@@ -58,8 +56,8 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_add_plexamp_device(
-        self, user_input=None, errors=None, with_metadata=False
+    async def async_step_add_plexamp_device_with_metadata(
+        self, user_input=None, errors=None
     ) -> FlowResult:
         with_metadata_schema = vol.Schema(
             {
@@ -69,59 +67,98 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
+        errors = {} if not errors else errors
+        if user_input is not None:
+            device = await self._async_add_plexamp_device(
+                user_input=user_input, with_metadata=True
+            )
+
+            if not device:
+                _LOGGER.error("Couldn't find any Plexamp device")
+                errors["base"] = "invalid_host"
+
+            if not errors:
+                _LOGGER.debug("identifier: %s", device.client_identifier)
+                await self.async_set_unique_id(device.client_identifier)
+                self._abort_if_unique_id_configured()
+                entry_data = user_input.copy()
+                entry_data["devices"] = [device.to_dict()]
+                return self.async_create_entry(title=device.name, data=entry_data)
+
+        return self.async_show_form(
+            step_id="add_plexamp_device_with_metadata",
+            data_schema=with_metadata_schema,
+            errors=errors,
+        )
+
+    async def async_step_add_plexamp_device(
+        self, user_input=None, errors=None
+    ) -> FlowResult:
         no_metadata_schema = vol.Schema(
             {
                 vol.Required("host"): str,
             }
         )
-
+        errors = {} if not errors else errors
         if user_input is not None:
-            host = user_input.get(CONF_HOST)
-            try:
-                (
-                    connection_successful,
-                    device,
-                ) = await self._async_test_connection(self.hass, host)
+            device = await self._async_add_plexamp_device(user_input=user_input)
 
-                if not connection_successful:
-                    _LOGGER.error(
-                        "Couldn't connect to Plexamp, connection was not successful"
-                    )
-                    errors["base"] = "invalid_host"
-
-                if not errors:
-                    _LOGGER.debug("identifier: %s", device.identifier)
-                    await self.async_set_unique_id(device.identifier)
-                    self._abort_if_unique_id_configured()
-                    entry_data = user_input.copy()
-                    entry_data["devices"] = [device.to_dict()]
-                    return self.async_create_entry(title=device.name, data=entry_data)
-
-            except Exception as e:
-                _LOGGER.error("Error trying to connect to Plexamp: %s", e)
-                return self.async_show_form(
-                    step_id="add_plexamp_device",
-                    data_schema=with_metadata_schema
-                    if with_metadata
-                    else no_metadata_schema,
-                    errors=errors,
+            if not device:
+                _LOGGER.error(
+                    "Couldn't connect to Plexamp, connection was not successful"
                 )
+                errors["base"] = "invalid_host"
+
+            if not errors:
+                _LOGGER.debug("identifier: %s", device.client_identifier)
+                await self.async_set_unique_id(device.client_identifier)
+                self._abort_if_unique_id_configured()
+                entry_data = user_input.copy()
+                entry_data["devices"] = [device.to_dict()]
+                return self.async_create_entry(title=device.name, data=entry_data)
 
         return self.async_show_form(
-            step_id="add_plexamp_device",
-            data_schema=with_metadata_schema if with_metadata else no_metadata_schema,
+            step_id="add_plexamp_device_with_metadata",
+            data_schema=no_metadata_schema,
             errors=errors,
         )
+
+    async def _async_add_plexamp_device(self, user_input, with_metadata=False):
+        host = user_input.get(CONF_HOST)
+        plex_token = user_input.get("plex_token")
+        plex_ip_address = user_input.get("plex_ip_address")
+
+        device = None
+        try:
+            if with_metadata:
+                device = await self._async_test_authenticated_connection(
+                    self.hass,
+                    host=host,
+                    plex_token=plex_token,
+                    plex_ip_address=plex_ip_address,
+                )
+            else:
+                device = await self._async_test_connection(self.hass, host)
+
+            return device
+
+        except Exception as e:
+            _LOGGER.error("Error trying to connect to Plexamp: %s", e)
+            return device
 
     async def async_step_add_sonos_devices(
         self, user_input=None, errors=None
     ) -> FlowResult:
         """Create form schema for looking for sonos devices"""
+        errors = {} if not errors else errors
         if user_input is not None:
             # Validate user input
             plex_token = user_input.get(CONF_PLEX_TOKEN)
 
             sonos_devices = await self._check_for_sonos_devices(self.hass, plex_token)
+            if not len(sonos_devices):
+                _LOGGER.error("Couldn't find any Sonos devices.")
+                errors["base"] = "invalid_host"
 
             if not errors:
                 all_devices: list[dict] = [device.to_dict() for device in sonos_devices]
@@ -164,17 +201,32 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 players = root.findall("Player")
 
                 for player in players:
-                    identifier = player.get("machineIdentifier", "")
-                    ip = player.get("lanIP", "")
                     name = player.get("title", "")
-                    host = "https://sonos.plex.tv"
+                    product = player.get("product")
+                    platform_version = player.get("platformVersion")
+                    machine_identifier = player.get("machineIdentifier", "")
+                    protocol = player.get("protocol")
+                    lan_ip = player.get("lanIP", "")
+                    uri = "https://sonos.plex.tv"
+                    server_uri = uri
+
                     new_sonos_device = BaseMediaPlayerFactory(
-                        name=name, host=host, identifier=identifier, ip=ip
+                        name=name,
+                        product=product,
+                        product_version=platform_version,
+                        client_identifier=machine_identifier,
+                        protocol=protocol,
+                        address=lan_ip,
+                        port="",
+                        uri=uri,
+                        server_uri=server_uri,
                     )
 
                     sonos_devices.append(new_sonos_device)
 
-                    _LOGGER.debug("Found player %s with id %s", name, identifier)
+                    _LOGGER.debug(
+                        "Found player %s with id %s", name, machine_identifier
+                    )
         except (aiohttp.ClientError, aiohttp.ClientResponseError) as e:
             _LOGGER.error("Error retrieving Sonos devices: %s", e)
         except ET.ParseError as e:
@@ -183,9 +235,67 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return sonos_devices
 
     @staticmethod
+    async def _async_test_authenticated_connection(
+        hass: HomeAssistant, host: str, plex_token: str, plex_ip_address: str
+    ) -> BaseMediaPlayerFactory | None:
+        """If the user provides authentication, we can get more info of the device and store it"""
+        url = "https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=0"
+        session = async_get_clientsession(hass)
+        _LOGGER.debug("URL: %s", url)
+        headers = {
+            "X-Plex-Token": plex_token,
+            "X-Plex-Client-Identifier": "Plex_HomeAssistant",
+            "X-Plex-Product": "Plex_HomeAssistant",
+            "Accept": "application/json",
+        }
+        try:
+            async with session.get(url, timeout=10, headers=headers) as response:
+                if response.status == 200:
+                    devices = await response.json()
+                    server_uri = None
+                    found_device = None
+
+                    for device in devices:
+                        first_connection = device.get("connections", [{}])[0]
+                        if (
+                            device.get("provides") == "server"
+                            and first_connection.get("address") == plex_ip_address
+                        ):
+                            server_uri = first_connection.get("uri")
+                        if (
+                            "player" in device.get("provides")
+                            and first_connection.get("address") == host
+                        ):
+                            found_device = device
+
+                    if found_device is None or server_uri is None:
+                        return None
+
+                    _LOGGER.debug("server_uri uri: %s", server_uri)
+                    device = BaseMediaPlayerFactory(
+                        name=found_device.get("name"),
+                        product=found_device.get("product"),
+                        product_version=found_device.get("productVersion"),
+                        client_identifier=found_device.get("clientIdentifier", ""),
+                        protocol=found_device.get("connections", [{}])[0].get(
+                            "protocol"
+                        ),
+                        address=found_device.get("connections", [{}])[0].get("address"),
+                        port=found_device.get("connections", [{}])[0].get("port"),
+                        uri=found_device.get("connections", [{}])[0].get("uri"),
+                        server_uri=server_uri,
+                    )
+
+                    return device
+            return None
+        except (TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Connection to Plexamp could not be established")
+        return None
+
+    @staticmethod
     async def _async_test_connection(
         hass: HomeAssistant, host: str
-    ) -> (bool, BaseMediaPlayerFactory):
+    ) -> BaseMediaPlayerFactory | None:
         """Return True if connection to the provided host is successful."""
 
         url = f"http://{host}:32500/resources"
@@ -195,30 +305,38 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             async with session.get(url, timeout=10) as response:
-                text = await response.text()
-                root = ET.fromstring(text)
+                if response.status == 200:
+                    text = await response.text()
+                    root = ET.fromstring(text)
 
-                timeline = root.find("Player")
+                    timeline = root.find("Player")
 
-                name = timeline.get("title", "Plexamp")
-                identifier = timeline.get("machineIdentifier", url)
+                    name = timeline.get("title", "Plexamp")
+                    product = timeline.get("product", "Plexamp")
+                    platform_version = timeline.get("platformVersion", url)
+                    machine_identifier = timeline.get("machineIdentifier", url)
 
-                device = BaseMediaPlayerFactory(
-                    name=name,
-                    host=f"http://{host}:32500",
-                    identifier=identifier,
-                    ip=host,
-                )
+                    device = BaseMediaPlayerFactory(
+                        name=name,
+                        product=product,
+                        product_version=platform_version,
+                        client_identifier=machine_identifier,
+                        protocol="http",
+                        address=host,
+                        port="32500",
+                        uri=f"http://{host}:32500",
+                        server_uri="",
+                    )
 
-                _LOGGER.debug(
-                    "Connection with %s was successful. New media_player found: %s",
-                    url,
-                    name,
-                )
+                    _LOGGER.debug(
+                        "Connection with %s was successful. New media_player found: %s",
+                        url,
+                        name,
+                    )
 
-                return response.status == 200, device
+                    return device
 
+            return None
         except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout trying to connect to Plexamp")
-
-        return False, None
+        return None

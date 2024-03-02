@@ -2,23 +2,65 @@
 
 
 class BaseMediaPlayerFactory:
-    """ Factory for creating a base media player (before actually creating the device in HA"""
-    name: str
-    host: str
-    identifier: str
-    ip: str
+    """Factory for creating a base media player (before actually creating the device in HA"""
 
-    def __init__(self, name: str, host: str, identifier: str, ip: str) -> None:
+    name: str
+    product: str
+    product_version: str
+    client_identifier: str
+    protocol: str
+    address: str
+    port: str
+    uri: str
+    server_uri: str
+
+    def __init__(
+        self,
+        name: str,
+        product: str,
+        product_version: str,
+        client_identifier: str,
+        protocol: str,
+        address: str,
+        port: str,
+        uri: str,
+        server_uri: str,
+    ) -> None:
         self.name = name
-        self.host = host
-        self.identifier = identifier
-        self.ip = ip
+        self.product = product
+        self.product_version = product_version
+        self.client_identifier = client_identifier
+        self.protocol = protocol
+        self.address = address
+        self.port = port
+        self.uri = uri
+        self.server_uri = server_uri
 
     def to_dict(self) -> dict:
         """Return a dictionary representation of the instance's data attributes."""
         return {
-            'name': self.name,
-            'host': self.host,
-            'identifier': self.identifier,
-            'ip': self.ip
+            "name": self.name,
+            "product": self.product,
+            "product_version": self.product_version,
+            "client_identifier": self.client_identifier,
+            "protocol": self.protocol,
+            "address": self.address,
+            "port": self.port,
+            "uri": self.uri,
+            "server_uri": self.server_uri,
         }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "BaseMediaPlayerFactory":
+        """Create an instance of BaseMediaPlayerFactory from a dictionary."""
+        return cls(
+            name=data.get("name", ""),
+            product=data.get("product", ""),
+            product_version=data.get("product_version", ""),
+            client_identifier=data.get("client_identifier", ""),
+            protocol=data.get("protocol", ""),
+            address=data.get("address", ""),
+            port=data.get("port", ""),
+            uri=data.get("uri", ""),
+            server_uri=data.get("server_uri", ""),
+        )

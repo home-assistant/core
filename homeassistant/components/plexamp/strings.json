@@ -12,10 +12,18 @@
           "sonos_devices": "Sonos devices (requires token)"
         }
       },
+      "add_plexamp_device_with_metadata": {
+        "title": "Add a Plexamp device",
+        "data": {
+          "host": "Plexamp device (local IP address of your Plexamp app)",
+          "plex_ip_address": "Plex Server (local IP address of your Plex Server).",
+          "plex_token": "Insert a valid Plex token."
+        }
+      },
       "add_plexamp_device": {
         "title": "Add a Plexamp device",
         "data": {
-          "host": "Plexamp device (IP address or domain name of your Plexamp app)",
+          "host": "Plexamp device (local IP address of your Plexamp app)",
           "plex_ip_address": "Plex Server (local IP address of your Plex Server).",
           "plex_token": "Insert a valid Plex token."
         }

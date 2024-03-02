@@ -11,7 +11,12 @@ from homeassistant.components.media_player import (
     RepeatMode,
     BrowseMedia,
 )
-from homeassistant.components.media_player.const import MEDIA_CLASS_ALBUM, MEDIA_CLASS_ARTIST, MEDIA_CLASS_PLAYLIST
+from homeassistant.components.media_player.const import (
+    MEDIA_CLASS_ALBUM,
+    MEDIA_CLASS_ARTIST,
+    MEDIA_CLASS_PLAYLIST,
+    MediaType,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_IDLE
@@ -20,6 +25,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_PLEX_IP_ADDRESS, CONF_PLEX_TOKEN, DOMAIN, REPEAT_MODE_TO_NUMBER
+from .models import BaseMediaPlayerFactory
 from .services import PlexampService
 
 
@@ -45,13 +51,10 @@ async def async_setup_entry(
 
     for device in devices:
         plex_token = entry.data.get(CONF_PLEX_TOKEN, None)
-        plex_ip_address = entry.data.get(CONF_PLEX_IP_ADDRESS, None)
+        # plex_ip_address = entry.data.get(CONF_PLEX_IP_ADDRESS, None)
         entity = PlexampMediaPlayer(
-            device.get("name"),
-            device.get("host"),
-            plex_token,
-            plex_ip_address,
-            device.get("identifier"),
+            BaseMediaPlayerFactory.from_dict(device),
+            plex_token=plex_token,
         )
         entities.append(entity)
 
@@ -63,32 +66,24 @@ class PlexampMediaPlayer(MediaPlayerEntity):
 
     def __init__(
         self,
-        name: str,
-        host: str,
+        entity: BaseMediaPlayerFactory,
         plex_token: str | None,
-        plex_ip_address: str | None,
-        plex_identifier: str,
     ) -> None:
         """Initialize the Plexamp device."""
-        self._attr_unique_id = f"Plexamp_{name}"
-        self._plex_identifier = plex_identifier
-        self._attr_name = f"Plexamp {name}"
+        self._attr_unique_id = f"Plexamp_{entity.name}"
+        self._attr_name = f"Plexamp {entity.name}"
+        self._plexamp_entity = entity
         self._attr_state = STATE_IDLE
-        self._host = host
-        self._plex_token = plex_token
-        self._plex_ip_address = plex_ip_address
+
         self._plexamp_service = PlexampService(
+            plexamp_entity=entity,
             plex_token=plex_token,
-            plex_identifier=plex_identifier,
-            plex_ip_address=plex_ip_address,
-            host=host,
-            device_name=name,
         )
 
-        _LOGGER.debug("Creating new device: %s", name)
+        _LOGGER.debug("Creating new device: %s", self._attr_name)
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, name)},
-            name=name,
+            identifiers={(DOMAIN, self._attr_name)},
+            name=self._attr_name,
             manufacturer="Plexamp",
         )
 
@@ -113,8 +108,7 @@ class PlexampMediaPlayer(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Retrieve the latest data from the device."""
-        device_information = await self._plexamp_service.get_device_information()
-
+        device_information = await self._plexamp_service.poll_device()
         if device_information:
             self._attr_state = device_information["state"]
             self._attr_media_image_url = device_information.get("thumb")
@@ -167,19 +161,27 @@ class PlexampMediaPlayer(MediaPlayerEntity):
             f"volume={converted_volume}"
         )
 
-    async def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: MediaType | str, **kwargs
+    ):
         """Implement media playback."""
         # Handle playlist selection
         if media_type == "playlist":
             # Send command to start playing the selected playlist
-            _LOGGER.debug("WE ARE STARTING A PLAYLIST MEDIA!!! %s %s %s", media_type, media_id, kwargs)
-            pass
+            _LOGGER.debug(
+                "WE ARE STARTING A PLAYLIST MEDIA!!! %s %s %s",
+                media_type,
+                media_id,
+                kwargs,
+            )
         # Handle track selection
         elif media_type == "track":
             # Send command to start playing the selected track
             pass
 
-    async def async_browse_media(self, media_content_type=None, media_content_id=None) -> BrowseMedia:
+    async def async_browse_media(
+        self, media_content_type=None, media_content_id=None
+    ) -> BrowseMedia:
         """Implement the browsing media method."""
 
         # Root level browsing
@@ -199,9 +201,9 @@ class PlexampMediaPlayer(MediaPlayerEntity):
                         media_content_id="albums",
                         media_content_type="albums",
                         can_expand=True,
-                        can_play=False
+                        can_play=False,
                     )
-                ]
+                ],
             )
 
         # Handle browsing for specific categories (e.g., albums)
@@ -212,14 +214,16 @@ class PlexampMediaPlayer(MediaPlayerEntity):
             # Construct browse media response
             album_items = []
             for playlist in playlists:
-                album_items.append(BrowseMedia(
-                    title=playlist["title"],
-                    media_class=MEDIA_CLASS_PLAYLIST,
-                    media_content_id=playlist["id"],
-                    media_content_type=MEDIA_CLASS_PLAYLIST,
-                    can_expand=False,
-                    can_play=True,
-                ))
+                album_items.append(
+                    BrowseMedia(
+                        title=playlist["title"],
+                        media_class=MEDIA_CLASS_PLAYLIST,
+                        media_content_id=playlist["composite"],
+                        media_content_type=MEDIA_CLASS_PLAYLIST,
+                        can_expand=False,
+                        can_play=True,
+                    )
+                )
 
             return BrowseMedia(
                 title="Albums",
