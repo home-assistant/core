@@ -992,8 +992,6 @@ class Integration:
             return platform
 
         cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
-        missing_platforms_cache: dict[str, ImportError]
-
         if (component := cache.get(self.domain)) and (
             file := getattr(component, "__file__", None)
         ):
@@ -1004,6 +1002,7 @@ class Integration:
             platform_file = pathlib.Path(file).parent.joinpath(f"{platform_name}.py")
             if not os.path.exists(platform_file):
                 full_name = f"{self.domain}.{platform_name}"
+                missing_platforms_cache: dict[str, ImportError]
                 missing_platforms_cache = self.hass.data[DATA_MISSING_PLATFORMS]
                 exc = ModuleNotFoundError(
                     f"Platform {full_name} not found at {platform_file}",
