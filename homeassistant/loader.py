@@ -12,6 +12,7 @@ from dataclasses import dataclass
 import functools as ft
 import importlib
 import logging
+import os
 import pathlib
 import sys
 import time
@@ -977,7 +978,17 @@ class Integration:
         """Return a platform for an integration."""
         if platform := self._get_platform_cached(f"{self.domain}.{platform_name}"):
             return platform
-        return self._load_platform(platform_name)
+        start_load_platform_time = time.perf_counter()
+        _LOGGER.debug("Importing %s.%s", self.pkg_path, platform_name)
+        try:
+            return self._load_platform(platform_name)
+        finally:
+            _LOGGER.debug(
+                "Importing %s.%s took %.2fs",
+                self.pkg_path,
+                platform_name,
+                time.perf_counter() - start_load_platform_time,
+            )
 
     def _load_platform(self, platform_name: str) -> ModuleType:
         """Load a platform for an integration.
@@ -991,15 +1002,32 @@ class Integration:
         """
         full_name = f"{self.domain}.{platform_name}"
         cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
+        missing_platforms_cache: dict[str, ImportError]
+
+        if (component := cache.get(self.domain)) and (
+            file := getattr(component, "__file__", None)
+        ):
+            # If the component is already loaded, we know the path
+            # to the platform file and can check if it exists before
+            # having to import it since with integration_platforms
+            # most of them do not exist
+            platform_file = pathlib.Path(file).parent.joinpath(f"{platform_name}.py")
+            if not os.path.exists(platform_file):
+                missing_platforms_cache = self.hass.data[DATA_MISSING_PLATFORMS]
+                exc = ModuleNotFoundError(
+                    f"Platform {full_name} not found at {platform_file}",
+                    name=f"{self.pkg_path}.{platform_name}",
+                )
+                missing_platforms_cache[full_name] = exc
+                raise exc
+
         try:
             cache[full_name] = self._import_platform(platform_name)
         except ImportError as ex:
             if self.domain in cache:
                 # If the domain is loaded, cache that the platform
                 # does not exist so we do not try to load it again
-                missing_platforms_cache: dict[str, ImportError] = self.hass.data[
-                    DATA_MISSING_PLATFORMS
-                ]
+                missing_platforms_cache = self.hass.data[DATA_MISSING_PLATFORMS]
                 missing_platforms_cache[full_name] = ex
             raise
         except RuntimeError as err:
