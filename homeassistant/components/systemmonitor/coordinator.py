@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 import os
-from typing import Any, NamedTuple, TypeVar
+from typing import Any, NamedTuple
 
 from psutil import Process
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
@@ -65,9 +65,6 @@ class VirtualMemory(NamedTuple):
     free: float
 
 
-dataT = TypeVar("dataT", bound=SensorData)
-
-
 class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
     """A System monitor Data Update Coordinator."""
 
@@ -115,7 +112,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         for argument in self._arguments:
             try:
                 usage: sdiskusage = self._psutil.disk_usage(argument)
-                _LOGGER.debug("sdiskusage: %s", usage)
+                _LOGGER.debug("sdiskusagefor %s: %s", argument, usage)
             except PermissionError as err:
                 _LOGGER.warning("No permission to access %s, error %s", argument, err)
             except OSError as err:

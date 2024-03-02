@@ -25,6 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN] = psutil_wrapper
 
     disk_arguments = await hass.async_add_executor_job(get_all_disk_mounts, hass)
+    _LOGGER.debug("disk arguments to be added: %s", disk_arguments)
 
     coordinator: SystemMonitorCoordinator = SystemMonitorCoordinator(
         hass, psutil_wrapper, list(disk_arguments)
