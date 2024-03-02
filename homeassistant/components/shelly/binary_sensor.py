@@ -206,6 +206,14 @@ RPC_SENSORS: Final = {
         name="Smoke",
         device_class=BinarySensorDeviceClass.SMOKE,
     ),
+    "script": RpcBinarySensorDescription(
+        key="script",
+        sub_key="running",
+        name="Script",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 }
 
 
