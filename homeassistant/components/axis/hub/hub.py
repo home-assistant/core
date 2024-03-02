@@ -1,5 +1,7 @@
 """Axis network device abstraction."""
 
+from __future__ import annotations
+
 from typing import Any
 
 import axis
@@ -57,6 +59,13 @@ class AxisHub:
         self.product_type = api.vapix.product_type
 
         self.additional_diagnostics: dict[str, Any] = {}
+
+    @callback
+    @staticmethod
+    def get_hub(hass: HomeAssistant, config_entry: ConfigEntry) -> AxisHub:
+        """Get Axis hub from config entry."""
+        hub: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+        return hub
 
     @property
     def host(self) -> str:
@@ -151,7 +160,7 @@ class AxisHub:
 
     @staticmethod
     async def async_new_address_callback(
-        hass: HomeAssistant, entry: ConfigEntry
+        hass: HomeAssistant, config_entry: ConfigEntry
     ) -> None:
         """Handle signals of device getting new address.
 
@@ -159,9 +168,9 @@ class AxisHub:
         This is a static method because a class method (bound method),
         cannot be used with weak references.
         """
-        device: AxisHub = hass.data[AXIS_DOMAIN][entry.entry_id]
-        device.api.config.host = device.host
-        async_dispatcher_send(hass, device.signal_new_address)
+        hub = AxisHub.get_hub(hass, config_entry)
+        hub.api.config.host = hub.host
+        async_dispatcher_send(hass, hub.signal_new_address)
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""

@@ -19,7 +19,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from .const import DOMAIN as AXIS_DOMAIN
 from .entity import AxisEventEntity
 from .hub import AxisHub
 
@@ -52,7 +51,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Axis binary sensor."""
-    hub: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    hub = AxisHub.get_hub(hass, config_entry)
 
     @callback
     def async_create_entity(event: Event) -> None:

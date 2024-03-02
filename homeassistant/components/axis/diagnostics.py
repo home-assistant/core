@@ -8,7 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN as AXIS_DOMAIN
 from .hub import AxisHub
 
 REDACT_CONFIG = {CONF_MAC, CONF_PASSWORD, CONF_UNIQUE_ID, CONF_USERNAME}
@@ -20,7 +19,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    hub: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    hub = AxisHub.get_hub(hass, config_entry)
     diag: dict[str, Any] = hub.additional_diagnostics.copy()
 
     diag["config"] = async_redact_data(config_entry.as_dict(), REDACT_CONFIG)

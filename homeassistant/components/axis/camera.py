@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEFAULT_STREAM_PROFILE, DEFAULT_VIDEO_SOURCE, DOMAIN as AXIS_DOMAIN
+from .const import DEFAULT_STREAM_PROFILE, DEFAULT_VIDEO_SOURCE
 from .entity import AxisEntity
 from .hub import AxisHub
 
@@ -22,7 +22,7 @@ async def async_setup_entry(
     """Set up the Axis camera video stream."""
     filter_urllib3_logging()
 
-    hub: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    hub = AxisHub.get_hub(hass, config_entry)
 
     if (
         not (prop := hub.api.vapix.params.property_handler.get("0"))

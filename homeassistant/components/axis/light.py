@@ -8,7 +8,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as AXIS_DOMAIN
 from .entity import AxisEventEntity
 from .hub import AxisHub
 
@@ -19,7 +18,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Axis light."""
-    hub: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    hub = AxisHub.get_hub(hass, config_entry)
 
     if hub.api.vapix.light_control is None or len(hub.api.vapix.light_control) == 0:
         return
