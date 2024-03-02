@@ -978,17 +978,7 @@ class Integration:
         """Return a platform for an integration."""
         if platform := self._get_platform_cached(f"{self.domain}.{platform_name}"):
             return platform
-        start_load_platform_time = time.perf_counter()
-        _LOGGER.debug("Importing %s.%s", self.pkg_path, platform_name)
-        try:
-            return self._load_platform(platform_name)
-        finally:
-            _LOGGER.debug(
-                "Importing %s.%s took %.2fs",
-                self.pkg_path,
-                platform_name,
-                time.perf_counter() - start_load_platform_time,
-            )
+        return self._load_platform(platform_name)
 
     def _load_platform(self, platform_name: str) -> ModuleType:
         """Load a platform for an integration.
