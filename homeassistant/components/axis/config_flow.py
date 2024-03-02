@@ -57,7 +57,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the Axis config flow."""
-        self.device_config: dict[str, Any] = {}
+        self.config: dict[str, Any] = {}
         self.discovery_schema: dict[vol.Required, type[str | int]] | None = None
 
     async def async_step_user(
@@ -85,7 +85,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
                     }
                 )
 
-                self.device_config = {
+                self.config = {
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_USERNAME: user_input[CONF_USERNAME],
@@ -110,7 +110,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            description_placeholders=self.device_config,
+            description_placeholders=self.config,
             data_schema=vol.Schema(data),
             errors=errors,
         )
@@ -120,7 +120,7 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
 
         Generate a name to be used as a prefix for device entities.
         """
-        model = self.device_config[CONF_MODEL]
+        model = self.config[CONF_MODEL]
         same_model = [
             entry.data[CONF_NAME]
             for entry in self.hass.config_entries.async_entries(AXIS_DOMAIN)
@@ -133,10 +133,10 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
             if name not in same_model:
                 break
 
-        self.device_config[CONF_NAME] = name
+        self.config[CONF_NAME] = name
 
         title = f"{model} - {serial}"
-        return self.async_create_entry(title=title, data=self.device_config)
+        return self.async_create_entry(title=title, data=self.config)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -197,39 +197,39 @@ class AxisFlowHandler(ConfigFlow, domain=AXIS_DOMAIN):
         )
 
     async def _process_discovered_device(
-        self, device: dict[str, Any]
+        self, discovery_info: dict[str, Any]
     ) -> ConfigFlowResult:
         """Prepare configuration for a discovered Axis device."""
-        if device[CONF_MAC][:8] not in AXIS_OUI:
+        if discovery_info[CONF_MAC][:8] not in AXIS_OUI:
             return self.async_abort(reason="not_axis_device")
 
-        if is_link_local(ip_address(device[CONF_HOST])):
+        if is_link_local(ip_address(discovery_info[CONF_HOST])):
             return self.async_abort(reason="link_local_address")
 
-        await self.async_set_unique_id(device[CONF_MAC])
+        await self.async_set_unique_id(discovery_info[CONF_MAC])
 
         self._abort_if_unique_id_configured(
             updates={
-                CONF_HOST: device[CONF_HOST],
-                CONF_PORT: device[CONF_PORT],
+                CONF_HOST: discovery_info[CONF_HOST],
+                CONF_PORT: discovery_info[CONF_PORT],
             }
         )
 
         self.context.update(
             {
                 "title_placeholders": {
-                    CONF_NAME: device[CONF_NAME],
-                    CONF_HOST: device[CONF_HOST],
+                    CONF_NAME: discovery_info[CONF_NAME],
+                    CONF_HOST: discovery_info[CONF_HOST],
                 },
-                "configuration_url": f"http://{device[CONF_HOST]}:{device[CONF_PORT]}",
+                "configuration_url": f"http://{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}",
             }
         )
 
         self.discovery_schema = {
-            vol.Required(CONF_HOST, default=device[CONF_HOST]): str,
+            vol.Required(CONF_HOST, default=discovery_info[CONF_HOST]): str,
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=device[CONF_PORT]): int,
+            vol.Required(CONF_PORT, default=discovery_info[CONF_PORT]): int,
         }
 
         return await self.async_step_user()
