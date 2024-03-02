@@ -1557,7 +1557,7 @@ async def async_process_component_config(  # noqa: C901
             continue
 
         try:
-            platform = p_integration.get_platform(domain)
+            platform = await p_integration.async_get_platform(domain)
         except LOAD_EXCEPTIONS as exc:
             exc_info = ConfigExceptionInfo(
                 exc,
