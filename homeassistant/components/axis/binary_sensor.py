@@ -19,9 +19,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from .const import DOMAIN as AXIS_DOMAIN
-from .device import AxisNetworkDevice
 from .entity import AxisEventEntity
+from .hub import AxisHub
 
 DEVICE_CLASS = {
     EventGroup.INPUT: BinarySensorDeviceClass.CONNECTIVITY,
@@ -52,14 +51,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Axis binary sensor."""
-    device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+    hub = AxisHub.get_hub(hass, config_entry)
 
     @callback
     def async_create_entity(event: Event) -> None:
         """Create Axis binary sensor entity."""
-        async_add_entities([AxisBinarySensor(event, device)])
+        async_add_entities([AxisBinarySensor(event, hub)])
 
-    device.api.event.subscribe(
+    hub.api.event.subscribe(
         async_create_entity,
         topic_filter=EVENT_TOPICS,
         operation_filter=EventOperation.INITIALIZED,
@@ -69,9 +68,9 @@ async def async_setup_entry(
 class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
     """Representation of a binary Axis event."""
 
-    def __init__(self, event: Event, device: AxisNetworkDevice) -> None:
+    def __init__(self, event: Event, hub: AxisHub) -> None:
         """Initialize the Axis binary sensor."""
-        super().__init__(event, device)
+        super().__init__(event, hub)
         self.cancel_scheduled_update: Callable[[], None] | None = None
 
         self._attr_device_class = DEVICE_CLASS.get(event.group)
@@ -94,13 +93,13 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
             self.cancel_scheduled_update()
             self.cancel_scheduled_update = None
 
-        if self.is_on or self.device.option_trigger_time == 0:
+        if self.is_on or self.hub.option_trigger_time == 0:
             self.async_write_ha_state()
             return
 
         self.cancel_scheduled_update = async_call_later(
             self.hass,
-            timedelta(seconds=self.device.option_trigger_time),
+            timedelta(seconds=self.hub.option_trigger_time),
             scheduled_update,
         )
 
@@ -109,21 +108,21 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
         """Set binary sensor name."""
         if (
             event.group == EventGroup.INPUT
-            and event.id in self.device.api.vapix.ports
-            and self.device.api.vapix.ports[event.id].name
+            and event.id in self.hub.api.vapix.ports
+            and self.hub.api.vapix.ports[event.id].name
         ):
-            self._attr_name = self.device.api.vapix.ports[event.id].name
+            self._attr_name = self.hub.api.vapix.ports[event.id].name
 
         elif event.group == EventGroup.MOTION:
             event_data: FenceGuardHandler | LoiteringGuardHandler | MotionGuardHandler | Vmd4Handler | None = None
             if event.topic_base == EventTopic.FENCE_GUARD:
-                event_data = self.device.api.vapix.fence_guard
+                event_data = self.hub.api.vapix.fence_guard
             elif event.topic_base == EventTopic.LOITERING_GUARD:
-                event_data = self.device.api.vapix.loitering_guard
+                event_data = self.hub.api.vapix.loitering_guard
             elif event.topic_base == EventTopic.MOTION_GUARD:
-                event_data = self.device.api.vapix.motion_guard
+                event_data = self.hub.api.vapix.motion_guard
             elif event.topic_base == EventTopic.MOTION_DETECTION_4:
-                event_data = self.device.api.vapix.vmd4
+                event_data = self.hub.api.vapix.vmd4
             if (
                 event_data
                 and event_data.initialized
@@ -137,8 +136,8 @@ class AxisBinarySensor(AxisEventEntity, BinarySensorEntity):
 
             if (
                 event.topic_base == EventTopic.OBJECT_ANALYTICS
-                and self.device.api.vapix.object_analytics.initialized
-                and (scenarios := self.device.api.vapix.object_analytics["0"].scenarios)
+                and self.hub.api.vapix.object_analytics.initialized
+                and (scenarios := self.hub.api.vapix.object_analytics["0"].scenarios)
             ):
                 for scenario_id, scenario in scenarios.items():
                     device_id = scenario.devices[0]["id"]
