@@ -151,6 +151,7 @@ class SysMonitorSensorEntityDescription(SensorEntityDescription):
     """Describes System Monitor sensor entities."""
 
     value_fn: Callable[[SystemMonitorSensor], StateType | datetime]
+    none_is_unavailable: bool = False
     mandatory_arg: bool = False
     placeholder: str | None = None
 
@@ -169,6 +170,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         )
         if entity.argument in entity.coordinator.data.disk_usage
         else None,
+        none_is_unavailable=True,
     ),
     "disk_use": SysMonitorSensorEntityDescription(
         key="disk_use",
@@ -183,6 +185,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         )
         if entity.argument in entity.coordinator.data.disk_usage
         else None,
+        none_is_unavailable=True,
     ),
     "disk_use_percent": SysMonitorSensorEntityDescription(
         key="disk_use_percent",
@@ -196,6 +199,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         ].percent
         if entity.argument in entity.coordinator.data.disk_usage
         else None,
+        none_is_unavailable=True,
     ),
     "ipv4_address": SysMonitorSensorEntityDescription(
         key="ipv4_address",
@@ -362,6 +366,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_processor_temperature,
+        none_is_unavailable=True,
     ),
     "swap_free": SysMonitorSensorEntityDescription(
         key="swap_free",
@@ -771,3 +776,13 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if self.entity_description.none_is_unavailable:
+            return bool(
+                self.coordinator.last_update_success is True
+                and self.native_value is not None
+            )
+        return super().available
