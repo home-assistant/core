@@ -125,6 +125,15 @@ async def async_setup_platform(
     )
 
 
+def get_available_values(sensor_values: list[tuple[str, Any]]):
+    """Collect all sansors values, honoring unknown states."""
+    return [
+        sensor_value
+        for _, sensor_value in sensor_values
+        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
+    ]
+
+
 def calc_min(sensor_values: list[tuple[str, Any]]) -> tuple[str | None, float | None]:
     """Calculate min value, honoring unknown states."""
     val: float | None = None
@@ -151,11 +160,7 @@ def calc_max(sensor_values: list[tuple[str, Any]]) -> tuple[str | None, float | 
 
 def calc_mean(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
     """Calculate mean value, honoring unknown states."""
-    result = [
-        sensor_value
-        for _, sensor_value in sensor_values
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-    ]
+    result = get_available_values(sensor_values)
 
     if not result:
         return None
@@ -167,11 +172,7 @@ def calc_median(
     sensor_values: list[tuple[str, Any]], round_digits: int
 ) -> float | None:
     """Calculate median value, honoring unknown states."""
-    result = [
-        sensor_value
-        for _, sensor_value in sensor_values
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-    ]
+    result = get_available_values(sensor_values)
 
     if not result:
         return None
@@ -179,13 +180,19 @@ def calc_median(
     return value
 
 
+def calc_stdev(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
+    """Calculate standard deviation value, honoring unknown states."""
+    result = get_available_values(sensor_values)
+
+    if not result:
+        return None
+    value: float = round(statistics.stdev(result), round_digits)
+    return value
+
+
 def calc_range(sensor_values: list[tuple[str, Any]], round_digits: int) -> float | None:
     """Calculate range value, honoring unknown states."""
-    result = [
-        sensor_value
-        for _, sensor_value in sensor_values
-        if sensor_value not in [STATE_UNKNOWN, STATE_UNAVAILABLE]
-    ]
+    result = get_available_values(sensor_values)
 
     if not result:
         return None

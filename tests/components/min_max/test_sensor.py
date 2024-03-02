@@ -30,6 +30,7 @@ MEAN = round(sum(VALUES) / COUNT, 2)
 MEAN_1_DIGIT = round(sum(VALUES) / COUNT, 1)
 MEAN_4_DIGITS = round(sum(VALUES) / COUNT, 4)
 MEDIAN = round(statistics.median(VALUES), 2)
+STDEV = round(statistics.stdev(VALUES), 2)
 RANGE_1_DIGIT = round(max(VALUES) - min(VALUES), 1)
 RANGE_4_DIGITS = round(max(VALUES) - min(VALUES), 4)
 SUM_VALUE = sum(VALUES)
@@ -221,6 +222,32 @@ async def test_median_sensor(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.test_median")
 
     assert str(float(MEDIAN)) == state.state
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+
+
+async def test_stdev_sensor(hass: HomeAssistant) -> None:
+    """Test the standard deviation sensor."""
+    config = {
+        "sensor": {
+            "platform": "min_max",
+            "name": "test_stdev",
+            "type": "stdev",
+            "entity_ids": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entity_ids = config["sensor"]["entity_ids"]
+
+    for entity_id, value in dict(zip(entity_ids, VALUES)).items():
+        hass.states.async_set(entity_id, value)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_stdev")
+
+    assert str(float(STDEV)) == state.state
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
 
