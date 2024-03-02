@@ -6,11 +6,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+from queue import SimpleQueue
 import shutil
 import tempfile
 
 from aiohttp import BodyPartReader, web
-import janus
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
@@ -152,34 +152,50 @@ class FileUploadView(HomeAssistantView):
 
         file_upload_data: FileUploadData = hass.data[DOMAIN]
         file_dir = file_upload_data.file_dir(file_id)
-        queue: janus.Queue[bytes | None] = janus.Queue()
+        queue: SimpleQueue[
+            tuple[bytes, asyncio.Future[None] | None] | None
+        ] = SimpleQueue()
 
         def _sync_queue_consumer(
-            sync_q: janus.SyncQueue[bytes | None], _file_name: str
+            sync_q: SimpleQueue[tuple[bytes, asyncio.Future[None] | None] | None],
+            _file_name: str,
         ) -> None:
             file_dir.mkdir()
             with (file_dir / _file_name).open("wb") as file_handle:
                 while True:
-                    _chunk = sync_q.get()
-                    if _chunk is None:
+                    _chunk_future = sync_q.get()
+                    if _chunk_future is None:
                         break
-
+                    _chunk, _future = _chunk_future
+                    if _future is not None:
+                        hass.loop.call_soon_threadsafe(_future.set_result, None)
                     file_handle.write(_chunk)
-                    sync_q.task_done()
 
         fut: asyncio.Future[None] | None = None
         try:
             fut = hass.async_add_executor_job(
                 _sync_queue_consumer,
-                queue.sync_q,
+                queue,
                 file_field_reader.filename,
             )
 
+            megabytes_sent = 0
             while chunk := await file_field_reader.read_chunk(ONE_MEGABYTE):
-                queue.async_q.put_nowait(chunk)
-                if queue.async_q.qsize() > 5:  # Allow up to 5 MB buffer size
-                    await queue.async_q.join()
-            queue.async_q.put_nowait(None)  # terminate queue consumer
+                megabytes_sent += 1
+                if megabytes_sent % 5 != 0:
+                    queue.put_nowait((chunk, None))
+                    continue
+
+                chunk_future = hass.loop.create_future()
+                queue.put_nowait((chunk, chunk_future))
+                await asyncio.wait(
+                    (fut, chunk_future), return_when=asyncio.FIRST_COMPLETED
+                )
+                if fut.done():
+                    # The executor job failed
+                    break
+
+            queue.put_nowait(None)  # terminate queue consumer
         finally:
             if fut is not None:
                 await fut
