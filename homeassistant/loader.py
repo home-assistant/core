@@ -975,7 +975,11 @@ class Integration:
         return None
 
     def get_platform(self, platform_name: str) -> ModuleType:
-        """Return a platform for an integration."""
+        """Return a platform for an integration.
+
+        If the platform is likely to not exist, use get_integration_platform
+        instead as its optimized for the failure case.
+        """
         if platform := self._get_platform_cached(f"{self.domain}.{platform_name}"):
             return platform
         return self._load_platform(platform_name)
