@@ -1407,7 +1407,8 @@ def extract_platform_integrations(config: ConfigType, domains: set[str]) -> set[
                 platform = item.get(CONF_PLATFORM)
             except AttributeError:
                 continue
-            platform_integrations.add(platform)
+            if platform:
+                platform_integrations.add(platform)
     return platform_integrations
 
 
