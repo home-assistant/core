@@ -545,7 +545,8 @@ omit =
     homeassistant/components/homematic/notify.py
     homeassistant/components/homematic/sensor.py
     homeassistant/components/homematic/switch.py
-    homeassistant/components/homeworks/*
+    homeassistant/components/homeworks/__init__.py
+    homeassistant/components/homeworks/light.py
     homeassistant/components/horizon/media_player.py
     homeassistant/components/hp_ilo/sensor.py
     homeassistant/components/huawei_lte/__init__.py
