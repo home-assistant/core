@@ -39,36 +39,19 @@ def recursive_flatten(prefix: Any, data: dict[str, Any]) -> dict[str, Any]:
 
 
 @callback
-def component_translation_path(
-    component: str, language: str, integration: Integration
-) -> str | None:
+def component_translation_path(language: str, integration: Integration) -> str | None:
     """Return the translation json file location for a component.
 
     For component:
      - components/hue/translations/nl.json
 
-    For platform:
-     - components/hue/translations/light.nl.json
-
     If component is just a single file, will return None.
     """
-    parts = component.split(".")
-    domain = parts[0]
-    is_platform = len(parts) == 2
-
     # If it's a component that is just one file, we don't support translations
     # Example custom_components/my_component.py
-    if integration.file_path.name != domain:
+    if integration.file_path.name != integration.domain:
         return None
-
-    if is_platform:
-        filename = f"{parts[1]}.{language}.json"
-    else:
-        filename = f"{language}.json"
-
-    translation_path = integration.file_path / "translations"
-
-    return str(translation_path / filename)
+    return str(integration.file_path / "translations" / f"{language}.json")
 
 
 def _load_translations_files_by_language(
@@ -173,10 +156,8 @@ async def _async_get_component_strings(
             domain = loaded.partition(".")[0]
             if not (integration := integrations.get(domain)):
                 continue
-
-            path = component_translation_path(loaded, language, integration)
             # No translation available
-            if path is None:
+            if (path := component_translation_path(language, integration)) is None:
                 loaded_translations[loaded] = {}
             else:
                 files_to_load[loaded] = path
@@ -345,10 +326,12 @@ class _TranslationCache:
                 _LOGGER.error(
                     (
                         "Validation of translation placeholders for localized (%s) string "
-                        "%s failed"
+                        "%s failed: (%s != %s)"
                     ),
                     language,
                     key,
+                    updated_placeholders,
+                    cached_placeholders,
                 )
                 mismatches.add(key)
 
@@ -374,7 +357,7 @@ class _TranslationCache:
         for category in categories:
             new_resources: Mapping[str, dict[str, Any] | str]
 
-            if category in ("state", "entity_component"):
+            if category == "entity_component":
                 new_resources = _merge_resources(
                     translation_strings, components, category
                 )
@@ -456,7 +439,7 @@ def _async_get_translations_cache(hass: HomeAssistant) -> _TranslationCache:
     return cache
 
 
-_DIRECT_MAPPED_CATEGORIES = {"state", "entity_component", "services"}
+_DIRECT_MAPPED_CATEGORIES = {"entity_component", "services"}
 
 
 @callback
@@ -467,7 +450,7 @@ def _async_get_components(
     """Return a set of components for which translations should be loaded."""
     if category in _DIRECT_MAPPED_CATEGORIES:
         return hass.config.components
-    # Only 'state' supports merging, so remove platforms from selection
+    # Only entity_component supports merging, so remove platforms from selection
     return {component for component in hass.config.components if "." not in component}
 
 
@@ -548,15 +531,6 @@ def async_translate_state(
         if localize_key in translations:
             return translations[localize_key]
     localize_key = f"component.{domain}.entity_component._.state.{state}"
-    if localize_key in translations:
-        return translations[localize_key]
-
-    translations = async_get_cached_translations(hass, language, "state", domain)
-    if device_class is not None:
-        localize_key = f"component.{domain}.state.{device_class}.{state}"
-        if localize_key in translations:
-            return translations[localize_key]
-    localize_key = f"component.{domain}.state._.{state}"
     if localize_key in translations:
         return translations[localize_key]
 

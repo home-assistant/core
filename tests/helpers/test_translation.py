@@ -46,35 +46,10 @@ async def test_component_translation_path(
         {"switch": [{"platform": "test"}, {"platform": "test_embedded"}]},
     )
     assert await async_setup_component(hass, "test_package", {"test_package": None})
-
-    (
-        int_test,
-        int_test_embedded,
-        int_test_package,
-    ) = await asyncio.gather(
-        async_get_integration(hass, "test"),
-        async_get_integration(hass, "test_embedded"),
-        async_get_integration(hass, "test_package"),
-    )
+    int_test_package = await async_get_integration(hass, "test_package")
 
     assert path.normpath(
-        translation.component_translation_path("test.switch", "en", int_test)
-    ) == path.normpath(
-        hass.config.path("custom_components", "test", "translations", "switch.en.json")
-    )
-
-    assert path.normpath(
-        translation.component_translation_path(
-            "test_embedded.switch", "en", int_test_embedded
-        )
-    ) == path.normpath(
-        hass.config.path(
-            "custom_components", "test_embedded", "translations", "switch.en.json"
-        )
-    )
-
-    assert path.normpath(
-        translation.component_translation_path("test_package", "en", int_test_package)
+        translation.component_translation_path("en", int_test_package)
     ) == path.normpath(
         hass.config.path("custom_components", "test_package", "translations", "en.json")
     )
@@ -85,28 +60,39 @@ def test__load_translations_files_by_language(
 ) -> None:
     """Test the load translation files function."""
     # Test one valid and one invalid file
-    file1 = hass.config.path(
-        "custom_components", "test", "translations", "switch.en.json"
-    )
-    file2 = hass.config.path(
+    en_file = hass.config.path("custom_components", "test", "translations", "en.json")
+    invalid_file = hass.config.path(
         "custom_components", "test", "translations", "invalid.json"
     )
-    file3 = hass.config.path(
-        "custom_components", "test", "translations", "_broken.en.json"
+    broken_file = hass.config.path(
+        "custom_components", "test", "translations", "_broken.json"
     )
     assert translation._load_translations_files_by_language(
-        {"en": {"switch.test": file1, "invalid": file2, "broken": file3}}
-    ) == {
-        "en": {
-            "switch.test": {
-                "state": {"string1": "Value 1", "string2": "Value 2"},
-                "something": "else",
-            },
-            "invalid": {},
+        {
+            "en": {"test": en_file},
+            "invalid": {"test": invalid_file},
+            "broken": {"test": broken_file},
         }
+    ) == {
+        "broken": {},
+        "en": {
+            "test": {
+                "entity": {
+                    "switch": {
+                        "other1": {"name": "Other 1"},
+                        "other2": {"name": "Other 2"},
+                        "other3": {"name": "Other 3"},
+                        "other4": {"name": "Other 4"},
+                        "outlet": {"name": "Outlet " "{placeholder}"},
+                    }
+                },
+                "something": "else",
+            }
+        },
+        "invalid": {"test": {}},
     }
     assert "Translation file is unexpected type" in caplog.text
-    assert "_broken.en.json" in caplog.text
+    assert "_broken.json" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -184,33 +170,61 @@ async def test_get_translations(
     hass: HomeAssistant, mock_config_flows, enable_custom_integrations: None
 ) -> None:
     """Test the get translations helper."""
-    translations = await translation.async_get_translations(hass, "en", "state")
+    translations = await translation.async_get_translations(hass, "en", "entity")
     assert translations == {}
 
     assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    translations = await translation.async_get_translations(hass, "en", "state")
+    translations = await translation.async_get_translations(
+        hass, "en", "entity", {"test"}
+    )
 
-    assert translations["component.switch.state.string1"] == "Value 1"
-    assert translations["component.switch.state.string2"] == "Value 2"
+    assert translations == {
+        "component.test.entity.switch.other1.name": "Other 1",
+        "component.test.entity.switch.other2.name": "Other 2",
+        "component.test.entity.switch.other3.name": "Other 3",
+        "component.test.entity.switch.other4.name": "Other 4",
+        "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
+    }
 
-    translations = await translation.async_get_translations(hass, "de", "state")
-    assert "component.switch.something" not in translations
-    assert translations["component.switch.state.string1"] == "German Value 1"
-    assert translations["component.switch.state.string2"] == "German Value 2"
+    translations = await translation.async_get_translations(
+        hass, "de", "entity", {"test"}
+    )
+
+    assert translations == {
+        "component.test.entity.switch.other1.name": "Anderes 1",
+        "component.test.entity.switch.other2.name": "Other 2",
+        "component.test.entity.switch.other3.name": "",
+        "component.test.entity.switch.other4.name": "Other 4",
+        "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
+    }
 
     # Test a partial translation
-    translations = await translation.async_get_translations(hass, "es", "state")
-    assert translations["component.switch.state.string1"] == "Spanish Value 1"
-    assert translations["component.switch.state.string2"] == "Value 2"
+    translations = await translation.async_get_translations(
+        hass, "es", "entity", {"test"}
+    )
+
+    assert translations == {
+        "component.test.entity.switch.other1.name": "Otra 1",
+        "component.test.entity.switch.other2.name": "Otra 2",
+        "component.test.entity.switch.other3.name": "Otra 3",
+        "component.test.entity.switch.other4.name": "Otra 4",
+        "component.test.entity.switch.outlet.name": "Enchufe {placeholder}",
+    }
 
     # Test that an untranslated language falls back to English.
     translations = await translation.async_get_translations(
-        hass, "invalid-language", "state"
+        hass, "invalid-language", "entity", {"test"}
     )
-    assert translations["component.switch.state.string1"] == "Value 1"
-    assert translations["component.switch.state.string2"] == "Value 2"
+
+    assert translations == {
+        "component.test.entity.switch.other1.name": "Other 1",
+        "component.test.entity.switch.other2.name": "Other 2",
+        "component.test.entity.switch.other3.name": "Other 3",
+        "component.test.entity.switch.other4.name": "Other 4",
+        "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
+    }
 
 
 async def test_get_translations_loads_config_flows(
@@ -348,7 +362,7 @@ async def test_translation_merging(
         """Mock loading."""
         result = orig_load_translations(files)
         result["en"]["moon.sensor"] = {
-            "state": {"moon__phase": {"first_quarter": "First Quarter"}}
+            "entity_component": {"moon__phase": {"first_quarter": "First Quarter"}}
         }
         return result
 
@@ -356,9 +370,11 @@ async def test_translation_merging(
         "homeassistant.helpers.translation._load_translations_files_by_language",
         side_effect=mock_load_translations_files,
     ):
-        translations = await translation.async_get_translations(hass, "en", "state")
+        translations = await translation.async_get_translations(
+            hass, "en", "entity_component"
+        )
 
-    assert "component.sensor.state.moon__phase.first_quarter" in translations
+    assert "component.sensor.entity_component.moon__phase.first_quarter" in translations
 
     hass.config.components.add("season.sensor")
 
@@ -366,16 +382,21 @@ async def test_translation_merging(
     def mock_load_bad_translations_files(files):
         """Mock loading."""
         result = orig_load_translations(files)
-        result["en"]["season.sensor"] = {"state": "bad data"}
+        result["en"]["season.sensor"] = {"entity_component": "bad data"}
         return result
 
     with patch(
         "homeassistant.helpers.translation._load_translations_files_by_language",
         side_effect=mock_load_bad_translations_files,
     ):
-        translations = await translation.async_get_translations(hass, "en", "state")
+        translations = await translation.async_get_translations(
+            hass, "en", "entity_component"
+        )
 
-        assert "component.sensor.state.moon__phase.first_quarter" in translations
+        assert (
+            "component.sensor.entity_component.moon__phase.first_quarter"
+            in translations
+        )
 
     assert (
         "An integration providing translations for sensor provided invalid data:"
@@ -393,7 +414,7 @@ async def test_translation_merging_loaded_apart(
         """Mock loading."""
         result = orig_load_translations(files)
         result["en"]["moon.sensor"] = {
-            "state": {"moon__phase": {"first_quarter": "First Quarter"}}
+            "entity_component": {"moon__phase": {"first_quarter": "First Quarter"}}
         }
         return result
 
@@ -403,9 +424,14 @@ async def test_translation_merging_loaded_apart(
         "homeassistant.helpers.translation._load_translations_files_by_language",
         side_effect=mock_load_translations_files,
     ):
-        translations = await translation.async_get_translations(hass, "en", "state")
+        translations = await translation.async_get_translations(
+            hass, "en", "entity_component"
+        )
 
-    assert "component.sensor.state.moon__phase.first_quarter" not in translations
+    assert (
+        "component.sensor.entity_component.moon__phase.first_quarter"
+        not in translations
+    )
 
     hass.config.components.add("moon.sensor")
 
@@ -413,19 +439,21 @@ async def test_translation_merging_loaded_apart(
         "homeassistant.helpers.translation._load_translations_files_by_language",
         side_effect=mock_load_translations_files,
     ):
-        translations = await translation.async_get_translations(hass, "en", "state")
+        translations = await translation.async_get_translations(
+            hass, "en", "entity_component"
+        )
 
-    assert "component.sensor.state.moon__phase.first_quarter" in translations
+    assert "component.sensor.entity_component.moon__phase.first_quarter" in translations
 
     with patch(
         "homeassistant.helpers.translation._load_translations_files_by_language",
         side_effect=mock_load_translations_files,
     ):
         translations = await translation.async_get_translations(
-            hass, "en", "state", integrations={"sensor"}
+            hass, "en", "entity_component", integrations={"sensor"}
         )
 
-    assert "component.sensor.state.moon__phase.first_quarter" in translations
+    assert "component.sensor.entity_component.moon__phase.first_quarter" in translations
 
 
 async def test_translation_merging_loaded_together(
@@ -558,47 +586,58 @@ async def test_custom_component_translations(
 
 async def test_get_cached_translations(
     hass: HomeAssistant, mock_config_flows, enable_custom_integrations: None
-):
+) -> None:
     """Test the get cached translations helper."""
-    translations = translation.async_get_cached_translations(hass, "en", "state")
+    translations = await translation.async_get_translations(hass, "en", "entity")
     assert translations == {}
 
     assert await async_setup_component(hass, "switch", {"switch": {"platform": "test"}})
     await hass.async_block_till_done()
 
-    await translation._async_get_translations_cache(hass).async_load(
-        "en", hass.config.components
-    )
-    translations = translation.async_get_cached_translations(hass, "en", "state")
+    await translation._async_get_translations_cache(hass).async_load("en", {"test"})
 
-    assert translations["component.switch.state.string1"] == "Value 1"
-    assert translations["component.switch.state.string2"] == "Value 2"
-
-    await translation._async_get_translations_cache(hass).async_load(
-        "de", hass.config.components
+    translations = translation.async_get_cached_translations(
+        hass, "en", "entity", "test"
     )
-    translations = translation.async_get_cached_translations(hass, "de", "state")
-    assert "component.switch.something" not in translations
-    assert translations["component.switch.state.string1"] == "German Value 1"
-    assert translations["component.switch.state.string2"] == "German Value 2"
+    assert translations == {
+        "component.test.entity.switch.other1.name": "Other 1",
+        "component.test.entity.switch.other2.name": "Other 2",
+        "component.test.entity.switch.other3.name": "Other 3",
+        "component.test.entity.switch.other4.name": "Other 4",
+        "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
+    }
+
+    await translation._async_get_translations_cache(hass).async_load("es", {"test"})
 
     # Test a partial translation
-    await translation._async_get_translations_cache(hass).async_load(
-        "es", hass.config.components
+    translations = translation.async_get_cached_translations(
+        hass, "es", "entity", "test"
     )
-    translations = translation.async_get_cached_translations(hass, "es", "state")
-    assert translations["component.switch.state.string1"] == "Spanish Value 1"
-    assert translations["component.switch.state.string2"] == "Value 2"
+
+    assert translations == {
+        "component.test.entity.switch.other1.name": "Otra 1",
+        "component.test.entity.switch.other2.name": "Otra 2",
+        "component.test.entity.switch.other3.name": "Otra 3",
+        "component.test.entity.switch.other4.name": "Otra 4",
+        "component.test.entity.switch.outlet.name": "Enchufe {placeholder}",
+    }
+
+    await translation._async_get_translations_cache(hass).async_load(
+        "invalid-language", {"test"}
+    )
 
     # Test that an untranslated language falls back to English.
-    await translation._async_get_translations_cache(hass).async_load(
-        "invalid-language", hass.config.components
-    )
     translations = translation.async_get_cached_translations(
-        hass, "invalid-language", "state"
+        hass, "invalid-language", "entity", "test"
     )
-    assert translations["component.switch.state.string1"] == "Value 1"
-    assert translations["component.switch.state.string2"] == "Value 2"
+
+    assert translations == {
+        "component.test.entity.switch.other1.name": "Other 1",
+        "component.test.entity.switch.other2.name": "Other 2",
+        "component.test.entity.switch.other3.name": "Other 3",
+        "component.test.entity.switch.other4.name": "Other 4",
+        "component.test.entity.switch.outlet.name": "Outlet {placeholder}",
+    }
 
 
 async def test_setup(hass: HomeAssistant):
@@ -679,36 +718,6 @@ async def test_translate_state(hass: HomeAssistant):
 
     with patch(
         "homeassistant.helpers.translation.async_get_cached_translations",
-        return_value={"component.binary_sensor.state.device_class.on": "TRANSLATED"},
-    ) as mock:
-        result = translation.async_translate_state(
-            hass, "on", "binary_sensor", "platform", None, "device_class"
-        )
-        mock.assert_has_calls(
-            [
-                call(hass, hass.config.language, "entity_component"),
-                call(hass, hass.config.language, "state", "binary_sensor"),
-            ]
-        )
-        assert result == "TRANSLATED"
-
-    with patch(
-        "homeassistant.helpers.translation.async_get_cached_translations",
-        return_value={"component.binary_sensor.state._.on": "TRANSLATED"},
-    ) as mock:
-        result = translation.async_translate_state(
-            hass, "on", "binary_sensor", "platform", None, None
-        )
-        mock.assert_has_calls(
-            [
-                call(hass, hass.config.language, "entity_component"),
-                call(hass, hass.config.language, "state", "binary_sensor"),
-            ]
-        )
-        assert result == "TRANSLATED"
-
-    with patch(
-        "homeassistant.helpers.translation.async_get_cached_translations",
         return_value={},
     ) as mock:
         result = translation.async_translate_state(
@@ -717,7 +726,6 @@ async def test_translate_state(hass: HomeAssistant):
         mock.assert_has_calls(
             [
                 call(hass, hass.config.language, "entity_component"),
-                call(hass, hass.config.language, "state", "binary_sensor"),
             ]
         )
         assert result == "on"
@@ -733,7 +741,6 @@ async def test_translate_state(hass: HomeAssistant):
             [
                 call(hass, hass.config.language, "entity"),
                 call(hass, hass.config.language, "entity_component"),
-                call(hass, hass.config.language, "state", "binary_sensor"),
             ]
         )
         assert result == "on"
