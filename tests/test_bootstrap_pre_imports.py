@@ -1,4 +1,9 @@
-"""Test the bootstrapping."""
+"""Test bootstrap pre imports.
+
+This test must be minimal as it tests that discovery
+and stage1 integrations are not pre-imported as a side
+effect of importing the pre-imports.
+"""
 
 
 import sys
