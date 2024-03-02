@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, runner
+from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
 from homeassistant.config_entries import HANDLERS, ConfigEntry
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
@@ -1023,3 +1023,16 @@ async def test_bootstrap_dependencies(
         f"Dependency {integration} will wait for dependencies dict_keys(['mqtt'])"
         in caplog.text
     )
+
+
+async def test_frontend_deps_pre_import_no_requirements(hass: HomeAssistant) -> None:
+    """Test frontend dependencies are pre-imported and do not have any requirements."""
+    pre_imports = [
+        name.removesuffix("_pre_import")
+        for name in dir(bootstrap)
+        if name.endswith("_pre_import")
+    ]
+
+    for pre_import in pre_imports:
+        integration = await loader.async_get_integration(hass, pre_import)
+        assert not integration.requirements
