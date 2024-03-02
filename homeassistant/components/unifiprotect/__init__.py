@@ -7,6 +7,11 @@ import logging
 from aiohttp.client_exceptions import ServerDisconnectedError
 from pyunifiprotect.exceptions import ClientError, NotAuthorized
 
+# Import the test_util.anonymize module from the pyunifiprotect package
+# in __init__ to ensure it gets imported in the executor since the
+# diagnostics module will not be imported in the executor.
+from pyunifiprotect.test_util.anonymize import anonymize_data  # noqa: F401
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
