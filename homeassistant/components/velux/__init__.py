@@ -22,8 +22,8 @@ CONFIG_SCHEMA = vol.Schema(
                 }
             )
         },
-        extra=vol.ALLOW_EXTRA,
-    )
+    ),
+    extra=vol.ALLOW_EXTRA,
 )
 
 
