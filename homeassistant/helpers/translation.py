@@ -352,7 +352,7 @@ async def async_get_translations(
     elif integrations is not None:
         components = set(integrations)
     else:
-        components = _async_get_components(hass)
+        components = {comp for comp in hass.config.components if "." not in comp}
 
     return await _async_get_translations_cache(hass).async_fetch(
         language, category, components
@@ -374,7 +374,7 @@ def async_get_cached_translations(
     if integration is not None:
         components = {integration}
     else:
-        components = _async_get_components(hass)
+        components = {comp for comp in hass.config.components if "." not in comp}
 
     return _async_get_translations_cache(hass).get_cached(
         language, category, components
@@ -386,12 +386,6 @@ def _async_get_translations_cache(hass: HomeAssistant) -> _TranslationCache:
     """Return the translation cache."""
     cache: _TranslationCache = hass.data[TRANSLATION_FLATTEN_CACHE]
     return cache
-
-
-@callback
-def _async_get_components(hass: HomeAssistant) -> set[str]:
-    """Return a set of components for which translations should be loaded."""
-    return {component for component in hass.config.components if "." not in component}
 
 
 @callback
