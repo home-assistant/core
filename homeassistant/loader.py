@@ -981,7 +981,13 @@ class Integration:
         return self._load_platform(platform_name)
 
     def get_integration_platform(self, platform_name: str) -> ModuleType:
-        """Return an integration platform for an integration."""
+        """Return an integration platform for an integration.
+
+        This is similar to get_platform, but it will also check if the
+        if the integration is already loaded and if the platform file
+        exists before having to import it since with integration_platforms
+        most of them do not exist.
+        """
         if platform := self._get_platform_cached(f"{self.domain}.{platform_name}"):
             return platform
 
@@ -1020,7 +1026,6 @@ class Integration:
         """
         full_name = f"{self.domain}.{platform_name}"
         cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
-        missing_platforms_cache: dict[str, ImportError]
 
         try:
             cache[full_name] = self._import_platform(platform_name)
@@ -1028,6 +1033,7 @@ class Integration:
             if self.domain in cache:
                 # If the domain is loaded, cache that the platform
                 # does not exist so we do not try to load it again
+                missing_platforms_cache: dict[str, ImportError]
                 missing_platforms_cache = self.hass.data[DATA_MISSING_PLATFORMS]
                 missing_platforms_cache[full_name] = ex
             raise
