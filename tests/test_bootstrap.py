@@ -1033,6 +1033,10 @@ async def test_frontend_deps_pre_import_no_requirements(hass: HomeAssistant) -> 
         if name.endswith("_pre_import")
     ]
 
+    # Make sure future refactoring does not
+    # accidentally remove the pre-imports
+    # or change the naming convention without
+    # updating this test.
     assert len(pre_imports) > 3
 
     for pre_import in pre_imports:
