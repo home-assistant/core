@@ -1418,7 +1418,7 @@ async def async_process_component_config(  # noqa: C901
     config_exceptions: list[ConfigExceptionInfo] = []
 
     try:
-        component = integration.get_component()
+        component = await integration.async_get_component()
     except LOAD_EXCEPTIONS as exc:
         exc_info = ConfigExceptionInfo(
             exc,
