@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 import logging
 import string
 from typing import Any
@@ -77,47 +77,6 @@ def _load_translations_files_by_language(
             loaded_for_language[component] = loaded_json
 
     return loaded
-
-
-def _merge_resources(
-    translation_strings: dict[str, dict[str, Any]],
-    components: set[str],
-    category: str,
-) -> dict[str, dict[str, Any]]:
-    """Build and merge the resources response for the given components and platforms."""
-    # Build response
-    resources: dict[str, dict[str, Any]] = {}
-    for component in components:
-        domain = component.rpartition(".")[-1]
-
-        domain_resources = resources.setdefault(domain, {})
-
-        # Integrations are able to provide translations for their entities under other
-        # integrations if they don't have an existing device class. This is done by
-        # using a custom device class prefixed with their domain and two underscores.
-        # These files are in platform specific files in the integration folder with
-        # names like `strings.sensor.json`.
-        # We are going to merge the translations for the custom device classes into
-        # the translations of sensor.
-
-        new_value = translation_strings.get(component, {}).get(category)
-
-        if new_value is None:
-            continue
-
-        if isinstance(new_value, dict):
-            domain_resources.update(new_value)
-        else:
-            _LOGGER.error(
-                (
-                    "An integration providing translations for %s provided invalid"
-                    " data: %s"
-                ),
-                domain,
-                new_value,
-            )
-
-    return resources
 
 
 def build_resources(
@@ -355,17 +314,7 @@ class _TranslationCache:
             categories.update(resource)
 
         for category in categories:
-            new_resources: Mapping[str, dict[str, Any] | str]
-
-            if category == "entity_component":
-                new_resources = _merge_resources(
-                    translation_strings, components, category
-                )
-            else:
-                new_resources = build_resources(
-                    translation_strings, components, category
-                )
-
+            new_resources = build_resources(translation_strings, components, category)
             category_cache = cached.setdefault(category, {})
 
             for component, resource in new_resources.items():
@@ -403,7 +352,7 @@ async def async_get_translations(
     elif integrations is not None:
         components = set(integrations)
     else:
-        components = _async_get_components(hass, category)
+        components = _async_get_components(hass)
 
     return await _async_get_translations_cache(hass).async_fetch(
         language, category, components
@@ -425,7 +374,7 @@ def async_get_cached_translations(
     if integration is not None:
         components = {integration}
     else:
-        components = _async_get_components(hass, category)
+        components = _async_get_components(hass)
 
     return _async_get_translations_cache(hass).get_cached(
         language, category, components
@@ -439,18 +388,9 @@ def _async_get_translations_cache(hass: HomeAssistant) -> _TranslationCache:
     return cache
 
 
-_DIRECT_MAPPED_CATEGORIES = {"entity_component", "services"}
-
-
 @callback
-def _async_get_components(
-    hass: HomeAssistant,
-    category: str,
-) -> set[str]:
+def _async_get_components(hass: HomeAssistant) -> set[str]:
     """Return a set of components for which translations should be loaded."""
-    if category in _DIRECT_MAPPED_CATEGORIES:
-        return hass.config.components
-    # Only entity_component supports merging, so remove platforms from selection
     return {component for component in hass.config.components if "." not in component}
 
 

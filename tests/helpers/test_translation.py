@@ -349,113 +349,6 @@ async def test_get_translation_categories(hass: HomeAssistant) -> None:
         assert "component.light.device_automation.action_type.turn_on" in translations
 
 
-async def test_translation_merging(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test we merge translations of two integrations."""
-    hass.config.components.add("moon.sensor")
-    hass.config.components.add("sensor")
-
-    orig_load_translations = translation._load_translations_files_by_language
-
-    def mock_load_translations_files(files):
-        """Mock loading."""
-        result = orig_load_translations(files)
-        result["en"]["moon.sensor"] = {
-            "entity_component": {"moon__phase": {"first_quarter": "First Quarter"}}
-        }
-        return result
-
-    with patch(
-        "homeassistant.helpers.translation._load_translations_files_by_language",
-        side_effect=mock_load_translations_files,
-    ):
-        translations = await translation.async_get_translations(
-            hass, "en", "entity_component"
-        )
-
-    assert "component.sensor.entity_component.moon__phase.first_quarter" in translations
-
-    hass.config.components.add("season.sensor")
-
-    # Patch in some bad translation data
-    def mock_load_bad_translations_files(files):
-        """Mock loading."""
-        result = orig_load_translations(files)
-        result["en"]["season.sensor"] = {"entity_component": "bad data"}
-        return result
-
-    with patch(
-        "homeassistant.helpers.translation._load_translations_files_by_language",
-        side_effect=mock_load_bad_translations_files,
-    ):
-        translations = await translation.async_get_translations(
-            hass, "en", "entity_component"
-        )
-
-        assert (
-            "component.sensor.entity_component.moon__phase.first_quarter"
-            in translations
-        )
-
-    assert (
-        "An integration providing translations for sensor provided invalid data:"
-        " bad data"
-    ) in caplog.text
-
-
-async def test_translation_merging_loaded_apart(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test we merge translations of two integrations when they are not loaded at the same time."""
-    orig_load_translations = translation._load_translations_files_by_language
-
-    def mock_load_translations_files(files):
-        """Mock loading."""
-        result = orig_load_translations(files)
-        result["en"]["moon.sensor"] = {
-            "entity_component": {"moon__phase": {"first_quarter": "First Quarter"}}
-        }
-        return result
-
-    hass.config.components.add("sensor")
-
-    with patch(
-        "homeassistant.helpers.translation._load_translations_files_by_language",
-        side_effect=mock_load_translations_files,
-    ):
-        translations = await translation.async_get_translations(
-            hass, "en", "entity_component"
-        )
-
-    assert (
-        "component.sensor.entity_component.moon__phase.first_quarter"
-        not in translations
-    )
-
-    hass.config.components.add("moon.sensor")
-
-    with patch(
-        "homeassistant.helpers.translation._load_translations_files_by_language",
-        side_effect=mock_load_translations_files,
-    ):
-        translations = await translation.async_get_translations(
-            hass, "en", "entity_component"
-        )
-
-    assert "component.sensor.entity_component.moon__phase.first_quarter" in translations
-
-    with patch(
-        "homeassistant.helpers.translation._load_translations_files_by_language",
-        side_effect=mock_load_translations_files,
-    ):
-        translations = await translation.async_get_translations(
-            hass, "en", "entity_component", integrations={"sensor"}
-        )
-
-    assert "component.sensor.entity_component.moon__phase.first_quarter" in translations
-
-
 async def test_translation_merging_loaded_together(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -513,14 +406,14 @@ async def test_caching(hass: HomeAssistant) -> None:
 
     # Patch with same method so we can count invocations
     with patch(
-        "homeassistant.helpers.translation._merge_resources",
-        side_effect=translation._merge_resources,
-    ) as mock_merge:
+        "homeassistant.helpers.translation.build_resources",
+        side_effect=translation.build_resources,
+    ) as mock_build_resources:
         load1 = await translation.async_get_translations(hass, "en", "entity_component")
-        assert len(mock_merge.mock_calls) == 1
+        assert len(mock_build_resources.mock_calls) == 5
 
         load2 = await translation.async_get_translations(hass, "en", "entity_component")
-        assert len(mock_merge.mock_calls) == 1
+        assert len(mock_build_resources.mock_calls) == 5
 
         assert load1 == load2
 
