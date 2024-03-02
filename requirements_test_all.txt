@@ -873,7 +873,7 @@ hole==0.8.0
 holidays==0.43
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240228.1
+home-assistant-frontend==20240301.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.2.28
@@ -1578,7 +1578,7 @@ pyotgw==2.1.3
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.13.7
+pyoverkiz==1.13.8
 
 # homeassistant.components.openweathermap
 pyowm==3.2.0
@@ -2270,7 +2270,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.63.2
+zigpy==0.63.3
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.55.3
