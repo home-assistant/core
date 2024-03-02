@@ -7,12 +7,6 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding
-from homeassistant.components.cloud import (
-    async_active_subscription,
-    async_create_cloudhook,
-    async_delete_cloudhook,
-    async_is_connected,
-)
 from homeassistant.components.webhook import async_generate_id, async_generate_url
 from homeassistant.core import HomeAssistant
 
@@ -229,6 +223,14 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
 
         webhook_id = async_generate_id()
 
+        # Local import to be sure cloud is loaded and setup
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.cloud import (
+            async_active_subscription,
+            async_create_cloudhook,
+            async_is_connected,
+        )
+
         if "cloud" in self.hass.config.components and async_active_subscription(
             self.hass
         ):
@@ -270,5 +272,9 @@ async def webhook_async_remove_entry(
     """Remove a webhook config entry."""
     if not entry.data.get("cloudhook") or "cloud" not in hass.config.components:
         return
+
+    # Local import to be sure cloud is loaded and setup
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.cloud import async_delete_cloudhook
 
     await async_delete_cloudhook(hass, entry.data["webhook_id"])
