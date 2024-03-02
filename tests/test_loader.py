@@ -1193,3 +1193,48 @@ async def test_async_get_platform_raises_after_import_failure(
         in caplog.text
     )
     assert "loaded_executor=False" not in caplog.text
+
+
+async def test_get_integration_platform(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
+    """Test the integration platform loader."""
+    integration = await loader.async_get_integration(hass, "test_integration_platform")
+    assert integration.domain == "test_integration_platform"
+
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ValueError
+    ) as mock_import:
+        integration.get_integration_platform("non_existing")
+
+    # The top level component is not loaded yet so we
+    # do the full check
+    assert mock_import.call_count == 1
+
+    component = integration.get_component()
+    assert component.DOMAIN == "test_integration_platform"
+
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ValueError
+    ) as mock_import:
+        integration.get_integration_platform("non_existing")
+
+    # The top level component is now loaded so we
+    # can skip the full check
+    assert mock_import.call_count == 0
+
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ValueError
+    ) as mock_import:
+        integration.get_platform("non_existing")
+
+    # The get_integration_platform call should cache the failure
+    assert mock_import.call_count == 0
+
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ValueError
+    ) as mock_import:
+        integration.get_integration_platform("non_existing")
+
+    # The get_integration_platform call should cache the failure
+    assert mock_import.call_count == 0
