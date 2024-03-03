@@ -48,6 +48,16 @@ def _get_platform(
         )
         return None
 
+    #
+    # Loading the platform may do quite a bit of blocking I/O
+    # and CPU work. (https://github.com/python/cpython/issues/92041)
+    #
+    # We don't want to block the event loop for too
+    # long so we check if the platform exists with `platform_exists``
+    # before trying to load it. `platform_exists` will do two
+    # `stat()` system calls which is far cheaper than calling
+    # `integration.get_platform`
+    #
     if integration.platform_exists(platform_name) is False:
         # If the platform cannot possibly exist, don't bother trying to load it
         return None
