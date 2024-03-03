@@ -35,7 +35,7 @@ from .components import (
     diagnostics as diagnostics_pre_import,  # noqa: F401
     file_upload as file_upload_pre_import,  # noqa: F401
     history as history_pre_import,  # noqa: F401
-    http,
+    http,  # not named pre_import since it has requirements
     logbook as logbook_pre_import,  # noqa: F401
     lovelace as lovelace_pre_import,  # noqa: F401
     onboarding as onboarding_pre_import,  # noqa: F401
