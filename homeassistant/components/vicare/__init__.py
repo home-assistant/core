@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import DEFAULT_CACHE_DURATION, DEVICE_LIST, DOMAIN, PLATFORMS
+from .const import DEFAULT_CACHE_DURATION, DEVICE_LIST, DOMAIN, PLATFORMS, UNSUPPORTED_DEVICES
 from .types import ViCareDevice
 from .utils import get_device
 
@@ -109,13 +109,5 @@ def get_supported_devices(
     return [
         device_config
         for device_config in devices
-        if device_config.getModel()
-        not in [
-            "Heatbox1",
-            "Heatbox2_SRC",
-            "E3_FloorHeatingCircuitChannel",
-            "E3_FloorHeatingCircuitDistributorBox",
-            "E3_RoomControl_One_522",
-            "E3_RoomSensor",
-        ]
+        if device_config.getModel() not in UNSUPPORTED_DEVICES
     ]
