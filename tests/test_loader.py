@@ -1,5 +1,6 @@
 """Test to verify that we can load components."""
 import asyncio
+import os
 import sys
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
@@ -1193,3 +1194,45 @@ async def test_async_get_platform_raises_after_import_failure(
         in caplog.text
     )
     assert "loaded_executor=False" not in caplog.text
+
+
+async def test_platform_exists(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
+    """Test platform_exists."""
+    integration = await loader.async_get_integration(hass, "test_integration_platform")
+    assert integration.domain == "test_integration_platform"
+
+    # get_component never called, will return None
+    assert integration.platform_exists("non_existing") is None
+
+    component = integration.get_component()
+    assert component.DOMAIN == "test_integration_platform"
+
+    # component is loaded, should now return False
+    with patch(
+        "homeassistant.loader.os.path.exists", wraps=os.path.exists
+    ) as mock_exists:
+        assert integration.platform_exists("non_existing") is False
+
+    # We should check if the file exists
+    assert mock_exists.call_count == 2
+
+    # component is loaded, should now return False
+    with patch(
+        "homeassistant.loader.os.path.exists", wraps=os.path.exists
+    ) as mock_exists:
+        assert integration.platform_exists("non_existing") is False
+
+    # We should remember the file does not exist
+    assert mock_exists.call_count == 0
+
+    assert integration.platform_exists("group") is True
+
+    platform = await integration.async_get_platform("group")
+    assert platform.MAGIC == 1
+
+    platform = integration.get_platform("group")
+    assert platform.MAGIC == 1
+
+    assert integration.platform_exists("group") is True
