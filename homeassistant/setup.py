@@ -482,8 +482,21 @@ async def async_prepare_setup_platform(
         log_error(str(err))
         return None
 
+    # Platforms cannot exist on their own, they are part of their integration.
+    # If the integration is not set up yet, and can be set up, set it up.
+    #
+    # We do this before we import the platform so the platform already knows
+    # where the top level component is.
+    #
+    if load_top_level_component := integration.domain not in hass.config.components:
+        try:
+            component = await integration.async_get_component()
+        except ImportError as exc:
+            log_error(f"Unable to import the component ({exc}).")
+            return None
+
     try:
-        platform = integration.get_platform(domain)
+        platform = await integration.async_get_platform(domain)
     except ImportError as exc:
         log_error(f"Platform not found ({exc}).")
         return None
@@ -494,13 +507,7 @@ async def async_prepare_setup_platform(
 
     # Platforms cannot exist on their own, they are part of their integration.
     # If the integration is not set up yet, and can be set up, set it up.
-    if integration.domain not in hass.config.components:
-        try:
-            component = integration.get_component()
-        except ImportError as exc:
-            log_error(f"Unable to import the component ({exc}).")
-            return None
-
+    if load_top_level_component:
         if (
             hasattr(component, "setup") or hasattr(component, "async_setup")
         ) and not await async_setup_component(hass, integration.domain, hass_config):
