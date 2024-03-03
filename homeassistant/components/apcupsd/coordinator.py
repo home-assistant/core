@@ -39,10 +39,7 @@ class APCUPSdData(OrderedDict[str, str]):
         """Return the model of the UPS, if available."""
         # Different UPS models may report slightly different keys for model, here we
         # try them all.
-        for model_key in ("APCMODEL", "MODEL"):
-            if model_key in self:
-                return self[model_key]
-        return None
+        return self.get("APCMODEL", self.get("MODEL"))
 
     @property
     def serial_no(self) -> str | None:
