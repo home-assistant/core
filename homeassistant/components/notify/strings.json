@@ -1,5 +1,19 @@
 {
   "title": "Notifications",
+  "entity_component": {
+    "_": {
+      "name": "[%key:component::button::title%]"
+    },
+    "direct_message": {
+      "name": "Direct message notifier"
+    },
+    "display": {
+      "name": "Display notifier"
+    },
+    "email": {
+      "name": "Email notifier"
+    }
+  },
   "services": {
     "notify": {
       "name": "Send a notification",

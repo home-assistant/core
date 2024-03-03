@@ -16,7 +16,7 @@ import voluptuous as vol
 from homeassistant.backports.functools import cached_property
 import homeassistant.components.persistent_notification as pn
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityDescription
@@ -67,7 +67,9 @@ PLATFORM_SCHEMA = vol.Schema(
 class NotifyDeviceClass(StrEnum):
     """Device class for notify entities."""
 
-    MESSAGE_NOTIFIER = "message_notifier"
+    DIRECT_MESSAGE = "direct_message"
+    DISPLAY = "display"
+    EMAIL = "email"
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(NotifyDeviceClass))
@@ -197,6 +199,13 @@ class NotifyEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_
         except AttributeError:
             pass
         self.__last_notified_isoformat = state
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the notify entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        state = await self.async_get_last_state()
+        if state is not None and state.state not in (STATE_UNAVAILABLE, None):
+            self.__set_state(state.state)
 
     @final
     async def _async_send_message(self, **kwargs: Any) -> None:
