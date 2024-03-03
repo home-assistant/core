@@ -999,7 +999,7 @@
         "name": "Buzzer manual alarm"
       },
       "boost": {
-        "name": "Boost"
+        "name": "Boost for 5 minutes"
       }
     }
   }
