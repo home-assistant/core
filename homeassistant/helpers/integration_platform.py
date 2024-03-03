@@ -53,7 +53,7 @@ def _get_platform(
     # and CPU work. (https://github.com/python/cpython/issues/92041)
     #
     # We don't want to block the event loop for too
-    # long so we check if the platform exists with `platform_exists``
+    # long so we check if the platform exists with `platform_exists`
     # before trying to load it. `platform_exists` will do two
     # `stat()` system calls which is far cheaper than calling
     # `integration.get_platform`
