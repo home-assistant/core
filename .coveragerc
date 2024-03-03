@@ -982,6 +982,7 @@ omit =
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pencom/switch.py
     homeassistant/components/permobil/__init__.py
+    homeassistant/components/permobil/binary_sensor.py
     homeassistant/components/permobil/coordinator.py
     homeassistant/components/permobil/entity.py
     homeassistant/components/permobil/sensor.py
