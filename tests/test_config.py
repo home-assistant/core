@@ -2339,3 +2339,33 @@ def test_config_per_platform() -> None:
         (None, 1),
         ("hello 2", config["zone Hallo"][1]),
     ] == list(config_util.config_per_platform(config, "zone"))
+
+
+def test_extract_platform_integrations() -> None:
+    """Test extract_platform_integrations."""
+    config = OrderedDict(
+        [
+            ("zone", {"platform": "hello"}),
+            ("zonex", []),
+            ("zoney", ""),
+            ("notzone", {"platform": "nothello"}),
+            ("zoner", None),
+            ("zone Hallo", [1, {"platform": "hello 2"}]),
+            ("zone 100", None),
+            ("i n v a-@@", None),
+            ("i n v a-@@", {"platform": "hello"}),
+            ("zoneq", "pig"),
+            ("zoneempty", {"platform": ""}),
+        ]
+    )
+    assert config_util.extract_platform_integrations(config, {"zone"}) == {
+        "hello",
+        "hello 2",
+    }
+    assert config_util.extract_platform_integrations(config, {"zonex"}) == set()
+    assert config_util.extract_platform_integrations(config, {"zoney"}) == set()
+    assert config_util.extract_platform_integrations(
+        config, {"zone", "not_valid", "notzone"}
+    ) == {"hello", "hello 2", "nothello"}
+    assert config_util.extract_platform_integrations(config, {"zoneq"}) == set()
+    assert config_util.extract_platform_integrations(config, {"zoneempty"}) == set()
