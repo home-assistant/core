@@ -17,7 +17,7 @@ async def test_device_tracker_states(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test lawn_mower state."""
+    """Test device_tracker state attributes."""
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get("device_tracker.test_mower_1")
     assert state is not None
