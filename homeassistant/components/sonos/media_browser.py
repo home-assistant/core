@@ -62,11 +62,15 @@ def get_thumbnail_url_full(
         )
         return urllib.parse.unquote(str(getattr(item, "album_art_uri", None)))
 
-    return urllib.parse.unquote(str(get_browse_image_url(
-        media_content_type,
-        media_content_id,
-        media_image_id,
-    )))
+    return urllib.parse.unquote(
+        str(
+            get_browse_image_url(
+                media_content_type,
+                media_content_id,
+                media_image_id,
+            )
+        )
+    )
 
 
 def media_source_filter(item: BrowseMedia) -> bool:
