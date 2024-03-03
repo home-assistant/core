@@ -3,6 +3,7 @@
   "name": "Emulated Kasa",
   "codeowners": ["@kbickar"],
   "documentation": "https://www.home-assistant.io/integrations/emulated_kasa",
+  "import_executor": true,
   "iot_class": "local_push",
   "loggers": ["sense_energy"],
   "quality_scale": "internal",

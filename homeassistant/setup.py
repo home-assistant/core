@@ -299,7 +299,7 @@ async def _async_setup_component(  # noqa: C901
         return False
 
     integration_config_info = await conf_util.async_process_component_config(
-        hass, config, integration
+        hass, config, integration, component
     )
     conf_util.async_handle_component_errors(hass, integration_config_info, integration)
     processed_config = conf_util.async_drop_config_annotations(

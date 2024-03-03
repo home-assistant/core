@@ -21,7 +21,7 @@ pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
 
 ENTITY_ID = "switch.f730_cu_3x400v_temporary_lux"
 ENTITY_FRIENDLY_NAME = "F730 CU 3x400V Tempo­rary lux"
-ENTITY_UID = "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-50004"
+ENTITY_UID = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-50004"
 
 
 async def test_entity_registry(
