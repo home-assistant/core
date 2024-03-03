@@ -741,12 +741,7 @@ class Integration:
     @cached_property
     def import_executor(self) -> bool:
         """Import integration in the executor."""
-        # If the integration does not explicitly set import_executor, we default to
-        # True if it's a built-in integration and False if it's a custom integration.
-        # In the future, we want to default to True for all integrations.
-        return self.manifest.get(
-            "import_executor", self.pkg_path.startswith("homeassistant.components")
-        )
+        return self.manifest.get("import_executor") or False
 
     @property
     def mqtt(self) -> list[str] | None:
