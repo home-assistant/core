@@ -621,7 +621,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==3.5.0
+bthome-ble==3.6.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1155,9 +1155,6 @@ iperf3==0.1.11
 
 # homeassistant.components.gogogate2
 ismartgate==5.0.1
-
-# homeassistant.components.file_upload
-janus==1.0.0
 
 # homeassistant.components.abode
 jaraco.abode==3.3.0
@@ -2758,7 +2755,7 @@ uasiren==0.0.1
 ultraheat-api==0.5.7
 
 # homeassistant.components.unifiprotect
-unifi-discovery==1.1.7
+unifi-discovery==1.1.8
 
 # homeassistant.components.unifi_direct
 unifi_ap==0.0.1
