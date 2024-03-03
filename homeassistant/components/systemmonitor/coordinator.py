@@ -95,19 +95,21 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         self, arguments: list[str]
     ) -> dict[tuple[str, str], set[str]]:
         """Set tuples in subscribers dictionary."""
-        _set_default: dict[tuple[str, str], set[str]] = {}
+        _disk_defaults: dict[tuple[str, str], set[str]] = {}
         for argument in arguments:
-            _set_default[("disks", argument)] = set()
-        _set_default[("swap", "")] = set()
-        _set_default[("memory", "")] = set()
-        _set_default[("io_counters", "")] = set()
-        _set_default[("addresses", "")] = set()
-        _set_default[("load", "")] = set()
-        _set_default[("cpu_percent", "")] = set()
-        _set_default[("boot", "")] = set()
-        _set_default[("processes", "")] = set()
-        _set_default[("temperatures", "")] = set()
-        return _set_default
+            _disk_defaults[("disks", argument)] = set()
+        return {
+            **_disk_defaults,
+            ("swap", ""): set(),
+            ("memory", ""): set(),
+            ("io_counters", ""): set(),
+            ("addresses", ""): set(),
+            ("load", ""): set(),
+            ("cpu_percent", ""): set(),
+            ("boot", ""): set(),
+            ("processes", ""): set(),
+            ("temperatures", ""): set(),
+        }
 
     async def _async_update_data(self) -> SensorData:
         """Fetch data."""
