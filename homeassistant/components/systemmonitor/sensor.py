@@ -10,7 +10,7 @@ import logging
 import socket
 import sys
 import time
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from psutil import NoSuchProcess
 import voluptuous as vol
@@ -799,20 +799,16 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
 
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
-        if TYPE_CHECKING:
-            assert self.unique_id
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].add(self.unique_id)
+        ].add(self.entity_id)
         return await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """When removed from hass."""
-        if TYPE_CHECKING:
-            assert self.unique_id
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].discard(self.unique_id)
+        ].discard(self.entity_id)
         return await super().async_will_remove_from_hass()
 
     @property

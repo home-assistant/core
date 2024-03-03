@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 import logging
 import sys
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from psutil import NoSuchProcess
 
@@ -140,20 +140,16 @@ class SystemMonitorSensor(
 
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
-        if TYPE_CHECKING:
-            assert self.unique_id
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].add(self.unique_id)
+        ].add(self.entity_id)
         return await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """When removed from hass."""
-        if TYPE_CHECKING:
-            assert self.unique_id
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].discard(self.unique_id)
+        ].discard(self.entity_id)
         return await super().async_will_remove_from_hass()
 
     @property
