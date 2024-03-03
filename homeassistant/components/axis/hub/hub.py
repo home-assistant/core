@@ -31,15 +31,12 @@ from homeassistant.setup import async_when_setup
 
 from ..const import (
     ATTR_MANUFACTURER,
-    CONF_EVENTS,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
-    DEFAULT_EVENTS,
     DEFAULT_STREAM_PROFILE,
     DEFAULT_TRIGGER_TIME,
     DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
-    PLATFORMS,
 )
 
 
@@ -111,11 +108,6 @@ class AxisHub:
     # Options
 
     @property
-    def option_events(self) -> bool:
-        """Config entry option defining if platforms based on events should be created."""
-        return self.config_entry.options.get(CONF_EVENTS, DEFAULT_EVENTS)
-
-    @property
     def option_stream_profile(self) -> str:
         """Config entry option defining what stream profile camera platform should use."""
         return self.config_entry.options.get(
@@ -147,7 +139,7 @@ class AxisHub:
     # Callbacks
 
     @callback
-    def async_connection_status_callback(self, status: Signal) -> None:
+    def connection_status_callback(self, status: Signal) -> None:
         """Handle signals of device connection status.
 
         This is called on every RTSP keep-alive message.
@@ -210,17 +202,17 @@ class AxisHub:
 
     # Setup and teardown methods
 
-    def async_setup_events(self) -> None:
+    @callback
+    def setup(self) -> None:
         """Set up the device events."""
-        if self.option_events:
-            self.api.stream.connection_status_callback.append(
-                self.async_connection_status_callback
-            )
-            self.api.enable_events()
-            self.api.stream.start()
+        self.api.stream.connection_status_callback.append(
+            self.connection_status_callback
+        )
+        self.api.enable_events()
+        self.api.stream.start()
 
-            if self.api.vapix.mqtt.supported:
-                async_when_setup(self.hass, MQTT_DOMAIN, self.async_use_mqtt)
+        if self.api.vapix.mqtt.supported:
+            async_when_setup(self.hass, MQTT_DOMAIN, self.async_use_mqtt)
 
     @callback
     def disconnect_from_stream(self) -> None:
@@ -233,10 +225,7 @@ class AxisHub:
         """Stop the event stream."""
         self.disconnect_from_stream()
 
-    async def async_reset(self) -> bool:
+    @callback
+    def teardown(self) -> None:
         """Reset this device to default state."""
         self.disconnect_from_stream()
-
-        return await self.hass.config_entries.async_unload_platforms(
-            self.config_entry, PLATFORMS
-        )

@@ -171,13 +171,6 @@ async def test_device_unavailable(
     assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state == STATE_OFF
 
 
-async def test_device_reset(hass: HomeAssistant, setup_config_entry) -> None:
-    """Successfully reset device."""
-    device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
-    result = await device.async_reset()
-    assert result is True
-
-
 async def test_device_not_accessible(
     hass: HomeAssistant, config_entry, setup_default_vapix_requests
 ) -> None:
