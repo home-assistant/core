@@ -17,9 +17,7 @@ from systembridgemodels.response import Response
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import zeroconf
-from homeassistant.components.system_bridge.config_flow import (
-    ConfigFlow as SystemBridgeConfigFlow,
-)
+from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
