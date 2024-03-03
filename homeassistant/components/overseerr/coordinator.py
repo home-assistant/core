@@ -23,7 +23,7 @@ class OverseerrRequestData:
     """Keep data for Overseerr entities."""
 
     def __init__(self, api_client: ApiClient, hass: HomeAssistant) -> None:
-        """Initialise the weather entity data."""
+        """Initialise the request entity data."""
         self.request_count: RequestCountGet200Response = RequestCountGet200Response()
         self._api_client = api_client
         self.hass = hass
