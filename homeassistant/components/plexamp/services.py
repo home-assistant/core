@@ -5,7 +5,7 @@ import logging
 import aiohttp
 import defusedxml.ElementTree as ET
 
-from homeassistant.components.media_player import MediaPlayerState
+from homeassistant.components.media_player import MediaPlayerState, MediaType
 
 from .const import NUMBER_TO_REPEAT_MODE
 from .models import BaseMediaPlayerFactory
@@ -25,8 +25,6 @@ class PlexampService:
 
         self._plex_identifier = plexamp_entity.client_identifier
         self._plex_ip_address = plexamp_entity.uri
-        # Since we get the docker internal url, we need to use the user provided plex url
-        self._metadata_base_url = None
         self._host = plexamp_entity.address
         self._device_name = plexamp_entity.name
         self._command_id = 1
@@ -43,7 +41,7 @@ class PlexampService:
 
     async def send_playback_command(self, action: str) -> None:
         """Send a command to the player."""
-        url = f"{self._host}/player/playback/{action}"
+        url = f"{self._plexamp_entity.uri}/player/playback/{action}"
         _LOGGER.debug("Sending playback command to %s: %s", self._device_name, url)
 
         async with aiohttp.ClientSession() as session:
@@ -64,7 +62,7 @@ class PlexampService:
 
     async def send_set_parameter_command(self, parameters: str) -> None:
         """Send a parameter command to the player."""
-        url = f"{self._host}/player/playback/setParameters?{parameters}"
+        url = f"{self._plexamp_entity.uri}/player/playback/setParameters?{parameters}"
         _LOGGER.debug("Sending parameter command to %s: %s", self._device_name, url)
 
         async with aiohttp.ClientSession() as session:
@@ -83,11 +81,9 @@ class PlexampService:
                     e,
                 )
 
-    async def play_media(self, rating_key: str, composite: str) -> None:
-        # GET /playlists/all
-        # GET /security/token
-        # POST /playQueues -> response -> playMedia
-        pass
+    async def play_media(self, media_type: MediaType | str, rating_key: str) -> None:
+        if media_type == MediaType.PLAYLIST:
+            await self._play_playlist(rating_key=rating_key)
 
     async def poll_device(self, poll_wait=0) -> dict:
         """Get device information from Plexamp.
@@ -160,46 +156,44 @@ class PlexampService:
                             )
                         # plexamp does not support photo and video, returned by Plex
                         break
+                return device_information
         except (TimeoutError, aiohttp.ClientError) as e:
             _LOGGER.error("Error updating device %s, error: %s", self._device_name, e)
             return device_information
 
     async def _get_play_token(self) -> str | None:
-        url = f"{self._metadata_base_url}/security/token?type=delegation&scope=all&includeFields=thumbBlurHash"
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    url,
-                    headers=self.headers,
-                    timeout=10,
-                ) as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        return data.get("MediaContainer", {}).get("token") or None
-                    return None
+        url = f"{self._plexamp_entity.server.get("uri")}/security/token?type=delegation&scope=all&includeFields=thumbBlurHash"
+        async with aiohttp.ClientSession() as session:
+            response = await session.get(url, headers=self.headers, timeout=10)
+            if response.status == 200:
+                data = await response.json()
+                return data.get("MediaContainer", {}).get("token") or None
+        return None
 
-        except aiohttp.ClientError | aiohttp.ServerTimeoutError as e:
-            _LOGGER.error(
-                "Error retrieving play token for %s, error: %s", self._device_name, e
-            )
-            return None
-
-    async def _play_queues(self, rating_key: str, composite: str):
+    async def _play_playlist(self, rating_key: str, shuffle=0):
         token = await self._get_play_token()
-        if not token or not self._metadata_base_url:
+        if not token or not self._plexamp_entity.server.get("uri"):
             return
 
-        base_url = f"{self._metadata_base_url}/playQueues"
-        source = self._plex_identifier
-        uri = f"server://{source}/com.plexapp.plugins.library{composite}/"
-        playlist_id = {rating_key}
-        protocol = ""
-        address = ""
-        port = ""
-        parameters = f"shuffle=1&token={token}&includeExternalMedia=1&type=music&protocol=https&address=192-168-0-234.0af15f5d4b5844fbb028c003ceae86da.plex.direct&port=32400&machineIdentifier={self._plex_identifier}&includeFields=thumbBlurHash"
+        base_url = f"{self._plexamp_entity.uri}/player/playback/createPlayQueue"
+        server_identifier = self._plexamp_entity.server.get("identifier")
+        uri = f"uri=server://{server_identifier}/com.plexapp.plugins.library/playlists/{rating_key}/items"
+        token = f"token={token}"
+        command_id = f"commandID={self._command_id + 1}"
+        extra_parameters = (
+            f"shuffle={shuffle}&includeExternalMedia=1&type=audio&includeFields=thumbBlurHash&linkToParent=true&linkToGrandparent=true"
+        )
+
+        url = f"{base_url}?{uri}&{token}&{command_id}&{extra_parameters}"
+        _LOGGER.debug("Starting new playlist in %s with url %s", self._device_name, url)
+        async with aiohttp.ClientSession() as session:
+            await session.get(url, headers=self.headers, timeout=10)
 
     async def get_playlists(self) -> list[dict]:
-        base_url = f"{self._metadata_base_url}/playlists/all"
+        server_uri = self._plexamp_entity.server.get("uri")
+        if not server_uri:
+            return []
+        base_url = f"{server_uri}/playlists/all"
         exclude_fields = "summary"
         exclude_elements = "Media,Director,Country"
         include_fields = "thumbBlurHash"
@@ -228,7 +222,7 @@ class PlexampService:
 
                         return playlist_mapped
 
-                    return []
+            return []
 
         except aiohttp.ClientError | aiohttp.ServerTimeoutError as e:
             _LOGGER.error(
@@ -283,10 +277,10 @@ class PlexampService:
 
         play_queue = timeline.get("containerKey")
 
-        if not play_queue:
+        if not play_queue or not self._plexamp_entity.server.get("uri"):
             return device_information
 
-        return await self._async_get_queue_data(session, device_information, play_queue)
+        return await self._async_get_queue_data(session=session, device_information=device_information, play_queue=play_queue)
 
     async def _async_get_queue_data(
         self,
@@ -308,9 +302,9 @@ class PlexampService:
         - dict: Updated device information dictionary.
 
         """
-        play_queue_url = f"{self._plexamp_entity.server_uri}{play_queue}"
-
+        play_queue_url = f"{self._plexamp_entity.server.get("uri")}{play_queue}"
         _LOGGER.debug("playing queue: %s", play_queue_url)
+
         try:
             async with session.get(
                 play_queue_url, timeout=10, headers=self.headers
@@ -338,7 +332,7 @@ class PlexampService:
                     thumb_size = "width=300&height=300"
                     thumb_parameters = f"url={thumb_url}&quality=90&format=jpeg&X-Plex-Token={self._plex_token}"
                     thumb = (
-                        f"{self._plexamp_entity.server_uri}/photo/:/transcode?{thumb_size}&{thumb_parameters}"
+                        f"{self._plexamp_entity.server.get("uri")}/photo/:/transcode?{thumb_size}&{thumb_parameters}"
                         if thumb_url
                         else None
                     )
@@ -353,8 +347,8 @@ class PlexampService:
                     device_information["grandparent_title"] = (
                         currently_playing_metadata.get("grandparentTitle")
                     )
-
                     return device_information
+            return device_information
 
         except aiohttp.ClientError | aiohttp.ServerTimeoutError as e:
             _LOGGER.error(

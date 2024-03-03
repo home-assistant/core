@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_PLEX_TOKEN, DOMAIN
+from .const import CONF_PLEX_TOKEN, DOMAIN, DEFAULT_PORT
 from .models import BaseMediaPlayerFactory
 
 _LOGGER = logging.getLogger(__name__)
@@ -219,7 +219,7 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         address=lan_ip,
                         port="",
                         uri=uri,
-                        server_uri=server_uri,
+                        server={},
                     )
 
                     sonos_devices.append(new_sonos_device)
@@ -252,8 +252,8 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             async with session.get(url, timeout=10, headers=headers) as response:
                 if response.status == 200:
                     devices = await response.json()
-                    server_uri = None
                     found_device = None
+                    found_server = {}
 
                     for device in devices:
                         first_connection = device.get("connections", [{}])[0]
@@ -261,17 +261,19 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             device.get("provides") == "server"
                             and first_connection.get("address") == plex_ip_address
                         ):
-                            server_uri = first_connection.get("uri")
+                            found_server["identifier"] = device.get("clientIdentifier")
+                            found_server["protocol"] = first_connection.get("protocol")
+                            found_server["port"] = first_connection.get("port")
+                            found_server["uri"] = first_connection.get("uri")
                         if (
                             "player" in device.get("provides")
                             and first_connection.get("address") == host
                         ):
                             found_device = device
 
-                    if found_device is None or server_uri is None:
+                    if found_device is None or found_server.get("identifier") is None:
                         return None
 
-                    _LOGGER.debug("server_uri uri: %s", server_uri)
                     device = BaseMediaPlayerFactory(
                         name=found_device.get("name"),
                         product=found_device.get("product"),
@@ -283,7 +285,7 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         address=found_device.get("connections", [{}])[0].get("address"),
                         port=found_device.get("connections", [{}])[0].get("port"),
                         uri=found_device.get("connections", [{}])[0].get("uri"),
-                        server_uri=server_uri,
+                        server=found_server,
                     )
 
                     return device
@@ -298,7 +300,7 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> BaseMediaPlayerFactory | None:
         """Return True if connection to the provided host is successful."""
 
-        url = f"http://{host}:32500/resources"
+        url = f"http://{host}:{DEFAULT_PORT}/resources"
         session = async_get_clientsession(hass)
 
         _LOGGER.debug("URL: %s", url)
@@ -323,9 +325,9 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         client_identifier=machine_identifier,
                         protocol="http",
                         address=host,
-                        port="32500",
-                        uri=f"http://{host}:32500",
-                        server_uri="",
+                        port=DEFAULT_PORT,
+                        uri=f"http://{host}:{DEFAULT_PORT}",
+                        server={},
                     )
 
                     _LOGGER.debug(

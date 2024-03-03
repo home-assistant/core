@@ -162,7 +162,7 @@ class PlexampMediaPlayer(MediaPlayerEntity):
         )
 
     async def async_play_media(
-        self, media_type: MediaType | str, media_id: MediaType | str, **kwargs
+        self, media_type: MediaType | str, media_id: str, **kwargs
     ):
         """Implement media playback."""
         # Handle playlist selection
@@ -174,13 +174,16 @@ class PlexampMediaPlayer(MediaPlayerEntity):
                 media_id,
                 kwargs,
             )
+            await self._plexamp_service.play_media(
+                media_type=media_type, rating_key=media_id
+            )
         # Handle track selection
         elif media_type == "track":
             # Send command to start playing the selected track
             pass
 
     async def async_browse_media(
-        self, media_content_type=None, media_content_id=None
+        self, media_content_type, media_content_id
     ) -> BrowseMedia:
         """Implement the browsing media method."""
 
@@ -218,7 +221,7 @@ class PlexampMediaPlayer(MediaPlayerEntity):
                     BrowseMedia(
                         title=playlist["title"],
                         media_class=MEDIA_CLASS_PLAYLIST,
-                        media_content_id=playlist["composite"],
+                        media_content_id=playlist["ratingKey"],
                         media_content_type=MEDIA_CLASS_PLAYLIST,
                         can_expand=False,
                         can_play=True,

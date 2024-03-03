@@ -24,7 +24,7 @@ class BaseMediaPlayerFactory:
         address: str,
         port: str,
         uri: str,
-        server_uri: str,
+        server: dict,
     ) -> None:
         self.name = name
         self.product = product
@@ -34,7 +34,7 @@ class BaseMediaPlayerFactory:
         self.address = address
         self.port = port
         self.uri = uri
-        self.server_uri = server_uri
+        self.server = server
 
     def to_dict(self) -> dict:
         """Return a dictionary representation of the instance's data attributes."""
@@ -47,7 +47,7 @@ class BaseMediaPlayerFactory:
             "address": self.address,
             "port": self.port,
             "uri": self.uri,
-            "server_uri": self.server_uri,
+            "server": self.server,
         }
 
     @classmethod
@@ -62,5 +62,5 @@ class BaseMediaPlayerFactory:
             address=data.get("address", ""),
             port=data.get("port", ""),
             uri=data.get("uri", ""),
-            server_uri=data.get("server_uri", ""),
+            server=data.get("server", {}),
         )
