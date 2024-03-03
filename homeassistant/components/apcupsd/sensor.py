@@ -24,7 +24,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, APCUPSdCoordinator
+from .const import DOMAIN
+from .coordinator import APCUPSdCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
