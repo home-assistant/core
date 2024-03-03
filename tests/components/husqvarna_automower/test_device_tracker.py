@@ -12,6 +12,20 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
+async def test_device_tracker_states(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test lawn_mower state."""
+    await setup_integration(hass, mock_config_entry)
+    state = hass.states.get("device_tracker.test_mower_1")
+    assert state is not None
+    assert state.attributes["source_type"] == "gps"
+    assert state.attributes["latitude"] == 35.5402913
+    assert state.attributes["longitude"] == -82.5527055
+
+
 async def test_device_tracker_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
