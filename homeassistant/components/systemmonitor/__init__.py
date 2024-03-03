@@ -24,11 +24,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     psutil_wrapper = await hass.async_add_executor_job(ha_psutil.PsutilWrapper)
     hass.data[DOMAIN] = psutil_wrapper
 
-    disk_arguments = await hass.async_add_executor_job(get_all_disk_mounts, hass)
+    disk_arguments = list(await hass.async_add_executor_job(get_all_disk_mounts, hass))
+    legacy_resources: set[str] = set(entry.options.get("resources", []))
+    for resource in legacy_resources:
+        if resource.startswith("disk_"):
+            split_index = resource.rfind("_")
+            _type = resource[:split_index]
+            argument = resource[split_index + 1 :]
+            _LOGGER.debug("Loading legacy %s with argument %s", _type, argument)
+            disk_arguments.append(argument)
+
     _LOGGER.debug("disk arguments to be added: %s", disk_arguments)
 
     coordinator: SystemMonitorCoordinator = SystemMonitorCoordinator(
-        hass, psutil_wrapper, list(disk_arguments)
+        hass, psutil_wrapper, disk_arguments
     )
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN_COORDINATOR] = coordinator
