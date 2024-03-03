@@ -990,7 +990,7 @@ async def _handle_entity_call(
 
 async def _async_admin_handler(
     hass: HomeAssistant,
-    service_job: HassJob[[None], Callable[[ServiceCall], Awaitable[None] | None]],
+    service_job: HassJob[[ServiceCall], Awaitable[None] | None],
     call: ServiceCall,
 ) -> None:
     """Run an admin service."""
