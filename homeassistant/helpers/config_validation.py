@@ -904,7 +904,7 @@ def _deprecated_or_removed(
             try:
                 near = (
                     f"near {config.__config_file__}"  # type: ignore[attr-defined]
-                    f":{config.__line__} "  # type: ignore[attr-defined]
+                    f":{config.__line__} "
                 )
             except AttributeError:
                 near = ""
