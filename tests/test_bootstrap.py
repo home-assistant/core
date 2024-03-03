@@ -3,12 +3,13 @@ import asyncio
 from collections.abc import Generator, Iterable
 import glob
 import os
+import sys
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, runner
+from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
 from homeassistant.config_entries import HANDLERS, ConfigEntry
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
@@ -1023,3 +1024,46 @@ async def test_bootstrap_dependencies(
         f"Dependency {integration} will wait for dependencies dict_keys(['mqtt'])"
         in caplog.text
     )
+
+
+async def test_frontend_deps_pre_import_no_requirements(hass: HomeAssistant) -> None:
+    """Test frontend dependencies are pre-imported and do not have any requirements."""
+    pre_imports = [
+        name.removesuffix("_pre_import")
+        for name in dir(bootstrap)
+        if name.endswith("_pre_import")
+    ]
+
+    # Make sure future refactoring does not
+    # accidentally remove the pre-imports
+    # or change the naming convention without
+    # updating this test.
+    assert len(pre_imports) > 3
+
+    for pre_import in pre_imports:
+        integration = await loader.async_get_integration(hass, pre_import)
+        assert not integration.requirements
+
+
+async def test_bootstrap_does_not_preload_stage_1_integrations() -> None:
+    """Test that the bootstrap does not preload stage 1 integrations.
+
+    If this test fails it means that stage1 integrations are being
+    loaded too soon and will not get their requirements updated
+    before they are loaded at runtime.
+    """
+
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-c",
+        "import homeassistant.bootstrap; import sys; print(sys.modules)",
+        stdout=asyncio.subprocess.PIPE,
+    )
+    stdout, _ = await process.communicate()
+    assert process.returncode == 0
+    decoded_stdout = stdout.decode()
+
+    # Ensure no stage1 integrations have been imported
+    # as a side effect of importing the pre-imports
+    for integration in bootstrap.STAGE_1_INTEGRATIONS:
+        assert f"homeassistant.components.{integration}" not in decoded_stdout

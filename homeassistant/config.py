@@ -1418,7 +1418,7 @@ async def async_process_component_config(  # noqa: C901
     config_exceptions: list[ConfigExceptionInfo] = []
 
     try:
-        component = integration.get_component()
+        component = await integration.async_get_component()
     except LOAD_EXCEPTIONS as exc:
         exc_info = ConfigExceptionInfo(
             exc,
@@ -1432,22 +1432,24 @@ async def async_process_component_config(  # noqa: C901
 
     # Check if the integration has a custom config validator
     config_validator = None
-    try:
-        config_validator = integration.get_platform("config")
-    except ImportError as err:
-        # Filter out import error of the config platform.
-        # If the config platform contains bad imports, make sure
-        # that still fails.
-        if err.name != f"{integration.pkg_path}.config":
-            exc_info = ConfigExceptionInfo(
-                err,
-                ConfigErrorTranslationKey.CONFIG_PLATFORM_IMPORT_ERR,
-                domain,
-                config,
-                integration_docs,
-            )
-            config_exceptions.append(exc_info)
-            return IntegrationConfigInfo(None, config_exceptions)
+    if integration.platform_exists("config") is not False:
+        # If the config platform cannot possibly exist, don't try to load it.
+        try:
+            config_validator = await integration.async_get_platform("config")
+        except ImportError as err:
+            # Filter out import error of the config platform.
+            # If the config platform contains bad imports, make sure
+            # that still fails.
+            if err.name != f"{integration.pkg_path}.config":
+                exc_info = ConfigExceptionInfo(
+                    err,
+                    ConfigErrorTranslationKey.CONFIG_PLATFORM_IMPORT_ERR,
+                    domain,
+                    config,
+                    integration_docs,
+                )
+                config_exceptions.append(exc_info)
+                return IntegrationConfigInfo(None, config_exceptions)
 
     if config_validator is not None and hasattr(
         config_validator, "async_validate_config"
@@ -1557,7 +1559,7 @@ async def async_process_component_config(  # noqa: C901
             continue
 
         try:
-            platform = p_integration.get_platform(domain)
+            platform = await p_integration.async_get_platform(domain)
         except LOAD_EXCEPTIONS as exc:
             exc_info = ConfigExceptionInfo(
                 exc,
