@@ -1,11 +1,10 @@
 """Axis network device abstraction."""
 
-from asyncio import timeout
-from types import MappingProxyType
+from __future__ import annotations
+
 from typing import Any
 
 import axis
-from axis.configuration import Configuration
 from axis.errors import Unauthorized
 from axis.stream_manager import Signal, State
 from axis.vapix.interfaces.mqtt import mqtt_json_to_event
@@ -28,10 +27,9 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.setup import async_when_setup
 
-from .const import (
+from ..const import (
     ATTR_MANUFACTURER,
     CONF_EVENTS,
     CONF_STREAM_PROFILE,
@@ -41,13 +39,11 @@ from .const import (
     DEFAULT_TRIGGER_TIME,
     DEFAULT_VIDEO_SOURCE,
     DOMAIN as AXIS_DOMAIN,
-    LOGGER,
     PLATFORMS,
 )
-from .errors import AuthenticationRequired, CannotConnect
 
 
-class AxisNetworkDevice:
+class AxisHub:
     """Manages a Axis device."""
 
     def __init__(
@@ -63,6 +59,13 @@ class AxisNetworkDevice:
         self.product_type = api.vapix.product_type
 
         self.additional_diagnostics: dict[str, Any] = {}
+
+    @callback
+    @staticmethod
+    def get_hub(hass: HomeAssistant, config_entry: ConfigEntry) -> AxisHub:
+        """Get Axis hub from config entry."""
+        hub: AxisHub = hass.data[AXIS_DOMAIN][config_entry.entry_id]
+        return hub
 
     @property
     def host(self) -> str:
@@ -157,7 +160,7 @@ class AxisNetworkDevice:
 
     @staticmethod
     async def async_new_address_callback(
-        hass: HomeAssistant, entry: ConfigEntry
+        hass: HomeAssistant, config_entry: ConfigEntry
     ) -> None:
         """Handle signals of device getting new address.
 
@@ -165,9 +168,9 @@ class AxisNetworkDevice:
         This is a static method because a class method (bound method),
         cannot be used with weak references.
         """
-        device: AxisNetworkDevice = hass.data[AXIS_DOMAIN][entry.entry_id]
-        device.api.config.host = device.host
-        async_dispatcher_send(hass, device.signal_new_address)
+        hub = AxisHub.get_hub(hass, config_entry)
+        hub.api.config.host = hub.host
+        async_dispatcher_send(hass, hub.signal_new_address)
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
@@ -237,41 +240,3 @@ class AxisNetworkDevice:
         return await self.hass.config_entries.async_unload_platforms(
             self.config_entry, PLATFORMS
         )
-
-
-async def get_axis_device(
-    hass: HomeAssistant,
-    config: MappingProxyType[str, Any],
-) -> axis.AxisDevice:
-    """Create a Axis device."""
-    session = get_async_client(hass, verify_ssl=False)
-
-    device = axis.AxisDevice(
-        Configuration(
-            session,
-            config[CONF_HOST],
-            port=config[CONF_PORT],
-            username=config[CONF_USERNAME],
-            password=config[CONF_PASSWORD],
-        )
-    )
-
-    try:
-        async with timeout(30):
-            await device.vapix.initialize()
-
-        return device
-
-    except axis.Unauthorized as err:
-        LOGGER.warning(
-            "Connected to device at %s but not registered", config[CONF_HOST]
-        )
-        raise AuthenticationRequired from err
-
-    except (TimeoutError, axis.RequestError) as err:
-        LOGGER.error("Error connecting to the Axis device at %s", config[CONF_HOST])
-        raise CannotConnect from err
-
-    except axis.AxisException as err:
-        LOGGER.exception("Unknown Axis communication error occurred")
-        raise AuthenticationRequired from err
