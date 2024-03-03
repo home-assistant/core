@@ -280,7 +280,7 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return STATE_JAMMED
         if self.is_locking:
             return STATE_LOCKING
-        if self._attr_is_opening:
+        if self.is_opening:
             return STATE_OPENING
         if self.is_open:
             return STATE_OPEN
