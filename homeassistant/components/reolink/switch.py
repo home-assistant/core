@@ -112,7 +112,6 @@ SWITCH_ENTITIES = (
         key="ptz_patrol",
         translation_key="ptz_patrol",
         icon="mdi:map-marker-path",
-        entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ptz_patrol"),
         value=lambda api, ch: None,
         method=lambda api, ch, value: api.ctrl_ptz_patrol(ch, value),
