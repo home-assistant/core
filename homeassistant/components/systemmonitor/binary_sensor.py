@@ -149,7 +149,7 @@ class SystemMonitorSensor(
         """When removed from hass."""
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].discard(self.entity_id)
+        ].remove(self.entity_id)
         return await super().async_will_remove_from_hass()
 
     @property
