@@ -17,9 +17,9 @@ async def test_sensor_states(
     """Test sensor state."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("binary_sensor.batcave_pump_heating_medium_gp1")
+    state = hass.states.get("binary_sensor.gotham_city_pump_heating_medium_gp1")
     assert state is not None
     assert state.state == "on"
     assert state.attributes == {
-        "friendly_name": "Batcave Pump: Heating medium (GP1)",
+        "friendly_name": "Gotham City Pump: Heating medium (GP1)",
     }

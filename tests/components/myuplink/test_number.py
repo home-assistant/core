@@ -14,8 +14,8 @@ from homeassistant.helpers import entity_registry as er
 TEST_PLATFORM = Platform.NUMBER
 pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
 
-ENTITY_ID = "number.f730_cu_3x400v_degree_minutes"
-ENTITY_FRIENDLY_NAME = "F730 CU 3x400V Degree minutes"
+ENTITY_ID = "number.gotham_city_degree_minutes"
+ENTITY_FRIENDLY_NAME = "Gotham City Degree minutes"
 ENTITY_UID = "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-40940"
 
 

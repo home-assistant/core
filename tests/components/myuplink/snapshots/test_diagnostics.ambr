@@ -2051,7 +2051,7 @@
               }),
             ]),
             'hasAlarm': False,
-            'name': 'Batcave',
+            'name': 'Gotham City',
             'securityLevel': 'admin',
             'systemId': '123456-7890-1234',
           }),
