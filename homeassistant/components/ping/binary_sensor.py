@@ -111,8 +111,6 @@ class PingBinarySensor(PingEntity, BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the ICMP checo request."""
-        if len(self.coordinator.data.data) == 0:
-            return None
         return {
             ATTR_ROUND_TRIP_TIME_AVG: self.coordinator.data.data.get("avg"),
             ATTR_ROUND_TRIP_TIME_MAX: self.coordinator.data.data.get("max"),

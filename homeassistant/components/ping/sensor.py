@@ -93,7 +93,6 @@ class PingSensor(PingEntity, SensorEntity):
     """Represents a Ping sensor."""
 
     entity_description: PingSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -109,7 +108,7 @@ class PingSensor(PingEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.data.is_alive
+        return super().available and self.coordinator.data.is_alive
 
     @property
     def native_value(self) -> float | None:
