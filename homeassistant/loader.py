@@ -900,7 +900,7 @@ class Integration:
             )
             raise ImportError(f"Exception importing {self.pkg_path}") from err
 
-        if self.platform_exists("config") is not False:
+        if self.platform_exists("config"):
             # Setting up a component always checks if the config
             # platform exists. Since we may be running in the executor
             # we will use this opportunity to cache the config platform
