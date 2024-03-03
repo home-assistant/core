@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 from datetime import timedelta
 import logging
 from typing import Final
@@ -26,7 +25,7 @@ UPDATE_INTERVAL: Final = timedelta(seconds=60)
 REQUEST_REFRESH_COOLDOWN: Final = 5
 
 
-class APCUPSdData(OrderedDict[str, str]):
+class APCUPSdData(dict[str, str]):
     """Store data about an APCUPSd and provide a few helper methods for easier accesses."""
 
     @property
