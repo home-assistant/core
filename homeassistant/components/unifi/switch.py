@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -162,22 +162,14 @@ async def async_wlan_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> Non
     await hub.api.request(WlanEnableRequest.create(obj_id, target))
 
 
-@dataclass(frozen=True)
-class UnifiSwitchEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
-    """Validate and load entities from different UniFi handlers."""
-
-    control_fn: Callable[[UnifiHub, str, bool], Coroutine[Any, Any, None]]
-    is_on_fn: Callable[[UnifiHub, ApiItemT], bool]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class UnifiSwitchEntityDescription(
-    SwitchEntityDescription,
-    UnifiEntityDescription[HandlerT, ApiItemT],
-    UnifiSwitchEntityDescriptionMixin[HandlerT, ApiItemT],
+    SwitchEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi switch entity."""
 
+    control_fn: Callable[[UnifiHub, str, bool], Coroutine[Any, Any, None]]
+    is_on_fn: Callable[[UnifiHub, ApiItemT], bool]
     custom_subscribe: Callable[[aiounifi.Controller], SubscriptionT] | None = None
     only_event_for_state_change: bool = False
 

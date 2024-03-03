@@ -93,9 +93,9 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     )
 
 
-@dataclass(frozen=True)
-class UnifiDescription(Generic[HandlerT, ApiItemT]):
-    """Validate and load entities from different UniFi handlers."""
+@dataclass(frozen=True, kw_only=True)
+class UnifiEntityDescription(EntityDescription, Generic[HandlerT, ApiItemT]):
+    """UniFi Entity Description."""
 
     allowed_fn: Callable[[UnifiHub, str], bool]
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
@@ -108,11 +108,6 @@ class UnifiDescription(Generic[HandlerT, ApiItemT]):
     should_poll: bool
     supported_fn: Callable[[UnifiHub, str], bool | None]
     unique_id_fn: Callable[[UnifiHub, str], str]
-
-
-@dataclass(frozen=True)
-class UnifiEntityDescription(EntityDescription, UnifiDescription[HandlerT, ApiItemT]):
-    """UniFi Entity Description."""
 
 
 class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):

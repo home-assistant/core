@@ -9,7 +9,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Generic
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -154,27 +153,19 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
     return True
 
 
-@dataclass(frozen=True)
-class UnifiSensorEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
-    """Validate and load entities from different UniFi handlers."""
-
-    value_fn: Callable[[UnifiHub, ApiItemT], datetime | float | str | None]
-
-
 @callback
 def async_device_state_value_fn(hub: UnifiHub, device: Device) -> str:
     """Retrieve the state of the device."""
     return DEVICE_STATES[device.state]
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class UnifiSensorEntityDescription(
-    SensorEntityDescription,
-    UnifiEntityDescription[HandlerT, ApiItemT],
-    UnifiSensorEntityDescriptionMixin[HandlerT, ApiItemT],
+    SensorEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi sensor entity."""
 
+    value_fn: Callable[[UnifiHub, ApiItemT], datetime | float | str | None]
     is_connected_fn: Callable[[UnifiHub, str], bool] | None = None
     # Custom function to determine whether a state change should be recorded
     value_changed_fn: Callable[

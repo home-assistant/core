@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any, TypeVar
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -40,21 +40,14 @@ async def async_device_control_fn(api: aiounifi.Controller, obj_id: str) -> None
     await api.request(DeviceUpgradeRequest.create(obj_id))
 
 
-@dataclass(frozen=True)
-class UnifiUpdateEntityDescriptionMixin(Generic[_HandlerT, _DataT]):
-    """Validate and load entities from different UniFi handlers."""
+@dataclass(frozen=True, kw_only=True)
+class UnifiUpdateEntityDescription(
+    UpdateEntityDescription, UnifiEntityDescription[_HandlerT, _DataT]
+):
+    """Class describing UniFi update entity."""
 
     control_fn: Callable[[aiounifi.Controller, str], Coroutine[Any, Any, None]]
     state_fn: Callable[[aiounifi.Controller, _DataT], bool]
-
-
-@dataclass(frozen=True)
-class UnifiUpdateEntityDescription(
-    UpdateEntityDescription,
-    UnifiEntityDescription[_HandlerT, _DataT],
-    UnifiUpdateEntityDescriptionMixin[_HandlerT, _DataT],
-):
-    """Class describing UniFi update entity."""
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (

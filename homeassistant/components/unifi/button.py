@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -57,20 +57,13 @@ async def async_power_cycle_port_control_fn(
     await api.request(DevicePowerCyclePortRequest.create(mac, int(index)))
 
 
-@dataclass(frozen=True)
-class UnifiButtonEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
-    """Validate and load entities from different UniFi handlers."""
-
-    control_fn: Callable[[aiounifi.Controller, str], Coroutine[Any, Any, None]]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class UnifiButtonEntityDescription(
-    ButtonEntityDescription,
-    UnifiEntityDescription[HandlerT, ApiItemT],
-    UnifiButtonEntityDescriptionMixin[HandlerT, ApiItemT],
+    ButtonEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi button entity."""
+
+    control_fn: Callable[[aiounifi.Controller, str], Coroutine[Any, Any, None]]
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
