@@ -900,6 +900,14 @@ class Integration:
             )
             raise ImportError(f"Exception importing {self.pkg_path}") from err
 
+        if self.platform_exists("config") is not False:
+            # Setting up a component always checks if the config
+            # platform exists. Since we may be running in the executor
+            # we will use this opportunity to cache the config platform
+            # as well.
+            with suppress(ImportError):
+                self.get_platform("config")
+
         return cache[self.domain]
 
     async def async_get_platform(self, platform_name: str) -> ModuleType:
