@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import CONF_COUNTRY_CODE, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -68,6 +68,7 @@ class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _unrecorded_attributes = frozenset({CONF_COUNTRY_CODE})
 
     def __init__(
         self, coordinator: CO2SignalCoordinator, description: CO2SensorEntityDescription
@@ -77,7 +78,7 @@ class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
         self.entity_description = description
 
         self._attr_extra_state_attributes = {
-            "country_code": coordinator.data.country_code,
+            CONF_COUNTRY_CODE: coordinator.data.country_code,
         }
         self._attr_device_info = DeviceInfo(
             configuration_url="https://www.electricitymaps.com/",
