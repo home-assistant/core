@@ -20,7 +20,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import DEFAULT_CACHE_DURATION, DEVICE_LIST, DOMAIN, PLATFORMS, UNSUPPORTED_DEVICES
+from .const import (
+    DEFAULT_CACHE_DURATION,
+    DEVICE_LIST,
+    DOMAIN,
+    PLATFORMS,
+    UNSUPPORTED_DEVICES,
+)
 from .types import ViCareDevice
 from .utils import get_device
 
