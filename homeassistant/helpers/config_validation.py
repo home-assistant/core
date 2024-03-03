@@ -10,7 +10,6 @@ from datetime import (
     timedelta,
 )
 from enum import Enum, StrEnum
-from functools import partial
 import logging
 from numbers import Number
 import os
@@ -891,16 +890,17 @@ def _deprecated_or_removed(
         - No warning if neither key nor replacement_key are provided
             - Adds replacement_key with default value in this case
     """
-    logger_func: Callable | None = None
-    if option_removed:
-        option_status = "has been removed"
-    else:
-        option_status = "is deprecated"
 
     def validator(config: dict) -> dict:
         """Check if key is in config and log warning or error."""
-        nonlocal logger_func
         if key in config:
+            if option_removed:
+                level = logging.ERROR
+                option_status = "has been removed"
+            else:
+                level = logging.WARNING
+                option_status = "is deprecated"
+
             try:
                 near = (
                     f"near {config.__config_file__}"  # type: ignore[attr-defined]
@@ -921,11 +921,7 @@ def _deprecated_or_removed(
             if raise_if_present:
                 raise vol.Invalid(warning % arguments)
 
-            if logger_func is None:
-                level = logging.WARNING if option_removed else logging.ERROR
-                logger_func = partial(get_logger(__name__).log, level)
-
-            logger_func(warning, *arguments)
+            get_logger(__name__).log(level, warning, *arguments)
             value = config[key]
             if replacement_key or option_removed:
                 config.pop(key)
