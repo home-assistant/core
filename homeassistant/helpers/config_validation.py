@@ -1234,11 +1234,29 @@ TARGET_SERVICE_FIELDS = {
     ),
 }
 
+BASE_ENTITY_SCHEMA = vol.Schema(
+    vol.All(
+        vol.Schema(
+            {
+                # The frontend stores data here. Don't use in core.
+                vol.Remove("metadata"): dict,
+                **ENTITY_SERVICE_FIELDS,
+            },
+        ),
+        has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
+    )
+)
+
 
 def make_entity_service_schema(
     schema: dict, *, extra: int = vol.PREVENT_EXTRA
 ) -> vol.Schema:
     """Create an entity service schema."""
+    if not schema and extra == vol.PREVENT_EXTRA:
+        # If the schema is empty and we don't allow extra keys, we can return
+        # the base schema and avoid compiling a new schema which is the case
+        # for ~50% of services.
+        return BASE_ENTITY_SCHEMA
     return vol.Schema(
         vol.All(
             vol.Schema(
