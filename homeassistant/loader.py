@@ -908,6 +908,15 @@ class Integration:
             with suppress(ImportError):
                 self.get_platform("config")
 
+        if self.config_flow:
+            # If there is a config flow, we will cache it as well since
+            # config entry setup always has to load the flow to get the
+            # major/minor version for migrations. Since we may be running
+            # in the executor we will use this opportunity to cache the
+            # config_flow as well.
+            with suppress(ImportError):
+                self.get_platform("config_flow")
+
         return cache[self.domain]
 
     async def async_get_platform(self, platform_name: str) -> ModuleType:
