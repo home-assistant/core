@@ -124,7 +124,7 @@
     {
       "id": "000000000000000000000002",
       "port": 2,
-      "name": "Port2",
+      "name": "Renamed Port",
       "disable": false,
       "type": 1,
       "maxSpeed": 4,

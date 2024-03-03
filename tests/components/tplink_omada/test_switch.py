@@ -1,4 +1,5 @@
 """Tests for TP-Link Omada switch entities."""
+from datetime import timedelta
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -14,12 +15,16 @@ from tplink_omada_client.devices import (
 from tplink_omada_client.exceptions import InvalidDevice
 
 from homeassistant.components import switch
-from homeassistant.components.tplink_omada.controller import OmadaSiteController
+from homeassistant.components.tplink_omada.controller import POLL_GATEWAY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+UPDATE_INTERVAL = timedelta(seconds=10)
+POLL_INTERVAL = timedelta(seconds=POLL_GATEWAY + 10)
 
 
 async def test_poe_switches(
@@ -30,15 +35,23 @@ async def test_poe_switches(
 ) -> None:
     """Test PoE switch."""
     poe_switch_mac = "54-AF-97-00-00-01"
-    for i in range(1, 9):
-        await _test_poe_switch(
-            hass,
-            mock_omada_site_client,
-            f"switch.test_poe_switch_port_{i}_poe",
-            poe_switch_mac,
-            i,
-            snapshot,
-        )
+    await _test_poe_switch(
+        hass,
+        mock_omada_site_client,
+        "switch.test_poe_switch_port_1_poe",
+        poe_switch_mac,
+        1,
+        snapshot,
+    )
+
+    await _test_poe_switch(
+        hass,
+        mock_omada_site_client,
+        "switch.test_poe_switch_port_2_renamed_port_poe",
+        poe_switch_mac,
+        2,
+        snapshot,
+    )
 
 
 async def test_gateway_connect_ipv4_switch(
@@ -68,6 +81,10 @@ async def test_gateway_connect_ipv4_switch(
     mock_omada_site_client.set_gateway_wan_port_connect_state.assert_called_once_with(
         4, False, test_gateway, ipv6=False
     )
+
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
     entity = hass.states.get(entity_id)
     assert entity.state == "off"
 
@@ -81,6 +98,10 @@ async def test_gateway_connect_ipv4_switch(
     mock_omada_site_client.set_gateway_wan_port_connect_state.assert_called_once_with(
         4, True, test_gateway, ipv6=False
     )
+
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
     entity = hass.states.get(entity_id)
     assert entity.state == "on"
 
@@ -97,16 +118,38 @@ async def test_gateway_api_fail_disables_switch_entities(
     assert entity == snapshot
     assert entity.state == "on"
 
-    controller: OmadaSiteController = hass.data[init_integration.domain][
-        init_integration.entry_id
-    ]
-
-    gateway_coordinator = await controller.get_gateway_coordinator()
-
     mock_omada_site_client.get_gateway.reset_mock()
     mock_omada_site_client.get_gateway.side_effect = InvalidDevice("Expected error")
 
-    await gateway_coordinator.async_refresh()
+    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get(entity_id)
+    assert entity.state == "unavailable"
+
+
+async def test_gateway_port_change_disables_switch_entities(
+    hass: HomeAssistant,
+    mock_omada_site_client: MagicMock,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test gateway connected switch reconfigure."""
+
+    gateway_mac = "AA-BB-CC-DD-EE-FF"
+    test_gateway = await mock_omada_site_client.get_gateway(gateway_mac)
+
+    entity_id = "switch.test_router_port_4_internet_connected"
+    entity = hass.states.get(entity_id)
+    assert entity == snapshot
+    assert entity.state == "on"
+
+    mock_omada_site_client.get_gateway.reset_mock()
+    # Set Port 4 to LAN mode
+    _get_updated_gateway_port_status(mock_omada_site_client, test_gateway, 3, "mode", 1)
+
+    async_fire_time_changed(hass, utcnow() + POLL_INTERVAL)
+    await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
     assert entity.state == "unavailable"
@@ -172,7 +215,7 @@ async def _test_poe_switch(
         True,
         **mock_omada_site_client.update_switch_port.call_args.kwargs,
     )
-    hass.async_block_till_done()
+    await hass.async_block_till_done()
     entity = hass.states.get(entity_id)
     assert entity.state == "on"
 
