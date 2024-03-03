@@ -403,6 +403,9 @@
       "gaurd_return": {
         "name": "Guard return"
       },
+      "patrol": {
+        "name": "Patrol"
+      },
       "email": {
         "name": "Email on event"
       },
