@@ -2345,6 +2345,7 @@ def test_extract_platform_integrations() -> None:
     """Test extract_platform_integrations."""
     config = OrderedDict(
         [
+            (b"zone", {"platform": "not str"}),
             ("zone", {"platform": "hello"}),
             ("zonex", []),
             ("zoney", ""),
