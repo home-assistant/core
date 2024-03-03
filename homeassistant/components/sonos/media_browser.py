@@ -60,7 +60,7 @@ def get_thumbnail_url_full(
             media_content_id,
             media_content_type,
         )
-        return urllib.parse.unquote(str(getattr(item, "album_art_uri", None)))
+        return urllib.parse.unquote(getattr(item, "album_art_uri", ""))
 
     return urllib.parse.unquote(
         str(
