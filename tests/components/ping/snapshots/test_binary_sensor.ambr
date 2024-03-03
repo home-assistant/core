@@ -113,6 +113,10 @@
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
       'friendly_name': '10.10.10.10',
+      'round_trip_time_avg': None,
+      'round_trip_time_max': None,
+      'round_trip_time_mdev': None,
+      'round_trip_time_min': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.10_10_10_10',
