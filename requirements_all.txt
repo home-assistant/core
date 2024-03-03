@@ -1770,7 +1770,7 @@ pydiscovergy==3.0.0
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2024.2.0
+pydrawise==2024.3.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -2430,7 +2430,7 @@ renault-api==0.2.1
 renson-endura-delta==1.7.1
 
 # homeassistant.components.reolink
-reolink-aio==0.8.8
+reolink-aio==0.8.9
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2902,7 +2902,7 @@ yeelight==0.7.14
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.3.7
+yolink-api==0.3.9
 
 # homeassistant.components.youless
 youless-api==1.0.1
@@ -2947,7 +2947,7 @@ zigpy-zigate==0.12.0
 zigpy-znp==0.12.1
 
 # homeassistant.components.zha
-zigpy==0.63.3
+zigpy==0.63.4
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
