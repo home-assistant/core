@@ -114,7 +114,7 @@ class PlexampService:
         device_information = {
             "state": MediaPlayerState.IDLE,
             "shuffle": False,
-            "volume_level": 1.0,
+            "volume": 1.0,
             "volume_step": 0.1,
             "repeat": NUMBER_TO_REPEAT_MODE.get("0"),
             "thumb": "",
@@ -257,9 +257,8 @@ class PlexampService:
 
         device_information["shuffle"] = timeline.get("shuffle", 0) != "0"
         device_information["volume"] = float(timeline.get("volume", 1.0)) / 100
-
-        device_information["duration"] = timeline.get("duration")
-        device_information["time"] = timeline.get("time")
+        device_information["duration"] = int(int(timeline.get("duration", 1)) / 1000)
+        device_information["time"] = int(int(timeline.get("time", 1)) / 1000)
         device_information["machineIdentifier"] = timeline.get("machineIdentifier")
         device_information["protocol"] = timeline.get("protocol")
         device_information["port"] = timeline.get("port")

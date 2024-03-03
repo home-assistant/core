@@ -23,8 +23,9 @@ from homeassistant.const import CONF_HOST, CONF_NAME, STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt
 
-from .const import CONF_PLEX_IP_ADDRESS, CONF_PLEX_TOKEN, DOMAIN, REPEAT_MODE_TO_NUMBER
+from .const import CONF_PLEX_TOKEN, DOMAIN, REPEAT_MODE_TO_NUMBER
 from .models import BaseMediaPlayerFactory
 from .services import PlexampService
 
@@ -51,7 +52,6 @@ async def async_setup_entry(
 
     for device in devices:
         plex_token = entry.data.get(CONF_PLEX_TOKEN, None)
-        # plex_ip_address = entry.data.get(CONF_PLEX_IP_ADDRESS, None)
         entity = PlexampMediaPlayer(
             BaseMediaPlayerFactory.from_dict(device),
             plex_token=plex_token,
@@ -74,6 +74,7 @@ class PlexampMediaPlayer(MediaPlayerEntity):
         self._attr_name = f"Plexamp {entity.name}"
         self._plexamp_entity = entity
         self._attr_state = STATE_IDLE
+        self._volume_before_mute = self._attr_volume_level or 0.15
 
         self._plexamp_service = PlexampService(
             plexamp_entity=entity,
@@ -115,6 +116,13 @@ class PlexampMediaPlayer(MediaPlayerEntity):
             self._attr_media_title = device_information.get("title")
             self._attr_media_album_name = device_information.get("parent_title")
             self._attr_media_artist = device_information.get("grandparent_title")
+            self._attr_media_duration = device_information.get("duration")
+            self._attr_media_position = device_information.get("time")
+            self._attr_media_position_updated_at = dt.utcnow()
+            self._attr_shuffle = device_information.get("shuffle")
+            self._attr_repeat = device_information.get("repeat")
+            self._attr_volume_level = device_information.get("volume")
+            self._attr_is_volume_muted = device_information.get("volume") <= 0.0
 
     async def async_media_play(self) -> None:
         """Send play command."""
@@ -152,7 +160,13 @@ class PlexampMediaPlayer(MediaPlayerEntity):
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        await self._plexamp_service.send_set_parameter_command("volume=0")
+        _LOGGER.error(f"Mute volume: %s", mute)
+        if mute:
+            self._volume_before_mute = self._attr_volume_level
+            await self.async_set_volume_level(0.0)
+        if not mute:
+            _LOGGER.error(f"_volume_before_mute: %s", self._volume_before_mute)
+            await self.async_set_volume_level(self._volume_before_mute)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
