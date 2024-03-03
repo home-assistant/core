@@ -1430,6 +1430,7 @@ async def async_process_component_config(  # noqa: C901
     hass: HomeAssistant,
     config: ConfigType,
     integration: Integration,
+    component: ComponentProtocol | None = None,
 ) -> IntegrationConfigInfo:
     """Check component configuration.
 
@@ -1441,18 +1442,19 @@ async def async_process_component_config(  # noqa: C901
     integration_docs = integration.documentation
     config_exceptions: list[ConfigExceptionInfo] = []
 
-    try:
-        component = await integration.async_get_component()
-    except LOAD_EXCEPTIONS as exc:
-        exc_info = ConfigExceptionInfo(
-            exc,
-            ConfigErrorTranslationKey.COMPONENT_IMPORT_ERR,
-            domain,
-            config,
-            integration_docs,
-        )
-        config_exceptions.append(exc_info)
-        return IntegrationConfigInfo(None, config_exceptions)
+    if not component:
+        try:
+            component = await integration.async_get_component()
+        except LOAD_EXCEPTIONS as exc:
+            exc_info = ConfigExceptionInfo(
+                exc,
+                ConfigErrorTranslationKey.COMPONENT_IMPORT_ERR,
+                domain,
+                config,
+                integration_docs,
+            )
+            config_exceptions.append(exc_info)
+            return IntegrationConfigInfo(None, config_exceptions)
 
     # Check if the integration has a custom config validator
     config_validator = None
