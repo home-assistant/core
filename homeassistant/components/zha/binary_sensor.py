@@ -304,7 +304,7 @@ class ZonnSmartWindowOpened(BinarySensor):
 
     _attribute_name = "window_detection"
     _unique_id_suffix = "window_detection"
-    _attr_translation_key: str = "window_detection"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.WINDOW
 
 
 @MULTI_MATCH(cluster_handler_names="opple_cluster", models={"lumi.airrtc.agl001"})
