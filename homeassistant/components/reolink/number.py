@@ -167,6 +167,21 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "vehicle"),
     ),
     ReolinkNumberEntityDescription(
+        key="ai_package_sensititvity",
+        cmd_key="GetAiAlarm",
+        translation_key="ai_package_sensititvity",
+        icon="mdi:gift-outline",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_sensitivity") and api.ai_supported(ch, "package")
+        ),
+        value=lambda api, ch: api.ai_sensitivity(ch, "package"),
+        method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "package"),
+    ),
+    ReolinkNumberEntityDescription(
         key="ai_pet_sensititvity",
         cmd_key="GetAiAlarm",
         translation_key="ai_pet_sensititvity",
@@ -248,6 +263,23 @@ NUMBER_ENTITIES = (
         ),
         value=lambda api, ch: api.ai_delay(ch, "vehicle"),
         method=lambda api, ch, value: api.set_ai_delay(ch, int(value), "vehicle"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ai_package_delay",
+        cmd_key="GetAiAlarm",
+        translation_key="ai_package_delay",
+        icon="mdi:gift-outline",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_min_value=0,
+        native_max_value=8,
+        supported=lambda api, ch: (
+            api.supported(ch, "ai_delay") and api.ai_supported(ch, "package")
+        ),
+        value=lambda api, ch: api.ai_delay(ch, "package"),
+        method=lambda api, ch, value: api.set_ai_delay(ch, int(value), "package"),
     ),
     ReolinkNumberEntityDescription(
         key="ai_pet_delay",
