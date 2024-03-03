@@ -109,5 +109,12 @@ def get_supported_devices(
     return [
         device_config
         for device_config in devices
-        if device_config.getModel() not in ["Heatbox1", "Heatbox2_SRC"]
+        if device_config.getModel() not in [
+            "Heatbox1",
+            "Heatbox2_SRC",
+            "E3_FloorHeatingCircuitChannel",
+            "E3_FloorHeatingCircuitDistributorBox",
+            "E3_RoomControl_One_522",
+            "E3_RoomSensor",
+        ]
     ]
