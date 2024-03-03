@@ -34,7 +34,7 @@ class IntegrationFrame:
     relative_filename: str
 
 
-def get_logger(fallback_name: str) -> logging.Logger:
+def get_integration_logger(fallback_name: str) -> logging.Logger:
     """Return a logger by checking the current integration frame.
 
     If Python is unable to access the sources files, the call stack frame

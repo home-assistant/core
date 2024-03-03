@@ -102,7 +102,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.util.yaml.objects import NodeStrClass
 
 from . import script_variables as script_variables_helper, template as template_helper
-from .frame import get_logger
+from .frame import get_integration_logger
 
 TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
 
@@ -921,7 +921,7 @@ def _deprecated_or_removed(
             if raise_if_present:
                 raise vol.Invalid(warning % arguments)
 
-            get_logger(__name__).log(level, warning, *arguments)
+            get_integration_logger(__name__).log(level, warning, *arguments)
             value = config[key]
             if replacement_key or option_removed:
                 config.pop(key)
@@ -1107,7 +1107,7 @@ def empty_config_schema(domain: str) -> Callable[[dict], dict]:
 
     def validator(config: dict) -> dict:
         if domain in config and config[domain]:
-            get_logger(__name__).error(
+            get_integration_logger(__name__).error(
                 (
                     "The %s integration does not support any configuration parameters, "
                     "got %s. Please remove the configuration parameters from your "
@@ -1149,7 +1149,7 @@ def _no_yaml_config_schema(
 
     def validator(config: dict) -> dict:
         if domain in config:
-            get_logger(__name__).error(
+            get_integration_logger(__name__).error(
                 (
                     "The %s integration does not support YAML setup, please remove it "
                     "from your configuration file"

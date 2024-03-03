@@ -988,7 +988,7 @@ def test_deprecated_with_default(caplog: pytest.LogCaptureFixture, schema) -> No
 
     test_data = {"mars": True}
     with patch(
-        "homeassistant.helpers.config_validation.get_logger",
+        "homeassistant.helpers.config_validation.get_integration_logger",
         return_value=logging.getLogger(__name__),
     ):
         output = deprecated_schema(test_data.copy())
