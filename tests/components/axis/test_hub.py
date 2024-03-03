@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components import axis, zeroconf
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
+from homeassistant.components.axis.hub import AxisHub
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import (
@@ -48,12 +49,12 @@ async def test_device_setup(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
-    device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
+    hub = AxisHub.get_hub(hass, setup_config_entry)
 
-    assert device.api.vapix.firmware_version == "9.10.1"
-    assert device.api.vapix.product_number == "M1065-LW"
-    assert device.api.vapix.product_type == "Network Camera"
-    assert device.api.vapix.serial_number == "00408C123456"
+    assert hub.api.vapix.firmware_version == "9.10.1"
+    assert hub.api.vapix.product_number == "M1065-LW"
+    assert hub.api.vapix.product_type == "Network Camera"
+    assert hub.api.vapix.serial_number == "00408C123456"
 
     assert len(forward_entry_setup.mock_calls) == 4
     assert forward_entry_setup.mock_calls[0][1][1] == "binary_sensor"
@@ -61,27 +62,27 @@ async def test_device_setup(
     assert forward_entry_setup.mock_calls[2][1][1] == "light"
     assert forward_entry_setup.mock_calls[3][1][1] == "switch"
 
-    assert device.host == config[CONF_HOST]
-    assert device.model == config[CONF_MODEL]
-    assert device.name == config[CONF_NAME]
-    assert device.unique_id == FORMATTED_MAC
+    assert hub.host == config[CONF_HOST]
+    assert hub.model == config[CONF_MODEL]
+    assert hub.name == config[CONF_NAME]
+    assert hub.unique_id == FORMATTED_MAC
 
     device_entry = device_registry.async_get_device(
-        identifiers={(AXIS_DOMAIN, device.unique_id)}
+        identifiers={(AXIS_DOMAIN, hub.unique_id)}
     )
 
-    assert device_entry.configuration_url == device.api.config.url
+    assert device_entry.configuration_url == hub.api.config.url
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_BASIC_DEVICE_INFO])
 async def test_device_info(hass: HomeAssistant, setup_config_entry) -> None:
     """Verify other path of device information works."""
-    device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
+    hub = AxisHub.get_hub(hass, setup_config_entry)
 
-    assert device.api.vapix.firmware_version == "9.80.1"
-    assert device.api.vapix.product_number == "M1065-LW"
-    assert device.api.vapix.product_type == "Network Camera"
-    assert device.api.vapix.serial_number == "00408C123456"
+    assert hub.api.vapix.firmware_version == "9.80.1"
+    assert hub.api.vapix.product_number == "M1065-LW"
+    assert hub.api.vapix.product_type == "Network Camera"
+    assert hub.api.vapix.serial_number == "00408C123456"
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_MQTT])
@@ -111,8 +112,8 @@ async def test_update_address(
     hass: HomeAssistant, setup_config_entry, mock_vapix_requests
 ) -> None:
     """Test update address works."""
-    device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
-    assert device.api.config.host == "1.2.3.4"
+    hub = AxisHub.get_hub(hass, setup_config_entry)
+    assert hub.api.config.host == "1.2.3.4"
 
     with patch(
         "homeassistant.components.axis.async_setup_entry", return_value=True
@@ -133,7 +134,7 @@ async def test_update_address(
         )
         await hass.async_block_till_done()
 
-    assert device.api.config.host == "2.3.4.5"
+    assert hub.api.config.host == "2.3.4.5"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
