@@ -872,6 +872,7 @@ build.json @home-assistant/supervisor
 /tests/components/nibe_heatpump/ @elupus
 /homeassistant/components/nightscout/ @marciogranzotto
 /tests/components/nightscout/ @marciogranzotto
+/homeassistant/components/niko_home_control/ @Iondependent
 /homeassistant/components/nilu/ @hfurubotten
 /homeassistant/components/nina/ @DeerMaximum
 /tests/components/nina/ @DeerMaximum

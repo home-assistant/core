@@ -1351,7 +1351,7 @@ nextdns==2.1.0
 nibe==2.5.2
 
 # homeassistant.components.niko_home_control
-niko-home-control==0.2.1
+niko-home-control==0.3.0
 
 # homeassistant.components.nilu
 niluclient==0.1.2
