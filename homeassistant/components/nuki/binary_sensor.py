@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NukiEntity, NukiEntryData
-from .const import DOMAIN as NUKI_DOMAIN
+from .const import ATTR_NUKI_ID, DOMAIN as NUKI_DOMAIN
 
 
 async def async_setup_entry(
@@ -50,6 +50,15 @@ class NukiDoorsensorEntity(NukiEntity[NukiDevice], BinarySensorEntity):
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_doorsensor"
 
+    # Deprecated, can be removed in 2024.9
+    @property
+    def extra_state_attributes(self):
+        """Return the device specific state attributes."""
+        data = {
+            ATTR_NUKI_ID: self._nuki_device.nuki_id,
+        }
+        return data
+
     @property
     def available(self) -> bool:
         """Return true if door sensor is present and activated."""
@@ -81,6 +90,15 @@ class NukiRingactionEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_ringaction"
+
+    # Deprecated, can be removed in 2024.9
+    @property
+    def extra_state_attributes(self):
+        """Return the device specific state attributes."""
+        data = {
+            ATTR_NUKI_ID: self._nuki_device.nuki_id,
+        }
+        return data
 
     @property
     def is_on(self) -> bool:
