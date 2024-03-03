@@ -22,6 +22,14 @@ async def test_extract_frame_integration(
     )
 
 
+async def test_get_logging(
+    caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
+) -> None:
+    """Test extracting the current frame to get the loggger."""
+    logger = frame.get_logger(__name__)
+    assert logger.name == "homeassistant.components.hue"
+
+
 async def test_extract_frame_resolve_module(
     hass: HomeAssistant, enable_custom_integrations
 ) -> None:
@@ -37,6 +45,17 @@ async def test_extract_frame_resolve_module(
         module="custom_components.test_integration_frame",
         relative_filename="custom_components/test_integration_frame/__init__.py",
     )
+
+
+async def test_get_logger_resolve_module(
+    hass: HomeAssistant, enable_custom_integrations
+) -> None:
+    """Test getting the logger from integration context."""
+    from custom_components.test_integration_frame import call_get_logger
+
+    logger = call_get_logger(__name__)
+
+    assert logger.name == "custom_components.test_integration_frame"
 
 
 async def test_extract_frame_integration_with_excluded_integration(
@@ -100,6 +119,28 @@ async def test_extract_frame_no_integration(caplog: pytest.LogCaptureFixture) ->
         ],
     ), pytest.raises(frame.MissingIntegrationFrame):
         frame.get_integration_frame()
+
+
+async def test_get_logger_no_integration(caplog: pytest.LogCaptureFixture) -> None:
+    """Test getting fallback logger without integration context."""
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        logger = frame.get_logger(__name__)
+
+    assert logger.name == __name__
 
 
 @patch.object(frame, "_REPORTED_INTEGRATIONS", set())
