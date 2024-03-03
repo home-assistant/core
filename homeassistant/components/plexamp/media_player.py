@@ -181,15 +181,10 @@ class PlexampMediaPlayer(MediaPlayerEntity):
         """Implement media playback."""
         # Handle playlist selection
         if media_type == "playlist":
-            # Send command to start playing the selected playlist
-            _LOGGER.debug(
-                "WE ARE STARTING A PLAYLIST MEDIA!!! %s %s %s",
-                media_type,
-                media_id,
-                kwargs,
-            )
             await self._plexamp_service.play_media(
-                media_type=media_type, rating_key=media_id
+                media_type=media_type,
+                rating_key=media_id,
+                shuffle=1 if self._attr_shuffle else 0,
             )
         # Handle track selection
         elif media_type == "track":

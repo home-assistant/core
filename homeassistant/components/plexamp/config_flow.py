@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_PLEX_TOKEN, DOMAIN, DEFAULT_PORT
+from .const import CONF_PLEX_TOKEN, DOMAIN, DEFAULT_PORT, CONF_PLEX_IP_ADDRESS
 from .models import BaseMediaPlayerFactory
 
 _LOGGER = logging.getLogger(__name__)
@@ -154,10 +154,13 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Validate user input
             plex_token = user_input.get(CONF_PLEX_TOKEN)
+            plex_ip = user_input.get(CONF_PLEX_IP_ADDRESS)
 
-            sonos_devices = await self._check_for_sonos_devices(self.hass, plex_token)
-            if not len(sonos_devices):
-                _LOGGER.error("Couldn't find any Sonos devices.")
+            sonos_devices = await self._check_for_sonos_devices(
+                self.hass, plex_token, plex_ip
+            )
+            if len(sonos_devices) == 0:
+                _LOGGER.error("Couldn't find any Sonos devices")
                 errors["base"] = "invalid_host"
 
             if not errors:
@@ -179,9 +182,8 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @staticmethod
     async def _check_for_sonos_devices(
-        hass: HomeAssistant, plex_token: str
+        self, hass: HomeAssistant, plex_token: str, plex_ip: str
     ) -> list[BaseMediaPlayerFactory]:
         """Looks for sonos devices connected to Plexamp."""
         sonos_devices: list[BaseMediaPlayerFactory] = []
@@ -199,34 +201,36 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 root = ET.fromstring(xml_content)
                 players = root.findall("Player")
+                server = await self._get_server_info(
+                    hass=self.hass, plex_token=plex_token, plex_ip_address=plex_ip
+                )
+                if server is not None:
+                    for player in players:
+                        name = player.get("title", "")
+                        product = player.get("product")
+                        platform_version = player.get("platformVersion")
+                        machine_identifier = player.get("machineIdentifier", "")
+                        protocol = player.get("protocol")
+                        lan_ip = player.get("lanIP", "")
+                        uri = "https://sonos.plex.tv"
 
-                for player in players:
-                    name = player.get("title", "")
-                    product = player.get("product")
-                    platform_version = player.get("platformVersion")
-                    machine_identifier = player.get("machineIdentifier", "")
-                    protocol = player.get("protocol")
-                    lan_ip = player.get("lanIP", "")
-                    uri = "https://sonos.plex.tv"
-                    server_uri = uri
+                        new_sonos_device = BaseMediaPlayerFactory(
+                            name=name,
+                            product=product,
+                            product_version=platform_version,
+                            client_identifier=machine_identifier,
+                            protocol=protocol,
+                            address=lan_ip,
+                            port="",
+                            uri=uri,
+                            server=server,
+                        )
 
-                    new_sonos_device = BaseMediaPlayerFactory(
-                        name=name,
-                        product=product,
-                        product_version=platform_version,
-                        client_identifier=machine_identifier,
-                        protocol=protocol,
-                        address=lan_ip,
-                        port="",
-                        uri=uri,
-                        server={},
-                    )
+                        sonos_devices.append(new_sonos_device)
 
-                    sonos_devices.append(new_sonos_device)
-
-                    _LOGGER.debug(
-                        "Found player %s with id %s", name, machine_identifier
-                    )
+                        _LOGGER.debug(
+                            "Found player %s with id %s", name, machine_identifier
+                        )
         except (aiohttp.ClientError, aiohttp.ClientResponseError) as e:
             _LOGGER.error("Error retrieving Sonos devices: %s", e)
         except ET.ParseError as e:
@@ -234,9 +238,8 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return sonos_devices
 
-    @staticmethod
     async def _async_test_authenticated_connection(
-        hass: HomeAssistant, host: str, plex_token: str, plex_ip_address: str
+        self, hass: HomeAssistant, host: str, plex_token: str, plex_ip_address: str
     ) -> BaseMediaPlayerFactory | None:
         """If the user provides authentication, we can get more info of the device and store it"""
         url = "https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=0"
@@ -253,18 +256,14 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if response.status == 200:
                     devices = await response.json()
                     found_device = None
-                    found_server = {}
+                    found_server = await self._get_server_info(
+                        hass=hass,
+                        plex_token=plex_token,
+                        plex_ip_address=plex_ip_address,
+                    )
 
                     for device in devices:
                         first_connection = device.get("connections", [{}])[0]
-                        if (
-                            device.get("provides") == "server"
-                            and first_connection.get("address") == plex_ip_address
-                        ):
-                            found_server["identifier"] = device.get("clientIdentifier")
-                            found_server["protocol"] = first_connection.get("protocol")
-                            found_server["port"] = first_connection.get("port")
-                            found_server["uri"] = first_connection.get("uri")
                         if (
                             "player" in device.get("provides")
                             and first_connection.get("address") == host
@@ -342,3 +341,34 @@ class PlexampConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except (TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout trying to connect to Plexamp")
         return None
+
+    @staticmethod
+    async def _get_server_info(
+        hass: HomeAssistant, plex_token: str, plex_ip_address: str
+    ) -> dict:
+        headers = {
+            "X-Plex-Token": plex_token,
+            "X-Plex-Client-Identifier": "Plex_HomeAssistant",
+            "X-Plex-Product": "Plex_HomeAssistant",
+            "Accept": "application/json",
+        }
+        server_url = "https://plex.tv/api/v2/resources?includeHttps=1&includeRelay=0"
+        session = async_get_clientsession(hass)
+        found_server = {}
+        async with session.get(server_url, headers=headers, timeout=10) as response:
+            if response.status == 200:
+                devices = await response.json()
+
+                for device in devices:
+                    first_connection = device.get("connections", [{}])[0]
+                    if (
+                        device.get("provides") == "server"
+                        and first_connection.get("address") == plex_ip_address
+                    ):
+                        found_server["identifier"] = device.get("clientIdentifier")
+                        found_server["protocol"] = first_connection.get("protocol")
+                        found_server["port"] = first_connection.get("port")
+                        found_server["uri"] = first_connection.get("uri")
+                    return found_server
+                return found_server
+        return found_server

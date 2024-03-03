@@ -9,7 +9,6 @@ from homeassistant.components.media_player import MediaPlayerState, MediaType
 
 from .const import NUMBER_TO_REPEAT_MODE
 from .models import BaseMediaPlayerFactory
-from .utils import replace_ip_prefix
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,9 +80,12 @@ class PlexampService:
                     e,
                 )
 
-    async def play_media(self, media_type: MediaType | str, rating_key: str) -> None:
+    async def play_media(self, media_type: MediaType | str, rating_key: str, shuffle=0) -> None:
         if media_type == MediaType.PLAYLIST:
-            await self._play_playlist(rating_key=rating_key)
+            if self._plexamp_entity.product == "Sonos":
+                await self._play_sonos_playlist(rating_key=rating_key, shuffle=shuffle)
+            else:
+                await self._play_playlist(rating_key=rating_key, shuffle=shuffle)
 
     async def poll_device(self, poll_wait=0) -> dict:
         """Get device information from Plexamp.
@@ -126,9 +128,7 @@ class PlexampService:
             "protocol": "",
             "port": "32400",
         }
-        _LOGGER.debug(
-            "device: %s | url: %s | headers: %s", self._device_name, url, self.headers
-        )
+
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
@@ -136,12 +136,6 @@ class PlexampService:
                     headers=self.headers,
                     timeout=10,
                 ) as response:
-                    _LOGGER.debug(
-                        "device: %s | url: %s | response: %s",
-                        self._device_name,
-                        url,
-                        response,
-                    )
                     response.raise_for_status()
                     self._command_id += 1
                     content = await response.text()
@@ -170,7 +164,7 @@ class PlexampService:
                 return data.get("MediaContainer", {}).get("token") or None
         return None
 
-    async def _play_playlist(self, rating_key: str, shuffle=0):
+    async def _play_playlist(self, rating_key: str, shuffle=0) -> None:
         token = await self._get_play_token()
         if not token or not self._plexamp_entity.server.get("uri"):
             return
@@ -188,6 +182,38 @@ class PlexampService:
         _LOGGER.debug("Starting new playlist in %s with url %s", self._device_name, url)
         async with aiohttp.ClientSession() as session:
             await session.get(url, headers=self.headers, timeout=10)
+
+    async def _play_sonos_playlist(self, rating_key: str, shuffle=0) -> None:
+        token = await self._get_play_token()
+        if not token or not self._plexamp_entity.server.get("uri"):
+            return
+
+        create_queue_base_url = f"{self._plexamp_entity.server.get('uri')}/playQueues"
+        server_identifier = self._plexamp_entity.server.get("identifier")
+        uri = f"uri=server://{server_identifier}/com.plexapp.plugins.library/playlists/{rating_key}/items"
+        playlist_id = f"playlistID={rating_key}"
+
+        shuffle_param = f"shuffle={shuffle}"
+        type_param = "type=music"
+        include_external_media = "includeExternalMedia=1"
+        base_url = f"{self._plexamp_entity.uri}/player/playback/playMedia"
+        token = f"token={token}"
+        extra_parameters = f"{shuffle_param}&{include_external_media}&{type_param}"
+
+        create_queue_url = f"{create_queue_base_url}?{uri}&{playlist_id}&{token}&{extra_parameters}"
+
+        async with aiohttp.ClientSession() as session:
+            response = await session.post(create_queue_url, headers=self.headers, timeout=10)
+            if response.ok:
+                playlist_data = await response.json()
+                playlist_queue_id = playlist_data.get("MediaContainer", {}).get("playQueueID")
+                playlist_name = playlist_data.get("MediaContainer", {}).get("playQueuePlaylistTitle")
+                _LOGGER.debug("Starting playlist %s in %s", playlist_name, self._device_name)
+                container_key = f"containerKey=/playQueues/{playlist_queue_id}?own=1"
+                machine_identifier = f"machineIdentifier={self._plexamp_entity.server.get("identifier")}"
+                command_id = f"commandID={self._command_id + 1}"
+                url = f"{base_url}?{token}&{machine_identifier}&{container_key}&{extra_parameters}&{command_id}"
+                await session.get(url, headers=self.headers, timeout=10)
 
     async def get_playlists(self) -> list[dict]:
         server_uri = self._plexamp_entity.server.get("uri")
@@ -265,17 +291,9 @@ class PlexampService:
 
         repeat_mode_value = timeline.get("repeat", 0)
         device_information["repeat"] = NUMBER_TO_REPEAT_MODE.get(repeat_mode_value)
-
-        # If the user didn't provide the token, we can't get queue info and metadata
-        if not self._plex_token or not self._plex_ip_address:
-            _LOGGER.debug(
-                "device: %s - NO _plex_token or _plex_ip_address",
-                self._device_name,
-            )
-            return device_information
-
         play_queue = timeline.get("containerKey")
 
+        # If there's no server, we can't get queue info and metadata
         if not play_queue or not self._plexamp_entity.server.get("uri"):
             return device_information
 
@@ -302,8 +320,6 @@ class PlexampService:
 
         """
         play_queue_url = f"{self._plexamp_entity.server.get("uri")}{play_queue}"
-        _LOGGER.debug("playing queue: %s", play_queue_url)
-
         try:
             async with session.get(
                 play_queue_url, timeout=10, headers=self.headers
