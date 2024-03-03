@@ -738,7 +738,7 @@ class Integration:
         # True if it's a built-in integration and False if it's a custom integration.
         # In the future, we want to default to True for all integrations.
         return self.manifest.get(
-            "import_executor", self.pkg_path == "homeassistant.components"
+            "import_executor", self.pkg_path.startswith("homeassistant.components")
         )
 
     @property
