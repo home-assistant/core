@@ -39,7 +39,7 @@ from .components import (
     logbook as logbook_pre_import,  # noqa: F401
     lovelace as lovelace_pre_import,  # noqa: F401
     onboarding as onboarding_pre_import,  # noqa: F401
-    recorder as recorder_pre_import,  # noqa: F401
+    recorder as recorder_import,  # noqa: F401 - not named pre_import since it has requirements
     repairs as repairs_pre_import,  # noqa: F401
     search as search_pre_import,  # noqa: F401
     sensor as sensor_pre_import,  # noqa: F401
