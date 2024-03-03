@@ -109,8 +109,8 @@ SWITCH_ENTITIES = (
         method=lambda api, ch, value: api.set_ptz_guard(ch, enable=value),
     ),
     ReolinkSwitchEntityDescription(
-        key="patrol",
-        translation_key="patrol",
+        key="ptz_patrol",
+        translation_key="ptz_patrol",
         icon="mdi:map-marker-path",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ptz_patrol"),
