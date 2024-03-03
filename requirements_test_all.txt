@@ -1372,7 +1372,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.0
 
 # homeassistant.components.hydrawise
-pydrawise==2024.2.0
+pydrawise==2024.3.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -2231,7 +2231,7 @@ yalexs==1.11.4
 yeelight==0.7.14
 
 # homeassistant.components.yolink
-yolink-api==0.3.7
+yolink-api==0.3.9
 
 # homeassistant.components.youless
 youless-api==1.0.1

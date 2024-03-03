@@ -675,6 +675,9 @@ async def _async_resolve_domains_to_setup(
     base_platforms_loaded = False
     domains_to_setup = _get_domains(hass, config)
     needed_requirements: set[str] = set()
+    platform_integrations = conf_util.extract_platform_integrations(
+        config, BASE_PLATFORMS
+    )
 
     # Resolve all dependencies so we know all integrations
     # that will have to be loaded and start rightaway
@@ -691,7 +694,7 @@ async def _async_resolve_domains_to_setup(
             # to avoid the lock contention when multiple
             # integrations try to resolve them at once
             base_platforms_loaded = True
-            to_get = {*old_to_resolve, *BASE_PLATFORMS}
+            to_get = {*old_to_resolve, *BASE_PLATFORMS, *platform_integrations}
         else:
             to_get = old_to_resolve
 
@@ -700,13 +703,16 @@ async def _async_resolve_domains_to_setup(
         integrations_to_process: list[loader.Integration] = []
 
         for domain, itg in (await loader.async_get_integrations(hass, to_get)).items():
-            if not isinstance(itg, loader.Integration) or domain not in old_to_resolve:
+            if not isinstance(itg, loader.Integration):
                 continue
-            integrations_to_process.append(itg)
             integration_cache[domain] = itg
+            needed_requirements.update(itg.requirements)
+            if domain not in old_to_resolve:
+                continue
+
+            integrations_to_process.append(itg)
             manifest_deps.update(itg.dependencies)
             manifest_deps.update(itg.after_dependencies)
-            needed_requirements.update(itg.requirements)
             if not itg.all_dependencies_resolved:
                 resolve_dependencies_tasks.append(
                     create_eager_task(
@@ -760,7 +766,9 @@ async def _async_resolve_domains_to_setup(
     # wait for the translation load lock, loading will be done by the
     # time it gets to it.
     hass.async_create_background_task(
-        translation.async_load_integrations(hass, {*BASE_PLATFORMS, *domains_to_setup}),
+        translation.async_load_integrations(
+            hass, {*BASE_PLATFORMS, *platform_integrations, *domains_to_setup}
+        ),
         "load translations",
         eager_start=True,
     )
