@@ -87,21 +87,41 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         self.boot_time: datetime | None = None
 
         self._initial_update: bool = True
-        self.update_list: list[tuple[str, str]] = []
+        self.update_subscribers: dict[
+            tuple[str, str], set[str]
+        ] = self.set_subscribers_tuples(arguments)
+
+    def set_subscribers_tuples(
+        self, arguments: list[str]
+    ) -> dict[tuple[str, str], set[str]]:
+        """Set tuples in subscribers dictionary."""
+        _set_default: dict[tuple[str, str], set[str]] = {}
+        for argument in arguments:
+            _set_default[("disks", argument)] = set()
+        _set_default[("swap", "")] = set()
+        _set_default[("memory", "")] = set()
+        _set_default[("io_counters", "")] = set()
+        _set_default[("addresses", "")] = set()
+        _set_default[("load", "")] = set()
+        _set_default[("cpu_percent", "")] = set()
+        _set_default[("boot", "")] = set()
+        _set_default[("processes", "")] = set()
+        _set_default[("temperatures", "")] = set()
+        return _set_default
 
     async def _async_update_data(self) -> SensorData:
         """Fetch data."""
-        _LOGGER.debug("Update list is: %s", self.update_list)
+        _LOGGER.debug("Update list is: %s", self.update_subscribers)
 
         _data = await self.hass.async_add_executor_job(self.update_data)
 
         load: tuple = (None, None, None)
-        if ("load", "") in self.update_list or self._initial_update:
+        if self.update_subscribers[("load", "")] or self._initial_update:
             load = os.getloadavg()
             _LOGGER.debug("Load: %s", load)
 
         cpu_percent: float | None = None
-        if ("cpu_percent", "") in self.update_list or self._initial_update:
+        if self.update_subscribers[("cpu_percent", "")] or self._initial_update:
             cpu_percent = self._psutil.cpu_percent(interval=None)
             _LOGGER.debug("cpu_percent: %s", cpu_percent)
 
@@ -123,7 +143,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         """To be extended by data update coordinators."""
         disks: dict[str, sdiskusage] = {}
         for argument in self._arguments:
-            if ("disks", argument) in self.update_list or self._initial_update:
+            if self.update_subscribers[("disks", argument)] or self._initial_update:
                 try:
                     usage: sdiskusage = self._psutil.disk_usage(argument)
                     _LOGGER.debug("sdiskusagefor %s: %s", argument, usage)
@@ -137,12 +157,12 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
                     disks[argument] = usage
 
         swap: sswap | None = None
-        if ("swap", "") in self.update_list or self._initial_update:
+        if self.update_subscribers[("swap", "")] or self._initial_update:
             swap = self._psutil.swap_memory()
             _LOGGER.debug("sswap: %s", swap)
 
         memory = None
-        if ("memory", "") in self.update_list or self._initial_update:
+        if self.update_subscribers[("memory", "")] or self._initial_update:
             memory = self._psutil.virtual_memory()
             _LOGGER.debug("memory: %s", memory)
             memory = VirtualMemory(
@@ -150,12 +170,12 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             )
 
         io_counters: dict[str, snetio] | None = None
-        if ("io_counters", "") in self.update_list or self._initial_update:
+        if self.update_subscribers[("io_counters", "")] or self._initial_update:
             io_counters = self._psutil.net_io_counters(pernic=True)
             _LOGGER.debug("io_counters: %s", io_counters)
 
         addresses: dict[str, list[snicaddr]] | None = None
-        if ("addresses", "") in self.update_list or self._initial_update:
+        if self.update_subscribers[("addresses", "")] or self._initial_update:
             addresses = self._psutil.net_if_addrs()
             _LOGGER.debug("ip_addresses: %s", addresses)
 
@@ -165,12 +185,13 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
             _LOGGER.debug("boot time: %s", self.boot_time)
 
         processes = None
-        if ("processes", "") in self.update_list or self._initial_update:
+        if self.update_subscribers[("processes", "")] or self._initial_update:
             processes = self._psutil.process_iter()
             _LOGGER.debug("processes: %s", processes)
             processes = list(processes)
+
         temps: dict[str, list[shwtemp]] = {}
-        if ("temperatures", "") in self.update_list or self._initial_update:
+        if self.update_subscribers[("temperatures", "")] or self._initial_update:
             try:
                 temps = self._psutil.sensors_temperatures()
                 _LOGGER.debug("temps: %s", temps)
