@@ -743,9 +743,6 @@
       "min_heat_setpoint_limit": {
         "name": "Min heat setpoint limit"
       },
-      "temperature_calibration_offset": {
-        "name": "Temperature calibration offset"
-      },
       "window_open_temperature": {
         "name": "Window open temperature"
       }
