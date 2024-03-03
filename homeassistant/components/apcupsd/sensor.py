@@ -493,7 +493,7 @@ class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
         super().__init__(coordinator=coordinator, context=description.key.upper())
 
         # Set up unique id and device info if serial number is available.
-        if (serial_no := coordinator.ups_serial_no) is not None:
+        if (serial_no := coordinator.data.serial_no) is not None:
             self._attr_unique_id = f"{serial_no}_{description.key}"
 
         self.entity_description = description
