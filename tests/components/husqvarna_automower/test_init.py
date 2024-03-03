@@ -1,9 +1,11 @@
 """Tests for init module."""
+from datetime import timedelta
 import http
 import time
 from unittest.mock import AsyncMock
 
-from aioautomower.exceptions import ApiException
+from aioautomower.exceptions import ApiException, HusqvarnaWSServerHandshakeError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
@@ -12,7 +14,7 @@ from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -82,3 +84,28 @@ async def test_update_failed(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_websocket_not_available(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test trying reload the websocket."""
+    getattr(
+        mock_automower_client, "start_listening"
+    ).side_effect = HusqvarnaWSServerHandshakeError("Boom")
+    await setup_integration(hass, mock_config_entry)
+    assert "Failed to connect to websocket. Trying to reconnect: Boom" in caplog.text
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert mock_automower_client.auth.websocket_connect.call_count == 1
+    assert mock_automower_client.start_listening.call_count == 1
+    assert entry.state == ConfigEntryState.LOADED
+    freezer.tick(timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_automower_client.auth.websocket_connect.call_count == 2
+    assert mock_automower_client.start_listening.call_count == 2
+    assert entry.state == ConfigEntryState.LOADED
