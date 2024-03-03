@@ -1,6 +1,5 @@
 """Base entity for the Ping component."""
-from config_entries import ConfigEntry
-
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import DOMAIN
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
