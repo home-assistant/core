@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/velux",
   "iot_class": "local_polling",
   "loggers": ["pyvlx"],
-  "requirements": ["pyvlx==0.2.21"],
+  "requirements": ["pyvlx==0.2.22"],
   "zeroconf": [{ "type": "_http._tcp.local.", "name": "velux_klf_lan*" }]
 }
