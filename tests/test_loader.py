@@ -1179,7 +1179,9 @@ async def test_async_get_platform_deadlock_fallback(
         "Detected deadlock trying to import homeassistant.components.executor_import"
         in caplog.text
     )
-    assert "loaded_executor=False" in caplog.text
+    # We should have tried both the executor and loop
+    assert "executor=['config_flow']" in caplog.text
+    assert "loop=['config_flow']" in caplog.text
     assert module is module_mock
 
 
