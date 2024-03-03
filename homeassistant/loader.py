@@ -12,6 +12,7 @@ from dataclasses import dataclass
 import functools as ft
 import importlib
 import logging
+import os
 import pathlib
 import sys
 import time
@@ -975,6 +976,43 @@ class Integration:
         if platform := self._get_platform_cached(f"{self.domain}.{platform_name}"):
             return platform
         return self._load_platform(platform_name)
+
+    def platform_exists(self, platform_name: str) -> bool | None:
+        """Check if a platform exists for an integration.
+
+        Returns True if the platform exists, False if it does not.
+
+        If it cannot be determined if the platform exists without attempting
+        to import the component, it returns None. This will only happen
+        if this function is called before get_component or async_get_component
+        has been called for the integration or the integration failed to load.
+        """
+        full_name = f"{self.domain}.{platform_name}"
+
+        cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
+        if full_name in cache:
+            return True
+
+        missing_platforms_cache: dict[str, ImportError]
+        missing_platforms_cache = self.hass.data[DATA_MISSING_PLATFORMS]
+        if full_name in missing_platforms_cache:
+            return False
+
+        if not (component := cache.get(self.domain)) or not (
+            file := getattr(component, "__file__", None)
+        ):
+            return None
+
+        path: pathlib.Path = pathlib.Path(file).parent.joinpath(platform_name)
+        if os.path.exists(path.with_suffix(".py")) or os.path.exists(path):
+            return True
+
+        exc = ModuleNotFoundError(
+            f"Platform {full_name} not found",
+            name=f"{self.pkg_path}.{platform_name}",
+        )
+        missing_platforms_cache[full_name] = exc
+        return False
 
     def _load_platform(self, platform_name: str) -> ModuleType:
         """Load a platform for an integration.
