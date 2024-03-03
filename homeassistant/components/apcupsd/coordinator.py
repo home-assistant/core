@@ -80,7 +80,7 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
             identifiers={(DOMAIN, self.data.serial_no or self.config_entry.entry_id)},
             model=self.data.model,
             manufacturer="APC",
-            name=self.data.name if self.data.name else "APC UPS",
+            name=self.data.name or "APC UPS",
             hw_version=self.data.get("FIRMWARE"),
             sw_version=self.data.get("VERSION"),
         )
