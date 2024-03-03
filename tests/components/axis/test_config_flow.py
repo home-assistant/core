@@ -124,7 +124,7 @@ async def test_flow_fails_faulty_credentials(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.axis.config_flow.get_axis_device",
+        "homeassistant.components.axis.config_flow.get_axis_api",
         side_effect=config_flow.AuthenticationRequired,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -150,7 +150,7 @@ async def test_flow_fails_cannot_connect(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.axis.config_flow.get_axis_device",
+        "homeassistant.components.axis.config_flow.get_axis_api",
         side_effect=config_flow.CannotConnect,
     ):
         result = await hass.config_entries.flow.async_configure(

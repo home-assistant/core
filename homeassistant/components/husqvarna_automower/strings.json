@@ -22,5 +22,50 @@
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
+  },
+  "entity": {
+    "switch": {
+      "enable_schedule": {
+        "name": "Enable schedule"
+      }
+    },
+    "sensor": {
+      "number_of_charging_cycles": {
+        "name": "Number of charging cycles"
+      },
+      "number_of_collisions": {
+        "name": "Number of collisions"
+      },
+      "cutting_blade_usage_time": {
+        "name": "Cutting blade usage time"
+      },
+      "total_charging_time": {
+        "name": "Total charging time"
+      },
+      "total_cutting_time": {
+        "name": "Total cutting time"
+      },
+      "total_running_time": {
+        "name": "Total running time"
+      },
+      "total_searching_time": {
+        "name": "Total searching time"
+      },
+      "total_drive_distance": {
+        "name": "Total drive distance"
+      },
+      "next_start_timestamp": {
+        "name": "Next start"
+      },
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "main_area": "Main area",
+          "secondary_area": "Secondary area",
+          "home": "Home",
+          "demo": "Demo"
+        }
+      }
+    }
   }
 }

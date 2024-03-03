@@ -90,7 +90,6 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         super().__init__(
             entry_id=entry_id,
             coordinator=coordinator,
-            icon=None,
         )
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}"
 

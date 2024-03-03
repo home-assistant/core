@@ -15,6 +15,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
     from .discovery import MQTTDiscoveryPayload
     from .tag import MQTTTagScanner
 
-from .const import TEMPLATE_ERRORS
+from .const import DOMAIN, TEMPLATE_ERRORS
 
 
 class PayloadSentinel(StrEnum):
@@ -111,6 +112,38 @@ class MqttOriginInfo(TypedDict, total=False):
     support_url: str
 
 
+class MqttCommandTemplateException(ServiceValidationError):
+    """Handle MqttCommandTemplate exceptions."""
+
+    def __init__(
+        self,
+        *args: object,
+        base_exception: Exception,
+        command_template: str,
+        value: PublishPayloadType,
+        entity_id: str | None = None,
+    ) -> None:
+        """Initialize exception."""
+        super().__init__(base_exception, *args)
+        value_log = str(value)
+        self.translation_domain = DOMAIN
+        self.translation_key = "command_template_error"
+        self.translation_placeholders = {
+            "error": str(base_exception),
+            "entity_id": str(entity_id),
+            "command_template": command_template,
+        }
+        entity_id_log = "" if entity_id is None else f" for entity '{entity_id}'"
+        self._message = (
+            f"{type(base_exception).__name__}: {base_exception} rendering template{entity_id_log}"
+            f", template: '{command_template}' and payload: {value_log}"
+        )
+
+    def __str__(self) -> str:
+        """Return exception message string."""
+        return self._message
+
+
 class MqttCommandTemplate:
     """Class for rendering MQTT payload with command templates."""
 
@@ -177,9 +210,17 @@ class MqttCommandTemplate:
             values,
             self._command_template,
         )
-        return _convert_outgoing_payload(
-            self._command_template.async_render(values, parse_result=False)
-        )
+        try:
+            return _convert_outgoing_payload(
+                self._command_template.async_render(values, parse_result=False)
+            )
+        except TemplateError as exc:
+            raise MqttCommandTemplateException(
+                base_exception=exc,
+                command_template=self._command_template.template,
+                value=value,
+                entity_id=self._entity.entity_id if self._entity is not None else None,
+            ) from exc
 
 
 class MqttValueTemplate:

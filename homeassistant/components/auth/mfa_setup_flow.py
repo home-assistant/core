@@ -38,6 +38,8 @@ _LOGGER = logging.getLogger(__name__)
 class MfaFlowManager(data_entry_flow.FlowManager):
     """Manage multi factor authentication flows."""
 
+    _flow_result = data_entry_flow.FlowResult
+
     async def async_create_flow(  # type: ignore[override]
         self,
         handler_key: str,
@@ -54,7 +56,7 @@ class MfaFlowManager(data_entry_flow.FlowManager):
         return await mfa_module.async_setup_flow(user_id)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
+        self, flow: data_entry_flow.BaseFlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Complete an mfs setup flow."""
         _LOGGER.debug("flow_result: %s", result)

@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import Coroutine, ValuesView
+from collections.abc import Mapping, ValuesView
 from enum import StrEnum
-from functools import partial
+from functools import lru_cache, partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
@@ -15,12 +15,13 @@ from yarl import URL
 
 from homeassistant.backports.functools import cached_property
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, get_release_channel
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
-from . import storage
+from . import storage, translation
 from .debounce import Debouncer
 from .deprecation import (
     DeprecatedConstantEnum,
@@ -94,6 +95,8 @@ class DeviceInfo(TypedDict, total=False):
     suggested_area: str | None
     sw_version: str | None
     hw_version: str | None
+    translation_key: str | None
+    translation_placeholders: Mapping[str, str] | None
     via_device: tuple[str, str]
 
 
@@ -321,6 +324,7 @@ class DeletedDeviceEntry:
         )
 
 
+@lru_cache(maxsize=512)
 def format_mac(mac: str) -> str:
     """Format the mac address string for entry into dev reg."""
     to_test = mac
@@ -496,6 +500,33 @@ class DeviceRegistry:
         """Check if device is deleted."""
         return self.deleted_devices.get_entry(identifiers, connections)
 
+    def _substitute_name_placeholders(
+        self,
+        domain: str,
+        name: str,
+        translation_placeholders: Mapping[str, str],
+    ) -> str:
+        """Substitute placeholders in entity name."""
+        try:
+            return name.format(**translation_placeholders)
+        except KeyError as err:
+            if get_release_channel() != "stable":
+                raise HomeAssistantError("Missing placeholder %s" % err) from err
+            report_issue = async_suggest_report_issue(
+                self.hass, integration_domain=domain
+            )
+            _LOGGER.warning(
+                (
+                    "Device from integration %s has translation placeholders '%s' "
+                    "which do not match the name '%s', please %s"
+                ),
+                domain,
+                translation_placeholders,
+                name,
+                report_issue,
+            )
+            return name
+
     @callback
     def async_get_or_create(
         self,
@@ -517,11 +548,31 @@ class DeviceRegistry:
         serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
+        translation_key: str | None = None,
+        translation_placeholders: Mapping[str, str] | None = None,
         via_device: tuple[str, str] | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
         if configuration_url is not UNDEFINED:
             configuration_url = _validate_configuration_url(configuration_url)
+
+        config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
+        if config_entry is None:
+            raise HomeAssistantError(
+                f"Can't link device to unknown config entry {config_entry_id}"
+            )
+
+        if translation_key:
+            full_translation_key = (
+                f"component.{config_entry.domain}.device.{translation_key}.name"
+            )
+            translations = translation.async_get_cached_translations(
+                self.hass, self.hass.config.language, "device", config_entry.domain
+            )
+            translated_name = translations.get(full_translation_key, translation_key)
+            name = self._substitute_name_placeholders(
+                config_entry.domain, translated_name, translation_placeholders or {}
+            )
 
         # Reconstruct a DeviceInfo dict from the arguments.
         # When we upgrade to Python 3.12, we can change this method to instead
@@ -548,11 +599,6 @@ class DeviceRegistry:
                 continue
             device_info[key] = val  # type: ignore[literal-required]
 
-        config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
-        if config_entry is None:
-            raise HomeAssistantError(
-                f"Can't link device to unknown config entry {config_entry_id}"
-            )
         device_info_type = _validate_device_info(config_entry, device_info)
 
         if identifiers is None or identifiers is UNDEFINED:
@@ -654,10 +700,6 @@ class DeviceRegistry:
         via_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry | None:
         """Update device attributes."""
-        # Circular dep
-        # pylint: disable-next=import-outside-toplevel
-        from . import area_registry as ar
-
         old = self.devices[device_id]
 
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
@@ -688,6 +730,10 @@ class DeviceRegistry:
             and area_id is UNDEFINED
             and old.area_id is None
         ):
+            # Circular dep
+            # pylint: disable-next=import-outside-toplevel
+            from . import area_registry as ar
+
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
 
@@ -1098,18 +1144,20 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         listener=_handle_label_registry_update,  # type: ignore[arg-type]
     )
 
-    async def cleanup() -> None:
+    @callback
+    def _async_cleanup() -> None:
         """Cleanup."""
         ent_reg = entity_registry.async_get(hass)
         async_cleanup(hass, dev_reg, ent_reg)
 
-    debounced_cleanup: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
-        hass, _LOGGER, cooldown=CLEANUP_DELAY, immediate=False, function=cleanup
+    debounced_cleanup: Debouncer[None] = Debouncer(
+        hass, _LOGGER, cooldown=CLEANUP_DELAY, immediate=False, function=_async_cleanup
     )
 
-    async def entity_registry_changed(event: Event) -> None:
+    @callback
+    def _async_entity_registry_changed(event: Event) -> None:
         """Handle entity updated or removed dispatch."""
-        await debounced_cleanup.async_call()
+        debounced_cleanup.async_schedule_call()
 
     @callback
     def entity_registry_changed_filter(event: Event) -> bool:
@@ -1125,7 +1173,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     if hass.is_running:
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            entity_registry_changed,
+            _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
         )
         return
@@ -1134,7 +1182,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         """Clean up on startup."""
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            entity_registry_changed,
+            _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
         )
         await debounced_cleanup.async_call()

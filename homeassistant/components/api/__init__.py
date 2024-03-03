@@ -12,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
-from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import (
     KEY_HASS,
     KEY_HASS_USER,
@@ -23,6 +22,7 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
+    KEY_DATA_LOGGING as DATA_LOGGING,
     MATCH_ALL,
     URL_API,
     URL_API_COMPONENTS,

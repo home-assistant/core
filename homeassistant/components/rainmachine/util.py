@@ -120,7 +120,8 @@ class RainMachineDataUpdateCoordinator(DataUpdateCoordinator[dict]):  # pylint: 
             self.config_entry.entry_id
         )
 
-    async def async_initialize(self) -> None:
+    @callback
+    def async_initialize(self) -> None:
         """Initialize the coordinator."""
 
         @callback

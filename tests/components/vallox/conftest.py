@@ -104,3 +104,8 @@ def patch_set_fan_speed():
 def patch_set_values():
     """Patch the Vallox metrics set values."""
     return patch("homeassistant.components.vallox.Vallox.set_values")
+
+
+def patch_set_filter_change_date():
+    """Patch the Vallox metrics set filter change date."""
+    return patch("homeassistant.components.vallox.Vallox.set_filter_change_date")

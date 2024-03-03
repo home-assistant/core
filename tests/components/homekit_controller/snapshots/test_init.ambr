@@ -75,44 +75,6 @@
             'aliases': list([
             ]),
             'area_id': None,
-            'capabilities': None,
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.CONFIG: 'config'>,
-            'entity_id': 'button.airversa_ap2_1808_provision_preferred_thread_credentials',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'Airversa AP2 1808 Provision Preferred Thread Credentials',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_112_119',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'friendly_name': 'Airversa AP2 1808 Provision Preferred Thread Credentials',
-            }),
-            'entity_id': 'button.airversa_ap2_1808_provision_preferred_thread_credentials',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
             'capabilities': dict({
               'preset_modes': None,
             }),
@@ -512,19 +474,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:lock-open',
+            'original_icon': None,
             'original_name': 'Airversa AP2 1808 Lock Physical Controls',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'lock_physical_controls',
             'unique_id': '00:00:00:00:00:00_1_32832_32839',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Airversa AP2 1808 Lock Physical Controls',
-              'icon': 'mdi:lock-open',
             }),
             'entity_id': 'switch.airversa_ap2_1808_lock_physical_controls',
             'state': 'off',
@@ -551,19 +512,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'Airversa AP2 1808 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_1_32832_32843',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Airversa AP2 1808 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.airversa_ap2_1808_mute',
             'state': 'on',
@@ -590,19 +550,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:power-sleep',
+            'original_icon': None,
             'original_name': 'Airversa AP2 1808 Sleep Mode',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'sleep_mode',
             'unique_id': '00:00:00:00:00:00_1_32832_32842',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Airversa AP2 1808 Sleep Mode',
-              'icon': 'mdi:power-sleep',
             }),
             'entity_id': 'switch.airversa_ap2_1808_sleep_mode',
             'state': 'off',
@@ -897,19 +856,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'eufyCam2-0000 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_4_80_83',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'eufyCam2-0000 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.eufycam2_0000_mute',
             'state': 'off',
@@ -1129,19 +1087,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'eufyCam2-000A Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_2_80_83',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'eufyCam2-000A Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.eufycam2_000a_mute',
             'state': 'off',
@@ -1361,19 +1318,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'eufyCam2-000A Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_3_80_83',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'eufyCam2-000A Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.eufycam2_000a_mute_2',
             'state': 'off',
@@ -1436,7 +1392,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:security',
+            'original_icon': None,
             'original_name': 'Aqara-Hub-E1-00A0 Security System',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -1451,7 +1407,6 @@
               'code_arm_required': True,
               'code_format': None,
               'friendly_name': 'Aqara-Hub-E1-00A0 Security System',
-              'icon': 'mdi:security',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
             }),
             'entity_id': 'alarm_control_panel.aqara_hub_e1_00a0_security_system',
@@ -1523,19 +1478,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-high',
+            'original_icon': None,
             'original_name': 'Aqara-Hub-E1-00A0 Volume',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'volume',
             'unique_id': '00:00:00:00:00:00_1_17_1114116',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Aqara-Hub-E1-00A0 Volume',
-              'icon': 'mdi:volume-high',
               'max': 100,
               'min': 0.0,
               'mode': <NumberMode.AUTO: 'auto'>,
@@ -1566,19 +1520,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:lock-open',
+            'original_icon': None,
             'original_name': 'Aqara-Hub-E1-00A0 Pairing Mode',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'pairing_mode',
             'unique_id': '00:00:00:00:00:00_1_17_1114117',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Aqara-Hub-E1-00A0 Pairing Mode',
-              'icon': 'mdi:lock-open',
             }),
             'entity_id': 'switch.aqara_hub_e1_00a0_pairing_mode',
             'state': 'off',
@@ -1795,7 +1748,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:security',
+            'original_icon': None,
             'original_name': 'Aqara Hub-1563 Security System',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -1810,7 +1763,6 @@
               'code_arm_required': True,
               'code_format': None,
               'friendly_name': 'Aqara Hub-1563 Security System',
-              'icon': 'mdi:security',
               'supported_features': <AlarmControlPanelEntityFeature: 7>,
             }),
             'entity_id': 'alarm_control_panel.aqara_hub_1563_security_system',
@@ -1945,19 +1897,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-high',
+            'original_icon': None,
             'original_name': 'Aqara Hub-1563 Volume',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'volume',
             'unique_id': '00:00:00:00:00:00_1_65536_65541',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Aqara Hub-1563 Volume',
-              'icon': 'mdi:volume-high',
               'max': 100,
               'min': 0.0,
               'mode': <NumberMode.AUTO: 'auto'>,
@@ -1988,19 +1939,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:lock-open',
+            'original_icon': None,
             'original_name': 'Aqara Hub-1563 Pairing Mode',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'pairing_mode',
             'unique_id': '00:00:00:00:00:00_1_65536_65538',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Aqara Hub-1563 Pairing Mode',
-              'icon': 'mdi:lock-open',
             }),
             'entity_id': 'switch.aqara_hub_1563_pairing_mode',
             'state': 'off',
@@ -2534,19 +2484,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'ArloBabyA0 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_1_300_302',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'ArloBabyA0 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.arlobabya0_mute',
             'state': 'off',
@@ -2573,19 +2522,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'ArloBabyA0 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_1_400_402',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'ArloBabyA0 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.arlobabya0_mute_2',
             'state': 'off',
@@ -3488,7 +3436,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'HomeW Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -3500,7 +3448,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -4235,7 +4182,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'HomeW Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -4247,7 +4194,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -4621,7 +4567,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'HomeW Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -4633,7 +4579,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HomeW Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -5377,7 +5322,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'My ecobee Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -5389,7 +5334,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'My ecobee Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -5863,19 +5807,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:elevation-rise',
+            'original_icon': None,
             'original_name': 'Eve Degree AA11 Elevation',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'elevation',
             'unique_id': '00:00:00:00:00:00_1_30_33',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Eve Degree AA11 Elevation',
-              'icon': 'mdi:elevation-rise',
               'max': 9000,
               'min': -450,
               'mode': <NumberMode.AUTO: 'auto'>,
@@ -5911,7 +5854,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'Eve Degree AA11 Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -5923,7 +5866,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Eve Degree AA11 Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -6413,19 +6355,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:lock-open',
+            'original_icon': None,
             'original_name': 'Eve Energy 50FF Lock Physical Controls',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'lock_physical_controls',
             'unique_id': '00:00:00:00:00:00_1_28_36',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Eve Energy 50FF Lock Physical Controls',
-              'icon': 'mdi:lock-open',
             }),
             'entity_id': 'switch.eve_energy_50ff_lock_physical_controls',
             'state': 'off',
@@ -6527,19 +6468,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:cog',
+            'original_icon': None,
             'original_name': 'HAA-C718B3 Setup',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'setup',
             'unique_id': '00:00:00:00:00:00_1_1010_1012',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'HAA-C718B3 Setup',
-              'icon': 'mdi:cog',
             }),
             'entity_id': 'button.haa_c718b3_setup',
             'state': 'unknown',
@@ -7638,7 +7578,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': '89 Living Room Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -7650,7 +7590,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': '89 Living Room Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -9158,7 +9097,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': '89 Living Room Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -9170,7 +9109,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': '89 Living Room Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -12947,7 +12885,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'Lennox Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -12959,7 +12897,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Lennox Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -13211,19 +13148,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'LG webOS TV AF80 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_1_80_82',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'LG webOS TV AF80 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.lg_webos_tv_af80_mute',
             'state': 'off',
@@ -14017,7 +13953,7 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:thermometer',
+            'original_icon': None,
             'original_name': 'Mysa-85dda9 Temperature Display Units',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
@@ -14029,7 +13965,6 @@
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Mysa-85dda9 Temperature Display Units',
-              'icon': 'mdi:thermometer',
               'options': list([
                 'celsius',
                 'fahrenheit',
@@ -14197,44 +14132,6 @@
               'friendly_name': 'Nanoleaf Strip 3B32 Identify',
             }),
             'entity_id': 'button.nanoleaf_strip_3b32_identify',
-            'state': 'unknown',
-          }),
-        }),
-        dict({
-          'entry': dict({
-            'aliases': list([
-            ]),
-            'area_id': None,
-            'capabilities': None,
-            'config_entry_id': 'TestData',
-            'device_class': None,
-            'disabled_by': None,
-            'domain': 'button',
-            'entity_category': <EntityCategory.CONFIG: 'config'>,
-            'entity_id': 'button.nanoleaf_strip_3b32_provision_preferred_thread_credentials',
-            'has_entity_name': False,
-            'hidden_by': None,
-            'icon': None,
-            'labels': list([
-            ]),
-            'name': None,
-            'options': dict({
-            }),
-            'original_device_class': None,
-            'original_icon': None,
-            'original_name': 'Nanoleaf Strip 3B32 Provision Preferred Thread Credentials',
-            'platform': 'homekit_controller',
-            'previous_unique_id': None,
-            'supported_features': 0,
-            'translation_key': None,
-            'unique_id': '00:00:00:00:00:00_1_31_119',
-            'unit_of_measurement': None,
-          }),
-          'state': dict({
-            'attributes': dict({
-              'friendly_name': 'Nanoleaf Strip 3B32 Provision Preferred Thread Credentials',
-            }),
-            'entity_id': 'button.nanoleaf_strip_3b32_provision_preferred_thread_credentials',
             'state': 'unknown',
           }),
         }),
@@ -14650,19 +14547,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'Netatmo-Doorbell-g738658 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_1_51_52',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Netatmo-Doorbell-g738658 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.netatmo_doorbell_g738658_mute',
             'state': 'off',
@@ -14689,19 +14585,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:volume-mute',
+            'original_icon': None,
             'original_name': 'Netatmo-Doorbell-g738658 Mute',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'mute',
             'unique_id': '00:00:00:00:00:00_1_8_9',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'Netatmo-Doorbell-g738658 Mute',
-              'icon': 'mdi:volume-mute',
             }),
             'entity_id': 'switch.netatmo_doorbell_g738658_mute_2',
             'state': 'off',
@@ -15245,19 +15140,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_512',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15287,19 +15181,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_768',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15329,19 +15222,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_1024',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15371,19 +15263,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_1280',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15413,19 +15304,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_1536',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15455,19 +15345,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_1792',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15497,19 +15386,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_2048',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -15539,19 +15427,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'RainMachine-00ce4a',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'valve',
             'unique_id': '00:00:00:00:00:00_1_2304',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'RainMachine-00ce4a',
-              'icon': 'mdi:water',
               'in_use': False,
               'is_configured': True,
               'remaining_duration': 0,
@@ -17540,19 +17427,18 @@
             'options': dict({
             }),
             'original_device_class': None,
-            'original_icon': 'mdi:water',
+            'original_icon': None,
             'original_name': 'VOCOlinc-Flowerbud-0d324b Spray Quantity',
             'platform': 'homekit_controller',
             'previous_unique_id': None,
             'supported_features': 0,
-            'translation_key': None,
+            'translation_key': 'spray_quantity',
             'unique_id': '00:00:00:00:00:00_1_30_38',
             'unit_of_measurement': None,
           }),
           'state': dict({
             'attributes': dict({
               'friendly_name': 'VOCOlinc-Flowerbud-0d324b Spray Quantity',
-              'icon': 'mdi:water',
               'max': 5,
               'min': 1,
               'mode': <NumberMode.AUTO: 'auto'>,
