@@ -12,7 +12,7 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -69,6 +69,10 @@ async def test_expired_token_refresh_failure(
     assert mock_config_entry.state is expected_state
 
 
+@pytest.mark.parametrize(
+    "load_systems_file",
+    [load_fixture("systems.json", DOMAIN)],
+)
 async def test_devices_created_count(
     hass: HomeAssistant,
     mock_myuplink_client: MagicMock,
@@ -80,3 +84,16 @@ async def test_devices_created_count(
     device_registry = dr.async_get(hass)
 
     assert len(device_registry.devices) == 1
+
+
+async def test_devices_multiple_created_count(
+    hass: HomeAssistant,
+    mock_myuplink_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that multiple device are created."""
+    await setup_integration(hass, mock_config_entry)
+
+    device_registry = dr.async_get(hass)
+
+    assert len(device_registry.devices) == 2
