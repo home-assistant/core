@@ -293,5 +293,11 @@
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
     }
+  },
+  "services": {
+    "get_maps": {
+      "name": "Get maps",
+      "description": "Get the map and room information of your device."
+    }
   }
 }
