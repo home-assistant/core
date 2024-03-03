@@ -419,6 +419,9 @@
       "gaurd_return": {
         "name": "Guard return"
       },
+      "ptz_patrol": {
+        "name": "PTZ patrol"
+      },
       "email": {
         "name": "Email on event"
       },
