@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 from homeassistant import config_entries
 from homeassistant.components import onboarding
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 
 from .typing import DiscoveryInfoType
 
@@ -46,7 +45,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -57,7 +56,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Confirm setup."""
         if user_input is None and onboarding.async_is_onboarded(self.hass):
             self._set_confirm_only()
@@ -87,7 +86,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
     async def async_step_discovery(
         self, discovery_info: DiscoveryInfoType
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -98,7 +97,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by bluetooth discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -107,7 +106,9 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
         return await self.async_step_confirm()
 
-    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by dhcp discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -118,7 +119,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Homekit discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -127,7 +128,9 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
         return await self.async_step_confirm()
 
-    async def async_step_mqtt(self, discovery_info: MqttServiceInfo) -> FlowResult:
+    async def async_step_mqtt(
+        self, discovery_info: MqttServiceInfo
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by mqtt discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -138,7 +141,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Zeroconf discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -147,7 +150,9 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
         return await self.async_step_confirm()
 
-    async def async_step_ssdp(self, discovery_info: SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by Ssdp discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -156,7 +161,9 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
 
         return await self.async_step_confirm()
 
-    async def async_step_import(self, _: dict[str, Any] | None) -> FlowResult:
+    async def async_step_import(
+        self, _: dict[str, Any] | None
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by import."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -205,7 +212,7 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a user initiated set up flow to create a webhook."""
         if not self._allow_multiple and self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")

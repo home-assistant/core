@@ -12,6 +12,7 @@ from dataclasses import dataclass
 import functools as ft
 import importlib
 import logging
+import os
 import pathlib
 import sys
 import time
@@ -844,15 +845,20 @@ class Integration:
         if debug := _LOGGER.isEnabledFor(logging.DEBUG):
             start = time.perf_counter()
         domain = self.domain
-        load_executor = (
-            self.import_executor
-            and f"hass.components.{domain}" not in sys.modules
-            and f"custom_components.{domain}" not in sys.modules
-        )
         # Some integrations fail on import because they call functions incorrectly.
         # So we do it before validating config to catch these errors.
+        load_executor = (
+            self.import_executor and f"{self.pkg_path}.{domain}" not in sys.modules
+        )
         if load_executor:
-            comp = await self.hass.async_add_executor_job(self.get_component)
+            try:
+                comp = await self.hass.async_add_import_executor_job(self.get_component)
+            except ImportError as ex:
+                load_executor = False
+                _LOGGER.debug("Failed to import %s in executor", domain, exc_info=ex)
+                # If importing in the executor deadlocks because there is a circular
+                # dependency, we fall back to the event loop.
+                comp = self.get_component()
         else:
             comp = self.get_component()
 
@@ -885,11 +891,22 @@ class Integration:
             )
         except ImportError:
             raise
+        except RuntimeError as err:
+            # _DeadlockError inherits from RuntimeError
+            raise ImportError(f"RuntimeError importing {self.pkg_path}: {err}") from err
         except Exception as err:
             _LOGGER.exception(
                 "Unexpected exception importing component %s", self.pkg_path
             )
             raise ImportError(f"Exception importing {self.pkg_path}") from err
+
+        if self.platform_exists("config"):
+            # Setting up a component always checks if the config
+            # platform exists. Since we may be running in the executor
+            # we will use this opportunity to cache the config platform
+            # as well.
+            with suppress(ImportError):
+                self.get_platform("config")
 
         return cache[self.domain]
 
@@ -908,14 +925,22 @@ class Integration:
         load_executor = (
             self.import_executor
             and domain not in self.hass.config.components
-            and f"hass.components.{domain}" not in sys.modules
-            and f"custom_components.{domain}" not in sys.modules
+            and f"{self.pkg_path}.{domain}" not in sys.modules
         )
         try:
             if load_executor:
-                platform = await self.hass.async_add_executor_job(
-                    self._load_platform, platform_name
-                )
+                try:
+                    platform = await self.hass.async_add_import_executor_job(
+                        self._load_platform, platform_name
+                    )
+                except ImportError as ex:
+                    _LOGGER.debug(
+                        "Failed to import %s in executor", domain, exc_info=ex
+                    )
+                    load_executor = False
+                    # If importing in the executor deadlocks because there is a circular
+                    # dependency, we fall back to the event loop.
+                    platform = self._load_platform(platform_name)
             else:
                 platform = self._load_platform(platform_name)
             import_future.set_result(platform)
@@ -960,6 +985,43 @@ class Integration:
             return platform
         return self._load_platform(platform_name)
 
+    def platform_exists(self, platform_name: str) -> bool | None:
+        """Check if a platform exists for an integration.
+
+        Returns True if the platform exists, False if it does not.
+
+        If it cannot be determined if the platform exists without attempting
+        to import the component, it returns None. This will only happen
+        if this function is called before get_component or async_get_component
+        has been called for the integration or the integration failed to load.
+        """
+        full_name = f"{self.domain}.{platform_name}"
+
+        cache: dict[str, ModuleType] = self.hass.data[DATA_COMPONENTS]
+        if full_name in cache:
+            return True
+
+        missing_platforms_cache: dict[str, ImportError]
+        missing_platforms_cache = self.hass.data[DATA_MISSING_PLATFORMS]
+        if full_name in missing_platforms_cache:
+            return False
+
+        if not (component := cache.get(self.domain)) or not (
+            file := getattr(component, "__file__", None)
+        ):
+            return None
+
+        path: pathlib.Path = pathlib.Path(file).parent.joinpath(platform_name)
+        if os.path.exists(path.with_suffix(".py")) or os.path.exists(path):
+            return True
+
+        exc = ModuleNotFoundError(
+            f"Platform {full_name} not found",
+            name=f"{self.pkg_path}.{platform_name}",
+        )
+        missing_platforms_cache[full_name] = exc
+        return False
+
     def _load_platform(self, platform_name: str) -> ModuleType:
         """Load a platform for an integration.
 
@@ -983,6 +1045,11 @@ class Integration:
                 ]
                 missing_platforms_cache[full_name] = ex
             raise
+        except RuntimeError as err:
+            # _DeadlockError inherits from RuntimeError
+            raise ImportError(
+                f"RuntimeError importing {self.pkg_path}.{platform_name}: {err}"
+            ) from err
         except Exception as err:
             _LOGGER.exception(
                 "Unexpected exception importing platform %s.%s",
@@ -1246,6 +1313,19 @@ class Components:
 
         if component is None:
             raise ImportError(f"Unable to load {comp_name}")
+
+        # Local import to avoid circular dependencies
+        from .helpers.frame import report  # pylint: disable=import-outside-toplevel
+
+        report(
+            (
+                f"accesses hass.components.{comp_name}."
+                " This is deprecated and will stop working in Home Assistant 2024.9, it"
+                f" should be updated to import functions used from {comp_name} directly"
+            ),
+            error_if_core=False,
+            log_custom_component_only=True,
+        )
 
         wrapped = ModuleWrapper(self._hass, component)
         setattr(self, comp_name, wrapped)

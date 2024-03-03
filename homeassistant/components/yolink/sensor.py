@@ -22,6 +22,7 @@ from yolink.const import (
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_THERMOSTAT,
     ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ATTR_GARAGE_DOOR_CONTROLLER,
 )
 from yolink.device import YoLinkDevice
@@ -37,6 +38,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfLength,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -72,6 +74,7 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_THERMOSTAT,
     ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ATTR_DEVICE_LOCK,
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
@@ -91,6 +94,7 @@ BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_LOCK,
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ATTR_DEVICE_WATER_DEPTH_SENSOR,
 ]
 
 MCU_DEV_TEMPERATURE_SENSOR = [
@@ -194,6 +198,12 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         options=["enabled", "disabled"],
         exists_fn=lambda device: device.device_type in ATTR_DEVICE_POWER_FAILURE_ALARM,
         value=lambda value: "enabled" if value is True else "disabled",
+    ),
+    YoLinkSensorEntityDescription(
+        key="waterDepth",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.METERS,
+        exists_fn=lambda device: device.device_type in ATTR_DEVICE_WATER_DEPTH_SENSOR,
     ),
 )
 

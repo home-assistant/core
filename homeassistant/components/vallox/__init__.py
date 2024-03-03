@@ -47,6 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 PLATFORMS: list[str] = [
     Platform.BINARY_SENSOR,
+    Platform.DATE,
     Platform.FAN,
     Platform.NUMBER,
     Platform.SENSOR,

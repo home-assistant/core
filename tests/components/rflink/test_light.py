@@ -4,7 +4,6 @@ Test setup of RFLink lights component/platform. State tracking and
 control of RFLink switch devices.
 
 """
-import asyncio
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
@@ -281,19 +280,21 @@ async def test_signal_repetitions_cancelling(hass: HomeAssistant, monkeypatch) -
 
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
+    await hass.async_block_till_done()
 
-    # Get background service time to start running
-    await asyncio.sleep(0)
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}, blocking=True
     )
     await hass.async_block_till_done()
 
     assert [call[0][1] for call in protocol.send_command_ack.call_args_list] == [
+        "off",
+        "off",
         "off",
         "on",
         "on",

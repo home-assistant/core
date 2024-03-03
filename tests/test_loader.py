@@ -1,6 +1,9 @@
 """Test to verify that we can load components."""
 import asyncio
-from unittest.mock import patch
+import os
+import sys
+from typing import Any
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
@@ -8,6 +11,7 @@ from homeassistant import loader
 from homeassistant.components import http, hue
 from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import frame
 
 from .common import MockModule, async_get_persistent_notifications, mock_integration
 
@@ -287,6 +291,7 @@ async def test_get_integration_custom_component(
 ) -> None:
     """Test resolving integration."""
     integration = await loader.async_get_integration(hass, "test_package")
+
     assert integration.get_component().DOMAIN == "test_package"
     assert integration.name == "Test Package"
 
@@ -1001,3 +1006,264 @@ async def test_config_folder_not_in_path(hass):
 
     # Verify that we are able to load the file with absolute path
     import tests.testing_config.check_config_not_in_path  # noqa: F401
+
+
+async def test_hass_components_use_reported(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
+) -> None:
+    """Test that use of hass.components is reported."""
+    mock_integration_frame.filename = (
+        "/home/paulus/homeassistant/custom_components/demo/light.py"
+    )
+    integration_frame = frame.IntegrationFrame(
+        custom_integration=True,
+        frame=mock_integration_frame,
+        integration="test_integration_frame",
+        module="custom_components.test_integration_frame",
+        relative_filename="custom_components/test_integration_frame/__init__.py",
+    )
+
+    with patch(
+        "homeassistant.helpers.frame.get_integration_frame",
+        return_value=integration_frame,
+    ), patch(
+        "homeassistant.components.http.start_http_server_and_save_config",
+        return_value=None,
+    ):
+        await hass.components.http.start_http_server_and_save_config(hass, [], None)
+
+        assert (
+            "Detected that custom integration 'test_integration_frame'"
+            " accesses hass.components.http. This is deprecated"
+        ) in caplog.text
+
+
+async def test_async_get_component_preloads_config(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify async_get_component will try to preload the config platform."""
+    executor_import_integration = _get_test_integration(
+        hass, "executor_import", True, import_executor=True
+    )
+    assert executor_import_integration.import_executor is True
+
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+
+    with patch(
+        "homeassistant.loader.importlib.import_module"
+    ) as mock_import, patch.object(
+        executor_import_integration, "platform_exists", return_value=True
+    ) as mock_platform_exists:
+        await executor_import_integration.async_get_component()
+
+    assert mock_platform_exists.call_count == 1
+    assert mock_import.call_count == 2
+    assert (
+        mock_import.call_args_list[0][0][0]
+        == "homeassistant.components.executor_import"
+    )
+    assert (
+        mock_import.call_args_list[1][0][0]
+        == "homeassistant.components.executor_import.config"
+    )
+
+
+async def test_async_get_component_deadlock_fallback(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify async_get_component fallback to importing in the event loop on deadlock."""
+    executor_import_integration = _get_test_integration(
+        hass, "executor_import", True, import_executor=True
+    )
+    assert executor_import_integration.import_executor is True
+    module_mock = MagicMock()
+    import_attempts = 0
+
+    def mock_import(module: str, *args: Any, **kwargs: Any) -> Any:
+        nonlocal import_attempts
+        if module == "homeassistant.components.executor_import":
+            import_attempts += 1
+
+        if import_attempts == 1:
+            # _DeadlockError inherits from RuntimeError
+            raise RuntimeError(
+                "Detected deadlock trying to import homeassistant.components.executor_import"
+            )
+
+        return module_mock
+
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    with patch("homeassistant.loader.importlib.import_module", mock_import):
+        module = await executor_import_integration.async_get_component()
+
+    assert (
+        "Detected deadlock trying to import homeassistant.components.executor_import"
+        in caplog.text
+    )
+    assert "loaded_executor=False" in caplog.text
+    assert module is module_mock
+
+
+async def test_async_get_component_raises_after_import_failure(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify async_get_component raises if we fail to import in both the executor and loop."""
+    executor_import_integration = _get_test_integration(
+        hass, "executor_import", True, import_executor=True
+    )
+    assert executor_import_integration.import_executor is True
+    module_mock = MagicMock()
+    import_attempts = 0
+
+    def mock_import(module: str, *args: Any, **kwargs: Any) -> Any:
+        nonlocal import_attempts
+        if module == "homeassistant.components.executor_import":
+            import_attempts += 1
+
+        if import_attempts == 1:
+            # _DeadlockError inherits from RuntimeError
+            raise RuntimeError(
+                "Detected deadlock trying to import homeassistant.components.executor_import"
+            )
+
+        if import_attempts == 2:
+            raise ImportError("Failed import homeassistant.components.executor_import")
+        return module_mock
+
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    with patch(
+        "homeassistant.loader.importlib.import_module", mock_import
+    ), pytest.raises(ImportError):
+        await executor_import_integration.async_get_component()
+
+    assert (
+        "Detected deadlock trying to import homeassistant.components.executor_import"
+        in caplog.text
+    )
+    assert "loaded_executor=False" not in caplog.text
+
+
+async def test_async_get_platform_deadlock_fallback(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify async_get_platform fallback to importing in the event loop on deadlock."""
+    executor_import_integration = _get_test_integration(
+        hass, "executor_import", True, import_executor=True
+    )
+    assert executor_import_integration.import_executor is True
+    module_mock = MagicMock()
+    import_attempts = 0
+
+    def mock_import(module: str, *args: Any, **kwargs: Any) -> Any:
+        nonlocal import_attempts
+        if module == "homeassistant.components.executor_import.config_flow":
+            import_attempts += 1
+
+        if import_attempts == 1:
+            # _DeadlockError inherits from RuntimeError
+            raise RuntimeError(
+                "Detected deadlock trying to import homeassistant.components.executor_import"
+            )
+
+        return module_mock
+
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    with patch("homeassistant.loader.importlib.import_module", mock_import):
+        module = await executor_import_integration.async_get_platform("config_flow")
+
+    assert (
+        "Detected deadlock trying to import homeassistant.components.executor_import"
+        in caplog.text
+    )
+    assert "loaded_executor=False" in caplog.text
+    assert module is module_mock
+
+
+async def test_async_get_platform_raises_after_import_failure(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify async_get_platform raises if we fail to import in both the executor and loop."""
+    executor_import_integration = _get_test_integration(
+        hass, "executor_import", True, import_executor=True
+    )
+    assert executor_import_integration.import_executor is True
+    module_mock = MagicMock()
+    import_attempts = 0
+
+    def mock_import(module: str, *args: Any, **kwargs: Any) -> Any:
+        nonlocal import_attempts
+        if module == "homeassistant.components.executor_import.config_flow":
+            import_attempts += 1
+
+        if import_attempts == 1:
+            # _DeadlockError inherits from RuntimeError
+            raise RuntimeError(
+                "Detected deadlock trying to import homeassistant.components.executor_import"
+            )
+
+        if import_attempts == 2:
+            # _DeadlockError inherits from RuntimeError
+            raise ImportError(
+                "Error trying to import homeassistant.components.executor_import"
+            )
+
+        return module_mock
+
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+    with patch(
+        "homeassistant.loader.importlib.import_module", mock_import
+    ), pytest.raises(ImportError):
+        await executor_import_integration.async_get_platform("config_flow")
+
+    assert (
+        "Detected deadlock trying to import homeassistant.components.executor_import"
+        in caplog.text
+    )
+    assert "loaded_executor=False" not in caplog.text
+
+
+async def test_platform_exists(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
+    """Test platform_exists."""
+    integration = await loader.async_get_integration(hass, "test_integration_platform")
+    assert integration.domain == "test_integration_platform"
+
+    # get_component never called, will return None
+    assert integration.platform_exists("non_existing") is None
+
+    component = integration.get_component()
+    assert component.DOMAIN == "test_integration_platform"
+
+    # component is loaded, should now return False
+    with patch(
+        "homeassistant.loader.os.path.exists", wraps=os.path.exists
+    ) as mock_exists:
+        assert integration.platform_exists("non_existing") is False
+
+    # We should check if the file exists
+    assert mock_exists.call_count == 2
+
+    # component is loaded, should now return False
+    with patch(
+        "homeassistant.loader.os.path.exists", wraps=os.path.exists
+    ) as mock_exists:
+        assert integration.platform_exists("non_existing") is False
+
+    # We should remember the file does not exist
+    assert mock_exists.call_count == 0
+
+    assert integration.platform_exists("group") is True
+
+    platform = await integration.async_get_platform("group")
+    assert platform.MAGIC == 1
+
+    platform = integration.get_platform("group")
+    assert platform.MAGIC == 1
+
+    assert integration.platform_exists("group") is True

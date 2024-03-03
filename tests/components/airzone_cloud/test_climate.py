@@ -1,10 +1,10 @@
 """The climate tests for the Airzone Cloud platform."""
 from unittest.mock import patch
 
+from aioairzone_cloud.const import API_DEFAULT_TEMP_STEP
 from aioairzone_cloud.exceptions import AirzoneCloudError
 import pytest
 
-from homeassistant.components.airzone.const import API_TEMPERATURE_STEP
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
@@ -53,7 +53,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
-    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_TEMPERATURE_STEP
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_DEFAULT_TEMP_STEP
     assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
     state = hass.states.get("climate.bron_pro")
@@ -71,7 +71,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
-    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_TEMPERATURE_STEP
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_DEFAULT_TEMP_STEP
     assert state.attributes[ATTR_TEMPERATURE] == 22.0
 
     # Groups
@@ -89,7 +89,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
-    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_TEMPERATURE_STEP
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_DEFAULT_TEMP_STEP
     assert state.attributes[ATTR_TEMPERATURE] == 24.0
 
     # Installations
@@ -108,7 +108,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
-    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_TEMPERATURE_STEP
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_DEFAULT_TEMP_STEP
     assert state.attributes[ATTR_TEMPERATURE] == 23.0
 
     # Zones
@@ -126,7 +126,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
-    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_TEMPERATURE_STEP
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_DEFAULT_TEMP_STEP
     assert state.attributes[ATTR_TEMPERATURE] == 24.0
 
     state = hass.states.get("climate.salon")
@@ -143,7 +143,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     ]
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
-    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_TEMPERATURE_STEP
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_DEFAULT_TEMP_STEP
     assert state.attributes[ATTR_TEMPERATURE] == 24.0
 
 
