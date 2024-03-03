@@ -48,6 +48,10 @@ def _get_platform(
         )
         return None
 
+    if integration.platform_exists(platform_name) is False:
+        # If the platform cannot possibly exist, don't bother trying to load it
+        return None
+
     try:
         return integration.get_platform(platform_name)
     except ImportError as err:
