@@ -30,7 +30,7 @@ from .const import DOMAIN, KNOWN_DEVICES
 from .utils import async_get_controller
 
 # Ensure all the controllers get imported in the executor
-# since they can be loaded late.
+# since they are loaded late.
 if BLE_TRANSPORT_SUPPORTED:
     from aiohomekit.controller import ble  # noqa: F401
 if COAP_TRANSPORT_SUPPORTED:
