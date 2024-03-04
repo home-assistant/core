@@ -100,13 +100,14 @@ class UnifiEntityDescription(EntityDescription, Generic[HandlerT, ApiItemT]):
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
     available_fn: Callable[[UnifiHub, str], bool]
     device_info_fn: Callable[[UnifiHub, str], DeviceInfo | None]
-    name_fn: Callable[[ApiItemT], str | None]
     object_fn: Callable[[aiounifi.Controller, str], ApiItemT]
     unique_id_fn: Callable[[UnifiHub, str], str]
 
     # Optional functions
     allowed_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
     """Determine if config entry options allow creation of entity."""
+    name_fn: Callable[[ApiItemT], str | None] = lambda obj: None
+    """Entity name function, can be used to extend entity name beyond device name."""
     supported_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
     """Determine if UniFi object supports providing relevant data for entity."""
 

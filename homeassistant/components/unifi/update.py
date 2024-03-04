@@ -58,7 +58,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         control_fn=async_device_control_fn,
         device_info_fn=async_device_device_info_fn,
-        name_fn=lambda device: None,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         state_fn=lambda api, device: device.state == 4,
         unique_id_fn=lambda hub, obj_id: f"device_update-{obj_id}",
