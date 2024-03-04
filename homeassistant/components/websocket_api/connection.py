@@ -9,9 +9,9 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
-from homeassistant.components.http import current_request
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers.http import current_request
 from homeassistant.util.json import JsonValueType
 
 from . import const, messages

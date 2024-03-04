@@ -26,7 +26,6 @@ async def test_manual_watering_switch_metadata(hass: HomeAssistant) -> None:
 
         assert switch is not None
         assert switch.attributes["device_class"] == SwitchDeviceClass.SWITCH
-        assert switch.attributes["icon"] == "mdi:sprinkler"
 
 
 async def test_manual_watering_switch_on_off(hass: HomeAssistant) -> None:

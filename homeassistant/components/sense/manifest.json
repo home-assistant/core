@@ -18,6 +18,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/sense",
+  "import_executor": true,
   "iot_class": "cloud_polling",
   "loggers": ["sense_energy"],
   "requirements": ["sense-energy==0.12.2"]

@@ -2,15 +2,14 @@
 from sunweg.api import APIHelper
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_PLANT_ID, DOMAIN
 
 
-class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SunWEGConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow class."""
 
     VERSION = 1
@@ -21,7 +20,7 @@ class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data: dict = {}
 
     @callback
-    def _async_show_user_form(self, errors=None) -> FlowResult:
+    def _async_show_user_form(self, errors=None) -> ConfigFlowResult:
         """Show the form to the user."""
         data_schema = vol.Schema(
             {
@@ -34,7 +33,7 @@ class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the start of the config flow."""
         if not user_input:
             return self._async_show_user_form()
@@ -50,7 +49,7 @@ class SunWEGConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.data = user_input
         return await self.async_step_plant()
 
-    async def async_step_plant(self, user_input=None) -> FlowResult:
+    async def async_step_plant(self, user_input=None) -> ConfigFlowResult:
         """Handle adding a "plant" to Home Assistant."""
         plant_list = await self.hass.async_add_executor_job(self.api.listPlants)
 

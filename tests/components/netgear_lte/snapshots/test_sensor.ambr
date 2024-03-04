@@ -3,7 +3,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Cell ID',
-      'icon': 'mdi:radio-tower',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_cell_id',
@@ -16,7 +15,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Connection text',
-      'icon': 'mdi:radio-tower',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_connection_text',
@@ -29,7 +27,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Connection type',
-      'icon': 'mdi:ip',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_connection_type',
@@ -42,7 +39,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Current band',
-      'icon': 'mdi:radio-tower',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_current_band',
@@ -68,7 +64,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Register network display',
-      'icon': 'mdi:web',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_register_network_display',
@@ -95,7 +90,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Service type',
-      'icon': 'mdi:radio-tower',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_service_type',
@@ -108,7 +102,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 SMS',
-      'icon': 'mdi:message-processing',
       'unit_of_measurement': 'unread',
     }),
     'context': <ANY>,
@@ -122,7 +115,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 SMS total',
-      'icon': 'mdi:message-processing',
       'unit_of_measurement': 'messages',
     }),
     'context': <ANY>,
@@ -150,7 +142,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Netgear LM1200 Upstream',
-      'icon': 'mdi:ip-network',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.netgear_lm1200_upstream',

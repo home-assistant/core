@@ -59,9 +59,14 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("user_input", "expected"), [({}, True), ({CONF_STATION_UPDATES: False}, False)]
+)
 async def test_form_options(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    user_input: dict[str, bool],
+    expected: bool,
 ) -> None:
     """Test the form options."""
 
@@ -87,30 +92,12 @@ async def test_form_options(
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_STATION_UPDATES: False}
+            result["flow_id"], user_input=user_input
         )
 
         assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert entry.options == {
-            CONF_STATION_UPDATES: False,
-        }
-
-        await hass.async_block_till_done()
-
-        assert entry.state is ConfigEntryState.LOADED
-
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={CONF_STATION_UPDATES: True}
-        )
-
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert entry.options == {
-            CONF_STATION_UPDATES: True,
+            CONF_STATION_UPDATES: expected,
         }
 
         await hass.async_block_till_done()
