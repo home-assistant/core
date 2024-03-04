@@ -44,58 +44,55 @@ CAPTURE_IMAGE_SERVICE_NAME = "capture_image"
 CLASSIFICATION_SERVICE_NAME = "get_classifications"
 DETECTIONS_SERVICE_NAME = "get_detections"
 
-ENTRY_SERVICE_SCHEMA = {
-    vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
-        {
-            "integration": DOMAIN,
-        }
-    ),
-}
-DATA_CAPTURE_SERVICE_SCHEMA = vol.Schema(
+ENTRY_SERVICE_SCHEMA = vol.Schema(
     {
-        **ENTRY_SERVICE_SCHEMA,
+        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+            {
+                "integration": DOMAIN,
+            }
+        ),
+    }
+)
+DATA_CAPTURE_SERVICE_SCHEMA = ENTRY_SERVICE_SCHEMA.extend(
+    {
         vol.Required(SERVICE_VALUES): vol.All(dict),
         vol.Required(SERVICE_COMPONENT_NAME): vol.All(str),
         vol.Required(SERVICE_COMPONENT_TYPE, default="sensor"): vol.All(str),
     }
 )
 
-IMAGE_SERVICE_FIELDS = {
-    vol.Optional(SERVICE_FILEPATH): vol.All(str, vol.IsFile),
-    vol.Optional(SERVICE_CAMERA): vol.All(str),
-}
-VISION_SERVICE_FIELDS = {
-    vol.Optional(SERVICE_CONFIDENCE, default="0.6"): vol.All(
-        str, vol.Coerce(float), vol.Range(min=0, max=1)
-    ),
-    vol.Optional(SERVICE_ROBOT_ADDRESS): vol.All(str),
-    vol.Optional(SERVICE_ROBOT_SECRET): vol.All(str),
-}
-
-CAPTURE_IMAGE_SERVICE_SCHEMA = vol.Schema(
+IMAGE_SERVICE_FIELDS = ENTRY_SERVICE_SCHEMA.extend(
     {
-        **ENTRY_SERVICE_SCHEMA,
-        **IMAGE_SERVICE_FIELDS,
+        vol.Optional(SERVICE_FILEPATH): vol.All(str, vol.IsFile),
+        vol.Optional(SERVICE_CAMERA): vol.All(str),
+    }
+)
+VISION_SERVICE_FIELDS = IMAGE_SERVICE_FIELDS.extend(
+    {
+        vol.Optional(SERVICE_CONFIDENCE, default="0.6"): vol.All(
+            str, vol.Coerce(float), vol.Range(min=0, max=1)
+        ),
+        vol.Optional(SERVICE_ROBOT_ADDRESS): vol.All(str),
+        vol.Optional(SERVICE_ROBOT_SECRET): vol.All(str),
+    }
+)
+
+CAPTURE_IMAGE_SERVICE_SCHEMA = IMAGE_SERVICE_FIELDS.extend(
+    {
         vol.Optional(SERVICE_FILE_NAME, default="camera"): vol.All(str),
         vol.Optional(SERVICE_COMPONENT_NAME): vol.All(str),
     }
 )
 
-CLASSIFICATION_SERVICE_SCHEMA = vol.Schema(
+CLASSIFICATION_SERVICE_SCHEMA = VISION_SERVICE_FIELDS.extend(
     {
-        **ENTRY_SERVICE_SCHEMA,
-        **IMAGE_SERVICE_FIELDS,
-        **VISION_SERVICE_FIELDS,
         vol.Required(SERVICE_CLASSIFIER_NAME): vol.All(str),
         vol.Optional(SERVICE_COUNT, default="2"): vol.All(str, vol.Coerce(int)),
     }
 )
 
-DETECTIONS_SERVICE_SCHEMA = vol.Schema(
+DETECTIONS_SERVICE_SCHEMA = VISION_SERVICE_FIELDS.extend(
     {
-        **ENTRY_SERVICE_SCHEMA,
-        **IMAGE_SERVICE_FIELDS,
-        **VISION_SERVICE_FIELDS,
         vol.Required(SERVICE_DETECTOR_NAME): vol.All(str),
     }
 )
