@@ -858,7 +858,8 @@ async def test_switches(
     # Block and unblock client
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     await hass.services.async_call(
@@ -882,7 +883,8 @@ async def test_switches(
     # Enable and disable DPI
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/rest/dpiapp/5f976f62e3c58f018ec7e17d",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/dpiapp/{DPI_APPS[0]["_id"]}",
     )
 
     await hass.services.async_call(
@@ -981,7 +983,8 @@ async def test_block_switches(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     await hass.services.async_call(
@@ -1160,7 +1163,8 @@ async def test_outlet_switches(
     device_id = test_data["device_id"]
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/rest/device/{device_id}",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/device/{device_id}",
     )
 
     await hass.services.async_call(
@@ -1370,7 +1374,8 @@ async def test_poe_port_switches(
     # Turn off PoE
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/rest/device/mock-id",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/device/mock-id",
     )
 
     await hass.services.async_call(
@@ -1466,8 +1471,8 @@ async def test_wlan_switches(
     # Disable WLAN
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}"
-        + f"/rest/wlanconf/{WLAN['_id']}",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/wlanconf/{WLAN['_id']}",
     )
 
     await hass.services.async_call(
@@ -1546,8 +1551,8 @@ async def test_port_forwarding_switches(
     # Disable port forward
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}"
-        + f"/rest/portforward/{data['_id']}",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/portforward/{data['_id']}",
     )
 
     await hass.services.async_call(

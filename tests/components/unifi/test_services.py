@@ -69,7 +69,8 @@ async def test_reconnect_client(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     device_entry = device_registry.async_get_or_create(
@@ -147,7 +148,8 @@ async def test_reconnect_client_hub_unavailable(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     device_entry = device_registry.async_get_or_create(
@@ -263,7 +265,8 @@ async def test_remove_clients(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/stamgr",
     )
 
     await hass.services.async_call(UNIFI_DOMAIN, SERVICE_REMOVE_CLIENTS, blocking=True)

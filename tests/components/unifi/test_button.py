@@ -55,7 +55,8 @@ async def test_restart_device_button(
     # Send restart device command
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr",
     )
 
     await hass.services.async_call(
@@ -137,7 +138,8 @@ async def test_power_cycle_poe(
     # Send restart device command
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{config_entry.data[CONF_HOST]}:1234/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr",
+        f"https://{config_entry.data[CONF_HOST]}:1234"
+        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr",
     )
 
     await hass.services.async_call(
