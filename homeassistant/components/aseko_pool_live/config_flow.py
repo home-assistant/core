@@ -73,9 +73,7 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_store_credentials(
-        self, info: dict[str, Any]
-    ) -> ConfigFlowResult:
+    async def async_store_credentials(self, info: dict[str, Any]) -> ConfigFlowResult:
         """Store validated credentials."""
 
         if self.reauth_entry:
@@ -101,7 +99,9 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
 
         self.reauth_entry = self.hass.config_entries.async_get_entry(
