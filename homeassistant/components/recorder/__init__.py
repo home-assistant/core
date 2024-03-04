@@ -191,4 +191,6 @@ async def _async_setup_integration_platform(
         ):
             instance.queue_task(AddRecorderPlatformTask(domain, platform))
 
-    await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)
+    await async_process_integration_platforms(
+        hass, DOMAIN, _process_recorder_platform, register_preload_platform=False
+    )
