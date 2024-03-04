@@ -859,8 +859,9 @@ class Integration:
         domain = self.domain
         # Some integrations fail on import because they call functions incorrectly.
         # So we do it before validating config to catch these errors.
-        load_executor = (
-            self.import_executor and f"{self.pkg_path}.{domain}" not in sys.modules
+        load_executor = self.import_executor and (
+            self.pkg_path not in sys.modules
+            or (self.config_flow and f"{self.pkg_path}.config_flow" not in sys.modules)
         )
         if load_executor:
             try:
