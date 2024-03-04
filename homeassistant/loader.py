@@ -1000,7 +1000,7 @@ class Integration:
                 for _, import_future in import_futures:
                     import_future.set_exception(ex)
                     with suppress(BaseException):
-                        # Clear the exception retrieved flag on the future since
+                        # Set the exception retrieved flag on the future since
                         # it will never be retrieved unless there
                         # are concurrent calls to async_get_platforms
                         import_future.result()
