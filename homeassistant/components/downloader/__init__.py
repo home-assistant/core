@@ -110,12 +110,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload downloader."""
-    hass.services.async_remove(domain=DOMAIN, service=SERVICE_DOWNLOAD_FILE)
-    return True
-
-
 def download_file(
     hass: HomeAssistant, service: ServiceCall, download_path: str
 ) -> None:
