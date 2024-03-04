@@ -151,7 +151,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         key="Client device scanner",
         allowed_fn=async_client_allowed_fn,
         api_handler_fn=lambda api: api.clients,
-        available_fn=lambda hub, obj_id: hub.available,
         device_info_fn=lambda api, obj_id: None,
         event_is_on=(WIRED_CONNECTION + WIRELESS_CONNECTION),
         event_to_subscribe=(
