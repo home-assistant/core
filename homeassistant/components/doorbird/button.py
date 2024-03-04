@@ -33,13 +33,13 @@ class DoorbirdButtonEntityDescription(
 
 RELAY_ENTITY_DESCRIPTION = DoorbirdButtonEntityDescription(
     key="relay",
+    translation_key="relay",
     press_action=lambda device, relay: device.energize_relay(relay),
-    icon="mdi:dip-switch",
 )
 IR_ENTITY_DESCRIPTION = DoorbirdButtonEntityDescription(
     key="ir",
+    translation_key="ir",
     press_action=lambda device, _: device.turn_light_on(),
-    icon="mdi:lightbulb",
 )
 
 

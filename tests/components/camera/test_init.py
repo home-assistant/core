@@ -1,5 +1,4 @@
 """The tests for the camera component."""
-import asyncio
 from http import HTTPStatus
 import io
 from types import ModuleType
@@ -27,7 +26,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import EMPTY_8_6_JPEG, WEBRTC_ANSWER, mock_turbo_jpeg
 
-from tests.common import import_and_test_deprecated_constant_enum
+from tests.common import help_test_all, import_and_test_deprecated_constant_enum
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 STREAM_SOURCE = "rtsp://127.0.0.1/stream"
@@ -204,7 +203,7 @@ async def test_get_image_with_timeout(hass: HomeAssistant, image_mock_url) -> No
     """Try to get image with timeout."""
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ), pytest.raises(HomeAssistantError):
         await camera.async_get_image(hass, "camera.demo_camera")
 
@@ -670,7 +669,7 @@ async def test_websocket_web_rtc_offer_timeout(
 
     with patch(
         "homeassistant.components.camera.Camera.async_handle_web_rtc_offer",
-        side_effect=asyncio.TimeoutError(),
+        side_effect=TimeoutError(),
     ):
         await client.send_json(
             {
@@ -960,6 +959,15 @@ async def test_use_stream_for_stills(
         mock_stream.async_get_image.assert_called_once()
         assert resp.status == HTTPStatus.OK
         assert await resp.read() == b"stream_keyframe_image"
+
+
+@pytest.mark.parametrize(
+    "module",
+    [camera, camera.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
 
 
 @pytest.mark.parametrize(

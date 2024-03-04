@@ -308,6 +308,117 @@ async def test_no_lights_or_groups(
                 },
             },
         ),
+        (  # Gradient light
+            {
+                "capabilities": {
+                    "alerts": [
+                        "none",
+                        "select",
+                        "lselect",
+                        "blink",
+                        "breathe",
+                        "okay",
+                        "channelchange",
+                        "finish",
+                        "stop",
+                    ],
+                    "bri": {"min_dim_level": 0.01},
+                    "color": {
+                        "ct": {"computes_xy": True, "max": 500, "min": 153},
+                        "effects": [
+                            "none",
+                            "colorloop",
+                            "candle",
+                            "fireplace",
+                            "prism",
+                            "sunrise",
+                        ],
+                        "gamut_type": "C",
+                        "gradient": {
+                            "max_segments": 9,
+                            "pixel_count": 16,
+                            "pixel_length": 1250,
+                            "styles": ["linear", "mirrored"],
+                        },
+                        "modes": ["ct", "effect", "gradient", "hs", "xy"],
+                        "xy": {
+                            "blue": [0.1532, 0.0475],
+                            "green": [0.17, 0.7],
+                            "red": [0.6915, 0.3083],
+                        },
+                    },
+                },
+                "colorcapabilities": 31,
+                "config": {
+                    "bri": {
+                        "couple_ct": False,
+                        "execute_if_off": True,
+                        "startup": "previous",
+                    },
+                    "color": {
+                        "ct": {"startup": "previous"},
+                        "execute_if_off": True,
+                        "gradient": {"reversed": False},
+                        "xy": {"startup": "previous"},
+                    },
+                    "groups": ["36", "39", "45", "46", "47", "51", "57", "59"],
+                    "on": {"startup": "previous"},
+                },
+                "ctmax": 500,
+                "ctmin": 153,
+                "etag": "077fb97dd6145f10a3c190f0a1ade499",
+                "hascolor": True,
+                "lastannounced": None,
+                "lastseen": "2024-02-29T18:36Z",
+                "manufacturername": "Signify Netherlands B.V.",
+                "modelid": "LCX004",
+                "name": "Gradient light",
+                "productid": "Philips-LCX004-1-GALSECLv1",
+                "productname": "Hue gradient lightstrip",
+                "state": {
+                    "alert": "none",
+                    "bri": 184,
+                    "colormode": "gradient",
+                    "ct": 396,
+                    "effect": "none",
+                    "gradient": {
+                        "color_adjustment": 0,
+                        "offset": 0,
+                        "offset_adjustment": 0,
+                        "points": [
+                            [0.2728, 0.6226],
+                            [0.163, 0.4262],
+                            [0.1563, 0.1699],
+                            [0.1551, 0.1147],
+                            [0.1534, 0.0579],
+                        ],
+                        "segments": 5,
+                        "style": "linear",
+                    },
+                    "hue": 20566,
+                    "on": True,
+                    "reachable": True,
+                    "sat": 254,
+                    "xy": [0.2727, 0.6226],
+                },
+                "swconfigid": "F03CAF4D",
+                "swversion": "1.104.2",
+                "type": "Extended color light",
+                "uniqueid": "00:17:88:01:0b:0c:0d:0e-0f",
+            },
+            {
+                "entity_id": "light.gradient_light",
+                "state": STATE_ON,
+                "attributes": {
+                    ATTR_SUPPORTED_COLOR_MODES: [
+                        ColorMode.COLOR_TEMP,
+                        ColorMode.HS,
+                        ColorMode.XY,
+                    ],
+                    ATTR_COLOR_MODE: ColorMode.XY,
+                },
+            },
+        ),
     ],
 )
 async def test_lights(
@@ -1179,9 +1290,19 @@ async def test_non_color_light_reports_color(
         await setup_deconz_integration(hass, aioclient_mock)
 
     assert len(hass.states.async_all()) == 3
+    assert hass.states.get("light.group").attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+        ColorMode.XY,
+    ]
+    assert (
+        hass.states.get("light.group").attributes[ATTR_COLOR_MODE]
+        == ColorMode.COLOR_TEMP
+    )
     assert hass.states.get("light.group").attributes[ATTR_COLOR_TEMP] == 250
 
-    # Updating a scene will return a faulty color value for a non-color light causing an exception in hs_color
+    # Updating a scene will return a faulty color value
+    # for a non-color light causing an exception in hs_color
     event_changed_light = {
         "e": "changed",
         "id": "1",
@@ -1200,7 +1321,9 @@ async def test_non_color_light_reports_color(
     await mock_deconz_websocket(data=event_changed_light)
     await hass.async_block_till_done()
 
-    # Bug is fixed if we reach this point, but device won't have neither color temp nor color
+    assert hass.states.get("light.group").attributes[ATTR_COLOR_MODE] == ColorMode.XY
+    # Bug is fixed if we reach this point
+    # device won't have neither color temp nor color
     with pytest.raises(AssertionError):
         assert hass.states.get("light.group").attributes.get(ATTR_COLOR_TEMP) is None
         assert hass.states.get("light.group").attributes.get(ATTR_HS_COLOR) is None

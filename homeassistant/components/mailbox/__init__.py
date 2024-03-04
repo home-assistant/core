@@ -19,6 +19,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_prepare_setup_platform
 
@@ -60,6 +61,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if platform is None:
             _LOGGER.error("Unknown mailbox platform specified")
             return
+
+        if p_type not in ["asterisk_cdr", "asterisk_mbox", "demo"]:
+            # Asterisk integration will raise a repair issue themselves
+            # For demo we don't create one
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_mailbox_{p_type}",
+                breaks_in_ha_version="2024.9.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_mailbox_integration",
+                translation_placeholders={
+                    "integration_domain": p_type,
+                },
+            )
 
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         mailbox = None
@@ -262,7 +280,7 @@ class MailboxMediaView(MailboxView):
         """Retrieve media."""
         mailbox = self.get_mailbox(platform)
 
-        with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+        with suppress(asyncio.CancelledError, TimeoutError):
             async with asyncio.timeout(10):
                 try:
                     stream = await mailbox.async_get_media(msgid)

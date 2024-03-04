@@ -4,8 +4,9 @@
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["http", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/backup",
+  "import_executor": true,
   "integration_type": "system",
   "iot_class": "calculated",
   "quality_scale": "internal",
-  "requirements": ["securetar==2023.3.0"]
+  "requirements": ["securetar==2024.2.1"]
 }

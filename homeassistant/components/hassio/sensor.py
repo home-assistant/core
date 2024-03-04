@@ -12,8 +12,8 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ADDONS_COORDINATOR
 from .const import (
+    ADDONS_COORDINATOR,
     ATTR_CPU_PERCENT,
     ATTR_MEMORY_PERCENT,
     ATTR_VERSION,
@@ -50,7 +50,6 @@ STATS_ENTITY_DESCRIPTIONS = (
         entity_registry_enabled_default=False,
         key=ATTR_CPU_PERCENT,
         translation_key="cpu_percent",
-        icon="mdi:cpu-64-bit",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -58,7 +57,6 @@ STATS_ENTITY_DESCRIPTIONS = (
         entity_registry_enabled_default=False,
         key=ATTR_MEMORY_PERCENT,
         translation_key="memory_percent",
-        icon="mdi:memory",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),

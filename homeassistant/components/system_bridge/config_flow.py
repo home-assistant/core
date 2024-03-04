@@ -16,11 +16,11 @@ from systembridgemodels.get_data import GetData
 from systembridgemodels.system import System
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -75,7 +75,7 @@ async def _validate_input(
             "Connection error when connecting to %s: %s", data[CONF_HOST], exception
         )
         raise CannotConnect from exception
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
         raise CannotConnect from exception
     except ValueError as exception:
@@ -107,8 +107,8 @@ async def _async_get_info(
     return errors, None
 
 
-class ConfigFlow(
-    config_entries.ConfigFlow,
+class SystemBridgeConfigFlow(
+    ConfigFlow,
     domain=DOMAIN,
 ):
     """Handle a config flow for System Bridge."""
@@ -123,7 +123,7 @@ class ConfigFlow(
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -144,7 +144,7 @@ class ConfigFlow(
 
     async def async_step_authenticate(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle getting the api-key for authentication."""
         errors: dict[str, str] = {}
 
@@ -177,7 +177,7 @@ class ConfigFlow(
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         properties = discovery_info.properties
         host = properties.get("ip")
@@ -198,7 +198,9 @@ class ConfigFlow(
 
         return await self.async_step_authenticate()
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._name = entry_data[CONF_HOST]
         self._input = {
@@ -209,9 +211,9 @@ class ConfigFlow(
         return await self.async_step_authenticate()
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

@@ -8,10 +8,9 @@ from aiohttp import ClientError
 from auroranoaa import AuroraForecast
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
@@ -34,7 +33,7 @@ OPTIONS_FLOW = {
 }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AuroraConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NOAA Aurora Integration."""
 
     VERSION = 1
@@ -42,16 +41,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             longitude = user_input[CONF_LONGITUDE]

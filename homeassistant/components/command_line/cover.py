@@ -20,12 +20,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    ManualTriggerEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import CONF_COMMAND_TIMEOUT, LOGGER
-from .utils import call_shell_with_timeout, check_output_or_log
+from .utils import async_call_shell_with_timeout, async_check_output_or_log
 
 SCAN_INTERVAL = timedelta(seconds=15)
 
@@ -50,6 +53,7 @@ async def async_setup_platform(
         trigger_entity_config = {
             CONF_UNIQUE_ID: device_config.get(CONF_UNIQUE_ID),
             CONF_NAME: Template(device_config.get(CONF_NAME, device_name), hass),
+            CONF_AVAILABILITY: device_config.get(CONF_AVAILABILITY),
         }
 
         covers.append(
@@ -110,11 +114,11 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
                 ),
             )
 
-    def _move_cover(self, command: str) -> bool:
+    async def _async_move_cover(self, command: str) -> bool:
         """Execute the actual commands."""
         LOGGER.info("Running command: %s", command)
 
-        returncode = call_shell_with_timeout(command, self._timeout)
+        returncode = await async_call_shell_with_timeout(command, self._timeout)
         success = returncode == 0
 
         if not success:
@@ -139,11 +143,11 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
         """
         return self._state
 
-    def _query_state(self) -> str | None:
+    async def _async_query_state(self) -> str | None:
         """Query for the state."""
         if self._command_state:
             LOGGER.info("Running state value command: %s", self._command_state)
-            return check_output_or_log(self._command_state, self._timeout)
+            return await async_check_output_or_log(self._command_state, self._timeout)
         if TYPE_CHECKING:
             return None
 
@@ -165,7 +169,7 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
     async def _async_update(self) -> None:
         """Update device state."""
         if self._command_state:
-            payload = str(await self.hass.async_add_executor_job(self._query_state))
+            payload = str(await self._async_query_state())
             if self._value_template:
                 payload = self._value_template.async_render_with_possible_json_value(
                     payload, None
@@ -185,15 +189,15 @@ class CommandCover(ManualTriggerEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.hass.async_add_executor_job(self._move_cover, self._command_open)
+        await self._async_move_cover(self._command_open)
         await self._update_entity_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.hass.async_add_executor_job(self._move_cover, self._command_close)
+        await self._async_move_cover(self._command_close)
         await self._update_entity_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self.hass.async_add_executor_job(self._move_cover, self._command_stop)
+        await self._async_move_cover(self._command_stop)
         await self._update_entity_state()

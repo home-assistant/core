@@ -30,6 +30,7 @@ from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
     DataRateConverter,
     DistanceConverter,
+    DurationConverter,
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
@@ -41,6 +42,7 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
     UnitlessRatioConverter,
     VolumeConverter,
+    VolumeFlowRateConverter,
 )
 
 from .const import (
@@ -125,6 +127,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: DataRateConverter for unit in DataRateConverter.VALID_UNITS},
     **{unit: DistanceConverter for unit in DistanceConverter.VALID_UNITS},
+    **{unit: DurationConverter for unit in DurationConverter.VALID_UNITS},
     **{unit: ElectricCurrentConverter for unit in ElectricCurrentConverter.VALID_UNITS},
     **{
         unit: ElectricPotentialConverter
@@ -139,6 +142,7 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **{unit: TemperatureConverter for unit in TemperatureConverter.VALID_UNITS},
     **{unit: UnitlessRatioConverter for unit in UnitlessRatioConverter.VALID_UNITS},
     **{unit: VolumeConverter for unit in VolumeConverter.VALID_UNITS},
+    **{unit: VolumeFlowRateConverter for unit in VolumeFlowRateConverter.VALID_UNITS},
 }
 
 DATA_SHORT_TERM_STATISTICS_RUN_CACHE = "recorder_short_term_statistics_run_cache"
@@ -2052,7 +2056,7 @@ def _sorted_statistics_to_dict(  # noqa: C901
     seen_statistic_ids: set[str] = set()
     key_func = itemgetter(metadata_id_idx)
     for meta_id, group in groupby(stats, key_func):
-        stats_list = stats_by_meta_id[meta_id] = list(group)
+        stats_by_meta_id[meta_id] = list(group)
         seen_statistic_ids.add(metadata[meta_id]["statistic_id"])
 
     # Set all statistic IDs to empty lists in result set to maintain the order

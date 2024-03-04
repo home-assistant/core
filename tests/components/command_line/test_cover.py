@@ -7,6 +7,7 @@ import os
 import tempfile
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import setup
@@ -22,10 +23,14 @@ from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
+    STATE_OPEN,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 import homeassistant.util.dt as dt_util
+
+from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
 
@@ -33,10 +38,7 @@ from tests.common import async_fire_time_changed
 async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> None:
     """Test that the cover does not polls when there's no state command."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"50\n",
-    ) as check_output:
+    with mock_asyncio_subprocess_run(b"50\n") as mock_subprocess_run:
         assert await setup.async_setup_component(
             hass,
             COVER_DOMAIN,
@@ -48,7 +50,7 @@ async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> N
         )
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
-        assert not check_output.called
+        assert not mock_subprocess_run.called
 
 
 @pytest.mark.parametrize(
@@ -71,17 +73,13 @@ async def test_poll_when_cover_has_command_state(
 ) -> None:
     """Test that the cover polls when there's a state  command."""
 
-    with patch(
-        "homeassistant.components.command_line.utils.subprocess.check_output",
-        return_value=b"50\n",
-    ) as check_output:
+    with mock_asyncio_subprocess_run(b"50\n") as mock_subprocess_run:
         async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
         await hass.async_block_till_done()
-        check_output.assert_called_once_with(
+        mock_subprocess_run.assert_called_once_with(
             "echo state",
-            shell=True,  # noqa: S604 # shell by design
-            timeout=15,
             close_fds=False,
+            stdout=-1,
         )
 
 
@@ -340,3 +338,47 @@ async def test_updating_manually(
     )
     await hass.async_block_till_done()
     assert called
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "cover": {
+                        "command_state": "echo 10",
+                        "name": "Test",
+                        "availability": '{{ states("sensor.input1")=="on" }}',
+                    },
+                }
+            ]
+        }
+    ],
+)
+async def test_availability(
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test availability."""
+
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity_state = hass.states.get("cover.test")
+    assert entity_state
+    assert entity_state.state == STATE_OPEN
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"50\n"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    entity_state = hass.states.get("cover.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE

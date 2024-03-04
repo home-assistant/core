@@ -41,7 +41,6 @@ SENSORS = (
     IdasenDeskSensorDescription(
         key="height",
         translation_key="height",
-        icon="mdi:arrow-up-down",
         native_unit_of_measurement=UnitOfLength.METERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -91,10 +90,14 @@ class IdasenDeskSensor(CoordinatorEntity[IdasenDeskCoordinator], SensorEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        self._handle_coordinator_update()
+        self._update_native_value()
 
     @callback
     def _handle_coordinator_update(self, *args: Any) -> None:
         """Handle data update."""
-        self._attr_native_value = self.entity_description.value_fn(self.coordinator)
+        self._update_native_value()
         super()._handle_coordinator_update()
+
+    def _update_native_value(self) -> None:
+        """Update the native value attribute."""
+        self._attr_native_value = self.entity_description.value_fn(self.coordinator)

@@ -63,6 +63,7 @@ FLASH_TO_DECONZ = {FLASH_SHORT: LightAlert.SHORT, FLASH_LONG: LightAlert.LONG}
 
 DECONZ_TO_COLOR_MODE = {
     LightColorMode.CT: ColorMode.COLOR_TEMP,
+    LightColorMode.GRADIENT: ColorMode.XY,
     LightColorMode.HS: ColorMode.HS,
     LightColorMode.XY: ColorMode.XY,
 }
@@ -212,6 +213,10 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
             color_mode = ColorMode.BRIGHTNESS
         else:
             color_mode = ColorMode.ONOFF
+        if color_mode not in self._attr_supported_color_modes:
+            # Some lights controlled by ZigBee scenes can get unsupported color mode
+            return self._attr_color_mode
+        self._attr_color_mode = color_mode
         return color_mode
 
     @property

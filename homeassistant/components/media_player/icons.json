@@ -1,0 +1,58 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:cast",
+      "state": {
+        "off": "mdi:cast-off",
+        "paused": "mdi:cast-connected",
+        "playing": "mdi:cast-connected"
+      }
+    },
+    "receiver": {
+      "default": "mdi:audio-video",
+      "state": {
+        "off": "mdi:audio-video-off"
+      }
+    },
+    "speaker": {
+      "default": "mdi:speaker",
+      "state": {
+        "off": "mdi:speaker-off",
+        "paused": "mdi:speaker-pause",
+        "playing": "mdi:speaker-play"
+      }
+    },
+    "tv": {
+      "default": "mdi:television",
+      "state": {
+        "off": "mdi:television-off",
+        "paused": "mdi:television-pause",
+        "playing": "mdi:television-play"
+      }
+    }
+  },
+  "services": {
+    "clear_playlist": "mdi:playlist-remove",
+    "join": "mdi:group",
+    "media_next_track": "mdi:skip-next",
+    "media_pause": "mdi:pause",
+    "media_play": "mdi:play",
+    "media_play_pause": "mdi:play-pause",
+    "media_previous_track": "mdi:skip-previous",
+    "media_seek": "mdi:fast-forward",
+    "media_stop": "mdi:stop",
+    "play_media": "mdi:play",
+    "repeat_set": "mdi:repeat",
+    "select_sound_mode": "mdi:surround-sound",
+    "select_source": "mdi:import",
+    "shuffle_set": "mdi:shuffle",
+    "toggle": "mdi:play-pause",
+    "turn_off": "mdi:power",
+    "turn_on": "mdi:power",
+    "unjoin": "mdi:ungroup",
+    "volume_down": "mdi:volume-minus",
+    "volume_mute": "mdi:volume-mute",
+    "volume_set": "mdi:volume",
+    "volume_up": "mdi:volume-plus"
+  }
+}

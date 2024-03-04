@@ -54,7 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ProtectSensorEntityDescription(
     ProtectRequiredKeysMixin[T], SensorEntityDescription
 ):
@@ -65,13 +65,12 @@ class ProtectSensorEntityDescription(
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
         value = super().get_ufp_value(obj)
-
-        if isinstance(value, float) and self.precision:
-            value = round(value, self.precision)
+        if self.precision and value is not None:
+            return round(value, self.precision)
         return value
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ProtectSensorEventEntityDescription(
     ProtectEventMixin[T], SensorEntityDescription
 ):
@@ -527,7 +526,7 @@ EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
         name="License Plate Detected",
         icon="mdi:car",
         translation_key="license_plate",
-        ufp_value="is_smart_detected",
+        ufp_value="is_license_plate_currently_detected",
         ufp_required_field="can_detect_license_plate",
         ufp_event_obj="last_license_plate_detect_event",
     ),
@@ -618,7 +617,8 @@ async def async_setup_entry(
     """Set up sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities = async_all_device_entities(
             data,
             ProtectDeviceSensor,
@@ -715,31 +715,14 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
     @callback
-    def _async_updated_event(self, device: ProtectModelWithId) -> None:
-        """Call back for incoming data that only writes when state has changed.
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
 
-        Only the native value and available are ever updated for these
-        entities, and since the websocket update for the device will trigger
-        an update for all entities connected to the device, we want to avoid
-        writing state unless something has actually changed.
+        Called before and after updating entity and state is only written if there
+        is a change.
         """
-        previous_value = self._attr_native_value
-        previous_available = self._attr_available
-        self._async_update_device_from_protect(device)
-        if (
-            self._attr_native_value != previous_value
-            or self._attr_available != previous_available
-        ):
-            _LOGGER.debug(
-                "Updating state [%s (%s)] %s (%s) -> %s (%s)",
-                device.name,
-                device.mac,
-                previous_value,
-                previous_available,
-                self._attr_native_value,
-                self._attr_available,
-            )
-            self.async_write_ha_state()
+
+        return (self._attr_available, self._attr_native_value)
 
 
 class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
@@ -752,22 +735,14 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
     @callback
-    def _async_updated_event(self, device: ProtectModelWithId) -> None:
-        """Call back for incoming data that only writes when state has changed.
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
 
-        Only the native value and available are ever updated for these
-        entities, and since the websocket update for the device will trigger
-        an update for all entities connected to the device, we want to avoid
-        writing state unless something has actually changed.
+        Called before and after updating entity and state is only written if there
+        is a change.
         """
-        previous_value = self._attr_native_value
-        previous_available = self._attr_available
-        self._async_update_device_from_protect(device)
-        if (
-            self._attr_native_value != previous_value
-            or self._attr_available != previous_available
-        ):
-            self.async_write_ha_state()
+
+        return (self._attr_available, self._attr_native_value)
 
 
 class ProtectEventSensor(EventEntityMixin, SensorEntity):
@@ -781,7 +756,7 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
         EventEntityMixin._async_update_device_from_protect(self, device)
         event = self._event
         entity_description = self.entity_description
-        is_on = entity_description.get_is_on(event)
+        is_on = entity_description.get_is_on(self.device, self._event)
         is_license_plate = (
             entity_description.ufp_event_obj == "last_license_plate_detect_event"
         )
@@ -803,3 +778,17 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
             self._attr_native_value = event.metadata.license_plate.name  # type: ignore[union-attr]
         else:
             self._attr_native_value = event.smart_detect_types[0].value
+
+    @callback
+    def _async_get_state_attrs(self) -> tuple[Any, ...]:
+        """Retrieve data that goes into the current state of the entity.
+
+        Called before and after updating entity and state is only written if there
+        is a change.
+        """
+
+        return (
+            self._attr_available,
+            self._attr_native_value,
+            self._attr_extra_state_attributes,
+        )
