@@ -211,10 +211,7 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
 
     async def async_get_connected_devices(self) -> dict[str, WrtDevice]:
         """Get list of connected devices."""
-        try:
-            api_devices = await self._api.async_get_connected_devices()
-        except OSError as exc:
-            raise UpdateFailed(exc) from exc
+        api_devices = await self._api.async_get_connected_devices()
         return {
             format_mac(mac): WrtDevice(dev.ip, dev.name, None)
             for mac, dev in api_devices.items()
@@ -343,10 +340,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
 
     async def async_get_connected_devices(self) -> dict[str, WrtDevice]:
         """Get list of connected devices."""
-        try:
-            api_devices = await self._api.async_get_connected_devices()
-        except AsusWrtError as exc:
-            raise UpdateFailed(exc) from exc
+        api_devices = await self._api.async_get_connected_devices()
         return {
             format_mac(mac): WrtDevice(dev.ip, dev.name, dev.node)
             for mac, dev in api_devices.items()

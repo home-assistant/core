@@ -7,9 +7,9 @@ from dataclasses import dataclass
 from functools import lru_cache
 import logging
 import sys
-from typing import Generic, Literal
+from typing import Literal
 
-import psutil
+from psutil import NoSuchProcess
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -25,8 +25,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
-from .const import CONF_PROCESS, DOMAIN
-from .coordinator import MonitorCoordinator, SystemMonitorProcessCoordinator, dataT
+from .const import CONF_PROCESS, DOMAIN, DOMAIN_COORDINATOR
+from .coordinator import SystemMonitorCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,16 +50,16 @@ def get_cpu_icon() -> Literal["mdi:cpu-64-bit", "mdi:cpu-32-bit"]:
     return "mdi:cpu-32-bit"
 
 
-def get_process(entity: SystemMonitorSensor[list[psutil.Process]]) -> bool:
+def get_process(entity: SystemMonitorSensor) -> bool:
     """Return process."""
     state = False
-    for proc in entity.coordinator.data:
+    for proc in entity.coordinator.data.processes:
         try:
             _LOGGER.debug("process %s for argument %s", proc.name(), entity.argument)
             if entity.argument == proc.name():
                 state = True
                 break
-        except psutil.NoSuchProcess as err:
+        except NoSuchProcess as err:
             _LOGGER.warning(
                 "Failed to load process with ID: %s, old name: %s",
                 err.pid,
@@ -69,23 +69,21 @@ def get_process(entity: SystemMonitorSensor[list[psutil.Process]]) -> bool:
 
 
 @dataclass(frozen=True, kw_only=True)
-class SysMonitorBinarySensorEntityDescription(
-    BinarySensorEntityDescription, Generic[dataT]
-):
+class SysMonitorBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes System Monitor binary sensor entities."""
 
-    value_fn: Callable[[SystemMonitorSensor[dataT]], bool]
+    value_fn: Callable[[SystemMonitorSensor], bool]
+    add_to_update: Callable[[SystemMonitorSensor], tuple[str, str]]
 
 
-SENSOR_TYPES: tuple[
-    SysMonitorBinarySensorEntityDescription[list[psutil.Process]], ...
-] = (
-    SysMonitorBinarySensorEntityDescription[list[psutil.Process]](
+SENSOR_TYPES: tuple[SysMonitorBinarySensorEntityDescription, ...] = (
+    SysMonitorBinarySensorEntityDescription(
         key="binary_process",
         translation_key="process",
         icon=get_cpu_icon(),
         value_fn=get_process,
         device_class=BinarySensorDeviceClass.RUNNING,
+        add_to_update=lambda entity: ("processes", ""),
     ),
 )
 
@@ -95,15 +93,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up System Montor binary sensors based on a config entry."""
     entities: list[SystemMonitorSensor] = []
-    process_coordinator = SystemMonitorProcessCoordinator(hass, "Process coordinator")
-    await process_coordinator.async_request_refresh()
+    coordinator: SystemMonitorCoordinator = hass.data[DOMAIN_COORDINATOR]
 
     for sensor_description in SENSOR_TYPES:
         _entry = entry.options.get(BINARY_SENSOR_DOMAIN, {})
         for argument in _entry.get(CONF_PROCESS, []):
             entities.append(
                 SystemMonitorSensor(
-                    process_coordinator,
+                    coordinator,
                     sensor_description,
                     entry.entry_id,
                     argument,
@@ -113,18 +110,18 @@ async def async_setup_entry(
 
 
 class SystemMonitorSensor(
-    CoordinatorEntity[MonitorCoordinator[dataT]], BinarySensorEntity
+    CoordinatorEntity[SystemMonitorCoordinator], BinarySensorEntity
 ):
     """Implementation of a system monitor binary sensor."""
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    entity_description: SysMonitorBinarySensorEntityDescription[dataT]
+    entity_description: SysMonitorBinarySensorEntityDescription
 
     def __init__(
         self,
-        coordinator: MonitorCoordinator[dataT],
-        sensor_description: SysMonitorBinarySensorEntityDescription[dataT],
+        coordinator: SystemMonitorCoordinator,
+        sensor_description: SysMonitorBinarySensorEntityDescription,
         entry_id: str,
         argument: str,
     ) -> None:
@@ -140,6 +137,20 @@ class SystemMonitorSensor(
             name="System Monitor",
         )
         self.argument = argument
+
+    async def async_added_to_hass(self) -> None:
+        """When added to hass."""
+        self.coordinator.update_subscribers[
+            self.entity_description.add_to_update(self)
+        ].add(self.entity_id)
+        return await super().async_added_to_hass()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """When removed from hass."""
+        self.coordinator.update_subscribers[
+            self.entity_description.add_to_update(self)
+        ].remove(self.entity_id)
+        return await super().async_will_remove_from_hass()
 
     @property
     def is_on(self) -> bool | None:

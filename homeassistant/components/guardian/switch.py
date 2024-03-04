@@ -80,7 +80,6 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSwitchDescription(
         key=SWITCH_KIND_ONBOARD_AP,
         translation_key="onboard_access_point",
-        icon="mdi:wifi",
         entity_category=EntityCategory.CONFIG,
         extra_state_attributes_fn=lambda data: {
             ATTR_CONNECTED_CLIENTS: data.get("ap_clients"),
@@ -94,7 +93,6 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSwitchDescription(
         key=SWITCH_KIND_VALVE,
         translation_key="valve_controller",
-        icon="mdi:water",
         api_category=API_VALVE_STATUS,
         extra_state_attributes_fn=lambda data: {
             ATTR_AVG_CURRENT: data["average_current"],

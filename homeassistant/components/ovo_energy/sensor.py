@@ -81,7 +81,6 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        icon="mdi:gas-cylinder",
         value=lambda usage: usage.gas[-1].consumption,
     ),
     OVOEnergySensorEntityDescription(
@@ -89,7 +88,6 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         translation_key=KEY_LAST_GAS_COST,
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        icon="mdi:cash-multiple",
         value=lambda usage: usage.gas[-1].cost.amount
         if usage.gas[-1].cost is not None
         else None,

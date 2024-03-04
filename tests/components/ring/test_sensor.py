@@ -5,6 +5,7 @@ from freezegun.api import FrozenDateTimeFactory
 import requests_mock
 
 from homeassistant.components.ring.const import SCAN_INTERVAL
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -22,10 +23,17 @@ async def test_sensor(hass: HomeAssistant, requests_mock: requests_mock.Mocker) 
     front_battery_state = hass.states.get("sensor.front_battery")
     assert front_battery_state is not None
     assert front_battery_state.state == "80"
+    assert (
+        front_battery_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    )
 
     front_door_battery_state = hass.states.get("sensor.front_door_battery")
     assert front_door_battery_state is not None
     assert front_door_battery_state.state == "100"
+    assert (
+        front_door_battery_state.attributes[ATTR_STATE_CLASS]
+        == SensorStateClass.MEASUREMENT
+    )
 
     downstairs_volume_state = hass.states.get("sensor.downstairs_volume")
     assert downstairs_volume_state is not None

@@ -1,11 +1,11 @@
 """Controller for sharing Omada API coordinators between platforms."""
 
+from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.devices import (
     OmadaGateway,
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
-from tplink_omada_client.omadasiteclient import OmadaSiteClient
 
 from homeassistant.core import HomeAssistant
 

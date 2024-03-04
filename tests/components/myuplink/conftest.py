@@ -1,5 +1,5 @@
 """Test helpers for myuplink."""
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 import time
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -28,9 +28,9 @@ def mock_expires_at() -> float:
 
 
 @pytest.fixture
-def mock_config_entry(expires_at: int) -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant, expires_at: float) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    return MockConfigEntry(
+    config_entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
         title="myUplink test",
@@ -38,7 +38,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
             "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "Fake_token",
-                "scope": "READSYSTEM offline",
+                "scope": "WRITESYSTEM READSYSTEM offline_access",
                 "expires_in": 86399,
                 "refresh_token": "3012bc9f-7a65-4240-b817-9154ffdcc30f",
                 "token_type": "Bearer",
@@ -47,6 +47,8 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
         },
         entry_id="myuplink_test",
     )
+    config_entry.add_to_hass(hass)
+    return config_entry
 
 
 @pytest.fixture(autouse=True)
@@ -91,7 +93,7 @@ def load_systems_jv_file(load_systems_file: str) -> dict[str, Any]:
 @pytest.fixture(scope="session")
 def load_systems_file() -> str:
     """Load fixture file for systems."""
-    return load_fixture("systems.json", DOMAIN)
+    return load_fixture("systems-2dev.json", DOMAIN)
 
 
 @pytest.fixture
@@ -165,3 +167,23 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture for platforms."""
+    return []
+
+
+@pytest.fixture
+async def setup_platform(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    platforms,
+) -> AsyncGenerator[None, None]:
+    """Set up one or all platforms."""
+
+    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        yield
