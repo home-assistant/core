@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_device_info
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': 'https://developer.viessmann.com/',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'vicare',
+        'gateway0',
+      ),
+    }),
+    'is_new': False,
+    'manufacturer': 'Viessmann',
+    'model': 'model0',
+    'name': 'model0',
+    'name_by_user': None,
+    'serial_number': 'gateway0',
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
