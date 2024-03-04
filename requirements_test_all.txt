@@ -179,7 +179,7 @@ aioambient==2024.01.0
 aioapcaccess==0.4.2
 
 # homeassistant.components.aseko_pool_live
-aioaseko==0.0.2
+aioaseko==0.1.1
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
@@ -514,7 +514,7 @@ bond-async==0.2.1
 boschshcpy==0.2.75
 
 # homeassistant.components.bring
-bring-api==0.4.1
+bring-api==0.5.4
 
 # homeassistant.components.broadlink
 broadlink==0.18.3
@@ -873,7 +873,7 @@ hole==0.8.0
 holidays==0.43
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240301.0
+home-assistant-frontend==20240304.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.2.28
@@ -2033,7 +2033,7 @@ surepy==0.9.0
 switchbot-api==2.0.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==4.0.1
+systembridgeconnector==4.0.2
 
 # homeassistant.components.tailscale
 tailscale==0.6.0
