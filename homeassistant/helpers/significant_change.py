@@ -89,7 +89,9 @@ async def _initialize(hass: HomeAssistant) -> None:
         """Process a significant change platform."""
         functions[component_name] = platform.async_check_significant_change
 
-    await async_process_integration_platforms(hass, PLATFORM, process_platform)
+    await async_process_integration_platforms(
+        hass, PLATFORM, process_platform, register_preload_platform=False
+    )
 
 
 def either_one_none(val1: Any | None, val2: Any | None) -> bool:
