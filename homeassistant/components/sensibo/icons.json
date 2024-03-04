@@ -42,11 +42,6 @@
       "climate_react_switch": {
         "default": "mdi:wizard-hat"
       }
-    },
-    "update": {
-      "translation_key_0": {
-        "default": "mdi:abc"
-      }
     }
   },
   "services": {
