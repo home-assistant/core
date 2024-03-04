@@ -558,6 +558,5 @@ async def test_migration(hass: HomeAssistant) -> None:
     # Check that the version has been updated and the api_key has been moved to token
     assert config_entry.version == SystemBridgeConfigFlow.VERSION
     assert config_entry.minor_version == SystemBridgeConfigFlow.MINOR_VERSION
-    assert CONF_API_KEY not in config_entry.data
     assert config_entry.data[CONF_TOKEN] == FIXTURE_USER_INPUT[CONF_TOKEN]
     assert config_entry.data == FIXTURE_USER_INPUT
