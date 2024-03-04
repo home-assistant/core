@@ -81,8 +81,17 @@ async def _async_process_integration_platforms_for_component(
     """Process integration platforms for a component."""
     integration = await async_get_integration(hass, component_name)
     if not (
+        non_missing_integration_platforms := [
+            integration_platform
+            for integration_platform in integration_platforms
+            if not integration.platform_missing(integration_platform.platform_name)
+        ]
+    ):
+        return
+
+    if not (
         integration_platforms_to_load := await hass.async_add_executor_job(
-            _filter_possible_platforms, integration, integration_platforms
+            _filter_possible_platforms, integration, non_missing_integration_platforms
         )
     ):
         return
@@ -188,8 +197,18 @@ async def async_process_integration_platforms(
         return
 
     futures: list[asyncio.Future[None]] = []
+    integrations_not_missing_platform = [
+        integration
+        for integration in loaded_integrations
+        if not integration.platform_missing(platform_name)
+    ]
+    if not integrations_not_missing_platform:
+        return
+
     for integration_with_platform in await hass.async_add_executor_job(
-        _get_integrations_with_platform, platform_name, loaded_integrations
+        _get_integrations_with_platform,
+        platform_name,
+        integrations_not_missing_platform,
     ):
         try:
             platform = await integration_with_platform.async_get_platform(platform_name)
