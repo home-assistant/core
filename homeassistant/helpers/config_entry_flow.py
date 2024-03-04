@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
 from homeassistant import config_entries
 from homeassistant.components import onboarding
-from homeassistant.components.webhook import async_generate_id, async_generate_url
 from homeassistant.core import HomeAssistant
 
 from .typing import DiscoveryInfoType
@@ -221,8 +220,6 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
         if user_input is None:
             return self.async_show_form(step_id="user")
 
-        webhook_id = async_generate_id()
-
         # Local import to be sure cloud is loaded and setup
         # pylint: disable-next=import-outside-toplevel
         from homeassistant.components.cloud import (
@@ -230,6 +227,15 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             async_create_cloudhook,
             async_is_connected,
         )
+
+        # Local import to be sure webhook is loaded and setup
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components.webhook import (
+            async_generate_id,
+            async_generate_url,
+        )
+
+        webhook_id = async_generate_id()
 
         if "cloud" in self.hass.config.components and async_active_subscription(
             self.hass
