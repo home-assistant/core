@@ -1,5 +1,4 @@
 """Cover integration microBees."""
-from threading import Timer
 from typing import Any
 
 from microBeesPy import Actuator
@@ -13,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from .const import DOMAIN
 from .coordinator import MicroBeesUpdateCoordinator
@@ -42,19 +42,17 @@ async def async_setup_entry(
 class MBCover(MicroBeesEntity, CoverEntity):
     """Representation of a microBees cover."""
 
+    _attr_device_class = CoverDeviceClass.SHUTTER
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.STOP | CoverEntityFeature.CLOSE
+    )
+
     def __init__(self, coordinator, bee_id, actuator_up_id, actuator_down_id) -> None:
         """Initialize the microBees cover."""
         super().__init__(coordinator, bee_id)
         self.actuator_up_id = actuator_up_id
         self.actuator_down_id = actuator_down_id
-        self.attr_supported_features = {
-            CoverEntityFeature.OPEN,
-            CoverEntityFeature.STOP,
-            CoverEntityFeature.CLOSE,
-        }
         self._attr_is_closed = None
-
-    _attr_device_class = CoverDeviceClass.SHUTTER
 
     @property
     def name(self) -> str:
@@ -71,7 +69,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
         """Return the rolling down actuator."""
         return self.coordinator.data.actuators[self.actuator_down_id]
 
-    def reset_open_close(self):
+    def _reset_open_close(self, *_: Any) -> None:
         """Reset the opening and closing state."""
         self._attr_is_opening = False
         self._attr_is_closing = None
@@ -83,14 +81,16 @@ class MBCover(MicroBeesEntity, CoverEntity):
             self.actuator_up_id,
             self.actuator_up.configuration.actuator_timing * 1000,
         )
-        if sendCommand:
-            self._attr_is_opening = True
-            Timer(
-                self.actuator_up.configuration.actuator_timing,
-                self.reset_open_close,
-            ).start()
-        else:
+
+        if not sendCommand:
             raise HomeAssistantError(f"Failed to turn off {self.name}")
+
+        self._attr_is_opening = True
+        async_call_later(
+            self.hass,
+            self.actuator_down.configuration.actuator_timing,
+            self._reset_open_close,
+        )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
@@ -98,14 +98,15 @@ class MBCover(MicroBeesEntity, CoverEntity):
             self.actuator_down_id,
             self.actuator_down.configuration.actuator_timing * 1000,
         )
-        if sendCommand:
-            self._attr_is_closing = True
-            Timer(
-                self.actuator_up.configuration.actuator_timing,
-                self.reset_open_close,
-            ).start()
-        else:
+        if not sendCommand:
             raise HomeAssistantError(f"Failed to turn off {self.name}")
+
+        self._attr_is_closing = True
+        async_call_later(
+            self.hass,
+            self.actuator_down.configuration.actuator_timing,
+            self._reset_open_close,
+        )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
