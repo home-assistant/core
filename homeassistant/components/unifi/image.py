@@ -6,7 +6,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
 
 from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.interfaces.wlans import Wlans
@@ -36,21 +35,14 @@ def async_wlan_qr_code_image_fn(hub: UnifiHub, wlan: Wlan) -> bytes:
     return hub.api.wlans.generate_wlan_qr_code(wlan)
 
 
-@dataclass(frozen=True)
-class UnifiImageEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
-    """Validate and load entities from different UniFi handlers."""
+@dataclass(frozen=True, kw_only=True)
+class UnifiImageEntityDescription(
+    ImageEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
+):
+    """Class describing UniFi image entity."""
 
     image_fn: Callable[[UnifiHub, ApiItemT], bytes]
     value_fn: Callable[[ApiItemT], str | None]
-
-
-@dataclass(frozen=True)
-class UnifiImageEntityDescription(
-    ImageEntityDescription,
-    UnifiEntityDescription[HandlerT, ApiItemT],
-    UnifiImageEntityDescriptionMixin[HandlerT, ApiItemT],
-):
-    """Class describing UniFi image entity."""
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
@@ -63,11 +55,8 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
         api_handler_fn=lambda api: api.wlans,
         available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
-        event_is_on=None,
-        event_to_subscribe=None,
         name_fn=lambda wlan: "QR Code",
         object_fn=lambda api, obj_id: api.wlans[obj_id],
-        should_poll=False,
         supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"qr_code-{obj_id}",
         image_fn=async_wlan_qr_code_image_fn,
