@@ -794,15 +794,10 @@ class HKDevice:
         """Load a group of platforms."""
         if not (to_load := platforms - self.platforms):
             return
-
         self.platforms.update(to_load)
-        try:
-            await self.hass.config_entries.async_forward_entry_setups(
-                self.config_entry, platforms
-            )
-        except Exception:
-            self.platforms -= to_load
-            raise
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, platforms
+        )
 
     async def async_load_platforms(self) -> None:
         """Load any platforms needed by this HomeKit device."""
