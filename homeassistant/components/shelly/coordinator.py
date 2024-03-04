@@ -602,10 +602,10 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
     ) -> None:
         """Handle device update."""
         if update_type is RpcUpdateType.INITIALIZED:
-            self.hass.async_create_task(self._async_connected())
+            self.hass.async_create_task(self._async_connected(), eager_start=True)
             self.async_set_updated_data(None)
         elif update_type is RpcUpdateType.DISCONNECTED:
-            self.hass.async_create_task(self._async_disconnected())
+            self.hass.async_create_task(self._async_disconnected(), eager_start=True)
         elif update_type is RpcUpdateType.STATUS:
             self.async_set_updated_data(None)
             if self.sleep_period:
@@ -619,7 +619,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self.device.subscribe_updates(self._async_handle_update)
         if self.device.initialized:
             # If we are already initialized, we are connected
-            self.hass.async_create_task(self._async_connected())
+            self.hass.async_create_task(self._async_connected(), eager_start=True)
 
     async def shutdown(self) -> None:
         """Shutdown the coordinator."""
@@ -701,4 +701,4 @@ async def async_reconnect_soon(hass: HomeAssistant, entry: ConfigEntry) -> None:
         and (entry_data := get_entry_data(hass).get(entry.entry_id))
         and (coordinator := entry_data.rpc)
     ):
-        hass.async_create_task(coordinator.async_request_refresh())
+        hass.async_create_task(coordinator.async_request_refresh(), eager_start=True)

@@ -6,6 +6,11 @@ import contextlib
 import logging
 
 import aiohomekit
+from aiohomekit.const import (
+    BLE_TRANSPORT_SUPPORTED,
+    COAP_TRANSPORT_SUPPORTED,
+    IP_TRANSPORT_SUPPORTED,
+)
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
@@ -23,6 +28,15 @@ from .config_flow import normalize_hkid
 from .connection import HKDevice
 from .const import DOMAIN, KNOWN_DEVICES
 from .utils import async_get_controller
+
+# Ensure all the controllers get imported in the executor
+# since they are loaded late.
+if BLE_TRANSPORT_SUPPORTED:
+    from aiohomekit.controller import ble  # noqa: F401
+if COAP_TRANSPORT_SUPPORTED:
+    from aiohomekit.controller import coap  # noqa: F401
+if IP_TRANSPORT_SUPPORTED:
+    from aiohomekit.controller import ip  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
