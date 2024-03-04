@@ -31,7 +31,7 @@ async def test_device_class_units(
     assert msg["success"]
     assert msg["result"] == {
         "units": [
-            "Bft",
+            "Beaufort",
             "ft/s",
             "in/d",
             "in/h",
