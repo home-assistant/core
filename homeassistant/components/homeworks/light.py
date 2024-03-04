@@ -4,12 +4,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
+from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED, Homeworks
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -47,14 +48,17 @@ class HomeworksLight(HomeworksEntity, LightEntity):
 
     def __init__(
         self,
-        controller,
-        controller_id,
-        addr,
-        name,
-        rate,
-    ):
+        controller: Homeworks,
+        controller_id: str,
+        addr: str,
+        name: str,
+        rate: float,
+    ) -> None:
         """Create device with Addr, name, and rate."""
-        super().__init__(controller, controller_id, addr, 0, name)
+        super().__init__(controller, controller_id, addr, 0, None)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{controller_id}.{addr}")}, name=name
+        )
         self._rate = rate
         self._level = 0
         self._prev_level = 0
@@ -83,28 +87,28 @@ class HomeworksLight(HomeworksEntity, LightEntity):
         self._set_brightness(0)
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Control the brightness."""
         return self._level
 
-    def _set_brightness(self, level):
+    def _set_brightness(self, level: int) -> None:
         """Send the brightness level to the device."""
         self._controller.fade_dim(
             float((level * 100.0) / 255.0), self._rate, 0, self._addr
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Supported attributes."""
         return {"homeworks_address": self._addr}
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Is the light on/off."""
         return self._level != 0
 
     @callback
-    def _update_callback(self, msg_type, values):
+    def _update_callback(self, msg_type: str, values: list[Any]) -> None:
         """Process device specific messages."""
 
         if msg_type == HW_LIGHT_CHANGED:

@@ -17,7 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -118,7 +118,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (ConnectionError, OSError) as err:
         raise ConfigEntryNotReady from err
 
-    def cleanup(event):
+    def cleanup(event: Event) -> None:
         controller.close()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup))
@@ -158,7 +158,7 @@ async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-def calculate_unique_id(controller_id, addr, idx):
+def calculate_unique_id(controller_id: str, addr: str, idx: int) -> str:
     """Calculate entity unique id."""
     return f"homeworks.{controller_id}.{addr}.{idx}"
 
@@ -166,6 +166,7 @@ def calculate_unique_id(controller_id, addr, idx):
 class HomeworksEntity(Entity):
     """Base class of a Homeworks device."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
@@ -194,7 +195,14 @@ class HomeworksKeypad:
     instead of a sensor entity in hass.
     """
 
-    def __init__(self, hass, controller, controller_id, addr, name):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        controller: Homeworks,
+        controller_id: str,
+        addr: str,
+        name: str,
+    ) -> None:
         """Register callback that will be used for signals."""
         self._addr = addr
         self._controller = controller
@@ -208,7 +216,7 @@ class HomeworksKeypad:
         )
 
     @callback
-    def _update_callback(self, msg_type, values):
+    def _update_callback(self, msg_type: str, values: list[Any]) -> None:
         """Fire events if button is pressed or released."""
 
         if msg_type == HW_BUTTON_PRESSED:

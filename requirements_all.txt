@@ -191,7 +191,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.4.5
 
 # homeassistant.components.airzone
-aioairzone==0.7.5
+aioairzone==0.7.6
 
 # homeassistant.components.ambient_station
 aioambient==2024.01.0
@@ -2282,7 +2282,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==0.39.2
+python-roborock==0.40.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2833,7 +2833,7 @@ watchdog==2.3.1
 waterfurnace==1.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.1.12
+weatherflow4py==0.1.13
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.1
