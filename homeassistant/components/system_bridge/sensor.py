@@ -382,9 +382,11 @@ async def async_setup_entry(
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
                         icon="mdi:harddisk",
-                        value=lambda data,
-                        dk=index_device,
-                        pk=index_partition: partition_usage(data, dk, pk),
+                        value=(
+                            lambda data,
+                            dk=index_device,
+                            pk=index_partition: partition_usage(data, dk, pk)
+                        ),
                     ),
                     entry.data[CONF_PORT],
                 )
