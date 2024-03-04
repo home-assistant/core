@@ -202,7 +202,7 @@ async def async_setup_entry(
 
     async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open path service call."""
-        _LOGGER.debug("Open: %s", service_call.data)
+        _LOGGER.debug("Open path: %s", service_call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             service_call.data[CONF_BRIDGE]
         ]
@@ -225,7 +225,7 @@ async def async_setup_entry(
 
     async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open url service call."""
-        _LOGGER.debug("Open: %s", service_call.data)
+        _LOGGER.debug("Open URL: %s", service_call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             service_call.data[CONF_BRIDGE]
         ]
