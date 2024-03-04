@@ -125,7 +125,7 @@ class BackupManager:
     async def load_platforms(self) -> None:
         """Load backup platforms."""
         await integration_platform.async_process_integration_platforms(
-            self.hass, DOMAIN, self._add_platform
+            self.hass, DOMAIN, self._add_platform, register_preload_platform=False
         )
         LOGGER.debug("Loaded %s platforms", len(self.platforms))
         self.loaded_platforms = True
