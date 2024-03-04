@@ -38,8 +38,8 @@ class EcowittEntity(Entity):
             """Update the state on callback."""
             self.async_write_ha_state()
 
-        self.ecowitt.update_cb.append(_update_state)  # type: ignore[arg-type]  # upstream bug
-        self.async_on_remove(lambda: self.ecowitt.update_cb.remove(_update_state))  # type: ignore[arg-type]  # upstream bug
+        self.ecowitt.update_cb.append(_update_state)
+        self.async_on_remove(lambda: self.ecowitt.update_cb.remove(_update_state))
 
     @property
     def available(self) -> bool:

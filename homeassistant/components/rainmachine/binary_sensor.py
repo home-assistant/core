@@ -42,14 +42,12 @@ BINARY_SENSOR_DESCRIPTIONS = (
     RainMachineBinarySensorDescription(
         key=TYPE_FLOW_SENSOR,
         translation_key=TYPE_FLOW_SENSOR,
-        icon="mdi:water-pump",
         api_category=DATA_PROVISION_SETTINGS,
         data_key="useFlowSensor",
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_FREEZE,
         translation_key=TYPE_FREEZE,
-        icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,
         data_key="freeze",
@@ -57,7 +55,6 @@ BINARY_SENSOR_DESCRIPTIONS = (
     RainMachineBinarySensorDescription(
         key=TYPE_HOURLY,
         translation_key=TYPE_HOURLY,
-        icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,
         data_key="hourly",
@@ -65,7 +62,6 @@ BINARY_SENSOR_DESCRIPTIONS = (
     RainMachineBinarySensorDescription(
         key=TYPE_MONTH,
         translation_key=TYPE_MONTH,
-        icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,
         data_key="month",
@@ -73,7 +69,6 @@ BINARY_SENSOR_DESCRIPTIONS = (
     RainMachineBinarySensorDescription(
         key=TYPE_RAINDELAY,
         translation_key=TYPE_RAINDELAY,
-        icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,
         data_key="rainDelay",
@@ -81,7 +76,6 @@ BINARY_SENSOR_DESCRIPTIONS = (
     RainMachineBinarySensorDescription(
         key=TYPE_RAINSENSOR,
         translation_key=TYPE_RAINSENSOR,
-        icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
@@ -90,7 +84,6 @@ BINARY_SENSOR_DESCRIPTIONS = (
     RainMachineBinarySensorDescription(
         key=TYPE_WEEKDAY,
         translation_key=TYPE_WEEKDAY,
-        icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,
         data_key="weekDay",

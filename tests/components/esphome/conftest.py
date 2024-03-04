@@ -269,26 +269,26 @@ async def _mock_generic_device_entry(
     }
     device_info = DeviceInfo(**(default_device_info | mock_device_info))
 
-    async def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
+    def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
         """Subscribe to state."""
         mock_device.set_state_callback(callback)
         for state in states:
             callback(state)
 
-    async def _subscribe_service_calls(
+    def _subscribe_service_calls(
         callback: Callable[[HomeassistantServiceCall], None],
     ) -> None:
         """Subscribe to service calls."""
         mock_device.set_service_call_callback(callback)
 
-    async def _subscribe_home_assistant_states(
+    def _subscribe_home_assistant_states(
         on_state_sub: Callable[[str, str | None], None],
     ) -> None:
         """Subscribe to home assistant states."""
         mock_device.set_home_assistant_state_subscription_callback(on_state_sub)
 
     mock_client.device_info = AsyncMock(return_value=device_info)
-    mock_client.subscribe_voice_assistant = AsyncMock(return_value=Mock())
+    mock_client.subscribe_voice_assistant = Mock()
     mock_client.list_entities_services = AsyncMock(
         return_value=mock_list_entities_services
     )

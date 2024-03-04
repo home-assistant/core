@@ -1,4 +1,5 @@
 """The Matter integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -45,7 +46,10 @@ def get_matter_device_info(
     hass: HomeAssistant, device_id: str
 ) -> MatterDeviceInfo | None:
     """Return Matter device info or None if device does not exist."""
-    if not (node := node_from_ha_device_id(hass, device_id)):
+    # Test hass.data[DOMAIN] to ensure config entry is set up
+    if not hass.data.get(DOMAIN, False) or not (
+        node := node_from_ha_device_id(hass, device_id)
+    ):
         return None
 
     return MatterDeviceInfo(
@@ -64,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(CONNECT_TIMEOUT):
             await matter_client.connect()
-    except (CannotConnect, asyncio.TimeoutError) as err:
+    except (CannotConnect, TimeoutError) as err:
         raise ConfigEntryNotReady("Failed to connect to matter server") from err
     except InvalidServerVersion as err:
         if use_addon:
@@ -109,7 +113,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(LISTEN_READY_TIMEOUT):
             await init_ready.wait()
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         listen_task.cancel()
         raise ConfigEntryNotReady("Matter client not ready") from err
 

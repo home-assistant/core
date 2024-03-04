@@ -67,7 +67,7 @@ class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self._client.select_command(self._key, option)
+        self._client.select_command(self._key, option)
 
 
 class EsphomeAssistPipelineSelect(EsphomeAssistEntity, AssistPipelineSelect):

@@ -12,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
-from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import (
     KEY_HASS,
     KEY_HASS_USER,
@@ -23,6 +22,7 @@ from homeassistant.const import (
     CONTENT_TYPE_JSON,
     EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED,
+    KEY_DATA_LOGGING as DATA_LOGGING,
     MATCH_ALL,
     URL_API,
     URL_API_COMPONENTS,
@@ -175,7 +175,7 @@ class APIEventStream(HomeAssistantView):
                     msg = f"data: {payload}\n\n"
                     _LOGGER.debug("STREAM %s WRITING %s", id(stop_obj), msg.strip())
                     await response.write(msg.encode("UTF-8"))
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     await to_write.put(STREAM_PING_PAYLOAD)
 
         except asyncio.CancelledError:
@@ -222,7 +222,7 @@ class APIStatesView(HomeAssistantView):
                 if entity_perm(state.entity_id, "read")
             )
         response = web.Response(
-            body=b"[" + b",".join(states) + b"]",
+            body=b"".join((b"[", b",".join(states), b"]")),
             content_type=CONTENT_TYPE_JSON,
             zlib_executor_size=32768,
         )
@@ -472,7 +472,9 @@ class APIErrorLog(HomeAssistantView):
     async def get(self, request: web.Request) -> web.FileResponse:
         """Retrieve API error log."""
         hass: HomeAssistant = request.app[KEY_HASS]
-        return web.FileResponse(hass.data[DATA_LOGGING])
+        response = web.FileResponse(hass.data[DATA_LOGGING])
+        response.enable_compression()
+        return response
 
 
 async def async_services_json(hass: HomeAssistant) -> list[dict[str, Any]]:

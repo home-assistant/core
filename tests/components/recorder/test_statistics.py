@@ -49,8 +49,6 @@ from .common import (
 from tests.common import mock_registry
 from tests.typing import WebSocketGenerator
 
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
-
 
 def test_converters_align_with_sensor() -> None:
     """Ensure STATISTIC_UNIT_TO_UNIT_CONVERTER is aligned with UNIT_CONVERTERS."""

@@ -144,11 +144,6 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
     """Define an Airzone Cloud climate."""
 
     _attr_name = None
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
-    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False
 
@@ -179,6 +174,12 @@ class AirzoneClimate(AirzoneEntity, ClimateEntity):
 
 class AirzoneDeviceClimate(AirzoneClimate):
     """Define an Airzone Cloud Device base class."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
@@ -216,6 +217,12 @@ class AirzoneDeviceClimate(AirzoneClimate):
 
 class AirzoneDeviceGroupClimate(AirzoneClimate):
     """Define an Airzone Cloud DeviceGroup base class."""
+
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""

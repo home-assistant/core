@@ -3,11 +3,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from python_homeassistant_analytics import HomeassistantAnalyticsClient
+from python_homeassistant_analytics import (
+    HomeassistantAnalyticsClient,
+    HomeassistantAnalyticsConnectionError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_TRACKED_INTEGRATIONS, DOMAIN
@@ -28,7 +32,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Homeassistant Analytics from a config entry."""
     client = HomeassistantAnalyticsClient(session=async_get_clientsession(hass))
 
-    integrations = await client.get_integrations()
+    try:
+        integrations = await client.get_integrations()
+    except HomeassistantAnalyticsConnectionError as ex:
+        raise ConfigEntryNotReady("Could not fetch integration list") from ex
 
     names = {}
     for integration in entry.options[CONF_TRACKED_INTEGRATIONS]:

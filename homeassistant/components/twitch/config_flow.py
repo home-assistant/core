@@ -3,17 +3,18 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, cast
 
 from twitchAPI.helper import first
 from twitchAPI.twitch import Twitch
 from twitchAPI.type import AuthScope, InvalidTokenException
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_TOKEN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import LocalOAuth2Implementation
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import CONF_CHANNELS, CONF_REFRESH_TOKEN, DOMAIN, LOGGER, OAUTH_SCOPES
@@ -45,11 +46,15 @@ class OAuth2FlowHandler(
     async def async_oauth_create_entry(
         self,
         data: dict[str, Any],
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
+        implementation = cast(
+            LocalOAuth2Implementation,
+            self.flow_impl,
+        )
 
         client = await Twitch(
-            app_id=self.flow_impl.__dict__[CONF_CLIENT_ID],
+            app_id=implementation.client_id,
             authenticate_app=False,
         )
         client.auto_refresh_auth = False
@@ -99,7 +104,9 @@ class OAuth2FlowHandler(
             description_placeholders={"title": self.reauth_entry.title},
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -108,13 +115,13 @@ class OAuth2FlowHandler(
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
         """Import from yaml."""
         client = await Twitch(
             app_id=config[CONF_CLIENT_ID],

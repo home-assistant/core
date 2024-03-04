@@ -24,6 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     options = ConnectionOptions(
         entry.data[CONF_USERNAME],
         entry.data[CONF_PASSWORD],
+        True,
     )
 
     airzone = AirzoneCloudApi(aiohttp_client.async_get_clientsession(hass), options)

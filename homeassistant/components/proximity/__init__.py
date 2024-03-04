@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -11,6 +12,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_ZONE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -203,16 +205,21 @@ class Proximity(CoordinatorEntity[ProximityDataUpdateCoordinator]):
         self._attr_unit_of_measurement = self.coordinator.unit_of_measurement
 
     @property
-    def state(self) -> str | int | float:
+    def data(self) -> dict[str, str | int | None]:
+        """Get data from coordinator."""
+        return self.coordinator.data.proximity
+
+    @property
+    def state(self) -> str | float:
         """Return the state."""
-        return self.coordinator.data.proximity[ATTR_DIST_TO]
+        if isinstance(distance := self.data[ATTR_DIST_TO], str):
+            return distance
+        return self.coordinator.convert_legacy(cast(int, distance))
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
         return {
-            ATTR_DIR_OF_TRAVEL: str(
-                self.coordinator.data.proximity[ATTR_DIR_OF_TRAVEL]
-            ),
-            ATTR_NEAREST: str(self.coordinator.data.proximity[ATTR_NEAREST]),
+            ATTR_DIR_OF_TRAVEL: str(self.data[ATTR_DIR_OF_TRAVEL] or STATE_UNKNOWN),
+            ATTR_NEAREST: str(self.data[ATTR_NEAREST]),
         }

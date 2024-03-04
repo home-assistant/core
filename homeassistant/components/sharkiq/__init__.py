@@ -40,7 +40,7 @@ async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     except SharkIqAuthError:
         LOGGER.error("Authentication error connecting to Shark IQ api")
         return False
-    except asyncio.TimeoutError as exc:
+    except TimeoutError as exc:
         LOGGER.error("Timeout expired")
         raise CannotConnect from exc
 
