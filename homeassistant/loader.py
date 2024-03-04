@@ -72,6 +72,7 @@ BASE_PRELOAD_PLATFORMS = [
     "group",
     "logbook",
     "hardware",
+    "intent",
     "media_source",
     "recorder",
     "repairs",
