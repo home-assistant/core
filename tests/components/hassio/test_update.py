@@ -470,7 +470,7 @@ async def test_release_notes_between_versions(
     config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.get_addons_changelogs",
+        "homeassistant.components.hassio.data.get_addons_changelogs",
         return_value={"test": "# 2.0.1\nNew updates\n# 2.0.0\nOld updates"},
     ):
         result = await async_setup_component(
@@ -506,7 +506,7 @@ async def test_release_notes_full(
     config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.get_addons_changelogs",
+        "homeassistant.components.hassio.data.get_addons_changelogs",
         return_value={"test": "# 2.0.0\nNew updates\n# 2.0.0\nOld updates"},
     ):
         result = await async_setup_component(
@@ -542,7 +542,7 @@ async def test_not_release_notes(
     config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.hassio.get_addons_changelogs",
+        "homeassistant.components.hassio.data.get_addons_changelogs",
         return_value={"test": None},
     ):
         result = await async_setup_component(
