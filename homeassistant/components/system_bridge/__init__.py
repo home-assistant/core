@@ -377,5 +377,4 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry.minor_version,
         )
 
-    # User is trying to downgrade from a future version
-    return False
+    return True
