@@ -196,7 +196,7 @@ async def async_setup_entry(
 
     async def handle_open_path(call: ServiceCall) -> None:
         """Handle the open path service call."""
-        _LOGGER.info("Open: %s", call.data)
+        _LOGGER.debug("Open: %s", call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
         ]
@@ -206,7 +206,7 @@ async def async_setup_entry(
 
     async def handle_power_command(call: ServiceCall) -> None:
         """Handle the power command service call."""
-        _LOGGER.info("Power command: %s", call.data)
+        _LOGGER.debug("Power command: %s", call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
         ]
@@ -217,7 +217,7 @@ async def async_setup_entry(
 
     async def handle_open_url(call: ServiceCall) -> None:
         """Handle the open url service call."""
-        _LOGGER.info("Open: %s", call.data)
+        _LOGGER.debug("Open: %s", call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
         ]
