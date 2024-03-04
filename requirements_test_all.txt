@@ -1124,7 +1124,7 @@ nsw-fuel-api-client==1.1.0
 nuheat==1.0.1
 
 # homeassistant.components.numato
-numato-gpio==0.10.0
+numato-gpio==0.12.0
 
 # homeassistant.components.compensation
 # homeassistant.components.iqvia
