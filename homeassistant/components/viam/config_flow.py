@@ -1,4 +1,5 @@
 """Config flow for viam integration."""
+
 from __future__ import annotations
 
 import logging
@@ -9,9 +10,8 @@ from viam.app.viam_client import ViamClient
 from viam.rpc.dial import Credentials, DialOptions
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_API_KEY
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -90,7 +90,7 @@ async def validate_input(data: dict[str, Any]) -> tuple[str, ViamClient]:
     raise CannotConnect
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ViamFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for viam."""
 
     VERSION = 1
@@ -103,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -116,7 +116,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -145,7 +145,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_robot(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Select robot from location."""
 
         app_client = self._get_app_client()
