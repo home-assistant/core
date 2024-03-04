@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
@@ -78,6 +77,9 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
+from homeassistant.helpers.normalized_name_base_registry import (
+    NormalizedNameBaseRegistryItems,
+)
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -633,7 +635,8 @@ def mock_area_registry(
     fixture instead.
     """
     registry = ar.AreaRegistry(hass)
-    registry.areas = mock_entries or OrderedDict()
+    registry._area_data = {}
+    registry.areas = mock_entries or NormalizedNameBaseRegistryItems()
 
     hass.data[ar.DATA_REGISTRY] = registry
     return registry
