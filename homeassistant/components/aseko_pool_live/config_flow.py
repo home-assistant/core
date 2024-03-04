@@ -46,7 +46,7 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> Config:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         self.reauth_entry = None
@@ -73,7 +73,9 @@ class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_store_credentials(self, info: dict[str, Any]) -> ConfigFlowResult:
+    async def async_store_credentials(
+        self, info: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Store validated credentials."""
 
         if self.reauth_entry:
