@@ -49,7 +49,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
     UnifiImageEntityDescription[Wlans, Wlan](
         key="WLAN QR Code",
         entity_category=EntityCategory.DIAGNOSTIC,
-        has_entity_name=True,
         entity_registry_enabled_default=False,
         allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.wlans,

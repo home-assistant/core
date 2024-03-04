@@ -149,7 +149,6 @@ class UnifiTrackerEntityDescription(UnifiEntityDescription[HandlerT, ApiItemT]):
 ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
     UnifiTrackerEntityDescription[Clients, Client](
         key="Client device scanner",
-        has_entity_name=True,
         allowed_fn=async_client_allowed_fn,
         api_handler_fn=lambda api: api.clients,
         available_fn=lambda hub, obj_id: hub.available,
@@ -172,7 +171,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
     ),
     UnifiTrackerEntityDescription[Devices, Device](
         key="Device scanner",
-        has_entity_name=True,
         allowed_fn=lambda hub, obj_id: hub.config.option_track_devices,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,

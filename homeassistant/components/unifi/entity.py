@@ -107,6 +107,8 @@ class UnifiEntityDescription(EntityDescription, Generic[HandlerT, ApiItemT]):
     unique_id_fn: Callable[[UnifiHub, str], str]
 
     # Optional
+    has_entity_name = True  # Part of EntityDescription
+    """Has entity name defaults to true."""
     event_is_on: tuple[EventKey, ...] | None = None
     """Which UniFi events should be used to consider state 'on'."""
     event_to_subscribe: tuple[EventKey, ...] | None = None

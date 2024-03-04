@@ -68,7 +68,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
     UnifiButtonEntityDescription[Devices, Device](
         key="Device restart",
         entity_category=EntityCategory.CONFIG,
-        has_entity_name=True,
         device_class=ButtonDeviceClass.RESTART,
         allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.devices,
@@ -83,7 +82,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
     UnifiButtonEntityDescription[Ports, Port](
         key="PoE power cycle",
         entity_category=EntityCategory.CONFIG,
-        has_entity_name=True,
         device_class=ButtonDeviceClass.RESTART,
         allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.ports,
