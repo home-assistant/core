@@ -321,9 +321,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         name_fn=lambda device: "Temperature",
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=lambda ctrlr, obj_id: ctrlr.api.devices[obj_id].has_temperature,
+        supported_fn=lambda hub, obj_id: hub.api.devices[obj_id].has_temperature,
         unique_id_fn=lambda hub, obj_id: f"device_temperature-{obj_id}",
-        value_fn=lambda ctrlr, device: device.general_temperature,
+        value_fn=lambda hub, device: device.general_temperature,
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device State",

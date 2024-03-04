@@ -208,7 +208,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         is_on_fn=async_dpi_group_is_on_fn,
         name_fn=lambda group: group.name,
         object_fn=lambda api, obj_id: api.dpi_groups[obj_id],
-        supported_fn=lambda c, obj_id: bool(c.api.dpi_groups[obj_id].dpiapp_ids),
+        supported_fn=lambda hub, obj_id: bool(hub.api.dpi_groups[obj_id].dpiapp_ids),
         unique_id_fn=lambda hub, obj_id: obj_id,
     ),
     UnifiSwitchEntityDescription[Outlets, Outlet](

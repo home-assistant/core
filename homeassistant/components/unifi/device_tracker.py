@@ -174,7 +174,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=lambda api, obj_id: None,
         heartbeat_timedelta_fn=async_device_heartbeat_timedelta_fn,
-        is_connected_fn=lambda ctrlr, obj_id: ctrlr.api.devices[obj_id].state == 1,
+        is_connected_fn=lambda hub, obj_id: hub.api.devices[obj_id].state == 1,
         name_fn=lambda device: device.name or device.model,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         unique_id_fn=lambda hub, obj_id: obj_id,
