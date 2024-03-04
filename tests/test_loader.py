@@ -1434,7 +1434,10 @@ async def test_async_get_platforms_loads_loop_if_already_in_sys_modules(
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
 ) -> None:
-    """Verify async_get_platforms does not create an executor job if the module is already in sys.modules."""
+    """Verify async_get_platforms does not create an executor job.
+
+    Case is for when the module is already in sys.modules.
+    """
     integration = await loader.async_get_integration(
         hass, "test_package_loaded_executor"
     )
@@ -1522,7 +1525,11 @@ async def test_async_get_platforms_concurrent_loads(
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
 ) -> None:
-    """Verify async_get_platforms waits if the first load if called again when still in progress."""
+    """Verify async_get_platforms waits if the first load if called again.
+
+    Case is for when when a second load is called
+    and the first is still in progress.
+    """
     integration = await loader.async_get_integration(
         hass, "test_package_loaded_executor"
     )
