@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -162,24 +162,20 @@ async def async_wlan_control_fn(hub: UnifiHub, obj_id: str, target: bool) -> Non
     await hub.api.request(WlanEnableRequest.create(obj_id, target))
 
 
-@dataclass(frozen=True)
-class UnifiSwitchEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
-    """Validate and load entities from different UniFi handlers."""
+@dataclass(frozen=True, kw_only=True)
+class UnifiSwitchEntityDescription(
+    SwitchEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
+):
+    """Class describing UniFi switch entity."""
 
     control_fn: Callable[[UnifiHub, str, bool], Coroutine[Any, Any, None]]
     is_on_fn: Callable[[UnifiHub, ApiItemT], bool]
 
-
-@dataclass(frozen=True)
-class UnifiSwitchEntityDescription(
-    SwitchEntityDescription,
-    UnifiEntityDescription[HandlerT, ApiItemT],
-    UnifiSwitchEntityDescriptionMixin[HandlerT, ApiItemT],
-):
-    """Class describing UniFi switch entity."""
-
+    # Optional
     custom_subscribe: Callable[[aiounifi.Controller], SubscriptionT] | None = None
+    """Callback for additional subscriptions to any UniFi handler."""
     only_event_for_state_change: bool = False
+    """Use only UniFi events to trigger state changes."""
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
@@ -200,7 +196,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         name_fn=lambda client: None,
         object_fn=lambda api, obj_id: api.clients[obj_id],
         only_event_for_state_change=True,
-        should_poll=False,
         supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"block-{obj_id}",
     ),
@@ -214,12 +209,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         control_fn=async_dpi_group_control_fn,
         custom_subscribe=lambda api: api.dpi_apps.subscribe,
         device_info_fn=async_dpi_group_device_info_fn,
-        event_is_on=None,
-        event_to_subscribe=None,
         is_on_fn=async_dpi_group_is_on_fn,
         name_fn=lambda group: group.name,
         object_fn=lambda api, obj_id: api.dpi_groups[obj_id],
-        should_poll=False,
         supported_fn=lambda c, obj_id: bool(c.api.dpi_groups[obj_id].dpiapp_ids),
         unique_id_fn=lambda hub, obj_id: obj_id,
     ),
@@ -232,12 +224,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         control_fn=async_outlet_control_fn,
         device_info_fn=async_device_device_info_fn,
-        event_is_on=None,
-        event_to_subscribe=None,
         is_on_fn=lambda hub, outlet: outlet.relay_state,
         name_fn=lambda outlet: outlet.name,
         object_fn=lambda api, obj_id: api.outlets[obj_id],
-        should_poll=False,
         supported_fn=async_outlet_supports_switching_fn,
         unique_id_fn=lambda hub, obj_id: f"outlet-{obj_id}",
     ),
@@ -252,12 +241,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         available_fn=lambda hub, obj_id: hub.available,
         control_fn=async_port_forward_control_fn,
         device_info_fn=async_port_forward_device_info_fn,
-        event_is_on=None,
-        event_to_subscribe=None,
         is_on_fn=lambda hub, port_forward: port_forward.enabled,
         name_fn=lambda port_forward: f"{port_forward.name}",
         object_fn=lambda api, obj_id: api.port_forwarding[obj_id],
-        should_poll=False,
         supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"port_forward-{obj_id}",
     ),
@@ -273,12 +259,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         control_fn=async_poe_port_control_fn,
         device_info_fn=async_device_device_info_fn,
-        event_is_on=None,
-        event_to_subscribe=None,
         is_on_fn=lambda hub, port: port.poe_mode != "off",
         name_fn=lambda port: f"{port.name} PoE",
         object_fn=lambda api, obj_id: api.ports[obj_id],
-        should_poll=False,
         supported_fn=lambda hub, obj_id: hub.api.ports[obj_id].port_poe,
         unique_id_fn=lambda hub, obj_id: f"poe-{obj_id}",
     ),
@@ -293,12 +276,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         available_fn=lambda hub, _: hub.available,
         control_fn=async_wlan_control_fn,
         device_info_fn=async_wlan_device_info_fn,
-        event_is_on=None,
-        event_to_subscribe=None,
         is_on_fn=lambda hub, wlan: wlan.enabled,
         name_fn=lambda wlan: None,
         object_fn=lambda api, obj_id: api.wlans[obj_id],
-        should_poll=False,
         supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"wlan-{obj_id}",
     ),
@@ -354,15 +334,11 @@ class UnifiSwitchEntity(UnifiEntity[HandlerT, ApiItemT], SwitchEntity):
     """Base representation of a UniFi switch."""
 
     entity_description: UnifiSwitchEntityDescription[HandlerT, ApiItemT]
-    only_event_for_state_change = False
 
     @callback
     def async_initiate_state(self) -> None:
         """Initiate entity state."""
-        self.async_update_state(ItemEvent.ADDED, self._obj_id)
-        self.only_event_for_state_change = (
-            self.entity_description.only_event_for_state_change
-        )
+        self.async_update_state(ItemEvent.ADDED, self._obj_id, first_update=True)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
@@ -373,12 +349,14 @@ class UnifiSwitchEntity(UnifiEntity[HandlerT, ApiItemT], SwitchEntity):
         await self.entity_description.control_fn(self.hub, self._obj_id, False)
 
     @callback
-    def async_update_state(self, event: ItemEvent, obj_id: str) -> None:
+    def async_update_state(
+        self, event: ItemEvent, obj_id: str, first_update: bool = False
+    ) -> None:
         """Update entity state.
 
         Update attr_is_on.
         """
-        if self.only_event_for_state_change:
+        if not first_update and self.entity_description.only_event_for_state_change:
             return
 
         description = self.entity_description
