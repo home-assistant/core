@@ -1002,7 +1002,7 @@ class Integration:
                     with suppress(BaseException):
                         # Clear the exception retrieved flag on the future since
                         # it will never be retrieved unless there
-                        # are concurrent calls to async_get_platform
+                        # are concurrent calls to async_get_platforms
                         import_future.result()
                 raise
 
