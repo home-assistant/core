@@ -51,7 +51,7 @@ PRIORITY_SENSOR_DESCRIPTION = SensorEntityDescription(
 
 
 def _sensor_unique_id(server_id: str, instance_num: int, suffix: str) -> str:
-    """Convert a sensor to a unique_id."""
+    """Calculate a sensor's unique_id."""
     return get_hyperion_unique_id(
         server_id,
         instance_num,
