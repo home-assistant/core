@@ -925,7 +925,7 @@ class Integration:
         load_executor = (
             self.import_executor
             and full_name not in self.hass.config.components
-            and f"{self.pkg_path}.{domain}.{platform_name}" not in sys.modules
+            and f"{self.pkg_path}.{platform_name}" not in sys.modules
         )
         try:
             if load_executor:
