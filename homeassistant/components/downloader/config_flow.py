@@ -7,8 +7,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import _LOGGER, CONF_DOWNLOAD_DIR, DEFAULT_NAME, DOMAIN
@@ -21,7 +20,7 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -48,7 +47,7 @@ class DownloaderConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by configuration file."""
 
         return await self.async_step_user(user_input)
