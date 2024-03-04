@@ -22,7 +22,7 @@ from .entity import MicroBeesEntity
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Setup the microBees cover platform."""
+    """Set up the microBees cover platform."""
     coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ].coordinator
