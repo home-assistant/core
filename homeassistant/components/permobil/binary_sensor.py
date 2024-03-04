@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from mypermobil import BATTERY_CHARGING
@@ -20,22 +19,13 @@ from .const import DOMAIN
 from .coordinator import MyPermobilCoordinator
 from .entity import PermobilEntity
 
-_LOGGER = logging.getLogger(__name__)
 
-
-@dataclass(frozen=True)
-class PermobilBinaryRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class PermobilBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Permobil binary sensor entity."""
 
     is_on_fn: Callable[[Any], bool]
     available_fn: Callable[[Any], bool]
-
-
-@dataclass(frozen=True)
-class PermobilBinarySensorEntityDescription(
-    BinarySensorEntityDescription, PermobilBinaryRequiredKeysMixin
-):
-    """Describes Permobil binary sensor entity."""
 
 
 BINARY_SENSOR_DESCRIPTIONS: tuple[PermobilBinarySensorEntityDescription, ...] = (
