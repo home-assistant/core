@@ -1445,7 +1445,7 @@ async def test_async_get_platforms_loads_loop_if_already_in_sys_modules(
     ), patch("homeassistant.loader.importlib.import_module", import_module):
         modules = await integration.async_get_platforms(["button", "switch", "light"])
 
-    # The button module is loaded in the cache so nothing happens
+    # The button module is already in the cache so nothing happens
     # The switch module is loaded in the executor since its not in the cache
     # The light module is in memory but not in the cache so its loaded in the loop
     assert "['button']" not in caplog.text
