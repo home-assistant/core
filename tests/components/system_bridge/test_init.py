@@ -20,7 +20,7 @@ async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
             CONF_HOST: FIXTURE_USER_INPUT[CONF_HOST],
             CONF_PORT: FIXTURE_USER_INPUT[CONF_PORT],
         },
-        version=1,
+        version=SystemBridgeConfigFlow.VERSION,
         minor_version=1,
     )
     config_entry.add_to_hass(hass)
@@ -39,7 +39,7 @@ async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
     }
 
 
-async def test_migration_minor_2_to_1(hass: HomeAssistant) -> None:
+async def test_migration_minor_future_to_2(hass: HomeAssistant) -> None:
     """Test migration."""
     config_entry_data = {
         CONF_API_KEY: FIXTURE_USER_INPUT[CONF_TOKEN],
@@ -51,8 +51,8 @@ async def test_migration_minor_2_to_1(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id=FIXTURE_UUID,
         data=config_entry_data,
-        version=1,
-        minor_version=2,
+        version=SystemBridgeConfigFlow.VERSION,
+        minor_version=SystemBridgeConfigFlow.MINOR_VERSION + 1,
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
