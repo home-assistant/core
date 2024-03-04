@@ -662,6 +662,7 @@ class Integration:
             self._all_dependencies_resolved = True
             self._all_dependencies = set()
 
+        self._component_future: asyncio.Future[ComponentProtocol] | None = None
         self._import_futures: dict[str, asyncio.Future[ModuleType]] = {}
         cache: dict[str, ModuleType | ComponentProtocol] = hass.data[DATA_COMPONENTS]
         self._cache = cache
@@ -854,6 +855,9 @@ class Integration:
         and will check if import_executor is set and load it in the executor,
         otherwise it will load it in the event loop.
         """
+        if self._component_future:
+            return await self._component_future
+
         if debug := _LOGGER.isEnabledFor(logging.DEBUG):
             start = time.perf_counter()
         domain = self.domain
@@ -863,17 +867,35 @@ class Integration:
             self.pkg_path not in sys.modules
             or (self.config_flow and f"{self.pkg_path}.config_flow" not in sys.modules)
         )
-        if load_executor:
-            try:
-                comp = await self.hass.async_add_import_executor_job(self.get_component)
-            except ImportError as ex:
-                load_executor = False
-                _LOGGER.debug("Failed to import %s in executor", domain, exc_info=ex)
-                # If importing in the executor deadlocks because there is a circular
-                # dependency, we fall back to the event loop.
+        self._component_future = self.hass.loop.create_future()
+        try:
+            if load_executor:
+                try:
+                    comp = await self.hass.async_add_import_executor_job(
+                        self.get_component
+                    )
+                except ImportError as ex:
+                    load_executor = False
+                    _LOGGER.debug(
+                        "Failed to import %s in executor", domain, exc_info=ex
+                    )
+                    # If importing in the executor deadlocks because there is a circular
+                    # dependency, we fall back to the event loop.
+                    comp = self.get_component()
+            else:
                 comp = self.get_component()
-        else:
-            comp = self.get_component()
+
+            self._component_future.set_result(comp)
+        except BaseException as ex:
+            self._component_future.set_exception(ex)
+            with suppress(BaseException):
+                # Set the exception retrieved flag on the future since
+                # it will never be retrieved unless there
+                # are concurrent calls to async_get_component
+                self._component_future.result()
+            raise
+        finally:
+            self._component_future = None
 
         if debug:
             _LOGGER.debug(
@@ -882,6 +904,7 @@ class Integration:
                 time.perf_counter() - start,
                 load_executor,
             )
+
         return comp
 
     def get_component(self) -> ComponentProtocol:
