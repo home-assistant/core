@@ -40,7 +40,6 @@ from .entity import (
 from .hub import UnifiHub
 
 
-@callback
 async def async_restart_device_control_fn(
     api: aiounifi.Controller, obj_id: str
 ) -> None:
@@ -48,7 +47,6 @@ async def async_restart_device_control_fn(
     await api.request(DeviceRestartRequest.create(obj_id))
 
 
-@callback
 async def async_power_cycle_port_control_fn(
     api: aiounifi.Controller, obj_id: str
 ) -> None:
