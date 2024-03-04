@@ -1030,7 +1030,7 @@ class Integration:
 
         for platform_name in platform_names:
             full_name = f"{domain}.{platform_name}"
-            if platform := self._get_platform_cached(full_name):
+            if platform := self._get_platform_cached_or_raise(full_name):
                 platforms[platform_name] = platform
                 continue
 
@@ -1110,7 +1110,7 @@ class Integration:
 
         return platforms
 
-    def _get_platform_cached(self, full_name: str) -> ModuleType | None:
+    def _get_platform_cached_or_raise(self, full_name: str) -> ModuleType | None:
         """Return a platform for an integration from cache."""
         if full_name in self._cache:
             # the cache is either a ModuleType or a ComponentProtocol
@@ -1120,9 +1120,15 @@ class Integration:
             raise self._missing_platforms_cache[full_name]
         return None
 
+    def get_platform_cached(self, platform_name: str) -> ModuleType | None:
+        """Return a platform for an integration from cache."""
+        return self._cache.get(f"{self.domain}.{platform_name}")  # type: ignore[return-value]
+
     def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        if platform := self._get_platform_cached(f"{self.domain}.{platform_name}"):
+        if platform := self._get_platform_cached_or_raise(
+            f"{self.domain}.{platform_name}"
+        ):
             return platform
         return self._load_platform(platform_name)
 

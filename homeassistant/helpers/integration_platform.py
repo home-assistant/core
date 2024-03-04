@@ -6,14 +6,15 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from functools import partial
 import logging
+from types import ModuleType
 from typing import Any
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import HassJob, HomeAssistant, callback
 from homeassistant.loader import (
     Integration,
-    async_get_integration,
     async_get_integrations,
+    async_get_loaded_integration,
     async_register_preload_platform,
     bind_hass,
 )
@@ -45,20 +46,47 @@ def _async_integration_platform_component_loaded(
     component_name = event.data[ATTR_COMPONENT]
     if "." in component_name:
         return
+    integration = async_get_loaded_integration(hass, component_name)
 
+    # First filter out platforms that the integration already
+    # known to be missing or already processed.
     to_process: list[IntegrationPlatform] = []
     for integration_platform in integration_platforms:
         if component_name not in integration_platform.seen_components:
             to_process.append(integration_platform)
         integration_platform.seen_components.add(component_name)
+        if not integration.platform_missing(integration_platform.platform_name):
+            to_process.append(integration_platform)
 
-    if to_process:
-        hass.async_create_task(
-            _async_process_integration_platforms_for_component(
-                hass, component_name, to_process
-            ),
-            eager_start=True,
+    if not to_process:
+        return
+
+    # If everything is already loaded, we can avoid creating a task.
+    can_use_cache = True
+    integration_platforms_to_load: list[IntegrationPlatform] = []
+    platforms: dict[str, ModuleType] = {}
+    for integration_platform in to_process:
+        if platform := integration.get_platform_cached(
+            integration_platform.platform_name
+        ):
+            integration_platforms_to_load.append(integration_platform)
+            platforms[integration_platform.platform_name] = platform
+        else:
+            can_use_cache = False
+            break
+
+    if can_use_cache:
+        _process_integration_platforms(
+            hass, integration, integration_platforms_to_load, platforms
         )
+        return
+
+    hass.async_create_task(
+        _async_process_integration_platforms_for_component(
+            hass, integration, to_process
+        ),
+        eager_start=True,
+    )
 
 
 def _filter_possible_platforms(
@@ -78,22 +106,11 @@ def _filter_possible_platforms(
 
 async def _async_process_integration_platforms_for_component(
     hass: HomeAssistant,
-    component_name: str,
+    integration: Integration,
     integration_platforms: list[IntegrationPlatform],
 ) -> None:
     """Process integration platforms for a component."""
-    integration = await async_get_integration(hass, component_name)
-    # First filter out platforms that the integration already
-    # knows are missing
-    non_missing_integration_platforms = [
-        integration_platform
-        for integration_platform in integration_platforms
-        if not integration.platform_missing(integration_platform.platform_name)
-    ]
-    if not non_missing_integration_platforms:
-        return
-
-    # Next create an executor job to filter out platforms that we don't know
+    # Create an executor job to filter out platforms that we don't know
     # if they are missing or not.
     #
     # We use the normal executor and not the import executor as we
@@ -101,40 +118,51 @@ async def _async_process_integration_platforms_for_component(
     # files.
     if not (
         integration_platforms_to_load := await hass.async_add_executor_job(
-            _filter_possible_platforms, integration, non_missing_integration_platforms
+            _filter_possible_platforms, integration, integration_platforms
         )
     ):
         return
 
     # Now we know which platforms to load, let's load them.
-    platform_names = [
-        integration_platform.platform_name
-        for integration_platform in integration_platforms_to_load
-    ]
-
     try:
-        platforms = await integration.async_get_platforms(platform_names)
+        platforms = await integration.async_get_platforms(
+            [
+                integration_platform.platform_name
+                for integration_platform in integration_platforms_to_load
+            ]
+        )
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception(
-            "Unexpected error importing %s for %s",
-            platform_names,
+            "Unexpected error importing integration platforms for %s",
             integration.domain,
         )
         return
 
+    if futures := _process_integration_platforms(
+        hass, integration, integration_platforms_to_load, platforms
+    ):
+        await asyncio.gather(*futures)
+
+
+@callback
+def _process_integration_platforms(
+    hass: HomeAssistant,
+    integration: Integration,
+    integration_platforms_to_load: list[IntegrationPlatform],
+    platforms: dict[str, ModuleType],
+) -> list[asyncio.Future[Awaitable[None] | None]]:
+    """Process integration platforms for a component."""
     # Finally, process the platforms.
     futures: list[asyncio.Future[Awaitable[None] | None]] = []
     for integration_platform in integration_platforms_to_load:
         if future := hass.async_run_hass_job(
             integration_platform.process_job,
             hass,
-            component_name,
+            integration.domain,
             platforms[integration_platform.platform_name],
         ):
             futures.append(future)
-
-    if futures:
-        await asyncio.gather(*futures)
+    return futures
 
 
 def _format_err(name: str, platform_name: str, *args: Any) -> str:
