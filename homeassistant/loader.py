@@ -980,16 +980,15 @@ class Integration:
             raise ImportError(f"Exception importing {self.pkg_path}") from err
 
         if self.integration_type not in SKIP_PRELOAD_INTEGRATION_TYPES:
-            for platform_name in self._preload_platforms:
-                if self.platform_exists(platform_name):
-                    # Setting up a component always checks if the config
-                    # platform exists. Since we may be running in the executor
-                    # we will use this opportunity to cache the config platform
-                    # as well.
-                    try:  # noqa: SIM105 suppress is much slower
-                        self.get_platform(platform_name)
-                    except ImportError:
-                        pass
+            for platform_name in self.platforms_exists(self._preload_platforms):
+                # Setting up a component always checks if the config
+                # platform exists. Since we may be running in the executor
+                # we will use this opportunity to cache the config platform
+                # as well.
+                try:  # noqa: SIM105 suppress is much slower
+                    self.get_platform(platform_name)
+                except ImportError:
+                    pass
 
         if self.config_flow:
             # If there is a config flow, we will cache it as well since
@@ -1142,43 +1141,50 @@ class Integration:
         This function is used to pre-filter in the event loop
         if a platform is known to be missing so we can avoid
         an executor job to check if the platform exists
-        using platform_exists.
+        using platforms_exists.
         """
         return bool(f"{self.domain}.{platform_name}" in self._missing_platforms_cache)
 
-    def platform_exists(self, platform_name: str) -> bool | None:
-        """Check if a platform exists for an integration.
+    def platforms_exists(self, platform_names: Iterable[str]) -> list[str]:
+        """Check if a platforms exists for an integration.
 
-        Returns True if the platform exists, False if it does not.
+        Returns a list of platforms that exist.
 
-        If it cannot be determined if the platform exists without attempting
-        to import the component, it returns None. This will only happen
-        if this function is called before get_component or async_get_component
-        has been called for the integration or the integration failed to load.
+        The component must be loaded before calling this method.
         """
-        full_name = f"{self.domain}.{platform_name}"
         cache = self._cache
-        if full_name in cache:
-            return True
-
-        if full_name in self._missing_platforms_cache:
-            return False
-
-        if not (component := cache.get(self.domain)) or not (
+        domain = self.domain
+        if not (component := cache.get(domain)) or not (
             file := getattr(component, "__file__", None)
         ):
-            return None
+            raise RuntimeError(f"Integration {domain} not loaded")
 
-        path: pathlib.Path = pathlib.Path(file).parent.joinpath(platform_name)
-        if os.path.exists(path.with_suffix(".py")) or os.path.exists(path):
-            return True
+        exiting_platforms: list[str] = []
+        parent_path: pathlib.Path | None = None
+        for platform_name in platform_names:
+            full_name = f"{domain}.{platform_name}"
 
-        exc = ModuleNotFoundError(
-            f"Platform {full_name} not found",
-            name=f"{self.pkg_path}.{platform_name}",
-        )
-        self._missing_platforms_cache[full_name] = exc
-        return False
+            if full_name in cache:
+                exiting_platforms.append(platform_name)
+                continue
+
+            if full_name in self._missing_platforms_cache:
+                continue
+
+            if parent_path is None:
+                parent_path = pathlib.Path(file).parent
+
+            path: pathlib.Path = parent_path.joinpath(platform_name)
+            if os.path.exists(path.with_suffix(".py")) or os.path.exists(path):
+                exiting_platforms.append(platform_name)
+                continue
+
+            self._missing_platforms_cache[full_name] = ModuleNotFoundError(
+                f"Platform {full_name} not found",
+                name=f"{self.pkg_path}.{platform_name}",
+            )
+
+        return exiting_platforms
 
     def _load_platform(self, platform_name: str) -> ModuleType:
         """Load a platform for an integration.
