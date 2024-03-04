@@ -1,0 +1,6 @@
+{
+  "services": {
+    "hue_activate_scene": "mdi:palette",
+    "activate_scene": "mdi:palette"
+  }
+}

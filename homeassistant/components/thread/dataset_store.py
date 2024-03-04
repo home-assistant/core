@@ -23,7 +23,7 @@ BORDER_AGENT_DISCOVERY_TIMEOUT = 30
 DATA_STORE = "thread.datasets"
 STORAGE_KEY = "thread.datasets"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 SAVE_DELAY = 10
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +38,7 @@ class DatasetEntry:
     """Dataset store entry."""
 
     preferred_border_agent_id: str | None
+    preferred_extended_address: str | None
     source: str
     tlv: str
 
@@ -79,6 +80,7 @@ class DatasetEntry:
             "created": self.created.isoformat(),
             "id": self.id,
             "preferred_border_agent_id": self.preferred_border_agent_id,
+            "preferred_extended_address": self.preferred_extended_address,
             "source": self.source,
             "tlv": self.tlv,
         }
@@ -104,6 +106,7 @@ class DatasetStoreStore(Store):
                         created=created,
                         id=dataset["id"],
                         preferred_border_agent_id=None,
+                        preferred_extended_address=None,
                         source=dataset["source"],
                         tlv=dataset["tlv"],
                     )
@@ -165,10 +168,14 @@ class DatasetStoreStore(Store):
                     "preferred_dataset": preferred_dataset,
                     "datasets": [dataset.to_json() for dataset in datasets.values()],
                 }
-            if old_minor_version < 3:
-                # Add border agent ID
+            # Migration to version 1.3 removed, it added the ID of the preferred border
+            # agent
+            if old_minor_version < 4:
+                # Add extended address of the preferred border agent and clear border
+                # agent ID
                 for dataset in data["datasets"]:
-                    dataset.setdefault("preferred_border_agent_id", None)
+                    dataset["preferred_border_agent_id"] = None
+                    dataset["preferred_extended_address"] = None
 
         return data
 
@@ -192,7 +199,11 @@ class DatasetStore:
 
     @callback
     def async_add(
-        self, source: str, tlv: str, preferred_border_agent_id: str | None
+        self,
+        source: str,
+        tlv: str,
+        preferred_border_agent_id: str | None,
+        preferred_extended_address: str | None,
     ) -> None:
         """Add dataset, does nothing if it already exists."""
         # Make sure the tlv is valid
@@ -206,16 +217,23 @@ class DatasetStore:
         ):
             raise HomeAssistantError("Invalid dataset")
 
+        # Don't allow setting preferred border agent ID without setting
+        # preferred extended address
+        if preferred_border_agent_id is not None and preferred_extended_address is None:
+            raise HomeAssistantError(
+                "Must set preferred extended address with preferred border agent ID"
+            )
+
         # Bail out if the dataset already exists
         entry: DatasetEntry | None
         for entry in self.datasets.values():
             if entry.dataset == dataset:
                 if (
-                    preferred_border_agent_id
-                    and entry.preferred_border_agent_id is None
+                    preferred_extended_address
+                    and entry.preferred_extended_address is None
                 ):
-                    self.async_set_preferred_border_agent_id(
-                        entry.id, preferred_border_agent_id
+                    self.async_set_preferred_border_agent(
+                        entry.id, preferred_border_agent_id, preferred_extended_address
                     )
                 return
 
@@ -262,14 +280,17 @@ class DatasetStore:
                 self.datasets[entry.id], tlv=tlv
             )
             self.async_schedule_save()
-            if preferred_border_agent_id and entry.preferred_border_agent_id is None:
-                self.async_set_preferred_border_agent_id(
-                    entry.id, preferred_border_agent_id
+            if preferred_extended_address and entry.preferred_extended_address is None:
+                self.async_set_preferred_border_agent(
+                    entry.id, preferred_border_agent_id, preferred_extended_address
                 )
             return
 
         entry = DatasetEntry(
-            preferred_border_agent_id=preferred_border_agent_id, source=source, tlv=tlv
+            preferred_border_agent_id=preferred_border_agent_id,
+            preferred_extended_address=preferred_extended_address,
+            source=source,
+            tlv=tlv,
         )
         self.datasets[entry.id] = entry
         self.async_schedule_save()
@@ -278,12 +299,12 @@ class DatasetStore:
         # no other router present. We only attempt this once.
         if (
             self._preferred_dataset is None
-            and preferred_border_agent_id
+            and preferred_extended_address
             and not self._set_preferred_dataset_task
         ):
             self._set_preferred_dataset_task = self.hass.async_create_task(
                 self._set_preferred_dataset_if_only_network(
-                    entry.id, preferred_border_agent_id
+                    entry.id, preferred_extended_address
                 )
             )
 
@@ -301,12 +322,21 @@ class DatasetStore:
         return self.datasets.get(dataset_id)
 
     @callback
-    def async_set_preferred_border_agent_id(
-        self, dataset_id: str, border_agent_id: str
+    def async_set_preferred_border_agent(
+        self, dataset_id: str, border_agent_id: str | None, extended_address: str
     ) -> None:
-        """Set preferred border agent id of a dataset."""
+        """Set preferred border agent id and extended address of a dataset."""
+        # Don't allow setting preferred border agent ID without setting
+        # preferred extended address
+        if border_agent_id is not None and extended_address is None:
+            raise HomeAssistantError(
+                "Must set preferred extended address with preferred border agent ID"
+            )
+
         self.datasets[dataset_id] = dataclasses.replace(
-            self.datasets[dataset_id], preferred_border_agent_id=border_agent_id
+            self.datasets[dataset_id],
+            preferred_border_agent_id=border_agent_id,
+            preferred_extended_address=extended_address,
         )
         self.async_schedule_save()
 
@@ -326,12 +356,12 @@ class DatasetStore:
         self.async_schedule_save()
 
     async def _set_preferred_dataset_if_only_network(
-        self, dataset_id: str, border_agent_id: str
+        self, dataset_id: str, extended_address: str | None
     ) -> None:
         """Set the preferred dataset, unless there are other routers present."""
         _LOGGER.debug(
             "_set_preferred_dataset_if_only_network called for router %s",
-            border_agent_id,
+            extended_address,
         )
 
         own_router_evt = Event()
@@ -342,8 +372,8 @@ class DatasetStore:
             key: str, data: discovery.ThreadRouterDiscoveryData
         ) -> None:
             """Handle router discovered."""
-            _LOGGER.debug("discovered router with id %s", data.border_agent_id)
-            if data.border_agent_id == border_agent_id:
+            _LOGGER.debug("discovered router with ext addr %s", data.extended_address)
+            if data.extended_address == extended_address:
                 own_router_evt.set()
                 return
 
@@ -395,6 +425,7 @@ class DatasetStore:
                     created=created,
                     id=dataset["id"],
                     preferred_border_agent_id=dataset["preferred_border_agent_id"],
+                    preferred_extended_address=dataset["preferred_extended_address"],
                     source=dataset["source"],
                     tlv=dataset["tlv"],
                 )
@@ -431,10 +462,11 @@ async def async_add_dataset(
     tlv: str,
     *,
     preferred_border_agent_id: str | None = None,
+    preferred_extended_address: str | None = None,
 ) -> None:
     """Add a dataset."""
     store = await async_get_store(hass)
-    store.async_add(source, tlv, preferred_border_agent_id)
+    store.async_add(source, tlv, preferred_border_agent_id, preferred_extended_address)
 
 
 async def async_get_dataset(hass: HomeAssistant, dataset_id: str) -> str | None:

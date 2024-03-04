@@ -3,10 +3,14 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectSelector,
@@ -86,14 +90,14 @@ def default_options(hass: HomeAssistant) -> dict[str, str | bool]:
     return defaults
 
 
-class WazeOptionsFlow(config_entries.OptionsFlow):
+class WazeOptionsFlow(OptionsFlow):
     """Handle an options flow for Waze Travel Time."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize waze options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             return self.async_create_entry(
@@ -109,7 +113,7 @@ class WazeOptionsFlow(config_entries.OptionsFlow):
         )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WazeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Waze Travel Time."""
 
     VERSION = 1
@@ -117,12 +121,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> WazeOptionsFlow:
         """Get the options flow for this handler."""
         return WazeOptionsFlow(config_entry)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         user_input = user_input or {}

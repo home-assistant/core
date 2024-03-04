@@ -5,7 +5,6 @@ import asyncio
 from collections.abc import Callable, Iterable
 from datetime import timedelta
 from functools import partial
-from itertools import chain
 import logging
 from types import ModuleType
 from typing import Any, Generic
@@ -148,6 +147,7 @@ class EntityComponent(Generic[_EntityT]):
                 self.hass.async_create_task(
                     self.async_setup_platform(p_type, p_config),
                     f"EntityComponent setup platform {p_type} {self.domain}",
+                    eager_start=True,
                 )
 
         # Generic discovery listener for loading platform dynamically
@@ -382,7 +382,7 @@ class EntityComponent(Generic[_EntityT]):
         if scan_interval is None:
             scan_interval = self.scan_interval
 
-        return EntityPlatform(
+        entity_platform = EntityPlatform(
             hass=self.hass,
             logger=self.logger,
             domain=self.domain,
@@ -391,9 +391,11 @@ class EntityComponent(Generic[_EntityT]):
             scan_interval=scan_interval,
             entity_namespace=entity_namespace,
         )
+        entity_platform.async_prepare()
+        return entity_platform
 
-    async def _async_shutdown(self, event: Event) -> None:
+    @callback
+    def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
-        await asyncio.gather(
-            *(platform.async_shutdown() for platform in chain(self._platforms.values()))
-        )
+        for platform in self._platforms.values():
+            platform.async_shutdown()

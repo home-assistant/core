@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import datetime
 import logging
+from typing import TYPE_CHECKING
 
 from pyenphase import (
     EnvoyEncharge,
@@ -14,6 +15,14 @@ from pyenphase import (
     EnvoyInverter,
     EnvoySystemConsumption,
     EnvoySystemProduction,
+)
+from pyenphase.const import PHASENAMES
+from pyenphase.models.meters import (
+    CtMeterStatus,
+    CtState,
+    CtStatusFlags,
+    CtType,
+    EnvoyMeterData,
 )
 
 from homeassistant.components.sensor import (
@@ -26,7 +35,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfApparentPower,
+    UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
 )
@@ -85,6 +96,7 @@ class EnvoyProductionRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoySystemProduction], int]
+    on_phase: str | None
 
 
 @dataclass(frozen=True)
@@ -104,6 +116,7 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=3,
         value_fn=lambda production: production.watts_now,
+        on_phase=None,
     ),
     EnvoyProductionSensorEntityDescription(
         key="daily_production",
@@ -114,6 +127,7 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=lambda production: production.watt_hours_today,
+        on_phase=None,
     ),
     EnvoyProductionSensorEntityDescription(
         key="seven_days_production",
@@ -123,6 +137,7 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=1,
         value_fn=lambda production: production.watt_hours_last_7_days,
+        on_phase=None,
     ),
     EnvoyProductionSensorEntityDescription(
         key="lifetime_production",
@@ -133,8 +148,24 @@ PRODUCTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         suggested_display_precision=3,
         value_fn=lambda production: production.watt_hours_lifetime,
+        on_phase=None,
     ),
 )
+
+
+PRODUCTION_PHASE_SENSORS = {
+    (on_phase := PHASENAMES[phase]): [
+        replace(
+            sensor,
+            key=f"{sensor.key}_l{phase + 1}",
+            translation_key=f"{sensor.translation_key}_phase",
+            on_phase=on_phase,
+            translation_placeholders={"phase_name": f"l{phase + 1}"},
+        )
+        for sensor in list(PRODUCTION_SENSORS)
+    ]
+    for phase in range(0, 3)
+}
 
 
 @dataclass(frozen=True)
@@ -142,6 +173,7 @@ class EnvoyConsumptionRequiredKeysMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[EnvoySystemConsumption], int]
+    on_phase: str | None
 
 
 @dataclass(frozen=True)
@@ -161,6 +193,7 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=3,
         value_fn=lambda consumption: consumption.watts_now,
+        on_phase=None,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="daily_consumption",
@@ -171,6 +204,7 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=2,
         value_fn=lambda consumption: consumption.watt_hours_today,
+        on_phase=None,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="seven_days_consumption",
@@ -180,6 +214,7 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         suggested_display_precision=1,
         value_fn=lambda consumption: consumption.watt_hours_last_7_days,
+        on_phase=None,
     ),
     EnvoyConsumptionSensorEntityDescription(
         key="lifetime_consumption",
@@ -190,8 +225,169 @@ CONSUMPTION_SENSORS = (
         suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
         suggested_display_precision=3,
         value_fn=lambda consumption: consumption.watt_hours_lifetime,
+        on_phase=None,
     ),
 )
+
+
+CONSUMPTION_PHASE_SENSORS = {
+    (on_phase := PHASENAMES[phase]): [
+        replace(
+            sensor,
+            key=f"{sensor.key}_l{phase + 1}",
+            translation_key=f"{sensor.translation_key}_phase",
+            on_phase=on_phase,
+            translation_placeholders={"phase_name": f"l{phase + 1}"},
+        )
+        for sensor in list(CONSUMPTION_SENSORS)
+    ]
+    for phase in range(0, 3)
+}
+
+
+@dataclass(frozen=True)
+class EnvoyCTRequiredKeysMixin:
+    """Mixin for required keys."""
+
+    value_fn: Callable[
+        [EnvoyMeterData],
+        int | float | str | CtType | CtMeterStatus | CtStatusFlags | CtState | None,
+    ]
+    on_phase: str | None
+
+
+@dataclass(frozen=True)
+class EnvoyCTSensorEntityDescription(SensorEntityDescription, EnvoyCTRequiredKeysMixin):
+    """Describes an Envoy CT sensor entity."""
+
+
+CT_NET_CONSUMPTION_SENSORS = (
+    EnvoyCTSensorEntityDescription(
+        key="lifetime_net_consumption",
+        translation_key="lifetime_net_consumption",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        suggested_display_precision=3,
+        value_fn=lambda ct: ct.energy_delivered,
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="lifetime_net_production",
+        translation_key="lifetime_net_production",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        suggested_display_precision=3,
+        value_fn=lambda ct: ct.energy_received,
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="net_consumption",
+        translation_key="net_consumption",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
+        suggested_display_precision=3,
+        value_fn=lambda ct: ct.active_power,
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="frequency",
+        translation_key="net_ct_frequency",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
+        suggested_unit_of_measurement=UnitOfFrequency.HERTZ,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ct: ct.frequency,
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="voltage",
+        translation_key="net_ct_voltage",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ct: ct.voltage,
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="net_consumption_ct_metering_status",
+        translation_key="net_ct_metering_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(CtMeterStatus),
+        entity_registry_enabled_default=False,
+        value_fn=lambda ct: ct.metering_status,
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="net_consumption_ct_status_flags",
+        translation_key="net_ct_status_flags",
+        state_class=None,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
+        on_phase=None,
+    ),
+)
+
+
+CT_NET_CONSUMPTION_PHASE_SENSORS = {
+    (on_phase := PHASENAMES[phase]): [
+        replace(
+            sensor,
+            key=f"{sensor.key}_l{phase + 1}",
+            translation_key=f"{sensor.translation_key}_phase",
+            entity_registry_enabled_default=False,
+            on_phase=on_phase,
+            translation_placeholders={"phase_name": f"l{phase + 1}"},
+        )
+        for sensor in list(CT_NET_CONSUMPTION_SENSORS)
+    ]
+    for phase in range(0, 3)
+}
+
+CT_PRODUCTION_SENSORS = (
+    EnvoyCTSensorEntityDescription(
+        key="production_ct_metering_status",
+        translation_key="production_ct_metering_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(CtMeterStatus),
+        entity_registry_enabled_default=False,
+        value_fn=lambda ct: ct.metering_status,
+        on_phase=None,
+    ),
+    EnvoyCTSensorEntityDescription(
+        key="production_ct_status_flags",
+        translation_key="production_ct_status_flags",
+        state_class=None,
+        entity_registry_enabled_default=False,
+        value_fn=lambda ct: 0 if ct.status_flags is None else len(ct.status_flags),
+        on_phase=None,
+    ),
+)
+
+CT_PRODUCTION_PHASE_SENSORS = {
+    (on_phase := PHASENAMES[phase]): [
+        replace(
+            sensor,
+            key=f"{sensor.key}_l{phase + 1}",
+            translation_key=f"{sensor.translation_key}_phase",
+            entity_registry_enabled_default=False,
+            on_phase=on_phase,
+            translation_placeholders={"phase_name": f"l{phase + 1}"},
+        )
+        for sensor in list(CT_PRODUCTION_SENSORS)
+    ]
+    for phase in range(0, 3)
+}
 
 
 @dataclass(frozen=True)
@@ -361,6 +557,53 @@ async def async_setup_entry(
             EnvoyConsumptionEntity(coordinator, description)
             for description in CONSUMPTION_SENSORS
         )
+    # For each production phase reported add production entities
+    if envoy_data.system_production_phases:
+        entities.extend(
+            EnvoyProductionPhaseEntity(coordinator, description)
+            for use_phase, phase in envoy_data.system_production_phases.items()
+            for description in PRODUCTION_PHASE_SENSORS[use_phase]
+            if phase is not None
+        )
+    # For each consumption phase reported add consumption entities
+    if envoy_data.system_consumption_phases:
+        entities.extend(
+            EnvoyConsumptionPhaseEntity(coordinator, description)
+            for use_phase, phase in envoy_data.system_consumption_phases.items()
+            for description in CONSUMPTION_PHASE_SENSORS[use_phase]
+            if phase is not None
+        )
+    # Add net consumption CT entities
+    if ctmeter := envoy_data.ctmeter_consumption:
+        entities.extend(
+            EnvoyConsumptionCTEntity(coordinator, description)
+            for description in CT_NET_CONSUMPTION_SENSORS
+            if ctmeter.measurement_type == CtType.NET_CONSUMPTION
+        )
+    # For each net consumption ct phase reported add net consumption entities
+    if phase_data := envoy_data.ctmeter_consumption_phases:
+        entities.extend(
+            EnvoyConsumptionCTPhaseEntity(coordinator, description)
+            for use_phase, phase in phase_data.items()
+            for description in CT_NET_CONSUMPTION_PHASE_SENSORS[use_phase]
+            if phase.measurement_type == CtType.NET_CONSUMPTION
+        )
+    # Add production CT entities
+    if ctmeter := envoy_data.ctmeter_production:
+        entities.extend(
+            EnvoyProductionCTEntity(coordinator, description)
+            for description in CT_PRODUCTION_SENSORS
+            if ctmeter.measurement_type == CtType.PRODUCTION
+        )
+    # For each production ct phase reported add production ct entities
+    if phase_data := envoy_data.ctmeter_production_phases:
+        entities.extend(
+            EnvoyProductionCTPhaseEntity(coordinator, description)
+            for use_phase, phase in phase_data.items()
+            for description in CT_PRODUCTION_PHASE_SENSORS[use_phase]
+            if phase.measurement_type == CtType.PRODUCTION
+        )
+
     if envoy_data.inverters:
         entities.extend(
             EnvoyInverterEntity(coordinator, description, inverter)
@@ -414,9 +657,11 @@ class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.envoy_serial_num)},
             manufacturer="Enphase",
-            model=coordinator.envoy.part_number or "Envoy",
+            model=coordinator.envoy.envoy_model,
             name=coordinator.name,
             sw_version=str(coordinator.envoy.firmware),
+            hw_version=coordinator.envoy.part_number,
+            serial_number=self.envoy_serial_num,
         )
 
 
@@ -444,6 +689,116 @@ class EnvoyConsumptionEntity(EnvoySystemSensorEntity):
         system_consumption = self.data.system_consumption
         assert system_consumption is not None
         return self.entity_description.value_fn(system_consumption)
+
+
+class EnvoyProductionPhaseEntity(EnvoySystemSensorEntity):
+    """Envoy phase production entity."""
+
+    entity_description: EnvoyProductionSensorEntityDescription
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the sensor."""
+        if TYPE_CHECKING:
+            assert self.entity_description.on_phase
+            assert self.data.system_production_phases
+
+        if (
+            system_production := self.data.system_production_phases[
+                self.entity_description.on_phase
+            ]
+        ) is None:
+            return None
+        return self.entity_description.value_fn(system_production)
+
+
+class EnvoyConsumptionPhaseEntity(EnvoySystemSensorEntity):
+    """Envoy phase consumption entity."""
+
+    entity_description: EnvoyConsumptionSensorEntityDescription
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the state of the sensor."""
+        if TYPE_CHECKING:
+            assert self.entity_description.on_phase
+            assert self.data.system_consumption_phases
+
+        if (
+            system_consumption := self.data.system_consumption_phases[
+                self.entity_description.on_phase
+            ]
+        ) is None:
+            return None
+        return self.entity_description.value_fn(system_consumption)
+
+
+class EnvoyConsumptionCTEntity(EnvoySystemSensorEntity):
+    """Envoy net consumption CT entity."""
+
+    entity_description: EnvoyCTSensorEntityDescription
+
+    @property
+    def native_value(
+        self,
+    ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
+        """Return the state of the CT sensor."""
+        if (ctmeter := self.data.ctmeter_consumption) is None:
+            return None
+        return self.entity_description.value_fn(ctmeter)
+
+
+class EnvoyConsumptionCTPhaseEntity(EnvoySystemSensorEntity):
+    """Envoy net consumption CT phase entity."""
+
+    entity_description: EnvoyCTSensorEntityDescription
+
+    @property
+    def native_value(
+        self,
+    ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
+        """Return the state of the CT phase sensor."""
+        if TYPE_CHECKING:
+            assert self.entity_description.on_phase
+        if (ctmeter := self.data.ctmeter_consumption_phases) is None:
+            return None
+        return self.entity_description.value_fn(
+            ctmeter[self.entity_description.on_phase]
+        )
+
+
+class EnvoyProductionCTEntity(EnvoySystemSensorEntity):
+    """Envoy net consumption CT entity."""
+
+    entity_description: EnvoyCTSensorEntityDescription
+
+    @property
+    def native_value(
+        self,
+    ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
+        """Return the state of the CT sensor."""
+        if (ctmeter := self.data.ctmeter_production) is None:
+            return None
+        return self.entity_description.value_fn(ctmeter)
+
+
+class EnvoyProductionCTPhaseEntity(EnvoySystemSensorEntity):
+    """Envoy net consumption CT phase entity."""
+
+    entity_description: EnvoyCTSensorEntityDescription
+
+    @property
+    def native_value(
+        self,
+    ) -> int | float | str | CtType | CtMeterStatus | CtStatusFlags | None:
+        """Return the state of the CT phase sensor."""
+        if TYPE_CHECKING:
+            assert self.entity_description.on_phase
+        if (ctmeter := self.data.ctmeter_production_phases) is None:
+            return None
+        return self.entity_description.value_fn(
+            ctmeter[self.entity_description.on_phase]
+        )
 
 
 class EnvoyInverterEntity(EnvoySensorBaseEntity):

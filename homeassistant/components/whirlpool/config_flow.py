@@ -1,7 +1,6 @@
 """Config flow for Whirlpool Appliances integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -12,9 +11,10 @@ from whirlpool.appliancesmanager import AppliancesManager
 from whirlpool.auth import Auth
 from whirlpool.backendselector import BackendSelector
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_REGIONS_MAP, DOMAIN
@@ -34,9 +34,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
 
-async def validate_input(
-    hass: core.HomeAssistant, data: dict[str, str]
-) -> dict[str, str]:
+async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -48,7 +46,7 @@ async def validate_input(
     auth = Auth(backend_selector, data[CONF_USERNAME], data[CONF_PASSWORD], session)
     try:
         await auth.do_auth()
-    except (asyncio.TimeoutError, ClientError) as exc:
+    except (TimeoutError, ClientError) as exc:
         raise CannotConnect from exc
 
     if not auth.is_access_token_valid():
@@ -62,13 +60,15 @@ async def validate_input(
     return {"title": data[CONF_USERNAME]}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WhirlpoolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Whirlpool Sixth Sense."""
 
     VERSION = 1
-    entry: config_entries.ConfigEntry | None
+    entry: ConfigEntry | None
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle re-authentication with Whirlpool Sixth Sense."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -76,7 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm re-authentication with Whirlpool Sixth Sense."""
         errors: dict[str, str] = {}
 
@@ -92,7 +92,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await validate_input(self.hass, data)
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except (CannotConnect, asyncio.TimeoutError):
+            except (CannotConnect, TimeoutError):
                 errors["base"] = "cannot_connect"
             else:
                 self.hass.config_entries.async_update_entry(
@@ -111,7 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -143,13 +143,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class NoAppliances(exceptions.HomeAssistantError):
+class NoAppliances(HomeAssistantError):
     """Error to indicate no supported appliances in the user account."""

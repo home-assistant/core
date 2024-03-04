@@ -113,7 +113,8 @@ async def async_setup_entry(
     """Discover cameras on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         if not isinstance(device, UFPCamera):
             return  # type: ignore[unreachable]
 

@@ -34,7 +34,6 @@ class SensiboButtonEntityDescription(
 DEVICE_BUTTON_TYPES = SensiboButtonEntityDescription(
     key="reset_filter",
     translation_key="reset_filter",
-    icon="mdi:air-filter",
     entity_category=EntityCategory.CONFIG,
     data_key="filter_clean",
 )

@@ -21,7 +21,10 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     HVACAction,
 )
-from homeassistant.components.cover import ATTR_POSITION, ATTR_TILT_POSITION
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
+)
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES, ATTR_HUMIDITY
 from homeassistant.components.light import ATTR_BRIGHTNESS
@@ -437,7 +440,7 @@ class PrometheusMetrics:
                 float(cover_state == state.state)
             )
 
-        position = state.attributes.get(ATTR_POSITION)
+        position = state.attributes.get(ATTR_CURRENT_POSITION)
         if position is not None:
             position_metric = self._metric(
                 "cover_position",
@@ -446,7 +449,7 @@ class PrometheusMetrics:
             )
             position_metric.labels(**self._labels(state)).set(float(position))
 
-        tilt_position = state.attributes.get(ATTR_TILT_POSITION)
+        tilt_position = state.attributes.get(ATTR_CURRENT_TILT_POSITION)
         if tilt_position is not None:
             tilt_position_metric = self._metric(
                 "cover_tilt_position",

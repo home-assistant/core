@@ -1,13 +1,13 @@
 """Asyncio utilities."""
 from __future__ import annotations
 
-from asyncio import Future, Semaphore, gather, get_running_loop
-from asyncio.events import AbstractEventLoop
-from collections.abc import Awaitable, Callable
+from asyncio import AbstractEventLoop, Future, Semaphore, Task, gather, get_running_loop
+from collections.abc import Awaitable, Callable, Coroutine
 import concurrent.futures
 from contextlib import suppress
 import functools
 import logging
+import sys
 import threading
 from traceback import extract_stack
 from typing import Any, ParamSpec, TypeVar, TypeVarTuple
@@ -22,6 +22,36 @@ _T = TypeVar("_T")
 _R = TypeVar("_R")
 _P = ParamSpec("_P")
 _Ts = TypeVarTuple("_Ts")
+
+if sys.version_info >= (3, 12, 0):
+
+    def create_eager_task(
+        coro: Coroutine[Any, Any, _T],
+        *,
+        name: str | None = None,
+        loop: AbstractEventLoop | None = None,
+    ) -> Task[_T]:
+        """Create a task from a coroutine and schedule it to run immediately."""
+        return Task(
+            coro,
+            loop=loop or get_running_loop(),
+            name=name,
+            eager_start=True,  # type: ignore[call-arg]
+        )
+else:
+
+    def create_eager_task(
+        coro: Coroutine[Any, Any, _T],
+        *,
+        name: str | None = None,
+        loop: AbstractEventLoop | None = None,
+    ) -> Task[_T]:
+        """Create a task from a coroutine and schedule it to run immediately."""
+        return Task(
+            coro,
+            loop=loop or get_running_loop(),
+            name=name,
+        )
 
 
 def cancelling(task: Future[Any]) -> bool:
@@ -186,7 +216,8 @@ async def gather_with_limited_concurrency(
             return await task
 
     return await gather(
-        *(sem_task(task) for task in tasks), return_exceptions=return_exceptions
+        *(create_eager_task(sem_task(task)) for task in tasks),
+        return_exceptions=return_exceptions,
     )
 
 

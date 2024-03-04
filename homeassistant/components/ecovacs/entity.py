@@ -16,25 +16,13 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import DOMAIN
 
-_EntityDescriptionT = TypeVar("_EntityDescriptionT", bound=EntityDescription)
-CapabilityT = TypeVar("CapabilityT")
+CapabilityEntity = TypeVar("CapabilityEntity")
+CapabilityDevice = TypeVar("CapabilityDevice", bound=Capabilities)
 EventT = TypeVar("EventT", bound=Event)
 
 
-@dataclass(kw_only=True, frozen=True)
-class EcovacsEntityDescription(
-    EntityDescription,
-    Generic[CapabilityT],
-):
-    """Ecovacs entity description."""
-
-    capability_fn: Callable[[Capabilities], CapabilityT | None]
-
-
-class EcovacsEntity(Entity, Generic[CapabilityT, _EntityDescriptionT]):
+class EcovacsEntity(Entity, Generic[CapabilityDevice, CapabilityEntity]):
     """Ecovacs entity."""
-
-    entity_description: _EntityDescriptionT
 
     _attr_should_poll = False
     _attr_has_entity_name = True
@@ -42,13 +30,15 @@ class EcovacsEntity(Entity, Generic[CapabilityT, _EntityDescriptionT]):
 
     def __init__(
         self,
-        device: Device,
-        capability: CapabilityT,
+        device: Device[CapabilityDevice],
+        capability: CapabilityEntity,
         **kwargs: Any,
     ) -> None:
         """Initialize entity."""
         super().__init__(**kwargs)
-        self._attr_unique_id = f"{device.device_info.did}_{self.entity_description.key}"
+        self._attr_unique_id = (
+            f"{device.device_info['did']}_{self.entity_description.key}"
+        )
 
         self._device = device
         self._capability = capability
@@ -59,16 +49,16 @@ class EcovacsEntity(Entity, Generic[CapabilityT, _EntityDescriptionT]):
         """Return device specific attributes."""
         device_info = self._device.device_info
         info = DeviceInfo(
-            identifiers={(DOMAIN, device_info.did)},
+            identifiers={(DOMAIN, device_info["did"])},
             manufacturer="Ecovacs",
             sw_version=self._device.fw_version,
-            serial_number=device_info.name,
+            serial_number=device_info["name"],
         )
 
-        if nick := device_info.api_device_info.get("nick"):
+        if nick := device_info.get("nick"):
             info["name"] = nick
 
-        if model := device_info.api_device_info.get("deviceName"):
+        if model := device_info.get("deviceName"):
             info["model"] = model
 
         if mac := self._device.mac:
@@ -106,16 +96,27 @@ class EcovacsEntity(Entity, Generic[CapabilityT, _EntityDescriptionT]):
             self._device.events.request_refresh(event_type)
 
 
-class EcovacsDescriptionEntity(EcovacsEntity[CapabilityT, _EntityDescriptionT]):
+class EcovacsDescriptionEntity(EcovacsEntity[CapabilityDevice, CapabilityEntity]):
     """Ecovacs entity."""
 
     def __init__(
         self,
-        device: Device,
-        capability: CapabilityT,
-        entity_description: _EntityDescriptionT,
+        device: Device[CapabilityDevice],
+        capability: CapabilityEntity,
+        entity_description: EntityDescription,
         **kwargs: Any,
     ) -> None:
         """Initialize entity."""
         self.entity_description = entity_description
         super().__init__(device, capability, **kwargs)
+
+
+@dataclass(kw_only=True, frozen=True)
+class EcovacsCapabilityEntityDescription(
+    EntityDescription,
+    Generic[CapabilityDevice, CapabilityEntity],
+):
+    """Ecovacs entity description."""
+
+    device_capabilities: type[CapabilityDevice]
+    capability_fn: Callable[[CapabilityDevice], CapabilityEntity | None]

@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_BASE,
     CONF_HOST,
@@ -25,7 +25,6 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -139,7 +138,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         self._config_data: dict[str, Any] = {}
 
     @callback
-    def _show_setup_form(self, error: str | None = None) -> FlowResult:
+    def _show_setup_form(self, error: str | None = None) -> ConfigFlowResult:
         """Show the setup form to the user."""
 
         user_input = self._config_data
@@ -216,7 +215,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         if error is not None:
             return error, None
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Successfully connected to the AsusWrt router at %s using protocol %s",
             host,
             protocol,
@@ -228,7 +227,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
 
         # if there's one entry without unique ID, we abort config flow
@@ -276,7 +275,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_legacy(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow for legacy settings."""
         if user_input is None:
             return self.async_show_form(step_id="legacy", data_schema=LEGACY_SCHEMA)
@@ -284,7 +283,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         self._config_data.update(user_input)
         return await self._async_save_entry()
 
-    async def _async_save_entry(self) -> FlowResult:
+    async def _async_save_entry(self) -> ConfigFlowResult:
         """Save entry data if unique id is valid."""
         return self.async_create_entry(
             title=self._config_data[CONF_HOST],

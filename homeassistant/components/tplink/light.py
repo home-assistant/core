@@ -17,6 +17,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -162,6 +163,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
 
     _attr_supported_features = LightEntityFeature.TRANSITION
     _attr_name = None
+    _fixed_color_mode: ColorMode | None = None
 
     device: SmartBulb
 
@@ -181,7 +183,7 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             self._attr_unique_id = legacy_device_id(device)
         else:
             self._attr_unique_id = device.mac.replace(":", "").upper()
-        modes: set[ColorMode] = set()
+        modes: set[ColorMode] = {ColorMode.ONOFF}
         if device.is_variable_color_temp:
             modes.add(ColorMode.COLOR_TEMP)
             temp_range = device.valid_temperature_range
@@ -191,9 +193,10 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
             modes.add(ColorMode.HS)
         if device.is_dimmable:
             modes.add(ColorMode.BRIGHTNESS)
-        if not modes:
-            modes.add(ColorMode.ONOFF)
-        self._attr_supported_color_modes = modes
+        self._attr_supported_color_modes = filter_supported_color_modes(modes)
+        if len(self._attr_supported_color_modes) == 1:
+            # If the light supports only a single color mode, set it now
+            self._fixed_color_mode = next(iter(self._attr_supported_color_modes))
         self._async_update_attrs()
 
     @callback
@@ -274,14 +277,14 @@ class TPLinkSmartBulb(CoordinatedTPLinkEntity, LightEntity):
 
     def _determine_color_mode(self) -> ColorMode:
         """Return the active color mode."""
-        if self.device.is_color:
-            if self.device.is_variable_color_temp and self.device.color_temp:
-                return ColorMode.COLOR_TEMP
-            return ColorMode.HS
-        if self.device.is_variable_color_temp:
-            return ColorMode.COLOR_TEMP
+        if self._fixed_color_mode:
+            # The light supports only a single color mode, return it
+            return self._fixed_color_mode
 
-        return ColorMode.BRIGHTNESS
+        # The light supports both color temp and color, determine which on is active
+        if self.device.is_variable_color_temp and self.device.color_temp:
+            return ColorMode.COLOR_TEMP
+        return ColorMode.HS
 
     @callback
     def _async_update_attrs(self) -> None:

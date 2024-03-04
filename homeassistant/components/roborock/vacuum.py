@@ -92,14 +92,16 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
     ) -> None:
         """Initialize a vacuum."""
         StateVacuumEntity.__init__(self)
-        RoborockCoordinatedEntity.__init__(self, unique_id, coordinator)
+        RoborockCoordinatedEntity.__init__(
+            self,
+            unique_id,
+            coordinator,
+            listener_request=[
+                RoborockDataProtocol.FAN_POWER,
+                RoborockDataProtocol.STATE,
+            ],
+        )
         self._attr_fan_speed_list = self._device_status.fan_power_options
-        self.api.add_listener(
-            RoborockDataProtocol.FAN_POWER, self._update_from_listener, self.api.cache
-        )
-        self.api.add_listener(
-            RoborockDataProtocol.STATE, self._update_from_listener, self.api.cache
-        )
 
     @property
     def state(self) -> str | None:
@@ -119,7 +121,12 @@ class RoborockVacuum(RoborockCoordinatedEntity, StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start the vacuum."""
-        await self.send(RoborockCommand.APP_START)
+        if self._device_status.in_cleaning == 2:
+            await self.send(RoborockCommand.RESUME_ZONED_CLEAN)
+        elif self._device_status.in_cleaning == 3:
+            await self.send(RoborockCommand.RESUME_SEGMENT_CLEAN)
+        else:
+            await self.send(RoborockCommand.APP_START)
 
     async def async_pause(self) -> None:
         """Pause the vacuum."""

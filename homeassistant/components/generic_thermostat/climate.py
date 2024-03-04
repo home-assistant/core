@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_COMFORT,
+    PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
     PRESET_SLEEP,
@@ -86,6 +87,7 @@ CONF_PRESETS = {
     for p in (
         PRESET_AWAY,
         PRESET_COMFORT,
+        PRESET_ECO,
         PRESET_HOME,
         PRESET_SLEEP,
         PRESET_ACTIVITY,
@@ -178,6 +180,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     """Representation of a Generic Thermostat device."""
 
     _attr_should_poll = False
+    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -225,7 +228,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._target_temp = target_temp
         self._attr_temperature_unit = unit
         self._attr_unique_id = unique_id
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
         if len(presets):
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
             self._attr_preset_modes = [PRESET_NONE] + list(presets.keys())

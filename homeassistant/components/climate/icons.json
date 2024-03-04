@@ -2,15 +2,6 @@
   "entity_component": {
     "_": {
       "default": "mdi:thermostat",
-      "state": {
-        "auto": "mdi:thermostat-auto",
-        "cool": "mdi:snowflake",
-        "dry": "mdi:water-percent",
-        "fan_mode": "mdi:fan",
-        "heat": "mdi:fire",
-        "heat_cool": "mdi:sun-snowflake-variant",
-        "off": "mdi:power"
-      },
       "state_attributes": {
         "fan_mode": {
           "default": "mdi:circle-medium",
@@ -64,7 +55,7 @@
   },
   "services": {
     "set_fan_mode": "mdi:fan",
-    "set_humidity": "mdi:humidity-percent",
+    "set_humidity": "mdi:water-percent",
     "set_swing_mode": "mdi:arrow-oscillating",
     "set_temperature": "mdi:thermometer"
   }

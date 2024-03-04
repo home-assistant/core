@@ -25,6 +25,11 @@ def test_write_utf8_file_atomic_private(tmpdir: py.path.local, func) -> None:
         assert fh.read() == '{"some":"data"}'
     assert os.stat(test_file).st_mode & 0o777 == 0o600
 
+    func(test_file, b'{"some":"data"}', True, mode="wb")
+    with open(test_file) as fh:
+        assert fh.read() == '{"some":"data"}'
+    assert os.stat(test_file).st_mode & 0o777 == 0o600
+
 
 def test_write_utf8_file_fails_at_creation(tmpdir: py.path.local) -> None:
     """Test that failed creation of the temp file does not create an empty file."""
