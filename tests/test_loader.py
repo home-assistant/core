@@ -1418,22 +1418,23 @@ async def test_platforms_exists(
     ):
         assert integration.platforms_exists(("non_existing",)) is None
 
-    component = integration.get_component()
+    # component is loaded, should now return False
+    with patch("homeassistant.loader.os.listdir", wraps=os.listdir) as mock_exists:
+        component = integration.get_component()
     assert component.DOMAIN == "test_integration_platform"
 
+    # We should check if the file exists
+    assert mock_exists.call_count == 1
+
     # component is loaded, should now return False
-    with patch(
-        "homeassistant.loader.os.path.exists", wraps=os.path.exists
-    ) as mock_exists:
+    with patch("homeassistant.loader.os.listdir", wraps=os.listdir) as mock_exists:
         assert integration.platforms_exists(("non_existing",)) == []
 
-    # We should check if the file exists
-    assert mock_exists.call_count == 2
+    # We should remember which files exist
+    assert mock_exists.call_count == 0
 
     # component is loaded, should now return False
-    with patch(
-        "homeassistant.loader.os.path.exists", wraps=os.path.exists
-    ) as mock_exists:
+    with patch("homeassistant.loader.os.listdir", wraps=os.listdir) as mock_exists:
         assert integration.platforms_exists(("non_existing",)) == []
 
     # We should remember the file does not exist

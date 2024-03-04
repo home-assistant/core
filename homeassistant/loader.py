@@ -1142,6 +1142,18 @@ class Integration:
         """
         return bool(f"{self.domain}.{platform_name}" in self._missing_platforms_cache)
 
+    @cached_property
+    def _top_level_files(self) -> set[str]:
+        """Return a list of top level files in the integration directory.
+
+        This does blocking I/O and should not be called from the event loop.
+        """
+        if not (component := self._cache.get(self.domain)) or not (
+            file := getattr(component, "__file__", None)
+        ):
+            raise RuntimeError(f"Integration {self.domain} not loaded")
+        return set(os.listdir(pathlib.Path(file).parent))
+
     def platforms_exists(self, platform_names: Iterable[str]) -> list[str]:
         """Check if a platforms exists for an integration.
 
@@ -1149,33 +1161,15 @@ class Integration:
 
         The component must be loaded before calling this method.
         """
-        cache = self._cache
+        files = self._top_level_files
         domain = self.domain
-        if not (component := cache.get(domain)) or not (
-            file := getattr(component, "__file__", None)
-        ):
-            raise RuntimeError(f"Integration {domain} not loaded")
-
         exiting_platforms: list[str] = []
-        parent_path: pathlib.Path | None = None
         for platform_name in platform_names:
+            if f"{platform_name}.py" in files or platform_name in files:
+                exiting_platforms.append(platform_name)
+                continue
+
             full_name = f"{domain}.{platform_name}"
-
-            if full_name in cache:
-                exiting_platforms.append(platform_name)
-                continue
-
-            if full_name in self._missing_platforms_cache:
-                continue
-
-            if parent_path is None:
-                parent_path = pathlib.Path(file).parent
-
-            path: pathlib.Path = parent_path.joinpath(platform_name)
-            if os.path.exists(path.with_suffix(".py")) or os.path.exists(path):
-                exiting_platforms.append(platform_name)
-                continue
-
             self._missing_platforms_cache[full_name] = ModuleNotFoundError(
                 f"Platform {full_name} not found",
                 name=f"{self.pkg_path}.{platform_name}",
