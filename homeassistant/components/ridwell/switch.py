@@ -19,7 +19,6 @@ from .entity import RidwellEntity
 SWITCH_DESCRIPTION = SwitchEntityDescription(
     key="opt_in",
     translation_key="opt_in",
-    icon="mdi:calendar-check",
 )
 
 

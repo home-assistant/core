@@ -1026,8 +1026,8 @@ async def test_bootstrap_dependencies(
     )
 
 
-async def test_frontend_deps_pre_import_no_requirements(hass: HomeAssistant) -> None:
-    """Test frontend dependencies are pre-imported and do not have any requirements."""
+async def test_pre_import_no_requirements(hass: HomeAssistant) -> None:
+    """Test pre-imported and do not have any requirements."""
     pre_imports = [
         name.removesuffix("_pre_import")
         for name in dir(bootstrap)
