@@ -3,9 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from threading import Thread
 
-import nclib
 from nikohomecontrol import NikoHomeControlConnection
 import voluptuous as vol
 
@@ -38,6 +36,7 @@ class Hub:
         self._hass = hass
         self._name = name
         self._id = name
+        self._listen_task = None
         try:
             self.connection = NikoHomeControlConnection(self._host, self._port)
             actions = []
@@ -105,34 +104,26 @@ class Hub:
 
     def start_events(self):
         """Start events."""
-        t = Thread(target=self.listen, daemon=True)
-        t.start()
+        self._listen_task = asyncio.create_task(self.listen())
 
     def list_actions(self):
         """List all actions."""
         return self._execute('{"cmd":"listactions"}')
 
-    def listen(self):
-        """Create a new socket to listen fo revents."""
-        socket = nclib.Netcat((self._host, self._port), udp=False)
-        socket.settimeout(0)
-
+    async def listen(self):
+        """Listen for events."""
         s = '{"cmd":"startevents"}'
-        sep = b"\r\n"
-        socket.send(s.encode())
+        reader, writer = await asyncio.open_connection(self._host, self._port)
 
-        while True:
-            ready_to_read, ready_to_write, in_error = nclib.select(
-                [socket], [], [socket]
-            )
+        writer.write(s.encode())
+        await writer.drain()
 
-            for so in ready_to_read:
-                if so is socket:
-                    message = json.loads(socket.recv_until(sep))
-                    if "event" in message and message["event"] == "listactions":
-                        for _action in message["data"]:
-                            action = self.get_action(_action["id"])
-                            action.update_state(_action["value1"])
+        async for line in reader:
+            message = json.loads(line.decode())
+            if "event" in message and message["event"] == "listactions":
+                for _action in message["data"]:
+                    action = self.get_action(_action["id"])
+                    action.update_state(_action["value1"])
 
     def get_action(self, action_id):
         """Get action by id."""
