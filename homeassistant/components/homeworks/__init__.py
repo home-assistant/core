@@ -166,6 +166,7 @@ def calculate_unique_id(controller_id, addr, idx):
 class HomeworksEntity(Entity):
     """Base class of a Homeworks device."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(

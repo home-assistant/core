@@ -10,6 +10,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEnti
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -54,7 +55,10 @@ class HomeworksLight(HomeworksEntity, LightEntity):
         rate,
     ):
         """Create device with Addr, name, and rate."""
-        super().__init__(controller, controller_id, addr, 0, name)
+        super().__init__(controller, controller_id, addr, 0, None)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{controller_id}.{addr}")}, name=name
+        )
         self._rate = rate
         self._level = 0
         self._prev_level = 0
