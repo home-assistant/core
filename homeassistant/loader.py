@@ -79,7 +79,7 @@ BASE_PRELOAD_PLATFORMS = [
     "trigger",
 ]
 
-SKIP_PRELOAD_INTEGRATION_TYPES = {"entity", "system", "helper", "virtual"}
+SKIP_PRELOAD_INTEGRATION_TYPES = {"entity", "helper", "virtual"}
 
 DATA_COMPONENTS = "components"
 DATA_INTEGRATIONS = "integrations"
