@@ -2,6 +2,7 @@
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
@@ -37,6 +38,7 @@ async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
         CONF_PORT: FIXTURE_USER_INPUT[CONF_PORT],
         CONF_TOKEN: FIXTURE_USER_INPUT[CONF_TOKEN],
     }
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_migration_minor_future_to_2(hass: HomeAssistant) -> None:
@@ -63,3 +65,4 @@ async def test_migration_minor_future_to_2(hass: HomeAssistant) -> None:
     assert config_entry.minor_version == SystemBridgeConfigFlow.MINOR_VERSION
     assert config_entry.data[CONF_API_KEY] == FIXTURE_USER_INPUT[CONF_TOKEN]
     assert config_entry.data == config_entry_data
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
