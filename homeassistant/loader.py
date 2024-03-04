@@ -58,6 +58,7 @@ DATA_COMPONENTS = "components"
 DATA_INTEGRATIONS = "integrations"
 DATA_MISSING_PLATFORMS = "missing_platforms"
 DATA_CUSTOM_COMPONENTS = "custom_components"
+DATA_PRELOAD_PLATFORMS = "preload_platforms"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
 CUSTOM_WARNING = (
@@ -192,6 +193,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.data[DATA_COMPONENTS] = {}
     hass.data[DATA_INTEGRATIONS] = {}
     hass.data[DATA_MISSING_PLATFORMS] = {}
+    hass.data[DATA_PRELOAD_PLATFORMS] = ["config"]
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
@@ -568,6 +570,14 @@ async def async_get_mqtt(hass: HomeAssistant) -> dict[str, list[str]]:
     return mqtt
 
 
+@callback
+def async_register_preload_platform(hass: HomeAssistant, platform_name: str) -> None:
+    """Register a platform to be preloaded."""
+    preload_platforms: list[str] = hass.data[DATA_PRELOAD_PLATFORMS]
+    if platform_name not in preload_platforms:
+        preload_platforms.append(platform_name)
+
+
 class Integration:
     """An integration in Home Assistant."""
 
@@ -662,6 +672,8 @@ class Integration:
             self._all_dependencies_resolved = True
             self._all_dependencies = set()
 
+        preload_platforms: list[str] = hass.data[DATA_PRELOAD_PLATFORMS]
+        self._preload_platforms = preload_platforms
         self._component_future: asyncio.Future[ComponentProtocol] | None = None
         self._import_futures: dict[str, asyncio.Future[ModuleType]] = {}
         cache: dict[str, ModuleType | ComponentProtocol] = hass.data[DATA_COMPONENTS]
@@ -937,13 +949,14 @@ class Integration:
             )
             raise ImportError(f"Exception importing {self.pkg_path}") from err
 
-        if self.platform_exists("config"):
-            # Setting up a component always checks if the config
-            # platform exists. Since we may be running in the executor
-            # we will use this opportunity to cache the config platform
-            # as well.
-            with suppress(ImportError):
-                self.get_platform("config")
+        for platform_name in self._preload_platforms:
+            if self.platform_exists(platform_name):
+                # Setting up a component always checks if the config
+                # platform exists. Since we may be running in the executor
+                # we will use this opportunity to cache the config platform
+                # as well.
+                with suppress(ImportError):
+                    self.get_platform(platform_name)
 
         if self.config_flow:
             # If there is a config flow, we will cache it as well since

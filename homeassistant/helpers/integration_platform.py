@@ -14,6 +14,7 @@ from homeassistant.loader import (
     Integration,
     async_get_integration,
     async_get_integrations,
+    async_register_preload_platform,
     bind_hass,
 )
 from homeassistant.setup import ATTR_COMPONENT, EventComponentLoaded
@@ -165,6 +166,7 @@ async def async_process_integration_platforms(
     integration_platform = IntegrationPlatform(
         platform_name, process_job, top_level_components
     )
+    async_register_preload_platform(hass, platform_name)
     integration_platforms.append(integration_platform)
     if not top_level_components:
         return
