@@ -17,6 +17,8 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Viessmann',
     'model': 'model0',
     'name': 'model0',
