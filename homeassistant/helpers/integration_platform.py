@@ -80,15 +80,18 @@ async def _async_process_integration_platforms_for_component(
 ) -> None:
     """Process integration platforms for a component."""
     integration = await async_get_integration(hass, component_name)
-    if not (
-        non_missing_integration_platforms := [
-            integration_platform
-            for integration_platform in integration_platforms
-            if not integration.platform_missing(integration_platform.platform_name)
-        ]
-    ):
+    # First filter out platforms that the integration already
+    # knows are missing
+    non_missing_integration_platforms = [
+        integration_platform
+        for integration_platform in integration_platforms
+        if not integration.platform_missing(integration_platform.platform_name)
+    ]
+    if non_missing_integration_platforms:
         return
 
+    # Next create an executor job to filter out platforms that we don't know
+    # if they are missing or not.
     if not (
         integration_platforms_to_load := await hass.async_add_executor_job(
             _filter_possible_platforms, integration, non_missing_integration_platforms
@@ -96,6 +99,7 @@ async def _async_process_integration_platforms_for_component(
     ):
         return
 
+    # Now we know which platforms to load, let's load them.
     platform_names = [
         integration_platform.platform_name
         for integration_platform in integration_platforms_to_load
@@ -111,6 +115,7 @@ async def _async_process_integration_platforms_for_component(
         )
         return
 
+    # Finally, process the platforms.
     futures: list[asyncio.Future[Awaitable[None] | None]] = []
     for integration_platform in integration_platforms_to_load:
         if future := hass.async_run_hass_job(
@@ -175,6 +180,9 @@ async def async_process_integration_platforms(
     integration_platform = IntegrationPlatform(
         platform_name, process_job, top_level_components
     )
+    # Tell the loader that it should try to pre-load the integration
+    # for any future components that are loaded so we can reduce the
+    # amount of import executor usage.
     async_register_preload_platform(hass, platform_name)
     integration_platforms.append(integration_platform)
     if not top_level_components:
@@ -196,7 +204,8 @@ async def async_process_integration_platforms(
     if not loaded_integrations:
         return
 
-    futures: list[asyncio.Future[None]] = []
+    # If the platform is known to be missing exclude it right
+    # away from the list of integrations to process.
     integrations_not_missing_platform = [
         integration
         for integration in loaded_integrations
@@ -205,11 +214,17 @@ async def async_process_integration_platforms(
     if not integrations_not_missing_platform:
         return
 
-    for integration_with_platform in await hass.async_add_executor_job(
+    # Now we create an executor job to filter out integrations that we
+    # don't know if they have the platform or not already.
+    integrations_with_platforms = await hass.async_add_executor_job(
         _get_integrations_with_platform,
         platform_name,
         integrations_not_missing_platform,
-    ):
+    )
+    futures: list[asyncio.Future[None]] = []
+
+    # Finally, fetch the platforms for each integration and process them.
+    for integration_with_platform in integrations_with_platforms:
         try:
             platform = await integration_with_platform.async_get_platform(platform_name)
         except Exception:  # pylint: disable=broad-except
