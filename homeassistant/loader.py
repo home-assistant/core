@@ -54,6 +54,32 @@ _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 _LOGGER = logging.getLogger(__name__)
 
+#
+# Integration.get_component will check preload platforms and
+# try to import the code to avoid a thundering heard of import
+# executor jobs later in the startup process.
+#
+# default platforms are prepopulated in this list to ensure that
+# by the time the component is loaded, we check if the platform is
+# available.
+#
+# This list can be extended by calling async_register_preload_platform
+#
+BASE_PRELOAD_PLATFORMS = [
+    "config",
+    "diagnostics",
+    "energy",
+    "group",
+    "logbook",
+    "hardware",
+    "media_source",
+    "recorder",
+    "repairs",
+    "system_health",
+    "trigger",
+]
+
+
 DATA_COMPONENTS = "components"
 DATA_INTEGRATIONS = "integrations"
 DATA_MISSING_PLATFORMS = "missing_platforms"
@@ -193,7 +219,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.data[DATA_COMPONENTS] = {}
     hass.data[DATA_INTEGRATIONS] = {}
     hass.data[DATA_MISSING_PLATFORMS] = {}
-    hass.data[DATA_PRELOAD_PLATFORMS] = ["config"]
+    hass.data[DATA_PRELOAD_PLATFORMS] = BASE_PRELOAD_PLATFORMS.copy()
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:

@@ -95,6 +95,10 @@ async def _async_process_integration_platforms_for_component(
 
     # Next create an executor job to filter out platforms that we don't know
     # if they are missing or not.
+    #
+    # We use the normal executor and not the import executor as we
+    # we are not importing anything and only going to stat()
+    # files.
     if not (
         integration_platforms_to_load := await hass.async_add_executor_job(
             _filter_possible_platforms, integration, non_missing_integration_platforms
@@ -222,6 +226,10 @@ async def async_process_integration_platforms(
 
     # Now we create an executor job to filter out integrations that we
     # don't know if they have the platform or not already.
+    #
+    # We use the normal executor and not the import executor as we
+    # we are not importing anything and only going to stat()
+    # files.
     integrations_with_platforms = await hass.async_add_executor_job(
         _get_integrations_with_platform,
         platform_name,
@@ -230,6 +238,9 @@ async def async_process_integration_platforms(
     futures: list[asyncio.Future[None]] = []
 
     # Finally, fetch the platforms for each integration and process them.
+    # This uses the import executor in a loop. If there are a lot
+    # of integration with the integration platform to process,
+    # this could be a bottleneck.
     for integration_with_platform in integrations_with_platforms:
         try:
             platform = await integration_with_platform.async_get_platform(platform_name)
