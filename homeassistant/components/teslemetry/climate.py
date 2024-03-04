@@ -26,7 +26,7 @@ async def async_setup_entry(
 
     async_add_entities(
         TeslemetryClimateEntity(vehicle, TeslemetryClimateSide.DRIVER)
-        for vehicle in data
+        for vehicle in data.vehicles
     )
 
 

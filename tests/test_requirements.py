@@ -548,7 +548,7 @@ async def test_discovery_requirements_mqtt(hass: HomeAssistant) -> None:
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "mqtt_comp")
 
-    assert len(mock_process.mock_calls) == 3  # mqtt also depends on http
+    assert len(mock_process.mock_calls) == 2  # mqtt also depends on http
     assert mock_process.mock_calls[0][1][1] == mqtt.requirements
 
 

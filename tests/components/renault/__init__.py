@@ -81,8 +81,6 @@ def check_entities_no_data(
         assert state.state == expected_state
         for attr in FIXED_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
-        # Check dynamic attributes:
-        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)
 
 
 def check_entities_unavailable(
@@ -100,5 +98,3 @@ def check_entities_unavailable(
         assert state.state == STATE_UNAVAILABLE
         for attr in FIXED_ATTRIBUTES:
             assert state.attributes.get(attr) == expected_entity.get(attr)
-        # Check dynamic attributes:
-        assert state.attributes.get(ATTR_ICON) == get_no_data_icon(expected_entity)

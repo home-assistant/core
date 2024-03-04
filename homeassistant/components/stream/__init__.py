@@ -188,22 +188,26 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-@callback
-def update_pyav_logging(_event: Event | None = None) -> None:
-    """Adjust libav logging to only log when the stream logger is at DEBUG."""
+def set_pyav_logging(enable: bool) -> None:
+    """Turn PyAV logging on or off."""
+    import av  # pylint: disable=import-outside-toplevel
 
-    def set_pyav_logging(enable: bool) -> None:
-        """Turn PyAV logging on or off."""
-        import av  # pylint: disable=import-outside-toplevel
-
-        av.logging.set_level(av.logging.VERBOSE if enable else av.logging.FATAL)
-
-    # enable PyAV logging iff Stream logger is set to debug
-    set_pyav_logging(logging.getLogger(__name__).isEnabledFor(logging.DEBUG))
+    av.logging.set_level(av.logging.VERBOSE if enable else av.logging.FATAL)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up stream."""
+    debug_enabled = _LOGGER.isEnabledFor(logging.DEBUG)
+
+    @callback
+    def update_pyav_logging(_event: Event | None = None) -> None:
+        """Adjust libav logging to only log when the stream logger is at DEBUG."""
+        nonlocal debug_enabled
+        if (new_debug_enabled := _LOGGER.isEnabledFor(logging.DEBUG)) == debug_enabled:
+            return
+        debug_enabled = new_debug_enabled
+        # enable PyAV logging iff Stream logger is set to debug
+        set_pyav_logging(new_debug_enabled)
 
     # Only pass through PyAV log messages if stream logging is above DEBUG
     cancel_logging_listener = hass.bus.async_listen(
@@ -213,7 +217,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # at logging.WARNING. Set those Logger levels to logging.ERROR
     for logging_namespace in ("libav.mp4", "libav.swscaler"):
         logging.getLogger(logging_namespace).setLevel(logging.ERROR)
-    update_pyav_logging()
+
+    # This will load av so we run it in the executor
+    await hass.async_add_import_executor_job(set_pyav_logging, debug_enabled)
 
     # Keep import here so that we can import stream integration without installing reqs
     # pylint: disable-next=import-outside-toplevel
