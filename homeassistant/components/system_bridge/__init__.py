@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import asdict
 import logging
 
 from systembridgeconnector.exceptions import (
@@ -208,7 +209,7 @@ async def async_setup_entry(
         response = await coordinator.websocket_client.open_path(
             OpenPath(path=service_call.data[CONF_PATH])
         )
-        return response.dict()
+        return asdict(response)
 
     async def handle_power_command(service_call: ServiceCall) -> ServiceResponse:
         """Handle the power command service call."""
@@ -220,7 +221,7 @@ async def async_setup_entry(
             coordinator.websocket_client,
             POWER_COMMAND_MAP[service_call.data[CONF_COMMAND]],
         )()
-        return response.dict()
+        return asdict(response)
 
     async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open url service call."""
@@ -231,7 +232,7 @@ async def async_setup_entry(
         response = await coordinator.websocket_client.open_url(
             OpenUrl(url=service_call.data[CONF_URL])
         )
-        return response.dict()
+        return asdict(response)
 
     async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
         """Handle the send_keypress service call."""
@@ -241,7 +242,7 @@ async def async_setup_entry(
         response = await coordinator.websocket_client.keyboard_keypress(
             KeyboardKey(key=service_call.data[CONF_KEY])
         )
-        return response.dict()
+        return asdict(response)
 
     async def handle_send_text(service_call: ServiceCall) -> ServiceResponse:
         """Handle the send_keypress service call."""
@@ -251,7 +252,7 @@ async def async_setup_entry(
         response = await coordinator.websocket_client.keyboard_text(
             KeyboardText(text=service_call.data[CONF_TEXT])
         )
-        return response.dict()
+        return asdict(response)
 
     hass.services.async_register(
         DOMAIN,
