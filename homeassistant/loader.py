@@ -948,8 +948,7 @@ class Integration:
         in_progress_imports: dict[str, asyncio.Future[ModuleType]] = {}
         import_futures: list[tuple[str, asyncio.Future[ModuleType]]] = []
 
-        for _plat in platform_names:
-            platform_name = _plat.value if type(_plat) is Platform else _plat
+        for platform_name in platform_names:
             full_name = f"{domain}.{platform_name}"
             if platform := self._get_platform_cached(full_name):
                 platforms[platform_name] = platform
@@ -1008,7 +1007,7 @@ class Integration:
                     with suppress(BaseException):
                         # Clear the exception retrieved flag on the future since
                         # it will never be retrieved unless there
-                        # are concurrent calls to async_get_platform
+                        # are concurrent calls to async_get_platforms
                         import_future.result()
                 raise
 
