@@ -18,6 +18,7 @@ from pyrainbird.data import ModelAndVersion, Schedule
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -27,6 +28,10 @@ UPDATE_INTERVAL = datetime.timedelta(minutes=1)
 # The calendar data requires RPCs for each program/zone, and the data rarely
 # changes, so we refresh it less often.
 CALENDAR_UPDATE_INTERVAL = datetime.timedelta(minutes=15)
+
+# The valves state are not immediately reflected after issuing a command. We add
+# small delay to give additional time to reflect the new state.
+DEBOUNCER_COOLDOWN = 5
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +65,9 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
             _LOGGER,
             name=name,
             update_interval=UPDATE_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=DEBOUNCER_COOLDOWN, immediate=False
+            ),
         )
         self._controller = controller
         self._unique_id = unique_id
