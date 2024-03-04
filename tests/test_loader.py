@@ -1038,6 +1038,101 @@ async def test_hass_components_use_reported(
         ) in caplog.text
 
 
+async def test_async_get_component_preloads_config_and_config_flow(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Verify async_get_component will try to preload the config and config_flow platform."""
+    executor_import_integration = _get_test_integration(
+        hass, "executor_import", True, import_executor=True
+    )
+    assert executor_import_integration.import_executor is True
+
+    assert "homeassistant.components.executor_import" not in sys.modules
+    assert "custom_components.executor_import" not in sys.modules
+
+    with patch(
+        "homeassistant.loader.importlib.import_module"
+    ) as mock_import, patch.object(
+        executor_import_integration, "platform_exists", return_value=True
+    ) as mock_platform_exists:
+        await executor_import_integration.async_get_component()
+
+    assert mock_platform_exists.call_count == 1
+    assert mock_import.call_count == 3
+    assert (
+        mock_import.call_args_list[0][0][0]
+        == "homeassistant.components.executor_import"
+    )
+    assert (
+        mock_import.call_args_list[1][0][0]
+        == "homeassistant.components.executor_import.config"
+    )
+    assert (
+        mock_import.call_args_list[2][0][0]
+        == "homeassistant.components.executor_import.config_flow"
+    )
+
+
+async def test_async_get_component_loads_loop_if_already_in_sys_modules(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
+    """Verify async_get_component does not create an executor job if the module is already in sys.modules."""
+    integration = await loader.async_get_integration(
+        hass, "test_package_loaded_executor"
+    )
+    assert integration.pkg_path == "custom_components.test_package_loaded_executor"
+    assert integration.import_executor is True
+    assert integration.config_flow is True
+
+    assert "executor_import" not in hass.config.components
+    assert "executor_import.config_flow" not in hass.config.components
+
+    config_flow_module_name = f"{integration.pkg_path}.config_flow"
+    module_mock = MagicMock()
+    config_flow_module_mock = MagicMock()
+
+    def import_module(name: str) -> Any:
+        if name == integration.pkg_path:
+            return module_mock
+        if name == config_flow_module_name:
+            return config_flow_module_mock
+        raise ImportError
+
+    modules_without_config_flow = {
+        k: v for k, v in sys.modules.items() if k != config_flow_module_name
+    }
+    with patch.dict(
+        "sys.modules",
+        {**modules_without_config_flow, integration.pkg_path: module_mock},
+        clear=True,
+    ), patch("homeassistant.loader.importlib.import_module", import_module):
+        module = await integration.async_get_component()
+
+    # The config flow is missing so we should load
+    # in the executor
+    assert "loaded_executor=True" in caplog.text
+    assert "loaded_executor=False" not in caplog.text
+    assert module is module_mock
+    caplog.clear()
+
+    with patch.dict(
+        "sys.modules",
+        {
+            integration.pkg_path: module_mock,
+            config_flow_module_name: config_flow_module_mock,
+        },
+    ), patch("homeassistant.loader.importlib.import_module", import_module):
+        module = await integration.async_get_component()
+
+    # Everything is there so we should load in the event loop
+    # since it will all be cached
+    assert "loaded_executor=False" in caplog.text
+    assert "loaded_executor=True" not in caplog.text
+    assert module is module_mock
+
+
 async def test_async_get_component_deadlock_fallback(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
