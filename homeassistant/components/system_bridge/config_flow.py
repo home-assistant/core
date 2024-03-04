@@ -57,7 +57,7 @@ async def _validate_input(
             await websocket_client.connect(session=async_get_clientsession(hass))
             hass.async_create_task(websocket_client.listen())
             response = await websocket_client.get_data(GetData(modules=["system"]))
-            _LOGGER.debug("Got response: %s", response.json())
+            _LOGGER.debug("Got response: %s", response)
             if response.data is None or not isinstance(response.data, System):
                 raise CannotConnect("No data received")
             system: System = response.data
