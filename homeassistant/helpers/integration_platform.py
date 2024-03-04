@@ -112,6 +112,7 @@ async def async_process_integration_platforms(
     platform_name: str,
     # Any = platform.
     process_platform: Callable[[HomeAssistant, str, Any], Awaitable[None] | None],
+    register_preload_platform: bool = True,
 ) -> None:
     """Process a specific platform for all current and future loaded integrations."""
     if DATA_INTEGRATION_PLATFORMS not in hass.data:
