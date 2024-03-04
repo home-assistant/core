@@ -429,6 +429,7 @@ DATA_SCHEMA_ADD_CONTROLLER = vol.Schema(
         **CONTROLLER_EDIT,
     }
 )
+DATA_SCHEMA_EDIT_CONTROLLER = vol.Schema(CONTROLLER_EDIT)
 DATA_SCHEMA_ADD_LIGHT = vol.Schema(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_LIGHT_NAME): TextSelector(),
@@ -641,6 +642,66 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(step_id="import_finish", data_schema=vol.Schema({}))
+
+    async def _validate_edit_controller(
+        self, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Validate controller setup."""
+        user_input[CONF_PORT] = int(user_input[CONF_PORT])
+
+        our_entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert our_entry
+        other_entries = self._async_current_entries()
+        for entry in other_entries:
+            if entry.entry_id == our_entry.entry_id:
+                continue
+            if (
+                user_input[CONF_HOST] == entry.options[CONF_HOST]
+                and user_input[CONF_PORT] == entry.options[CONF_PORT]
+            ):
+                raise SchemaFlowError("duplicated_host_port")
+
+        await _try_connection(user_input)
+        return user_input
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfigure flow."""
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+
+        errors = {}
+        suggested_values = {
+            CONF_HOST: entry.options[CONF_HOST],
+            CONF_PORT: entry.options[CONF_PORT],
+        }
+
+        if user_input:
+            suggested_values = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_PORT: user_input[CONF_PORT],
+            }
+            try:
+                await self._validate_edit_controller(user_input)
+            except SchemaFlowError as err:
+                errors["base"] = str(err)
+            else:
+                new_options = entry.options | {
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                }
+                self.hass.config_entries.async_update_entry(entry, options=new_options)
+                await self.hass.config_entries.async_reload(entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA_EDIT_CONTROLLER, suggested_values
+            ),
+            errors=errors,
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
