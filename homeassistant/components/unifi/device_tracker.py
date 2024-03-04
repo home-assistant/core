@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, Generic
+from typing import Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -136,22 +136,14 @@ def async_device_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta
     return timedelta(seconds=device.next_interval + 60)
 
 
-@dataclass(frozen=True)
-class UnifiEntityTrackerDescriptionMixin(Generic[HandlerT, ApiItemT]):
-    """Device tracker local functions."""
+@dataclass(frozen=True, kw_only=True)
+class UnifiTrackerEntityDescription(UnifiEntityDescription[HandlerT, ApiItemT]):
+    """Class describing UniFi device tracker entity."""
 
     heartbeat_timedelta_fn: Callable[[UnifiHub, str], timedelta]
     ip_address_fn: Callable[[aiounifi.Controller, str], str | None]
     is_connected_fn: Callable[[UnifiHub, str], bool]
     hostname_fn: Callable[[aiounifi.Controller, str], str | None]
-
-
-@dataclass(frozen=True)
-class UnifiTrackerEntityDescription(
-    UnifiEntityDescription[HandlerT, ApiItemT],
-    UnifiEntityTrackerDescriptionMixin[HandlerT, ApiItemT],
-):
-    """Class describing UniFi device tracker entity."""
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
@@ -173,7 +165,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda client: client.name or client.hostname,
         object_fn=lambda api, obj_id: api.clients[obj_id],
-        should_poll=False,
         supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"{hub.site}-{obj_id}",
         ip_address_fn=lambda api, obj_id: api.clients[obj_id].ip,
@@ -186,13 +177,10 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=lambda api, obj_id: None,
-        event_is_on=None,
-        event_to_subscribe=None,
         heartbeat_timedelta_fn=async_device_heartbeat_timedelta_fn,
         is_connected_fn=lambda ctrlr, obj_id: ctrlr.api.devices[obj_id].state == 1,
         name_fn=lambda device: device.name or device.model,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        should_poll=False,
         supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: obj_id,
         ip_address_fn=lambda api, obj_id: api.devices[obj_id].ip,
