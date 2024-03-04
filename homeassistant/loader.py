@@ -849,7 +849,6 @@ class Integration:
         if debug := _LOGGER.isEnabledFor(logging.DEBUG):
             start = time.perf_counter()
 
-        domain = self.domain
         # Some integrations fail on import because they call functions incorrectly.
         # So we do it before validating config to catch these errors.
         load_executor = self.import_executor and (
@@ -861,7 +860,7 @@ class Integration:
             if debug:
                 _LOGGER.debug(
                     "Component %s import took %.3f seconds (loaded_executor=False)",
-                    domain,
+                    self.domain,
                     time.perf_counter() - start,
                 )
             return comp
@@ -872,7 +871,9 @@ class Integration:
                 comp = await self.hass.async_add_import_executor_job(self.get_component)
             except ImportError as ex:
                 load_executor = False
-                _LOGGER.debug("Failed to import %s in executor", domain, exc_info=ex)
+                _LOGGER.debug(
+                    "Failed to import %s in executor", self.domain, exc_info=ex
+                )
                 # If importing in the executor deadlocks because there is a circular
                 # dependency, we fall back to the event loop.
                 comp = self.get_component()
@@ -891,7 +892,7 @@ class Integration:
         if debug:
             _LOGGER.debug(
                 "Component %s import took %.3f seconds (loaded_executor=%s)",
-                domain,
+                self.domain,
                 time.perf_counter() - start,
                 load_executor,
             )
