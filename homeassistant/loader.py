@@ -79,6 +79,7 @@ BASE_PRELOAD_PLATFORMS = [
     "trigger",
 ]
 
+SKIP_PRELOAD_INTEGRATION_TYPES = {"entity", "system", "helper", "virtual"}
 
 DATA_COMPONENTS = "components"
 DATA_INTEGRATIONS = "integrations"
@@ -975,16 +976,17 @@ class Integration:
             )
             raise ImportError(f"Exception importing {self.pkg_path}") from err
 
-        for platform_name in self._preload_platforms:
-            if self.platform_exists(platform_name):
-                # Setting up a component always checks if the config
-                # platform exists. Since we may be running in the executor
-                # we will use this opportunity to cache the config platform
-                # as well.
-                try:  # noqa: SIM105 suppress is much slower
-                    self.get_platform(platform_name)
-                except ImportError:
-                    pass
+        if self.integration_type not in SKIP_PRELOAD_INTEGRATION_TYPES:
+            for platform_name in self._preload_platforms:
+                if self.platform_exists(platform_name):
+                    # Setting up a component always checks if the config
+                    # platform exists. Since we may be running in the executor
+                    # we will use this opportunity to cache the config platform
+                    # as well.
+                    try:  # noqa: SIM105 suppress is much slower
+                        self.get_platform(platform_name)
+                    except ImportError:
+                        pass
 
         if self.config_flow:
             # If there is a config flow, we will cache it as well since
