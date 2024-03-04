@@ -2,6 +2,7 @@
 import asyncio
 import os
 import sys
+import threading
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
@@ -275,6 +276,41 @@ async def test_async_get_platform_caches_failures_when_component_loaded(
     # Hue is loaded and the last call should have cached the import_module failure
     with pytest.raises(ImportError):
         assert await integration.async_get_platform("light") == hue_light
+
+
+async def test_async_get_platforms_caches_failures_when_component_loaded(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_get_platforms cache failures only when the component is loaded."""
+    integration = await loader.async_get_integration(hass, "hue")
+
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ImportError("Boom")
+    ):
+        assert integration.get_component() == hue
+
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ImportError("Boom")
+    ):
+        assert await integration.async_get_platforms(["light"]) == {"light": hue_light}
+
+    # Hue is not loaded so we should still hit the import_module path
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ImportError("Boom")
+    ):
+        assert await integration.async_get_platforms(["light"]) == {"light": hue_light}
+
+    assert integration.get_component() == hue
+
+    # Hue is loaded so we should cache the import_module failure now
+    with pytest.raises(ImportError), patch(
+        "homeassistant.loader.importlib.import_module", side_effect=ImportError("Boom")
+    ):
+        assert await integration.async_get_platforms(["light"]) == {"light": hue_light}
+
+    # Hue is loaded and the last call should have cached the import_module failure
+    with pytest.raises(ImportError):
+        assert await integration.async_get_platforms(["light"]) == {"light": hue_light}
 
 
 async def test_get_integration_legacy(
@@ -1086,8 +1122,8 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
     assert integration.import_executor is True
     assert integration.config_flow is True
 
-    assert "executor_import" not in hass.config.components
-    assert "executor_import.config_flow" not in hass.config.components
+    assert "test_package_loaded_executor" not in hass.config.components
+    assert "test_package_loaded_executor.config_flow" not in hass.config.components
 
     config_flow_module_name = f"{integration.pkg_path}.config_flow"
     module_mock = MagicMock()
@@ -1131,6 +1167,64 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
     assert "loaded_executor=False" in caplog.text
     assert "loaded_executor=True" not in caplog.text
     assert module is module_mock
+
+
+async def test_async_get_component_concurrent_loads(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
+    """Verify async_get_component waits if the first load if called again when still in progress."""
+    integration = await loader.async_get_integration(
+        hass, "test_package_loaded_executor"
+    )
+    assert integration.pkg_path == "custom_components.test_package_loaded_executor"
+    assert integration.import_executor is True
+    assert integration.config_flow is True
+
+    assert "test_package_loaded_executor" not in hass.config.components
+    assert "test_package_loaded_executor.config_flow" not in hass.config.components
+
+    config_flow_module_name = f"{integration.pkg_path}.config_flow"
+    module_mock = MagicMock()
+    config_flow_module_mock = MagicMock()
+    imports = []
+    start_event = threading.Event()
+    import_event = asyncio.Event()
+
+    def import_module(name: str) -> Any:
+        hass.loop.call_soon_threadsafe(import_event.set)
+        imports.append(name)
+        start_event.wait()
+        if name == integration.pkg_path:
+            return module_mock
+        if name == config_flow_module_name:
+            return config_flow_module_mock
+        raise ImportError
+
+    modules_without_integration = {
+        k: v
+        for k, v in sys.modules.items()
+        if k != config_flow_module_name and k != integration.pkg_path
+    }
+    with patch.dict(
+        "sys.modules",
+        {**modules_without_integration},
+        clear=True,
+    ), patch("homeassistant.loader.importlib.import_module", import_module):
+        load_task1 = asyncio.create_task(integration.async_get_component())
+        load_task2 = asyncio.create_task(integration.async_get_component())
+        await import_event.wait()  # make sure the import is started
+        assert not integration._component_future.done()
+        start_event.set()
+        comp1 = await load_task1
+        comp2 = await load_task2
+        assert integration._component_future is None
+
+    assert comp1 is module_mock
+    assert comp2 is module_mock
+
+    assert imports == [integration.pkg_path, config_flow_module_name]
 
 
 async def test_async_get_component_deadlock_fallback(
@@ -1243,7 +1337,9 @@ async def test_async_get_platform_deadlock_fallback(
         "Detected deadlock trying to import homeassistant.components.executor_import"
         in caplog.text
     )
-    assert "loaded_executor=False" in caplog.text
+    # We should have tried both the executor and loop
+    assert "executor=['config_flow']" in caplog.text
+    assert "loop=['config_flow']" in caplog.text
     assert module is module_mock
 
 
@@ -1331,3 +1427,155 @@ async def test_platform_exists(
     assert platform.MAGIC == 1
 
     assert integration.platform_exists("group") is True
+
+
+async def test_async_get_platforms_loads_loop_if_already_in_sys_modules(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
+    """Verify async_get_platforms does not create an executor job.
+
+    Case is for when the module is already in sys.modules.
+    """
+    integration = await loader.async_get_integration(
+        hass, "test_package_loaded_executor"
+    )
+    assert integration.pkg_path == "custom_components.test_package_loaded_executor"
+    assert integration.import_executor is True
+    assert integration.config_flow is True
+
+    assert "test_package_loaded_executor" not in hass.config.components
+    assert "test_package_loaded_executor.config_flow" not in hass.config.components
+    await integration.async_get_component()
+
+    button_module_name = f"{integration.pkg_path}.button"
+    switch_module_name = f"{integration.pkg_path}.switch"
+    light_module_name = f"{integration.pkg_path}.light"
+    button_module_mock = MagicMock()
+    switch_module_mock = MagicMock()
+    light_module_mock = MagicMock()
+
+    def import_module(name: str) -> Any:
+        if name == button_module_name:
+            return button_module_mock
+        if name == switch_module_name:
+            return switch_module_mock
+        if name == light_module_name:
+            return light_module_mock
+        raise ImportError
+
+    modules_without_button = {
+        k: v for k, v in sys.modules.items() if k != button_module_name
+    }
+    with patch.dict(
+        "sys.modules",
+        modules_without_button,
+        clear=True,
+    ), patch("homeassistant.loader.importlib.import_module", import_module):
+        module = (await integration.async_get_platforms(["button"]))["button"]
+
+    # The button module is missing so we should load
+    # in the executor
+    assert "executor=['button']" in caplog.text
+    assert "loop=[]" in caplog.text
+    assert module is button_module_mock
+    caplog.clear()
+
+    with patch.dict(
+        "sys.modules",
+        {
+            **modules_without_button,
+            button_module_name: button_module_mock,
+        },
+    ), patch("homeassistant.loader.importlib.import_module", import_module):
+        module = (await integration.async_get_platforms(["button"]))["button"]
+
+    # Everything is cached so there should be no logging
+    assert "loop=" not in caplog.text
+    assert "executor=" not in caplog.text
+    assert module is button_module_mock
+    caplog.clear()
+
+    modules_without_switch = {
+        k: v for k, v in sys.modules.items() if k not in switch_module_name
+    }
+    with patch.dict(
+        "sys.modules",
+        {**modules_without_switch, light_module_name: light_module_mock},
+        clear=True,
+    ), patch("homeassistant.loader.importlib.import_module", import_module):
+        modules = await integration.async_get_platforms(["button", "switch", "light"])
+
+    # The button module is already in the cache so nothing happens
+    # The switch module is loaded in the executor since its not in the cache
+    # The light module is in memory but not in the cache so its loaded in the loop
+    assert "['button']" not in caplog.text
+    assert "executor=['switch']" in caplog.text
+    assert "loop=['light']" in caplog.text
+    assert modules == {
+        "button": button_module_mock,
+        "switch": switch_module_mock,
+        "light": light_module_mock,
+    }
+
+
+async def test_async_get_platforms_concurrent_loads(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
+    """Verify async_get_platforms waits if the first load if called again.
+
+    Case is for when when a second load is called
+    and the first is still in progress.
+    """
+    integration = await loader.async_get_integration(
+        hass, "test_package_loaded_executor"
+    )
+    assert integration.pkg_path == "custom_components.test_package_loaded_executor"
+    assert integration.import_executor is True
+    assert integration.config_flow is True
+
+    assert "test_package_loaded_executor" not in hass.config.components
+    assert "test_package_loaded_executor.config_flow" not in hass.config.components
+    await integration.async_get_component()
+
+    button_module_name = f"{integration.pkg_path}.button"
+    button_module_mock = MagicMock()
+
+    imports = []
+    start_event = threading.Event()
+    import_event = asyncio.Event()
+
+    def import_module(name: str) -> Any:
+        hass.loop.call_soon_threadsafe(import_event.set)
+        imports.append(name)
+        start_event.wait()
+        if name == button_module_name:
+            return button_module_mock
+        raise ImportError
+
+    modules_without_button = {
+        k: v
+        for k, v in sys.modules.items()
+        if k != button_module_name and k != integration.pkg_path
+    }
+    with patch.dict(
+        "sys.modules",
+        modules_without_button,
+        clear=True,
+    ), patch("homeassistant.loader.importlib.import_module", import_module):
+        load_task1 = asyncio.create_task(integration.async_get_platforms(["button"]))
+        load_task2 = asyncio.create_task(integration.async_get_platforms(["button"]))
+        await import_event.wait()  # make sure the import is started
+        assert not integration._import_futures["button"].done()
+        start_event.set()
+        load_result1 = await load_task1
+        load_result2 = await load_task2
+        assert integration._import_futures is not None
+
+    assert load_result1 == {"button": button_module_mock}
+    assert load_result2 == {"button": button_module_mock}
+
+    assert imports == [button_module_name]
