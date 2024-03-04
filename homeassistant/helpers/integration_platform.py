@@ -139,8 +139,8 @@ def _process_integration_platforms(
     return [
         future
         for platform_name, platform in platforms.items()
-        if (integration_platform := integration_platforms_to_load.get(platform_name))
-        if (
+        if (integration_platform := integration_platforms_to_load[platform_name])
+        and (
             future := hass.async_run_hass_job(
                 integration_platform.process_job,
                 hass,
