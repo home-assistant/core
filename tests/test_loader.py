@@ -1036,7 +1036,7 @@ async def test_async_suggest_report_issue(
 def test_import_executor_default(hass: HomeAssistant) -> None:
     """Test that import_executor defaults."""
     custom_comp = mock_integration(hass, MockModule("any_random"), built_in=False)
-    assert custom_comp.import_executor is False
+    assert custom_comp.import_executor is True
     built_in_comp = mock_integration(hass, MockModule("other_random"), built_in=True)
     assert built_in_comp.import_executor is True
 
