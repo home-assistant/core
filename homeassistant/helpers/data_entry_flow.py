@@ -61,6 +61,16 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+        """Initialize a POST request.
+
+        Override `_post_impl` in subclasses which need
+        to implement their own `RequestDataValidator`
+        """
+        return await self._post_impl(request, data)
+
+    async def _post_impl(
+        self, request: web.Request, data: dict[str, Any]
+    ) -> web.Response:
         """Handle a POST request."""
         if isinstance(data["handler"], list):
             handler = tuple(data["handler"])
@@ -74,10 +84,8 @@ class FlowManagerIndexView(_BaseFlowManagerView):
             )
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
-        except data_entry_flow.UnknownStep:
-            return self.json_message(
-                "Handler does not support user", HTTPStatus.BAD_REQUEST
-            )
+        except data_entry_flow.UnknownStep as err:
+            return self.json_message(str(err), HTTPStatus.BAD_REQUEST)
 
         result = self._prepare_result_json(result)
 

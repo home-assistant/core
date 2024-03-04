@@ -7,7 +7,7 @@ from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant
 
 
-class RepairsFlow(data_entry_flow.BaseFlowHandler[data_entry_flow.FlowResult]):
+class RepairsFlow(data_entry_flow.FlowHandler):
     """Handle a flow for fixing an issue."""
 
     _flow_result = data_entry_flow.FlowResult
