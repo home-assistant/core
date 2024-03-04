@@ -54,10 +54,38 @@ _CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 _LOGGER = logging.getLogger(__name__)
 
+#
+# Integration.get_component will check preload platforms and
+# try to import the code to avoid a thundering heard of import
+# executor jobs later in the startup process.
+#
+# default platforms are prepopulated in this list to ensure that
+# by the time the component is loaded, we check if the platform is
+# available.
+#
+# This list can be extended by calling async_register_preload_platform
+#
+BASE_PRELOAD_PLATFORMS = [
+    "config",
+    "diagnostics",
+    "energy",
+    "group",
+    "logbook",
+    "hardware",
+    "media_source",
+    "recorder",
+    "repairs",
+    "system_health",
+    "trigger",
+]
+
+SKIP_PRELOAD_INTEGRATION_TYPES = {"entity", "helper", "virtual"}
+
 DATA_COMPONENTS = "components"
 DATA_INTEGRATIONS = "integrations"
 DATA_MISSING_PLATFORMS = "missing_platforms"
 DATA_CUSTOM_COMPONENTS = "custom_components"
+DATA_PRELOAD_PLATFORMS = "preload_platforms"
 PACKAGE_CUSTOM_COMPONENTS = "custom_components"
 PACKAGE_BUILTIN = "homeassistant.components"
 CUSTOM_WARNING = (
@@ -192,6 +220,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.data[DATA_COMPONENTS] = {}
     hass.data[DATA_INTEGRATIONS] = {}
     hass.data[DATA_MISSING_PLATFORMS] = {}
+    hass.data[DATA_PRELOAD_PLATFORMS] = BASE_PRELOAD_PLATFORMS.copy()
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
@@ -568,6 +597,14 @@ async def async_get_mqtt(hass: HomeAssistant) -> dict[str, list[str]]:
     return mqtt
 
 
+@callback
+def async_register_preload_platform(hass: HomeAssistant, platform_name: str) -> None:
+    """Register a platform to be preloaded."""
+    preload_platforms: list[str] = hass.data[DATA_PRELOAD_PLATFORMS]
+    if platform_name not in preload_platforms:
+        preload_platforms.append(platform_name)
+
+
 class Integration:
     """An integration in Home Assistant."""
 
@@ -662,6 +699,8 @@ class Integration:
             self._all_dependencies_resolved = True
             self._all_dependencies = set()
 
+        preload_platforms: list[str] = hass.data[DATA_PRELOAD_PLATFORMS]
+        self._preload_platforms = preload_platforms
         self._component_future: asyncio.Future[ComponentProtocol] | None = None
         self._import_futures: dict[str, asyncio.Future[ModuleType]] = {}
         cache: dict[str, ModuleType | ComponentProtocol] = hass.data[DATA_COMPONENTS]
@@ -940,13 +979,14 @@ class Integration:
             )
             raise ImportError(f"Exception importing {self.pkg_path}") from err
 
-        if self.platform_exists("config"):
-            # Setting up a component always checks if the config
-            # platform exists. Since we may be running in the executor
-            # we will use this opportunity to cache the config platform
-            # as well.
-            with suppress(ImportError):
-                self.get_platform("config")
+        if self.integration_type not in SKIP_PRELOAD_INTEGRATION_TYPES:
+            for platform_name in self.platforms_exists(self._preload_platforms):
+                # Setting up a component always checks if the config
+                # platform exists. Since we may be running in the executor
+                # we will use this opportunity to cache the config platform
+                # as well.
+                with suppress(ImportError):
+                    self.get_platform(platform_name)
 
         if self.config_flow:
             # If there is a config flow, we will cache it as well since
@@ -985,7 +1025,7 @@ class Integration:
 
         for platform_name in platform_names:
             full_name = f"{domain}.{platform_name}"
-            if platform := self._get_platform_cached(full_name):
+            if platform := self._get_platform_cached_or_raise(full_name):
                 platforms[platform_name] = platform
                 continue
 
@@ -1065,7 +1105,7 @@ class Integration:
 
         return platforms
 
-    def _get_platform_cached(self, full_name: str) -> ModuleType | None:
+    def _get_platform_cached_or_raise(self, full_name: str) -> ModuleType | None:
         """Return a platform for an integration from cache."""
         if full_name in self._cache:
             # the cache is either a ModuleType or a ComponentProtocol
@@ -1075,45 +1115,72 @@ class Integration:
             raise self._missing_platforms_cache[full_name]
         return None
 
+    def get_platform_cached(self, platform_name: str) -> ModuleType | None:
+        """Return a platform for an integration from cache."""
+        return self._cache.get(f"{self.domain}.{platform_name}")  # type: ignore[return-value]
+
     def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        if platform := self._get_platform_cached(f"{self.domain}.{platform_name}"):
+        if platform := self._get_platform_cached_or_raise(
+            f"{self.domain}.{platform_name}"
+        ):
             return platform
         return self._load_platform(platform_name)
 
-    def platform_exists(self, platform_name: str) -> bool | None:
-        """Check if a platform exists for an integration.
+    def platform_missing(self, platform_name: str) -> bool:
+        """Check if its known that a platform is missing.
 
-        Returns True if the platform exists, False if it does not.
+        If the platform has already been checked on disk
+        and is known to be missing, this will return True,
+        otherwise if the platform might exist, it will return False.
 
-        If it cannot be determined if the platform exists without attempting
-        to import the component, it returns None. This will only happen
-        if this function is called before get_component or async_get_component
-        has been called for the integration or the integration failed to load.
+        This function is used to pre-filter in the event loop
+        if a platform is known to be missing so we can avoid
+        an executor job to check if the platform exists
+        using platforms_exists.
         """
-        full_name = f"{self.domain}.{platform_name}"
+        return bool(f"{self.domain}.{platform_name}" in self._missing_platforms_cache)
+
+    def platforms_exists(self, platform_names: Iterable[str]) -> list[str]:
+        """Check if a platforms exists for an integration.
+
+        Returns a list of platforms that exist.
+
+        The component must be loaded before calling this method.
+        """
         cache = self._cache
-        if full_name in cache:
-            return True
-
-        if full_name in self._missing_platforms_cache:
-            return False
-
-        if not (component := cache.get(self.domain)) or not (
+        domain = self.domain
+        if not (component := cache.get(domain)) or not (
             file := getattr(component, "__file__", None)
         ):
-            return None
+            raise RuntimeError(f"Integration {domain} not loaded")
 
-        path: pathlib.Path = pathlib.Path(file).parent.joinpath(platform_name)
-        if os.path.exists(path.with_suffix(".py")) or os.path.exists(path):
-            return True
+        exiting_platforms: list[str] = []
+        parent_path: pathlib.Path | None = None
+        for platform_name in platform_names:
+            full_name = f"{domain}.{platform_name}"
 
-        exc = ModuleNotFoundError(
-            f"Platform {full_name} not found",
-            name=f"{self.pkg_path}.{platform_name}",
-        )
-        self._missing_platforms_cache[full_name] = exc
-        return False
+            if full_name in cache:
+                exiting_platforms.append(platform_name)
+                continue
+
+            if full_name in self._missing_platforms_cache:
+                continue
+
+            if parent_path is None:
+                parent_path = pathlib.Path(file).parent
+
+            path: pathlib.Path = parent_path.joinpath(platform_name)
+            if os.path.exists(path.with_suffix(".py")) or os.path.exists(path):
+                exiting_platforms.append(platform_name)
+                continue
+
+            self._missing_platforms_cache[full_name] = ModuleNotFoundError(
+                f"Platform {full_name} not found",
+                name=f"{self.pkg_path}.{platform_name}",
+            )
+
+        return exiting_platforms
 
     def _load_platform(self, platform_name: str) -> ModuleType:
         """Load a platform for an integration.
