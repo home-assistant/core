@@ -129,8 +129,7 @@ async def async_process_integration_platforms(
     else:
         integration_platforms = hass.data[DATA_INTEGRATION_PLATFORMS]
 
-    if register_preload_platform:
-        async_register_preload_platform(hass, platform_name)
+    async_register_preload_platform(hass, platform_name)
     top_level_components = {comp for comp in hass.config.components if "." not in comp}
     process_job = HassJob(
         catch_log_exception(
