@@ -635,6 +635,10 @@ class Integration:
                 manifest,
             )
 
+            # Prime the cache while we are here
+            # so the import executor does not have to do it
+            integration._top_level_files  # pylint: disable=pointless-statement
+
             if integration.is_built_in:
                 return integration
 
@@ -1148,11 +1152,7 @@ class Integration:
 
         This does blocking I/O and should not be called from the event loop.
         """
-        if not (component := self._cache.get(self.domain)) or not (
-            file := getattr(component, "__file__", None)
-        ):
-            raise RuntimeError(f"Integration {self.domain} not loaded")
-        return set(os.listdir(pathlib.Path(file).parent))
+        return set(os.listdir(self.file_path))
 
     def platforms_exists(self, platform_names: Iterable[str]) -> list[str]:
         """Check if a platforms exists for an integration.
