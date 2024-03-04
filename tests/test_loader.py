@@ -1093,20 +1093,23 @@ async def test_async_get_component_preloads_config_and_config_flow(
     ) as mock_platform_exists:
         await executor_import_integration.async_get_component()
 
-    assert mock_platform_exists.call_count == 1
-    assert mock_import.call_count == 3
+    assert mock_platform_exists.call_count == len(loader.BASE_PRELOAD_PLATFORMS)
+    assert mock_import.call_count == 2 + len(loader.BASE_PRELOAD_PLATFORMS)
     assert (
         mock_import.call_args_list[0][0][0]
         == "homeassistant.components.executor_import"
     )
-    assert (
-        mock_import.call_args_list[1][0][0]
-        == "homeassistant.components.executor_import.config"
-    )
-    assert (
-        mock_import.call_args_list[2][0][0]
-        == "homeassistant.components.executor_import.config_flow"
-    )
+    checked_platforms = {
+        mock_import.call_args_list[i][0][0]
+        for i in range(1, len(mock_import.call_args_list))
+    }
+    assert checked_platforms == {
+        "homeassistant.components.executor_import.config_flow",
+        *(
+            f"homeassistant.components.executor_import.{platform}"
+            for platform in loader.BASE_PRELOAD_PLATFORMS
+        ),
+    }
 
 
 async def test_async_get_component_loads_loop_if_already_in_sys_modules(

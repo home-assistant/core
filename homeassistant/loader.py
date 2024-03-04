@@ -981,8 +981,10 @@ class Integration:
                 # platform exists. Since we may be running in the executor
                 # we will use this opportunity to cache the config platform
                 # as well.
-                with suppress(ImportError):
+                try:  # noqa: SIM105 suppress is much slower
                     self.get_platform(platform_name)
+                except ImportError:
+                    pass
 
         if self.config_flow:
             # If there is a config flow, we will cache it as well since
@@ -990,8 +992,10 @@ class Integration:
             # major/minor version for migrations. Since we may be running
             # in the executor we will use this opportunity to cache the
             # config_flow as well.
-            with suppress(ImportError):
+            try:  # noqa: SIM105 suppress is much slower
                 self.get_platform("config_flow")
+            except ImportError:
+                pass
 
         return cache[domain]
 
