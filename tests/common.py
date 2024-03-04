@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
@@ -260,14 +259,14 @@ async def async_test_home_assistant(
 
         return orig_async_add_executor_job(target, *args)
 
-    def async_create_task(coroutine, name=None):
+    def async_create_task(coroutine, name=None, eager_start=False):
         """Create task."""
         if isinstance(coroutine, Mock) and not isinstance(coroutine, AsyncMock):
             fut = asyncio.Future()
             fut.set_result(None)
             return fut
 
-        return orig_async_create_task(coroutine, name)
+        return orig_async_create_task(coroutine, name, eager_start)
 
     hass.async_add_job = async_add_job
     hass.async_add_executor_job = async_add_executor_job
@@ -615,27 +614,6 @@ def mock_registry(
         registry.entities[key] = entry
 
     hass.data[er.DATA_REGISTRY] = registry
-    return registry
-
-
-def mock_area_registry(
-    hass: HomeAssistant, mock_entries: dict[str, ar.AreaEntry] | None = None
-) -> ar.AreaRegistry:
-    """Mock the Area Registry.
-
-    This should only be used if you need to mock/re-stage a clean mocked
-    area registry in your current hass object. It can be useful to,
-    for example, pre-load the registry with items.
-
-    This mock will thus replace the existing registry in the running hass.
-
-    If you just need to access the existing registry, use the `area_registry`
-    fixture instead.
-    """
-    registry = ar.AreaRegistry(hass)
-    registry.areas = mock_entries or OrderedDict()
-
-    hass.data[ar.DATA_REGISTRY] = registry
     return registry
 
 
@@ -1075,11 +1053,11 @@ def assert_setup_component(count, domain=None):
     """
     config = {}
 
-    async def mock_psc(hass, config_input, integration):
+    async def mock_psc(hass, config_input, integration, component=None):
         """Mock the prepare_setup_component to capture config."""
         domain_input = integration.domain
         integration_config_info = await async_process_component_config(
-            hass, config_input, integration
+            hass, config_input, integration, component
         )
         res = integration_config_info.config
         config[domain_input] = None if res is None else res.get(domain_input)

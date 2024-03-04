@@ -93,26 +93,26 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     )
 
 
-@dataclass(frozen=True)
-class UnifiDescription(Generic[HandlerT, ApiItemT]):
-    """Validate and load entities from different UniFi handlers."""
+@dataclass(frozen=True, kw_only=True)
+class UnifiEntityDescription(EntityDescription, Generic[HandlerT, ApiItemT]):
+    """UniFi Entity Description."""
 
     allowed_fn: Callable[[UnifiHub, str], bool]
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
     available_fn: Callable[[UnifiHub, str], bool]
     device_info_fn: Callable[[UnifiHub, str], DeviceInfo | None]
-    event_is_on: tuple[EventKey, ...] | None
-    event_to_subscribe: tuple[EventKey, ...] | None
     name_fn: Callable[[ApiItemT], str | None]
     object_fn: Callable[[aiounifi.Controller, str], ApiItemT]
-    should_poll: bool
     supported_fn: Callable[[UnifiHub, str], bool | None]
     unique_id_fn: Callable[[UnifiHub, str], str]
 
-
-@dataclass(frozen=True)
-class UnifiEntityDescription(EntityDescription, UnifiDescription[HandlerT, ApiItemT]):
-    """UniFi Entity Description."""
+    # Optional
+    event_is_on: tuple[EventKey, ...] | None = None
+    """Which UniFi events should be used to consider state 'on'."""
+    event_to_subscribe: tuple[EventKey, ...] | None = None
+    """Which UniFi events to listen on."""
+    should_poll: bool = False
+    """If entity needs to do regular checks on state."""
 
 
 class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):

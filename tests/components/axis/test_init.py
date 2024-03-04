@@ -18,7 +18,7 @@ async def test_setup_entry_fails(hass: HomeAssistant, config_entry) -> None:
     mock_device = Mock()
     mock_device.async_setup = AsyncMock(return_value=False)
 
-    with patch.object(axis, "AxisNetworkDevice") as mock_device_class:
+    with patch.object(axis, "AxisHub") as mock_device_class:
         mock_device_class.return_value = mock_device
 
         assert not await hass.config_entries.async_setup(config_entry.entry_id)

@@ -1,0 +1,59 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "mobile_connection": {
+        "default": "mdi:signal-off",
+        "state": {
+          "on": "mdi:signal"
+        }
+      },
+      "wifi_status": {
+        "default": "mdi:wifi-off",
+        "state": {
+          "on": "mdi:wifi"
+        }
+      },
+      "24ghz_wifi_status": {
+        "default": "mdi:wifi-off",
+        "state": {
+          "on": "mdi:wifi"
+        }
+      },
+      "5ghz_wifi_status": {
+        "default": "mdi:wifi-off",
+        "state": {
+          "on": "mdi:wifi"
+        }
+      },
+      "sms_storage_full": {
+        "default": "mdi:email-off",
+        "state": {
+          "on": "mdi:email-alert"
+        }
+      }
+    },
+    "select": {
+      "preferred_network_mode": {
+        "default": "mdi:transmission-tower"
+      }
+    },
+    "switch": {
+      "mobile_data": {
+        "default": "mdi:signal-off",
+        "state": {
+          "on": "mdi:signal"
+        }
+      },
+      "wifi_guest_network": {
+        "default": "mdi:wifi-off",
+        "state": {
+          "on": "mdi:wifi"
+        }
+      }
+    }
+  },
+  "services": {
+    "resume_integration": "mdi:play-pause",
+    "suspend_integration": "mdi:pause"
+  }
+}
