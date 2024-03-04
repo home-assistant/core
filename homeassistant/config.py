@@ -1458,6 +1458,9 @@ async def async_process_component_config(  # noqa: C901
 
     # Check if the integration has a custom config validator
     config_validator = None
+    # A successful call to async_get_component will prime
+    # the cache for platform_exists to ensure it does no
+    # blocking I/O
     if integration.platform_exists("config") is not False:
         # If the config platform cannot possibly exist, don't try to load it.
         try:
