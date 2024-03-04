@@ -1119,15 +1119,52 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
     )
     assert integration.pkg_path == "custom_components.test_package_loaded_executor"
     assert integration.import_executor is True
-    module_mock = MagicMock()
+    assert integration.config_flow is True
+
     assert "executor_import" not in hass.config.components
-    with patch.dict("sys.modules", {integration.pkg_path: module_mock}), patch(
-        "homeassistant.loader.importlib.import_module", return_value=module_mock
-    ) as mock_import:
+    assert "executor_import.config_flow" not in hass.config.components
+
+    config_flow_module_name = f"{integration.pkg_path}.config_flow"
+    module_mock = MagicMock()
+    config_flow_module_mock = MagicMock()
+
+    def import_module(name: str) -> Any:
+        if name == integration.pkg_path:
+            return module_mock
+        if name == config_flow_module_name:
+            return config_flow_module_mock
+        raise ImportError
+
+    modules_without_config_flow = {
+        k: v for k, v in sys.modules.items() if k != config_flow_module_name
+    }
+    with patch.dict(
+        "sys.modules",
+        {**modules_without_config_flow, integration.pkg_path: module_mock},
+        clear=True,
+    ), patch("homeassistant.loader.importlib.import_module", import_module):
         module = await integration.async_get_component()
 
-    assert mock_import.call_count == 2
+    # The config flow is missing so we should load
+    # in the executor
+    assert "loaded_executor=True" in caplog.text
+    assert "loaded_executor=False" not in caplog.text
+    assert module is module_mock
+    caplog.clear()
+
+    with patch.dict(
+        "sys.modules",
+        {
+            integration.pkg_path: module_mock,
+            config_flow_module_name: config_flow_module_mock,
+        },
+    ), patch("homeassistant.loader.importlib.import_module", import_module):
+        module = await integration.async_get_component()
+
+    # Everything is there so we should load in the event loop
+    # since it will all be cached
     assert "loaded_executor=False" in caplog.text
+    assert "loaded_executor=True" not in caplog.text
     assert module is module_mock
 
 
