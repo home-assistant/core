@@ -86,6 +86,11 @@
       }
     }
   },
+  "exceptions": {
+    "process_not_found": {
+      "message": "Could not find process with id {id}."
+    }
+  },
   "issues": {
     "unsupported_version": {
       "title": "System Bridge Upgrade Required",

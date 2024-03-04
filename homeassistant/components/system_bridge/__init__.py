@@ -39,7 +39,11 @@ from homeassistant.core import (
     ServiceResponse,
     SupportsResponse,
 )
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -212,27 +216,22 @@ async def async_setup_entry(
             service_call.data[CONF_BRIDGE]
         ]
         processes: list[Process] = coordinator.data.processes
-        # Find process.id from list
-        return asdict(
-            next(
-                (
+
+        # Find process.id from list, raise HomeAssistantError if not found
+        try:
+            return asdict(
+                next(
                     process
                     for process in processes
                     if process.id == service_call.data[CONF_ID]
-                ),
-                Process(
-                    id=service_call.data[CONF_ID],
-                    name="",
-                    cpu_usage=None,
-                    created=None,
-                    memory_usage=None,
-                    path=None,
-                    status=None,
-                    username=None,
-                    working_directory=None,
-                ),
+                )
             )
-        )
+        except StopIteration as exception:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="process_not_found",
+                translation_placeholders={"id": service_call.data[CONF_ID]},
+            ) from exception
 
     async def handle_get_processes_by_name(
         call: ServiceCall,
