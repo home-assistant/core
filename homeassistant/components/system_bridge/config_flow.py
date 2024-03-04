@@ -17,8 +17,7 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_TOKEN
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -35,75 +34,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_TOKEN): cv.string,
     }
 )
-
-
-async def _validate_input(
-    hass: HomeAssistant,
-    data: dict[str, Any],
-) -> dict[str, str]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    host = data[CONF_HOST]
-
-    websocket_client = WebSocketClient(
-        host,
-        data[CONF_PORT],
-        data[CONF_API_KEY],
-    )
-    try:
-        async with asyncio.timeout(15):
-            await websocket_client.connect(session=async_get_clientsession(hass))
-            hass.async_create_task(websocket_client.listen())
-            response = await websocket_client.get_data(GetData(modules=["system"]))
-            _LOGGER.debug("Got response: %s", response)
-            if response.data is None or not isinstance(response.data, System):
-                raise CannotConnect("No data received")
-            system: System = response.data
-    except AuthenticationException as exception:
-        _LOGGER.warning(
-            "Authentication error when connecting to %s: %s", data[CONF_HOST], exception
-        )
-        raise InvalidAuth from exception
-    except (
-        ConnectionClosedException,
-        ConnectionErrorException,
-    ) as exception:
-        _LOGGER.warning(
-            "Connection error when connecting to %s: %s", data[CONF_HOST], exception
-        )
-        raise CannotConnect from exception
-    except TimeoutError as exception:
-        _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
-        raise CannotConnect from exception
-    except ValueError as exception:
-        raise CannotConnect from exception
-
-    _LOGGER.debug("Got System data: %s", system)
-
-    return {"hostname": host, "uuid": system.uuid}
-
-
-async def _async_get_info(
-    hass: HomeAssistant,
-    user_input: dict[str, Any],
-) -> tuple[dict[str, str], dict[str, str] | None]:
-    errors = {}
-
-    try:
-        info = await _validate_input(hass, user_input)
-    except CannotConnect:
-        errors["base"] = "cannot_connect"
-    except InvalidAuth:
-        errors["base"] = "invalid_auth"
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception("Unexpected exception")
-        errors["base"] = "unknown"
-    else:
-        return errors, info
-
-    return errors, None
 
 
 class SystemBridgeConfigFlow(
