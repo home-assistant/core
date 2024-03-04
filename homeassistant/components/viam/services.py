@@ -169,22 +169,38 @@ async def __capture_image(call: ServiceCall, *, hass: HomeAssistant) -> None:
         )
 
 
-async def __get_classifications(
-    call: ServiceCall, *, hass: HomeAssistant
-) -> ServiceResponse:
-    """Accept input configuration to request classifications."""
+async def __get_service_values(
+    hass: HomeAssistant, call: ServiceCall, service_config_name: str
+):
+    """Create common values for vision services."""
     manager: ViamManager = __get_manager(hass, call)
     filepath = call.data.get(SERVICE_FILEPATH)
     camera_entity = call.data.get(SERVICE_CAMERA)
-    classifier_name = call.data.get(SERVICE_CLASSIFIER_NAME, "")
+    service_name = call.data.get(service_config_name, "")
     count = int(call.data.get(SERVICE_COUNT, 2))
     confidence_threshold = float(call.data.get(SERVICE_CONFIDENCE, 0.6))
 
     async with await manager.get_robot_client(
         call.data.get(SERVICE_ROBOT_SECRET), call.data.get(SERVICE_ROBOT_ADDRESS)
     ) as robot:
-        classifier = VisionClient.from_robot(robot, classifier_name)
+        service: VisionClient = VisionClient.from_robot(robot, service_name)
         image = await manager.get_image(filepath, camera_entity)
+
+    return manager, service, image, filepath, confidence_threshold, count
+
+
+async def __get_classifications(
+    call: ServiceCall, *, hass: HomeAssistant
+) -> ServiceResponse:
+    """Accept input configuration to request classifications."""
+    (
+        manager,
+        classifier,
+        image,
+        filepath,
+        confidence_threshold,
+        count,
+    ) = await __get_service_values(hass, call, SERVICE_CLASSIFIER_NAME)
 
     if image is None:
         return {
@@ -209,17 +225,14 @@ async def __get_detections(
     call: ServiceCall, *, hass: HomeAssistant
 ) -> ServiceResponse:
     """Accept input configuration to request detections."""
-    manager: ViamManager = __get_manager(hass, call)
-    filepath = call.data.get(SERVICE_FILEPATH)
-    camera_entity = call.data.get(SERVICE_CAMERA)
-    detector_name = call.data.get(SERVICE_DETECTOR_NAME, "")
-    confidence_threshold = float(call.data.get(SERVICE_CONFIDENCE, 0.6))
-
-    async with await manager.get_robot_client(
-        call.data.get(SERVICE_ROBOT_SECRET), call.data.get(SERVICE_ROBOT_ADDRESS)
-    ) as robot:
-        detector = VisionClient.from_robot(robot, detector_name)
-        image = await manager.get_image(filepath, camera_entity)
+    (
+        manager,
+        detector,
+        image,
+        filepath,
+        confidence_threshold,
+        _count,
+    ) = await __get_service_values(hass, call, SERVICE_DETECTOR_NAME)
 
     if image is None:
         return {
