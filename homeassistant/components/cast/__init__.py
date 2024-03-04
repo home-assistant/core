@@ -27,9 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await home_assistant_cast.async_setup_ha_cast(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.data[DOMAIN] = {"cast_platform": {}, "unknown_models": {}}
-    await async_process_integration_platforms(
-        hass, DOMAIN, _register_cast_platform, register_preload_platform=False
-    )
+    await async_process_integration_platforms(hass, DOMAIN, _register_cast_platform)
     return True
 
 
