@@ -30,7 +30,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
-from homeassistant.util.async_ import create_eager_task
 
 from .config_flow import normalize_hkid
 from .const import (
@@ -320,7 +319,7 @@ class HKDevice:
             )
             # BLE devices always get an RSSI sensor as well
             if "sensor" not in self.platforms:
-                await self.async_load_platform("sensor")
+                await self._async_load_platforms({"sensor"})
 
     @callback
     def _async_start_polling(self) -> None:
@@ -791,18 +790,18 @@ class HKDevice:
                         self.entities.add(entity_key)
                         break
 
-    async def async_load_platform(self, platform: str) -> None:
-        """Load a single platform idempotently."""
-        if platform in self.platforms:
+    async def _async_load_platforms(self, platforms: set[str]) -> None:
+        """Load a group of platforms."""
+        if not (to_load := platforms - self.platforms):
             return
 
-        self.platforms.add(platform)
+        self.platforms.update(to_load)
         try:
-            await self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, platform
+            await self.hass.config_entries.async_forward_entry_setups(
+                self.config_entry, platforms
             )
         except Exception:
-            self.platforms.remove(platform)
+            self.platforms -= to_load
             raise
 
     async def async_load_platforms(self) -> None:
@@ -822,12 +821,7 @@ class HKDevice:
                             to_load.add(platform)
 
         if to_load:
-            await asyncio.gather(
-                *(
-                    create_eager_task(self.async_load_platform(platform))
-                    for platform in to_load
-                )
-            )
+            await self._async_load_platforms(to_load)
 
     @callback
     def async_update_available_state(self, *_: Any) -> None:
