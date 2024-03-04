@@ -8,9 +8,8 @@ from typing import Any
 from aioaseko import APIUnavailable, InvalidAuthCredentials, WebAccount
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -18,7 +17,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class AsekoPoolLiveConfigFlow(ConfigFlow, domain=DOMAIN):
+class AsekoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aseko Pool Live."""
 
     VERSION = 2
@@ -47,7 +46,7 @@ class AsekoPoolLiveConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: Mapping[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         self.reauth_entry = None

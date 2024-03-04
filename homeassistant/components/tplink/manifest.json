@@ -266,6 +266,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/tplink",
+  "import_executor": true,
   "iot_class": "local_polling",
   "loggers": ["kasa"],
   "quality_scale": "platinum",

@@ -32,6 +32,11 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.http import (
+    KEY_AUTHENTICATED,  # noqa: F401
+    HomeAssistantView,
+    current_request,
+)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -41,20 +46,14 @@ from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .const import (  # noqa: F401
-    KEY_AUTHENTICATED,
-    KEY_HASS,
-    KEY_HASS_REFRESH_TOKEN_ID,
-    KEY_HASS_USER,
-)
+from .const import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID, KEY_HASS_USER  # noqa: F401
 from .cors import setup_cors
 from .decorators import require_admin  # noqa: F401
 from .forwarded import async_setup_forwarded
 from .headers import setup_headers
-from .request_context import current_request, setup_request_context
+from .request_context import setup_request_context
 from .security_filter import setup_security_filter
 from .static import CACHE_HEADERS, CachingStaticResource
-from .view import HomeAssistantView
 from .web_runner import HomeAssistantTCPSite
 
 DOMAIN: Final = "http"

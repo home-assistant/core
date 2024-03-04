@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components import axis, zeroconf
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
+from homeassistant.components.axis.hub import AxisHub
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import (
@@ -48,12 +49,12 @@ async def test_device_setup(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Successful setup."""
-    device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
+    hub = AxisHub.get_hub(hass, setup_config_entry)
 
-    assert device.api.vapix.firmware_version == "9.10.1"
-    assert device.api.vapix.product_number == "M1065-LW"
-    assert device.api.vapix.product_type == "Network Camera"
-    assert device.api.vapix.serial_number == "00408C123456"
+    assert hub.api.vapix.firmware_version == "9.10.1"
+    assert hub.api.vapix.product_number == "M1065-LW"
+    assert hub.api.vapix.product_type == "Network Camera"
+    assert hub.api.vapix.serial_number == "00408C123456"
 
     assert len(forward_entry_setup.mock_calls) == 4
     assert forward_entry_setup.mock_calls[0][1][1] == "binary_sensor"
@@ -61,27 +62,27 @@ async def test_device_setup(
     assert forward_entry_setup.mock_calls[2][1][1] == "light"
     assert forward_entry_setup.mock_calls[3][1][1] == "switch"
 
-    assert device.host == config[CONF_HOST]
-    assert device.model == config[CONF_MODEL]
-    assert device.name == config[CONF_NAME]
-    assert device.unique_id == FORMATTED_MAC
+    assert hub.host == config[CONF_HOST]
+    assert hub.model == config[CONF_MODEL]
+    assert hub.name == config[CONF_NAME]
+    assert hub.unique_id == FORMATTED_MAC
 
     device_entry = device_registry.async_get_device(
-        identifiers={(AXIS_DOMAIN, device.unique_id)}
+        identifiers={(AXIS_DOMAIN, hub.unique_id)}
     )
 
-    assert device_entry.configuration_url == device.api.config.url
+    assert device_entry.configuration_url == hub.api.config.url
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_BASIC_DEVICE_INFO])
 async def test_device_info(hass: HomeAssistant, setup_config_entry) -> None:
     """Verify other path of device information works."""
-    device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
+    hub = AxisHub.get_hub(hass, setup_config_entry)
 
-    assert device.api.vapix.firmware_version == "9.80.1"
-    assert device.api.vapix.product_number == "M1065-LW"
-    assert device.api.vapix.product_type == "Network Camera"
-    assert device.api.vapix.serial_number == "00408C123456"
+    assert hub.api.vapix.firmware_version == "9.80.1"
+    assert hub.api.vapix.product_number == "M1065-LW"
+    assert hub.api.vapix.product_type == "Network Camera"
+    assert hub.api.vapix.serial_number == "00408C123456"
 
 
 @pytest.mark.parametrize("api_discovery_items", [API_DISCOVERY_MQTT])
@@ -111,8 +112,8 @@ async def test_update_address(
     hass: HomeAssistant, setup_config_entry, mock_vapix_requests
 ) -> None:
     """Test update address works."""
-    device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
-    assert device.api.config.host == "1.2.3.4"
+    hub = AxisHub.get_hub(hass, setup_config_entry)
+    assert hub.api.config.host == "1.2.3.4"
 
     with patch(
         "homeassistant.components.axis.async_setup_entry", return_value=True
@@ -133,7 +134,7 @@ async def test_update_address(
         )
         await hass.async_block_till_done()
 
-    assert device.api.config.host == "2.3.4.5"
+    assert hub.api.config.host == "2.3.4.5"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -171,18 +172,11 @@ async def test_device_unavailable(
     assert hass.states.get(f"{BINARY_SENSOR_DOMAIN}.{NAME}_sound_1").state == STATE_OFF
 
 
-async def test_device_reset(hass: HomeAssistant, setup_config_entry) -> None:
-    """Successfully reset device."""
-    device = hass.data[AXIS_DOMAIN][setup_config_entry.entry_id]
-    result = await device.async_reset()
-    assert result is True
-
-
 async def test_device_not_accessible(
     hass: HomeAssistant, config_entry, setup_default_vapix_requests
 ) -> None:
     """Failed setup schedules a retry of setup."""
-    with patch.object(axis, "get_axis_device", side_effect=axis.errors.CannotConnect):
+    with patch.object(axis, "get_axis_api", side_effect=axis.errors.CannotConnect):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     assert hass.data[AXIS_DOMAIN] == {}
@@ -193,7 +187,7 @@ async def test_device_trigger_reauth_flow(
 ) -> None:
     """Failed authentication trigger a reauthentication flow."""
     with patch.object(
-        axis, "get_axis_device", side_effect=axis.errors.AuthenticationRequired
+        axis, "get_axis_api", side_effect=axis.errors.AuthenticationRequired
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -205,7 +199,7 @@ async def test_device_unknown_error(
     hass: HomeAssistant, config_entry, setup_default_vapix_requests
 ) -> None:
     """Unknown errors are handled."""
-    with patch.object(axis, "get_axis_device", side_effect=Exception):
+    with patch.object(axis, "get_axis_api", side_effect=Exception):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
     assert hass.data[AXIS_DOMAIN] == {}
@@ -217,7 +211,7 @@ async def test_shutdown(config) -> None:
     entry = Mock()
     entry.data = config
 
-    axis_device = axis.device.AxisNetworkDevice(hass, entry, Mock())
+    axis_device = axis.hub.AxisHub(hass, entry, Mock())
 
     await axis_device.shutdown(None)
 
@@ -227,9 +221,9 @@ async def test_shutdown(config) -> None:
 async def test_get_device_fails(hass: HomeAssistant, config) -> None:
     """Device unauthorized yields authentication required error."""
     with patch(
-        "axis.vapix.vapix.Vapix.request", side_effect=axislib.Unauthorized
+        "axis.vapix.vapix.Vapix.initialize", side_effect=axislib.Unauthorized
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.device.get_axis_device(hass, config)
+        await axis.hub.get_axis_api(hass, config)
 
 
 async def test_get_device_device_unavailable(hass: HomeAssistant, config) -> None:
@@ -237,7 +231,7 @@ async def test_get_device_device_unavailable(hass: HomeAssistant, config) -> Non
     with patch(
         "axis.vapix.vapix.Vapix.request", side_effect=axislib.RequestError
     ), pytest.raises(axis.errors.CannotConnect):
-        await axis.device.get_axis_device(hass, config)
+        await axis.hub.get_axis_api(hass, config)
 
 
 async def test_get_device_unknown_error(hass: HomeAssistant, config) -> None:
@@ -245,4 +239,4 @@ async def test_get_device_unknown_error(hass: HomeAssistant, config) -> None:
     with patch(
         "axis.vapix.vapix.Vapix.request", side_effect=axislib.AxisException
     ), pytest.raises(axis.errors.AuthenticationRequired):
-        await axis.device.get_axis_device(hass, config)
+        await axis.hub.get_axis_api(hass, config)

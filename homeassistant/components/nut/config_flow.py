@@ -7,9 +7,13 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import exceptions
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_BASE,
@@ -20,7 +24,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 
 from . import PyNUTData
 from .const import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -94,7 +98,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Prepare configuration for a discovered nut device."""
         self.discovery_info = discovery_info
         await self._async_handle_discovery_without_unique_id()
@@ -106,7 +110,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user input."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -136,7 +140,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_ups(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the picking the ups."""
         errors: dict[str, str] = {}
 
@@ -194,7 +198,7 @@ class OptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -212,5 +216,5 @@ class OptionsFlowHandler(OptionsFlow):
         return self.async_show_form(step_id="init", data_schema=vol.Schema(base_schema))
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""

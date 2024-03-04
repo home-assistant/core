@@ -29,6 +29,7 @@ from .helpers import translation
 from .helpers.issue_registry import IssueSeverity, async_create_issue
 from .helpers.typing import ConfigType, EventType
 from .util import ensure_unique_string
+from .util.async_ import create_eager_task
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -192,7 +193,7 @@ async def _async_process_dependencies(
 
     dependencies_tasks = {
         dep: setup_futures.get(dep)
-        or hass.loop.create_task(
+        or create_eager_task(
             async_setup_component(hass, dep, config),
             name=f"setup {dep} as dependency of {integration.domain}",
         )
@@ -298,7 +299,7 @@ async def _async_setup_component(  # noqa: C901
         return False
 
     integration_config_info = await conf_util.async_process_component_config(
-        hass, config, integration
+        hass, config, integration, component
     )
     conf_util.async_handle_component_errors(hass, integration_config_info, integration)
     processed_config = conf_util.async_drop_config_annotations(
@@ -352,7 +353,7 @@ async def _async_setup_component(  # noqa: C901
         # loaded since we try to load them in bootstrap ahead of time.
         # If for some reason the background task in bootstrap was too slow
         # or the integration was added after bootstrap, we will load them here.
-        load_translations_task = asyncio.create_task(
+        load_translations_task = create_eager_task(
             translation.async_load_integrations(hass, integration_set)
         )
 
@@ -433,7 +434,7 @@ async def _async_setup_component(  # noqa: C901
         ):
             await asyncio.gather(
                 *(
-                    asyncio.create_task(
+                    create_eager_task(
                         entry.async_setup(hass, integration=integration),
                         name=f"config entry setup {entry.title} {entry.domain} {entry.entry_id}",
                     )
@@ -481,8 +482,21 @@ async def async_prepare_setup_platform(
         log_error(str(err))
         return None
 
+    # Platforms cannot exist on their own, they are part of their integration.
+    # If the integration is not set up yet, and can be set up, set it up.
+    #
+    # We do this before we import the platform so the platform already knows
+    # where the top level component is.
+    #
+    if load_top_level_component := integration.domain not in hass.config.components:
+        try:
+            component = await integration.async_get_component()
+        except ImportError as exc:
+            log_error(f"Unable to import the component ({exc}).")
+            return None
+
     try:
-        platform = integration.get_platform(domain)
+        platform = await integration.async_get_platform(domain)
     except ImportError as exc:
         log_error(f"Platform not found ({exc}).")
         return None
@@ -493,13 +507,7 @@ async def async_prepare_setup_platform(
 
     # Platforms cannot exist on their own, they are part of their integration.
     # If the integration is not set up yet, and can be set up, set it up.
-    if integration.domain not in hass.config.components:
-        try:
-            component = integration.get_component()
-        except ImportError as exc:
-            log_error(f"Unable to import the component ({exc}).")
-            return None
-
+    if load_top_level_component:
         if (
             hasattr(component, "setup") or hasattr(component, "async_setup")
         ) and not await async_setup_component(hass, integration.domain, hass_config):
@@ -569,7 +577,9 @@ def _async_when_setup(
             _LOGGER.exception("Error handling when_setup callback for %s", component)
 
     if component in hass.config.components:
-        hass.async_create_task(when_setup(), f"when setup {component}")
+        hass.async_create_task(
+            when_setup(), f"when setup {component}", eager_start=True
+        )
         return
 
     listeners: list[CALLBACK_TYPE] = []

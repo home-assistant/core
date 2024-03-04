@@ -10,6 +10,7 @@ import pytest
 from homeassistant.bootstrap import async_setup_component
 import homeassistant.components.mailbox as mailbox
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -207,3 +208,17 @@ async def test_delete_from_invalid_mailbox(mock_http_client: TestClient) -> None
 
     req = await mock_http_client.delete(url)
     assert req.status == HTTPStatus.NOT_FOUND
+
+
+async def test_repair_issue_is_created(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry, mock_mailbox: None
+) -> None:
+    """Test repair issue is created."""
+    assert await async_setup_component(
+        hass, mailbox.DOMAIN, {mailbox.DOMAIN: {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+    assert (
+        mailbox.DOMAIN,
+        "deprecated_mailbox_test",
+    ) in issue_registry.issues

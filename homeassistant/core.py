@@ -95,6 +95,7 @@ from .util.async_ import (
     run_callback_threadsafe,
     shutdown_run_callback_threadsafe,
 )
+from .util.executor import InterruptibleThreadPoolExecutor
 from .util.json import JsonObjectType
 from .util.read_only_dict import ReadOnlyDict
 from .util.timeout import TimeoutManager
@@ -394,6 +395,9 @@ class HomeAssistant:
         self.timeout: TimeoutManager = TimeoutManager()
         self._stop_future: concurrent.futures.Future[None] | None = None
         self._shutdown_jobs: list[HassJobWithArgs] = []
+        self.import_executor = InterruptibleThreadPoolExecutor(
+            max_workers=1, thread_name_prefix="ImportExecutor"
+        )
 
     @cached_property
     def is_running(self) -> bool:
@@ -509,6 +513,11 @@ class HomeAssistant:
         """
         if target is None:
             raise ValueError("Don't call add_job with None")
+        if asyncio.iscoroutine(target):
+            self.loop.call_soon_threadsafe(self.async_add_job, target)
+            return
+        if TYPE_CHECKING:
+            target = cast(Callable[..., Any], target)
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     @overload
@@ -637,6 +646,8 @@ class HomeAssistant:
         """
         if eager_start:
             task = create_eager_task(target, name=name, loop=self.loop)
+            if task.done():
+                return task
         else:
             task = self.loop.create_task(target, name=name)
         self._tasks.add(task)
@@ -657,6 +668,8 @@ class HomeAssistant:
         """
         if eager_start:
             task = create_eager_task(target, name=name, loop=self.loop)
+            if task.done():
+                return task
         else:
             task = self.loop.create_task(target, name=name)
         self._background_tasks.add(task)
@@ -672,6 +685,16 @@ class HomeAssistant:
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
 
+        return task
+
+    @callback
+    def async_add_import_executor_job(
+        self, target: Callable[..., _T], *args: Any
+    ) -> asyncio.Future[_T]:
+        """Add an import executor job from within the event loop."""
+        task = self.loop.run_in_executor(self.import_executor, target, *args)
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.remove)
         return task
 
     @overload
@@ -988,6 +1011,7 @@ class HomeAssistant:
             self._async_log_running_tasks("close")
 
         self.set_state(CoreState.stopped)
+        self.import_executor.shutdown()
 
         if self._stopped is not None:
             self._stopped.set()
@@ -2293,6 +2317,7 @@ class ServiceRegistry:
             self._hass.async_create_task(
                 self._run_service_call_catch_exceptions(coro, service_call),
                 f"service call background {service_call.domain}.{service_call.service}",
+                eager_start=True,
             )
             return None
 
