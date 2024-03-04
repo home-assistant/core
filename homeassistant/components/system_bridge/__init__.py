@@ -207,7 +207,7 @@ async def async_setup_entry(
 
     async def handle_get_process_by_id(service_call: ServiceCall) -> ServiceResponse:
         """Handle the get process by id service call."""
-        _LOGGER.info("Get process by id: %s", service_call.data)
+        _LOGGER.debug("Get process by id: %s", service_call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             service_call.data[CONF_BRIDGE]
         ]
@@ -238,7 +238,7 @@ async def async_setup_entry(
         call: ServiceCall,
     ) -> ServiceResponse:
         """Handle the get process by name service call."""
-        _LOGGER.info("Get process by name: %s", call.data)
+        _LOGGER.debug("Get process by name: %s", call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
         ]
