@@ -1100,7 +1100,6 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
             return config_flow_module_mock
         raise ImportError
 
-    caplog.clear()
     modules_without_config_flow = {
         k: v for k, v in sys.modules.items() if k != config_flow_module_name
     }
@@ -1114,7 +1113,9 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
     # The config flow is missing so we should load
     # in the executor
     assert "loaded_executor=True" in caplog.text
+    assert "loaded_executor=False" not in caplog.text
     assert module is module_mock
+    caplog.clear()
 
     with patch.dict(
         "sys.modules",
@@ -1128,9 +1129,8 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
     # Everything is there so we should load in the event loop
     # since it will all be cached
     assert "loaded_executor=False" in caplog.text
+    assert "loaded_executor=True" not in caplog.text
     assert module is module_mock
-
-    caplog.clear()
 
 
 async def test_async_get_component_deadlock_fallback(
