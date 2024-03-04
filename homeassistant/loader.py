@@ -1092,7 +1092,13 @@ class Integration:
         return self._load_platform(platform_name)
 
     def platform_missing(self, platform_name: str) -> bool:
-        """Check if its known that a platform is missing."""
+        """Check if its known that a platform is missing.
+
+        This function is used to pre-filter in the event loop
+        if a platform is known to be missing so we can avoid
+        an executor job to check if the platform exists
+        using platform_exists.
+        """
         return bool(f"{self.domain}.{platform_name}" in self._missing_platforms_cache)
 
     def platform_exists(self, platform_name: str) -> bool | None:

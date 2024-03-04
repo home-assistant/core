@@ -65,7 +65,10 @@ def _filter_possible_platforms(
     integration: Integration,
     integration_platforms: list[IntegrationPlatform],
 ) -> list[IntegrationPlatform]:
-    """Filter out platforms that have already been processed."""
+    """Filter out platforms that have already been processed.
+
+    This function is executed in an executor.
+    """
     return [
         integration_platform
         for integration_platform in integration_platforms
@@ -139,7 +142,10 @@ def _get_integrations_with_platform(
     platform_name: str,
     integrations: list[Integration],
 ) -> list[Integration]:
-    """Filter out integrations that have a platform."""
+    """Filter out integrations that have a platform.
+
+    This function is executed in an executor.
+    """
     return [
         integration
         for integration in integrations
