@@ -47,8 +47,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError) as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err
 
-    await async_migrate_devices(hass, entry)
-    await async_migrate_entities(hass, entry)
+    for device in hass.data[DOMAIN][entry.entry_id][DEVICE_LIST]:
+        await async_migrate_devices(hass, entry, device)
+        await async_migrate_entities(hass, entry, device)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -112,22 +113,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_migrate_devices(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_migrate_devices(
+    hass: HomeAssistant, entry: ConfigEntry, device: ViCareDevice
+) -> None:
     """Migrate old entry."""
     registry = dr.async_get(hass)
 
-    device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
-    device = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
-    old_serial: str = device_config.getConfig().serial
-    new_serial: str = device.getSerial()
+    old_serial: str = device.config.getConfig().serial
+    new_serial: str = device.api.getSerial()
 
     if new_serial == old_serial:
         return
 
     # Migrate devices
-    for device_entry in dr.async_entries_for_config_entry(
-        registry, config_entry.entry_id
-    ):
+    for device_entry in dr.async_entries_for_config_entry(registry, entry.entry_id):
         if device_entry.serial_number == old_serial:
             _LOGGER.debug(
                 "Migrating device %s serial to %s", device_entry.name, new_serial
@@ -140,13 +139,11 @@ async def async_migrate_devices(hass: HomeAssistant, config_entry: ConfigEntry) 
 
 
 async def async_migrate_entities(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, entry: ConfigEntry, device: ViCareDevice
 ) -> None:
     """Migrate old entry."""
-    device_config = hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG]
-    device = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
-    old_serial: str = device_config.getConfig().serial
-    new_serial: str = device.getSerial()
+    old_serial: str = device.config.getConfig().serial
+    new_serial: str = device.api.getSerial()
 
     @callback
     def _update_unique_id(
@@ -173,7 +170,8 @@ async def async_migrate_entities(
         return
 
     # Migrate entities
-    await er.async_migrate_entries(hass, config_entry.entry_id, _update_unique_id)
+    await er.async_migrate_entries(hass, entry.entry_id, _update_unique_id)
+
 
 def get_supported_devices(
     devices: list[PyViCareDeviceConfig],
@@ -184,4 +182,3 @@ def get_supported_devices(
         for device_config in devices
         if device_config.getModel() not in UNSUPPORTED_DEVICES
     ]
-
