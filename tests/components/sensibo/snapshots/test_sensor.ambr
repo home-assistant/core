@@ -3,7 +3,6 @@
   ReadOnlyDict({
     'device_class': 'pm25',
     'friendly_name': 'Kitchen PM2.5',
-    'icon': 'mdi:air-filter',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     'unit_of_measurement': 'µg/m³',
   })
