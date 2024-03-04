@@ -919,9 +919,7 @@ class Integration:
 
         return cache[domain]
 
-    def _load_platforms(
-        self, platform_names: Iterable[Platform | str]
-    ) -> dict[str, ModuleType]:
+    def _load_platforms(self, platform_names: Iterable[str]) -> dict[str, ModuleType]:
         """Load platforms for an integration."""
         return {
             platform_name: self._load_platform(platform_name)
@@ -945,7 +943,8 @@ class Integration:
         in_progress_imports: dict[str, asyncio.Future[ModuleType]] = {}
         import_futures: list[tuple[str, asyncio.Future[ModuleType]]] = []
 
-        for platform_name in platform_names:
+        for _plat in platform_names:
+            platform_name = _plat.value if type(_plat) is Platform else _plat
             full_name = f"{domain}.{platform_name}"
             if platform := self._get_platform_cached(full_name):
                 platforms[platform_name] = platform
