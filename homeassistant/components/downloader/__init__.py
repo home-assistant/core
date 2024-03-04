@@ -153,7 +153,6 @@ def do_download(hass: HomeAssistant, service: ServiceCall, download_path: str) -
                 filename = os.path.basename(url).strip()  # type: ignore[arg-type]
 
             if not filename:
-                # Generate a random filename
                 filename = "ha_download"
 
             # Check the filename
