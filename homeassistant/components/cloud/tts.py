@@ -151,7 +151,7 @@ class CloudTTSEntity(TextToSpeechEntity):
     @property
     def supported_options(self) -> list[str]:
         """Return list of supported options like voice, emotion."""
-        # The gender option is deprecated and will be removed in 2024.9.0.
+        # The gender option is deprecated and will be removed in 2024.10.0.
         return [ATTR_GENDER, ATTR_VOICE, ATTR_AUDIO_OUTPUT]
 
     async def async_added_to_hass(self) -> None:
@@ -280,7 +280,7 @@ def handle_deprecated_gender(
         is_fixable=True,
         is_persistent=True,
         severity=IssueSeverity.WARNING,
-        breaks_in_ha_version="2024.9.0",
+        breaks_in_ha_version="2024.10.0",
         translation_key="deprecated_gender",
         translation_placeholders={
             "integration_name": "Home Assistant Cloud",
