@@ -15,7 +15,9 @@ async def async_process_hardware_platforms(hass: HomeAssistant) -> None:
     """Start processing hardware platforms."""
     hass.data[DOMAIN]["hardware_platform"] = {}
 
-    await async_process_integration_platforms(hass, DOMAIN, _register_hardware_platform)
+    await async_process_integration_platforms(
+        hass, DOMAIN, _register_hardware_platform, register_preload_platform=False
+    )
 
 
 @callback
