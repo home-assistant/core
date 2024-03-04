@@ -1,5 +1,6 @@
 """Consume the august activity stream."""
-import asyncio
+from __future__ import annotations
+
 from datetime import datetime
 from functools import partial
 import logging
@@ -61,11 +62,10 @@ class ActivityStream(AugustSubscriberMixin):
         self._update_debounce: dict[str, Debouncer] = {}
         self._update_debounce_jobs: dict[str, HassJob] = {}
 
-    async def _async_update_house_id_later(
-        self, debouncer: Debouncer, _: datetime
-    ) -> None:
+    @callback
+    def _async_update_house_id_later(self, debouncer: Debouncer, _: datetime) -> None:
         """Call a debouncer from async_call_later."""
-        await debouncer.async_call()
+        debouncer.async_schedule_call()
 
     async def async_setup(self) -> None:
         """Token refresh check and catch up the activity stream."""
@@ -126,9 +126,9 @@ class ActivityStream(AugustSubscriberMixin):
             _LOGGER.debug("Skipping update because pubnub is connected")
             return
         _LOGGER.debug("Start retrieving device activities")
-        await asyncio.gather(
-            *(debouncer.async_call() for debouncer in self._update_debounce.values())
-        )
+        # Await in sequence to avoid hammering the API
+        for debouncer in self._update_debounce.values():
+            await debouncer.async_call()
 
     @callback
     def async_schedule_house_id_refresh(self, house_id: str) -> None:
@@ -137,7 +137,7 @@ class ActivityStream(AugustSubscriberMixin):
             _async_cancel_future_scheduled_updates(future_updates)
 
         debouncer = self._update_debounce[house_id]
-        self._hass.async_create_task(debouncer.async_call())
+        debouncer.async_schedule_call()
         # Schedule two updates past the debounce time
         # to ensure we catch the case where the activity
         # api does not update right away and we need to poll

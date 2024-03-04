@@ -374,7 +374,7 @@ async def test_platform_import_error(hass: HomeAssistant) -> None:
 
 
 async def test_package_invalid(hass: HomeAssistant) -> None:
-    """Test a valid platform setup."""
+    """Test a platform setup with an invalid package config."""
     files = {YAML_CONFIG_FILE: BASE_CONFIG + '  packages:\n    p1:\n      group: ["a"]'}
     with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
         res = await async_check_ha_config_file(hass)
@@ -391,6 +391,72 @@ async def test_package_invalid(hass: HomeAssistant) -> None:
             {"group": ["a"]},
         )
         _assert_warnings_errors(res, [warning], [])
+
+
+async def test_package_definition_invalid_slug_keys(hass: HomeAssistant) -> None:
+    """Test a platform setup with a broken package: keys must be slugs."""
+    files = {
+        YAML_CONFIG_FILE: BASE_CONFIG
+        + '  packages:\n    not a slug:\n      group: ["a"]'
+    }
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert res.keys() == {"homeassistant"}
+
+        warning = CheckConfigError(
+            (
+                "Setup of package 'not a slug' failed: Invalid package definition 'not a slug': invalid slug not a "
+                "slug (try not_a_slug). Package will not be initialized"
+            ),
+            "homeassistant.packages.not a slug",
+            {"group": ["a"]},
+        )
+        _assert_warnings_errors(res, [warning], [])
+
+
+async def test_package_definition_invalid_dict(hass: HomeAssistant) -> None:
+    """Test a platform setup with a broken package: packages must be dicts."""
+    files = {
+        YAML_CONFIG_FILE: BASE_CONFIG
+        + '  packages:\n    not_a_dict:\n      - group: ["a"]'
+    }
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        assert res.keys() == {"homeassistant"}
+
+        warning = CheckConfigError(
+            (
+                "Setup of package 'not_a_dict' failed: Invalid package definition 'not_a_dict': expected a "
+                "dictionary. Package will not be initialized"
+            ),
+            "homeassistant.packages.not_a_dict",
+            [{"group": ["a"]}],
+        )
+        _assert_warnings_errors(res, [warning], [])
+
+
+async def test_package_schema_invalid(hass: HomeAssistant) -> None:
+    """Test an invalid platform config because of severely broken packages section."""
+    files = {
+        YAML_CONFIG_FILE: "homeassistant:\n  packages:\n    - must\n    - not\n    - be\n    - a\n    - list"
+    }
+    with patch("os.path.isfile", return_value=True), patch_yaml_files(files):
+        res = await async_check_ha_config_file(hass)
+        log_ha_config(res)
+
+        error = CheckConfigError(
+            (
+                f"Invalid config for 'homeassistant' at {YAML_CONFIG_FILE}, line 2:"
+                " expected a dictionary for dictionary value 'packages', got ['must', 'not', 'be', 'a', 'list']"
+            ),
+            "homeassistant",
+            {"packages": ["must", "not", "be", "a", "list"]},
+        )
+        _assert_warnings_errors(res, [], [error])
 
 
 async def test_missing_included_file(hass: HomeAssistant) -> None:

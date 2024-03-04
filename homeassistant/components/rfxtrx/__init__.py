@@ -1,7 +1,6 @@
 """Support for RFXtrx devices."""
 from __future__ import annotations
 
-import asyncio
 import binascii
 from collections.abc import Callable, Mapping
 import copy
@@ -23,6 +22,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
@@ -49,6 +49,7 @@ from .const import (
 DEFAULT_OFF_DELAY = 2.0
 
 SIGNAL_EVENT = f"{DOMAIN}_event"
+CONNECT_TIMEOUT = 30.0
 
 _Ts = TypeVarTuple("_Ts")
 
@@ -76,12 +77,13 @@ def _bytearray_string(data: Any) -> bytearray:
 SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
 
 PLATFORMS = [
-    Platform.SWITCH,
-    Platform.SENSOR,
-    Platform.LIGHT,
     Platform.BINARY_SENSOR,
     Platform.COVER,
+    Platform.EVENT,
+    Platform.LIGHT,
+    Platform.SENSOR,
     Platform.SIREN,
+    Platform.SWITCH,
 ]
 
 
@@ -89,15 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the RFXtrx component."""
     hass.data.setdefault(DOMAIN, {})
 
-    try:
-        await async_setup_internal(hass, entry)
-    except asyncio.TimeoutError:
-        # Library currently doesn't support reload
-        _LOGGER.error(
-            "Connection timeout: failed to receive response from RFXtrx device"
-        )
-        return False
-
+    await async_setup_internal(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -118,7 +112,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def _create_rfx(config: Mapping[str, Any]) -> rfxtrxmod.Connect:
+def _create_rfx(
+    config: Mapping[str, Any], event_callback: Callable[[rfxtrxmod.RFXtrxEvent], None]
+) -> rfxtrxmod.Connect:
     """Construct a rfx object based on config."""
 
     modes = config.get(CONF_PROTOCOLS)
@@ -130,18 +126,22 @@ def _create_rfx(config: Mapping[str, Any]) -> rfxtrxmod.Connect:
 
     if config[CONF_PORT] is not None:
         # If port is set then we create a TCP connection
-        rfx = rfxtrxmod.Connect(
-            (config[CONF_HOST], config[CONF_PORT]),
-            None,
-            transport_protocol=rfxtrxmod.PyNetworkTransport,
-            modes=modes,
-        )
+        transport = rfxtrxmod.PyNetworkTransport((config[CONF_HOST], config[CONF_PORT]))
     else:
-        rfx = rfxtrxmod.Connect(
-            config[CONF_DEVICE],
-            None,
-            modes=modes,
-        )
+        transport = rfxtrxmod.PySerialTransport(config[CONF_DEVICE])
+
+    rfx = rfxtrxmod.Connect(
+        transport,
+        event_callback,
+        modes=modes,
+    )
+
+    try:
+        rfx.connect(CONNECT_TIMEOUT)
+    except TimeoutError as exc:
+        raise ConfigEntryNotReady("Timeout on connect") from exc
+    except rfxtrxmod.RFXtrxTransportError as exc:
+        raise ConfigEntryNotReady(str(exc)) from exc
 
     return rfx
 
@@ -165,10 +165,6 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Set up the RFXtrx component."""
     config = entry.data
 
-    # Initialize library
-    async with asyncio.timeout(30):
-        rfx_object = await hass.async_add_executor_job(_create_rfx, config)
-
     # Setup some per device config
     devices = _get_device_lookup(config[CONF_DEVICES])
     pt2262_devices: set[str] = set()
@@ -179,8 +175,16 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     @callback
     def async_handle_receive(event: rfxtrxmod.RFXtrxEvent) -> None:
         """Handle received messages from RFXtrx gateway."""
-        # Log RFXCOM event
-        if not event.device.id_string:
+
+        if isinstance(event, rfxtrxmod.ConnectionLost):
+            _LOGGER.warning("Connection was lost, triggering reload")
+            hass.async_create_task(
+                hass.config_entries.async_reload(entry.entry_id),
+                f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
+            )
+            return
+
+        if not event.device or not event.device.id_string:
             return
 
         event_data = {
@@ -264,6 +268,13 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         if device_id:
             _remove_device(device_id)
 
+    # Initialize library
+    rfx_object = await hass.async_add_executor_job(
+        _create_rfx, config, lambda event: hass.add_job(async_handle_receive, event)
+    )
+
+    hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
+
     entry.async_on_unload(
         hass.bus.async_listen(dr.EVENT_DEVICE_REGISTRY_UPDATED, _updated_device)
     )
@@ -275,9 +286,6 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown_rfxtrx)
     )
-    hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
-
-    rfx_object.event_callback = lambda event: hass.add_job(async_handle_receive, event)
 
     def send(call: ServiceCall) -> None:
         event = call.data[ATTR_EVENT]

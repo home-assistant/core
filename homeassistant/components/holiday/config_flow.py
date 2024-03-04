@@ -7,9 +7,8 @@ from babel import Locale, UnknownLocaleError
 from holidays import list_supported_countries
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
@@ -23,7 +22,7 @@ from .const import CONF_PROVINCE, DOMAIN
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
 
 
-class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Holiday."""
 
     VERSION = 1
@@ -34,7 +33,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             self.data = user_input
@@ -47,7 +46,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_COUNTRY: user_input[CONF_COUNTRY]})
 
             try:
-                locale = Locale(self.hass.config.language.replace("-", "_"))
+                locale = Locale.parse(self.hass.config.language, sep="-")
             except UnknownLocaleError:
                 # Default to (US) English if language not recognized by babel
                 # Mainly an issue with English flavors such as "en-GB"
@@ -71,7 +70,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_province(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the province step."""
         if user_input is not None:
             combined_input: dict[str, Any] = {**self.data, **user_input}
@@ -87,7 +86,7 @@ class HolidayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                locale = Locale(self.hass.config.language.replace("-", "_"))
+                locale = Locale.parse(self.hass.config.language, sep="-")
             except UnknownLocaleError:
                 # Default to (US) English if language not recognized by babel
                 # Mainly an issue with English flavors such as "en-GB"

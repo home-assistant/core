@@ -55,12 +55,15 @@ from homeassistant.helpers import (
     config_entry_oauth2_flow,
     device_registry as dr,
     entity_registry as er,
+    floor_registry as fr,
     issue_registry as ir,
+    label_registry as lr,
     recorder as recorder_helper,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import BASE_PLATFORMS, async_setup_component
-from homeassistant.util import dt as dt_util, location
+from homeassistant.util import location
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
@@ -517,17 +520,14 @@ def hass_fixture_setup() -> list[bool]:
 @pytest.fixture
 async def hass(
     hass_fixture_setup: list[bool],
-    event_loop: asyncio.AbstractEventLoop,
     load_registries: bool,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
 ) -> AsyncGenerator[HomeAssistant, None]:
     """Create a test instance of Home Assistant."""
 
-    loop = event_loop
+    loop = asyncio.get_running_loop()
     hass_fixture_setup.append(True)
-
-    orig_tz = dt_util.DEFAULT_TIME_ZONE
 
     def exc_handle(loop, context):
         """Handle exceptions by rethrowing them, which will fail the test."""
@@ -546,26 +546,22 @@ async def hass(
         orig_exception_handler(loop, context)
 
     exceptions: list[Exception] = []
-    hass = await async_test_home_assistant(loop, load_registries)
+    async with async_test_home_assistant(loop, load_registries) as hass:
+        orig_exception_handler = loop.get_exception_handler()
+        loop.set_exception_handler(exc_handle)
 
-    orig_exception_handler = loop.get_exception_handler()
-    loop.set_exception_handler(exc_handle)
+        yield hass
 
-    yield hass
-
-    # Config entries are not normally unloaded on HA shutdown. They are unloaded here
-    # to ensure that they could, and to help track lingering tasks and timers.
-    await asyncio.gather(
-        *(
-            config_entry.async_unload(hass)
-            for config_entry in hass.config_entries.async_entries()
+        # Config entries are not normally unloaded on HA shutdown. They are unloaded here
+        # to ensure that they could, and to help track lingering tasks and timers.
+        await asyncio.gather(
+            *(
+                create_eager_task(config_entry.async_unload(hass))
+                for config_entry in hass.config_entries.async_entries()
+            )
         )
-    )
 
-    await hass.async_stop(force=True)
-
-    # Restore timezone, it is set when creating the hass object
-    dt_util.DEFAULT_TIME_ZONE = orig_tz
+        await hass.async_stop(force=True)
 
     for ex in exceptions:
         if (
@@ -577,12 +573,11 @@ async def hass(
 
 
 @pytest.fixture
-async def stop_hass(
-    event_loop: asyncio.AbstractEventLoop,
-) -> AsyncGenerator[None, None]:
+async def stop_hass() -> AsyncGenerator[None, None]:
     """Make sure all hass are stopped."""
     orig_hass = ha.HomeAssistant
 
+    event_loop = asyncio.get_running_loop()
     created = []
 
     def mock_hass(*args):
@@ -1307,86 +1302,85 @@ def hass_recorder(
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components.recorder import migration
 
-    original_tz = dt_util.DEFAULT_TIME_ZONE
+    with get_test_home_assistant() as hass:
+        nightly = (
+            recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
+        )
+        stats = (
+            recorder.Recorder.async_periodic_statistics if enable_statistics else None
+        )
+        compile_missing = (
+            recorder.Recorder._schedule_compile_missing_statistics
+            if enable_statistics
+            else None
+        )
+        schema_validate = (
+            migration._find_schema_errors
+            if enable_schema_validation
+            else itertools.repeat(set())
+        )
+        migrate_states_context_ids = (
+            recorder.Recorder._migrate_states_context_ids
+            if enable_migrate_context_ids
+            else None
+        )
+        migrate_events_context_ids = (
+            recorder.Recorder._migrate_events_context_ids
+            if enable_migrate_context_ids
+            else None
+        )
+        migrate_event_type_ids = (
+            recorder.Recorder._migrate_event_type_ids
+            if enable_migrate_event_type_ids
+            else None
+        )
+        migrate_entity_ids = (
+            recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
+        )
+        with patch(
+            "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+            side_effect=nightly,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder.async_periodic_statistics",
+            side_effect=stats,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.migration._find_schema_errors",
+            side_effect=schema_validate,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
+            side_effect=migrate_events_context_ids,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
+            side_effect=migrate_states_context_ids,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
+            side_effect=migrate_event_type_ids,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder._migrate_entity_ids",
+            side_effect=migrate_entity_ids,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
+            side_effect=compile_missing,
+            autospec=True,
+        ):
 
-    hass = get_test_home_assistant()
-    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
-    stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
-    compile_missing = (
-        recorder.Recorder._schedule_compile_missing_statistics
-        if enable_statistics
-        else None
-    )
-    schema_validate = (
-        migration._find_schema_errors
-        if enable_schema_validation
-        else itertools.repeat(set())
-    )
-    migrate_states_context_ids = (
-        recorder.Recorder._migrate_states_context_ids
-        if enable_migrate_context_ids
-        else None
-    )
-    migrate_events_context_ids = (
-        recorder.Recorder._migrate_events_context_ids
-        if enable_migrate_context_ids
-        else None
-    )
-    migrate_event_type_ids = (
-        recorder.Recorder._migrate_event_type_ids
-        if enable_migrate_event_type_ids
-        else None
-    )
-    migrate_entity_ids = (
-        recorder.Recorder._migrate_entity_ids if enable_migrate_entity_ids else None
-    )
-    with patch(
-        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
-        side_effect=nightly,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder.async_periodic_statistics",
-        side_effect=stats,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.migration._find_schema_errors",
-        side_effect=schema_validate,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_events_context_ids",
-        side_effect=migrate_events_context_ids,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_states_context_ids",
-        side_effect=migrate_states_context_ids,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_event_type_ids",
-        side_effect=migrate_event_type_ids,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder._migrate_entity_ids",
-        side_effect=migrate_entity_ids,
-        autospec=True,
-    ), patch(
-        "homeassistant.components.recorder.Recorder._schedule_compile_missing_statistics",
-        side_effect=compile_missing,
-        autospec=True,
-    ):
+            def setup_recorder(config: dict[str, Any] | None = None) -> HomeAssistant:
+                """Set up with params."""
+                init_recorder_component(hass, config, recorder_db_url)
+                hass.start()
+                hass.block_till_done()
+                hass.data[recorder.DATA_INSTANCE].block_till_done()
+                return hass
 
-        def setup_recorder(config: dict[str, Any] | None = None) -> HomeAssistant:
-            """Set up with params."""
-            init_recorder_component(hass, config, recorder_db_url)
-            hass.start()
-            hass.block_till_done()
-            hass.data[recorder.DATA_INSTANCE].block_till_done()
-            return hass
-
-        yield setup_recorder
-        hass.stop()
-
-    # Restore timezone, it is set when creating the hass object
-    dt_util.DEFAULT_TIME_ZONE = original_tz
+            yield setup_recorder
+            hass.stop()
 
 
 async def _async_init_recorder_component(
@@ -1509,7 +1503,7 @@ async def async_setup_recorder_instance(
             await hass.async_block_till_done()
             instance = hass.data[recorder.DATA_INSTANCE]
             # The recorder's worker is not started until Home Assistant is running
-            if hass.state == CoreState.running:
+            if hass.state is CoreState.running:
                 await async_recorder_block_till_done(hass)
             return instance
 
@@ -1578,10 +1572,38 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
-    with patch(
-        "habluetooth.scanner.OriginalBleakScanner.start",
-    ) as mock_bleak_scanner_start:
+    with patch.object(
+        bluetooth_scanner.OriginalBleakScanner,
+        "start",
+    ) as mock_bleak_scanner_start, patch.object(bluetooth_scanner, "HaScanner"):
         yield mock_bleak_scanner_start
+
+
+@pytest.fixture
+def mock_integration_frame() -> Generator[Mock, None, None]:
+    """Mock as if we're calling code from inside an integration."""
+    correct_frame = Mock(
+        filename="/home/paulus/homeassistant/components/hue/light.py",
+        lineno="23",
+        line="self.light.is_on",
+    )
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            correct_frame,
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        yield correct_frame
 
 
 @pytest.fixture
@@ -1610,9 +1632,21 @@ def entity_registry(hass: HomeAssistant) -> er.EntityRegistry:
 
 
 @pytest.fixture
+def floor_registry(hass: HomeAssistant) -> fr.FloorRegistry:
+    """Return the floor registry from the current hass instance."""
+    return fr.async_get(hass)
+
+
+@pytest.fixture
 def issue_registry(hass: HomeAssistant) -> ir.IssueRegistry:
     """Return the issue registry from the current hass instance."""
     return ir.async_get(hass)
+
+
+@pytest.fixture
+def label_registry(hass: HomeAssistant) -> lr.LabelRegistry:
+    """Return the label registry from the current hass instance."""
+    return lr.async_get(hass)
 
 
 @pytest.fixture

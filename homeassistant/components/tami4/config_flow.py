@@ -8,8 +8,7 @@ from typing import Any
 from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
@@ -23,7 +22,7 @@ _STEP_OTP_CODE_SCHEMA = vol.Schema({vol.Required("otp"): cv.string})
 _PHONE_MATCHER = re.compile(r"^(\+?972)?0?(?P<number>\d{8,9})$")
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Tami4Edge."""
 
     VERSION = 1
@@ -32,7 +31,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the otp request step."""
         errors = {}
         if user_input is not None:
@@ -62,7 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_otp(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the otp submission step."""
         errors = {}
         if user_input is not None:

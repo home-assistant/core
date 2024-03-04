@@ -73,7 +73,7 @@ class TriggerActionType(Protocol):
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
-    ) -> None:
+    ) -> Any:
         """Define action callback type."""
 
 
@@ -222,7 +222,7 @@ async def _async_get_trigger_platform(
     except IntegrationNotFound:
         raise vol.Invalid(f"Invalid platform '{platform}' specified") from None
     try:
-        return integration.get_platform("trigger")
+        return await integration.async_get_platform("trigger")
     except ImportError:
         raise vol.Invalid(
             f"Integration '{platform}' does not provide trigger support"

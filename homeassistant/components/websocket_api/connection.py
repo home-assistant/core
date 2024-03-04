@@ -1,7 +1,6 @@
 """Connection session."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
 from typing import TYPE_CHECKING, Any
@@ -10,9 +9,9 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import RefreshToken, User
-from homeassistant.components.http import current_request
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers.http import current_request
 from homeassistant.util.json import JsonValueType
 
 from . import const, messages
@@ -51,7 +50,7 @@ class ActiveConnection:
         self,
         logger: WebSocketAdapter,
         hass: HomeAssistant,
-        send_message: Callable[[str | dict[str, Any]], None],
+        send_message: Callable[[bytes | str | dict[str, Any]], None],
         user: User,
         refresh_token: RefreshToken,
     ) -> None:
@@ -244,7 +243,7 @@ class ActiveConnection:
 
     @callback
     def _connect_closed_error(
-        self, msg: str | dict[str, Any] | Callable[[], str]
+        self, msg: bytes | str | dict[str, Any] | Callable[[], str]
     ) -> None:
         """Send a message when the connection is closed."""
         self.logger.debug("Tried to send message %s on closed connection", msg)
@@ -266,7 +265,7 @@ class ActiveConnection:
         elif isinstance(err, vol.Invalid):
             code = const.ERR_INVALID_FORMAT
             err_message = vol.humanize.humanize_error(msg, err)
-        elif isinstance(err, asyncio.TimeoutError):
+        elif isinstance(err, TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"
         elif isinstance(err, HomeAssistantError):

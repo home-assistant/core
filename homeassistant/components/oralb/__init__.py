@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from oralb_ble import OralBBluetoothDeviceData
+from oralb_ble import OralBBluetoothDeviceData, SensorUpdate
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
@@ -36,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Only poll if hass is running, we need to poll,
         # and we actually have a way to connect to the device
         return (
-            hass.state == CoreState.running
+            hass.state is CoreState.running
             and data.poll_needed(service_info, last_poll)
             and bool(
                 async_ble_device_from_address(
@@ -45,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
 
-    async def _async_poll(service_info: BluetoothServiceInfoBleak):
+    async def _async_poll(service_info: BluetoothServiceInfoBleak) -> SensorUpdate:
         # BluetoothServiceInfoBleak is defined in HA, otherwise would just pass it
         # directly to the oralb code
         # Make sure the device we have is one that we can connect with

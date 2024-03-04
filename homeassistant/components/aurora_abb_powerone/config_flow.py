@@ -9,14 +9,13 @@ from aurorapy.client import AuroraError, AuroraSerialClient
 import serial.tools.list_ports
 import voluptuous as vol
 
-from homeassistant import config_entries, core
-from homeassistant.const import CONF_ADDRESS, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_ADDRESS, CONF_PORT
+from homeassistant.core import HomeAssistant
 
 from .const import (
     ATTR_FIRMWARE,
     ATTR_MODEL,
-    ATTR_SERIAL_NUMBER,
     DEFAULT_ADDRESS,
     DEFAULT_INTEGRATION_TITLE,
     DOMAIN,
@@ -28,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def validate_and_connect(
-    hass: core.HomeAssistant, data: Mapping[str, Any]
+    hass: HomeAssistant, data: Mapping[str, Any]
 ) -> dict[str, str]:
     """Validate the user input allows us to connect.
 
@@ -70,7 +69,7 @@ def scan_comports() -> tuple[list[str] | None, str | None]:
     return None, None
 
 
-class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AuroraABBConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Aurora ABB PowerOne."""
 
     VERSION = 1
@@ -83,7 +82,7 @@ class AuroraABBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialised by the user."""
 
         errors = {}

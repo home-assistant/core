@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -30,6 +31,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
@@ -85,10 +87,6 @@ _DEPRECATED_SUPPORT_OPERATION_MODE = DeprecatedConstantEnum(
 _DEPRECATED_SUPPORT_AWAY_MODE = DeprecatedConstantEnum(
     WaterHeaterEntityFeature.AWAY_MODE, "2025.1"
 )
-
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(dir_with_deprecated_constants, module_globals=globals())
 
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
@@ -152,7 +150,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_SET_OPERATION_MODE,
         SET_OPERATION_MODE_SCHEMA,
-        "async_set_operation_mode",
+        "async_handle_set_operation_mode",
     )
     component.async_register_entity_service(
         SERVICE_TURN_OFF, ON_OFF_SERVICE_SCHEMA, "async_turn_off"
@@ -241,7 +239,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features:
+        if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features_compat:
             data[ATTR_OPERATION_LIST] = self.operation_list
 
         return data
@@ -277,7 +275,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ),
         }
 
-        supported_features = self.supported_features
+        supported_features = self.supported_features_compat
 
         if WaterHeaterEntityFeature.OPERATION_MODE in supported_features:
             data[ATTR_OPERATION_MODE] = self.current_operation
@@ -362,6 +360,36 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Set new target operation mode."""
         await self.hass.async_add_executor_job(self.set_operation_mode, operation_mode)
 
+    @final
+    async def async_handle_set_operation_mode(self, operation_mode: str) -> None:
+        """Handle a set target operation mode service call."""
+        if self.operation_list is None:
+            raise ServiceValidationError(
+                f"Operation mode {operation_mode} not valid for "
+                f"entity {self.entity_id}. The operation list is not defined",
+                translation_domain=DOMAIN,
+                translation_key="operation_list_not_defined",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "operation_mode": operation_mode,
+                },
+            )
+        if operation_mode not in self.operation_list:
+            operation_list = ", ".join(self.operation_list)
+            raise ServiceValidationError(
+                f"Operation mode {operation_mode} not valid for "
+                f"entity {self.entity_id}. Valid "
+                f"operation modes are: {operation_list}",
+                translation_domain=DOMAIN,
+                translation_key="not_valid_operation_mode",
+                translation_placeholders={
+                    "entity_id": self.entity_id,
+                    "operation_mode": operation_mode,
+                    "operation_list": operation_list,
+                },
+            )
+        await self.async_set_operation_mode(operation_mode)
+
     def turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         raise NotImplementedError()
@@ -441,3 +469,11 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

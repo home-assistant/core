@@ -484,6 +484,11 @@ class OnOffTrait(_Trait):
         if domain == water_heater.DOMAIN and features & WaterHeaterEntityFeature.ON_OFF:
             return True
 
+        if domain == climate.DOMAIN and features & (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        ):
+            return True
+
         return domain in (
             group.DOMAIN,
             input_boolean.DOMAIN,
@@ -1152,12 +1157,12 @@ class TemperatureSettingTrait(_Trait):
         modes = []
         attrs = self.state.attributes
 
-        for mode in attrs.get(climate.ATTR_HVAC_MODES, []):
+        for mode in attrs.get(climate.ATTR_HVAC_MODES) or []:
             google_mode = self.hvac_to_google.get(mode)
             if google_mode and google_mode not in modes:
                 modes.append(google_mode)
 
-        for preset in attrs.get(climate.ATTR_PRESET_MODES, []):
+        for preset in attrs.get(climate.ATTR_PRESET_MODES) or []:
             google_mode = self.preset_to_google.get(preset)
             if google_mode and google_mode not in modes:
                 modes.append(google_mode)
@@ -1937,9 +1942,7 @@ class ModesTrait(_Trait):
         elif self.state.domain == media_player.DOMAIN:
             if media_player.ATTR_SOUND_MODE_LIST in attrs:
                 mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
-        elif self.state.domain == input_select.DOMAIN:
-            mode_settings["option"] = self.state.state
-        elif self.state.domain == select.DOMAIN:
+        elif self.state.domain in (input_select.DOMAIN, select.DOMAIN):
             mode_settings["option"] = self.state.state
         elif self.state.domain == humidifier.DOMAIN:
             if ATTR_MODE in attrs:
@@ -2094,9 +2097,10 @@ class InputSelectorTrait(_Trait):
     def sync_attributes(self):
         """Return mode attributes for a sync request."""
         attrs = self.state.attributes
+        sourcelist: list[str] = attrs.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
         inputs = [
             {"key": source, "names": [{"name_synonym": [source], "lang": "en"}]}
-            for source in attrs.get(media_player.ATTR_INPUT_SOURCE_LIST, [])
+            for source in sourcelist
         ]
 
         payload = {"availableInputs": inputs, "orderedInputs": True}

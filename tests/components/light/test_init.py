@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.setup import async_setup_component
 import homeassistant.util.color as color_util
 
-from tests.common import MockUser, async_mock_service
+from tests.common import MockEntityPlatform, MockUser, async_mock_service
 
 orig_Profiles = light.Profiles
 
@@ -127,6 +127,9 @@ async def test_services(
         | light.LightEntityFeature.EFFECT
         | light.LightEntityFeature.TRANSITION
     )
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    ent2.supported_color_modes = None
+    ent2.color_mode = None
     ent3.supported_features = (
         light.LightEntityFeature.FLASH | light.LightEntityFeature.TRANSITION
     )
@@ -905,9 +908,15 @@ async def test_light_brightness_step(
     platform.ENTITIES.append(platform.MockLight("Test_1", STATE_ON))
     entity0 = platform.ENTITIES[0]
     entity0.supported_features = light.SUPPORT_BRIGHTNESS
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity0.supported_color_modes = None
+    entity0.color_mode = None
     entity0.brightness = 100
     entity1 = platform.ENTITIES[1]
     entity1.supported_features = light.SUPPORT_BRIGHTNESS
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity1.supported_color_modes = None
+    entity1.color_mode = None
     entity1.brightness = 50
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -967,6 +976,9 @@ async def test_light_brightness_pct_conversion(
     platform.init()
     entity = platform.ENTITIES[0]
     entity.supported_features = light.SUPPORT_BRIGHTNESS
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity.supported_color_modes = None
+    entity.color_mode = None
     entity.brightness = 100
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1133,17 +1145,29 @@ async def test_light_backwards_compatibility_supported_color_modes(
 
     entity1 = platform.ENTITIES[1]
     entity1.supported_features = light.SUPPORT_BRIGHTNESS
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity1.supported_color_modes = None
+    entity1.color_mode = None
 
     entity2 = platform.ENTITIES[2]
     entity2.supported_features = light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR_TEMP
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity2.supported_color_modes = None
+    entity2.color_mode = None
 
     entity3 = platform.ENTITIES[3]
     entity3.supported_features = light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity3.supported_color_modes = None
+    entity3.color_mode = None
 
     entity4 = platform.ENTITIES[4]
     entity4.supported_features = (
         light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR | light.SUPPORT_COLOR_TEMP
     )
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity4.supported_color_modes = None
+    entity4.color_mode = None
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -1204,20 +1228,32 @@ async def test_light_backwards_compatibility_color_mode(
 
     entity1 = platform.ENTITIES[1]
     entity1.supported_features = light.SUPPORT_BRIGHTNESS
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity1.supported_color_modes = None
+    entity1.color_mode = None
     entity1.brightness = 100
 
     entity2 = platform.ENTITIES[2]
     entity2.supported_features = light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR_TEMP
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity2.supported_color_modes = None
+    entity2.color_mode = None
     entity2.color_temp_kelvin = 10000
 
     entity3 = platform.ENTITIES[3]
     entity3.supported_features = light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity3.supported_color_modes = None
+    entity3.color_mode = None
     entity3.hs_color = (240, 100)
 
     entity4 = platform.ENTITIES[4]
     entity4.supported_features = (
         light.SUPPORT_BRIGHTNESS | light.SUPPORT_COLOR | light.SUPPORT_COLOR_TEMP
     )
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity4.supported_color_modes = None
+    entity4.color_mode = None
     entity4.hs_color = (240, 100)
     entity4.color_temp_kelvin = 10000
 
@@ -1464,6 +1500,9 @@ async def test_light_service_call_color_conversion(
 
     entity4 = platform.ENTITIES[4]
     entity4.supported_features = light.SUPPORT_COLOR
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity4.supported_color_modes = None
+    entity4.color_mode = None
 
     entity5 = platform.ENTITIES[5]
     entity5.supported_color_modes = {light.ColorMode.RGBW}
@@ -1905,6 +1944,9 @@ async def test_light_service_call_color_conversion_named_tuple(
 
     entity4 = platform.ENTITIES[4]
     entity4.supported_features = light.SUPPORT_COLOR
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity4.supported_color_modes = None
+    entity4.color_mode = None
 
     entity5 = platform.ENTITIES[5]
     entity5.supported_color_modes = {light.ColorMode.RGBW}
@@ -2330,6 +2372,9 @@ async def test_light_state_color_conversion(
     entity3 = platform.ENTITIES[3]
     entity3.hs_color = (240, 100)
     entity3.supported_features = light.SUPPORT_COLOR
+    # Set color modes to none to trigger backwards compatibility in LightEntity
+    entity3.supported_color_modes = None
+    entity3.color_mode = None
 
     assert await async_setup_component(hass, "light", {"light": {"platform": "test"}})
     await hass.async_block_till_done()
@@ -2610,3 +2655,165 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
     caplog.clear()
     assert entity.supported_features_compat is light.LightEntityFeature(1)
     assert "is using deprecated supported features values" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("color_mode", "supported_color_modes", "warning_expected"),
+    [
+        (None, {light.ColorMode.ONOFF}, True),
+        (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, False),
+    ],
+)
+def test_report_no_color_mode(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    color_mode: str,
+    supported_color_modes: set[str],
+    warning_expected: bool,
+) -> None:
+    """Test a light setting no color mode."""
+
+    class MockLightEntityEntity(light.LightEntity):
+        _attr_color_mode = color_mode
+        _attr_is_on = True
+        _attr_supported_features = light.LightEntityFeature.EFFECT
+        _attr_supported_color_modes = supported_color_modes
+
+    entity = MockLightEntityEntity()
+    entity._async_calculate_state()
+    expected_warning = "does not report a color mode"
+    assert (expected_warning in caplog.text) is warning_expected
+
+
+@pytest.mark.parametrize(
+    ("color_mode", "supported_color_modes", "warning_expected"),
+    [
+        (light.ColorMode.ONOFF, None, True),
+        (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, False),
+    ],
+)
+def test_report_no_color_modes(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    color_mode: str,
+    supported_color_modes: set[str],
+    warning_expected: bool,
+) -> None:
+    """Test a light setting no color mode."""
+
+    class MockLightEntityEntity(light.LightEntity):
+        _attr_color_mode = color_mode
+        _attr_is_on = True
+        _attr_supported_features = light.LightEntityFeature.EFFECT
+        _attr_supported_color_modes = supported_color_modes
+
+    entity = MockLightEntityEntity()
+    entity._async_calculate_state()
+    expected_warning = "does not set supported color modes"
+    assert (expected_warning in caplog.text) is warning_expected
+
+
+@pytest.mark.parametrize(
+    ("color_mode", "supported_color_modes", "effect", "warning_expected"),
+    [
+        (light.ColorMode.ONOFF, {light.ColorMode.ONOFF}, None, False),
+        # A light which supports brightness should not set its color mode to on_off
+        (light.ColorMode.ONOFF, {light.ColorMode.BRIGHTNESS}, None, True),
+        (light.ColorMode.ONOFF, {light.ColorMode.BRIGHTNESS}, light.EFFECT_OFF, True),
+        # Unless it renders an effect
+        (light.ColorMode.ONOFF, {light.ColorMode.BRIGHTNESS}, "effect", False),
+        (light.ColorMode.BRIGHTNESS, {light.ColorMode.BRIGHTNESS}, "effect", False),
+        (light.ColorMode.BRIGHTNESS, {light.ColorMode.BRIGHTNESS}, None, False),
+        # A light which supports color should not set its color mode to brightnes
+        (light.ColorMode.BRIGHTNESS, {light.ColorMode.HS}, None, True),
+        (light.ColorMode.BRIGHTNESS, {light.ColorMode.HS}, light.EFFECT_OFF, True),
+        (light.ColorMode.ONOFF, {light.ColorMode.HS}, None, True),
+        (light.ColorMode.ONOFF, {light.ColorMode.HS}, light.EFFECT_OFF, True),
+        # Unless it renders an effect
+        (light.ColorMode.BRIGHTNESS, {light.ColorMode.HS}, "effect", False),
+        (light.ColorMode.ONOFF, {light.ColorMode.HS}, "effect", False),
+        (light.ColorMode.HS, {light.ColorMode.HS}, "effect", False),
+        # A light which supports brightness should not set its color mode to hs even
+        # if rendering an effect
+        (light.ColorMode.HS, {light.ColorMode.BRIGHTNESS}, "effect", True),
+    ],
+)
+def test_report_invalid_color_mode(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    color_mode: str,
+    supported_color_modes: set[str],
+    effect: str | None,
+    warning_expected: bool,
+) -> None:
+    """Test a light setting an invalid color mode."""
+
+    class MockLightEntityEntity(light.LightEntity):
+        _attr_color_mode = color_mode
+        _attr_effect = effect
+        _attr_is_on = True
+        _attr_supported_features = light.LightEntityFeature.EFFECT
+        _attr_supported_color_modes = supported_color_modes
+
+    entity = MockLightEntityEntity()
+    entity._async_calculate_state()
+    expected_warning = f"set to unsupported color mode {color_mode}"
+    assert (expected_warning in caplog.text) is warning_expected
+
+
+@pytest.mark.parametrize(
+    ("color_mode", "supported_color_modes", "platform_name", "warning_expected"),
+    [
+        (
+            light.ColorMode.ONOFF,
+            {light.ColorMode.ONOFF},
+            "test",
+            False,
+        ),
+        (
+            light.ColorMode.ONOFF,
+            {light.ColorMode.ONOFF, light.ColorMode.BRIGHTNESS},
+            "test",
+            True,
+        ),
+        (
+            light.ColorMode.HS,
+            {light.ColorMode.HS, light.ColorMode.BRIGHTNESS},
+            "test",
+            True,
+        ),
+        (
+            light.ColorMode.HS,
+            {light.ColorMode.COLOR_TEMP, light.ColorMode.HS},
+            "test",
+            False,
+        ),
+        (
+            light.ColorMode.ONOFF,
+            {light.ColorMode.ONOFF, light.ColorMode.BRIGHTNESS},
+            "tuya",  # We don't log issues for tuya
+            False,
+        ),
+    ],
+)
+def test_report_invalid_color_modes(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    color_mode: str,
+    supported_color_modes: set[str],
+    platform_name: str,
+    warning_expected: bool,
+) -> None:
+    """Test a light setting an invalid color mode."""
+
+    class MockLightEntityEntity(light.LightEntity):
+        _attr_color_mode = color_mode
+        _attr_is_on = True
+        _attr_supported_features = light.LightEntityFeature.EFFECT
+        _attr_supported_color_modes = supported_color_modes
+        platform = MockEntityPlatform(hass, platform_name=platform_name)
+
+    entity = MockLightEntityEntity()
+    entity._async_calculate_state()
+    expected_warning = "sets invalid supported color modes"
+    assert (expected_warning in caplog.text) is warning_expected

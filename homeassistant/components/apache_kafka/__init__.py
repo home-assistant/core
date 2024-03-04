@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from datetime import datetime
 import json
-import sys
 from typing import Any, Literal
 
+from aiokafka import AIOKafkaProducer
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -19,16 +19,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA, EntityFilter
 from homeassistant.helpers.event import EventStateChangedData
 from homeassistant.helpers.typing import ConfigType, EventType
 from homeassistant.util import ssl as ssl_util
-
-if sys.version_info < (3, 12):
-    from aiokafka import AIOKafkaProducer
-
 
 DOMAIN = "apache_kafka"
 
@@ -58,10 +53,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate the Apache Kafka integration."""
-    if sys.version_info >= (3, 12):
-        raise HomeAssistantError(
-            "Apache Kafka is not supported on Python 3.12. Please use Python 3.11."
-        )
     conf = config[DOMAIN]
 
     kafka = hass.data[DOMAIN] = KafkaManager(

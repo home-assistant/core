@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import CONF_SWING_SUPPORT, DATA_COORDINATOR, DATA_INFO, DOMAIN
 from .coordinator import CoolmasterDataUpdateCoordinator
 
-PLATFORMS = [Platform.CLIMATE, Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.CLIMATE, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

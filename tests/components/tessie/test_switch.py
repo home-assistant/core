@@ -1,34 +1,30 @@
 """Test the Tessie switch platform."""
 from unittest.mock import patch
 
+from syrupy import SnapshotAssertion
+
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.tessie.switch import DESCRIPTIONS
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from .common import TEST_VEHICLE_STATE_ONLINE, setup_platform
+from .common import assert_entities, setup_platform
 
 
-async def test_switches(hass: HomeAssistant) -> None:
+async def test_switches(
+    hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
+) -> None:
     """Tests that the switche entities are correct."""
 
-    assert len(hass.states.async_all("switch")) == 0
+    entry = await setup_platform(hass, [Platform.SWITCH])
 
-    await setup_platform(hass)
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
-    assert len(hass.states.async_all("switch")) == len(DESCRIPTIONS)
-
-    assert (hass.states.get("switch.test_charge").state == STATE_ON) == (
-        TEST_VEHICLE_STATE_ONLINE["charge_state"]["charge_enable_request"]
-    )
-    assert (hass.states.get("switch.test_sentry_mode").state == STATE_ON) == (
-        TEST_VEHICLE_STATE_ONLINE["vehicle_state"]["sentry_mode"]
-    )
-
+    entity_id = "switch.test_charge"
     with patch(
         "homeassistant.components.tessie.switch.start_charging",
     ) as mock_start_charging:
@@ -36,10 +32,12 @@ async def test_switches(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ["switch.test_charge"]},
+            {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
         mock_start_charging.assert_called_once()
+    assert hass.states.get(entity_id) == snapshot(name=SERVICE_TURN_ON)
+
     with patch(
         "homeassistant.components.tessie.switch.stop_charging",
     ) as mock_stop_charging:
@@ -47,7 +45,9 @@ async def test_switches(hass: HomeAssistant) -> None:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ["switch.test_charge"]},
+            {ATTR_ENTITY_ID: [entity_id]},
             blocking=True,
         )
         mock_stop_charging.assert_called_once()
+
+    assert hass.states.get(entity_id) == snapshot(name=SERVICE_TURN_OFF)

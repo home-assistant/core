@@ -265,10 +265,7 @@ async def _test_common_success(
         assert result["type"] == FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "provisioning"
         assert result["step_id"] == "do_provision"
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-        assert result["step_id"] == "provision_done"
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result.get("description_placeholders") == placeholders
@@ -321,10 +318,7 @@ async def _test_common_success_w_authorize(
         assert result["progress_action"] == "authorize"
         assert result["step_id"] == "authorize"
         mock_subscribe_state_updates.assert_awaited_once()
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-        assert result["step_id"] == "provision"
+        await hass.async_block_till_done()
 
     with patch(
         f"{IMPROV_BLE}.config_flow.ImprovBLEClient.need_authorization",
@@ -337,10 +331,7 @@ async def _test_common_success_w_authorize(
         assert result["type"] == FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "provisioning"
         assert result["step_id"] == "do_provision"
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-        assert result["step_id"] == "provision_done"
+        await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["description_placeholders"] == {"url": "http://blabla.local"}
@@ -578,10 +569,7 @@ async def _test_provision_error(hass: HomeAssistant, exc) -> None:
         assert result["type"] == FlowResultType.SHOW_PROGRESS
         assert result["progress_action"] == "provisioning"
         assert result["step_id"] == "do_provision"
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        assert result["type"] == FlowResultType.SHOW_PROGRESS_DONE
-        assert result["step_id"] == "provision_done"
+        await hass.async_block_till_done()
 
     return result["flow_id"]
 
