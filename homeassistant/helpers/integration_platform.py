@@ -46,6 +46,7 @@ def _async_integration_platform_component_loaded(
     component_name = event.data[ATTR_COMPONENT]
     if "." in component_name:
         return
+
     integration = async_get_loaded_integration(hass, component_name)
 
     # First filter out platforms that the integration already
