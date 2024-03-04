@@ -179,7 +179,7 @@ aioambient==2024.01.0
 aioapcaccess==0.4.2
 
 # homeassistant.components.aseko_pool_live
-aioaseko==0.0.2
+aioaseko==0.1.1
 
 # homeassistant.components.asuswrt
 aioasuswrt==1.4.0
