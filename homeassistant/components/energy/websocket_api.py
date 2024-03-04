@@ -71,12 +71,7 @@ async def async_get_energy_platforms(
 
         platforms[domain] = cast(EnergyPlatform, platform).async_get_solar_forecast
 
-    # register_preload_platform is set to False to avoid preloading the platforms
-    # since energy is a rare integration platform and we don't want to slow down
-    # the startup of Home Assistant by having to check each integration for energy
-    await async_process_integration_platforms(
-        hass, DOMAIN, _process_energy_platform, register_preload_platform=False
-    )
+    await async_process_integration_platforms(hass, DOMAIN, _process_energy_platform)
 
     return platforms
 

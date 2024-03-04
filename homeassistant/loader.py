@@ -68,6 +68,7 @@ _LOGGER = logging.getLogger(__name__)
 BASE_PRELOAD_PLATFORMS = [
     "config",
     "diagnostics",
+    "energy",
     "group",
     "logbook",
     "hardware",
