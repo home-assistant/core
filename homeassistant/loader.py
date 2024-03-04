@@ -958,7 +958,7 @@ class Integration:
             if (
                 self.import_executor
                 and full_name not in self.hass.config.components
-                and f"{self.pkg_path}.{domain}.{platform_name}" not in sys.modules
+                and f"{self.pkg_path}.{full_name}" not in sys.modules
             ):
                 load_executor_platforms.append(platform_name)
             else:
