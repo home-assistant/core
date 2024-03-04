@@ -843,7 +843,7 @@ async def test_async_prepare_setup_platform(
     caplog.clear()
     # There is no actual config platform for this integration
     assert await setup.async_prepare_setup_platform(hass, {}, "config", "test") is None
-    assert "No module named 'custom_components.test.config'" in caplog.text
+    assert "test.config not found" in caplog.text
 
     button_platform = (
         await setup.async_prepare_setup_platform(hass, {}, "button", "test") is None
