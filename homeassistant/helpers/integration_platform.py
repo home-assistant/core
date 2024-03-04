@@ -102,7 +102,7 @@ async def _async_process_integration_platforms_for_component(
         return
 
     futures: list[asyncio.Future[Awaitable[None] | None]] = []
-    for integration_platform in integration_platforms:
+    for integration_platform in integration_platforms_to_load:
         if future := hass.async_run_hass_job(
             integration_platform.process_job,
             hass,
