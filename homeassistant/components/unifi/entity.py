@@ -98,9 +98,13 @@ class UnifiEntityDescription(EntityDescription, Generic[HandlerT, ApiItemT]):
     """UniFi Entity Description."""
 
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
+    """Provide api_handler from api."""
     device_info_fn: Callable[[UnifiHub, str], DeviceInfo | None]
+    """Provide device info object based on hub and obj_id."""
     object_fn: Callable[[aiounifi.Controller, str], ApiItemT]
+    """Retrieve object based on api and obj_id."""
     unique_id_fn: Callable[[UnifiHub, str], str]
+    """Provide a unique ID based on hub and obj_id."""
 
     # Optional functions
     allowed_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
