@@ -506,6 +506,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, push_config)
 
     push_config_task = hass.async_create_task(push_config(None), eager_start=True)
+    # Start listening for problems with supervisor and making issues
+    hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass, hassio)
+    issues_task = hass.async_create_task(issues.setup(), eager_start=True)
 
     async def async_service_handler(service: ServiceCall) -> None:
         """Handle service calls for Hass.io."""
@@ -566,8 +569,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         )
 
     # Fetch data
-    await update_info_data()
-    await push_config_task
+    update_info_task = hass.async_create_task(update_info_data(), eager_start=True)
 
     async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
         """Stop or restart home assistant."""
@@ -590,7 +592,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async_setup_ingress_view(hass, host)
 
     # Init add-on ingress panels
-    await async_setup_addon_panel(hass, hassio)
+    panels_task = hass.async_create_task(
+        async_setup_addon_panel(hass, hassio), eager_start=True
+    )
 
     # Setup hardware integration for the detected board type
     @callback
@@ -611,7 +615,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 hw_integration, context={"source": "system"}
-            )
+            ),
+            eager_start=True,
         )
 
     async_setup_hardware_integration_job = HassJob(
@@ -625,10 +630,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         eager_start=True,
     )
 
-    # Start listening for problems with supervisor and making issues
-    hass.data[DATA_KEY_SUPERVISOR_ISSUES] = issues = SupervisorIssues(hass, hassio)
-    await issues.setup()
-
+    await panels_task
+    await update_info_task
+    await push_config_task
+    await issues_task
     return True
 
 
