@@ -359,7 +359,14 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", config_entry.version)
+    _LOGGER.debug(
+        "Migrating from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    if config_entry.version > SystemBridgeConfigFlow.VERSION:
+        return False
 
     if config_entry.version == 1 and config_entry.minor_version == 1:
         # Migrate to CONF_TOKEN, which was added in 1.2
@@ -378,7 +385,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry.minor_version,
         )
 
-    if config_entry.version > SystemBridgeConfigFlow.VERSION:
-        return False
+    if config_entry.minor_version > SystemBridgeConfigFlow.MINOR_VERSION:
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=dict(config_entry.data),
+            minor_version=2,
+        )
 
     return True
