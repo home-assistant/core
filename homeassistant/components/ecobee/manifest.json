@@ -1,7 +1,7 @@
 {
   "domain": "ecobee",
   "name": "ecobee",
-  "codeowners": ["@marcolivierarsenault"],
+  "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ecobee",
   "homekit": {

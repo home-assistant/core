@@ -571,7 +571,6 @@ async def test_scan_calendar_error(
     config_entry,
 ) -> None:
     """Test that the calendar update handles a server error."""
-    config_entry.add_to_hass(hass)
     mock_calendars_list({}, exc=ClientError())
     assert await component_setup()
 

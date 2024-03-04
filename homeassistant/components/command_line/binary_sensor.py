@@ -24,7 +24,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.trigger_template_entity import ManualTriggerEntity
+from homeassistant.helpers.trigger_template_entity import (
+    CONF_AVAILABILITY,
+    ManualTriggerEntity,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -63,6 +66,7 @@ async def async_setup_platform(
     scan_interval: timedelta = binary_sensor_config.get(
         CONF_SCAN_INTERVAL, SCAN_INTERVAL
     )
+    availability: Template | None = binary_sensor_config.get(CONF_AVAILABILITY)
     if value_template is not None:
         value_template.hass = hass
     data = CommandSensorData(hass, command, command_timeout)
@@ -72,6 +76,7 @@ async def async_setup_platform(
         CONF_NAME: Template(name, hass),
         CONF_DEVICE_CLASS: device_class,
         CONF_ICON: icon,
+        CONF_AVAILABILITY: availability,
     }
 
     async_add_entities(
@@ -143,7 +148,7 @@ class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
 
     async def _async_update(self) -> None:
         """Get the latest data and updates the state."""
-        await self.hass.async_add_executor_job(self.data.update)
+        await self.data.async_update()
         value = self.data.value
 
         if self._value_template is not None:

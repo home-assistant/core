@@ -11,20 +11,19 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import CONF_SERIAL_NUMBER
-from .coordinator import RainbirdData
+from .coordinator import RainbirdData, async_create_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
-    Platform.SWITCH,
-    Platform.SENSOR,
     Platform.BINARY_SENSOR,
-    Platform.NUMBER,
     Platform.CALENDAR,
+    Platform.NUMBER,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 
@@ -36,9 +35,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})
 
+    clientsession = async_create_clientsession()
+    entry.async_on_unload(clientsession.close)
     controller = AsyncRainbirdController(
         AsyncRainbirdClient(
-            async_get_clientsession(hass),
+            clientsession,
             entry.data[CONF_HOST],
             entry.data[CONF_PASSWORD],
         )

@@ -193,7 +193,7 @@ def test_include_dir_list_recursive(
         ),
         (
             {"/test/first.yaml": "1", "/test/second.yaml": None},
-            {"first": 1},
+            {"first": 1, "second": {}},
         ),
     ],
 )

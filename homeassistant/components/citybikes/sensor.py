@@ -144,7 +144,7 @@ async def async_citybikes_request(hass, uri, schema):
 
         json_response = await req.json()
         return schema(json_response)
-    except (asyncio.TimeoutError, aiohttp.ClientError):
+    except (TimeoutError, aiohttp.ClientError):
         _LOGGER.error("Could not connect to CityBikes API endpoint")
     except ValueError:
         _LOGGER.error("Received non-JSON data from CityBikes API endpoint")

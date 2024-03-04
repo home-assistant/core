@@ -23,7 +23,7 @@ async def async_setup_entry(
                 "volume1",
                 "volume",
                 42.0,
-                "mdi:volume-high",
+                "volume",
                 False,
                 mode=NumberMode.SLIDER,
             ),
@@ -31,7 +31,7 @@ async def async_setup_entry(
                 "pwm1",
                 "PWM 1",
                 0.42,
-                "mdi:square-wave",
+                "pwm",
                 False,
                 native_min_value=0.0,
                 native_max_value=1.0,
@@ -42,7 +42,7 @@ async def async_setup_entry(
                 "large_range",
                 "Large Range",
                 500,
-                "mdi:square-wave",
+                "range",
                 False,
                 native_min_value=1,
                 native_max_value=1000,
@@ -52,7 +52,7 @@ async def async_setup_entry(
                 "small_range",
                 "Small Range",
                 128,
-                "mdi:square-wave",
+                "range",
                 False,
                 native_min_value=1,
                 native_max_value=255,
@@ -62,7 +62,7 @@ async def async_setup_entry(
                 "temp1",
                 "Temperature setting",
                 22,
-                "mdi:thermometer",
+                None,
                 False,
                 device_class=NumberDeviceClass.TEMPERATURE,
                 native_min_value=15.0,
@@ -87,7 +87,7 @@ class DemoNumber(NumberEntity):
         unique_id: str,
         device_name: str,
         state: float,
-        icon: str,
+        translation_key: str | None,
         assumed_state: bool,
         *,
         device_class: NumberDeviceClass | None = None,
@@ -100,7 +100,7 @@ class DemoNumber(NumberEntity):
         """Initialize the Demo Number entity."""
         self._attr_assumed_state = assumed_state
         self._attr_device_class = device_class
-        self._attr_icon = icon
+        self._attr_translation_key = translation_key
         self._attr_mode = mode
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_native_value = state

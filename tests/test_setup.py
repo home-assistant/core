@@ -1,18 +1,17 @@
 """Test component/platform setup."""
 
 import asyncio
-import datetime
 import threading
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, loader, setup
 from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, translation
 from homeassistant.helpers.config_validation import (
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -320,6 +319,7 @@ async def test_component_failing_setup(hass: HomeAssistant) -> None:
 
 async def test_component_exception_setup(hass: HomeAssistant) -> None:
     """Test component that raises exception during setup."""
+    setup.async_set_domains_to_be_loaded(hass, {"comp"})
 
     def exception_setup(hass, config):
         """Raise exception."""
@@ -328,6 +328,22 @@ async def test_component_exception_setup(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule("comp", setup=exception_setup))
 
     assert not await setup.async_setup_component(hass, "comp", {})
+    assert "comp" not in hass.config.components
+
+
+async def test_component_base_exception_setup(hass: HomeAssistant) -> None:
+    """Test component that raises exception during setup."""
+    setup.async_set_domains_to_be_loaded(hass, {"comp"})
+
+    def exception_setup(hass, config):
+        """Raise exception."""
+        raise BaseException("fail!")
+
+    mock_integration(hass, MockModule("comp", setup=exception_setup))
+
+    with pytest.raises(BaseException):
+        await setup.async_setup_component(hass, "comp", {})
+
     assert "comp" not in hass.config.components
 
 
@@ -714,28 +730,22 @@ async def test_integration_only_setup_entry(hass: HomeAssistant) -> None:
 async def test_async_start_setup(hass: HomeAssistant) -> None:
     """Test setup started context manager keeps track of setup times."""
     with setup.async_start_setup(hass, ["august"]):
-        assert isinstance(
-            hass.data[setup.DATA_SETUP_STARTED]["august"], datetime.datetime
-        )
+        assert isinstance(hass.data[setup.DATA_SETUP_STARTED]["august"], float)
         with setup.async_start_setup(hass, ["august"]):
-            assert isinstance(
-                hass.data[setup.DATA_SETUP_STARTED]["august_2"], datetime.datetime
-            )
+            assert isinstance(hass.data[setup.DATA_SETUP_STARTED]["august_2"], float)
 
     assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
-    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
+    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], float)
     assert "august_2" not in hass.data[setup.DATA_SETUP_TIME]
 
 
 async def test_async_start_setup_platforms(hass: HomeAssistant) -> None:
     """Test setup started context manager keeps track of setup times for platforms."""
     with setup.async_start_setup(hass, ["august.sensor"]):
-        assert isinstance(
-            hass.data[setup.DATA_SETUP_STARTED]["august.sensor"], datetime.datetime
-        )
+        assert isinstance(hass.data[setup.DATA_SETUP_STARTED]["august.sensor"], float)
 
     assert "august" not in hass.data[setup.DATA_SETUP_STARTED]
-    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], datetime.timedelta)
+    assert isinstance(hass.data[setup.DATA_SETUP_TIME]["august"], float)
     assert "sensor" not in hass.data[setup.DATA_SETUP_TIME]
 
 
@@ -791,3 +801,51 @@ async def test_setup_config_entry_from_yaml(
     caplog.clear()
     hass.data.pop(setup.DATA_SETUP)
     hass.config.components.remove("test_integration_only_entry")
+
+
+async def test_loading_component_loads_translations(hass: HomeAssistant) -> None:
+    """Test that loading a component loads translations."""
+    assert translation.async_translations_loaded(hass, {"comp"}) is False
+    mock_setup = Mock(return_value=True)
+
+    mock_integration(hass, MockModule("comp", setup=mock_setup))
+
+    assert await setup.async_setup_component(hass, "comp", {})
+    assert mock_setup.called
+    assert translation.async_translations_loaded(hass, {"comp"}) is True
+
+
+async def test_importing_integration_in_executor(
+    hass: HomeAssistant, enable_custom_integrations: None
+) -> None:
+    """Test we can import an integration in an executor."""
+    assert await setup.async_setup_component(hass, "test_package_loaded_executor", {})
+    assert await setup.async_setup_component(hass, "test_package_loaded_executor", {})
+    await hass.async_block_till_done()
+
+
+async def test_async_prepare_setup_platform(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we can prepare a platform setup."""
+    integration = await loader.async_get_integration(hass, "test")
+    with patch.object(
+        integration, "async_get_component", side_effect=ImportError("test is broken")
+    ):
+        assert (
+            await setup.async_prepare_setup_platform(hass, {}, "config", "test") is None
+        )
+
+    assert "test is broken" in caplog.text
+
+    caplog.clear()
+    # There is no actual config platform for this integration
+    assert await setup.async_prepare_setup_platform(hass, {}, "config", "test") is None
+    assert "test.config not found" in caplog.text
+
+    button_platform = (
+        await setup.async_prepare_setup_platform(hass, {}, "button", "test") is None
+    )
+    assert button_platform is not None
