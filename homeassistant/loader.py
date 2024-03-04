@@ -922,6 +922,15 @@ class Integration:
             with suppress(ImportError):
                 self.get_platform("config")
 
+        if self.config_flow:
+            # If there is a config flow, we will cache it as well since
+            # config entry setup always has to load the flow to get the
+            # major/minor version for migrations. Since we may be running
+            # in the executor we will use this opportunity to cache the
+            # config_flow as well.
+            with suppress(ImportError):
+                self.get_platform("config_flow")
+
         return cache[domain]
 
     def _load_platforms(self, platform_names: Iterable[str]) -> dict[str, ModuleType]:
@@ -1005,7 +1014,7 @@ class Integration:
                 for _, import_future in import_futures:
                     import_future.set_exception(ex)
                     with suppress(BaseException):
-                        # Clear the exception retrieved flag on the future since
+                        # Set the exception retrieved flag on the future since
                         # it will never be retrieved unless there
                         # are concurrent calls to async_get_platforms
                         import_future.result()
