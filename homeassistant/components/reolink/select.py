@@ -41,6 +41,10 @@ class ReolinkSelectEntityDescription(
     value: Callable[[Host, int], str] | None = None
 
 
+def _get_quick_reply_id(api: Host, ch: int, mess: str) -> int:
+    return [k for k, v in api.quick_reply_dict(ch).items() if v == mess][0]
+
+
 SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="floodlight_mode",
@@ -79,7 +83,7 @@ SELECT_ENTITIES = (
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values())[1:],
         supported=lambda api, ch: api.supported(ch, "play_quick_reply"),
         method=lambda api, ch, mess: api.play_quick_reply(
-            ch, file_id=[k for k, v in api.quick_reply_dict(ch).items() if v == mess][0]
+            ch, file_id=_get_quick_reply_id(api, ch, mess)
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -92,7 +96,7 @@ SELECT_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "quick_reply"),
         value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
         method=lambda api, ch, mess: api.set_quick_reply(
-            ch, file_id=[k for k, v in api.quick_reply_dict(ch).items() if v == mess][0]
+            ch, file_id=_get_quick_reply_id(api, ch, mess)
         ),
     ),
     ReolinkSelectEntityDescription(
