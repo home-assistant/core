@@ -35,7 +35,7 @@ class IntegrationPlatform:
 
 
 @callback
-def _async_dispatch_process_integration_platforms_for_component(
+def _async_integration_platform_component_loaded(
     hass: HomeAssistant,
     integration_platforms: list[IntegrationPlatform],
     event: EventType[EventComponentLoaded],
@@ -146,7 +146,7 @@ async def async_process_integration_platforms(
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
             partial(
-                _async_dispatch_process_integration_platforms_for_component,
+                _async_integration_platform_component_loaded,
                 hass,
                 integration_platforms,
             ),
