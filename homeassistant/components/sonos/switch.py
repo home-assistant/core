@@ -67,18 +67,6 @@ POLL_REQUIRED = (
     ATTR_STATUS_LIGHT,
 )
 
-FEATURE_ICONS = {
-    ATTR_LOUDNESS: "mdi:bullhorn-variant",
-    ATTR_MUSIC_PLAYBACK_FULL_VOLUME: "mdi:music-note-plus",
-    ATTR_NIGHT_SOUND: "mdi:chat-sleep",
-    ATTR_SPEECH_ENHANCEMENT: "mdi:ear-hearing",
-    ATTR_CROSSFADE: "mdi:swap-horizontal",
-    ATTR_STATUS_LIGHT: "mdi:led-on",
-    ATTR_SUB_ENABLED: "mdi:dog",
-    ATTR_SURROUND_ENABLED: "mdi:surround-sound",
-    ATTR_TOUCH_CONTROLS: "mdi:gesture-tap",
-}
-
 WEEKEND_DAYS = (0, 6)
 
 
@@ -153,7 +141,6 @@ class SonosSwitchEntity(SonosPollingEntity, SwitchEntity):
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_translation_key = feature_type
         self._attr_unique_id = f"{speaker.soco.uid}-{feature_type}"
-        self._attr_icon = FEATURE_ICONS.get(feature_type)
 
         if feature_type in POLL_REQUIRED:
             self._attr_entity_registry_enabled_default = False
@@ -408,7 +395,6 @@ def async_migrate_speech_enhancement_entity_unique_id(
         entry
         for entry in registry_entries
         if entry.domain == Platform.SWITCH
-        and entry.original_icon == FEATURE_ICONS[ATTR_SPEECH_ENHANCEMENT]
         and entry.unique_id.startswith(speaker.soco.uid)
     ]
 
