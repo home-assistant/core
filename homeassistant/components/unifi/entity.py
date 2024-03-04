@@ -97,16 +97,20 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
 class UnifiEntityDescription(EntityDescription, Generic[HandlerT, ApiItemT]):
     """UniFi Entity Description."""
 
-    allowed_fn: Callable[[UnifiHub, str], bool]
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
     available_fn: Callable[[UnifiHub, str], bool]
     device_info_fn: Callable[[UnifiHub, str], DeviceInfo | None]
     name_fn: Callable[[ApiItemT], str | None]
     object_fn: Callable[[aiounifi.Controller, str], ApiItemT]
-    supported_fn: Callable[[UnifiHub, str], bool | None]
     unique_id_fn: Callable[[UnifiHub, str], str]
 
-    # Optional
+    # Optional functions
+    allowed_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
+    """Determine if config entry options allow creation of entity."""
+    supported_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
+    """Determine if UniFi object supports providing relevant data for entity."""
+
+    # Optional constants
     has_entity_name = True  # Part of EntityDescription
     """Has entity name defaults to true."""
     event_is_on: tuple[EventKey, ...] | None = None

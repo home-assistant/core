@@ -54,7 +54,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
     UnifiUpdateEntityDescription[Devices, Device](
         key="Upgrade device",
         device_class=UpdateDeviceClass.FIRMWARE,
-        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         control_fn=async_device_control_fn,
@@ -62,7 +61,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiUpdateEntityDescription, ...] = (
         name_fn=lambda device: None,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         state_fn=lambda api, device: device.state == 4,
-        supported_fn=lambda hub, obj_id: True,
         unique_id_fn=lambda hub, obj_id: f"device_update-{obj_id}",
     ),
 )
