@@ -80,7 +80,7 @@ async def _validate_input(
     except ValueError as exception:
         raise CannotConnect from exception
 
-    _LOGGER.debug("Got System data: %s", system.json())
+    _LOGGER.debug("Got System data: %s", system)
 
     return {"hostname": host, "uuid": system.uuid}
 
