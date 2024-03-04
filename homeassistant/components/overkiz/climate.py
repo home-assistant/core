@@ -27,15 +27,16 @@ async def async_setup_entry(
     """Set up the Overkiz climate from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
+    # Match devices based on the widget.
+    entities_based_on_widget = [
         WIDGET_TO_CLIMATE_ENTITY[device.widget](device.device_url, data.coordinator)
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_TO_CLIMATE_ENTITY
-    )
+    ]
 
-    # Match devices based on the widget and controllableName
-    # This is for example used for Atlantic APC, where devices with different functionality share the same uiClass and widget.
-    async_add_entities(
+    # Match devices based on the widget and controllableName.
+    # ie Atlantic APC
+    entities_based_on_widget_and_controllable = [
         WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY[device.widget][
             cast(Controllable, device.controllable_name)
         ](device.device_url, data.coordinator)
@@ -43,14 +44,21 @@ async def async_setup_entry(
         if device.widget in WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY
         and device.controllable_name
         in WIDGET_AND_CONTROLLABLE_TO_CLIMATE_ENTITY[device.widget]
-    )
+    ]
 
-    # Hitachi Air To Air Heat Pumps
-    async_add_entities(
+    # Match devices based on the widget and protocol.
+    # #ie Hitachi Air To Air Heat Pumps
+    entities_based_on_widget_and_protocol = [
         WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget][device.protocol](
             device.device_url, data.coordinator
         )
         for device in data.platforms[Platform.CLIMATE]
         if device.widget in WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY
         and device.protocol in WIDGET_AND_PROTOCOL_TO_CLIMATE_ENTITY[device.widget]
+    ]
+
+    async_add_entities(
+        entities_based_on_widget
+        + entities_based_on_widget_and_controllable
+        + entities_based_on_widget_and_protocol
     )

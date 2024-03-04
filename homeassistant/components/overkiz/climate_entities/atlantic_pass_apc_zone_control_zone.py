@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from asyncio import sleep
+from functools import cached_property
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -38,14 +39,6 @@ OVERKIZ_TO_HVAC_ACTION: dict[str, HVACAction] = {
     OverkizCommandParam.STOP: HVACAction.OFF,
 }
 
-# Maps the HVAC ZoneControlZone mode.
-HVAC_ACTION_TO_HVAC_MODES: dict[HVACAction, HVACMode] = {
-    HVACAction.COOLING: HVACMode.COOL,
-    HVACAction.DRYING: HVACMode.DRY,
-    HVACAction.HEATING: HVACMode.HEAT,
-    HVACAction.OFF: HVACMode.OFF,
-}
-
 HVAC_ACTION_TO_OVERKIZ_PROFILE_STATE: dict[HVACAction, OverkizState] = {
     HVACAction.COOLING: OverkizState.IO_PASS_APC_COOLING_PROFILE,
     HVACAction.HEATING: OverkizState.IO_PASS_APC_HEATING_PROFILE,
@@ -60,15 +53,28 @@ PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_MODE_TO_PRESET_MODES.items()
 
 TEMPERATURE_ZONECONTROL_DEVICE_INDEX = 20
 
-SUPPORTED_FEATURES = (
+SUPPORTED_FEATURES: ClimateEntityFeature = (
     ClimateEntityFeature.PRESET_MODE
     | ClimateEntityFeature.TURN_OFF
     | ClimateEntityFeature.TURN_ON
 )
-SUPPORTED_FEATURES_MANUAL = SUPPORTED_FEATURES | ClimateEntityFeature.TARGET_TEMPERATURE
-SUPPORTED_FEATURES_AUTO = (
-    SUPPORTED_FEATURES | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-)
+
+OVERKIZ_THERMAL_CONFIGURATION_TO_HVAC_MODE: dict[
+    OverkizCommandParam, tuple[HVACMode, ClimateEntityFeature]
+] = {
+    OverkizCommandParam.COOLING: (
+        HVACMode.COOL,
+        SUPPORTED_FEATURES | ClimateEntityFeature.TARGET_TEMPERATURE,
+    ),
+    OverkizCommandParam.HEATING: (
+        HVACMode.HEAT,
+        SUPPORTED_FEATURES | ClimateEntityFeature.TARGET_TEMPERATURE,
+    ),
+    OverkizCommandParam.HEATING_AND_COOLING: (
+        HVACMode.HEAT_COOL,
+        SUPPORTED_FEATURES | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE,
+    ),
+}
 
 
 # Those device depends on a main probe that choose the operating mode (heating, cooling, ...).
@@ -87,13 +93,17 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         if self.is_using_derogated_temperature_fallback:
             return
 
-        self._attr_min_temp = 0
-        self._attr_max_temp = 0
-
-        self._attr_supported_features = SUPPORTED_FEATURES
-
-        # Modes are not configurable, they will follow current HVAC Mode of Zone Control.
         self._attr_hvac_modes = []
+        self._attr_supported_features = ClimateEntityFeature(0)
+
+        # Modes depends on device capabilities.
+        if (thermal_configuration := self.thermal_configuration) is not None:
+            (
+                device_hvac_mode,
+                climate_entity_feature,
+            ) = thermal_configuration
+            self._attr_hvac_modes = [device_hvac_mode, HVACMode.OFF]
+            self._attr_supported_features = climate_entity_feature
 
         # Those are available and tested presets on Shogun.
         self._attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
@@ -113,6 +123,37 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 zone_control_device.device_url,
                 coordinator,
             )
+
+    @cached_property
+    def thermal_configuration(self) -> tuple[HVACMode, ClimateEntityFeature] | None:
+        """Retrieve thermal configuration for this devices."""
+
+        if (
+            (
+                state_thermal_configuration := cast(
+                    str,
+                    self.executor.select_state(OverkizState.CORE_THERMAL_CONFIGURATION),
+                )
+            )
+            is not None
+            and state_thermal_configuration
+            in OVERKIZ_THERMAL_CONFIGURATION_TO_HVAC_MODE
+        ):
+            return OVERKIZ_THERMAL_CONFIGURATION_TO_HVAC_MODE[
+                state_thermal_configuration
+            ]
+
+        return None
+
+    @cached_property
+    def device_hvac_mode(self) -> HVACMode | None:
+        """ZoneControlZone device has a single possible mode."""
+
+        return (
+            None
+            if self.thermal_configuration is None
+            else self.thermal_configuration[0]
+        )
 
     @property
     def is_using_derogated_temperature_fallback(self) -> bool:
@@ -139,22 +180,6 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         return HVACAction.OFF
 
     @property
-    def is_zone_control_auto_switch_active(self) -> bool:
-        """Check if auto mode is available and active on the ZoneControl."""
-
-        if self.zone_control_executor is not None and (
-            (
-                state := self.zone_control_executor.select_state(
-                    OverkizState.CORE_HEATING_COOLING_AUTO_SWITCH
-                )
-            )
-            is not None
-        ):
-            return cast(str, state) == OverkizCommandParam.ON
-
-        return False
-
-    @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
 
@@ -178,34 +203,32 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         if self.is_using_derogated_temperature_fallback:
             return super().hvac_mode
 
-        zone_control_hvac_mode = HVAC_ACTION_TO_HVAC_MODES[
-            zone_control_hvac_action := self.zone_control_hvac_action
-        ]
+        if (device_hvac_mode := self.device_hvac_mode) is None:
+            return HVACMode.OFF
 
-        # Selectable mode is kept in synced with the Zone Control current mode.
-        # When auto switching is enabled on Zone Control, we can use the HEAT_COOL mode.
-        if self.is_zone_control_auto_switch_active:
-            selectable_hvac_mode = HVACMode.HEAT_COOL
-        else:
-            selectable_hvac_mode = zone_control_hvac_mode
+        cooling_is_off = cast(
+            str,
+            self.executor.select_state(OverkizState.CORE_COOLING_ON_OFF),
+        ) in (OverkizCommandParam.OFF, None)
 
-        self.sync_attrs_from_mode(selectable_hvac_mode)
+        heating_is_off = cast(
+            str,
+            self.executor.select_state(OverkizState.CORE_HEATING_ON_OFF),
+        ) in (OverkizCommandParam.OFF, None)
 
         # Device is Stopped, it means the air flux is flowing but its venting door is closed.
         if (
-            cast(
-                str,
-                self.executor.select_state(
-                    OverkizState.CORE_COOLING_ON_OFF
-                    if zone_control_hvac_action == HVACAction.COOLING
-                    else OverkizState.CORE_HEATING_ON_OFF
-                ),
+            (device_hvac_mode == HVACMode.COOL and cooling_is_off)
+            or (device_hvac_mode == HVACMode.HEAT and heating_is_off)
+            or (
+                device_hvac_mode == HVACMode.HEAT_COOL
+                and cooling_is_off
+                and heating_is_off
             )
-            == OverkizCommandParam.OFF
         ):
             return HVACMode.OFF
 
-        return selectable_hvac_mode
+        return device_hvac_mode
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -216,24 +239,20 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         # They are mainly managed by the Zone Control device
         # However, it make sense to map the OFF Mode to the Overkiz STOP Preset
 
-        if hvac_mode == HVACMode.OFF:
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_COOLING_ON_OFF,
-                OverkizCommandParam.OFF,
-            )
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_HEATING_ON_OFF,
-                OverkizCommandParam.OFF,
-            )
-        else:
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_COOLING_ON_OFF,
-                OverkizCommandParam.ON,
-            )
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_HEATING_ON_OFF,
-                OverkizCommandParam.ON,
-            )
+        on_off_target_command_param = (
+            OverkizCommandParam.OFF
+            if hvac_mode == HVACMode.OFF
+            else OverkizCommandParam.ON
+        )
+
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_COOLING_ON_OFF,
+            on_off_target_command_param,
+        )
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_HEATING_ON_OFF,
+            on_off_target_command_param,
+        )
 
         await self.async_refresh_modes()
 
@@ -244,12 +263,16 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         if self.is_using_derogated_temperature_fallback:
             return super().preset_mode
 
-        mode_state = HVAC_ACTION_TO_OVERKIZ_MODE_STATE[self.zone_control_hvac_action]
-
-        if mode_state is not None and (
-            mode := OVERKIZ_MODE_TO_PRESET_MODES[
-                cast(str, self.executor.select_state(mode_state))
+        if (
+            mode_state := HVAC_ACTION_TO_OVERKIZ_MODE_STATE[
+                self.zone_control_hvac_action
             ]
+        ) is not None and (
+            (
+                mode := OVERKIZ_MODE_TO_PRESET_MODES[
+                    cast(str, self.executor.select_state(mode_state))
+                ]
+            )
             is not None
         ):
             return mode
@@ -281,12 +304,12 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         if self.is_using_derogated_temperature_fallback:
             return super().target_temperature
 
-        hvac_mode = self.hvac_mode
+        device_hvac_mode = self.device_hvac_mode
 
-        if hvac_mode == HVACMode.HEAT_COOL:
+        if device_hvac_mode == HVACMode.HEAT_COOL:
             return None
 
-        if hvac_mode == HVACMode.COOL:
+        if device_hvac_mode == HVACMode.COOL:
             return cast(
                 float,
                 self.executor.select_state(
@@ -294,7 +317,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 ),
             )
 
-        if hvac_mode == HVACMode.HEAT:
+        if device_hvac_mode == HVACMode.HEAT:
             return cast(
                 float,
                 self.executor.select_state(
@@ -310,7 +333,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach (cooling)."""
 
-        if self.hvac_mode != HVACMode.HEAT_COOL:
+        if self.device_hvac_mode != HVACMode.HEAT_COOL:
             return None
 
         return cast(
@@ -321,7 +344,8 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     @property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach (heating)."""
-        if self.hvac_mode != HVACMode.HEAT_COOL:
+
+        if self.device_hvac_mode != HVACMode.HEAT_COOL:
             return None
 
         return cast(
@@ -399,43 +423,13 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             OverkizCommand.REFRESH_TARGET_TEMPERATURE
         )
 
-    def sync_attrs_from_mode(self, hvac_mode: HVACMode) -> None:
-        """Synchronise attrs from zone control mode."""
+    @property
+    def min_temp(self):
+        """Return Minimum Temperature for AC of this group."""
 
-        should_write_state = False
+        device_hvac_mode = self.device_hvac_mode
 
-        # Selectable mode is kept in synced with the Zone Control current mode.
-        # When auto switching is enabled on Zone Control, we can use the HEAT_COOL mode.
-        if hvac_mode == HVACMode.HEAT_COOL:
-            supported_features = SUPPORTED_FEATURES_AUTO
-        else:
-            supported_features = SUPPORTED_FEATURES_MANUAL
-
-        # Only HEAT_COOL mode supports temperature range.
-        if self._attr_supported_features != supported_features:
-            self._attr_supported_features = supported_features
-            should_write_state = True
-
-        # It helps keep it consistent with the Zone Control, within the interface.
-        if self._attr_hvac_modes != (hvac_modes := [hvac_mode, HVACMode.OFF]):
-            self._attr_hvac_modes = hvac_modes
-            should_write_state = True
-
-        min_temp = self.get_min_temp(hvac_mode)
-        max_temp = self.get_max_temp(hvac_mode)
-
-        if self._attr_min_temp != min_temp or self._attr_max_temp != max_temp:
-            self._attr_min_temp = min_temp
-            self._attr_max_temp = max_temp
-            should_write_state = True
-
-        if should_write_state is True:
-            self.async_write_ha_state()
-
-    def get_min_temp(self, hvac_mode: HVACMode) -> float:
-        """Compute the minimum temperature."""
-
-        if hvac_mode in (HVACMode.HEAT, HVACMode.HEAT_COOL):
+        if device_hvac_mode in (HVACMode.HEAT, HVACMode.HEAT_COOL):
             return cast(
                 float,
                 self.executor.select_state(
@@ -443,7 +437,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 ),
             )
 
-        if hvac_mode == HVACMode.COOL:
+        if device_hvac_mode == HVACMode.COOL:
             return cast(
                 float,
                 self.executor.select_state(
@@ -453,10 +447,13 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         return self._attr_min_temp
 
-    def get_max_temp(self, hvac_mode: HVACMode) -> float:
-        """Compute the maximum temperature."""
+    @property
+    def max_temp(self):
+        """Return Max Temperature for AC of this group."""
 
-        if hvac_mode == HVACMode.HEAT:
+        device_hvac_mode = self.device_hvac_mode
+
+        if device_hvac_mode == HVACMode.HEAT:
             return cast(
                 float,
                 self.executor.select_state(
@@ -464,7 +461,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
                 ),
             )
 
-        if hvac_mode in (HVACMode.COOL, HVACMode.HEAT_COOL):
+        if device_hvac_mode in (HVACMode.COOL, HVACMode.HEAT_COOL):
             return cast(
                 float,
                 self.executor.select_state(
