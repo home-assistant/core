@@ -82,8 +82,8 @@ SELECT_ENTITIES = (
         icon="mdi:message-reply-text-outline",
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values())[1:],
         supported=lambda api, ch: api.supported(ch, "play_quick_reply"),
-        method=lambda api, ch, mess: api.play_quick_reply(
-            ch, file_id=_get_quick_reply_id(api, ch, mess)
+        method=lambda api, ch, mess: (
+            api.play_quick_reply(ch, file_id=_get_quick_reply_id(api, ch, mess))
         ),
     ),
     ReolinkSelectEntityDescription(
@@ -95,8 +95,8 @@ SELECT_ENTITIES = (
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
         supported=lambda api, ch: api.supported(ch, "quick_reply"),
         value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
-        method=lambda api, ch, mess: api.set_quick_reply(
-            ch, file_id=_get_quick_reply_id(api, ch, mess)
+        method=lambda api, ch, mess: (
+            api.set_quick_reply(ch, file_id=_get_quick_reply_id(api, ch, mess))
         ),
     ),
     ReolinkSelectEntityDescription(
