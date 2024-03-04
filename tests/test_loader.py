@@ -1038,10 +1038,10 @@ async def test_hass_components_use_reported(
         ) in caplog.text
 
 
-async def test_async_get_component_preloads_config(
+async def test_async_get_component_preloads_config_and_config_flow(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Verify async_get_component will try to preload the config platform."""
+    """Verify async_get_component will try to preload the config and config_flow platform."""
     executor_import_integration = _get_test_integration(
         hass, "executor_import", True, import_executor=True
     )
@@ -1058,7 +1058,7 @@ async def test_async_get_component_preloads_config(
         await executor_import_integration.async_get_component()
 
     assert mock_platform_exists.call_count == 1
-    assert mock_import.call_count == 2
+    assert mock_import.call_count == 3
     assert (
         mock_import.call_args_list[0][0][0]
         == "homeassistant.components.executor_import"
@@ -1066,6 +1066,10 @@ async def test_async_get_component_preloads_config(
     assert (
         mock_import.call_args_list[1][0][0]
         == "homeassistant.components.executor_import.config"
+    )
+    assert (
+        mock_import.call_args_list[2][0][0]
+        == "homeassistant.components.executor_import.config_flow"
     )
 
 
