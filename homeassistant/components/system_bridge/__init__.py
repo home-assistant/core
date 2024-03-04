@@ -45,6 +45,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
+from .config_flow import SystemBridgeConfigFlow
 from .const import DOMAIN, MODULES
 from .coordinator import SystemBridgeDataUpdateCoordinator
 
@@ -376,5 +377,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry.version,
             config_entry.minor_version,
         )
+
+    if config_entry.version > SystemBridgeConfigFlow.VERSION:
+        return False
 
     return True
