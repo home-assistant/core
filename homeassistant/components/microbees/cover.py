@@ -22,7 +22,7 @@ from .entity import MicroBeesEntity
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Config entry."""
+    """Setup the microBees cover platform."""
     coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ].coordinator
@@ -72,7 +72,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
     def _reset_open_close(self, *_: Any) -> None:
         """Reset the opening and closing state."""
         self._attr_is_opening = False
-        self._attr_is_closing = None
+        self._attr_is_closing = False
         self.async_write_ha_state()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -83,7 +83,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
         )
 
         if not sendCommand:
-            raise HomeAssistantError(f"Failed to turn off {self.name}")
+            raise HomeAssistantError(f"Failed to open {self.name}")
 
         self._attr_is_opening = True
         async_call_later(
@@ -99,7 +99,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
             self.actuator_down.configuration.actuator_timing * 1000,
         )
         if not sendCommand:
-            raise HomeAssistantError(f"Failed to turn off {self.name}")
+            raise HomeAssistantError(f"Failed to close {self.name}")
 
         self._attr_is_closing = True
         async_call_later(
