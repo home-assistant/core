@@ -924,8 +924,8 @@ class Integration:
             # in the executor we will use this opportunity to cache the
             # config_flow as well.
             with suppress(ImportError):
-                self.get_platform("config_flow")                
-                
+                self.get_platform("config_flow")
+
         return cache[domain]
 
     def _load_platforms(self, platform_names: Iterable[str]) -> dict[str, ModuleType]:
