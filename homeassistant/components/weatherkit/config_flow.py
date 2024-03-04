@@ -12,7 +12,7 @@ from apple_weatherkit.client import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -53,7 +53,7 @@ class WeatherKitUnsupportedLocationError(Exception):
     """Error to indicate a location is unsupported."""
 
 
-class WeatherKitFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class WeatherKitFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for WeatherKit."""
 
     VERSION = 1
@@ -61,7 +61,7 @@ class WeatherKitFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:

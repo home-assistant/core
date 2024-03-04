@@ -5,6 +5,7 @@
   "codeowners": ["@home-assistant/core", "@ludeeus"],
   "dependencies": ["api", "websocket_api"],
   "documentation": "https://www.home-assistant.io/integrations/analytics",
+  "import_executor": true,
   "integration_type": "system",
   "iot_class": "cloud_push",
   "quality_scale": "internal"

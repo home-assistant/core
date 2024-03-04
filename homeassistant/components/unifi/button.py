@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic
+from typing import Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import ItemEvent
@@ -30,7 +30,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .controller import UniFiController
 from .entity import (
     HandlerT,
     UnifiEntity,
@@ -38,6 +37,7 @@ from .entity import (
     async_device_available_fn,
     async_device_device_info_fn,
 )
+from .hub import UnifiHub
 
 
 @callback
@@ -57,20 +57,13 @@ async def async_power_cycle_port_control_fn(
     await api.request(DevicePowerCyclePortRequest.create(mac, int(index)))
 
 
-@dataclass(frozen=True)
-class UnifiButtonEntityDescriptionMixin(Generic[HandlerT, ApiItemT]):
-    """Validate and load entities from different UniFi handlers."""
-
-    control_fn: Callable[[aiounifi.Controller, str], Coroutine[Any, Any, None]]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class UnifiButtonEntityDescription(
-    ButtonEntityDescription,
-    UnifiEntityDescription[HandlerT, ApiItemT],
-    UnifiButtonEntityDescriptionMixin[HandlerT, ApiItemT],
+    ButtonEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi button entity."""
+
+    control_fn: Callable[[aiounifi.Controller, str], Coroutine[Any, Any, None]]
 
 
 ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
@@ -79,25 +72,22 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
         device_class=ButtonDeviceClass.RESTART,
-        allowed_fn=lambda controller, obj_id: True,
+        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         control_fn=async_restart_device_control_fn,
         device_info_fn=async_device_device_info_fn,
-        event_is_on=None,
-        event_to_subscribe=None,
         name_fn=lambda _: "Restart",
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        should_poll=False,
-        supported_fn=lambda controller, obj_id: True,
-        unique_id_fn=lambda controller, obj_id: f"device_restart-{obj_id}",
+        supported_fn=lambda hub, obj_id: True,
+        unique_id_fn=lambda hub, obj_id: f"device_restart-{obj_id}",
     ),
     UnifiButtonEntityDescription[Ports, Port](
         key="PoE power cycle",
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
         device_class=ButtonDeviceClass.RESTART,
-        allowed_fn=lambda controller, obj_id: True,
+        allowed_fn=lambda hub, obj_id: True,
         api_handler_fn=lambda api: api.ports,
         available_fn=async_device_available_fn,
         control_fn=async_power_cycle_port_control_fn,
@@ -106,9 +96,8 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
         event_to_subscribe=None,
         name_fn=lambda port: f"{port.name} Power Cycle",
         object_fn=lambda api, obj_id: api.ports[obj_id],
-        should_poll=False,
-        supported_fn=lambda controller, obj_id: controller.api.ports[obj_id].port_poe,
-        unique_id_fn=lambda controller, obj_id: f"power_cycle-{obj_id}",
+        supported_fn=lambda hub, obj_id: hub.api.ports[obj_id].port_poe,
+        unique_id_fn=lambda hub, obj_id: f"power_cycle-{obj_id}",
     ),
 )
 
@@ -119,7 +108,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up button platform for UniFi Network integration."""
-    UniFiController.register_platform(
+    UnifiHub.register_platform(
         hass,
         config_entry,
         async_add_entities,
@@ -136,7 +125,7 @@ class UnifiButtonEntity(UnifiEntity[HandlerT, ApiItemT], ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.entity_description.control_fn(self.controller.api, self._obj_id)
+        await self.entity_description.control_fn(self.hub.api, self._obj_id)
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:

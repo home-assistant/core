@@ -13,6 +13,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView, require_admin
+from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, Unauthorized
 import homeassistant.helpers.config_validation as cv
@@ -26,8 +27,8 @@ from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
     async_get_config_flows,
-    async_get_integration,
     async_get_integrations,
+    async_get_loaded_integration,
 )
 
 
@@ -153,10 +154,26 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
     @require_admin(
         error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
     )
-    async def post(self, request: web.Request) -> web.Response:
-        """Handle a POST request."""
+    @RequestDataValidator(
+        vol.Schema(
+            {
+                vol.Required("handler"): vol.Any(str, list),
+                vol.Optional("show_advanced_options", default=False): cv.boolean,
+                vol.Optional("entry_id"): cv.string,
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
+    )
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+        """Initialize a POST request for a config entry flow."""
+        return await self._post_impl(request, data)
+
+    async def _post_impl(
+        self, request: web.Request, data: dict[str, Any]
+    ) -> web.Response:
+        """Handle a POST request for a config entry flow."""
         try:
-            return await super().post(request)
+            return await super()._post_impl(request, data)
         except DependencyError as exc:
             return web.Response(
                 text=f"Failed dependencies {', '.join(exc.failed_dependencies)}",
@@ -167,6 +184,9 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
         """Return context."""
         context = super().get_context(data)
         context["source"] = config_entries.SOURCE_USER
+        if entry_id := data.get("entry_id"):
+            context["source"] = config_entries.SOURCE_RECONFIGURE
+            context["entry_id"] = entry_id
         return context
 
     def _prepare_result_json(
@@ -479,12 +499,13 @@ async def config_entries_subscribe(
     """Subscribe to config entry updates."""
     type_filter = msg.get("type_filter")
 
-    async def async_forward_config_entry_changes(
+    @callback
+    def async_forward_config_entry_changes(
         change: config_entries.ConfigEntryChange, entry: config_entries.ConfigEntry
     ) -> None:
         """Forward config entry state events to websocket."""
         if type_filter:
-            integration = await async_get_integration(hass, entry.domain)
+            integration = async_get_loaded_integration(hass, entry.domain)
             if integration.integration_type not in type_filter:
                 return
 

@@ -1,6 +1,7 @@
 """Types for the ViCare integration."""
 from collections.abc import Callable
 from dataclasses import dataclass
+import enum
 from typing import Any
 import enum
 

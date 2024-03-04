@@ -22,18 +22,21 @@ CONFIG_SCHEMA = vol.Schema(
                 }
             )
         },
-        extra=vol.ALLOW_EXTRA,
-    )
+    ),
+    extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the velux component."""
+    if DOMAIN not in config:
+        return True
+
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=config,
+            data=config[DOMAIN],
         )
     )
 

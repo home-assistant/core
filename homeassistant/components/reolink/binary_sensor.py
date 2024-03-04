@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from reolink_aio.api import (
     DUAL_LENS_DUAL_MOTION_MODELS,
     FACE_DETECTION_TYPE,
+    PACKAGE_DETECTION_TYPE,
     PERSON_DETECTION_TYPE,
     PET_DETECTION_TYPE,
     VEHICLE_DETECTION_TYPE,
@@ -85,6 +86,14 @@ BINARY_SENSORS = (
         icon_off="mdi:paw-off",
         value=lambda api, ch: api.ai_detected(ch, PET_DETECTION_TYPE),
         supported=lambda api, ch: api.supported(ch, "ai_animal"),
+    ),
+    ReolinkBinarySensorEntityDescription(
+        key=PACKAGE_DETECTION_TYPE,
+        translation_key="package",
+        icon="mdi:gift-outline",
+        icon_off="mdi:gift-off-outline",
+        value=lambda api, ch: api.ai_detected(ch, PACKAGE_DETECTION_TYPE),
+        supported=lambda api, ch: api.ai_supported(ch, PACKAGE_DETECTION_TYPE),
     ),
     ReolinkBinarySensorEntityDescription(
         key="visitor",

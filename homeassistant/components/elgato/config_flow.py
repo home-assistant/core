@@ -7,10 +7,9 @@ from elgato import Elgato, ElgatoError
 import voluptuous as vol
 
 from homeassistant.components import onboarding, zeroconf
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -28,7 +27,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         if user_input is None:
             return self._async_show_setup_form()
@@ -45,7 +44,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info.host
         self.mac = discovery_info.properties.get("id")
@@ -67,14 +66,14 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, _: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
         return self._async_create_entry()
 
     @callback
     def _async_show_setup_form(
         self, errors: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         return self.async_show_form(
             step_id="user",
@@ -88,7 +87,7 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
-    def _async_create_entry(self) -> FlowResult:
+    def _async_create_entry(self) -> ConfigFlowResult:
         return self.async_create_entry(
             title=self.serial_number,
             data={

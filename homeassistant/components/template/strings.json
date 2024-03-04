@@ -20,7 +20,7 @@
         "title": "Template sensor"
       },
       "user": {
-        "description": "This helper allow you to create helper entities that define their state using a template.",
+        "description": "This helper allows you to create helper entities that define their state using a template.",
         "menu_options": {
           "binary_sensor": "Template a binary sensor",
           "sensor": "Template a sensor"

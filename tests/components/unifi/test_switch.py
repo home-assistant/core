@@ -33,12 +33,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
-from .test_controller import (
-    CONTROLLER_HOST,
-    ENTRY_CONFIG,
-    SITE,
-    setup_unifi_integration,
-)
+from .test_hub import CONTROLLER_HOST, ENTRY_CONFIG, SITE, setup_unifi_integration
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -780,10 +775,10 @@ async def test_no_clients(
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
 
-async def test_controller_not_client(
+async def test_hub_not_client(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test that the controller doesn't become a switch."""
+    """Test that the cloud key doesn't become a switch."""
     await setup_unifi_integration(
         hass,
         aioclient_mock,
@@ -816,7 +811,9 @@ async def test_not_admin(
 
 
 async def test_switches(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the update_items function with some clients."""
     config_entry = await setup_unifi_integration(
@@ -832,7 +829,7 @@ async def test_switches(
         dpigroup_response=DPI_GROUPS,
         dpiapp_response=DPI_APPS,
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 3
 
@@ -852,14 +849,15 @@ async def test_switches(
     assert dpi_switch.state == "on"
     assert dpi_switch.attributes["icon"] == "mdi:network"
 
-    ent_reg = er.async_get(hass)
     for entry_id in ("switch.block_client_1", "switch.block_media_streaming"):
-        assert ent_reg.async_get(entry_id).entity_category is EntityCategory.CONFIG
+        assert (
+            entity_registry.async_get(entry_id).entity_category is EntityCategory.CONFIG
+        )
 
     # Block and unblock client
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/stamgr",
     )
 
     await hass.services.async_call(
@@ -883,7 +881,7 @@ async def test_switches(
     # Enable and disable DPI
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{controller.host}:1234/api/s/{controller.site}/rest/dpiapp/5f976f62e3c58f018ec7e17d",
+        f"https://{hub.host}:1234/api/s/{hub.site}/rest/dpiapp/5f976f62e3c58f018ec7e17d",
     )
 
     await hass.services.async_call(
@@ -953,7 +951,7 @@ async def test_block_switches(
         clients_response=[UNBLOCKED],
         clients_all_response=[BLOCKED],
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
 
@@ -983,7 +981,7 @@ async def test_block_switches(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        f"https://{controller.host}:1234/api/s/{controller.site}/cmd/stamgr",
+        f"https://{hub.host}:1234/api/s/{hub.site}/cmd/stamgr",
     )
 
     await hass.services.async_call(
@@ -1144,7 +1142,7 @@ async def test_outlet_switches(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, devices_response=[test_data]
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == expected_switches
     # Validate state object
     switch_1 = hass.states.get(f"switch.{entity_id}")
@@ -1163,7 +1161,7 @@ async def test_outlet_switches(
     device_id = test_data["device_id"]
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{controller.host}:1234/api/s/{controller.site}/rest/device/{device_id}",
+        f"https://{hub.host}:1234/api/s/{hub.site}/rest/device/{device_id}",
     )
 
     await hass.services.async_call(
@@ -1326,6 +1324,7 @@ async def test_option_remove_switches(
 
 async def test_poe_port_switches(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
     websocket_mock,
@@ -1334,20 +1333,19 @@ async def test_poe_port_switches(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, devices_response=[DEVICE_1]
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
-    ent_reg = er.async_get(hass)
-    ent_reg_entry = ent_reg.async_get("switch.mock_name_port_1_poe")
+    ent_reg_entry = entity_registry.async_get("switch.mock_name_port_1_poe")
     assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
     assert ent_reg_entry.entity_category is EntityCategory.CONFIG
 
     # Enable entity
-    ent_reg.async_update_entity(
+    entity_registry.async_update_entity(
         entity_id="switch.mock_name_port_1_poe", disabled_by=None
     )
-    ent_reg.async_update_entity(
+    entity_registry.async_update_entity(
         entity_id="switch.mock_name_port_2_poe", disabled_by=None
     )
     await hass.async_block_till_done()
@@ -1374,7 +1372,7 @@ async def test_poe_port_switches(
     # Turn off PoE
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{controller.host}:1234/api/s/{controller.site}/rest/device/mock-id",
+        f"https://{hub.host}:1234/api/s/{hub.site}/rest/device/mock-id",
     )
 
     await hass.services.async_call(
@@ -1438,6 +1436,7 @@ async def test_poe_port_switches(
 
 async def test_wlan_switches(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
     websocket_mock,
@@ -1446,12 +1445,11 @@ async def test_wlan_switches(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, wlans_response=[WLAN]
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    ent_reg = er.async_get(hass)
-    ent_reg_entry = ent_reg.async_get("switch.ssid_1")
+    ent_reg_entry = entity_registry.async_get("switch.ssid_1")
     assert ent_reg_entry.unique_id == "wlan-012345678910111213141516"
     assert ent_reg_entry.entity_category is EntityCategory.CONFIG
 
@@ -1471,8 +1469,7 @@ async def test_wlan_switches(
     # Disable WLAN
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{controller.host}:1234/api/s/{controller.site}"
-        + f"/rest/wlanconf/{WLAN['_id']}",
+        f"https://{hub.host}:1234/api/s/{hub.site}" + f"/rest/wlanconf/{WLAN['_id']}",
     )
 
     await hass.services.async_call(
@@ -1507,6 +1504,7 @@ async def test_wlan_switches(
 
 async def test_port_forwarding_switches(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     aioclient_mock: AiohttpClientMocker,
     mock_unifi_websocket,
     websocket_mock,
@@ -1527,12 +1525,11 @@ async def test_port_forwarding_switches(
     config_entry = await setup_unifi_integration(
         hass, aioclient_mock, port_forward_response=[_data.copy()]
     )
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    hub = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
 
-    ent_reg = er.async_get(hass)
-    ent_reg_entry = ent_reg.async_get("switch.unifi_network_plex")
+    ent_reg_entry = entity_registry.async_get("switch.unifi_network_plex")
     assert ent_reg_entry.unique_id == "port_forward-5a32aa4ee4b0412345678911"
     assert ent_reg_entry.entity_category is EntityCategory.CONFIG
 
@@ -1552,7 +1549,7 @@ async def test_port_forwarding_switches(
     # Disable port forward
     aioclient_mock.clear_requests()
     aioclient_mock.put(
-        f"https://{controller.host}:1234/api/s/{controller.site}"
+        f"https://{hub.host}:1234/api/s/{hub.site}"
         + f"/rest/portforward/{data['_id']}",
     )
 
@@ -1594,7 +1591,9 @@ async def test_port_forwarding_switches(
 
 
 async def test_updating_unique_id(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Verify outlet control and poe control unique ID update works."""
     poe_device = {
@@ -1637,15 +1636,14 @@ async def test_updating_unique_id(
         entry_id="1",
     )
 
-    registry = er.async_get(hass)
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         UNIFI_DOMAIN,
         f'{poe_device["mac"]}-poe-1',
         suggested_object_id="switch_port_1_poe",
         config_entry=config_entry,
     )
-    registry.async_get_or_create(
+    entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         UNIFI_DOMAIN,
         f'{OUTLET_UP1["mac"]}-outlet-1',

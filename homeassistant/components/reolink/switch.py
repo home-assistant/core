@@ -33,7 +33,7 @@ class ReolinkSwitchEntityDescription(
     """A class that describes switch entities."""
 
     method: Callable[[Host, int, bool], Any]
-    value: Callable[[Host, int], bool]
+    value: Callable[[Host, int], bool | None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -107,6 +107,14 @@ SWITCH_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "ptz_guard"),
         value=lambda api, ch: api.ptz_guard_enabled(ch),
         method=lambda api, ch, value: api.set_ptz_guard(ch, enable=value),
+    ),
+    ReolinkSwitchEntityDescription(
+        key="ptz_patrol",
+        translation_key="ptz_patrol",
+        icon="mdi:map-marker-path",
+        supported=lambda api, ch: api.supported(ch, "ptz_patrol"),
+        value=lambda api, ch: None,
+        method=lambda api, ch, value: api.ctrl_ptz_patrol(ch, value),
     ),
     ReolinkSwitchEntityDescription(
         key="email",
@@ -275,7 +283,7 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         super().__init__(reolink_data, channel)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.entity_description.value(self._host.api, self._channel)
 

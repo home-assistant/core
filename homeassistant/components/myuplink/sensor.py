@@ -206,7 +206,8 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
 
         # Internal properties
         self.point_id = device_point.parameter_id
-        self._attr_name = device_point.parameter_name.replace("\u002d", "")
+        # Remove soft hyphens
+        self._attr_name = device_point.parameter_name.replace("\u00ad", "")
 
         if entity_description is not None:
             self.entity_description = entity_description
