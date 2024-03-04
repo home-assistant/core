@@ -1,0 +1,38 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "bin_full": {
+        "default": "mdi:delete-variant"
+      }
+    },
+    "sensor": {
+      "battery_cycles": {
+        "default": "mdi:counter"
+      },
+      "total_cleaning_time": {
+        "default": "mdi:clock"
+      },
+      "average_mission_time": {
+        "default": "mdi:clock"
+      },
+      "total_missions": {
+        "default": "mdi:counter"
+      },
+      "successful_missions": {
+        "default": "mdi:counter"
+      },
+      "canceled_missions": {
+        "default": "mdi:counter"
+      },
+      "failed_missions": {
+        "default": "mdi:counter"
+      },
+      "scrubs_count": {
+        "default": "mdi:counter"
+      },
+      "total_cleaned_area": {
+        "default": "mdi:texture-box"
+      }
+    }
+  }
+}
