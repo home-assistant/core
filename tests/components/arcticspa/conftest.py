@@ -20,5 +20,5 @@ def mock_arcticspa():
         return_value=mock_arcticspa_device,
     ):
         mock_arcticspa_device.return_value.status.return_value = device_data
-        mock_arcticspa_device.return_value.id.__getitem__.return_value = API_ID
+        mock_arcticspa_device.return_value.id = API_ID
         yield mock_arcticspa_device
