@@ -10,8 +10,7 @@ from elmax_api.http import Elmax
 from elmax_api.model.panel import PanelEntry
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
@@ -55,7 +54,7 @@ def _store_panel_by_name(
     panel_names[panel_name] = panel_id
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for elmax-cloud."""
 
     VERSION = 1
@@ -64,11 +63,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _password: str
     _panels_schema: vol.Schema
     _panel_names: dict
-    _entry: config_entries.ConfigEntry | None
+    _entry: ConfigEntry | None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         # When invokes without parameters, show the login form.
         if user_input is None:
@@ -133,7 +132,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_panels(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle Panel selection step."""
         errors: dict[str, Any] = {}
         if user_input is None:
@@ -175,14 +174,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="panels", data_schema=self._panels_schema, errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauthorization flow."""
         errors = {}
         if user_input is not None:

@@ -77,7 +77,6 @@ async def async_setup_entry(
 class CertExpiryEntity(CoordinatorEntity[CertExpiryDataUpdateCoordinator]):
     """Defines a base Cert Expiry entity."""
 
-    _attr_icon = "mdi:certificate"
     _attr_has_entity_name = True
 
     @property

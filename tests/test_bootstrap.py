@@ -3,12 +3,13 @@ import asyncio
 from collections.abc import Generator, Iterable
 import glob
 import os
+import sys
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, runner
+from homeassistant import bootstrap, loader, runner
 import homeassistant.config as config_util
 from homeassistant.config_entries import HANDLERS, ConfigEntry
 from homeassistant.const import SIGNAL_BOOTSTRAP_INTEGRATIONS
@@ -93,15 +94,6 @@ async def test_load_hassio(hass: HomeAssistant) -> None:
 
     with patch.dict(os.environ, {"SUPERVISOR": "1"}):
         assert "hassio" in bootstrap._get_domains(hass, {})
-
-
-async def test_load_backup(hass: HomeAssistant) -> None:
-    """Test that we load the backup integration when not using Supervisor."""
-    with patch.dict(os.environ, {}, clear=True):
-        assert "backup" in bootstrap._get_domains(hass, {})
-
-    with patch.dict(os.environ, {"SUPERVISOR": "1"}):
-        assert "backup" not in bootstrap._get_domains(hass, {})
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -480,7 +472,6 @@ async def test_setup_hass(
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     verbose = Mock()
@@ -530,7 +521,6 @@ async def test_setup_hass_takes_longer_than_log_slow_startup(
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     verbose = Mock()
@@ -569,7 +559,6 @@ async def test_setup_hass_invalid_yaml(
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     with patch(
@@ -597,7 +586,6 @@ async def test_setup_hass_config_dir_nonexistent(
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     mock_ensure_config_exists.return_value = False
@@ -624,7 +612,6 @@ async def test_setup_hass_recovery_mode(
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     with patch("homeassistant.components.browser.setup") as browser_setup, patch(
@@ -659,7 +646,6 @@ async def test_setup_hass_safe_mode(
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     with patch("homeassistant.components.browser.setup"), patch(
@@ -692,7 +678,6 @@ async def test_setup_hass_recovery_mode_and_safe_mode(
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
     caplog: pytest.LogCaptureFixture,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     with patch("homeassistant.components.browser.setup"), patch(
@@ -725,7 +710,6 @@ async def test_setup_hass_invalid_core_config(
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test it works."""
     with patch("homeassistant.bootstrap.async_notify_setup_error") as mock_notify:
@@ -765,7 +749,6 @@ async def test_setup_recovery_mode_if_no_frontend(
     mock_mount_local_lib_path: AsyncMock,
     mock_ensure_config_exists: AsyncMock,
     mock_process_ha_config_upgrade: Mock,
-    event_loop: asyncio.AbstractEventLoop,
 ) -> None:
     """Test we setup recovery mode if frontend didn't load."""
     verbose = Mock()
@@ -935,7 +918,7 @@ async def test_bootstrap_dependencies(
         """Assert the mqtt config entry was set up."""
         calls.append("mqtt")
         # assert the integration is not yet set up
-        assertions.append(hass.data["setup_done"][integration].is_set() is False)
+        assertions.append(hass.data["setup_done"][integration].done() is False)
         assertions.append(
             all(
                 dependency in hass.config.components
@@ -951,7 +934,7 @@ async def test_bootstrap_dependencies(
         # assert mqtt was already set up
         assertions.append(
             "mqtt" not in hass.data["setup_done"]
-            or hass.data["setup_done"]["mqtt"].is_set()
+            or hass.data["setup_done"]["mqtt"].done()
         )
         assertions.append("mqtt" in hass.config.components)
         return True
@@ -1038,5 +1021,49 @@ async def test_bootstrap_dependencies(
     assert calls == ["mqtt", integration]
 
     assert (
-        f"Dependency {integration} will wait for dependencies ['mqtt']" in caplog.text
+        f"Dependency {integration} will wait for dependencies dict_keys(['mqtt'])"
+        in caplog.text
     )
+
+
+async def test_frontend_deps_pre_import_no_requirements(hass: HomeAssistant) -> None:
+    """Test frontend dependencies are pre-imported and do not have any requirements."""
+    pre_imports = [
+        name.removesuffix("_pre_import")
+        for name in dir(bootstrap)
+        if name.endswith("_pre_import")
+    ]
+
+    # Make sure future refactoring does not
+    # accidentally remove the pre-imports
+    # or change the naming convention without
+    # updating this test.
+    assert len(pre_imports) > 3
+
+    for pre_import in pre_imports:
+        integration = await loader.async_get_integration(hass, pre_import)
+        assert not integration.requirements
+
+
+async def test_bootstrap_does_not_preload_stage_1_integrations() -> None:
+    """Test that the bootstrap does not preload stage 1 integrations.
+
+    If this test fails it means that stage1 integrations are being
+    loaded too soon and will not get their requirements updated
+    before they are loaded at runtime.
+    """
+
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-c",
+        "import homeassistant.bootstrap; import sys; print(sys.modules)",
+        stdout=asyncio.subprocess.PIPE,
+    )
+    stdout, _ = await process.communicate()
+    assert process.returncode == 0
+    decoded_stdout = stdout.decode()
+
+    # Ensure no stage1 integrations have been imported
+    # as a side effect of importing the pre-imports
+    for integration in bootstrap.STAGE_1_INTEGRATIONS:
+        assert f"homeassistant.components.{integration}" not in decoded_stdout

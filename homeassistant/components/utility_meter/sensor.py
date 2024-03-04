@@ -362,7 +362,7 @@ class UtilitySensorExtraStoredData(SensorExtraStoredData):
 class UtilityMeterSensor(RestoreSensor):
     """Representation of an utility meter sensor."""
 
-    _attr_icon = "mdi:counter"
+    _attr_translation_key = "utility_meter"
     _attr_should_poll = False
 
     def __init__(
@@ -570,7 +570,7 @@ class UtilityMeterSensor(RestoreSensor):
 
     async def async_reset_meter(self, entity_id):
         """Reset meter."""
-        if self._tariff_entity != entity_id:
+        if self._tariff is not None and self._tariff_entity != entity_id:
             return
         _LOGGER.debug("Reset utility meter <%s>", self.entity_id)
         self._last_reset = dt_util.utcnow()

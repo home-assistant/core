@@ -1,7 +1,6 @@
 """Light platform support for yeelight."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Coroutine
 import logging
 import math
@@ -255,7 +254,7 @@ def _async_cmd(
             try:
                 _LOGGER.debug("Calling %s with %s %s", func, args, kwargs)
                 return await func(self, *args, **kwargs)
-            except asyncio.TimeoutError as ex:
+            except TimeoutError as ex:
                 # The wifi likely dropped, so we want to retry once since
                 # python-yeelight will auto reconnect
                 if attempts == 0:

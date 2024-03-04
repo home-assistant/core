@@ -1,11 +1,14 @@
 """Module to coordinate user intentions."""
+
 from __future__ import annotations
 
+from abc import abstractmethod
 import asyncio
 from collections.abc import Collection, Coroutine, Iterable
 import dataclasses
 from dataclasses import dataclass
 from enum import Enum
+from functools import cached_property
 import logging
 from typing import Any, TypeVar
 
@@ -32,6 +35,7 @@ INTENT_TURN_ON = "HassTurnOn"
 INTENT_TOGGLE = "HassToggle"
 INTENT_GET_STATE = "HassGetState"
 INTENT_NEVERMIND = "HassNevermind"
+INTENT_SET_POSITION = "HassSetPosition"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -152,6 +156,17 @@ class NoStatesMatchedError(IntentError):
         self.area = area
         self.domains = domains
         self.device_classes = device_classes
+
+
+class DuplicateNamesMatchedError(IntentError):
+    """Error when two or more entities with the same name matched."""
+
+    def __init__(self, name: str, area: str | None) -> None:
+        """Initialize error."""
+        super().__init__()
+
+        self.name = name
+        self.area = area
 
 
 def _is_device_class(
@@ -317,8 +332,6 @@ def async_match_states(
         for state, entity in states_and_entities:
             if _has_name(state, entity, name):
                 yield state
-                break
-
     else:
         # Not filtered by name
         for state, _entity in states_and_entities:
@@ -337,7 +350,6 @@ class IntentHandler:
 
     intent_type: str | None = None
     slot_schema: vol.Schema | None = None
-    _slot_schema: vol.Schema | None = None
     platforms: Iterable[str] | None = []
 
     @callback
@@ -351,16 +363,19 @@ class IntentHandler:
         if self.slot_schema is None:
             return slots
 
-        if self._slot_schema is None:
-            self._slot_schema = vol.Schema(
-                {
-                    key: SLOT_SCHEMA.extend({"value": validator})
-                    for key, validator in self.slot_schema.items()
-                },
-                extra=vol.ALLOW_EXTRA,
-            )
-
         return self._slot_schema(slots)  # type: ignore[no-any-return]
+
+    @cached_property
+    def _slot_schema(self) -> vol.Schema:
+        """Create validation schema for slots."""
+        assert self.slot_schema is not None
+        return vol.Schema(
+            {
+                key: SLOT_SCHEMA.extend({"value": validator})
+                for key, validator in self.slot_schema.items()
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the intent."""
@@ -371,8 +386,8 @@ class IntentHandler:
         return f"<{self.__class__.__name__} - {self.intent_type}>"
 
 
-class ServiceIntentHandler(IntentHandler):
-    """Service Intent handler registration.
+class DynamicServiceIntentHandler(IntentHandler):
+    """Service Intent handler registration (dynamic).
 
     Service specific intent handler that calls a service by name/entity_id.
     """
@@ -388,32 +403,68 @@ class ServiceIntentHandler(IntentHandler):
     service_timeout: float = 0.2
 
     def __init__(
-        self, intent_type: str, domain: str, service: str, speech: str | None = None
+        self,
+        intent_type: str,
+        speech: str | None = None,
+        extra_slots: dict[str, vol.Schema] | None = None,
     ) -> None:
         """Create Service Intent Handler."""
         self.intent_type = intent_type
-        self.domain = domain
-        self.service = service
         self.speech = speech
+        self.extra_slots = extra_slots
+
+    @cached_property
+    def _slot_schema(self) -> vol.Schema:
+        """Create validation schema for slots (with extra required slots)."""
+        if self.slot_schema is None:
+            raise ValueError("Slot schema is not defined")
+
+        if self.extra_slots:
+            slot_schema = {
+                **self.slot_schema,
+                **{
+                    vol.Required(key): schema
+                    for key, schema in self.extra_slots.items()
+                },
+            }
+        else:
+            slot_schema = self.slot_schema
+
+        return vol.Schema(
+            {
+                key: SLOT_SCHEMA.extend({"value": validator})
+                for key, validator in slot_schema.items()
+            },
+            extra=vol.ALLOW_EXTRA,
+        )
+
+    @abstractmethod
+    def get_domain_and_service(
+        self, intent_obj: Intent, state: State
+    ) -> tuple[str, str]:
+        """Get the domain and service name to call."""
+        raise NotImplementedError()
 
     async def async_handle(self, intent_obj: Intent) -> IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
 
-        name: str | None = slots.get("name", {}).get("value")
-        if name == "all":
+        name_slot = slots.get("name", {})
+        entity_name: str | None = name_slot.get("value")
+        entity_text: str | None = name_slot.get("text")
+        if entity_name == "all":
             # Don't match on name if targeting all entities
-            name = None
+            entity_name = None
 
         # Look up area first to fail early
-        area_name = slots.get("area", {}).get("value")
+        area_slot = slots.get("area", {})
+        area_id = area_slot.get("value")
+        area_name = area_slot.get("text")
         area: area_registry.AreaEntry | None = None
-        if area_name is not None:
+        if area_id is not None:
             areas = area_registry.async_get(hass)
-            area = areas.async_get_area(area_name) or areas.async_get_area_by_name(
-                area_name
-            )
+            area = areas.async_get_area(area_id)
             if area is None:
                 raise IntentHandleError(f"No area named {area_name}")
 
@@ -431,7 +482,7 @@ class ServiceIntentHandler(IntentHandler):
         states = list(
             async_match_states(
                 hass,
-                name=name,
+                name=entity_name,
                 area=area,
                 domains=domains,
                 device_classes=device_classes,
@@ -442,13 +493,26 @@ class ServiceIntentHandler(IntentHandler):
         if not states:
             # No states matched constraints
             raise NoStatesMatchedError(
-                name=name,
-                area=area_name,
+                name=entity_text or entity_name,
+                area=area_name or area_id,
                 domains=domains,
                 device_classes=device_classes,
             )
 
+        if entity_name and (len(states) > 1):
+            # Multiple entities matched for the same name
+            raise DuplicateNamesMatchedError(
+                name=entity_text or entity_name,
+                area=area_name or area_id,
+            )
+
+        # Update intent slots to include any transformations done by the schemas
+        intent_obj.slots = slots
+
         response = await self.async_handle_states(intent_obj, states, area)
+
+        # Make the matched states available in the response
+        response.async_set_states(matched_states=states, unmatched_states=[])
 
         return response
 
@@ -476,7 +540,10 @@ class ServiceIntentHandler(IntentHandler):
 
         service_coros: list[Coroutine[Any, Any, None]] = []
         for state in states:
-            service_coros.append(self.async_call_service(intent_obj, state))
+            domain, service = self.get_domain_and_service(intent_obj, state)
+            service_coros.append(
+                self.async_call_service(domain, service, intent_obj, state)
+            )
 
         # Handle service calls in parallel, noting failures as they occur.
         failed_results: list[IntentResponseTarget] = []
@@ -498,7 +565,7 @@ class ServiceIntentHandler(IntentHandler):
             # If no entities succeeded, raise an error.
             failed_entity_ids = [target.id for target in failed_results]
             raise IntentHandleError(
-                f"Failed to call {self.service} for: {failed_entity_ids}"
+                f"Failed to call {service} for: {failed_entity_ids}"
             )
 
         response.async_set_results(
@@ -514,19 +581,28 @@ class ServiceIntentHandler(IntentHandler):
 
         return response
 
-    async def async_call_service(self, intent_obj: Intent, state: State) -> None:
+    async def async_call_service(
+        self, domain: str, service: str, intent_obj: Intent, state: State
+    ) -> None:
         """Call service on entity."""
         hass = intent_obj.hass
+
+        service_data: dict[str, Any] = {ATTR_ENTITY_ID: state.entity_id}
+        if self.extra_slots:
+            service_data.update(
+                {key: intent_obj.slots[key]["value"] for key in self.extra_slots}
+            )
+
         await self._run_then_background(
             hass.async_create_task(
                 hass.services.async_call(
-                    self.domain,
-                    self.service,
-                    {ATTR_ENTITY_ID: state.entity_id},
+                    domain,
+                    service,
+                    service_data,
                     context=intent_obj.context,
                     blocking=True,
                 ),
-                f"intent_call_service_{self.domain}_{self.service}",
+                f"intent_call_service_{domain}_{service}",
             )
         )
 
@@ -537,7 +613,7 @@ class ServiceIntentHandler(IntentHandler):
         """
         try:
             await asyncio.wait({task}, timeout=self.service_timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pass
         except asyncio.CancelledError:
             # Task calling us was cancelled, so cancel service call task, and wait for
@@ -546,6 +622,32 @@ class ServiceIntentHandler(IntentHandler):
             task.cancel()
             await asyncio.wait({task}, timeout=5)
             raise
+
+
+class ServiceIntentHandler(DynamicServiceIntentHandler):
+    """Service Intent handler registration.
+
+    Service specific intent handler that calls a service by name/entity_id.
+    """
+
+    def __init__(
+        self,
+        intent_type: str,
+        domain: str,
+        service: str,
+        speech: str | None = None,
+        extra_slots: dict[str, vol.Schema] | None = None,
+    ) -> None:
+        """Create service handler."""
+        super().__init__(intent_type, speech=speech, extra_slots=extra_slots)
+        self.domain = domain
+        self.service = service
+
+    def get_domain_and_service(
+        self, intent_obj: Intent, state: State
+    ) -> tuple[str, str]:
+        """Get the domain and service name to call."""
+        return (self.domain, self.service)
 
 
 class IntentCategory(Enum):

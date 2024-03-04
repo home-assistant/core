@@ -1,14 +1,12 @@
 """Config flow for APCUPSd integration."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -39,7 +37,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
 
         if user_input is None:
@@ -54,7 +52,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         coordinator = APCUPSdCoordinator(self.hass, host, port)
         await coordinator.async_request_refresh()
 
-        if isinstance(coordinator.last_exception, (UpdateFailed, asyncio.TimeoutError)):
+        if isinstance(coordinator.last_exception, (UpdateFailed, TimeoutError)):
             errors = {"base": "cannot_connect"}
             return self.async_show_form(
                 step_id="user", data_schema=_SCHEMA, errors=errors

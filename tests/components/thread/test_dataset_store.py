@@ -17,6 +17,7 @@ from . import (
     DATASET_3,
     ROUTER_DISCOVERY_GOOGLE_1,
     ROUTER_DISCOVERY_HASS,
+    TEST_BORDER_AGENT_EXTENDED_ADDRESS,
     TEST_BORDER_AGENT_ID,
 )
 
@@ -269,7 +270,7 @@ async def test_load_datasets(hass: HomeAssistant) -> None:
 
     store1 = await dataset_store.async_get_store(hass)
     for dataset in datasets:
-        store1.async_add(dataset["source"], dataset["tlv"], None)
+        store1.async_add(dataset["source"], dataset["tlv"], None, None)
     assert len(store1.datasets) == 3
     dataset_id = list(store1.datasets.values())[0].id
     store1.preferred_dataset = dataset_id
@@ -321,6 +322,7 @@ async def test_loading_datasets_from_storage(
                     "created": "2023-02-02T09:41:13.746514+00:00",
                     "id": "id1",
                     "preferred_border_agent_id": "230C6A1AC57F6F4BE262ACF32E5EF52C",
+                    "preferred_extended_address": "AEEB2F594B570BBF",
                     "source": "source_1",
                     "tlv": DATASET_1,
                 },
@@ -328,6 +330,7 @@ async def test_loading_datasets_from_storage(
                     "created": "2023-02-02T09:41:13.746514+00:00",
                     "id": "id2",
                     "preferred_border_agent_id": None,
+                    "preferred_extended_address": "AEEB2F594B570BBF",
                     "source": "source_2",
                     "tlv": DATASET_2,
                 },
@@ -335,6 +338,7 @@ async def test_loading_datasets_from_storage(
                     "created": "2023-02-02T09:41:13.746514+00:00",
                     "id": "id3",
                     "preferred_border_agent_id": None,
+                    "preferred_extended_address": None,
                     "source": "source_3",
                     "tlv": DATASET_3,
                 },
@@ -556,42 +560,148 @@ async def test_migrate_set_default_border_agent_id(
 
     store = await dataset_store.async_get_store(hass)
     assert store.datasets[store._preferred_dataset].preferred_border_agent_id is None
+    assert store.datasets[store._preferred_dataset].preferred_extended_address is None
 
 
 async def test_set_preferred_border_agent_id(hass: HomeAssistant) -> None:
     """Test set the preferred border agent ID of a dataset."""
     assert await dataset_store.async_get_preferred_dataset(hass) is None
 
+    with pytest.raises(HomeAssistantError):
+        await dataset_store.async_add_dataset(
+            hass, "source", DATASET_3, preferred_border_agent_id="blah"
+        )
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 0
+
+    with pytest.raises(HomeAssistantError):
+        await dataset_store.async_add_dataset(
+            hass, "source", DATASET_3, preferred_border_agent_id="bleh"
+        )
+    assert len(store.datasets) == 0
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_2)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].preferred_border_agent_id is None
+
+    with pytest.raises(HomeAssistantError):
+        await dataset_store.async_add_dataset(
+            hass, "source", DATASET_2, preferred_border_agent_id="blah"
+        )
+    assert list(store.datasets.values())[0].preferred_border_agent_id is None
+
+    store = await dataset_store.async_get_store(hass)
+    dataset_id = list(store.datasets.values())[0].id
+    with pytest.raises(HomeAssistantError):
+        await store.async_set_preferred_border_agent(dataset_id, "blah", None)
+    assert list(store.datasets.values())[0].preferred_border_agent_id is None
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    assert len(store.datasets) == 2
+    assert list(store.datasets.values())[1].preferred_border_agent_id is None
+
+    with pytest.raises(HomeAssistantError):
+        await dataset_store.async_add_dataset(
+            hass, "source", DATASET_1_LARGER_TIMESTAMP, preferred_border_agent_id="blah"
+        )
+    assert list(store.datasets.values())[1].preferred_border_agent_id is None
+
+
+async def test_set_preferred_border_agent_id_and_extended_address(
+    hass: HomeAssistant,
+) -> None:
+    """Test set the preferred border agent ID and extended address of a dataset."""
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
+
     await dataset_store.async_add_dataset(
-        hass, "source", DATASET_3, preferred_border_agent_id="blah"
+        hass,
+        "source",
+        DATASET_3,
+        preferred_border_agent_id="blah",
+        preferred_extended_address="bleh",
     )
 
     store = await dataset_store.async_get_store(hass)
     assert len(store.datasets) == 1
     assert list(store.datasets.values())[0].preferred_border_agent_id == "blah"
+    assert list(store.datasets.values())[0].preferred_extended_address == "bleh"
 
     await dataset_store.async_add_dataset(
-        hass, "source", DATASET_3, preferred_border_agent_id="bleh"
+        hass,
+        "source",
+        DATASET_3,
+        preferred_border_agent_id="bleh",
+        preferred_extended_address="bleh",
     )
     assert list(store.datasets.values())[0].preferred_border_agent_id == "blah"
+    assert list(store.datasets.values())[0].preferred_extended_address == "bleh"
 
     await dataset_store.async_add_dataset(hass, "source", DATASET_2)
     assert len(store.datasets) == 2
     assert list(store.datasets.values())[1].preferred_border_agent_id is None
+    assert list(store.datasets.values())[1].preferred_extended_address is None
 
     await dataset_store.async_add_dataset(
-        hass, "source", DATASET_2, preferred_border_agent_id="blah"
+        hass,
+        "source",
+        DATASET_2,
+        preferred_border_agent_id="blah",
+        preferred_extended_address="bleh",
     )
     assert list(store.datasets.values())[1].preferred_border_agent_id == "blah"
+    assert list(store.datasets.values())[1].preferred_extended_address == "bleh"
 
     await dataset_store.async_add_dataset(hass, "source", DATASET_1)
     assert len(store.datasets) == 3
     assert list(store.datasets.values())[2].preferred_border_agent_id is None
+    assert list(store.datasets.values())[2].preferred_extended_address is None
 
     await dataset_store.async_add_dataset(
-        hass, "source", DATASET_1_LARGER_TIMESTAMP, preferred_border_agent_id="blah"
+        hass,
+        "source",
+        DATASET_1_LARGER_TIMESTAMP,
+        preferred_border_agent_id="blah",
+        preferred_extended_address="bleh",
     )
-    assert list(store.datasets.values())[1].preferred_border_agent_id == "blah"
+    assert list(store.datasets.values())[2].preferred_border_agent_id == "blah"
+    assert list(store.datasets.values())[2].preferred_extended_address == "bleh"
+
+
+async def test_set_preferred_extended_address(hass: HomeAssistant) -> None:
+    """Test set the preferred extended address of a dataset."""
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
+
+    await dataset_store.async_add_dataset(
+        hass, "source", DATASET_3, preferred_extended_address="blah"
+    )
+
+    store = await dataset_store.async_get_store(hass)
+    assert len(store.datasets) == 1
+    assert list(store.datasets.values())[0].preferred_extended_address == "blah"
+
+    await dataset_store.async_add_dataset(
+        hass, "source", DATASET_3, preferred_extended_address="bleh"
+    )
+    assert list(store.datasets.values())[0].preferred_extended_address == "blah"
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_2)
+    assert len(store.datasets) == 2
+    assert list(store.datasets.values())[1].preferred_extended_address is None
+
+    await dataset_store.async_add_dataset(
+        hass, "source", DATASET_2, preferred_extended_address="blah"
+    )
+    assert list(store.datasets.values())[1].preferred_extended_address == "blah"
+
+    await dataset_store.async_add_dataset(hass, "source", DATASET_1)
+    assert len(store.datasets) == 3
+    assert list(store.datasets.values())[2].preferred_extended_address is None
+
+    await dataset_store.async_add_dataset(
+        hass, "source", DATASET_1_LARGER_TIMESTAMP, preferred_extended_address="blah"
+    )
+    assert list(store.datasets.values())[2].preferred_extended_address == "blah"
 
 
 async def test_automatically_set_preferred_dataset(
@@ -624,6 +734,7 @@ async def test_automatically_set_preferred_dataset(
             "source",
             DATASET_1,
             preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+            preferred_extended_address=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
         )
 
         # Wait for discovery to start
@@ -650,6 +761,10 @@ async def test_automatically_set_preferred_dataset(
     assert (
         list(store.datasets.values())[0].preferred_border_agent_id
         == TEST_BORDER_AGENT_ID.hex()
+    )
+    assert (
+        list(store.datasets.values())[0].preferred_extended_address
+        == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
     )
     assert await dataset_store.async_get_preferred_dataset(hass) == DATASET_1
 
@@ -687,6 +802,7 @@ async def test_automatically_set_preferred_dataset_own_and_other_router(
             "source",
             DATASET_1,
             preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+            preferred_extended_address=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
         )
 
         # Wait for discovery to start
@@ -725,6 +841,10 @@ async def test_automatically_set_preferred_dataset_own_and_other_router(
         list(store.datasets.values())[0].preferred_border_agent_id
         == TEST_BORDER_AGENT_ID.hex()
     )
+    assert (
+        list(store.datasets.values())[0].preferred_extended_address
+        == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
+    )
     assert await dataset_store.async_get_preferred_dataset(hass) is None
 
 
@@ -761,6 +881,7 @@ async def test_automatically_set_preferred_dataset_other_router(
             "source",
             DATASET_1,
             preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+            preferred_extended_address=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
         )
 
         # Wait for discovery to start
@@ -787,6 +908,10 @@ async def test_automatically_set_preferred_dataset_other_router(
     assert (
         list(store.datasets.values())[0].preferred_border_agent_id
         == TEST_BORDER_AGENT_ID.hex()
+    )
+    assert (
+        list(store.datasets.values())[0].preferred_extended_address
+        == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
     )
     assert await dataset_store.async_get_preferred_dataset(hass) is None
 
@@ -824,6 +949,7 @@ async def test_automatically_set_preferred_dataset_no_router(
             "source",
             DATASET_1,
             preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+            preferred_extended_address=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
         )
 
         # Wait for discovery to start
@@ -839,5 +965,9 @@ async def test_automatically_set_preferred_dataset_no_router(
     assert (
         list(store.datasets.values())[0].preferred_border_agent_id
         == TEST_BORDER_AGENT_ID.hex()
+    )
+    assert (
+        list(store.datasets.values())[0].preferred_extended_address
+        == TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()
     )
     assert await dataset_store.async_get_preferred_dataset(hass) is None

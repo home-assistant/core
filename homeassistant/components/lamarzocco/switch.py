@@ -28,6 +28,7 @@ class LaMarzoccoSwitchEntityDescription(
 ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     LaMarzoccoSwitchEntityDescription(
         key="main",
+        translation_key="main",
         name=None,
         control_fn=lambda coordinator, state: coordinator.lm.set_power(state),
         is_on_fn=lambda coordinator: coordinator.lm.current_status["power"],

@@ -97,7 +97,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
+class VizioAppsDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):  # pylint: disable=hass-enforce-coordinator-module
     """Define an object to hold Vizio app config data."""
 
     def __init__(self, hass: HomeAssistant, store: Store[list[dict[str, Any]]]) -> None:
