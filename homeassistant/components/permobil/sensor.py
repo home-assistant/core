@@ -32,10 +32,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import BATTERY_ASSUMED_VOLTAGE, DOMAIN, KM, MILES
 from .coordinator import MyPermobilCoordinator
+from .entity import PermobilEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -177,6 +177,7 @@ SENSOR_DESCRIPTIONS: tuple[PermobilSensorEntityDescription, ...] = (
         key="record_distance",
         translation_key="record_distance",
         icon="mdi:map-marker-distance",
+        device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
@@ -202,28 +203,14 @@ async def async_setup_entry(
     )
 
 
-class PermobilSensor(CoordinatorEntity[MyPermobilCoordinator], SensorEntity):
+class PermobilSensor(PermobilEntity, SensorEntity):
     """Representation of a Sensor.
 
     This implements the common functions of all sensors.
     """
 
-    _attr_has_entity_name = True
     _attr_suggested_display_precision = 0
     entity_description: PermobilSensorEntityDescription
-    _available = True
-
-    def __init__(
-        self,
-        coordinator: MyPermobilCoordinator,
-        description: PermobilSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator=coordinator)
-        self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.p_api.email}_{self.entity_description.key}"
-        )
 
     @property
     def native_unit_of_measurement(self) -> str | None:

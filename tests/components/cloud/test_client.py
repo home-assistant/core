@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
 from aiohttp import web
+from hass_nabucasa.client import RemoteActivationNotAllowed
 import pytest
 
 from homeassistant.components.cloud import DOMAIN
@@ -376,14 +377,15 @@ async def test_cloud_connection_info(hass: HomeAssistant) -> None:
     response = await cloud.client.async_cloud_connection_info({})
 
     assert response == {
+        "instance_id": "12345678901234567890",
         "remote": {
+            "alias": None,
+            "can_enable": True,
             "connected": False,
             "enabled": False,
             "instance_domain": None,
-            "alias": None,
         },
         "version": HA_VERSION,
-        "instance_id": "12345678901234567890",
     }
 
 
@@ -481,6 +483,19 @@ async def test_remote_enable(hass: HomeAssistant) -> None:
     client = CloudClient(hass, prefs, None, {}, {})
     client.cloud = MagicMock(is_logged_in=True, username="mock-username")
 
-    result = await client.async_cloud_connect_update(True)
-    assert result is None
+    await client.async_cloud_connect_update(True)
     prefs.async_update.assert_called_once_with(remote_enabled=True)
+
+
+async def test_remote_enable_not_allowed(hass: HomeAssistant) -> None:
+    """Test enabling remote UI."""
+    prefs = MagicMock(
+        async_update=AsyncMock(return_value=None),
+        remote_allow_remote_enable=False,
+    )
+    client = CloudClient(hass, prefs, None, {}, {})
+    client.cloud = MagicMock(is_logged_in=True, username="mock-username")
+
+    with pytest.raises(RemoteActivationNotAllowed):
+        await client.async_cloud_connect_update(True)
+    prefs.async_update.assert_not_called()

@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import Coroutine, ValuesView
+from collections.abc import Mapping, ValuesView
 from enum import StrEnum
-from functools import partial
+from functools import lru_cache, partial
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
@@ -15,12 +15,13 @@ from yarl import URL
 
 from homeassistant.backports.functools import cached_property
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback, get_release_channel
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.json import format_unserializable_data
 import homeassistant.util.uuid as uuid_util
 
-from . import storage
+from . import storage, translation
 from .debounce import Debouncer
 from .deprecation import (
     DeprecatedConstantEnum,
@@ -43,7 +44,7 @@ DATA_REGISTRY = "device_registry"
 EVENT_DEVICE_REGISTRY_UPDATED = "device_registry_updated"
 STORAGE_KEY = "core.device_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 5
 SAVE_DELAY = 10
 CLEANUP_DELAY = 10
 
@@ -94,6 +95,8 @@ class DeviceInfo(TypedDict, total=False):
     suggested_area: str | None
     sw_version: str | None
     hw_version: str | None
+    translation_key: str | None
+    translation_placeholders: Mapping[str, str] | None
     via_device: tuple[str, str]
 
 
@@ -238,6 +241,7 @@ class DeviceEntry:
     hw_version: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
     identifiers: set[tuple[str, str]] = attr.ib(converter=set, factory=set)
+    labels: set[str] = attr.ib(converter=set, factory=set)
     manufacturer: str | None = attr.ib(default=None)
     model: str | None = attr.ib(default=None)
     name_by_user: str | None = attr.ib(default=None)
@@ -320,6 +324,7 @@ class DeletedDeviceEntry:
         )
 
 
+@lru_cache(maxsize=512)
 def format_mac(mac: str) -> str:
     """Format the mac address string for entry into dev reg."""
     to_test = mac
@@ -378,6 +383,10 @@ class DeviceRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                 # Introduced in 2023.11
                 for device in old_data["devices"]:
                     device["serial_number"] = None
+            if old_minor_version < 5:
+                # Introduced in 2024.3
+                for device in old_data["devices"]:
+                    device["labels"] = device.get("labels", [])
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -491,6 +500,33 @@ class DeviceRegistry:
         """Check if device is deleted."""
         return self.deleted_devices.get_entry(identifiers, connections)
 
+    def _substitute_name_placeholders(
+        self,
+        domain: str,
+        name: str,
+        translation_placeholders: Mapping[str, str],
+    ) -> str:
+        """Substitute placeholders in entity name."""
+        try:
+            return name.format(**translation_placeholders)
+        except KeyError as err:
+            if get_release_channel() != "stable":
+                raise HomeAssistantError("Missing placeholder %s" % err) from err
+            report_issue = async_suggest_report_issue(
+                self.hass, integration_domain=domain
+            )
+            _LOGGER.warning(
+                (
+                    "Device from integration %s has translation placeholders '%s' "
+                    "which do not match the name '%s', please %s"
+                ),
+                domain,
+                translation_placeholders,
+                name,
+                report_issue,
+            )
+            return name
+
     @callback
     def async_get_or_create(
         self,
@@ -512,11 +548,31 @@ class DeviceRegistry:
         serial_number: str | None | UndefinedType = UNDEFINED,
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
+        translation_key: str | None = None,
+        translation_placeholders: Mapping[str, str] | None = None,
         via_device: tuple[str, str] | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist."""
         if configuration_url is not UNDEFINED:
             configuration_url = _validate_configuration_url(configuration_url)
+
+        config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
+        if config_entry is None:
+            raise HomeAssistantError(
+                f"Can't link device to unknown config entry {config_entry_id}"
+            )
+
+        if translation_key:
+            full_translation_key = (
+                f"component.{config_entry.domain}.device.{translation_key}.name"
+            )
+            translations = translation.async_get_cached_translations(
+                self.hass, self.hass.config.language, "device", config_entry.domain
+            )
+            translated_name = translations.get(full_translation_key, translation_key)
+            name = self._substitute_name_placeholders(
+                config_entry.domain, translated_name, translation_placeholders or {}
+            )
 
         # Reconstruct a DeviceInfo dict from the arguments.
         # When we upgrade to Python 3.12, we can change this method to instead
@@ -543,11 +599,6 @@ class DeviceRegistry:
                 continue
             device_info[key] = val  # type: ignore[literal-required]
 
-        config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
-        if config_entry is None:
-            raise HomeAssistantError(
-                f"Can't link device to unknown config entry {config_entry_id}"
-            )
         device_info_type = _validate_device_info(config_entry, device_info)
 
         if identifiers is None or identifiers is UNDEFINED:
@@ -634,6 +685,7 @@ class DeviceRegistry:
         disabled_by: DeviceEntryDisabler | None | UndefinedType = UNDEFINED,
         entry_type: DeviceEntryType | None | UndefinedType = UNDEFINED,
         hw_version: str | None | UndefinedType = UNDEFINED,
+        labels: set[str] | UndefinedType = UNDEFINED,
         manufacturer: str | None | UndefinedType = UNDEFINED,
         merge_connections: set[tuple[str, str]] | UndefinedType = UNDEFINED,
         merge_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
@@ -648,10 +700,6 @@ class DeviceRegistry:
         via_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry | None:
         """Update device attributes."""
-        # Circular dep
-        # pylint: disable-next=import-outside-toplevel
-        from . import area_registry as ar
-
         old = self.devices[device_id]
 
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
@@ -682,6 +730,10 @@ class DeviceRegistry:
             and area_id is UNDEFINED
             and old.area_id is None
         ):
+            # Circular dep
+            # pylint: disable-next=import-outside-toplevel
+            from . import area_registry as ar
+
             area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
 
@@ -728,6 +780,7 @@ class DeviceRegistry:
             ("disabled_by", disabled_by),
             ("entry_type", entry_type),
             ("hw_version", hw_version),
+            ("labels", labels),
             ("manufacturer", manufacturer),
             ("model", model),
             ("name", name),
@@ -822,6 +875,7 @@ class DeviceRegistry:
                         tuple(iden)  # type: ignore[misc]
                         for iden in device["identifiers"]
                     },
+                    labels=set(device["labels"]),
                     manufacturer=device["manufacturer"],
                     model=device["model"],
                     name_by_user=device["name_by_user"],
@@ -865,6 +919,7 @@ class DeviceRegistry:
                 "hw_version": entry.hw_version,
                 "id": entry.id,
                 "identifiers": list(entry.identifiers),
+                "labels": list(entry.labels),
                 "manufacturer": entry.manufacturer,
                 "model": entry.model,
                 "name_by_user": entry.name_by_user,
@@ -937,6 +992,15 @@ class DeviceRegistry:
             if area_id == device.area_id:
                 self.async_update_device(dev_id, area_id=None)
 
+    @callback
+    def async_clear_label_id(self, label_id: str) -> None:
+        """Clear label from registry entries."""
+        for device_id, entry in self.devices.items():
+            if label_id in entry.labels:
+                labels = entry.labels.copy()
+                labels.remove(label_id)
+                self.async_update_device(device_id, labels=labels)
+
 
 @callback
 def async_get(hass: HomeAssistant) -> DeviceRegistry:
@@ -955,6 +1019,14 @@ async def async_load(hass: HomeAssistant) -> None:
 def async_entries_for_area(registry: DeviceRegistry, area_id: str) -> list[DeviceEntry]:
     """Return entries that match an area."""
     return [device for device in registry.devices.values() if device.area_id == area_id]
+
+
+@callback
+def async_entries_for_label(
+    registry: DeviceRegistry, label_id: str
+) -> list[DeviceEntry]:
+    """Return entries that match a label."""
+    return [device for device in registry.devices.values() if label_id in device.labels]
 
 
 @callback
@@ -1051,20 +1123,41 @@ def async_cleanup(
 @callback
 def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     """Clean up device registry when entities removed."""
-    from . import entity_registry  # pylint: disable=import-outside-toplevel
+    # pylint: disable-next=import-outside-toplevel
+    from . import entity_registry, label_registry as lr
 
-    async def cleanup() -> None:
+    @callback
+    def _label_removed_from_registry_filter(
+        event: lr.EventLabelRegistryUpdated,
+    ) -> bool:
+        """Filter all except for the remove action from label registry events."""
+        return event.data["action"] == "remove"
+
+    @callback
+    def _handle_label_registry_update(event: lr.EventLabelRegistryUpdated) -> None:
+        """Update devices that have a label that has been removed."""
+        dev_reg.async_clear_label_id(event.data["label_id"])
+
+    hass.bus.async_listen(
+        event_type=lr.EVENT_LABEL_REGISTRY_UPDATED,
+        event_filter=_label_removed_from_registry_filter,  # type: ignore[arg-type]
+        listener=_handle_label_registry_update,  # type: ignore[arg-type]
+    )
+
+    @callback
+    def _async_cleanup() -> None:
         """Cleanup."""
         ent_reg = entity_registry.async_get(hass)
         async_cleanup(hass, dev_reg, ent_reg)
 
-    debounced_cleanup: Debouncer[Coroutine[Any, Any, None]] = Debouncer(
-        hass, _LOGGER, cooldown=CLEANUP_DELAY, immediate=False, function=cleanup
+    debounced_cleanup: Debouncer[None] = Debouncer(
+        hass, _LOGGER, cooldown=CLEANUP_DELAY, immediate=False, function=_async_cleanup
     )
 
-    async def entity_registry_changed(event: Event) -> None:
+    @callback
+    def _async_entity_registry_changed(event: Event) -> None:
         """Handle entity updated or removed dispatch."""
-        await debounced_cleanup.async_call()
+        debounced_cleanup.async_schedule_call()
 
     @callback
     def entity_registry_changed_filter(event: Event) -> bool:
@@ -1080,7 +1173,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
     if hass.is_running:
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            entity_registry_changed,
+            _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
         )
         return
@@ -1089,7 +1182,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
         """Clean up on startup."""
         hass.bus.async_listen(
             entity_registry.EVENT_ENTITY_REGISTRY_UPDATED,
-            entity_registry_changed,
+            _async_entity_registry_changed,
             event_filter=entity_registry_changed_filter,
         )
         await debounced_cleanup.async_call()
