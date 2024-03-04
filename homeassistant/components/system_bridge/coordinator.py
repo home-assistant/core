@@ -240,7 +240,9 @@ class SystemBridgeDataUpdateCoordinator(
 
         async def close_websocket(_) -> None:
             """Close WebSocket connection."""
-            await self.websocket_client.close()
+            await self.websocket_client.close(
+                keep_session_active=True,
+            )
 
         # Clean disconnect WebSocket on Home Assistant shutdown
         self.unsub = self.hass.bus.async_listen_once(
