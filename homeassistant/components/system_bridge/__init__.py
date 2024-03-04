@@ -14,9 +14,9 @@ from systembridgeconnector.exceptions import (
 from systembridgeconnector.version import Version
 from systembridgemodels.keyboard_key import KeyboardKey
 from systembridgemodels.keyboard_text import KeyboardText
+from systembridgemodels.modules.processes import Process
 from systembridgemodels.open_path import OpenPath
 from systembridgemodels.open_url import OpenUrl
-from systembridgemodels.processes import Process
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -211,26 +211,28 @@ async def async_setup_entry(
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             service_call.data[CONF_BRIDGE]
         ]
-        processes: list[Process] = coordinator.data.processes.processes
+        processes: list[Process] = coordinator.data.processes
         # Find process.id from list
-        return next(
-            (
-                process
-                for process in processes
-                if process.id == service_call.data[CONF_ID]
-            ),
-            Process(
-                id=service_call.data[CONF_ID],
-                name="",
-                cpu_usage=None,
-                created=None,
-                memory_usage=None,
-                path=None,
-                status=None,
-                username=None,
-                working_directory=None,
-            ),
-        ).dict()
+        return asdict(
+            next(
+                (
+                    process
+                    for process in processes
+                    if process.id == service_call.data[CONF_ID]
+                ),
+                Process(
+                    id=service_call.data[CONF_ID],
+                    name="",
+                    cpu_usage=None,
+                    created=None,
+                    memory_usage=None,
+                    path=None,
+                    status=None,
+                    username=None,
+                    working_directory=None,
+                ),
+            )
+        )
 
     async def handle_get_processes_by_name(
         call: ServiceCall,
@@ -240,12 +242,13 @@ async def async_setup_entry(
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
             call.data[CONF_BRIDGE]
         ]
-        processes: list[Process] = coordinator.data.processes.processes
+        processes: list[Process] = coordinator.data.processes
         # Find processes from list
         items: list[dict[str, Any]] = [
-            process.dict()
+            asdict(process)
             for process in processes
-            if call.data[CONF_NAME].lower() in process.name.lower()
+            if process.name is not None
+            and call.data[CONF_NAME].lower() in process.name.lower()
         ]
 
         return {
