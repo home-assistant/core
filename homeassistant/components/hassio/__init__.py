@@ -118,6 +118,9 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+# If new platforms are added, be sure to import them above
+# so we do not make other components that depend on hassio
+# wait for the import of the platforms
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.UPDATE]
 
 CONF_FRONTEND_REPO = "development_repo"
