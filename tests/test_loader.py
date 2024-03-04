@@ -1409,22 +1409,31 @@ async def test_platforms_exists(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
     """Test platforms_exists."""
-    integration = await loader.async_get_integration(hass, "test_integration_platform")
-    assert integration.domain == "test_integration_platform"
+    original_os_listdir = os.listdir
 
-    # get_component never called, will raise RuntimeError
-    with pytest.raises(
-        RuntimeError, match="Integration test_integration_platform not loaded"
-    ):
-        assert integration.platforms_exists(("non_existing",)) is None
+    paths: list[str] = []
+
+    def mock_list_dir(path: str) -> list[str]:
+        paths.append(path)
+        return original_os_listdir(path)
+
+    with patch("homeassistant.loader.os.listdir", mock_list_dir):
+        integration = await loader.async_get_integration(
+            hass, "test_integration_platform"
+        )
+        assert integration.domain == "test_integration_platform"
+
+    # Verify the files cache is primed
+    assert integration.file_path in paths
 
     # component is loaded, should now return False
     with patch("homeassistant.loader.os.listdir", wraps=os.listdir) as mock_exists:
         component = integration.get_component()
     assert component.DOMAIN == "test_integration_platform"
 
-    # We should check if the file exists
-    assert mock_exists.call_count == 1
+    # The files cache should be primed when
+    # the integration is resolved
+    assert mock_exists.call_count == 0
 
     # component is loaded, should now return False
     with patch("homeassistant.loader.os.listdir", wraps=os.listdir) as mock_exists:
