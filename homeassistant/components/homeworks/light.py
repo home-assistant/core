@@ -7,53 +7,61 @@ from typing import Any
 from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_ADDR, CONF_DIMMERS, CONF_RATE, HOMEWORKS_CONTROLLER, HomeworksDevice
+from . import HomeworksData, HomeworksEntity
+from .const import CONF_ADDR, CONF_CONTROLLER_ID, CONF_DIMMERS, CONF_RATE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discover_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Homeworks lights."""
-    if discover_info is None:
-        return
-
-    controller = hass.data[HOMEWORKS_CONTROLLER]
+    data: HomeworksData = hass.data[DOMAIN][entry.entry_id]
+    controller = data.controller
+    controller_id = entry.options[CONF_CONTROLLER_ID]
     devs = []
-    for dimmer in discover_info[CONF_DIMMERS]:
+    for dimmer in entry.options.get(CONF_DIMMERS, []):
         dev = HomeworksLight(
-            controller, dimmer[CONF_ADDR], dimmer[CONF_NAME], dimmer[CONF_RATE]
+            controller,
+            controller_id,
+            dimmer[CONF_ADDR],
+            dimmer[CONF_NAME],
+            dimmer[CONF_RATE],
         )
         devs.append(dev)
-    add_entities(devs, True)
+    async_add_entities(devs, True)
 
 
-class HomeworksLight(HomeworksDevice, LightEntity):
+class HomeworksLight(HomeworksEntity, LightEntity):
     """Homeworks Light."""
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def __init__(self, controller, addr, name, rate):
+    def __init__(
+        self,
+        controller,
+        controller_id,
+        addr,
+        name,
+        rate,
+    ):
         """Create device with Addr, name, and rate."""
-        super().__init__(controller, addr, name)
+        super().__init__(controller, controller_id, addr, 0, name)
         self._rate = rate
         self._level = 0
         self._prev_level = 0
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        signal = f"homeworks_entity_{self._addr}"
+        signal = f"homeworks_entity_{self._controller_id}_{self._addr}"
         _LOGGER.debug("connecting %s", signal)
         self.async_on_remove(
             async_dispatcher_connect(self.hass, signal, self._update_callback)

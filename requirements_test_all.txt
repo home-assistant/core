@@ -1437,6 +1437,9 @@ pyhiveapi==0.5.16
 # homeassistant.components.homematic
 pyhomematic==0.1.77
 
+# homeassistant.components.homeworks
+pyhomeworks==0.0.6
+
 # homeassistant.components.ialarm
 pyialarm==2.2.0
 
