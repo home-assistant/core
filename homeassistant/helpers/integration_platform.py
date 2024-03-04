@@ -90,7 +90,7 @@ async def _async_process_integration_platforms_for_component(
         for integration_platform in integration_platforms
         if not integration.platform_missing(integration_platform.platform_name)
     ]
-    if non_missing_integration_platforms:
+    if not non_missing_integration_platforms:
         return
 
     # Next create an executor job to filter out platforms that we don't know
