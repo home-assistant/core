@@ -9,6 +9,7 @@ from functools import cached_property
 import logging
 from typing import TypeVar
 
+import aiohttp
 from pyrainbird.async_client import (
     AsyncRainbirdController,
     RainbirdApiException,
@@ -28,6 +29,9 @@ UPDATE_INTERVAL = datetime.timedelta(minutes=1)
 # changes, so we refresh it less often.
 CALENDAR_UPDATE_INTERVAL = datetime.timedelta(minutes=15)
 
+# Rainbird devices can only accept a single request at a time
+CONECTION_LIMIT = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 _T = TypeVar("_T")
@@ -41,6 +45,13 @@ class RainbirdDeviceState:
     active_zones: set[int]
     rain: bool
     rain_delay: int
+
+
+def async_create_clientsession() -> aiohttp.ClientSession:
+    """Create a rainbird async_create_clientsession with a connection limit."""
+    return aiohttp.ClientSession(
+        connector=aiohttp.TCPConnector(limit=CONECTION_LIMIT),
+    )
 
 
 class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
