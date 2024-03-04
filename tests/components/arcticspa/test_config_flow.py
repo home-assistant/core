@@ -1,22 +1,22 @@
 """Test the Arctic Spa config flow."""
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
-from pyarcticspas import SpaResponse
-from pyarcticspas.error import SpaHTTPException, UnauthorizedError
+from pyarcticspas.error import ServerError, TooManyRequestsError, UnauthorizedError
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.arcticspa.const import DOMAIN
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.components.arcticspa import CONF_API_KEY, CONF_API_KEY_VALUE
+from tests.common import MockConfigEntry
+from tests.components.arcticspa import API_ID, API_KEY, TITLE
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
+async def test_user_flow(hass: HomeAssistant, mock_arcticspa: MagicMock) -> None:
+    """Test we can handle a regular successflow setup flow."""
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -24,63 +24,94 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "pyarcticspas.Spa.status",
-        return_value=SpaResponse(
-            connected=True,
-        ),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
+        "homeassistant.components.arcticspa.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_API_KEY: CONF_API_KEY_VALUE,
-            },
+            {CONF_API_KEY: API_KEY},
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
-        CONF_API_KEY: CONF_API_KEY_VALUE,
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        CONF_API_KEY: API_KEY,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth."""
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (UnauthorizedError(401), "invalid_auth"),
+        (TooManyRequestsError(421), "too_many_requests"),
+        (ServerError(500), "cannot_connect"),
+    ],
+)
+async def test_form_exceptions(
+    hass: HomeAssistant, exception: Exception, error: str, mock_arcticspa: MagicMock
+) -> None:
+    """Test we can handle Form exceptions."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_arcticspa.return_value.status.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: API_KEY},
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_arcticspa.return_value.status.side_effect = None
+
+    with patch(
+        "homeassistant.components.arcticspa.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: API_KEY},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == TITLE
+    assert result["data"] == {
+        CONF_API_KEY: API_KEY,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_duplicate_entry(hass: HomeAssistant, mock_arcticspa: MagicMock) -> None:
+    """Test duplicate setup handling."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: API_KEY,
+        },
+        unique_id=API_ID,
+    )
+    entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
-        "pyarcticspas.Spa.status",
-        side_effect=UnauthorizedError(401),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
+        "homeassistant.components.arcticspa.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_API_KEY: CONF_API_KEY_VALUE,
-            },
+            {CONF_API_KEY: API_KEY},
         )
+        await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "pyarcticspas.Spa.status",
-        side_effect=SpaHTTPException(500),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_API_KEY: "fake_api_key",
-            },
-        )
-
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_setup_entry.call_count == 0

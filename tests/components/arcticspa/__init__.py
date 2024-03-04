@@ -1,40 +1,5 @@
 """Tests for the Arctic Spa integration."""
 
-from unittest.mock import AsyncMock, MagicMock, Mock
-
-from pyarcticspas import Spa
-
-from homeassistant.components.arcticspa import CONF_API_KEY
-from homeassistant.components.arcticspa.const import DOMAIN
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-
-CONF_API_KEY_VALUE = "mockapikey"
-
-
-def _mock_spa() -> Spa:
-    spa = MagicMock(auto_spec=Spa, name="Mocked Arctic Spa Device")
-    spa.async_status = AsyncMock()
-    spa.status = Mock()
-    spa.async_set_lights = AsyncMock()
-    spa.set_lights = AsyncMock()
-    return spa
-
-
-async def initialize_config_entry_for_device(
-    hass: HomeAssistant, dev: Spa
-) -> MockConfigEntry:
-    """Create a mocked configuration entry for the given device."""
-
-    config_entry = MockConfigEntry(
-        title="Arctic Spa",
-        domain=DOMAIN,
-        data={CONF_API_KEY: CONF_API_KEY_VALUE},
-    )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    return config_entry
+API_KEY = "F0CACC1AF0CACC1AF0CACC1A"
+API_ID = "67faf9298deeb3118585cc22ed66a026624d53f25bc68ea297122d4a346eff9d"
+TITLE = "API-67faf9298deeb3118585cc22ed66a026624d53f25bc68ea297122d4a346eff9d"
