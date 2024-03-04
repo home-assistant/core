@@ -1094,6 +1094,10 @@ class Integration:
     def platform_missing(self, platform_name: str) -> bool:
         """Check if its known that a platform is missing.
 
+        If the platform has already been checked on disk
+        and is known to be missing, this will return True,
+        otherwise if the platform might exist, it will return False.
+
         This function is used to pre-filter in the event loop
         if a platform is known to be missing so we can avoid
         an executor job to check if the platform exists
