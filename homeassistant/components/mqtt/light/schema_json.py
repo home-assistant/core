@@ -244,21 +244,11 @@ _PLATFORM_SCHEMA_BASE = (
 DISCOVERY_SCHEMA_JSON = vol.All(
     valid_color_configuration(False),
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-    cv.deprecated(CONF_COLOR_MODE),
-    cv.deprecated(CONF_COLOR_TEMP),
-    cv.deprecated(CONF_HS),
-    cv.deprecated(CONF_RGB),
-    cv.deprecated(CONF_XY),
 )
 
 PLATFORM_SCHEMA_MODERN_JSON = vol.All(
     valid_color_configuration(True),
     _PLATFORM_SCHEMA_BASE,
-    cv.deprecated(CONF_COLOR_MODE),
-    cv.deprecated(CONF_COLOR_TEMP),
-    cv.deprecated(CONF_HS),
-    cv.deprecated(CONF_RGB),
-    cv.deprecated(CONF_XY),
 )
 
 
@@ -305,7 +295,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         self._attr_supported_features |= (
             config[CONF_EFFECT] and LightEntityFeature.EFFECT
         )
-        if supported_color_modes := self._config.get(CONF_SUPPORTED_COLOR_MODES, []):
+        if supported_color_modes := self._config.get(CONF_SUPPORTED_COLOR_MODES):
             self._attr_supported_color_modes = supported_color_modes
             if self.supported_color_modes and len(self.supported_color_modes) == 1:
                 self._attr_color_mode = next(iter(self.supported_color_modes))
@@ -586,7 +576,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
     def _scale_rgbxx(self, rgbxx: tuple[int, ...], kwargs: Any) -> tuple[int, ...]:
         # If brightness is supported, we don't want to scale the
-        # RGBxx values given using the brightness.
+        # RGBxx values given using the brightness and
+        # we pop the brightness, to omit it from the payload
         brightness: int
         if self._config[CONF_BRIGHTNESS]:
             brightness = 255
@@ -628,7 +619,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
                 if self._config[CONF_BRIGHTNESS]:
                     brightness = 255
                 else:
-                    # We pop the brightness, to omit it in the payload
+                    # We pop the brightness, to omit it from the payload
                     brightness = kwargs.pop(ATTR_BRIGHTNESS, 255)
                 rgb = color_util.color_hsv_to_RGB(
                     hs_color[0], hs_color[1], brightness / 255 * 100
