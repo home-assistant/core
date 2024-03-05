@@ -1,4 +1,4 @@
-"""Plugin for checking sorted platforms list."""
+"""Plugin for checking async_add_entities not using list comprehensions."""
 from __future__ import annotations
 
 from astroid import nodes
