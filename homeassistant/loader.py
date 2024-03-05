@@ -628,14 +628,13 @@ class Integration:
                 )
                 continue
 
-            path = manifest_path.parent
-
+            file_path = manifest_path.parent
             integration = cls(
                 hass,
                 f"{root_module.__name__}.{domain}",
-                manifest_path.parent,
+                file_path,
                 manifest,
-                set(os.listdir(path)),
+                set(os.listdir(file_path)),
             )
 
             if integration.is_built_in:
