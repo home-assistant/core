@@ -122,3 +122,28 @@ def enforce_coordinator_module_fixture(
     )
     enforce_coordinator_module_checker.module = "homeassistant.components.pylint_test"
     return enforce_coordinator_module_checker
+
+
+@pytest.fixture(name="hass_enforce_non_list_comprehensions", scope="session")
+def hass_enforce_non_list_comprehensions_fixture() -> ModuleType:
+    """Fixture to the content for the hass_enforce_non_list_comprehensions check."""
+    return _load_plugin_from_file(
+        "hass_enforce_non_list_comprehensions",
+        "pylint/plugins/hass_enforce_non_list_comprehensions.py",
+    )
+
+
+@pytest.fixture(name="enforce_non_list_comprehensions_checker")
+def enforce_non_list_comprehensions_fixture(
+    hass_enforce_non_list_comprehensions, linter
+) -> BaseChecker:
+    """Fixture to provide a hass_enforce_non_list_comprehensions checker."""
+    enforce_non_list_comprehensions_checker = (
+        hass_enforce_non_list_comprehensions.HassEnforceNonListComprehensionsChecker(
+            linter
+        )
+    )
+    enforce_non_list_comprehensions_checker.module = (
+        "homeassistant.components.pylint_test"
+    )
+    return enforce_non_list_comprehensions_checker
