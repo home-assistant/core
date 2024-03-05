@@ -628,14 +628,13 @@ class Integration:
                 )
                 continue
 
-            path = manifest_path.parent
-
+            file_path = manifest_path.parent
             integration = cls(
                 hass,
                 f"{root_module.__name__}.{domain}",
-                manifest_path.parent,
+                file_path,
                 manifest,
-                set(os.listdir(path)),
+                set(os.listdir(file_path)),
             )
 
             if integration.is_built_in:
@@ -1150,9 +1149,8 @@ class Integration:
     def platforms_exists(self, platform_names: Iterable[str]) -> list[str]:
         """Check if a platforms exists for an integration.
 
-        Returns a list of platforms that exist.
-
-        The component must be loaded before calling this method.
+        This method is thread-safe and can be called from the executor
+        or event loop without doing blocking I/O.
         """
         files = self._top_level_files
         domain = self.domain
