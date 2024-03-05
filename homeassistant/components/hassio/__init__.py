@@ -42,7 +42,7 @@ from homeassistant.util.dt import now
 # config_flow, and entity platforms are imported to ensure
 # other dependencies that wait for hassio are not waiting
 # for hassio to import its platforms
-from . import binary_sensor, config_flow, sensor, update  # noqa: F401
+from . import binary_sensor, config_flow, diagnostics, sensor, update  # noqa: F401
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # noqa: F401
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
