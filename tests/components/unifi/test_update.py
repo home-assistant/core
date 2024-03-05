@@ -164,7 +164,7 @@ async def test_install(
 
     url = (
         f"https://{config_entry.data[CONF_HOST]}:1234"
-        + f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr"
+        f"/api/s/{config_entry.data[CONF_SITE_ID]}/cmd/devmgr"
     )
     aioclient_mock.clear_requests()
     aioclient_mock.post(url)
