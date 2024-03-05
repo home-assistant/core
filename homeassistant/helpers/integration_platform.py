@@ -200,9 +200,6 @@ async def async_process_integration_platforms(
         for integration in integrations.values()
         if not isinstance(integration, Exception)
     ]
-    if not loaded_integrations:
-        return
-
     # Finally, fetch the platforms for each integration and process them.
     # This uses the import executor in a loop. If there are a lot
     # of integration with the integration platform to process,
