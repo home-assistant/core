@@ -111,10 +111,8 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            ValloxNumberEntity(
-                data["name"], data["coordinator"], description, data["client"]
-            )
-            for description in NUMBER_ENTITIES
-        ]
+        ValloxNumberEntity(
+            data["name"], data["coordinator"], description, data["client"]
+        )
+        for description in NUMBER_ENTITIES
     )
