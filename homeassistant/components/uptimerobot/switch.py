@@ -40,7 +40,7 @@ async def async_setup_entry(
 class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
     """Representation of a UptimeRobot switch."""
 
-    _attr_icon = "mdi:cog"
+    _attr_translation_key = "monitor_status"
 
     @property
     def is_on(self) -> bool:

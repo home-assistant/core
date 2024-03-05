@@ -1117,7 +1117,7 @@ async def test_async_get_component_preloads_config_and_config_flow(
         await executor_import_integration.async_get_component()
 
     assert len(platform_exists_calls[0]) == len(loader.BASE_PRELOAD_PLATFORMS)
-    assert mock_import.call_count == 2 + len(loader.BASE_PRELOAD_PLATFORMS)
+    assert mock_import.call_count == 1 + len(loader.BASE_PRELOAD_PLATFORMS)
     assert (
         mock_import.call_args_list[0][0][0]
         == "homeassistant.components.executor_import"
@@ -1188,10 +1188,9 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
     ), patch("homeassistant.loader.importlib.import_module", import_module):
         module = await integration.async_get_component()
 
-    # Everything is there so we should load in the event loop
-    # since it will all be cached
-    assert "loaded_executor=False" in caplog.text
-    assert "loaded_executor=True" not in caplog.text
+    # Everything is already in the integration cache
+    # so it should not have to call the load
+    assert "loaded_executor" not in caplog.text
     assert module is module_mock
 
 
