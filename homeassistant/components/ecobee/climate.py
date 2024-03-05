@@ -783,7 +783,7 @@ class Thermostat(ClimateEntity):
 
         # Ensure sensors provided are available for thermostat.
         if not set(sensor_names).issubset(set(self._sensors)):
-            msg = f"Invalid sensor for thermosat, available options are: {', '.join(self._sensors)}"
+            msg = f"Invalid sensor for thermostat, available options are: {', '.join(self._sensors)}"
             raise ServiceValidationError(msg)
 
         # Check if sensors are currently used on the climate for the thermostat.
