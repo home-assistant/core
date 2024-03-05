@@ -1117,7 +1117,7 @@ async def test_async_get_component_preloads_config_and_config_flow(
         await executor_import_integration.async_get_component()
 
     assert len(platform_exists_calls[0]) == len(loader.BASE_PRELOAD_PLATFORMS)
-    assert mock_import.call_count == 2 + len(loader.BASE_PRELOAD_PLATFORMS)
+    assert mock_import.call_count == 1 + len(loader.BASE_PRELOAD_PLATFORMS)
     assert (
         mock_import.call_args_list[0][0][0]
         == "homeassistant.components.executor_import"
