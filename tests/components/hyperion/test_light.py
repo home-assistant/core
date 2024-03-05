@@ -338,6 +338,7 @@ async def test_light_async_turn_on(hass: HomeAssistant) -> None:
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COMPONENTID: const.KEY_COMPONENTID_COLOR,
             const.KEY_VALUE: {const.KEY_RGB: (0, 255, 255)},
+            const.KEY_OWNER: "System",
         }
     ]
 
@@ -432,6 +433,7 @@ async def test_light_async_turn_on(hass: HomeAssistant) -> None:
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COMPONENTID: const.KEY_COMPONENTID_COLOR,
             const.KEY_VALUE: {const.KEY_RGB: (0, 0, 255)},
+            const.KEY_OWNER: "System",
         }
     ]
     call_registered_callback(client, "priorities-update")
@@ -564,6 +566,8 @@ async def test_light_async_updates_from_hyperion_client(
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COMPONENTID: const.KEY_COMPONENTID_EFFECT,
             const.KEY_OWNER: effect,
+            const.KEY_VISIBLE: True,
+            const.KEY_ORIGIN: "System",
         }
     ]
 
@@ -581,6 +585,9 @@ async def test_light_async_updates_from_hyperion_client(
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COMPONENTID: const.KEY_COMPONENTID_COLOR,
             const.KEY_VALUE: {const.KEY_RGB: rgb},
+            const.KEY_VISIBLE: True,
+            const.KEY_ORIGIN: "System",
+            const.KEY_OWNER: "System",
         }
     ]
 
@@ -625,6 +632,9 @@ async def test_light_async_updates_from_hyperion_client(
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COMPONENTID: const.KEY_COMPONENTID_COLOR,
             const.KEY_VALUE: {const.KEY_RGB: rgb},
+            const.KEY_VISIBLE: True,
+            const.KEY_ORIGIN: "System",
+            const.KEY_OWNER: "System",
         }
     ]
     call_registered_callback(client, "client-update", {"loaded-state": True})
@@ -645,6 +655,7 @@ async def test_full_state_loaded_on_start(hass: HomeAssistant) -> None:
             const.KEY_PRIORITY: TEST_PRIORITY,
             const.KEY_COMPONENTID: const.KEY_COMPONENTID_COLOR,
             const.KEY_VALUE: {const.KEY_RGB: (0, 100, 100)},
+            const.KEY_OWNER: "System",
         }
     ]
     client.effects = [{const.KEY_NAME: "One"}, {const.KEY_NAME: "Two"}]
@@ -705,6 +716,7 @@ async def test_setup_entry_no_token_reauth(hass: HomeAssistant) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         assert client.async_client_disconnect.called
         mock_flow_init.assert_called_once_with(
             DOMAIN,
@@ -734,6 +746,7 @@ async def test_setup_entry_bad_token_reauth(hass: HomeAssistant) -> None:
         "homeassistant.components.hyperion.client.HyperionClient", return_value=client
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
         assert client.async_client_disconnect.called
         mock_flow_init.assert_called_once_with(
             DOMAIN,

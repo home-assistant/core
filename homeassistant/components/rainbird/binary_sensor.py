@@ -21,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 RAIN_SENSOR_ENTITY_DESCRIPTION = BinarySensorEntityDescription(
     key="rainsensor",
     translation_key="rainsensor",
-    icon="mdi:water",
 )
 
 

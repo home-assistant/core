@@ -11,13 +11,18 @@ from typing import Any, Final, TypedDict
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import device_automation
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     CONF_DEVICES,
@@ -28,7 +33,6 @@ from homeassistant.const import (
     CONF_PORT,
 )
 from homeassistant.core import HomeAssistant, callback, split_entity_id
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -191,7 +195,7 @@ async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HomeKit."""
 
     VERSION = 1
@@ -202,7 +206,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Choose specific domains in bridge mode."""
         if user_input is not None:
             self.hk_data[CONF_FILTER] = _make_entity_filter(
@@ -228,7 +232,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_pairing(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Pairing instructions."""
         hk_data = self.hk_data
 
@@ -278,7 +282,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             )
 
-    async def async_step_accessory(self, accessory_input: dict[str, Any]) -> FlowResult:
+    async def async_step_accessory(
+        self, accessory_input: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Handle creation a single accessory in accessory mode."""
         entity_id = accessory_input[CONF_ENTITY_ID]
         port = accessory_input[CONF_PORT]
@@ -302,7 +308,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title=f"{name}:{entry_data[CONF_PORT]}", data=entry_data
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from yaml."""
         if not self._async_is_unique_name_port(user_input):
             return self.async_abort(reason="port_name_in_use")
@@ -349,16 +355,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
+class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for homekit."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
         self.hk_options: dict[str, Any] = {}
@@ -366,7 +372,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_yaml(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """No options for yaml managed entries."""
         if user_input is not None:
             # Apparently not possible to abort an options flow
@@ -377,7 +383,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_advanced(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Choose advanced options."""
         hk_options = self.hk_options
         show_advanced_options = self.show_advanced_options
@@ -414,7 +420,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_cameras(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Choose camera config."""
         hk_options = self.hk_options
         all_entity_config: dict[str, dict[str, Any]]
@@ -465,7 +471,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_accessory(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Choose entity for the accessory."""
         hk_options = self.hk_options
         domains = hk_options[CONF_DOMAINS]
@@ -508,7 +514,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_include(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Choose entities to include from the domain on the bridge."""
         hk_options = self.hk_options
         domains = hk_options[CONF_DOMAINS]
@@ -546,7 +552,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_exclude(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Choose entities to exclude from the domain on the bridge."""
         hk_options = self.hk_options
         domains = hk_options[CONF_DOMAINS]
@@ -598,7 +604,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle options flow."""
         if self.config_entry.source == SOURCE_IMPORT:
             return await self.async_step_yaml(user_input)
