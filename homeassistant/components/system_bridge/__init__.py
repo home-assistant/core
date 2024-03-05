@@ -385,11 +385,4 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             config_entry.minor_version,
         )
 
-    if config_entry.minor_version > SystemBridgeConfigFlow.MINOR_VERSION:
-        hass.config_entries.async_update_entry(
-            config_entry,
-            data=dict(config_entry.data),
-            minor_version=2,
-        )
-
     return True
