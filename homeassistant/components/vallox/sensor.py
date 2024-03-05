@@ -268,8 +268,6 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
 
     async_add_entities(
-        [
-            description.entity_type(name, coordinator, description)
-            for description in SENSOR_ENTITIES
-        ]
+        description.entity_type(name, coordinator, description)
+        for description in SENSOR_ENTITIES
     )

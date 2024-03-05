@@ -75,8 +75,6 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            ValloxBinarySensorEntity(data["name"], data["coordinator"], description)
-            for description in BINARY_SENSOR_ENTITIES
-        ]
+        ValloxBinarySensorEntity(data["name"], data["coordinator"], description)
+        for description in BINARY_SENSOR_ENTITIES
     )
