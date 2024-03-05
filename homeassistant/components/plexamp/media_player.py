@@ -1,6 +1,7 @@
 """Support to interface with Plexamp integration."""
 
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -10,12 +11,12 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     RepeatMode,
+    MediaType,
 )
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
     MEDIA_CLASS_ARTIST,
     MEDIA_CLASS_PLAYLIST,
-    MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_IDLE
@@ -48,7 +49,7 @@ async def async_setup_entry(
     _LOGGER.debug("Found devices %s", devices)
 
     for device in devices:
-        plex_token = entry.data.get(CONF_PLEX_TOKEN, None)
+        plex_token = entry.data.get(CONF_PLEX_TOKEN, "")
         entity = PlexampMediaPlayer(
             BaseMediaPlayerFactory.from_dict(device),
             plex_token=plex_token,
@@ -173,8 +174,8 @@ class PlexampMediaPlayer(MediaPlayerEntity):
         )
 
     async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs
-    ):
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
         """Implement media playback."""
         # Handle playlist selection
         if media_type == "playlist":
@@ -189,7 +190,9 @@ class PlexampMediaPlayer(MediaPlayerEntity):
             pass
 
     async def async_browse_media(
-        self, media_content_type, media_content_id
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the browsing media method."""
 

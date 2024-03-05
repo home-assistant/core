@@ -27,13 +27,6 @@
           "plex_ip_address": "Plex Server (local IP address of your Plex Server).",
           "plex_token": "Insert a valid Plex token."
         }
-      },
-      "add_sonos_devices": {
-        "title": "Look for Sonos devices to control with Plexamp",
-        "data": {
-          "plex_ip_address": "Plex Server (local IP address of your Plex Server).",
-          "plex_token": "Insert a valid Plex token."
-        }
       }
     },
     "abort": {
