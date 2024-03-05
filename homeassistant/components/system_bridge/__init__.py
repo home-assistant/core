@@ -42,7 +42,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    HomeAssistantError,
+    ServiceValidationError,
 )
 from homeassistant.helpers import (
     config_validation as cv,
@@ -227,7 +227,7 @@ async def async_setup_entry(
                 )
             )
         except StopIteration as exception:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="process_not_found",
                 translation_placeholders={"id": service_call.data[CONF_ID]},
