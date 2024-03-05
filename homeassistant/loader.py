@@ -1156,21 +1156,21 @@ class Integration:
         """
         files = self._top_level_files
         domain = self.domain
-        exiting_platforms: list[str] = []
+        existing_platforms: list[str] = []
         missing_platforms = self._missing_platforms_cache
         for platform_name in platform_names:
             full_name = f"{domain}.{platform_name}"
             if full_name not in missing_platforms and (
                 f"{platform_name}.py" in files or platform_name in files
             ):
-                exiting_platforms.append(platform_name)
+                existing_platforms.append(platform_name)
                 continue
             missing_platforms[full_name] = ModuleNotFoundError(
                 f"Platform {full_name} not found",
                 name=f"{self.pkg_path}.{platform_name}",
             )
 
-        return exiting_platforms
+        return existing_platforms
 
     def _load_platform(self, platform_name: str) -> ModuleType:
         """Load a platform for an integration.
