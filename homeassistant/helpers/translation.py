@@ -110,7 +110,7 @@ async def _async_get_component_strings(
         translations_by_language[language] = {}
 
         for loaded in components:
-            domain = loaded.partition(".")[0]
+            domain, _, platform = loaded.partition(".")
             if not (integration := integrations.get(domain)):
                 continue
             # No translation available

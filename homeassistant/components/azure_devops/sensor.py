@@ -17,23 +17,15 @@ from . import AzureDevOpsDeviceEntity, AzureDevOpsEntityDescription
 from .const import CONF_ORG, DOMAIN
 
 
-@dataclass(frozen=True)
-class AzureDevOpsSensorEntityDescriptionMixin:
-    """Mixin class for required Azure DevOps sensor description keys."""
-
-    build_key: int
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class AzureDevOpsSensorEntityDescription(
-    AzureDevOpsEntityDescription,
-    SensorEntityDescription,
-    AzureDevOpsSensorEntityDescriptionMixin,
+    AzureDevOpsEntityDescription, SensorEntityDescription
 ):
     """Class describing Azure DevOps sensor entities."""
 
-    attrs: Callable[[DevOpsBuild], Any] = round
-    value: Callable[[DevOpsBuild], StateType] = round
+    build_key: int
+    attrs: Callable[[DevOpsBuild], Any]
+    value: Callable[[DevOpsBuild], StateType]
 
 
 async def async_setup_entry(
@@ -47,8 +39,8 @@ async def async_setup_entry(
             coordinator,
             AzureDevOpsSensorEntityDescription(
                 key=f"{build.project.id}_{build.definition.id}_latest_build",
-                name=f"{build.project.name} {build.definition.name} Latest Build",
-                icon="mdi:pipe",
+                translation_key="latest_build",
+                translation_placeholders={"definition_name": build.definition.name},
                 attrs=lambda build: {
                     "definition_id": build.definition.id,
                     "definition_name": build.definition.name,

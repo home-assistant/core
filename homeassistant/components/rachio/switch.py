@@ -198,7 +198,6 @@ class RachioStandbySwitch(RachioSwitch):
 
     _attr_has_entity_name = True
     _attr_translation_key = "standby"
-    _attr_icon = "mdi:power"
 
     @property
     def unique_id(self) -> str:
@@ -242,7 +241,6 @@ class RachioRainDelay(RachioSwitch):
 
     _attr_has_entity_name = True
     _attr_translation_key = "rain_delay"
-    _attr_icon = "mdi:camera-timer"
 
     def __init__(self, controller):
         """Set up a Rachio rain delay switch."""

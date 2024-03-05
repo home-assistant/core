@@ -17,18 +17,11 @@ from .models import DoorBirdData
 IR_RELAY = "__ir_light__"
 
 
-@dataclass(frozen=True)
-class DoorbirdButtonEntityDescriptionMixin:
-    """Mixin to describe a Doorbird Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class DoorbirdButtonEntityDescription(ButtonEntityDescription):
+    """Class to describe a Doorbird Button entity."""
 
     press_action: Callable[[DoorBird, str], None]
-
-
-@dataclass(frozen=True)
-class DoorbirdButtonEntityDescription(
-    ButtonEntityDescription, DoorbirdButtonEntityDescriptionMixin
-):
-    """Class to describe a Doorbird Button entity."""
 
 
 RELAY_ENTITY_DESCRIPTION = DoorbirdButtonEntityDescription(

@@ -20,5 +20,3 @@ DEFAULT_SCAN_INTERVAL: Final = 60
 DEFAULT_SERVER: Final = "*Auto Detect"
 
 ATTRIBUTION: Final = "Data retrieved from Speedtest.net by Ookla"
-
-ICON: Final = "mdi:speedometer"

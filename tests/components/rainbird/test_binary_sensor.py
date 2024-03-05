@@ -53,7 +53,6 @@ async def test_rainsensor(
     assert rainsensor.state == expected_state
     assert rainsensor.attributes == {
         "friendly_name": "Rain Bird Controller Rainsensor",
-        "icon": "mdi:water",
     }
 
 

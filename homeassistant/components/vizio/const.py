@@ -49,10 +49,6 @@ DEFAULT_VOLUME_STEP = 1
 DEVICE_ID = "pyvizio"
 
 DOMAIN = "vizio"
-ICON = {
-    MediaPlayerDeviceClass.TV: "mdi:television",
-    MediaPlayerDeviceClass.SPEAKER: "mdi:speaker",
-}
 
 COMMON_SUPPORTED_COMMANDS = (
     MediaPlayerEntityFeature.SELECT_SOURCE

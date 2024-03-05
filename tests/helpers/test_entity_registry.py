@@ -90,6 +90,8 @@ def test_get_or_create_updates_data(entity_registry: er.EntityRegistry) -> None:
         unit_of_measurement="initial-unit_of_measurement",
     )
 
+    assert set(entity_registry.async_device_ids()) == {"mock-dev-id"}
+
     assert orig_entry == er.RegistryEntry(
         "light.hue_5678",
         "5678",
@@ -159,6 +161,8 @@ def test_get_or_create_updates_data(entity_registry: er.EntityRegistry) -> None:
         unit_of_measurement="updated-unit_of_measurement",
     )
 
+    assert set(entity_registry.async_device_ids()) == {"new-mock-dev-id"}
+
     new_entry = entity_registry.async_get_or_create(
         "light",
         "hue",
@@ -202,6 +206,8 @@ def test_get_or_create_updates_data(entity_registry: er.EntityRegistry) -> None:
         translation_key=None,
         unit_of_measurement=None,
     )
+
+    assert set(entity_registry.async_device_ids()) == set()
 
 
 def test_get_or_create_suggested_object_id_conflict_register(
