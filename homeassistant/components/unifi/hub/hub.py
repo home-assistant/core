@@ -196,12 +196,10 @@ class UnifiHub:
             def async_add_unifi_entities() -> None:
                 """Add UniFi entity."""
                 async_add_entities(
-                    [
-                        unifi_platform_entity(obj_id, self, description)
-                        for description in descriptions
-                        for obj_id in description.api_handler_fn(self.api)
-                        if self._async_should_add_entity(description, obj_id)
-                    ]
+                    unifi_platform_entity(obj_id, self, description)
+                    for description in descriptions
+                    for obj_id in description.api_handler_fn(self.api)
+                    if self._async_should_add_entity(description, obj_id)
                 )
 
             async_add_unifi_entities()
