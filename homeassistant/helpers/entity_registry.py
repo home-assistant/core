@@ -10,7 +10,7 @@ timer.
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import Callable, Iterable, Mapping, ValuesView
+from collections.abc import Callable, Iterable, KeysView, Mapping, ValuesView
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
@@ -511,6 +511,14 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         self._unindex_entry(key)
         super().__delitem__(key)
 
+    def get_entity_ids(self) -> ValuesView[str]:
+        """Return entity ids."""
+        return self._index.values()
+
+    def get_device_ids(self) -> KeysView[str]:
+        """Return device ids."""
+        return self._device_id_index.keys()
+
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
         """Get entity_id from (domain, platform, unique_id)."""
         return self._index.get(key)
@@ -611,6 +619,16 @@ class EntityRegistry:
     ) -> str | None:
         """Check if an entity_id is currently registered."""
         return self.entities.get_entity_id((domain, platform, unique_id))
+
+    @callback
+    def async_entity_ids(self) -> list[str]:
+        """Return entity ids."""
+        return list(self.entities.get_entity_ids())
+
+    @callback
+    def async_device_ids(self) -> list[str]:
+        """Return known device ids."""
+        return list(self.entities.get_device_ids())
 
     def _entity_id_available(
         self, entity_id: str, known_object_ids: Iterable[str] | None

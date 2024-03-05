@@ -1463,6 +1463,11 @@ class ConfigEntries:
         return self._entries.data.get(entry_id)
 
     @callback
+    def async_entry_ids(self) -> list[str]:
+        """Return entry ids."""
+        return list(self._entries.data)
+
+    @callback
     def async_entries(
         self,
         domain: str | None = None,

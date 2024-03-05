@@ -90,6 +90,9 @@ def test_get_or_create_updates_data(entity_registry: er.EntityRegistry) -> None:
         unit_of_measurement="initial-unit_of_measurement",
     )
 
+    assert set(entity_registry.async_device_ids()) == {"mock-dev-id"}
+    assert set(entity_registry.async_entity_ids()) == {"light.hue_5678"}
+
     assert orig_entry == er.RegistryEntry(
         "light.hue_5678",
         "5678",
@@ -159,6 +162,9 @@ def test_get_or_create_updates_data(entity_registry: er.EntityRegistry) -> None:
         unit_of_measurement="updated-unit_of_measurement",
     )
 
+    assert set(entity_registry.async_device_ids()) == {"new-mock-dev-id"}
+    assert set(entity_registry.async_entity_ids()) == {"light.hue_5678"}
+
     new_entry = entity_registry.async_get_or_create(
         "light",
         "hue",
@@ -202,6 +208,9 @@ def test_get_or_create_updates_data(entity_registry: er.EntityRegistry) -> None:
         translation_key=None,
         unit_of_measurement=None,
     )
+
+    assert set(entity_registry.async_device_ids()) == set()
+    assert set(entity_registry.async_entity_ids()) == {"light.hue_5678"}
 
 
 def test_get_or_create_suggested_object_id_conflict_register(
@@ -445,6 +454,8 @@ def test_async_get_entity_id(entity_registry: er.EntityRegistry) -> None:
         entity_registry.async_get_entity_id("light", "hue", "1234") == "light.hue_1234"
     )
     assert entity_registry.async_get_entity_id("light", "hue", "123") is None
+
+    assert set(entity_registry.async_entity_ids()) == {"light.hue_1234"}
 
 
 async def test_updating_config_entry_id(
@@ -1469,6 +1480,7 @@ def test_entity_registry_items() -> None:
     entities = er.EntityRegistryItems()
     assert entities.get_entity_id(("a", "b", "c")) is None
     assert entities.get_entry("abc") is None
+    assert set(entities.get_entity_ids()) == set()
 
     entry1 = er.RegistryEntry("test.entity1", "1234", "hue")
     entry2 = er.RegistryEntry("test.entity2", "2345", "hue")
@@ -1482,6 +1494,7 @@ def test_entity_registry_items() -> None:
     assert entities.get_entry(entry1.id) is entry1
     assert entities.get_entity_id(("test", "hue", "2345")) is entry2.entity_id
     assert entities.get_entry(entry2.id) is entry2
+    assert set(entities.get_entity_ids()) == {"test.entity2", "test.entity1"}
 
     entities.pop("test.entity1")
     del entities["test.entity2"]
@@ -1490,6 +1503,8 @@ def test_entity_registry_items() -> None:
     assert entities.get_entry(entry1.id) is None
     assert entities.get_entity_id(("test", "hue", "2345")) is None
     assert entities.get_entry(entry2.id) is None
+
+    assert set(entities.get_entity_ids()) == set()
 
 
 async def test_disabled_by_str_not_allowed(
