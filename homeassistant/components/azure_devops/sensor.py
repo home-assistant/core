@@ -17,23 +17,16 @@ from . import AzureDevOpsDeviceEntity, AzureDevOpsEntityDescription
 from .const import CONF_ORG, DOMAIN
 
 
-@dataclass(frozen=True)
-class AzureDevOpsSensorEntityDescriptionMixin:
-    """Mixin class for required Azure DevOps sensor description keys."""
-
-    build_key: int
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class AzureDevOpsSensorEntityDescription(
     AzureDevOpsEntityDescription,
     SensorEntityDescription,
-    AzureDevOpsSensorEntityDescriptionMixin,
 ):
     """Class describing Azure DevOps sensor entities."""
 
-    attrs: Callable[[DevOpsBuild], Any] = round
-    value: Callable[[DevOpsBuild], StateType] = round
+    build_key: int
+    attrs: Callable[[DevOpsBuild], Any]
+    value: Callable[[DevOpsBuild], StateType]
 
 
 async def async_setup_entry(
