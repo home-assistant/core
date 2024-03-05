@@ -1,7 +1,7 @@
 {
   "services": {
     "button": "mdi:button-pointer",
-    "command": "mdi:terminal",
+    "command": "mdi:console",
     "select_sound_output": "mdi:volume-source"
   }
 }
