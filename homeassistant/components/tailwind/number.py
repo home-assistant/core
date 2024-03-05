@@ -30,7 +30,6 @@ class TailwindNumberEntityDescription(NumberEntityDescription):
 DESCRIPTIONS = [
     TailwindNumberEntityDescription(
         key="brightness",
-        icon="mdi:led-on",
         translation_key="brightness",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
