@@ -94,6 +94,12 @@ CUSTOM_WARNING = (
     "cause stability problems, be sure to disable it if you "
     "experience issues with Home Assistant"
 )
+IMPORT_EVENT_LOOP_WARNING = (
+    "We found an integration %s which is configured to "
+    "to import its code in the event loop. This component might "
+    "cause stability problems, be sure to disable it if you "
+    "experience issues with Home Assistant"
+)
 
 _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
 
@@ -638,6 +644,9 @@ class Integration:
                 manifest,
                 None if is_virtual else set(os.listdir(file_path)),
             )
+
+            if not integration.import_executor:
+                _LOGGER.warning(IMPORT_EVENT_LOOP_WARNING, integration.domain)
 
             if integration.is_built_in:
                 return integration

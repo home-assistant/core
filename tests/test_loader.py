@@ -1623,3 +1623,13 @@ async def test_async_get_platforms_concurrent_loads(
 
     assert imports == [button_module_name]
     assert integration.get_platform_cached("button") is button_module_mock
+
+
+async def test_integration_warnings(
+    hass: HomeAssistant,
+    enable_custom_integrations: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test integration warnings."""
+    await loader.async_get_integration(hass, "test_package_loaded_loop")
+    assert "configured to to import its code in the event loop" in caplog.text
