@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "switch": {
+      "poe_control": {
+        "default": "mdi:ethernet"
+      }
+    }
+  }
+}
