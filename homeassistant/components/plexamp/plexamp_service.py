@@ -1,4 +1,6 @@
-"""Handles communication with Plexamp services."""
+"""Handles communication with Plexamp services.
+To be moved out of HA and create a PyPi library out of it
+"""
 
 import logging
 
@@ -6,7 +8,6 @@ import aiohttp
 import defusedxml.ElementTree as ET
 
 from homeassistant.components.media_player import MediaPlayerState, MediaType
-
 from .const import NUMBER_TO_REPEAT_MODE
 from .models import BaseMediaPlayerFactory
 
@@ -80,7 +81,9 @@ class PlexampService:
                     e,
                 )
 
-    async def play_media(self, media_type: MediaType | str, rating_key: str, shuffle=0) -> None:
+    async def play_media(
+        self, media_type: MediaType | str, rating_key: str, shuffle=0
+    ) -> None:
         if media_type == MediaType.PLAYLIST:
             if self._plexamp_entity.product == "Sonos":
                 await self._play_sonos_playlist(rating_key=rating_key, shuffle=shuffle)
@@ -111,7 +114,6 @@ class PlexampService:
 
         base_url = f"{self._plexamp_entity.uri}/player/timeline/poll"
         url = f"{base_url}?wait={poll_wait}&includeMetadata=1&commandID={self._command_id}&type=music"
-        _LOGGER.debug("Updating device: %s", self._device_name)
 
         device_information = {
             "state": MediaPlayerState.IDLE,
@@ -156,7 +158,8 @@ class PlexampService:
             return device_information
 
     async def _get_play_token(self) -> str | None:
-        url = f"{self._plexamp_entity.server.get("uri")}/security/token?type=delegation&scope=all&includeFields=thumbBlurHash"
+        server_uri = self._plexamp_entity.server.get("uri")
+        url = f"{server_uri}/security/token?type=delegation&scope=all&includeFields=thumbBlurHash"
         async with aiohttp.ClientSession() as session:
             response = await session.get(url, headers=self.headers, timeout=10)
             if response.status == 200:
@@ -174,9 +177,7 @@ class PlexampService:
         uri = f"uri=server://{server_identifier}/com.plexapp.plugins.library/playlists/{rating_key}/items"
         token = f"token={token}"
         command_id = f"commandID={self._command_id + 1}"
-        extra_parameters = (
-            f"shuffle={shuffle}&includeExternalMedia=1&type=audio&includeFields=thumbBlurHash&linkToParent=true&linkToGrandparent=true"
-        )
+        extra_parameters = f"shuffle={shuffle}&includeExternalMedia=1&type=audio&includeFields=thumbBlurHash&linkToParent=true&linkToGrandparent=true"
 
         url = f"{base_url}?{uri}&{token}&{command_id}&{extra_parameters}"
         _LOGGER.debug("Starting new playlist in %s with url %s", self._device_name, url)
@@ -200,17 +201,29 @@ class PlexampService:
         token = f"token={token}"
         extra_parameters = f"{shuffle_param}&{include_external_media}&{type_param}"
 
-        create_queue_url = f"{create_queue_base_url}?{uri}&{playlist_id}&{token}&{extra_parameters}"
+        create_queue_url = (
+            f"{create_queue_base_url}?{uri}&{playlist_id}&{token}&{extra_parameters}"
+        )
 
         async with aiohttp.ClientSession() as session:
-            response = await session.post(create_queue_url, headers=self.headers, timeout=10)
+            response = await session.post(
+                create_queue_url, headers=self.headers, timeout=10
+            )
             if response.ok:
                 playlist_data = await response.json()
-                playlist_queue_id = playlist_data.get("MediaContainer", {}).get("playQueueID")
-                playlist_name = playlist_data.get("MediaContainer", {}).get("playQueuePlaylistTitle")
-                _LOGGER.debug("Starting playlist %s in %s", playlist_name, self._device_name)
+                playlist_queue_id = playlist_data.get("MediaContainer", {}).get(
+                    "playQueueID"
+                )
+                playlist_name = playlist_data.get("MediaContainer", {}).get(
+                    "playQueuePlaylistTitle"
+                )
+                _LOGGER.debug(
+                    "Starting playlist %s in %s", playlist_name, self._device_name
+                )
                 container_key = f"containerKey=/playQueues/{playlist_queue_id}?own=1"
-                machine_identifier = f"machineIdentifier={self._plexamp_entity.server.get("identifier")}"
+                machine_identifier = (
+                    f"machineIdentifier={self._plexamp_entity.server.get("identifier")}"
+                )
                 command_id = f"commandID={self._command_id + 1}"
                 url = f"{base_url}?{token}&{machine_identifier}&{container_key}&{extra_parameters}&{command_id}"
                 await session.get(url, headers=self.headers, timeout=10)
@@ -259,8 +272,7 @@ class PlexampService:
     async def _async_get_playlist_tracks(
         self, session: aiohttp.ClientSession, device_information: dict, timeline: dict
     ):
-        """
-        Retrieve playlist tracks information.
+        """Retrieve playlist tracks information.
 
         This method retrieves information about the tracks in the playlist currently being played on the Plexamp device.
 
@@ -271,11 +283,10 @@ class PlexampService:
 
         Returns:
         - dict: Updated device information dictionary.
+
         """
 
         status = timeline.get("state", MediaPlayerState.IDLE)
-        _LOGGER.debug("device: %s has status %s", self._device_name, status)
-
         device_information["state"] = {
             "playing": MediaPlayerState.PLAYING,
             "paused": MediaPlayerState.PAUSED,
@@ -297,7 +308,11 @@ class PlexampService:
         if not play_queue or not self._plexamp_entity.server.get("uri"):
             return device_information
 
-        return await self._async_get_queue_data(session=session, device_information=device_information, play_queue=play_queue)
+        return await self._async_get_queue_data(
+            session=session,
+            device_information=device_information,
+            play_queue=play_queue,
+        )
 
     async def _async_get_queue_data(
         self,
@@ -305,8 +320,7 @@ class PlexampService:
         device_information: dict,
         play_queue: str,
     ):
-        """
-        Retrieve queue data for the currently playing playlist.
+        """Retrieve queue data for the currently playing playlist.
 
         This method retrieves information about the tracks in the playlist currently being played on the Plex device.
 
@@ -359,9 +373,9 @@ class PlexampService:
                     device_information["parent_title"] = currently_playing_metadata.get(
                         "parentTitle"
                     )
-                    device_information["grandparent_title"] = (
-                        currently_playing_metadata.get("grandparentTitle")
-                    )
+                    device_information[
+                        "grandparent_title"
+                    ] = currently_playing_metadata.get("grandparentTitle")
                     return device_information
             return device_information
 

@@ -6,10 +6,10 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     RepeatMode,
-    BrowseMedia,
 )
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_ALBUM,
@@ -17,18 +17,15 @@ from homeassistant.components.media_player.const import (
     MEDIA_CLASS_PLAYLIST,
     MediaType,
 )
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_IDLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt
-
 from .const import CONF_PLEX_TOKEN, DOMAIN, REPEAT_MODE_TO_NUMBER
 from .models import BaseMediaPlayerFactory
-from .services import PlexampService
-
+from .plexamp_service import PlexampService
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,12 +157,12 @@ class PlexampMediaPlayer(MediaPlayerEntity):
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-        _LOGGER.error(f"Mute volume: %s", mute)
+        _LOGGER.error("Mute volume: %s", mute)
         if mute:
             self._volume_before_mute = self._attr_volume_level
             await self.async_set_volume_level(0.0)
         if not mute:
-            _LOGGER.error(f"_volume_before_mute: %s", self._volume_before_mute)
+            _LOGGER.error("_volume_before_mute: %s", self._volume_before_mute)
             await self.async_set_volume_level(self._volume_before_mute)
 
     async def async_set_volume_level(self, volume: float) -> None:
