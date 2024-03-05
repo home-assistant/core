@@ -78,6 +78,5 @@ async def test_migration_minor_future_version(hass: HomeAssistant) -> None:
 
     assert config_entry.version == SystemBridgeConfigFlow.VERSION
     assert config_entry.minor_version == SystemBridgeConfigFlow.MINOR_VERSION + 1
-    assert config_entry.data[CONF_API_KEY] == FIXTURE_USER_INPUT[CONF_TOKEN]
     assert config_entry.data == config_entry_data
     assert config_entry.state == ConfigEntryState.LOADED
