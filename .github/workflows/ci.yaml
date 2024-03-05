@@ -103,7 +103,7 @@ jobs:
           echo "key=pre-commit-${{ env.CACHE_VERSION }}-${{
             hashFiles('.pre-commit-config.yaml') }}"  >> $GITHUB_OUTPUT
       - name: Filter for core changes
-        uses: dorny/paths-filter@v3.0.1
+        uses: dorny/paths-filter@v3.0.2
         id: core
         with:
           filters: .core_files.yaml
@@ -118,7 +118,7 @@ jobs:
           echo "Result:"
           cat .integration_paths.yaml
       - name: Filter for integration changes
-        uses: dorny/paths-filter@v3.0.1
+        uses: dorny/paths-filter@v3.0.2
         id: integrations
         with:
           filters: .integration_paths.yaml
