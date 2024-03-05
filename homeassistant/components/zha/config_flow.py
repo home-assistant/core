@@ -463,6 +463,10 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             return
 
         # Only update the current entry if it is an ignored discovery
+        if current_entry.source != SOURCE_IGNORE:
+            self._abort_if_unique_id_configured()
+            return
+
         self._abort_if_unique_id_configured(
             updates={
                 CONF_DEVICE: {
