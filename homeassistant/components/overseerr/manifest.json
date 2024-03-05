@@ -4,6 +4,7 @@
   "codeowners": ["@vehjelmtvedt", "@l-holter"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/overseerr",
+  "integration_type": "service",
   "iot_class": "local_polling",
   "requirements": ["overseerr-api==1.0.1"]
 }

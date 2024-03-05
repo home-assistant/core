@@ -10,8 +10,6 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .coordinator import OverseerrUpdateCoordinator
 
-# List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
@@ -32,14 +30,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     overseerr_coordinator = OverseerrUpdateCoordinator(hass, overseerr_client)
 
-    # Run first refresh of data from coordinator
     await overseerr_coordinator.async_config_entry_first_refresh()
 
-    # Set coordinator in Home Assistant's data structure for later access
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = overseerr_coordinator
 
-    # Forward the entry setup to the relevant platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

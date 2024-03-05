@@ -28,7 +28,6 @@ USER_DATA_SCHEMA = vol.Schema(
 class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Overseerr."""
 
-    VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the flow."""

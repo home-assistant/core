@@ -9,47 +9,35 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
       },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Your Overseerr integration needs reauthorization. Please confirm to re-authenticate."
-      }
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "open_api_exception": "Connection failed. Please re-check your API key and host name.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {}
-      }
-    }
   },
   "entity": {
     "sensor": {
       "requested_movies": {
-        "name": "Movie Requests"
+        "name": "Movie requests"
       },
       "requested_tv": {
-        "name": "TV Show Requests"
+        "name": "TV show requests"
       },
       "requested_pending": {
-        "name": "Pending Requests"
+        "name": "Pending requests"
       },
       "requested_approved": {
-        "name": "Approved Requests"
+        "name": "Approved requests"
       },
       "requested_available": {
-        "name": "Available Requests"
+        "name": "Available requests"
       },
       "requested_total": {
-        "name": "Total Requests"
+        "name": "Total requests"
       }
     }
   }
