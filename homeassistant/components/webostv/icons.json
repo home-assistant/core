@@ -2,6 +2,6 @@
   "services": {
     "button": "mdi:button-pointer",
     "command": "mdi:terminal",
-    "select_sound_output": "mdi:volume-high"
+    "select_sound_output": "mdi:volume-source"
   }
 }
