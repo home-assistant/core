@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 class RensonBreezeSwitch(RensonEntity, SwitchEntity):
     """Provide the breeze switch."""
 
-    _attr_icon = "mdi:weather-dust"
     _attr_device_class = SwitchDeviceClass.SWITCH
     _attr_has_entity_name = True
     _attr_translation_key = "breeze"
