@@ -4,19 +4,14 @@ from __future__ import annotations
 import collections
 from contextlib import suppress
 import json
-from typing import Any
+from typing import Any, cast
 
-import serial.tools.list_ports
-from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant.components import onboarding, usb, zeroconf
 from homeassistant.components.file_upload import process_uploaded_file
-from homeassistant.components.hassio import AddonError, AddonState
-from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
-from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     SOURCE_ZEROCONF,
@@ -30,7 +25,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
 from homeassistant.util import dt as dt_util
 
@@ -47,6 +41,11 @@ from .radio_manager import (
     RECOMMENDED_RADIOS,
     ProbeResult,
     ZhaRadioManager,
+)
+from .serial_port import (
+    UsbSerialPort,
+    async_list_serial_ports,
+    async_serial_port_from_path,
 )
 
 CONF_MANUAL_PATH = "Enter Manually"
@@ -92,43 +91,6 @@ def _format_backup_choice(
     ).lower()
 
     return f"{dt_util.as_local(backup.backup_time).strftime('%c')} ({identifier})"
-
-
-async def list_serial_ports(hass: HomeAssistant) -> list[ListPortInfo]:
-    """List all serial ports, including the Yellow radio and the multi-PAN addon."""
-    ports = await hass.async_add_executor_job(serial.tools.list_ports.comports)
-
-    # Add useful info to the Yellow's serial port selection screen
-    try:
-        yellow_hardware.async_info(hass)
-    except HomeAssistantError:
-        pass
-    else:
-        yellow_radio = next(p for p in ports if p.device == "/dev/ttyAMA1")
-        yellow_radio.description = "Yellow Zigbee module"
-        yellow_radio.manufacturer = "Nabu Casa"
-
-    # Present the multi-PAN addon as a setup option, if it's available
-    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
-        hass
-    )
-
-    try:
-        addon_info = await multipan_manager.async_get_addon_info()
-    except (AddonError, KeyError):
-        addon_info = None
-
-    if addon_info is not None and addon_info.state != AddonState.NOT_INSTALLED:
-        addon_port = ListPortInfo(
-            device=silabs_multiprotocol_addon.get_zigbee_socket(),
-            skip_link_detection=True,
-        )
-
-        addon_port.description = "Multiprotocol add-on"
-        addon_port.manufacturer = "Nabu Casa"
-        ports.append(addon_port)
-
-    return ports
 
 
 class BaseZhaFlow(ConfigEntryBaseFlow):
@@ -179,17 +141,13 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose a serial port."""
-        ports = await list_serial_ports(self.hass)
-        list_of_ports = [
-            f"{p}{', s/n: ' + p.serial_number if p.serial_number else ''}"
-            + (f" - {p.manufacturer}" if p.manufacturer else "")
-            for p in ports
-        ]
+        ports = await async_list_serial_ports(self.hass)
+        port_names = [p.display_name for p in ports]
 
-        if not list_of_ports:
+        if not port_names:
             return await self.async_step_manual_pick_radio_type()
 
-        list_of_ports.append(CONF_MANUAL_PATH)
+        port_names.append(CONF_MANUAL_PATH)
 
         if user_input is not None:
             user_selection = user_input[CONF_DEVICE_PATH]
@@ -197,8 +155,8 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
             if user_selection == CONF_MANUAL_PATH:
                 return await self.async_step_manual_pick_radio_type()
 
-            port = ports[list_of_ports.index(user_selection)]
-            self._radio_mgr.device_path = port.device
+            port = ports[port_names.index(user_selection)]
+            self._radio_mgr.device_path = port.path
 
             probe_result = await self._radio_mgr.detect_radio_type()
             if probe_result == ProbeResult.WRONG_FIRMWARE_INSTALLED:
@@ -210,12 +168,7 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
                 # Did not autodetect anything, proceed to manual selection
                 return await self.async_step_manual_pick_radio_type()
 
-            self._title = (
-                f"{port.description}{', s/n: ' + port.serial_number if port.serial_number else ''}"
-                f" - {port.manufacturer}"
-                if port.manufacturer
-                else ""
-            )
+            self._title = port.display_name
 
             return await self.async_step_verify_radio()
 
@@ -223,19 +176,15 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         default_port = vol.UNDEFINED
 
         if self._radio_mgr.device_path is not None:
-            for description, port in zip(list_of_ports, ports):
-                if port.device == self._radio_mgr.device_path:
+            for description, port in zip(port_names, ports):
+                if port.path == self._radio_mgr.device_path:
                     default_port = description
                     break
             else:
                 default_port = CONF_MANUAL_PATH
 
         schema = vol.Schema(
-            {
-                vol.Required(CONF_DEVICE_PATH, default=default_port): vol.In(
-                    list_of_ports
-                )
-            }
+            {vol.Required(CONF_DEVICE_PATH, default=default_port): vol.In(port_names)}
         )
         return self.async_show_form(step_id="choose_serial_port", data_schema=schema)
 
@@ -272,8 +221,12 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
         errors = {}
 
         if user_input is not None:
-            self._title = user_input[CONF_DEVICE_PATH]
-            self._radio_mgr.device_path = user_input[CONF_DEVICE_PATH]
+            port = await async_serial_port_from_path(
+                self.hass, user_input[CONF_DEVICE_PATH]
+            )
+
+            self._title = port.display_name
+            self._radio_mgr.device_path = port.path
             self._radio_mgr.device_settings = user_input.copy()
 
             if await self._radio_mgr.radio_type.controller.probe(user_input):
@@ -498,17 +451,18 @@ class BaseZhaFlow(ConfigEntryBaseFlow):
 class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 4
+    VERSION = 5
 
     async def _set_unique_id_or_update_path(
-        self, unique_id: str, device_path: str
+        self, unique_id: str | None, device_path: str
     ) -> None:
-        """Set the flow's unique ID and update the device path if it isn't unique."""
+        """Set the flow's unique ID and update the device path in an ignored flow."""
         current_entry = await self.async_set_unique_id(unique_id)
 
-        if not current_entry:
+        if not current_entry or unique_id is None:
             return
 
+        # Only update the current entry if it is an ignored discovery
         self._abort_if_unique_id_configured(
             updates={
                 CONF_DEVICE: {
@@ -579,34 +533,28 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         self, discovery_info: usb.UsbServiceInfo
     ) -> ConfigFlowResult:
         """Handle usb discovery."""
-        vid = discovery_info.vid
-        pid = discovery_info.pid
-        serial_number = discovery_info.serial_number
-        manufacturer = discovery_info.manufacturer
-        description = discovery_info.description
-        dev_path = discovery_info.device
+        port = await async_serial_port_from_path(self.hass, discovery_info.device)
+        port = cast(UsbSerialPort, port)
 
-        await self._set_unique_id_or_update_path(
-            unique_id=f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}",
-            device_path=dev_path,
-        )
+        await self._set_unique_id_or_update_path(port.unique_id, port.path)
 
         # If they already have a discovery for deconz we ignore the usb discovery as
         # they probably want to use it there instead
         if self.hass.config_entries.flow.async_progress_by_handler(DECONZ_DOMAIN):
             return self.async_abort(reason="not_zha_device")
+
         for entry in self.hass.config_entries.async_entries(DECONZ_DOMAIN):
             if entry.source != SOURCE_IGNORE:
                 return self.async_abort(reason="not_zha_device")
 
-        self._radio_mgr.device_path = dev_path
-        self._title = description or usb.human_readable_device_name(
-            dev_path,
-            serial_number,
-            manufacturer,
-            description,
-            vid,
-            pid,
+        self._radio_mgr.device_path = port.path
+        self._title = port.description or usb.human_readable_device_name(
+            port.path,
+            port.serial_number,
+            port.manufacturer,
+            port.description,
+            port.vid,
+            port.pid,
         )
         self.context["title_placeholders"] = {CONF_NAME: self._title}
         return await self.async_step_confirm()
@@ -636,10 +584,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         node_name = local_name.removesuffix(".local")
         device_path = f"socket://{discovery_info.host}:{port}"
 
-        await self._set_unique_id_or_update_path(
-            unique_id=node_name,
-            device_path=device_path,
-        )
+        await self._set_unique_id_or_update_path(node_name, device_path)
 
         self.context["title_placeholders"] = {CONF_NAME: node_name}
         self._title = device_path
@@ -661,10 +606,9 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         device_settings = discovery_data["port"]
         device_path = device_settings[CONF_DEVICE_PATH]
 
-        await self._set_unique_id_or_update_path(
-            unique_id=f"{name}_{radio_type.name}_{device_path}",
-            device_path=device_path,
-        )
+        port = await async_serial_port_from_path(self.hass, device_path)
+
+        await self._set_unique_id_or_update_path(port.unique_id, port.path)
 
         self._title = name
         self._radio_mgr.radio_type = radio_type

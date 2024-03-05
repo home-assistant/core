@@ -46,6 +46,7 @@ from .repairs.wrong_silabs_firmware import (
     AlreadyRunningEZSP,
     warn_on_wrong_silabs_firmware,
 )
+from .serial_port import async_serial_port_from_path
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({vol.Optional(CONF_TYPE): cv.string})
 ZHA_CONFIG_SCHEMA = {
@@ -287,6 +288,16 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             data[CONF_DEVICE][CONF_FLOW_CONTROL] = None
 
         hass.config_entries.async_update_entry(config_entry, data=data, version=4)
+
+    if config_entry.version == 4:
+        path = config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
+        port = await async_serial_port_from_path(hass, path)
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            unique_id=port.unique_id,
+            version=5,
+        )
 
     _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True
