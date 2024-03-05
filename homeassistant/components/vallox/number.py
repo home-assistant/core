@@ -77,7 +77,6 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         metric_key="A_CYC_HOME_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon="mdi:thermometer",
         native_min_value=5.0,
         native_max_value=25.0,
         native_step=1.0,
@@ -88,7 +87,6 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         metric_key="A_CYC_AWAY_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon="mdi:thermometer",
         native_min_value=5.0,
         native_max_value=25.0,
         native_step=1.0,
@@ -99,7 +97,6 @@ NUMBER_ENTITIES: tuple[ValloxNumberEntityDescription, ...] = (
         metric_key="A_CYC_BOOST_AIR_TEMP_TARGET",
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon="mdi:thermometer",
         native_min_value=5.0,
         native_max_value=25.0,
         native_step=1.0,
@@ -114,10 +111,8 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            ValloxNumberEntity(
-                data["name"], data["coordinator"], description, data["client"]
-            )
-            for description in NUMBER_ENTITIES
-        ]
+        ValloxNumberEntity(
+            data["name"], data["coordinator"], description, data["client"]
+        )
+        for description in NUMBER_ENTITIES
     )

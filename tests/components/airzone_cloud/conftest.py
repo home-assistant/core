@@ -11,5 +11,8 @@ def airzone_cloud_no_websockets():
     with patch(
         "homeassistant.components.airzone_cloud.AirzoneCloudApi._update_websockets",
         return_value=False,
-    ), patch("aioairzone_cloud.websockets.AirzoneCloudIWS.connect", return_value=True):
+    ), patch(
+        "homeassistant.components.airzone_cloud.AirzoneCloudApi.connect_installation_websockets",
+        return_value=None,
+    ):
         yield

@@ -157,9 +157,9 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         self.scan_filter = self.unique_id
         self.context["identifier"] = self.unique_id
-        return await self.async_step_reconfigure()
+        return await self.async_step_restore_device()
 
-    async def async_step_reconfigure(
+    async def async_step_restore_device(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Inform user that reconfiguration is about to start."""
@@ -168,7 +168,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.async_pair_next_protocol, allow_exist=True
             )
 
-        return self.async_show_form(step_id="reconfigure")
+        return self.async_show_form(step_id="restore_device")
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None

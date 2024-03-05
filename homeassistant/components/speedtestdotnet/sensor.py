@@ -28,7 +28,6 @@ from .const import (
     ATTRIBUTION,
     DEFAULT_NAME,
     DOMAIN,
-    ICON,
 )
 from .coordinator import SpeedTestDataCoordinator
 
@@ -86,7 +85,6 @@ class SpeedtestSensor(CoordinatorEntity[SpeedTestDataCoordinator], SensorEntity)
     entity_description: SpeedtestSensorEntityDescription
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    _attr_icon = ICON
 
     def __init__(
         self,

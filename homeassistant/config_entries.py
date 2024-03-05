@@ -87,6 +87,7 @@ SOURCE_IMPORT = "import"
 SOURCE_INTEGRATION_DISCOVERY = "integration_discovery"
 SOURCE_MQTT = "mqtt"
 SOURCE_SSDP = "ssdp"
+SOURCE_SYSTEM = "system"
 SOURCE_USB = "usb"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
@@ -490,7 +491,7 @@ class ConfigEntry:
                 hass, self.domain
             )
         try:
-            component = integration.get_component()
+            component = await integration.async_get_component()
         except ImportError as err:
             _LOGGER.error(
                 "Error importing integration %s to set up %s configuration entry: %s",
@@ -677,7 +678,7 @@ class ConfigEntry:
                 self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
                 return True
 
-        component = integration.get_component()
+        component = await integration.async_get_component()
 
         if integration.domain == self.domain:
             if not self.state.recoverable:
@@ -734,7 +735,7 @@ class ConfigEntry:
                 # entry.
                 return
 
-        component = integration.get_component()
+        component = await integration.async_get_component()
         if not hasattr(component, "async_remove_entry"):
             return
         try:
@@ -783,7 +784,7 @@ class ConfigEntry:
 
         if not (integration := self._integration_for_domain):
             integration = await loader.async_get_integration(hass, self.domain)
-        component = integration.get_component()
+        component = await integration.async_get_component()
         supports_migrate = hasattr(component, "async_migrate_entry")
         if not supports_migrate:
             if same_major_version:
@@ -1044,7 +1045,7 @@ class FlowCancelledError(Exception):
     """Error to indicate that a flow has been cancelled."""
 
 
-class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
+class ConfigEntriesFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
     """Manage all the config entry flows that are in progress."""
 
     _flow_result = ConfigFlowResult
@@ -1169,7 +1170,9 @@ class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]
         self._discovery_debouncer.async_shutdown()
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.BaseFlowHandler, result: ConfigFlowResult
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult],
+        result: ConfigFlowResult,
     ) -> ConfigFlowResult:
         """Finish a config flow and add an entry."""
         flow = cast(ConfigFlow, flow)
@@ -1289,7 +1292,9 @@ class ConfigEntriesFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]
         return flow
 
     async def async_post_init(
-        self, flow: data_entry_flow.BaseFlowHandler, result: ConfigFlowResult
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult],
+        result: ConfigFlowResult,
     ) -> None:
         """After a flow is initialised trigger new flow notifications."""
         source = flow.context["source"]
@@ -1935,7 +1940,7 @@ def _async_abort_entries_match(
             raise data_entry_flow.AbortFlow("already_configured")
 
 
-class ConfigEntryBaseFlow(data_entry_flow.BaseFlowHandler[ConfigFlowResult]):
+class ConfigEntryBaseFlow(data_entry_flow.FlowHandler[ConfigFlowResult]):
     """Base class for config and option flows."""
 
     _flow_result = ConfigFlowResult
@@ -2287,7 +2292,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         return self.async_abort(reason=reason)
 
 
-class OptionsFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
+class OptionsFlowManager(data_entry_flow.FlowManager[ConfigFlowResult]):
     """Flow to set options for a configuration entry."""
 
     _flow_result = ConfigFlowResult
@@ -2316,7 +2321,9 @@ class OptionsFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
         return handler.async_get_options_flow(entry)
 
     async def async_finish_flow(
-        self, flow: data_entry_flow.BaseFlowHandler, result: ConfigFlowResult
+        self,
+        flow: data_entry_flow.FlowHandler[ConfigFlowResult],
+        result: ConfigFlowResult,
     ) -> ConfigFlowResult:
         """Finish an options flow and update options for configuration entry.
 
@@ -2336,7 +2343,9 @@ class OptionsFlowManager(data_entry_flow.BaseFlowManager[ConfigFlowResult]):
         result["result"] = True
         return result
 
-    async def _async_setup_preview(self, flow: data_entry_flow.BaseFlowHandler) -> None:
+    async def _async_setup_preview(
+        self, flow: data_entry_flow.FlowHandler[ConfigFlowResult]
+    ) -> None:
         """Set up preview for an option flow handler."""
         entry = self._async_get_config_entry(flow.handler)
         await _load_integration(self.hass, entry.domain, {})
@@ -2497,14 +2506,14 @@ def _handle_entry_updated_filter(event: Event) -> bool:
 async def support_entry_unload(hass: HomeAssistant, domain: str) -> bool:
     """Test if a domain supports entry unloading."""
     integration = await loader.async_get_integration(hass, domain)
-    component = integration.get_component()
+    component = await integration.async_get_component()
     return hasattr(component, "async_unload_entry")
 
 
 async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     """Test if a domain supports being removed from a device."""
     integration = await loader.async_get_integration(hass, domain)
-    component = integration.get_component()
+    component = await integration.async_get_component()
     return hasattr(component, "async_remove_config_entry_device")
 
 

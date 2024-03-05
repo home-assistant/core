@@ -29,7 +29,6 @@ ENTITY_DESCRIPTIONS = (
     RitualsSelectEntityDescription(
         key="room_size_square_meter",
         translation_key="room_size_square_meter",
-        icon="mdi:ruler-square",
         unit_of_measurement=AREA_SQUARE_METERS,
         entity_category=EntityCategory.CONFIG,
         options=["15", "30", "60", "100"],

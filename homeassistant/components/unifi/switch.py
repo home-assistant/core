@@ -64,9 +64,9 @@ CLIENT_UNBLOCKED = (EventKey.WIRED_CLIENT_UNBLOCKED, EventKey.WIRELESS_CLIENT_UN
 @callback
 def async_block_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
-    if obj_id in hub.option_supported_clients:
+    if obj_id in hub.config.option_supported_clients:
         return True
-    return obj_id in hub.option_block_clients
+    return obj_id in hub.config.option_block_clients
 
 
 @callback
@@ -95,7 +95,7 @@ def async_dpi_group_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
 @callback
 def async_port_forward_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     """Create device registry entry for port forward."""
-    unique_id = hub.config_entry.unique_id
+    unique_id = hub.config.entry.unique_id
     assert unique_id is not None
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
@@ -203,7 +203,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         key="DPI restriction",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:network",
-        allowed_fn=lambda hub, obj_id: hub.option_dpi_restrictions,
+        allowed_fn=lambda hub, obj_id: hub.config.option_dpi_restrictions,
         api_handler_fn=lambda api: api.dpi_groups,
         available_fn=lambda hub, obj_id: hub.available,
         control_fn=async_dpi_group_control_fn,

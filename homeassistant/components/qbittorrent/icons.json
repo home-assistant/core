@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "download_speed": {
+        "default": "mdi:cloud-download"
+      },
+      "upload_speed": {
+        "default": "mdi:cloud-upload"
+      }
+    }
+  }
+}

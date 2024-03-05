@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "button": {
+      "panic": {
+        "default": "mdi:alarm-light"
+      }
+    }
+  }
+}
