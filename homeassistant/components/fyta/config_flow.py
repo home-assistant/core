@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import ConfigFlowResult
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -33,7 +33,7 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> FlowResult:
         """Handle the initial step."""
 
         errors = {}
