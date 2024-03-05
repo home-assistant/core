@@ -66,7 +66,6 @@ WALL_CONNECTOR_SENSORS = [
             data[WALLCONNECTOR_DATA_VITALS].evse_state
         ),
         options=list(EVSE_STATE.values()),
-        icon="mdi:ev-station",
     ),
     WallConnectorSensorDescription(
         key="handle_temp_c",
