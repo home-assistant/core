@@ -1,4 +1,5 @@
 """Support for vacuum cleaner robots (botvacs)."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -21,7 +22,7 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     STATE_ON,
     STATE_PAUSED,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -176,6 +177,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         },
         "async_send_command",
         [VacuumEntityFeature.SEND_COMMAND],
+        SupportsResponse.OPTIONAL,
     )
 
     return True
@@ -354,7 +356,7 @@ class StateVacuumEntity(
         command: str,
         params: dict[str, Any] | list[Any] | None = None,
         **kwargs: Any,
-    ) -> None:
+    ) -> ServiceResponse | None:
         """Send a command to a vacuum cleaner."""
         raise NotImplementedError()
 
@@ -363,12 +365,12 @@ class StateVacuumEntity(
         command: str,
         params: dict[str, Any] | list[Any] | None = None,
         **kwargs: Any,
-    ) -> None:
+    ) -> ServiceResponse | None:
         """Send a command to a vacuum cleaner.
 
         This method must be run in the event loop.
         """
-        await self.hass.async_add_executor_job(
+        return await self.hass.async_add_executor_job(
             partial(self.send_command, command, params=params, **kwargs)
         )
 

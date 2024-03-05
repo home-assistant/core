@@ -1505,6 +1505,7 @@ omit =
     homeassistant/components/upnp/__init__.py
     homeassistant/components/upnp/device.py
     homeassistant/components/upnp/sensor.py
+    homeassistant/components/vacuum/__init__.py
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/v2c/__init__.py
     homeassistant/components/v2c/binary_sensor.py
