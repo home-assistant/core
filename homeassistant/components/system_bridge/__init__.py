@@ -234,12 +234,12 @@ async def async_setup_entry(
             ) from exception
 
     async def handle_get_processes_by_name(
-        call: ServiceCall,
+        service_call: ServiceCall,
     ) -> ServiceResponse:
         """Handle the get process by name service call."""
-        _LOGGER.debug("Get process by name: %s", call.data)
+        _LOGGER.debug("Get process by name: %s", service_call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
         processes: list[Process] = coordinator.data.processes
         # Find processes from list
@@ -247,7 +247,7 @@ async def async_setup_entry(
             asdict(process)
             for process in processes
             if process.name is not None
-            and call.data[CONF_NAME].lower() in process.name.lower()
+            and service_call.data[CONF_NAME].lower() in process.name.lower()
         ]
 
         return {
