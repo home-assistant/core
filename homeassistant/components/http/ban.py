@@ -302,11 +302,8 @@ class IpBanManager:
 
     async def async_remove_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Remove an IP address from the banned list."""
-        if remote_addr in self.ip_bans_lookup:
-            self.ip_bans_lookup.pop(remote_addr)
-            await self.hass.async_add_executor_job(
-                self._write_bans, self.ip_bans_lookup
-            )
-            return
+        if remote_addr not in self.ip_bans_lookup:
+            raise ValueError(f"IP address {remote_addr} is not banned")
 
-        raise ValueError(f"IP address {remote_addr} is not banned")
+        self.ip_bans_lookup.pop(remote_addr)
+        await self.hass.async_add_executor_job(self._write_bans, self.ip_bans_lookup)
