@@ -922,7 +922,9 @@ class Integration:
         self._component_future = self.hass.loop.create_future()
         try:
             try:
-                comp = await self.hass.async_add_import_executor_job(self.get_component)
+                comp = await self.hass.async_add_import_executor_job(
+                    ft.partial(self.get_component, preload_platforms=True)
+                )
             except ImportError as ex:
                 load_executor = False
                 _LOGGER.debug(
@@ -953,7 +955,7 @@ class Integration:
 
         return comp
 
-    def get_component(self) -> ComponentProtocol:
+    def get_component(self, preload_platforms: bool = False) -> ComponentProtocol:
         """Return the component.
 
         This method must be thread-safe as it's called from the executor
@@ -984,23 +986,24 @@ class Integration:
             )
             raise ImportError(f"Exception importing {self.pkg_path}") from err
 
-        if self.integration_type not in SKIP_PRELOAD_INTEGRATION_TYPES:
-            for platform_name in self.platforms_exists(self._preload_platforms):
-                # Setting up a component always checks if the config
-                # platform exists. Since we may be running in the executor
-                # we will use this opportunity to cache the config platform
-                # as well.
-                with suppress(ImportError):
-                    self.get_platform(platform_name)
+        if preload_platforms:
+            if self.integration_type not in SKIP_PRELOAD_INTEGRATION_TYPES:
+                for platform_name in self.platforms_exists(self._preload_platforms):
+                    # Setting up a component always checks if the config
+                    # platform exists. Since we may be running in the executor
+                    # we will use this opportunity to cache the config platform
+                    # as well.
+                    with suppress(ImportError):
+                        self.get_platform(platform_name)
 
-        if self.config_flow:
-            # If there is a config flow, we will cache it as well since
-            # config entry setup always has to load the flow to get the
-            # major/minor version for migrations. Since we may be running
-            # in the executor we will use this opportunity to cache the
-            # config_flow as well.
-            with suppress(ImportError):
-                self.get_platform("config_flow")
+            if self.config_flow:
+                # If there is a config flow, we will cache it as well since
+                # config entry setup always has to load the flow to get the
+                # major/minor version for migrations. Since we may be running
+                # in the executor we will use this opportunity to cache the
+                # config_flow as well.
+                with suppress(ImportError):
+                    self.get_platform("config_flow")
 
         return cache[domain]
 
