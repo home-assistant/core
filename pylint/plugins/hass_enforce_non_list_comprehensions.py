@@ -23,8 +23,19 @@ class HassEnforceNonListComprehensionsChecker(BaseChecker):
 
     def visit_call(self, node: nodes.Call) -> None:
         """Check if async_add_entities call is not using list comprehensions."""
+        root_name = node.root().name
+
+        # we only need to check components
+        if not root_name.startswith("homeassistant.components"):
+            return
+
         func_name = node.func.as_string()
         if func_name == "async_add_entities":
+            # we only want to check calls where
+            # update_before_add is not set
+            if len(node.args) > 1:
+                return
+
             for arg in node.args:
                 if isinstance(arg, nodes.ListComp):
                     self.add_message("hass-enforce-non-list-comprehensions", node=node)
