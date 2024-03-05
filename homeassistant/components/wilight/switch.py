@@ -56,10 +56,6 @@ VALID_TRIGGER_INDEX = vol.All(
 DESC_WATERING = "watering"
 DESC_PAUSE = "pause"
 
-# Icons of the valve switch entities
-ICON_WATERING = "mdi:water"
-ICON_PAUSE = "mdi:pause-circle-outline"
-
 
 def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> tuple[Any]:
     """Parse configuration and add WiLight switch entities."""
@@ -149,7 +145,6 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve switch."""
 
     _attr_translation_key = "watering"
-    _attr_icon = ICON_WATERING
 
     @property
     def is_on(self) -> bool:
@@ -266,7 +261,6 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve Pause switch."""
 
     _attr_translation_key = "pause"
-    _attr_icon = ICON_PAUSE
 
     @property
     def is_on(self) -> bool:

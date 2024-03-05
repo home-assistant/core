@@ -55,7 +55,6 @@ class WiLightFan(WiLightDevice, FanEntity):
     """Representation of a WiLights fan."""
 
     _attr_name = None
-    _attr_icon = "mdi:fan"
     _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
 
