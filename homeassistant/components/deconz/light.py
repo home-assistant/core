@@ -165,6 +165,7 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
     """Representation of a deCONZ light."""
 
     TYPE = DOMAIN
+    _attr_color_mode = ColorMode.UNKNOWN
 
     def __init__(self, device: _LightDeviceT, gateway: DeconzGateway) -> None:
         """Set up light."""
@@ -203,11 +204,6 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
             self._attr_effect_list = [EFFECT_COLORLOOP]
             if device.model_id in ("HG06467", "TS0601"):
                 self._attr_effect_list = XMAS_LIGHT_EFFECTS
-
-        # This is only used as a fallback in self.color_mode to always report a
-        # supported color mode as otherwise self._attr_color_mode could be None
-        if not self.is_on and self.color_mode not in self._attr_supported_color_modes:
-            self._attr_color_mode = ColorMode.UNKNOWN
 
     @property
     def color_mode(self) -> str | None:
