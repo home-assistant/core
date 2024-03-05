@@ -44,7 +44,6 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await fyta.login()
-                await fyta.client.close()
             except FytaConnectionError:
                 errors["base"] = "cannot_connect"
             except FytaAuthentificationError:
