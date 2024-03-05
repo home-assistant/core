@@ -41,7 +41,6 @@ async def async_setup_entry(
                 key=f"{build.project.id}_{build.definition.id}_latest_build",
                 translation_key="latest_build",
                 translation_placeholders={"definition_name": build.definition.name},
-                icon="mdi:pipe",
                 attrs=lambda build: {
                     "definition_id": build.definition.id,
                     "definition_name": build.definition.name,
