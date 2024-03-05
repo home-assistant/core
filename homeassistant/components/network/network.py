@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
+from homeassistant.util.async_ import create_eager_task
 
 from .const import (
     ATTR_CONFIGURED_ADAPTERS,
@@ -50,8 +51,9 @@ class Network:
 
     async def async_setup(self) -> None:
         """Set up the network config."""
-        await self.async_load()
+        storage_load_task = create_eager_task(self.async_load())
         self.adapters = await async_load_adapters()
+        await storage_load_task
 
     @callback
     def async_configure(self) -> None:
