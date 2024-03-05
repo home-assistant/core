@@ -15,13 +15,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN
 from .coordinator import OverseerrUpdateCoordinator
 
-SENSOR_TYPE_MOVIE_REQUESTS = "requested_movies"
-SENSOR_TYPE_TV_REQUESTS = "requested_tv"
-SENSOR_TYPE_PENDING_REQUESTS = "requested_pending"
-SENSOR_TYPE_APPROVED_REQUESTS = "requested_approved"
-SENSOR_TYPE_AVAILABLE_REQUESTS = "requested_available"
-SENSOR_TYPE_TOTAL_REQUESTS = "requested_total"
-
 
 @dataclass(frozen=True, kw_only=True)
 class OverseerrSensorEntityDescription(SensorEntityDescription):
@@ -32,37 +25,37 @@ class OverseerrSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES: tuple[OverseerrSensorEntityDescription, ...] = (
     OverseerrSensorEntityDescription(
-        key=SENSOR_TYPE_MOVIE_REQUESTS,
+        key="requested_movies",
         translation_key="requested_movies",
         icon="mdi:movie",
         value_fn=lambda coordinator: coordinator.data.request_count.movie,
     ),
     OverseerrSensorEntityDescription(
-        key=SENSOR_TYPE_TV_REQUESTS,
+        key="requested_tv",
         translation_key="requested_tv",
         icon="mdi:television-classic",
         value_fn=lambda coordinator: coordinator.data.request_count.tv,
     ),
     OverseerrSensorEntityDescription(
-        key=SENSOR_TYPE_PENDING_REQUESTS,
+        key="requested_pending",
         translation_key="requested_pending",
         icon="mdi:clock-alert-outline",
         value_fn=lambda coordinator: coordinator.data.request_count.pending,
     ),
     OverseerrSensorEntityDescription(
-        key=SENSOR_TYPE_APPROVED_REQUESTS,
+        key="requested_approved",
         translation_key="requested_approved",
         icon="mdi:check",
         value_fn=lambda coordinator: coordinator.data.request_count.approved,
     ),
     OverseerrSensorEntityDescription(
-        key=SENSOR_TYPE_AVAILABLE_REQUESTS,
+        key="requested_available",
         translation_key="requested_available",
         icon="mdi:download",
         value_fn=lambda coordinator: coordinator.data.request_count.available,
     ),
     OverseerrSensorEntityDescription(
-        key=SENSOR_TYPE_TOTAL_REQUESTS,
+        key="requested_total",
         translation_key="requested_total",
         icon="mdi:movie",
         value_fn=lambda coordinator: coordinator.data.request_count.total,
