@@ -6,9 +6,9 @@ from pyvlx import PyVLX, PyVLXException
 from pyvlx.discovery import VeluxDiscovery, VeluxHost
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 import homeassistant.helpers.config_validation as cv
@@ -29,7 +29,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for velux."""
 
     VERSION = 1
@@ -37,9 +37,7 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     hosts: list[VeluxHost | None] = []
 
-    async def async_step_import(
-        self, config: dict[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+    async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
         LOGGER.debug("Handle Velux configuration.yaml entry: %s", config)
 
@@ -95,7 +93,7 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
@@ -153,9 +151,7 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_unignore(
-        self, user_input: dict[str, Any]
-    ) -> config_entries.ConfigFlowResult:
+    async def async_step_unignore(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Rediscover a previously ignored discover."""
         unique_id = user_input["unique_id"]
         await self.async_set_unique_id(unique_id)
@@ -163,7 +159,7 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
-    ) -> config_entries.ConfigFlowResult:
+    ) -> ConfigFlowResult:
         """Handle discovery by zeroconf."""
         hostname = discovery_info.hostname.replace(".local.", "")
         await self.async_set_unique_id(hostname)
