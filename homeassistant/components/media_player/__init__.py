@@ -522,7 +522,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _access_token: str | None = None
 
     _attr_app_id: str | None = None
-    _name: str | None = None
+    _attr_app_name: str | None = None
     _attr_device_class: MediaPlayerDeviceClass | None
     _attr_group_members: list[str] | None = None
     _attr_is_volume_muted: bool | None = None
