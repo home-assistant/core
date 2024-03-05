@@ -23,7 +23,7 @@ from .const import DOMAIN
 from .model import DoorDevice
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class AccSensorEntityDescription(SensorEntityDescription):
     """Describes AladdinConnect sensor entity."""
 
