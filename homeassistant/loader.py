@@ -992,10 +992,6 @@ class Integration:
 
         if preload_platforms:
             for platform_name in self.platforms_exists(self._preload_platforms):
-                # Setting up a component always checks if the config
-                # platform exists. Since we may be running in the executor
-                # we will use this opportunity to cache the config platform
-                # as well.
                 with suppress(ImportError):
                     self.get_platform(platform_name)
 
