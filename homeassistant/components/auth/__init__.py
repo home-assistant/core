@@ -258,10 +258,10 @@ class TokenView(HomeAssistantView):
             return await RevokeTokenView.post(self, request)  # type: ignore[arg-type]
 
         if grant_type == "authorization_code":
-            return await self._async_handle_auth_code(hass, data, request.remote)
+            return await self._async_handle_auth_code(hass, data, request)
 
         if grant_type == "refresh_token":
-            return await self._async_handle_refresh_token(hass, data, request.remote)
+            return await self._async_handle_refresh_token(hass, data, request)
 
         return self.json(
             {"error": "unsupported_grant_type"}, status_code=HTTPStatus.BAD_REQUEST
@@ -271,7 +271,7 @@ class TokenView(HomeAssistantView):
         self,
         hass: HomeAssistant,
         data: MultiDictProxy[str],
-        remote_addr: str | None,
+        request: web.Request,
     ) -> web.Response:
         """Handle authorization code request."""
         client_id = data.get("client_id")
@@ -311,7 +311,7 @@ class TokenView(HomeAssistantView):
         )
         try:
             access_token = hass.auth.async_create_access_token(
-                refresh_token, remote_addr
+                refresh_token, request.remote
             )
         except InvalidAuthError as exc:
             return self.json(
@@ -319,6 +319,7 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.FORBIDDEN,
             )
 
+        await hass.auth.session.async_create_session(request, refresh_token)
         return self.json(
             {
                 "access_token": access_token,
@@ -339,9 +340,9 @@ class TokenView(HomeAssistantView):
         self,
         hass: HomeAssistant,
         data: MultiDictProxy[str],
-        remote_addr: str | None,
+        request: web.Request,
     ) -> web.Response:
-        """Handle authorization code request."""
+        """Handle refresh token request."""
         client_id = data.get("client_id")
         if client_id is not None and not indieauth.verify_client_id(client_id):
             return self.json(
@@ -379,7 +380,7 @@ class TokenView(HomeAssistantView):
 
         try:
             access_token = hass.auth.async_create_access_token(
-                refresh_token, remote_addr
+                refresh_token, request.remote
             )
         except InvalidAuthError as exc:
             return self.json(
@@ -387,6 +388,7 @@ class TokenView(HomeAssistantView):
                 status_code=HTTPStatus.FORBIDDEN,
             )
 
+        await hass.auth.session.async_create_session(request, refresh_token)
         return self.json(
             {
                 "access_token": access_token,
