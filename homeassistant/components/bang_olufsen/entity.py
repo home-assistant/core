@@ -53,15 +53,13 @@ class BangOlufsenEntity(Entity, BangOlufsenBase):
     """Base Entity for BangOlufsen entities."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, entry: ConfigEntry, client: MozartClient) -> None:
         """Initialize the object."""
         super().__init__(entry, client)
 
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, self._unique_id)})
-        self._attr_device_class = None
-        self._attr_entity_category = None
-        self._attr_should_poll = False
 
     async def _update_connection_state(self, connection_state: bool) -> None:
         """Update entity connection state."""
