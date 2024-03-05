@@ -170,8 +170,12 @@ async def _async_get_component_strings(
         translations_by_language[language] = loaded_translations
 
         for loaded in components:
-            domain = loaded.partition(".")[0]
+            domain, _, platform = loaded.partition(".")
             if not (integration := integrations.get(domain)):
+                continue
+
+            if platform and integration.is_built_in:
+                loaded_translations[loaded] = {}
                 continue
 
             path = component_translation_path(loaded, language, integration)
