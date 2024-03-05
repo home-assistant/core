@@ -636,7 +636,7 @@ class Integration:
                 f"{root_module.__name__}.{domain}",
                 file_path,
                 manifest,
-                set() if is_virtual else set(os.listdir(file_path)),
+                None if is_virtual else set(os.listdir(file_path)),
             )
 
             if integration.is_built_in:
