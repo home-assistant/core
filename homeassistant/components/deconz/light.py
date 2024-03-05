@@ -204,11 +204,10 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
             if device.model_id in ("HG06467", "TS0601"):
                 self._attr_effect_list = XMAS_LIGHT_EFFECTS
 
-        # Make a best guess effort to provide a reasonable color mode as a start,
-        # this is only used as a fallback in self.color_mode to always report a
+        # This is only used as a fallback in self.color_mode to always report a
         # supported color mode as otherwise self._attr_color_mode could be None
         if not self.is_on and self.color_mode not in self._attr_supported_color_modes:
-            self._attr_color_mode = next(iter(self._attr_supported_color_modes))
+            self._attr_color_mode = ColorMode.UNKNOWN
 
     @property
     def color_mode(self) -> str | None:

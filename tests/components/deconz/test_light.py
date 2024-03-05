@@ -1523,4 +1523,4 @@ async def test_verify_group_color_mode_fallback(
     )
     group_state = hass.states.get("light.opbergruimte")
     assert group_state.state == STATE_ON
-    assert group_state.attributes[ATTR_COLOR_MODE] is ColorMode.BRIGHTNESS
+    assert group_state.attributes[ATTR_COLOR_MODE] is ColorMode.UNKNOWN
