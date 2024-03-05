@@ -30,18 +30,11 @@ from .coordinator import EasyEnergyData, EasyEnergyDataUpdateCoordinator
 
 
 @dataclass(frozen=True)
-class EasyEnergySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+class EasyEnergySensorEntityDescription(SensorEntityDescription):
+    """Describes easyEnergy sensor entity."""
 
     value_fn: Callable[[EasyEnergyData], float | datetime | None]
     service_type: str
-
-
-@dataclass(frozen=True)
-class EasyEnergySensorEntityDescription(
-    SensorEntityDescription, EasyEnergySensorEntityDescriptionMixin
-):
-    """Describes easyEnergy sensor entity."""
 
 
 SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
