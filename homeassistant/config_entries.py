@@ -490,7 +490,7 @@ class ConfigEntry:
                 hass, self.domain
             )
         try:
-            component = integration.get_component()
+            component = await integration.async_get_component()
         except ImportError as err:
             _LOGGER.error(
                 "Error importing integration %s to set up %s configuration entry: %s",
@@ -677,7 +677,7 @@ class ConfigEntry:
                 self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
                 return True
 
-        component = integration.get_component()
+        component = await integration.async_get_component()
 
         if integration.domain == self.domain:
             if not self.state.recoverable:
@@ -734,7 +734,7 @@ class ConfigEntry:
                 # entry.
                 return
 
-        component = integration.get_component()
+        component = await integration.async_get_component()
         if not hasattr(component, "async_remove_entry"):
             return
         try:
@@ -783,7 +783,7 @@ class ConfigEntry:
 
         if not (integration := self._integration_for_domain):
             integration = await loader.async_get_integration(hass, self.domain)
-        component = integration.get_component()
+        component = await integration.async_get_component()
         supports_migrate = hasattr(component, "async_migrate_entry")
         if not supports_migrate:
             if same_major_version:
@@ -2497,14 +2497,14 @@ def _handle_entry_updated_filter(event: Event) -> bool:
 async def support_entry_unload(hass: HomeAssistant, domain: str) -> bool:
     """Test if a domain supports entry unloading."""
     integration = await loader.async_get_integration(hass, domain)
-    component = integration.get_component()
+    component = await integration.async_get_component()
     return hasattr(component, "async_unload_entry")
 
 
 async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     """Test if a domain supports being removed from a device."""
     integration = await loader.async_get_integration(hass, domain)
-    component = integration.get_component()
+    component = await integration.async_get_component()
     return hasattr(component, "async_remove_config_entry_device")
 
 

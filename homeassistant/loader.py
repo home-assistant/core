@@ -901,6 +901,10 @@ class Integration:
         and will check if import_executor is set and load it in the executor,
         otherwise it will load it in the event loop.
         """
+        domain = self.domain
+        if domain in (cache := self._cache):
+            return cache[domain]
+
         if self._component_future:
             return await self._component_future
 
@@ -914,7 +918,7 @@ class Integration:
             or (self.config_flow and f"{self.pkg_path}.config_flow" not in sys.modules)
         )
         if not load_executor:
-            comp = self.get_component()
+            comp = self._get_component()
             if debug:
                 _LOGGER.debug(
                     "Component %s import took %.3f seconds (loaded_executor=False)",
@@ -927,7 +931,7 @@ class Integration:
         try:
             try:
                 comp = await self.hass.async_add_import_executor_job(
-                    self.get_component, True
+                    self._get_component, True
                 )
             except ImportError as ex:
                 load_executor = False
@@ -936,7 +940,7 @@ class Integration:
                 )
                 # If importing in the executor deadlocks because there is a circular
                 # dependency, we fall back to the event loop.
-                comp = self.get_component()
+                comp = self._get_component()
             self._component_future.set_result(comp)
         except BaseException as ex:
             self._component_future.set_exception(ex)
@@ -959,22 +963,29 @@ class Integration:
 
         return comp
 
-    def get_component(self, preload_platforms: bool = False) -> ComponentProtocol:
+    def get_component(self) -> ComponentProtocol:
         """Return the component.
 
         This method must be thread-safe as it's called from the executor
         and the event loop.
 
+        This method checks the cache and if the component is not loaded
+        it will load it in the executor if import_executor is set, otherwise
+        it will load it in the event loop.
+
         This is mostly a thin wrapper around importlib.import_module
         with a dict cache which is thread-safe since importlib has
         appropriate locks.
         """
+        domain = self.domain
+        if domain in (cache := self._cache):
+            return cache[domain]
+        return self._get_component()
+
+    def _get_component(self, preload_platforms: bool = False) -> ComponentProtocol:
+        """Return the component."""
         cache = self._cache
         domain = self.domain
-
-        if domain in cache:
-            return cache[domain]
-
         try:
             cache[domain] = cast(
                 ComponentProtocol, importlib.import_module(self.pkg_path)
