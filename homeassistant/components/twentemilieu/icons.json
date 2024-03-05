@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "calendar": {
+      "calendar": {
+        "default": "mdi:delete-empty"
+      }
+    },
+    "sensor": {
+      "christmas_tree_pickup": {
+        "default": "mdi:pine-tree"
+      },
+      "non_recyclable_waste_pickup": {
+        "default": "mdi:delete-empty"
+      },
+      "organic_waste_pickup": {
+        "default": "mdi:delete-empty"
+      },
+      "paper_waste_pickup": {
+        "default": "mdi:delete-empty"
+      },
+      "packages_waste_pickup": {
+        "default": "mdi:delete-empty"
+      }
+    }
+  }
+}

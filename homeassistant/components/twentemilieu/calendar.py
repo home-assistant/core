@@ -31,8 +31,8 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
     """Defines a Twente Milieu calendar."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:delete-empty"
     _attr_name = None
+    _attr_translation_key = "calendar"
 
     def __init__(
         self,
