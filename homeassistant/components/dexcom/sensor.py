@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import COORDINATOR, DOMAIN, GLUCOSE_TREND_ICON, MG_DL
+from .const import COORDINATOR, DOMAIN, MG_DL
 
 trends = {
     1: "rising_quickly",
@@ -99,13 +99,6 @@ class DexcomGlucoseTrendSensor(DexcomSensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, username, entry_id, "trend")
-
-    @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        if self.coordinator.data:
-            return GLUCOSE_TREND_ICON[self.coordinator.data.trend]
-        return GLUCOSE_TREND_ICON[0]
 
     @property
     def native_value(self) -> str | None:
