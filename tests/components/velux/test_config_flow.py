@@ -56,7 +56,6 @@ async def test_user_success(hass: HomeAssistant) -> None:
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=None
         )
-        await hass.async_block_till_done()
         assert result["type"] == FlowResultType.FORM
 
         result2: dict[str, Any] = await hass.config_entries.flow.async_configure(
