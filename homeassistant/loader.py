@@ -927,7 +927,7 @@ class Integration:
         try:
             try:
                 comp = await self.hass.async_add_import_executor_job(
-                    ft.partial(self.get_component, preload_platforms=True)
+                    self.get_component, True
                 )
             except ImportError as ex:
                 load_executor = False
