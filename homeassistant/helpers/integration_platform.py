@@ -60,14 +60,19 @@ def _async_integration_platform_component_loaded(
     if not to_process:
         return
 
+    integration_platforms_by_name = {
+        integration_platform.platform_name: integration_platform
+        for integration_platform in to_process
+    }
+    platforms_that_exist = integration.platforms_exists(integration_platforms_by_name)
+    if not platforms_that_exist:
+        return
+
     # If everything is already loaded, we can avoid creating a task.
     can_use_cache = True
-    integration_platforms_to_load: dict[str, IntegrationPlatform] = {}
     platforms: dict[str, ModuleType] = {}
-    for integration_platform in to_process:
-        platform_name = integration_platform.platform_name
+    for platform_name in platforms_that_exist:
         if platform := integration.get_platform_cached(platform_name):
-            integration_platforms_to_load[platform_name] = integration_platform
             platforms[platform_name] = platform
         else:
             can_use_cache = False
@@ -75,7 +80,10 @@ def _async_integration_platform_component_loaded(
 
     if can_use_cache:
         _process_integration_platforms(
-            hass, integration, integration_platforms_to_load, platforms
+            hass,
+            integration,
+            platforms,
+            integration_platforms_by_name,
         )
         return
 
@@ -83,7 +91,7 @@ def _async_integration_platform_component_loaded(
     # so we have to fall back to creating a task.
     hass.async_create_task(
         _async_process_integration_platforms_for_component(
-            hass, integration, to_process
+            hass, integration, platforms_that_exist, integration_platforms_by_name
         ),
         eager_start=True,
     )
@@ -92,26 +100,10 @@ def _async_integration_platform_component_loaded(
 async def _async_process_integration_platforms_for_component(
     hass: HomeAssistant,
     integration: Integration,
-    integration_platforms: list[IntegrationPlatform],
+    platforms_that_exist: list[str],
+    integration_platforms_by_name: dict[str, IntegrationPlatform],
 ) -> None:
     """Process integration platforms for a component."""
-    # Create an executor job to filter out platforms that we don't know
-    # if they are missing or not.
-    #
-    # We use the normal executor and not the import executor as we
-    # we are not importing anything and only going to stat()
-    # files.
-    integration_platforms_by_name = {
-        integration_platform.platform_name: integration_platform
-        for integration_platform in integration_platforms
-    }
-    platforms_that_exist = await hass.async_add_executor_job(
-        integration.platforms_exists, integration_platforms_by_name
-    )
-
-    if not platforms_that_exist:
-        return
-
     # Now we know which platforms to load, let's load them.
     try:
         platforms = await integration.async_get_platforms(platforms_that_exist)
@@ -123,7 +115,10 @@ async def _async_process_integration_platforms_for_component(
         return
 
     if futures := _process_integration_platforms(
-        hass, integration, integration_platforms_by_name, platforms
+        hass,
+        integration,
+        platforms,
+        integration_platforms_by_name,
     ):
         await asyncio.gather(*futures)
 
@@ -132,14 +127,17 @@ async def _async_process_integration_platforms_for_component(
 def _process_integration_platforms(
     hass: HomeAssistant,
     integration: Integration,
-    integration_platforms_to_load: dict[str, IntegrationPlatform],
     platforms: dict[str, ModuleType],
+    integration_platforms_by_name: dict[str, IntegrationPlatform],
 ) -> list[asyncio.Future[Awaitable[None] | None]]:
-    """Process integration platforms for a component."""
+    """Process integration platforms for a component.
+
+    Only the platforms that are passed in will be processed.
+    """
     return [
         future
         for platform_name, platform in platforms.items()
-        if (integration_platform := integration_platforms_to_load[platform_name])
+        if (integration_platform := integration_platforms_by_name[platform_name])
         and (
             future := hass.async_run_hass_job(
                 integration_platform.process_job,
@@ -154,21 +152,6 @@ def _process_integration_platforms(
 def _format_err(name: str, platform_name: str, *args: Any) -> str:
     """Format error message."""
     return f"Exception in {name} when processing platform '{platform_name}': {args}"
-
-
-def _get_integrations_with_platform(
-    platform_name: str,
-    integrations: list[Integration],
-) -> list[Integration]:
-    """Filter out integrations that have a platform.
-
-    This function is executed in an executor.
-    """
-    return [
-        integration
-        for integration in integrations
-        if integration.platforms_exists((platform_name,))
-    ]
 
 
 @bind_hass
@@ -230,46 +213,26 @@ async def async_process_integration_platforms(
     if not loaded_integrations:
         return
 
-    # If the platform is known to be missing exclude it right
-    # away from the list of integrations to process.
-    integrations_not_missing_platform = [
-        integration
-        for integration in loaded_integrations
-        if not integration.platform_missing(platform_name)
-    ]
-    if not integrations_not_missing_platform:
-        return
-
-    # Now we create an executor job to filter out integrations that we
-    # don't know if they have the platform or not already.
-    #
-    # We use the normal executor and not the import executor as we
-    # we are not importing anything and only going to stat()
-    # files.
-    integrations_with_platforms = await hass.async_add_executor_job(
-        _get_integrations_with_platform,
-        platform_name,
-        integrations_not_missing_platform,
-    )
-    futures: list[asyncio.Future[None]] = []
-
     # Finally, fetch the platforms for each integration and process them.
     # This uses the import executor in a loop. If there are a lot
     # of integration with the integration platform to process,
     # this could be a bottleneck.
-    for integration_with_platform in integrations_with_platforms:
+    futures: list[asyncio.Future[None]] = []
+    for integration in loaded_integrations:
+        if not integration.platforms_exists((platform_name,)):
+            continue
         try:
-            platform = await integration_with_platform.async_get_platform(platform_name)
+            platform = await integration.async_get_platform(platform_name)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
                 "Unexpected error importing %s for %s",
                 platform_name,
-                integration_with_platform.domain,
+                integration.domain,
             )
             continue
 
         if future := hass.async_run_hass_job(
-            process_job, hass, integration_with_platform.domain, platform
+            process_job, hass, integration.domain, platform
         ):
             futures.append(future)
 
