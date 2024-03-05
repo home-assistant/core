@@ -15,6 +15,7 @@ from homeassistant.loader import (
     Integration,
     async_get_integrations,
     async_get_loaded_integration,
+    async_register_preload_platform,
     bind_hass,
 )
 from homeassistant.setup import ATTR_COMPONENT, EventComponentLoaded
@@ -36,68 +37,113 @@ class IntegrationPlatform:
 
 
 @callback
-def _get_platform(
-    integration: Integration | Exception, component_name: str, platform_name: str
-) -> ModuleType | None:
-    """Get a platform from an integration."""
-    if isinstance(integration, Exception):
-        _LOGGER.exception(
-            "Error importing integration %s for %s",
-            component_name,
-            platform_name,
-        )
-        return None
-
-    #
-    # Loading the platform may do quite a bit of blocking I/O
-    # and CPU work. (https://github.com/python/cpython/issues/92041)
-    #
-    # We don't want to block the event loop for too
-    # long so we check if the platform exists with `platform_exists`
-    # before trying to load it. `platform_exists` will do two
-    # `stat()` system calls which is far cheaper than calling
-    # `integration.get_platform`
-    #
-    if integration.platform_exists(platform_name) is False:
-        # If the platform cannot possibly exist, don't bother trying to load it
-        return None
-
-    try:
-        return integration.get_platform(platform_name)
-    except ImportError as err:
-        if f"{component_name}.{platform_name}" not in str(err):
-            _LOGGER.exception(
-                "Unexpected error importing %s/%s.py",
-                component_name,
-                platform_name,
-            )
-
-    return None
-
-
-@callback
-def _async_process_integration_platforms_for_component(
+def _async_integration_platform_component_loaded(
     hass: HomeAssistant,
     integration_platforms: list[IntegrationPlatform],
     event: EventType[EventComponentLoaded],
 ) -> None:
     """Process integration platforms for a component."""
-    component_name = event.data[ATTR_COMPONENT]
-    if "." in component_name:
+    if "." in (component_name := event.data[ATTR_COMPONENT]):
         return
 
     integration = async_get_loaded_integration(hass, component_name)
+    # First filter out platforms that the integration already processed.
+    integration_platforms_by_name: dict[str, IntegrationPlatform] = {}
     for integration_platform in integration_platforms:
-        if component_name in integration_platform.seen_components or not (
-            platform := _get_platform(
-                integration, component_name, integration_platform.platform_name
-            )
-        ):
+        if component_name in integration_platform.seen_components:
             continue
         integration_platform.seen_components.add(component_name)
-        hass.async_run_hass_job(
-            integration_platform.process_job, hass, component_name, platform
+        integration_platforms_by_name[
+            integration_platform.platform_name
+        ] = integration_platform
+
+    if not integration_platforms_by_name:
+        return
+
+    # Next, check which platforms exist for this integration.
+    platforms_that_exist = integration.platforms_exists(integration_platforms_by_name)
+    if not platforms_that_exist:
+        return
+
+    # If everything is already loaded, we can avoid creating a task.
+    can_use_cache = True
+    platforms: dict[str, ModuleType] = {}
+    for platform_name in platforms_that_exist:
+        if platform := integration.get_platform_cached(platform_name):
+            platforms[platform_name] = platform
+        else:
+            can_use_cache = False
+            break
+
+    if can_use_cache:
+        _process_integration_platforms(
+            hass,
+            integration,
+            platforms,
+            integration_platforms_by_name,
         )
+        return
+
+    # At least one of the platforms is not loaded, we need to load them
+    # so we have to fall back to creating a task.
+    hass.async_create_task(
+        _async_process_integration_platforms_for_component(
+            hass, integration, platforms_that_exist, integration_platforms_by_name
+        ),
+        eager_start=True,
+    )
+
+
+async def _async_process_integration_platforms_for_component(
+    hass: HomeAssistant,
+    integration: Integration,
+    platforms_that_exist: list[str],
+    integration_platforms_by_name: dict[str, IntegrationPlatform],
+) -> None:
+    """Process integration platforms for a component."""
+    # Now we know which platforms to load, let's load them.
+    try:
+        platforms = await integration.async_get_platforms(platforms_that_exist)
+    except ImportError:
+        _LOGGER.debug(
+            "Unexpected error importing integration platforms for %s",
+            integration.domain,
+        )
+        return
+
+    if futures := _process_integration_platforms(
+        hass,
+        integration,
+        platforms,
+        integration_platforms_by_name,
+    ):
+        await asyncio.gather(*futures)
+
+
+@callback
+def _process_integration_platforms(
+    hass: HomeAssistant,
+    integration: Integration,
+    platforms: dict[str, ModuleType],
+    integration_platforms_by_name: dict[str, IntegrationPlatform],
+) -> list[asyncio.Future[Awaitable[None] | None]]:
+    """Process integration platforms for a component.
+
+    Only the platforms that are passed in will be processed.
+    """
+    return [
+        future
+        for platform_name, platform in platforms.items()
+        if (integration_platform := integration_platforms_by_name[platform_name])
+        and (
+            future := hass.async_run_hass_job(
+                integration_platform.process_job,
+                hass,
+                integration.domain,
+                platform,
+            )
+        )
+    ]
 
 
 def _format_err(name: str, platform_name: str, *args: Any) -> str:
@@ -119,14 +165,16 @@ async def async_process_integration_platforms(
         hass.bus.async_listen(
             EVENT_COMPONENT_LOADED,
             partial(
-                _async_process_integration_platforms_for_component,
+                _async_integration_platform_component_loaded,
                 hass,
                 integration_platforms,
             ),
+            run_immediately=True,
         )
     else:
         integration_platforms = hass.data[DATA_INTEGRATION_PLATFORMS]
 
+    async_register_preload_platform(hass, platform_name)
     top_level_components = {comp for comp in hass.config.components if "." not in comp}
     process_job = HassJob(
         catch_log_exception(
@@ -138,16 +186,42 @@ async def async_process_integration_platforms(
     integration_platform = IntegrationPlatform(
         platform_name, process_job, top_level_components
     )
+    # Tell the loader that it should try to pre-load the integration
+    # for any future components that are loaded so we can reduce the
+    # amount of import executor usage.
+    async_register_preload_platform(hass, platform_name)
     integration_platforms.append(integration_platform)
-
     if not top_level_components:
         return
 
     integrations = await async_get_integrations(hass, top_level_components)
-    if futures := [
-        future
-        for comp in top_level_components
-        if (platform := _get_platform(integrations[comp], comp, platform_name))
-        and (future := hass.async_run_hass_job(process_job, hass, comp, platform))
-    ]:
+    loaded_integrations: list[Integration] = [
+        integration
+        for integration in integrations.values()
+        if not isinstance(integration, Exception)
+    ]
+    # Finally, fetch the platforms for each integration and process them.
+    # This uses the import executor in a loop. If there are a lot
+    # of integration with the integration platform to process,
+    # this could be a bottleneck.
+    futures: list[asyncio.Future[None]] = []
+    for integration in loaded_integrations:
+        if not integration.platforms_exists((platform_name,)):
+            continue
+        try:
+            platform = await integration.async_get_platform(platform_name)
+        except ImportError:
+            _LOGGER.debug(
+                "Unexpected error importing %s for %s",
+                platform_name,
+                integration.domain,
+            )
+            continue
+
+        if future := hass.async_run_hass_job(
+            process_job, hass, integration.domain, platform
+        ):
+            futures.append(future)
+
+    if futures:
         await asyncio.gather(*futures)
