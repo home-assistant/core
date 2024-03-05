@@ -14,7 +14,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import RomyVacuumCoordinator
 
 
@@ -50,6 +50,18 @@ async def async_setup_entry(
         romy_status_sensor_entitiy_rssi,
     ]
     async_add_entities(romy_status_sensor_entities, True)
+
+    adc_sensor_entities = []
+    romy_adc_sensor_entitiy_dustbin_full = RomyAdcSensor(
+        coordinator, coordinator.romy, "Dustbin Full Level", "dustbin_sensor"
+    )
+
+    # add dustbin sensor if present
+    if "dustbin_sensor" in coordinator.romy.adc_sensors:
+        LOGGER.info("Dustbin Sensor found for ROMY %s", coordinator.romy.unique_id)
+        adc_sensor_entities.append(romy_adc_sensor_entitiy_dustbin_full)
+
+    async_add_entities(adc_sensor_entities, True)
 
 
 class RomyStatusSensor(CoordinatorEntity[RomyVacuumCoordinator], SensorEntity):
@@ -107,4 +119,48 @@ class RomyStatusSensor(CoordinatorEntity[RomyVacuumCoordinator], SensorEntity):
     @property
     def native_value(self) -> int | None:
         """Return the value of the sensor."""
+        return self._sensor_value
+
+
+class RomyAdcSensor(CoordinatorEntity[RomyVacuumCoordinator], SensorEntity):
+    """RomyAdcSensor Class."""
+
+    def __init__(
+        self,
+        coordinator: RomyVacuumCoordinator,
+        romy: RomyRobot,
+        sensor_name: str,
+        sensor_descriptor: str,
+    ) -> None:
+        """Initialize ROMYs DustbinFullSensor."""
+        self._sensor_value: int | None = None
+        super().__init__(coordinator)
+        self.romy = romy
+        self._attr_unique_id = self.romy.unique_id
+        self._device_info = DeviceInfo(
+            identifiers={(DOMAIN, romy.unique_id)},
+            manufacturer="ROMY",
+            name=romy.name,
+            model=romy.model,
+        )
+        self._sensor_name = sensor_name
+        self._sensor_descriptor = sensor_descriptor
+
+    @property
+    def unique_id(self) -> str:
+        """Return the ID of this sensor."""
+        return f"{self._sensor_descriptor}_{self._attr_unique_id}"
+
+    @property
+    def entity_category(self) -> EntityCategory:
+        """Device entity category."""
+        return EntityCategory.DIAGNOSTIC
+
+    async def async_update(self) -> None:
+        """Fetch adc value from the device."""
+        self._sensor_value = self.romy.adc_sensors[self._sensor_descriptor]
+
+    @property
+    def native_value(self) -> int | None:
+        """Return the adc value of the sensor."""
         return self._sensor_value
