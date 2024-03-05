@@ -19,6 +19,7 @@ from homeassistant.components.assist_pipeline.pipeline import STORAGE_KEY
 from homeassistant.components.cloud.const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
 from homeassistant.components.google_assistant.helpers import GoogleEntity
 from homeassistant.components.homeassistant import exposed_entities
+from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -916,6 +917,33 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.google_secure_devices_pin == "1234"
     assert cloud.client.prefs.remote_allow_remote_enable is False
     assert cloud.client.prefs.tts_default_voice == ("en-GB", "RyanNeural")
+
+
+@pytest.mark.parametrize(
+    ("language", "voice"), [("en-GB", "bad_voice"), ("bad_language", "RyanNeural")]
+)
+async def test_websocket_update_preferences_bad_voice(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+    language: str,
+    voice: str,
+) -> None:
+    """Test updating preference."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "cloud/update_prefs",
+            "tts_default_voice": [language, voice],
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == ERR_INVALID_FORMAT
+    assert cloud.client.prefs.tts_default_voice == ("en-US", "JennyNeural")
 
 
 async def test_websocket_update_preferences_alexa_report_state(
