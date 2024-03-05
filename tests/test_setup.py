@@ -617,7 +617,7 @@ async def test_async_when_setup_or_start_already_loaded(hass: HomeAssistant) -> 
 async def test_setup_import_blows_up(hass: HomeAssistant) -> None:
     """Test that we handle it correctly when importing integration blows up."""
     with patch(
-        "homeassistant.loader.Integration.get_component", side_effect=ImportError
+        "homeassistant.loader.Integration.async_get_component", side_effect=ImportError
     ):
         assert not await setup.async_setup_component(hass, "sun", {})
 
@@ -843,7 +843,7 @@ async def test_async_prepare_setup_platform(
     caplog.clear()
     # There is no actual config platform for this integration
     assert await setup.async_prepare_setup_platform(hass, {}, "config", "test") is None
-    assert "test.config not found" in caplog.text
+    assert "No module named 'custom_components.test.config'" in caplog.text
 
     button_platform = (
         await setup.async_prepare_setup_platform(hass, {}, "button", "test") is None
