@@ -15,6 +15,7 @@ from homeassistant.loader import (
     Integration,
     async_get_integrations,
     async_get_loaded_integration,
+    async_register_preload_platform,
     bind_hass,
 )
 from homeassistant.setup import ATTR_COMPONENT, EventComponentLoaded
@@ -58,7 +59,7 @@ def _get_platform(
     # `stat()` system calls which is far cheaper than calling
     # `integration.get_platform`
     #
-    if integration.platform_exists(platform_name) is False:
+    if not integration.platforms_exists((platform_name,)):
         # If the platform cannot possibly exist, don't bother trying to load it
         return None
 
@@ -127,6 +128,7 @@ async def async_process_integration_platforms(
     else:
         integration_platforms = hass.data[DATA_INTEGRATION_PLATFORMS]
 
+    async_register_preload_platform(hass, platform_name)
     top_level_components = {comp for comp in hass.config.components if "." not in comp}
     process_job = HassJob(
         catch_log_exception(
