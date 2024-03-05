@@ -884,7 +884,7 @@ async def test_switches(
     aioclient_mock.clear_requests()
     aioclient_mock.put(
         f"https://{config_entry.data[CONF_HOST]}:1234"
-        f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/dpiapp/{DPI_APPS[0]["_id"]}",
+        f"/api/s/{config_entry.data[CONF_SITE_ID]}/rest/dpiapp/{DPI_APPS[0]['_id']}",
     )
 
     await hass.services.async_call(
