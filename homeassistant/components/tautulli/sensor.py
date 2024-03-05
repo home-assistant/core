@@ -185,7 +185,6 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
         value_fn=lambda session: cast(str, session.stream_video_resolution),
     ),
     TautulliSessionSensorEntityDescription(
-        icon="mdi:plex",
         key="transcode_decision",
         translation_key="transcode_decision",
         entity_category=EntityCategory.DIAGNOSTIC,
