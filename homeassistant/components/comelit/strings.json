@@ -46,7 +46,18 @@
           "rest": "Rest",
           "sabotated": "Sabotated"
         }
+      },
+      "humidifier": {
+        "name": "Humidifier"
+      },
+      "dehumidifier": {
+        "name": "Dehumidifier"
       }
+    }
+  },
+  "exceptions": {
+    "humidity_while_off": {
+      "message": "Cannot change humidity while off"
     }
   }
 }

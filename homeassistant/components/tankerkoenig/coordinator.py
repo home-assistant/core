@@ -12,6 +12,7 @@ from aiotankerkoenig import (
     TankerkoenigConnectionError,
     TankerkoenigError,
     TankerkoenigInvalidKeyError,
+    TankerkoenigRateLimitError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -19,7 +20,7 @@ from homeassistant.const import CONF_API_KEY, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_FUEL_TYPES, CONF_STATIONS
 
@@ -61,8 +62,11 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
                 station = await self._tankerkoenig.station_details(station_id)
             except TankerkoenigInvalidKeyError as err:
                 raise ConfigEntryAuthFailed(err) from err
-            except (TankerkoenigError, TankerkoenigConnectionError) as err:
+            except TankerkoenigConnectionError as err:
                 raise ConfigEntryNotReady(err) from err
+            except TankerkoenigError as err:
+                _LOGGER.error("Error when adding station %s %s", station_id, err)
+                continue
 
             self.stations[station_id] = station
 
@@ -78,13 +82,22 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator):
         station_ids = list(self.stations)
 
         prices = {}
-
         # The API seems to only return at most 10 results, so split the list in chunks of 10
         # and merge it together.
         for index in range(ceil(len(station_ids) / 10)):
-            data = await self._tankerkoenig.prices(
-                station_ids[index * 10 : (index + 1) * 10]
-            )
+            try:
+                data = await self._tankerkoenig.prices(
+                    station_ids[index * 10 : (index + 1) * 10]
+                )
+            except TankerkoenigInvalidKeyError as err:
+                raise ConfigEntryAuthFailed(err) from err
+            except (TankerkoenigError, TankerkoenigConnectionError) as err:
+                if isinstance(err, TankerkoenigRateLimitError):
+                    _LOGGER.warning(
+                        "API rate limit reached, consider to increase polling interval"
+                    )
+                raise UpdateFailed(err) from err
+
             prices.update(data)
 
         return prices

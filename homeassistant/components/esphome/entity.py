@@ -65,10 +65,8 @@ def async_static_info_updated(
         device_info = entry_data.device_info
         if TYPE_CHECKING:
             assert device_info is not None
-        hass.async_create_task(
-            entry_data.async_remove_entities(
-                hass, current_infos.values(), device_info.mac_address
-            )
+        entry_data.async_remove_entities(
+            hass, current_infos.values(), device_info.mac_address
         )
 
     # Then update the actual info
@@ -210,12 +208,6 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         key = self._key
         static_info = self._static_info
 
-        self.async_on_remove(
-            entry_data.async_register_key_static_info_remove_callback(
-                static_info,
-                functools.partial(self.async_remove, force_remove=True),
-            )
-        )
         self.async_on_remove(
             async_dispatcher_connect(
                 hass,

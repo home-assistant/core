@@ -6,8 +6,8 @@ from typing import Any
 from aioautomower.utils import async_structure_token
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, NAME
@@ -26,7 +26,7 @@ class HusqvarnaConfigFlowHandler(
     DOMAIN = DOMAIN
     reauth_entry: ConfigEntry | None = None
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow."""
         token = data[CONF_TOKEN]
         user_id = token[CONF_USER_ID]
@@ -49,7 +49,7 @@ class HusqvarnaConfigFlowHandler(
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

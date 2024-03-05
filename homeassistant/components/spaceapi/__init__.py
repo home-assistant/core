@@ -36,7 +36,7 @@ ATTR_RADIO_SHOW = "radio_show"
 ATTR_LAT = "lat"
 ATTR_LON = "lon"
 ATTR_API = "api"
-ATTR_CLOSE = "close"
+ATTR_CLOSED = "closed"
 ATTR_CONTACT = "contact"
 ATTR_ISSUE_REPORT_CHANNELS = "issue_report_channels"
 ATTR_LASTCHANGE = "lastchange"
@@ -292,7 +292,7 @@ class APISpaceApiView(HomeAssistantView):
         with suppress(KeyError):
             state[ATTR_ICON] = {
                 ATTR_OPEN: spaceapi["state"][CONF_ICON_OPEN],
-                ATTR_CLOSE: spaceapi["state"][CONF_ICON_CLOSED],
+                ATTR_CLOSED: spaceapi["state"][CONF_ICON_CLOSED],
             }
 
         data = {

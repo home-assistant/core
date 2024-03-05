@@ -40,12 +40,11 @@ BUTTON_TYPES: dict[str, DevoloButtonEntityDescription] = {
     IDENTIFY: DevoloButtonEntityDescription(
         key=IDENTIFY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:led-on",
+        device_class=ButtonDeviceClass.IDENTIFY,
         press_func=lambda device: device.plcnet.async_identify_device_start(),  # type: ignore[union-attr]
     ),
     PAIRING: DevoloButtonEntityDescription(
         key=PAIRING,
-        icon="mdi:plus-network-outline",
         press_func=lambda device: device.plcnet.async_pair_device(),  # type: ignore[union-attr]
     ),
     RESTART: DevoloButtonEntityDescription(
@@ -56,7 +55,6 @@ BUTTON_TYPES: dict[str, DevoloButtonEntityDescription] = {
     ),
     START_WPS: DevoloButtonEntityDescription(
         key=START_WPS,
-        icon="mdi:wifi-plus",
         press_func=lambda device: device.device.async_start_wps(),  # type: ignore[union-attr]
     ),
 }

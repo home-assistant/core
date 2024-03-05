@@ -18,9 +18,7 @@ from .coordinator import AutomowerDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-PLATFORMS: list[Platform] = [
-    Platform.LAWN_MOWER,
-]
+PLATFORMS: list[Platform] = [Platform.LAWN_MOWER, Platform.SENSOR, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

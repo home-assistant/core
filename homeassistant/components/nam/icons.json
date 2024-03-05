@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "pmsx003_caqi": {
+        "default": "mdi:air-filter"
+      },
+      "pmsx003_caqi_level": {
+        "default": "mdi:air-filter"
+      },
+      "sds011_caqi": {
+        "default": "mdi:air-filter"
+      },
+      "sds011_caqi_level": {
+        "default": "mdi:air-filter"
+      },
+      "sps30_caqi": {
+        "default": "mdi:air-filter"
+      },
+      "sps30_caqi_level": {
+        "default": "mdi:air-filter"
+      },
+      "sps30_pm4": {
+        "default": "mdi:molecule"
+      }
+    }
+  }
+}

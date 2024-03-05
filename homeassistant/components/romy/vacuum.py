@@ -19,8 +19,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DOMAIN, LOGGER
 from .coordinator import RomyVacuumCoordinator
 
-ICON = "mdi:robot-vacuum"
-
 FAN_SPEED_NONE = "default"
 FAN_SPEED_NORMAL = "normal"
 FAN_SPEED_SILENT = "silent"
@@ -68,7 +66,6 @@ class RomyVacuumEntity(CoordinatorEntity[RomyVacuumCoordinator], StateVacuumEnti
     _attr_name = None
     _attr_supported_features = SUPPORT_ROMY_ROBOT
     _attr_fan_speed_list = FAN_SPEEDS
-    _attr_icon = ICON
 
     def __init__(
         self,
