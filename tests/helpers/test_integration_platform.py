@@ -1,10 +1,11 @@
 """Test integration platform helpers."""
 from collections.abc import Callable
 from types import ModuleType
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant import loader
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.integration_platform import (
@@ -50,6 +51,48 @@ async def test_process_integration_platforms(hass: HomeAssistant) -> None:
 
     # Firing again should not check again
     assert len(processed) == 2
+
+
+async def test_process_integration_platforms_import_fails(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test processing integrations when one fails to import."""
+    loaded_platform = Mock()
+    mock_platform(hass, "loaded.platform_to_check", loaded_platform)
+    hass.config.components.add("loaded")
+
+    event_platform = Mock()
+    mock_platform(hass, "event.platform_to_check", event_platform)
+
+    processed = []
+
+    async def _process_platform(hass, domain, platform):
+        """Process platform."""
+        processed.append((domain, platform))
+
+    loaded_integration = await loader.async_get_integration(hass, "loaded")
+    with patch.object(
+        loaded_integration, "async_get_platform", side_effect=ImportError
+    ):
+        await async_process_integration_platforms(
+            hass, "platform_to_check", _process_platform
+        )
+
+    assert len(processed) == 0
+    assert "Unexpected error importing platform_to_check for loaded" in caplog.text
+
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "event"})
+    await hass.async_block_till_done()
+
+    assert len(processed) == 1
+    assert processed[0][0] == "event"
+    assert processed[0][1] == event_platform
+
+    hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "event"})
+    await hass.async_block_till_done()
+
+    # Firing again should not check again
+    assert len(processed) == 1
 
 
 @callback
