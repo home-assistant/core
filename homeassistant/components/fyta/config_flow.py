@@ -57,6 +57,8 @@ class FytaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
+            finally:
+                await fyta.client.close()
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
