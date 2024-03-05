@@ -1,0 +1,235 @@
+# serializer version: 1
+# name: test_overseerr_sensor[approved_requests]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_approved_requests',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:check',
+    'original_name': 'Approved Requests',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'requested_approved',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_overseerr_sensor[approved_requests].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Approved Requests',
+      'icon': 'mdi:check',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_approved_requests',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7',
+  })
+# ---
+# name: test_overseerr_sensor[available_requests]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_available_requests',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:download',
+    'original_name': 'Available Requests',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'requested_available',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_overseerr_sensor[available_requests].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Available Requests',
+      'icon': 'mdi:download',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_available_requests',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8',
+  })
+# ---
+# name: test_overseerr_sensor[movie_requests]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_movie_requests',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:movie',
+    'original_name': 'Movie Requests',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'requested_movies',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_overseerr_sensor[movie_requests].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Movie Requests',
+      'icon': 'mdi:movie',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_movie_requests',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_overseerr_sensor[pending_requests]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_pending_requests',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:clock-alert-outline',
+    'original_name': 'Pending Requests',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'requested_pending',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_overseerr_sensor[pending_requests].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Pending Requests',
+      'icon': 'mdi:clock-alert-outline',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_pending_requests',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9',
+  })
+# ---
+# name: test_overseerr_sensor[total_requests]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mock_title_total_requests',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:movie',
+    'original_name': 'Total Requests',
+    'platform': 'overseerr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'requested_total',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_overseerr_sensor[total_requests].1
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Title Total Requests',
+      'icon': 'mdi:movie',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_total_requests',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24',
+  })
+# ---
+# name: test_overseerr_sensor[tv_requests]
+  None
+# ---
+# name: test_overseerr_sensor[tv_requests].1
+  None
+# ---
+# name: test_sensor
+  None
+# ---

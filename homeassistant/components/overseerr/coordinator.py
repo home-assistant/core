@@ -33,5 +33,6 @@ class OverseerrUpdateCoordinator(DataUpdateCoordinator):
             self.request_count = await self.hass.async_add_executor_job(
                 self._request_api.request_count_get
             )
+            return self.request_count
         except (OpenApiException, MaxRetryError) as err:
             raise UpdateFailed(f"Update failed: {err}") from err

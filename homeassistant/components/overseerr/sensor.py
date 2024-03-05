@@ -28,37 +28,37 @@ SENSOR_TYPES: tuple[OverseerrSensorEntityDescription, ...] = (
         key="requested_movies",
         translation_key="requested_movies",
         icon="mdi:movie",
-        value_fn=lambda coordinator: coordinator.data.request_count.movie,
+        value_fn=lambda coordinator: coordinator.data.movie,
     ),
     OverseerrSensorEntityDescription(
         key="requested_tv",
         translation_key="requested_tv",
         icon="mdi:television-classic",
-        value_fn=lambda coordinator: coordinator.data.request_count.tv,
+        value_fn=lambda coordinator: coordinator.data.tv,
     ),
     OverseerrSensorEntityDescription(
         key="requested_pending",
         translation_key="requested_pending",
         icon="mdi:clock-alert-outline",
-        value_fn=lambda coordinator: coordinator.data.request_count.pending,
+        value_fn=lambda coordinator: coordinator.data.pending,
     ),
     OverseerrSensorEntityDescription(
         key="requested_approved",
         translation_key="requested_approved",
         icon="mdi:check",
-        value_fn=lambda coordinator: coordinator.data.request_count.approved,
+        value_fn=lambda coordinator: coordinator.data.approved,
     ),
     OverseerrSensorEntityDescription(
         key="requested_available",
         translation_key="requested_available",
         icon="mdi:download",
-        value_fn=lambda coordinator: coordinator.data.request_count.available,
+        value_fn=lambda coordinator: coordinator.data.available,
     ),
     OverseerrSensorEntityDescription(
         key="requested_total",
         translation_key="requested_total",
         icon="mdi:movie",
-        value_fn=lambda coordinator: coordinator.data.request_count.total,
+        value_fn=lambda coordinator: coordinator.data.total,
     ),
 )
 
