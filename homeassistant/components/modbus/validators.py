@@ -308,7 +308,7 @@ def check_config(config: dict) -> dict:
     ) -> bool:
         """Validate entity."""
         name = entity[CONF_NAME]
-        addr = hub_name + str(entity[CONF_ADDRESS])
+        addr = f"{hub_name}{entity[CONF_ADDRESS]}"
         scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         if scan_interval < 5:
             _LOGGER.warning(
