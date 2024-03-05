@@ -29,7 +29,7 @@ from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
 from .coordinator import EasyEnergyData, EasyEnergyDataUpdateCoordinator
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class EasyEnergySensorEntityDescription(SensorEntityDescription):
     """Describes easyEnergy sensor entity."""
 
