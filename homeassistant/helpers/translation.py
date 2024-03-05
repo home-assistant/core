@@ -175,6 +175,10 @@ async def _async_get_component_strings(
                 continue
 
             if platform and integration.is_built_in:
+                # Legacy state translations are no longer used for built-in integrations
+                # and we avoid trying to load them. This is a temporary measure to allow
+                # them to keep working for custom integrations until we can fully remove
+                # them.
                 loaded_translations[loaded] = {}
                 continue
 
