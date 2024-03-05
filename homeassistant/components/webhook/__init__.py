@@ -1,4 +1,5 @@
 """Webhooks for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Iterable
@@ -86,10 +87,21 @@ def async_generate_id() -> str:
 
 @callback
 @bind_hass
-def async_generate_url(hass: HomeAssistant, webhook_id: str) -> str:
+def async_generate_url(
+    hass: HomeAssistant,
+    webhook_id: str,
+    prefer_external: bool = True,
+    allow_cloud: bool = False,
+    allow_ip: bool | None = None,
+) -> str:
     """Generate the full URL for a webhook_id."""
     return "{}{}".format(
-        get_url(hass, prefer_external=True, allow_cloud=False),
+        get_url(
+            hass,
+            prefer_external=prefer_external,
+            allow_cloud=allow_cloud,
+            allow_ip=allow_ip,
+        ),
         async_generate_path(webhook_id),
     )
 
