@@ -67,15 +67,64 @@ class BedrockAgent(conversation.AbstractConversationAgent):
     async def async_call_bedrock(self, question) -> str:
         """Return result from Amazon Bedrock."""
 
-        body = json.dumps(
-            {
-                "prompt": f"\n\nHuman:{question}\n\nAssistant:",
-                "max_tokens_to_sample": 300,
-                "temperature": 0.1,
-                "top_p": 0.9,
-            }
-        )
+        # amazon.titan-text-express-v1
+        # anthropic.claude
+        # ai21.j2
+        # mistral.mistral-
+        # meta.llama2-
+
         modelId = self.entry.data[CONST_MODEL_ID]
+        body = json.dumps({"prompt": question})
+
+        # switch case statement
+        if modelId.startswith("amazon.titan-text-express-v1"):
+            body = json.dumps(
+                {
+                    "inputText": question,
+                    "textGenerationConfig": {
+                        "temperature": 0,
+                        "topP": 1,
+                        "maxTokenCount": 512,
+                    },
+                }
+            )
+        elif modelId.startswith("anthropic.claude"):
+            body = json.dumps(
+                {
+                    "prompt": f"\n\nHuman:{question}\n\nAssistant:",
+                    "max_tokens_to_sample": 300,
+                    "temperature": 0.1,
+                    "top_p": 0.9,
+                }
+            )
+        elif modelId.startswith("ai21.j2"):
+            body = json.dumps(
+                {
+                    "prompt": question,
+                    "temperature": 0.5,
+                    "topP": 0.5,
+                    "maxTokens": 200,
+                    "countPenalty": {"scale": 0},
+                    "presencePenalty": {"scale": 0},
+                    "frequencyPenalty": {"scale": 0},
+                }
+            )
+        elif modelId.startswith("mistral.mistral-"):
+            body = json.dumps(
+                {
+                    "prompt": f"<s>[INST] {question} [/INST]",
+                    "max_tokens": 512,
+                    "temperature": 0.5,
+                    "top_p": 0.9,
+                    "top_k": 50,
+                }
+            )
+        #     return "ai21.j2"
+        # elif modelId == "mistral.mistral-":
+        #     return "mistral.mistral-"
+        # elif modelId == "meta.llama2-":
+        #     return "meta.llama2-"
+
         accept = "application/json"
         contentType = "application/json"
 
@@ -90,7 +139,18 @@ class BedrockAgent(conversation.AbstractConversationAgent):
         )
 
         response_body = json.loads(bedrock_response.get("body").read())
-        return response_body["completion"]
+        if modelId.startswith("amazon.titan-text-express-v1"):
+            answer = response_body["results"][0]["outputText"]
+        elif modelId.startswith("anthropic.claude"):
+            answer = response_body["completion"]
+        elif modelId.startswith("ai21.j2"):
+            answer = response_body["completions"][0]["data"]["text"]
+        elif modelId.startswith("mistral.mistral-"):
+            answer = response_body["outputs"][0]["text"]
+        else:
+            answer = "Sorry I am not able to understand my underlying model."
+
+        return answer
 
     async def async_process(
         self, user_input: agent.ConversationInput

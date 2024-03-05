@@ -15,8 +15,16 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import selector
 
-from .const import CONST_KEY_ID, CONST_KEY_SECRET, CONST_MODEL_ID, CONST_REGION, DOMAIN
+from .const import (
+    CONST_KEY_ID,
+    CONST_KEY_SECRET,
+    CONST_MODEL_ID,
+    CONST_MODEL_LIST,
+    CONST_REGION,
+    DOMAIN,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,14 +33,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONST_REGION): str,
         vol.Required(CONST_KEY_ID): str,
         vol.Required(CONST_KEY_SECRET): str,
-        vol.Required(CONST_MODEL_ID): str,
+        vol.Required(CONST_MODEL_ID): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
+        ),
     }
 )
 
 STEP_INIT_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONST_REGION): str,
-        vol.Required(CONST_MODEL_ID): str,
+        vol.Required(CONST_MODEL_ID): selector.SelectSelector(
+            selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
+        ),
     }
 )
 
@@ -148,7 +160,9 @@ class OptionsFlowHandler(OptionsFlow):
                 ): str,
                 vol.Required(
                     CONST_MODEL_ID, default=self.config_entry.data[CONST_MODEL_ID]
-                ): str,
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
+                ),
             }
         )
 
