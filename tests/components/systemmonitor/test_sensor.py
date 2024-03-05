@@ -60,7 +60,6 @@ async def test_sensor(
         "state_class": "measurement",
         "unit_of_measurement": "MiB",
         "device_class": "data_size",
-        "icon": "mdi:memory",
         "friendly_name": "System Monitor Memory free",
     }
 

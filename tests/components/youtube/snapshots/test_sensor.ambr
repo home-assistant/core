@@ -4,7 +4,6 @@
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://i.ytimg.com/vi/wysukDrMdqU/maxresdefault.jpg',
       'friendly_name': 'Google for Developers Latest upload',
-      'icon': 'mdi:youtube',
       'published_at': datetime.datetime(2023, 5, 11, 0, 20, 46, tzinfo=datetime.timezone.utc),
       'video_id': 'wysukDrMdqU',
     }),
@@ -20,7 +19,6 @@
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
       'friendly_name': 'Google for Developers Subscribers',
-      'icon': 'mdi:youtube-subscription',
       'unit_of_measurement': 'subscribers',
     }),
     'context': <ANY>,
@@ -34,7 +32,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Google for Developers Latest upload',
-      'icon': 'mdi:youtube',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.google_for_developers_latest_upload',
@@ -48,7 +45,6 @@
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
       'friendly_name': 'Google for Developers Subscribers',
-      'icon': 'mdi:youtube-subscription',
       'unit_of_measurement': 'subscribers',
     }),
     'context': <ANY>,
