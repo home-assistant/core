@@ -42,17 +42,9 @@ error_types_to_test: list[tuple[Exception, str]] = [
     (Exception("DUMMY"), "unknown"),
 ]
 
-pytest.mark.usefixtures("mock_setup_entry")
-
-
-@pytest.fixture(autouse=True)
-def use_mocked_zeroconf(mock_async_zeroconf):
-    """Mock zeroconf in all tests."""
-
-
-@pytest.fixture(autouse=True)
-def use_mocked_velux_discovery(mock_velux_discovery):
-    """Mock zeroconf in all tests."""
+pytest.mark.usefixtures(
+    "mock_setup_entry", "mock_async_zeroconf", "mock_velux_discovery"
+)
 
 
 async def test_user_success(hass: HomeAssistant) -> None:
