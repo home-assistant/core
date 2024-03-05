@@ -90,6 +90,7 @@ class WazeTravelTime(SensorEntity):
         identifiers={(DOMAIN, DOMAIN)},
         configuration_url="https://www.waze.com",
     )
+    _attr_translation_key = "waze_travel_time"
 
     def __init__(
         self,
@@ -105,7 +106,6 @@ class WazeTravelTime(SensorEntity):
         self._attr_name = name
         self._origin = origin
         self._destination = destination
-        self._attr_icon = "mdi:car"
         self._state = None
 
     async def async_added_to_hass(self) -> None:
