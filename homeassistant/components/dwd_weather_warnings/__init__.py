@@ -17,6 +17,7 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import DwdWeatherWarningsCoordinator
+from .exceptions import EntityNotFoundError
 from .util import get_position_data
 
 
@@ -43,7 +44,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             return False
 
-        position = get_position_data(hass, device_tracker)
+        try:
+            position = get_position_data(hass, device_tracker)
+        except (EntityNotFoundError, AttributeError) as err:
+            # The provided device_tracker is not available or missing required attributes.
+            LOGGER.error(f"Failed to setup dwd_weather_warnings: {repr(err)}")
+            return False
+
         api = await hass.async_add_executor_job(DwdWeatherWarningsAPI, position)
 
     coordinator = DwdWeatherWarningsCoordinator(hass, api)

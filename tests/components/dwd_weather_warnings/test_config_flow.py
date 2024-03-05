@@ -74,6 +74,38 @@ async def test_create_entry_gps(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_CONFIG_ENTRY_GPS
+    )
+
+    # Test for missing entity error.
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "entity_not_found"}
+
+    # Add location data for unique ID with missing attribute.
+    hass.states.async_set(
+        DEMO_CONFIG_ENTRY_GPS[CONF_REGION_DEVICE_TRACKER],
+        STATE_HOME,
+        {ATTR_LONGITUDE: "7.610263"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_CONFIG_ENTRY_GPS
+    )
+
+    # Test for missing attribute error.
+    await hass.async_block_till_done()
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "attribute_not_found"}
+
+    # Add full location data.
+    hass.states.async_set(
+        DEMO_CONFIG_ENTRY_GPS[CONF_REGION_DEVICE_TRACKER],
+        STATE_HOME,
+        {ATTR_LATITUDE: "50.180454", ATTR_LONGITUDE: "7.610263"},
+    )
+
     with patch(
         "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",
         return_value=False,
@@ -82,17 +114,10 @@ async def test_create_entry_gps(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=DEMO_CONFIG_ENTRY_GPS
         )
 
-    # Test for invalid location data.
+    # Test for invalid provided identifier.
     await hass.async_block_till_done()
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_identifier"}
-
-    # Add location data for unique ID.
-    hass.states.async_set(
-        DEMO_CONFIG_ENTRY_GPS[CONF_REGION_DEVICE_TRACKER],
-        STATE_HOME,
-        {ATTR_LATITUDE: "50.180454", ATTR_LONGITUDE: "7.610263"},
-    )
 
     with patch(
         "homeassistant.components.dwd_weather_warnings.config_flow.DwdWeatherWarningsAPI",

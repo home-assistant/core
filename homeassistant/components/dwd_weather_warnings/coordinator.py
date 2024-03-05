@@ -6,9 +6,10 @@ from dwdwfsapi import DwdWeatherWarningsAPI
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_REGION_DEVICE_TRACKER, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
+from .exceptions import EntityNotFoundError
 from .util import get_position_data
 
 
@@ -28,7 +29,11 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Get the latest data from the DWD Weather Warnings API."""
         if device_tracker := self.config_entry.data.get(CONF_REGION_DEVICE_TRACKER):
-            position = get_position_data(self.hass, device_tracker)
+            try:
+                position = get_position_data(self.hass, device_tracker)
+            except (EntityNotFoundError, AttributeError) as err:
+                raise UpdateFailed(f"Error fetching position: {repr(err)}") from err
+
             self.api = await self.hass.async_add_executor_job(
                 DwdWeatherWarningsAPI, position
             )

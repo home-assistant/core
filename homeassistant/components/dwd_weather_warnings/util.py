@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant
 
-from .const import LOGGER
+from .exceptions import EntityNotFoundError
 
 
 def get_position_data(
@@ -13,20 +14,20 @@ def get_position_data(
     """Extract longitude and latitude from a device tracker."""
     entity = hass.states.get(device_tracker)
     if entity is None:
-        return None
+        raise EntityNotFoundError(f"Failed to find entity {device_tracker}")
 
-    latitude = entity.attributes.get("latitude")
+    latitude = entity.attributes.get(ATTR_LATITUDE)
     if not latitude:
-        LOGGER.warning(
-            "Failed to find attribute 'latitude' in device_tracker %s", entity
+        raise AttributeError(
+            f"Failed to find attribute '{ATTR_LATITUDE}' in {device_tracker}",
+            ATTR_LATITUDE,
         )
-        return None
 
-    longitude = entity.attributes.get("longitude")
+    longitude = entity.attributes.get(ATTR_LONGITUDE)
     if not longitude:
-        LOGGER.warning(
-            "Failed to find attribute 'longitude' in device_tracker %s", entity
+        raise AttributeError(
+            f"Failed to find attribute '{ATTR_LONGITUDE}' in {device_tracker}",
+            ATTR_LONGITUDE,
         )
-        return None
 
     return (latitude, longitude)

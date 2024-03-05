@@ -12,6 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
 from .const import CONF_REGION_DEVICE_TRACKER, CONF_REGION_IDENTIFIER, DOMAIN
+from .exceptions import EntityNotFoundError
 from .util import get_position_data
 
 
@@ -52,12 +53,17 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
             elif CONF_REGION_DEVICE_TRACKER in user_input:
                 # Validate position using the API
                 device_tracker = user_input[CONF_REGION_DEVICE_TRACKER]
-                position = get_position_data(self.hass, device_tracker)
-
-                if not await self.hass.async_add_executor_job(
-                    DwdWeatherWarningsAPI, position
-                ):
-                    errors["base"] = "invalid_identifier"
+                try:
+                    position = get_position_data(self.hass, device_tracker)
+                except EntityNotFoundError:
+                    errors["base"] = "entity_not_found"
+                except AttributeError:
+                    errors["base"] = "attribute_not_found"
+                else:
+                    if not await self.hass.async_add_executor_job(
+                        DwdWeatherWarningsAPI, position
+                    ):
+                        errors["base"] = "invalid_identifier"
 
                 # Position is valid here, because the API call was successful.
                 if not errors and position is not None:
