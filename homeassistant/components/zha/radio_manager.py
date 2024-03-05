@@ -8,7 +8,7 @@ import copy
 import enum
 import logging
 import os
-from typing import Any, Self
+from typing import Any, Self, cast
 
 from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
@@ -36,6 +36,7 @@ from .core.const import (
     RadioType,
 )
 from .core.helpers import get_zha_data
+from .serial_port import async_serial_port_from_path
 
 # Only the common radio types will be autoprobed, ordered by new device popularity.
 # XBee takes too long to probe since it scans through all possible bauds and likely has
@@ -416,13 +417,18 @@ class ZhaMultiPANMigrationHelper:
         # Then configure the radio manager for the new radio to use the new settings
         self._radio_mgr.chosen_backup = backup
         self._radio_mgr.radio_type = new_radio_type
-        self._radio_mgr.device_path = new_device_settings[CONF_DEVICE_PATH]
+        self._radio_mgr.device_path = cast(str, new_device_settings[CONF_DEVICE_PATH])
         self._radio_mgr.device_settings = new_device_settings
         device_settings = self._radio_mgr.device_settings.copy()  # type: ignore[union-attr]
+
+        port = await async_serial_port_from_path(
+            self._hass, self._radio_mgr.device_path
+        )
 
         # Update the config entry settings
         self._hass.config_entries.async_update_entry(
             entry=self._config_entry,
+            unique_id=port.unique_id,
             data={
                 CONF_DEVICE: device_settings,
                 CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,

@@ -694,9 +694,12 @@ class ZhaOptionsFlowHandler(BaseZhaFlow, OptionsFlow):
             usb.get_serial_by_id, self._radio_mgr.device_path
         )
 
+        port = await async_serial_port_from_path(self.hass, self._radio_mgr.device_path)
+
         # Avoid creating both `.options` and `.data` by directly writing `data` here
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
+            unique_id=port.unique_id,
             data={
                 CONF_DEVICE: device_settings,
                 CONF_RADIO_TYPE: self._radio_mgr.radio_type.name,
