@@ -3,14 +3,21 @@
 from typing import Any
 
 from pyvlx import PyVLX, PyVLXException
+from pyvlx.discovery import VeluxDiscovery, VeluxHost
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import DOMAIN, LOGGER
 
@@ -28,7 +35,7 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
-    host: str | None = None
+    hosts: list[VeluxHost | None] = []
 
     async def async_step_import(
         self, config: dict[str, Any]
@@ -94,6 +101,12 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            for host in self.hosts:
+                if user_input[CONF_HOST] == host.ip_address:  # type: ignore[union-attr]
+                    await self.async_set_unique_id(host.hostname)  # type: ignore[union-attr]
+                    self._abort_if_unique_id_configured(
+                        updates={CONF_HOST: host.ip_address}  # type: ignore[union-attr]
+                    )
 
             pyvlx = PyVLX(
                 host=user_input[CONF_HOST], password=user_input[CONF_PASSWORD]
@@ -113,9 +126,27 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-        data_schema = self.add_suggested_values_to_schema(
-            DATA_SCHEMA, user_input or {CONF_HOST: self.context[CONF_HOST]}
-        )
+        if self.hosts is None:
+            aiozc = await zeroconf.async_get_async_instance(self.hass)
+            vd: VeluxDiscovery = VeluxDiscovery(zeroconf=aiozc)
+            self.hosts = vd.hosts
+
+        if self.hosts is not None:
+            data_schema = vol.Schema(
+                {
+                    vol.Required(CONF_HOST): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[host.ip_address for host in self.hosts],  # type: ignore[union-attr]
+                            custom_value=True,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
+                    vol.Required(CONF_PASSWORD): cv.string,
+                }
+            )
+        else:
+            data_schema = self.add_suggested_values_to_schema(DATA_SCHEMA, user_input)
+
         return self.async_show_form(
             step_id="user",
             data_schema=data_schema,
@@ -139,8 +170,10 @@ class VeluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Check if config_entry exists already without unigue_id configured.
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.data[CONF_HOST] == discovery_info.host and entry.unique_id is None:
-                entry.unique_id = hostname
+                self.hass.config_entries.async_update_entry(
+                    entry=entry, unique_id=hostname
+                )
                 return self.async_abort(reason="already_configured")
 
-        self.context[CONF_HOST] = discovery_info.host
+        self.hosts.append(VeluxHost(hostname=hostname, ip_address=discovery_info.host))
         return await self.async_step_user()
