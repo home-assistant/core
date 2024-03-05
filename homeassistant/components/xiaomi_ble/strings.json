@@ -54,7 +54,7 @@
       "low_quality_too_light_fuzzy": "Low quality (too light, fuzzy)",
       "insufficient_area": "Insufficient area",
       "skin_is_too_dry": "Skin is too dry",
-      "skin_is_too_wet": "skin is too wet",
+      "skin_is_too_wet": "Skin is too wet",
       "lock_outside_the_door": "Lock outside the door",
       "unlock_outside_the_door": "Unlock outside the door",
       "lock_inside_the_door": "Lock inside the door",
@@ -148,7 +148,7 @@
               "lock_picking": "Lock picking",
               "reset_button_is_pressed": "Reset button is pressed",
               "the_wrong_key_is_frequently_unlocked": "The wrong key is frequently unlocked",
-              "foreign_body_in_the_keyhole": "foreign body in the keyhole",
+              "foreign_body_in_the_keyhole": "Foreign body in the keyhole",
               "the_key_has_not_been_taken_out": "The key has not been taken out",
               "error_nfc_frequently_unlocks": "Error NFC frequently unlocks",
               "timeout_is_not_locked_as_required": "Timeout is not locked as required",
@@ -161,8 +161,8 @@
               "the_safe_was_moved": "The safe was moved",
               "the_battery_level_is_less_than_10_percent": "The battery level is less than 10%",
               "the_battery_level_is_less_than_5_percent": "The battery level is less than 5%",
-              "the_fingerprint_sensor_is_abnormal": "the fingerprint sensor is abnormal",
-              "the_accessory_battery_is_low": "the accessory battery is low",
+              "the_fingerprint_sensor_is_abnormal": "The fingerprint sensor is abnormal",
+              "the_accessory_battery_is_low": "The accessory battery is low",
               "mechanical_failure": "Mechanical failure",
               "the_lock_sensor_is_faulty": "The lock sensor is faulty"
             }
