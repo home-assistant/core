@@ -1,14 +1,16 @@
 """Session auth module."""
+from __future__ import annotations
+
 from collections.abc import Callable
 import dataclasses
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import secrets
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from aiohttp.web import Request
-from aiohttp_session import get_session, new_session
+from aiohttp_session import Session, get_session, new_session
 from cryptography.fernet import Fernet
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -16,6 +18,9 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 
 from .models import RefreshToken
+
+if TYPE_CHECKING:
+    from . import AuthManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,9 +78,9 @@ def _validate_authorized_session_data(
 class SessionManager:
     """Session manager."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, auth: AuthManager) -> None:
         """Initialize the strict connection manager."""
-        self._hass = hass
+        self._auth = auth
         self._unauthorized_sessions: dict[
             str, UnauthorizedTempSessionData | UnauthorizedRefreshTokenSessionData
         ] = {}
@@ -103,21 +108,24 @@ class SessionManager:
         - False -> A session was provided to access unauthenticated resources
         - True -> A session was provided to access authenticated resources
         """
+        session = await get_session(request)
+        if session.new:
+            return None
         result = await self._async_validate_session(
-            request, set_refresh_token_on_request
+            request, session, set_refresh_token_on_request
         )
         if result is None:
-            # Delete session by creating an empty session
-            await new_session(request)
+            session.invalidate()
+            # todo raise for None to notify ban?
         return result
 
     async def _async_validate_session(
         self,
         request: Request,
+        session: Session,
         set_refresh_token_on_request: Callable[[RefreshToken], None],
     ) -> None | bool:
-        session = await get_session(request)
-        if session.new or not (session_id := session.get(SESSION_ID)):
+        if not (session_id := session.get(SESSION_ID)):
             return None
 
         refresh_token_id = None
@@ -144,7 +152,7 @@ class SessionManager:
                 refresh_token_id = data.refresh_token_id
 
         if refresh_token_id and (
-            refresh := self._hass.auth.async_get_refresh_token(refresh_token_id)
+            refresh := self._auth.async_get_refresh_token(refresh_token_id)
         ):
             if auth_session_data:
                 set_refresh_token_on_request(refresh)
@@ -165,8 +173,7 @@ class SessionManager:
         self._authorized_sessions.pop(session_id, None)
         self._unauthorized_sessions.pop(session_id, None)
         self._async_schedule_save()
-        await new_session(request)
-        return None  # todo raise instead for ban?
+        return None
 
     @callback
     def _async_invalidate_auth_sessions(self, refresh_token: RefreshToken) -> None:
@@ -195,7 +202,7 @@ class SessionManager:
 
         self._refresh_token_revoce_callbacks[
             refresh_token_id
-        ] = self._hass.auth.async_register_revoke_token_callback(
+        ] = self._auth.async_register_revoke_token_callback(
             refresh_token_id, async_invalidate_auth_sessions
         )
 
@@ -205,14 +212,13 @@ class SessionManager:
         refresh_token: RefreshToken,
     ) -> None:
         """Create new session for given refresh token."""
-        if not self._hass.auth.async_get_refresh_token(refresh_token.id):
+        if not self._auth.async_get_refresh_token(refresh_token.id):
             return
 
         now_plus_transition = dt_util.utcnow() + TRANSITION_TIMEOUT
         for session_id, data in self._authorized_sessions.items():
             if data.refresh_token_id == refresh_token.id:
-                if now_plus_transition < data.absolute_expiry:
-                    data.absolute_expiry = now_plus_transition
+                data.absolute_expiry = min(data.absolute_expiry, now_plus_transition)
                 self._unauthorized_sessions.pop(session_id, None)
 
         self._async_register_revoke_token_callback(refresh_token.id)
@@ -288,8 +294,8 @@ class SessionManager:
         for session_id, session_data in data["authorized_sessions"].items():
             self._authorized_sessions[session_id] = AuthorizedSessionData(
                 refresh_token_id=session_data["refresh_token_id"],
-                absolute_expiry=session_data["absolute_expiry"],
-                idle_expiry=session_data["idle_expiry"],
+                absolute_expiry=datetime.fromisoformat(session_data["absolute_expiry"]),
+                idle_expiry=datetime.fromisoformat(session_data["idle_expiry"]),
             )
             self._async_register_revoke_token_callback(session_data["refresh_token_id"])
 
@@ -298,10 +304,10 @@ class SessionManager:
         """Set default values."""
         self._authorized_sessions = {}
         self._unauthorized_sessions = {}
-        self._key = generate_key()
+        self._key = _generate_key()
         self._async_schedule_save(0)
 
 
-def generate_key() -> str:
+def _generate_key() -> str:
     """Generate a random key."""
     return Fernet.generate_key().decode()

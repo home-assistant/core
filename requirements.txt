@@ -5,7 +5,7 @@
 # Home Assistant Core
 aiohttp==3.9.3
 aiohttp_cors==0.7.0
-aiohttp_session[secure]==2.12.0
+aiohttp_session==2.12.0
 aiohttp-fast-url-dispatcher==0.3.0
 aiohttp-zlib-ng==0.3.1
 astral==2.2

@@ -3,7 +3,7 @@ from functools import lru_cache
 import logging
 
 from aiohttp.web import Request, StreamResponse
-from aiohttp_session import Session, SessionData
+from aiohttp_session import Session
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from cryptography.fernet import InvalidToken
 
@@ -76,11 +76,6 @@ class HomeAssistantCookieStorage(EncryptedCookieStorage):
             return Session(None, data=None, new=True, max_age=self.max_age)
         return self._decrypt_cookie(cookie)
 
-    @lru_cache(maxsize=SESSION_CACHE_SIZE)
-    def _encode_and_encrypt(self, data: SessionData) -> str:
-        """Encode and encrypt data."""
-        return self._fernet.encrypt(self._encoder(data).encode("utf-8")).decode("utf-8")
-
     async def save_session(
         self, request: Request, response: StreamResponse, session: Session
     ) -> None:
@@ -95,8 +90,10 @@ class HomeAssistantCookieStorage(EncryptedCookieStorage):
             params = self.cookie_params.copy()
             params["secure"] = is_secure
             params["max_age"] = session.max_age
+
+            cookie_data = self._encoder(self._get_session_data(session)).encode("utf-8")
             response.set_cookie(
                 cookie_name,
-                self._encode_and_encrypt(self._get_session_data(session)),
+                self._fernet.encrypt(cookie_data).decode("utf-8"),
                 **params,
             )

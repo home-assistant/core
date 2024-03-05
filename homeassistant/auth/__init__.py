@@ -176,7 +176,7 @@ class AuthManager:
         self._remove_expired_job = HassJob(
             self._async_remove_expired_refresh_tokens, job_type=HassJobType.Callback
         )
-        self.session = SessionManager(hass)
+        self.session = SessionManager(hass, self)
 
     async def async_setup(self) -> None:
         """Set up the auth manager."""
