@@ -112,10 +112,20 @@
       "wiper_blade_heater": false
     },
     "drive_state": {
-      "active_route_latitude": -27.855946,
-      "active_route_longitude": 153.345056,
+      "active_route_latitude": 30.2226265,
+      "active_route_longitude": -97.6236871,
+      "active_route_miles_to_arrival": 0.039491,
+      "active_route_minutes_to_arrival": 0.103577,
       "active_route_traffic_minutes_delay": 0,
-      "power": 0,
+      "gps_as_of": 1701129612,
+      "heading": 185,
+      "latitude": -30.222626,
+      "longitude": -97.6236871,
+      "native_latitude": -30.222626,
+      "native_location_supported": 1,
+      "native_longitude": -97.6236871,
+      "native_type": "wgs",
+      "power": -7,
       "shift_state": null,
       "speed": null,
       "timestamp": 1705707520649

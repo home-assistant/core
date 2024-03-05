@@ -6,7 +6,6 @@ from homeassistant.components.rituals_perfume_genie.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -34,7 +33,6 @@ async def test_switch_entity(
     state = hass.states.get("switch.genie")
     assert state
     assert state.state == STATE_ON
-    assert state.attributes.get(ATTR_ICON) == "mdi:fan"
 
     entry = entity_registry.async_get("switch.genie")
     assert entry

@@ -103,6 +103,9 @@
       "visitor": {
         "name": "Visitor"
       },
+      "package": {
+        "name": "Package"
+      },
       "motion_lens_0": {
         "name": "Motion lens 0"
       },
@@ -124,6 +127,9 @@
       "visitor_lens_0": {
         "name": "Visitor lens 0"
       },
+      "package_lens_0": {
+        "name": "Package lens 0"
+      },
       "motion_lens_1": {
         "name": "Motion lens 1"
       },
@@ -144,6 +150,9 @@
       },
       "visitor_lens_1": {
         "name": "Visitor lens 1"
+      },
+      "package_lens_1": {
+        "name": "Package lens 1"
       }
     },
     "button": {
@@ -270,6 +279,9 @@
       "ai_vehicle_sensititvity": {
         "name": "AI vehicle sensitivity"
       },
+      "ai_package_sensititvity": {
+        "name": "AI package sensitivity"
+      },
       "ai_pet_sensititvity": {
         "name": "AI pet sensitivity"
       },
@@ -284,6 +296,9 @@
       },
       "ai_vehicle_delay": {
         "name": "AI vehicle delay"
+      },
+      "ai_package_delay": {
+        "name": "AI package delay"
       },
       "ai_pet_delay": {
         "name": "AI pet delay"
@@ -367,7 +382,8 @@
         "state": {
           "stayoff": "Stay off",
           "auto": "Auto",
-          "alwaysonatnight": "Auto & always on at night"
+          "alwaysonatnight": "Auto & always on at night",
+          "alwayson": "Always on"
         }
       }
     },
@@ -402,6 +418,9 @@
       },
       "gaurd_return": {
         "name": "Guard return"
+      },
+      "ptz_patrol": {
+        "name": "PTZ patrol"
       },
       "email": {
         "name": "Email on event"

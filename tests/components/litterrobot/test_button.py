@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 from freezegun import freeze_time
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, STATE_UNKNOWN, EntityCategory
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -21,7 +21,6 @@ async def test_button(
 
     state = hass.states.get(BUTTON_ENTITY)
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:delete-variant"
     assert state.state == STATE_UNKNOWN
 
     entry = entity_registry.async_get(BUTTON_ENTITY)
