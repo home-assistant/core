@@ -72,6 +72,7 @@ BASE_PRELOAD_PLATFORMS = [
     "group",
     "logbook",
     "hardware",
+    "intent",
     "media_source",
     "recorder",
     "repairs",
@@ -627,11 +628,14 @@ class Integration:
                 )
                 continue
 
+            path = manifest_path.parent
+
             integration = cls(
                 hass,
                 f"{root_module.__name__}.{domain}",
                 manifest_path.parent,
                 manifest,
+                set(os.listdir(path)),
             )
 
             if integration.is_built_in:
@@ -684,6 +688,7 @@ class Integration:
         pkg_path: str,
         file_path: pathlib.Path,
         manifest: Manifest,
+        top_level_files: set[str] | None = None,
     ) -> None:
         """Initialize an integration."""
         self.hass = hass
@@ -709,6 +714,7 @@ class Integration:
             DATA_MISSING_PLATFORMS
         ]
         self._missing_platforms_cache = missing_platforms_cache
+        self._top_level_files = top_level_files or set()
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
     @cached_property
@@ -1148,33 +1154,15 @@ class Integration:
 
         The component must be loaded before calling this method.
         """
-        cache = self._cache
+        files = self._top_level_files
         domain = self.domain
-        if not (component := cache.get(domain)) or not (
-            file := getattr(component, "__file__", None)
-        ):
-            raise RuntimeError(f"Integration {domain} not loaded")
-
         exiting_platforms: list[str] = []
-        parent_path: pathlib.Path | None = None
         for platform_name in platform_names:
+            if f"{platform_name}.py" in files or platform_name in files:
+                exiting_platforms.append(platform_name)
+                continue
+
             full_name = f"{domain}.{platform_name}"
-
-            if full_name in cache:
-                exiting_platforms.append(platform_name)
-                continue
-
-            if full_name in self._missing_platforms_cache:
-                continue
-
-            if parent_path is None:
-                parent_path = pathlib.Path(file).parent
-
-            path: pathlib.Path = parent_path.joinpath(platform_name)
-            if os.path.exists(path.with_suffix(".py")) or os.path.exists(path):
-                exiting_platforms.append(platform_name)
-                continue
-
             self._missing_platforms_cache[full_name] = ModuleNotFoundError(
                 f"Platform {full_name} not found",
                 name=f"{self.pkg_path}.{platform_name}",
