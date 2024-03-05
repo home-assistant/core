@@ -120,6 +120,8 @@ async def test_custom_component_name(
 
     integration = await loader.async_get_integration(hass, "test")
     platform = integration.get_platform("light")
+    assert integration.get_platform_cached("light") is platform
+
     assert platform.__name__ == "custom_components.test.light"
     assert platform.__package__ == "custom_components.test"
 
@@ -277,6 +279,9 @@ async def test_async_get_platform_caches_failures_when_component_loaded(
     with pytest.raises(ImportError):
         assert await integration.async_get_platform("light") == hue_light
 
+    # The cache should never be filled because the import error is remembered
+    assert integration.get_platform_cached("light") is None
+
 
 async def test_async_get_platforms_caches_failures_when_component_loaded(
     hass: HomeAssistant,
@@ -312,6 +317,9 @@ async def test_async_get_platforms_caches_failures_when_component_loaded(
     with pytest.raises(ImportError):
         assert await integration.async_get_platforms(["light"]) == {"light": hue_light}
 
+    # The cache should never be filled because the import error is remembered
+    assert integration.get_platform_cached("light") is None
+
 
 async def test_get_integration_legacy(
     hass: HomeAssistant, enable_custom_integrations: None
@@ -320,6 +328,7 @@ async def test_get_integration_legacy(
     integration = await loader.async_get_integration(hass, "test_embedded")
     assert integration.get_component().DOMAIN == "test_embedded"
     assert integration.get_platform("switch") is not None
+    assert integration.get_platform_cached("switch") is not None
 
 
 async def test_get_integration_custom_component(
@@ -1549,6 +1558,9 @@ async def test_async_get_platforms_loads_loop_if_already_in_sys_modules(
         "switch": switch_module_mock,
         "light": light_module_mock,
     }
+    assert integration.get_platform_cached("button") is button_module_mock
+    assert integration.get_platform_cached("switch") is switch_module_mock
+    assert integration.get_platform_cached("light") is light_module_mock
 
 
 async def test_async_get_platforms_concurrent_loads(
@@ -1610,3 +1622,4 @@ async def test_async_get_platforms_concurrent_loads(
     assert load_result2 == {"button": button_module_mock}
 
     assert imports == [button_module_name]
+    assert integration.get_platform_cached("button") is button_module_mock
