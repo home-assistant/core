@@ -36,6 +36,7 @@ from .components import (
     file_upload as file_upload_pre_import,  # noqa: F401
     history as history_pre_import,  # noqa: F401
     http,  # not named pre_import since it has requirements
+    image_upload as image_upload_import,  # noqa: F401 - not named pre_import since it has requirements
     lovelace as lovelace_pre_import,  # noqa: F401
     onboarding as onboarding_pre_import,  # noqa: F401
     recorder as recorder_import,  # noqa: F401 - not named pre_import since it has requirements
