@@ -13,7 +13,7 @@ class HassEnforceNonListComprehensionsChecker(BaseChecker):
     priority = -1
     msgs = {
         "W7461": (
-            "Call to async_add_entities should not use of list comprehensions. "
+            "Call to async_add_entities should not use list comprehensions. "
             "Unwrap and use the generator expression directly.",
             "hass-enforce-non-list-comprehensions",
             "Used when async_add_entities should not use list comprehensions.",
