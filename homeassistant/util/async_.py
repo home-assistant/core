@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from asyncio import AbstractEventLoop, Future, Semaphore, Task, gather, get_running_loop
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Coroutine
 import concurrent.futures
 from contextlib import suppress
 import functools
@@ -26,7 +26,7 @@ _Ts = TypeVarTuple("_Ts")
 if sys.version_info >= (3, 12, 0):
 
     def create_eager_task(
-        coro: Awaitable[_T],
+        coro: Coroutine[Any, Any, _T],
         *,
         name: str | None = None,
         loop: AbstractEventLoop | None = None,
@@ -41,7 +41,7 @@ if sys.version_info >= (3, 12, 0):
 else:
 
     def create_eager_task(
-        coro: Awaitable[_T],
+        coro: Coroutine[Any, Any, _T],
         *,
         name: str | None = None,
         loop: AbstractEventLoop | None = None,

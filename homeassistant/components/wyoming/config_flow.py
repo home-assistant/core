@@ -7,10 +7,9 @@ from urllib.parse import urlparse
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import hassio, zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 from .data import WyomingService
@@ -25,7 +24,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Wyoming integration."""
 
     VERSION = 1
@@ -36,7 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -62,7 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio(
         self, discovery_info: hassio.HassioServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle Supervisor add-on discovery."""
         _LOGGER.debug("Supervisor discovery info: %s", discovery_info)
         await self.async_set_unique_id(discovery_info.uuid)
@@ -79,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_hassio_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm Supervisor discovery."""
         errors: dict[str, str] = {}
 
@@ -104,7 +103,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         _LOGGER.debug("Zeroconf discovery info: %s", discovery_info)
         if discovery_info.port is None:
@@ -131,7 +130,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
         assert self._service is not None
         assert self._name is not None

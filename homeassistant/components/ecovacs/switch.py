@@ -75,6 +75,46 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSwitchEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
+    EcovacsSwitchEntityDescription[Capabilities](
+        device_capabilities=Capabilities,
+        capability_fn=lambda c: c.settings.border_switch,
+        key="border_switch",
+        translation_key="border_switch",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    EcovacsSwitchEntityDescription[Capabilities](
+        device_capabilities=Capabilities,
+        capability_fn=lambda c: c.settings.child_lock,
+        key="child_lock",
+        translation_key="child_lock",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    EcovacsSwitchEntityDescription[Capabilities](
+        device_capabilities=Capabilities,
+        capability_fn=lambda c: c.settings.moveup_warning,
+        key="move_up_warning",
+        translation_key="move_up_warning",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    EcovacsSwitchEntityDescription[Capabilities](
+        device_capabilities=Capabilities,
+        capability_fn=lambda c: c.settings.cross_map_border_warning,
+        key="cross_map_border_warning",
+        translation_key="cross_map_border_warning",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    EcovacsSwitchEntityDescription[Capabilities](
+        device_capabilities=Capabilities,
+        capability_fn=lambda c: c.settings.safe_protect,
+        key="safe_protect",
+        translation_key="safe_protect",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+    ),
 )
 
 

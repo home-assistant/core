@@ -10,7 +10,6 @@ from weatherflow4py.api import WeatherFlowRestAPI
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -32,7 +31,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, user_input: Mapping[str, Any]
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow for reauth."""
         errors = {}
 
@@ -58,7 +59,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> config_entries.ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 

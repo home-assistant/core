@@ -53,11 +53,6 @@ class NexiaHoldSwitch(NexiaThermostatZoneEntity, SwitchEntity):
         """Return if the zone is in hold mode."""
         return self._zone.is_in_permanent_hold()
 
-    @property
-    def icon(self) -> str:
-        """Return the icon for the switch."""
-        return "mdi:timer-off" if self._zone.is_in_permanent_hold() else "mdi:timer"
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable permanent hold."""
         if self._zone.get_current_mode() == OPERATION_MODE_OFF:

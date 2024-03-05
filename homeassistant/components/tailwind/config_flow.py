@@ -16,9 +16,9 @@ import voluptuous as vol
 
 from homeassistant.components import zeroconf
 from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TOKEN
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
@@ -44,7 +44,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
@@ -84,7 +84,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery of a Tailwind device."""
         if not (device_id := discovery_info.properties.get("device_id")):
             return self.async_abort(reason="no_device_id")
@@ -112,7 +112,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
         errors = {}
 
@@ -143,7 +143,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, _: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
         """Handle initiation of re-authentication with a Tailwind device."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -152,7 +152,7 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle re-authentication with a Tailwind device."""
         errors = {}
 
@@ -183,7 +183,9 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle dhcp discovery to update existing entries.
 
         This flow is triggered only by DHCP discovery of known devices.
@@ -196,7 +198,9 @@ class TailwindFlowHandler(ConfigFlow, domain=DOMAIN):
         # abort the flow with an unknown error.
         return self.async_abort(reason="unknown")
 
-    async def _async_step_create_entry(self, *, host: str, token: str) -> FlowResult:
+    async def _async_step_create_entry(
+        self, *, host: str, token: str
+    ) -> ConfigFlowResult:
         """Create entry."""
         tailwind = Tailwind(
             host=host, token=token, session=async_get_clientsession(self.hass)

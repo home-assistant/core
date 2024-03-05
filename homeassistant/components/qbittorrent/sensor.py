@@ -64,7 +64,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_DOWNLOAD_SPEED,
         translation_key="download_speed",
-        icon="mdi:cloud-download",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_display_precision=2,
@@ -76,7 +75,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_UPLOAD_SPEED,
         translation_key="upload_speed",
-        icon="mdi:cloud-upload",
         device_class=SensorDeviceClass.DATA_RATE,
         native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
         suggested_display_precision=2,
