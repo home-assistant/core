@@ -173,12 +173,12 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "match_successful": "Match successful",
-              "match_failed": "Match failed",
-              "low_quality_too_light_fuzzy": "Low quality (too light, fuzzy)",
-              "insufficient_area": "Insufficient area",
-              "skin_is_too_dry": "Skin is too dry",
-              "skin_is_too_wet": "skin is too wet"
+              "match_successful": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::match_successful%]",
+              "match_failed": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::match_failed%]",
+              "low_quality_too_light_fuzzy": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::low_quality_too_light_fuzzy%]",
+              "insufficient_area": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::insufficient_area%]",
+              "skin_is_too_dry": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::skin_is_too_dry%]",
+              "skin_is_too_wet": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::skin_is_too_wet%]"
             }
           }
         }
@@ -187,16 +187,16 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "lock_outside_the_door": "Lock outside the door",
-              "unlock_outside_the_door": "Unlock outside the door",
-              "lock_inside_the_door": "Lock inside the door",
-              "unlock_inside_the_door": "Unlock outside the door",
-              "locked": "Locked",
-              "turn_on_antilock": "Turn on antilock",
-              "release_the_antilock": "Release antilock",
-              "turn_on_child_lock": "Turn on child lock",
-              "turn_off_child_lock": "Turn off child lock",
-              "abnormal": "Abnormal"
+              "lock_outside_the_door": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::lock_outside_the_door%]",
+              "unlock_outside_the_door": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::unlock_outside_the_door%]",
+              "lock_inside_the_door": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::lock_inside_the_door%]",
+              "unlock_inside_the_door": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::unlock_inside_the_door%]",
+              "locked": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::locked%]",
+              "turn_on_antilock": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::turn_on_antilock%]",
+              "release_the_antilock": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::release_the_antilock%]",
+              "turn_on_child_lock": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::turn_on_child_lock%]",
+              "turn_off_child_lock": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::turn_off_child_lock%]",
+              "abnormal": "[%key:component::xiaomi_ble::device_automation::trigger_subtype::abnormal%]"
             }
           }
         }
