@@ -165,9 +165,7 @@ async def _async_get_component_strings(
     for language in languages:
         files_to_load: dict[str, str] = {}
         files_to_load_by_language[language] = files_to_load
-
-        loaded_translations: dict[str, Any] = {}
-        translations_by_language[language] = loaded_translations
+        translations_by_language[language] = {}
 
         for loaded in components:
             domain, _, platform = loaded.partition(".")
@@ -179,14 +177,9 @@ async def _async_get_component_strings(
                 # and we avoid trying to load them. This is a temporary measure to allow
                 # them to keep working for custom integrations until we can fully remove
                 # them.
-                loaded_translations[loaded] = {}
                 continue
 
-            path = component_translation_path(loaded, language, integration)
-            # No translation available
-            if path is None:
-                loaded_translations[loaded] = {}
-            else:
+            if path := component_translation_path(loaded, language, integration):
                 files_to_load[loaded] = path
 
     if not files_to_load:
