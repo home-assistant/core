@@ -16,7 +16,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_CLOSE,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
@@ -43,7 +43,6 @@ def _async_register_clientsession_shutdown(
 ) -> None:
     """Register cleanup hooks for the clientsession."""
 
-    @callback
     async def _async_close_websession(*_: Any) -> None:
         """Close websession."""
         await clientsession.close()
