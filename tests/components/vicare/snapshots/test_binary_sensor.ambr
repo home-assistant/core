@@ -4,7 +4,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'running',
       'friendly_name': 'model0 Burner',
-      'icon': 'mdi:gas-burner',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_burner',
@@ -18,7 +17,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'running',
       'friendly_name': 'model0 Circulation pump',
-      'icon': 'mdi:pump',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_circulation_pump',
@@ -31,7 +29,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Frost protection',
-      'icon': 'mdi:snowflake',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.model0_frost_protection',
