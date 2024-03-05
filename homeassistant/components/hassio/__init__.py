@@ -39,7 +39,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import now
 
-# config_flow, and entity platforms are imported to ensure
+# config_flow, diagnostics, and entity platforms are imported to ensure
 # other dependencies that wait for hassio are not waiting
 # for hassio to import its platforms
 from . import binary_sensor, config_flow, diagnostics, sensor, update  # noqa: F401
