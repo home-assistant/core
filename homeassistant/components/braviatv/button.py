@@ -19,7 +19,7 @@ from .coordinator import BraviaTVCoordinator
 from .entity import BraviaTVEntity
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class BraviaTVButtonDescription(ButtonEntityDescription):
     """Bravia TV Button description."""
 
