@@ -141,7 +141,9 @@ def _prepare_config_flow_result_json(
     return data
 
 
-class ConfigManagerFlowIndexView(FlowManagerIndexView):
+class ConfigManagerFlowIndexView(
+    FlowManagerIndexView[config_entries.ConfigEntriesFlowManager]
+):
     """View to create config flows."""
 
     url = "/api/config/config_entries/flow"
@@ -196,7 +198,9 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
         return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
 
-class ConfigManagerFlowResourceView(FlowManagerResourceView):
+class ConfigManagerFlowResourceView(
+    FlowManagerResourceView[config_entries.ConfigEntriesFlowManager]
+):
     """View to interact with the flow manager."""
 
     url = "/api/config/config_entries/flow/{flow_id}"
@@ -238,7 +242,9 @@ class ConfigManagerAvailableFlowView(HomeAssistantView):
         return self.json(await async_get_config_flows(hass, **kwargs))
 
 
-class OptionManagerFlowIndexView(FlowManagerIndexView):
+class OptionManagerFlowIndexView(
+    FlowManagerIndexView[config_entries.OptionsFlowManager]
+):
     """View to create option flows."""
 
     url = "/api/config/config_entries/options/flow"
@@ -255,7 +261,9 @@ class OptionManagerFlowIndexView(FlowManagerIndexView):
         return await super().post(request)
 
 
-class OptionManagerFlowResourceView(FlowManagerResourceView):
+class OptionManagerFlowResourceView(
+    FlowManagerResourceView[config_entries.OptionsFlowManager]
+):
     """View to interact with the option flow manager."""
 
     url = "/api/config/config_entries/options/flow/{flow_id}"
