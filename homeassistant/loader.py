@@ -705,8 +705,8 @@ class Integration:
             self._all_dependencies_resolved = True
             self._all_dependencies = set()
 
-        preload_platforms: list[str] = hass.data[DATA_PRELOAD_PLATFORMS]
-        self._preload_platforms = preload_platforms
+        platforms_to_preload: list[str] = hass.data[DATA_PRELOAD_PLATFORMS]
+        self._platforms_to_preload = platforms_to_preload
         self._component_future: asyncio.Future[ComponentProtocol] | None = None
         self._import_futures: dict[str, asyncio.Future[ModuleType]] = {}
         cache: dict[str, ModuleType | ComponentProtocol] = hass.data[DATA_COMPONENTS]
@@ -991,7 +991,7 @@ class Integration:
             raise ImportError(f"Exception importing {self.pkg_path}") from err
 
         if preload_platforms:
-            for platform_name in self.platforms_exists(self._preload_platforms):
+            for platform_name in self.platforms_exists(self._platforms_to_preload):
                 with suppress(ImportError):
                     self.get_platform(platform_name)
 
