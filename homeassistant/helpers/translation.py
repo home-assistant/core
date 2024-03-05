@@ -162,13 +162,14 @@ async def _async_get_component_strings(
     translations_by_language: dict[str, dict[str, Any]] = {}
     # Determine paths of missing components/platforms
     files_to_load_by_language: dict[str, dict[str, str]] = {}
+    has_files_to_load = False
     for language in languages:
         files_to_load: dict[str, str] = {}
         files_to_load_by_language[language] = files_to_load
         translations_by_language[language] = {}
 
-        for loaded in components:
-            domain, _, platform = loaded.partition(".")
+        for comp in components:
+            domain, _, platform = comp.partition(".")
             if not (integration := integrations.get(domain)):
                 continue
 
@@ -179,10 +180,11 @@ async def _async_get_component_strings(
                 # them.
                 continue
 
-            if path := component_translation_path(loaded, language, integration):
-                files_to_load[loaded] = path
+            if path := component_translation_path(comp, language, integration):
+                files_to_load[comp] = path
+                has_files_to_load = True
 
-    if not files_to_load:
+    if not has_files_to_load:
         return translations_by_language
 
     # Load files
