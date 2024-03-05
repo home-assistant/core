@@ -23,19 +23,11 @@ from .coordinator import AndroidIPCamDataUpdateCoordinator
 from .entity import AndroidIPCamBaseEntity
 
 
-@dataclass(frozen=True)
-class AndroidIPWebcamSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[PyDroidIPCam], StateType]
-
-
-@dataclass(frozen=True)
-class AndroidIPWebcamSensorEntityDescription(
-    SensorEntityDescription, AndroidIPWebcamSensorEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class AndroidIPWebcamSensorEntityDescription(SensorEntityDescription):
     """Entity description class for Android IP Webcam sensors."""
 
+    value_fn: Callable[[PyDroidIPCam], StateType]
     unit_fn: Callable[[PyDroidIPCam], str | None] = lambda _: None
 
 
