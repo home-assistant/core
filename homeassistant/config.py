@@ -1083,7 +1083,7 @@ async def merge_packages_config(
                 integration = await async_get_integration_with_requirements(
                     hass, domain
                 )
-                component = integration.get_component()
+                component = await integration.async_get_component()
             except LOAD_EXCEPTIONS as exc:
                 _log_pkg_error(
                     hass,
