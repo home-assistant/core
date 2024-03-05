@@ -32,7 +32,8 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
 
     # Test flow with no errors
     with patch(
-        "homeassistant.components.overseerr.config_flow.setup_client", return_value=None
+        "homeassistant.components.overseerr.config_flow.AuthApi.auth_me_get",
+        return_value=None,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -48,16 +49,26 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     }
 
 
-async def test_form_with_max_retry_exception(
+@pytest.mark.parametrize(
+    ("exception", "error_string"),
+    [
+        (OpenApiException, "open_api_exception"),
+        (MaxRetryError, "open_api_exception"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_retries_on_exception(
     hass: HomeAssistant,
+    exception: Exception,
+    error_string: str,
 ) -> None:
-    """Test max retry exception causes error and not create entry."""
-    # Create dummy pool for exception
-    pool = HTTPConnectionPool(host="localhost", port=5055)
-
+    """Test that config flow can recover for all expected exceptions."""
+    if exception == MaxRetryError:
+        pool = HTTPConnectionPool(host="localhost", port=5055)
+        exception = MaxRetryError(pool, "Dummy exception")
     with patch(
-        "homeassistant.components.overseerr.config_flow.setup_client",
-        side_effect=MaxRetryError(pool, "Dummy exception"),
+        "homeassistant.components.overseerr.config_flow.AuthApi.auth_me_get",
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -65,47 +76,25 @@ async def test_form_with_max_retry_exception(
             data=USER_INPUT,
         )
 
+    # Assert that the exception causes error in the form
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "open_api_exception"}
+    assert result["errors"] == {"base": error_string}
 
-
-async def test_form_with_overseeerr_api_exception(
-    hass: HomeAssistant,
-) -> None:
-    """Test OpenApiException causes error and not create entry."""
+    # Assert that this can be recovered
     with patch(
-        "homeassistant.components.overseerr.config_flow.setup_client",
-        side_effect=OpenApiException,
+        "homeassistant.components.overseerr.config_flow.AuthApi.auth_me_get",
+        return_value=None,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: SOURCE_USER},
-            data=USER_INPUT,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
         )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "open_api_exception"}
-
-
-async def test_form_with_general_exception(
-    hass: HomeAssistant,
-) -> None:
-    """Test Exception causes error unknown and not create entry."""
-    with patch(
-        "homeassistant.components.overseerr.config_flow.setup_client",
-        side_effect=Exception,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={CONF_SOURCE: SOURCE_USER},
-            data=USER_INPUT,
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Overseerr"
+    assert result["data"] == {
+        CONF_URL: USER_INPUT[CONF_URL],
+        CONF_API_KEY: USER_INPUT[CONF_API_KEY],
+    }
 
 
 async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
