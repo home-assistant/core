@@ -80,7 +80,6 @@ BASE_PRELOAD_PLATFORMS = [
     "trigger",
 ]
 
-SKIP_PRELOAD_INTEGRATION_TYPES = {"entity", "helper", "virtual"}
 
 DATA_COMPONENTS = "components"
 DATA_INTEGRATIONS = "integrations"
@@ -190,7 +189,7 @@ class Manifest(TypedDict, total=False):
     disabled: str
     domain: str
     integration_type: Literal[
-        "entity", "device", "hardware", "helper", "hub", "service", "system"
+        "entity", "device", "hardware", "helper", "hub", "service", "system", "virtual"
     ]
     dependencies: list[str]
     after_dependencies: list[str]
@@ -629,12 +628,15 @@ class Integration:
                 continue
 
             file_path = manifest_path.parent
+            # Avoid the listdir for virtual integrations
+            # as they cannot have any platforms
+            is_virtual = manifest.get("integration_type") == "virtual"
             integration = cls(
                 hass,
                 f"{root_module.__name__}.{domain}",
                 file_path,
                 manifest,
-                set(os.listdir(file_path)),
+                set() if is_virtual else set(os.listdir(file_path)),
             )
 
             if integration.is_built_in:
@@ -779,7 +781,9 @@ class Integration:
     @cached_property
     def integration_type(
         self,
-    ) -> Literal["entity", "device", "hardware", "helper", "hub", "service", "system"]:
+    ) -> Literal[
+        "entity", "device", "hardware", "helper", "hub", "service", "system", "virtual"
+    ]:
         """Return the integration type."""
         return self.manifest.get("integration_type", "hub")
 
@@ -987,14 +991,13 @@ class Integration:
             raise ImportError(f"Exception importing {self.pkg_path}") from err
 
         if preload_platforms:
-            if self.integration_type not in SKIP_PRELOAD_INTEGRATION_TYPES:
-                for platform_name in self.platforms_exists(self._preload_platforms):
-                    # Setting up a component always checks if the config
-                    # platform exists. Since we may be running in the executor
-                    # we will use this opportunity to cache the config platform
-                    # as well.
-                    with suppress(ImportError):
-                        self.get_platform(platform_name)
+            for platform_name in self.platforms_exists(self._preload_platforms):
+                # Setting up a component always checks if the config
+                # platform exists. Since we may be running in the executor
+                # we will use this opportunity to cache the config platform
+                # as well.
+                with suppress(ImportError):
+                    self.get_platform(platform_name)
 
             if self.config_flow:
                 # If there is a config flow, we will cache it as well since
