@@ -104,8 +104,8 @@ async def _async_process_integration_platforms_for_component(
     # Now we know which platforms to load, let's load them.
     try:
         platforms = await integration.async_get_platforms(platforms_that_exist)
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.exception(
+    except ImportError:
+        _LOGGER.debug(
             "Unexpected error importing integration platforms for %s",
             integration.domain,
         )
@@ -212,8 +212,8 @@ async def async_process_integration_platforms(
             continue
         try:
             platform = await integration.async_get_platform(platform_name)
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception(
+        except ImportError:
+            _LOGGER.debug(
                 "Unexpected error importing %s for %s",
                 platform_name,
                 integration.domain,
