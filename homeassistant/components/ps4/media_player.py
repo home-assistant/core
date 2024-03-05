@@ -41,8 +41,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-ICON = "mdi:sony-playstation"
-
 DEFAULT_RETRIES = 2
 
 
@@ -67,7 +65,6 @@ async def async_setup_entry(
 class PS4Device(MediaPlayerEntity):
     """Representation of a PS4."""
 
-    _attr_icon = ICON
     _attr_supported_features = (
         MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.TURN_ON
@@ -75,6 +72,7 @@ class PS4Device(MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
+    _attr_translation_key = "media_player"
 
     def __init__(
         self,
