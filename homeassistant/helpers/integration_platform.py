@@ -49,21 +49,18 @@ def _async_integration_platform_component_loaded(
     integration = async_get_loaded_integration(hass, component_name)
     # First filter out platforms that the integration already
     # known to be missing or already processed.
-    to_process: list[IntegrationPlatform] = []
+    integration_platforms_by_name: dict[str, IntegrationPlatform] = {}
     for integration_platform in integration_platforms:
         if component_name in integration_platform.seen_components:
             continue
         integration_platform.seen_components.add(component_name)
-        if not integration.platform_missing(integration_platform.platform_name):
-            to_process.append(integration_platform)
+        integration_platforms_by_name[
+            integration_platform.platform_name
+        ] = integration_platform
 
-    if not to_process:
+    if not integration_platforms_by_name:
         return
 
-    integration_platforms_by_name = {
-        integration_platform.platform_name: integration_platform
-        for integration_platform in to_process
-    }
     platforms_that_exist = integration.platforms_exists(integration_platforms_by_name)
     if not platforms_that_exist:
         return
