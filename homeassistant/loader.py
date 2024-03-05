@@ -1158,13 +1158,15 @@ class Integration:
         files = self._top_level_files
         domain = self.domain
         exiting_platforms: list[str] = []
+        missing_platforms = self._missing_platforms_cache
         for platform_name in platform_names:
-            if f"{platform_name}.py" in files or platform_name in files:
+            full_name = f"{domain}.{platform_name}"
+            if full_name not in missing_platforms and (
+                f"{platform_name}.py" in files or platform_name in files
+            ):
                 exiting_platforms.append(platform_name)
                 continue
-
-            full_name = f"{domain}.{platform_name}"
-            self._missing_platforms_cache[full_name] = ModuleNotFoundError(
+            missing_platforms[full_name] = ModuleNotFoundError(
                 f"Platform {full_name} not found",
                 name=f"{self.pkg_path}.{platform_name}",
             )
