@@ -126,8 +126,9 @@ async def test_broken_integration(
         hass, "platform_to_check", _process_platform
     )
 
+    # This should never actually happen as the component cannot be
+    # in hass.config.components without a loaded manifest
     assert len(processed) == 0
-    assert "Error importing integration loaded for platform_to_check" in caplog.text
 
 
 async def test_process_integration_platforms_no_integrations(

@@ -194,18 +194,11 @@ async def async_process_integration_platforms(
         return
 
     integrations = await async_get_integrations(hass, top_level_components)
-    loaded_integrations: list[Integration] = []
-    for domain, integration in integrations.items():
-        if isinstance(integration, Exception):
-            _LOGGER.exception(
-                "Error importing integration %s for %s",
-                domain,
-                platform_name,
-                exc_info=integration,
-            )
-            continue
-        loaded_integrations.append(integration)
-
+    loaded_integrations: list[Integration] = [
+        integration
+        for integration in integrations.values()
+        if not isinstance(integration, Exception)
+    ]
     if not loaded_integrations:
         return
 
