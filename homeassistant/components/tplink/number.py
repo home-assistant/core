@@ -1,12 +1,12 @@
-"""Support for TPLink switch entities."""
+"""Support for TPLink number entities."""
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import cast
 
 from kasa import Feature, FeatureType, SmartDevice, SmartPlug
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -26,33 +26,31 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up switches."""
+    """Set up number entities."""
     data: TPLinkData = hass.data[DOMAIN][config_entry.entry_id]
     parent_coordinator = data.parent_coordinator
     device = cast(SmartPlug, parent_coordinator.device)
     entities: list = []
 
-    def _switches_for_device(dev, parent: SmartDevice = None) -> list[Switch]:
+    def _numbers_for_device(dev, parent: SmartDevice = None) -> list[Number]:
         switches = [
-            Switch(dev, data.parent_coordinator, id_, feat, parent=parent)
+            Number(dev, data.parent_coordinator, id_, feat, parent=parent)
             for id_, feat in dev.features.items()
-            if feat.type == FeatureType.Switch
+            if feat.type == FeatureType.Number
         ]
-        # TODO: a way to filter state switch for platforms with their own main controls:
-        #  lights and fans?
         return switches
 
     if device.children:
         _LOGGER.debug("Initializing device with %s children", len(device.children))
         for child in device.children:
-            entities.extend(_switches_for_device(child, parent=device))
+            entities.extend(_numbers_for_device(child, parent=device))
 
-    entities.extend(_switches_for_device(device))
+    entities.extend(_numbers_for_device(device))
 
     async_add_entities(entities)
 
 
-class Switch(CoordinatedTPLinkEntity, SwitchEntity):
+class Number(CoordinatedTPLinkEntity, NumberEntity):
     """Representation of a feature-based TPLink sensor."""
 
     def __init__(
@@ -63,7 +61,7 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
         feature: Feature,
         parent: SmartDevice = None,
     ):
-        """Initialize the switch."""
+        """Initialize the number entity."""
         super().__init__(device, coordinator, parent=parent)
         self._device = device
         self._feature = feature
@@ -71,26 +69,23 @@ class Switch(CoordinatedTPLinkEntity, SwitchEntity):
         self._attr_entity_category = (
             EntityCategory.CONFIG
         )  # TODO: read from the feature
-        if feature.name == "State":  # Main switch of the device has no category.
-            self._attr_entity_category = None
 
-        self.entity_description = SwitchEntityDescription(
-            key=id_, translation_key=id_, name=feature.name, icon=feature.icon
+        self.entity_description = NumberEntityDescription(
+            key=id_,
+            translation_key=id_,
+            name=feature.name,
+            icon=feature.icon,
+            native_min_value=feature.minimum_value,
+            native_max_value=feature.maximum_value,
         )
         self._async_update_attrs()
 
     @async_refresh_after
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the LED switch on."""
-        await self._feature.set_value(True)
-
-    @async_refresh_after
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the LED switch off."""
-        await self._feature.set_value(False)
+    async def async_set_native_value(self, value: float) -> None:
+        """Set feature value."""
+        await self._feature.set_value(int(value))
 
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity's attributes."""
-        is_on = self._feature.value
-        self._attr_is_on = is_on
+        self._attr_native_value = self._feature.value

@@ -1,12 +1,13 @@
 """Common code for tplink."""
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from kasa import SmartDevice
 
-from homeassistant.helpers import device_registry as dr
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -29,20 +30,26 @@ def async_refresh_after(
     return _async_wrap
 
 
-class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
+class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], ABC):
     """Common base class for all coordinated tplink entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, device: SmartDevice, coordinator: TPLinkDataUpdateCoordinator
+        self,
+        device: SmartDevice,
+        coordinator: TPLinkDataUpdateCoordinator,
+        parent: SmartDevice = None,
     ) -> None:
-        """Initialize the switch."""
+        """Initialize the entity."""
         super().__init__(coordinator)
         self.device: SmartDevice = device
         self._attr_unique_id = device.device_id
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
+            # TODO: find out if connections have any use and/or if it should
+            #  still be set for the main device. if set for child devices, all
+            #  devices will be presented by a single device
+            # connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
             identifiers={(DOMAIN, str(device.device_id))},
             manufacturer="TP-Link",
             model=device.model,
@@ -50,3 +57,17 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator]):
             sw_version=device.hw_info["sw_ver"],
             hw_version=device.hw_info["hw_ver"],
         )
+
+        if parent is not None:
+            self._attr_device_info["via_device"] = (DOMAIN, parent.device_id)
+
+    @abstractmethod
+    def _async_update_attrs(self):
+        """Callback to update the entity internals."""
+        raise NotImplementedError()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
