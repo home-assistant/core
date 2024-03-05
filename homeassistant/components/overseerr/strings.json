@@ -8,16 +8,15 @@
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }
-      },
+      }
     },
     "error": {
       "open_api_exception": "Connection failed. Please re-check your API key and host name.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  },
   },
   "entity": {
     "sensor": {

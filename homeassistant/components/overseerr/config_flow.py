@@ -36,7 +36,7 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             try:
-                self.setup_client(user_input)
+                await self.hass.async_add_executor_job(self.setup_client, user_input)
             except (OpenApiException, MaxRetryError) as exception:
                 _LOGGER.error("Error connecting to the Overseerr API: %s", exception)
                 errors = {"base": "open_api_exception"}

@@ -23,7 +23,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:check',
-    'original_name': 'Approved Requests',
+    'original_name': 'Approved requests',
     'platform': 'overseerr',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -34,7 +34,7 @@
 # name: test_overseerr_sensor[approved_requests].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Approved Requests',
+      'friendly_name': 'Mock Title Approved requests',
       'icon': 'mdi:check',
     }),
     'context': <ANY>,
@@ -68,7 +68,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:download',
-    'original_name': 'Available Requests',
+    'original_name': 'Available requests',
     'platform': 'overseerr',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -79,7 +79,7 @@
 # name: test_overseerr_sensor[available_requests].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Available Requests',
+      'friendly_name': 'Mock Title Available requests',
       'icon': 'mdi:download',
     }),
     'context': <ANY>,
@@ -113,7 +113,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:movie',
-    'original_name': 'Movie Requests',
+    'original_name': 'Movie requests',
     'platform': 'overseerr',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -124,7 +124,7 @@
 # name: test_overseerr_sensor[movie_requests].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Movie Requests',
+      'friendly_name': 'Mock Title Movie requests',
       'icon': 'mdi:movie',
     }),
     'context': <ANY>,
@@ -158,7 +158,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:clock-alert-outline',
-    'original_name': 'Pending Requests',
+    'original_name': 'Pending requests',
     'platform': 'overseerr',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -169,7 +169,7 @@
 # name: test_overseerr_sensor[pending_requests].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Pending Requests',
+      'friendly_name': 'Mock Title Pending requests',
       'icon': 'mdi:clock-alert-outline',
     }),
     'context': <ANY>,
@@ -203,7 +203,7 @@
     }),
     'original_device_class': None,
     'original_icon': 'mdi:movie',
-    'original_name': 'Total Requests',
+    'original_name': 'Total requests',
     'platform': 'overseerr',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -214,7 +214,7 @@
 # name: test_overseerr_sensor[total_requests].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Total Requests',
+      'friendly_name': 'Mock Title Total requests',
       'icon': 'mdi:movie',
     }),
     'context': <ANY>,
