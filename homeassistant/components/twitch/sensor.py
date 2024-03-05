@@ -46,8 +46,6 @@ ATTR_FOLLOW_SINCE = "following_since"
 ATTR_FOLLOWING = "followers"
 ATTR_VIEWS = "views"
 
-ICON = "mdi:twitch"
-
 STATE_OFFLINE = "offline"
 STATE_STREAMING = "streaming"
 
@@ -118,7 +116,7 @@ async def async_setup_entry(
 class TwitchSensor(SensorEntity):
     """Representation of a Twitch channel."""
 
-    _attr_icon = ICON
+    _attr_translation_key = "channel"
 
     def __init__(self, channel: TwitchUser, client: Twitch) -> None:
         """Initialize the sensor."""
