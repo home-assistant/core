@@ -53,7 +53,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
             await self.fyta.login()
         except FytaConnectionError as ex:
             raise ConfigEntryNotReady from ex
-        except (FytaAuthentificationError, FytaPasswordError)  as ex:
+        except (FytaAuthentificationError, FytaPasswordError) as ex:
             raise ConfigEntryAuthFailed from ex
 
         return True
