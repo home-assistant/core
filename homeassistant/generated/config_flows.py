@@ -224,6 +224,7 @@ FLOWS = {
         "homekit_controller",
         "homematicip_cloud",
         "homewizard",
+        "homeworks",
         "honeywell",
         "huawei_lte",
         "hue",

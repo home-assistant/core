@@ -10,7 +10,7 @@ from aiounifi.interfaces.api_handlers import ItemEvent
 from aiounifi.models.device import DeviceSetPoePortModeRequest
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
@@ -29,31 +29,13 @@ import homeassistant.util.dt as dt_util
 
 from ..const import (
     ATTR_MANUFACTURER,
-    CONF_ALLOW_BANDWIDTH_SENSORS,
-    CONF_ALLOW_UPTIME_SENSORS,
-    CONF_BLOCK_CLIENT,
-    CONF_CLIENT_SOURCE,
-    CONF_DETECTION_TIME,
-    CONF_DPI_RESTRICTIONS,
-    CONF_IGNORE_WIRED_BUG,
     CONF_SITE_ID,
-    CONF_SSID_FILTER,
-    CONF_TRACK_CLIENTS,
-    CONF_TRACK_DEVICES,
-    CONF_TRACK_WIRED_CLIENTS,
-    DEFAULT_ALLOW_BANDWIDTH_SENSORS,
-    DEFAULT_ALLOW_UPTIME_SENSORS,
-    DEFAULT_DETECTION_TIME,
-    DEFAULT_DPI_RESTRICTIONS,
-    DEFAULT_IGNORE_WIRED_BUG,
-    DEFAULT_TRACK_CLIENTS,
-    DEFAULT_TRACK_DEVICES,
-    DEFAULT_TRACK_WIRED_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
     PLATFORMS,
     UNIFI_WIRELESS_CLIENTS,
 )
 from ..entity import UnifiEntity, UnifiEntityDescription
+from .config import UnifiConfig
 from .websocket import UnifiWebsocket
 
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
@@ -67,8 +49,8 @@ class UnifiHub:
     ) -> None:
         """Initialize the system."""
         self.hass = hass
-        self.config_entry = config_entry
         self.api = api
+        self.config = UnifiConfig.from_config_entry(config_entry)
         self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
 
         self.wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
@@ -79,71 +61,11 @@ class UnifiHub:
         self._cancel_heartbeat_check: CALLBACK_TYPE | None = None
         self._heartbeat_time: dict[str, datetime] = {}
 
-        self.load_config_entry_options()
-
         self.entities: dict[str, str] = {}
         self.known_objects: set[tuple[str, str]] = set()
 
         self.poe_command_queue: dict[str, dict[int, str]] = {}
         self._cancel_poe_command: CALLBACK_TYPE | None = None
-
-    def load_config_entry_options(self) -> None:
-        """Store attributes to avoid property call overhead since they are called frequently."""
-        options = self.config_entry.options
-
-        # Allow creating entities from clients.
-        self.option_supported_clients: list[str] = options.get(CONF_CLIENT_SOURCE, [])
-
-        # Device tracker options
-
-        # Config entry option to not track clients.
-        self.option_track_clients = options.get(
-            CONF_TRACK_CLIENTS, DEFAULT_TRACK_CLIENTS
-        )
-        # Config entry option to not track wired clients.
-        self.option_track_wired_clients = options.get(
-            CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS
-        )
-        # Config entry option to not track devices.
-        self.option_track_devices: bool = options.get(
-            CONF_TRACK_DEVICES, DEFAULT_TRACK_DEVICES
-        )
-        # Config entry option listing what SSIDs are being used to track clients.
-        self.option_ssid_filter = set(options.get(CONF_SSID_FILTER, []))
-        # Config entry option defining number of seconds from last seen to away
-        self.option_detection_time = timedelta(
-            seconds=options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
-        )
-        # Config entry option to ignore wired bug.
-        self.option_ignore_wired_bug = options.get(
-            CONF_IGNORE_WIRED_BUG, DEFAULT_IGNORE_WIRED_BUG
-        )
-
-        # Client control options
-
-        # Config entry option with list of clients to control network access.
-        self.option_block_clients: list[str] = options.get(CONF_BLOCK_CLIENT, [])
-        # Config entry option to control DPI restriction groups.
-        self.option_dpi_restrictions: bool = options.get(
-            CONF_DPI_RESTRICTIONS, DEFAULT_DPI_RESTRICTIONS
-        )
-
-        # Statistics sensor options
-
-        # Config entry option to allow bandwidth sensors.
-        self.option_allow_bandwidth_sensors: bool = options.get(
-            CONF_ALLOW_BANDWIDTH_SENSORS, DEFAULT_ALLOW_BANDWIDTH_SENSORS
-        )
-        # Config entry option to allow uptime sensors.
-        self.option_allow_uptime_sensors: bool = options.get(
-            CONF_ALLOW_UPTIME_SENSORS, DEFAULT_ALLOW_UPTIME_SENSORS
-        )
-
-    @property
-    def host(self) -> str:
-        """Return the host of this hub."""
-        host: str = self.config_entry.data[CONF_HOST]
-        return host
 
     @property
     def available(self) -> bool:
@@ -196,12 +118,10 @@ class UnifiHub:
             def async_add_unifi_entities() -> None:
                 """Add UniFi entity."""
                 async_add_entities(
-                    [
-                        unifi_platform_entity(obj_id, self, description)
-                        for description in descriptions
-                        for obj_id in description.api_handler_fn(self.api)
-                        if self._async_should_add_entity(description, obj_id)
-                    ]
+                    unifi_platform_entity(obj_id, self, description)
+                    for description in descriptions
+                    for obj_id in description.api_handler_fn(self.api)
+                    if self._async_should_add_entity(description, obj_id)
                 )
 
             async_add_unifi_entities()
@@ -221,7 +141,7 @@ class UnifiHub:
                     partial(async_create_entity, description), ItemEvent.ADDED
                 )
 
-            self.config_entry.async_on_unload(
+            self.config.entry.async_on_unload(
                 async_dispatcher_connect(
                     self.hass,
                     self.signal_options_update,
@@ -234,12 +154,12 @@ class UnifiHub:
     @property
     def signal_reachable(self) -> str:
         """Integration specific event to signal a change in connection status."""
-        return f"unifi-reachable-{self.config_entry.entry_id}"
+        return f"unifi-reachable-{self.config.entry.entry_id}"
 
     @property
     def signal_options_update(self) -> str:
         """Event specific per UniFi entry to signal new options."""
-        return f"unifi-options-{self.config_entry.entry_id}"
+        return f"unifi-options-{self.config.entry.entry_id}"
 
     @property
     def signal_heartbeat_missed(self) -> str:
@@ -250,25 +170,29 @@ class UnifiHub:
         """Set up a UniFi Network instance."""
         await self.api.initialize()
 
-        assert self.config_entry.unique_id is not None
-        self.is_admin = self.api.sites[self.config_entry.unique_id].role == "admin"
+        assert self.config.entry.unique_id is not None
+        self.is_admin = self.api.sites[self.config.entry.unique_id].role == "admin"
 
         # Restore device tracker clients that are not a part of active clients list.
         macs: list[str] = []
         entity_registry = er.async_get(self.hass)
         for entry in async_entries_for_config_entry(
-            entity_registry, self.config_entry.entry_id
+            entity_registry, self.config.entry.entry_id
         ):
             if entry.domain == Platform.DEVICE_TRACKER and "-" in entry.unique_id:
                 macs.append(entry.unique_id.split("-", 1)[1])
 
-        for mac in self.option_supported_clients + self.option_block_clients + macs:
+        for mac in (
+            self.config.option_supported_clients
+            + self.config.option_block_clients
+            + macs
+        ):
             if mac not in self.api.clients and mac in self.api.clients_all:
                 self.api.clients.process_raw([dict(self.api.clients_all[mac].raw)])
 
         self.wireless_clients.update_clients(set(self.api.clients.values()))
 
-        self.config_entry.add_update_listener(self.async_config_entry_updated)
+        self.config.entry.add_update_listener(self.async_config_entry_updated)
 
         self._cancel_heartbeat_check = async_track_time_interval(
             self.hass, self._async_check_for_stale, CHECK_HEARTBEAT_INTERVAL
@@ -330,7 +254,7 @@ class UnifiHub:
     @property
     def device_info(self) -> DeviceInfo:
         """UniFi Network device info."""
-        assert self.config_entry.unique_id is not None
+        assert self.config.entry.unique_id is not None
 
         version: str | None = None
         if sysinfo := next(iter(self.api.system_information.values()), None):
@@ -338,7 +262,7 @@ class UnifiHub:
 
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(UNIFI_DOMAIN, self.config_entry.unique_id)},
+            identifiers={(UNIFI_DOMAIN, self.config.entry.unique_id)},
             manufacturer=ATTR_MANUFACTURER,
             model="UniFi Network Application",
             name="UniFi Network",
@@ -350,7 +274,7 @@ class UnifiHub:
         """Update device registry."""
         device_registry = dr.async_get(self.hass)
         return device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id, **self.device_info
+            config_entry_id=self.config.entry.entry_id, **self.device_info
         )
 
     @staticmethod
@@ -364,7 +288,7 @@ class UnifiHub:
         """
         if not (hub := hass.data[UNIFI_DOMAIN].get(config_entry.entry_id)):
             return
-        hub.load_config_entry_options()
+        hub.config = UnifiConfig.from_config_entry(config_entry)
         async_dispatcher_send(hass, hub.signal_options_update)
 
     @callback
@@ -384,7 +308,7 @@ class UnifiHub:
         await self.websocket.stop_and_wait()
 
         unload_ok = await self.hass.config_entries.async_unload_platforms(
-            self.config_entry, PLATFORMS
+            self.config.entry, PLATFORMS
         )
 
         if not unload_ok:

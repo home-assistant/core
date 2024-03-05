@@ -1083,7 +1083,7 @@ async def merge_packages_config(
                 integration = await async_get_integration_with_requirements(
                     hass, domain
                 )
-                component = integration.get_component()
+                component = await integration.async_get_component()
             except LOAD_EXCEPTIONS as exc:
                 _log_pkg_error(
                     hass,
@@ -1430,6 +1430,7 @@ async def async_process_component_config(  # noqa: C901
     hass: HomeAssistant,
     config: ConfigType,
     integration: Integration,
+    component: ComponentProtocol | None = None,
 ) -> IntegrationConfigInfo:
     """Check component configuration.
 
@@ -1441,22 +1442,26 @@ async def async_process_component_config(  # noqa: C901
     integration_docs = integration.documentation
     config_exceptions: list[ConfigExceptionInfo] = []
 
-    try:
-        component = await integration.async_get_component()
-    except LOAD_EXCEPTIONS as exc:
-        exc_info = ConfigExceptionInfo(
-            exc,
-            ConfigErrorTranslationKey.COMPONENT_IMPORT_ERR,
-            domain,
-            config,
-            integration_docs,
-        )
-        config_exceptions.append(exc_info)
-        return IntegrationConfigInfo(None, config_exceptions)
+    if not component:
+        try:
+            component = await integration.async_get_component()
+        except LOAD_EXCEPTIONS as exc:
+            exc_info = ConfigExceptionInfo(
+                exc,
+                ConfigErrorTranslationKey.COMPONENT_IMPORT_ERR,
+                domain,
+                config,
+                integration_docs,
+            )
+            config_exceptions.append(exc_info)
+            return IntegrationConfigInfo(None, config_exceptions)
 
     # Check if the integration has a custom config validator
     config_validator = None
-    if integration.platform_exists("config") is not False:
+    # A successful call to async_get_component will prime
+    # the cache for platforms_exists to ensure it does no
+    # blocking I/O
+    if integration.platforms_exists(("config",)):
         # If the config platform cannot possibly exist, don't try to load it.
         try:
             config_validator = await integration.async_get_platform("config")

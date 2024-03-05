@@ -10,7 +10,6 @@ from homeassistant.components.select import (
 from homeassistant.const import (
     AREA_SQUARE_METERS,
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     SERVICE_SELECT_OPTION,
     EntityCategory,
 )
@@ -33,7 +32,6 @@ async def test_select_entity(
     state = hass.states.get("select.genie_room_size")
     assert state
     assert state.state == str(diffuser.room_size_square_meter)
-    assert state.attributes[ATTR_ICON] == "mdi:ruler-square"
     assert state.attributes[ATTR_OPTIONS] == ["15", "30", "60", "100"]
 
     entry = entity_registry.async_get("select.genie_room_size")
