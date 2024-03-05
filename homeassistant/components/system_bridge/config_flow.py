@@ -37,17 +37,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-system_bridge_data = SystemBridgeData()
-
-
-async def _async_handle_module(
-    module_name: str,
-    module: Any,
-) -> None:
-    """Handle data from the WebSocket client."""
-    _LOGGER.debug("Set new data for: %s", module_name)
-    setattr(system_bridge_data, module_name, module)
-
 
 async def _validate_input(
     hass: HomeAssistant,
@@ -57,6 +46,17 @@ async def _validate_input(
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
+
+    system_bridge_data = SystemBridgeData()
+
+    async def _async_handle_module(
+        module_name: str,
+        module: Any,
+    ) -> None:
+        """Handle data from the WebSocket client."""
+        _LOGGER.debug("Set new data for: %s", module_name)
+        setattr(system_bridge_data, module_name, module)
+
     websocket_client = WebSocketClient(
         data[CONF_HOST],
         data[CONF_PORT],
