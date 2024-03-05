@@ -1126,6 +1126,10 @@ class Integration:
             raise self._missing_platforms_cache[full_name]
         return None
 
+    def get_platform_cached(self, platform_name: str) -> ModuleType | None:
+        """Return a platform for an integration from cache."""
+        return self._cache.get(f"{self.domain}.{platform_name}")  # type: ignore[return-value]
+
     def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
         if platform := self._get_platform_cached_or_raise(
