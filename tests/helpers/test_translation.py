@@ -335,7 +335,35 @@ async def test_get_translation_categories(hass: HomeAssistant) -> None:
         assert "component.light.device_automation.action_type.turn_on" in translations
 
 
-async def test_translation_merging(
+async def test_legacy_platform_translations_not_used_built_in_integrations(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test legacy platform translations are not used for built-in integrations."""
+    hass.config.components.add("moon.sensor")
+    hass.config.components.add("sensor")
+
+    load_requests = []
+
+    def mock_load_translations_files_by_language(files):
+        load_requests.append(files)
+        return {}
+
+    with patch(
+        "homeassistant.helpers.translation._load_translations_files_by_language",
+        mock_load_translations_files_by_language,
+    ):
+        await translation.async_get_translations(hass, "en", "state")
+
+    assert len(load_requests) == 1
+    to_load = load_requests[0]
+    assert len(to_load) == 1
+    en_load = to_load["en"]
+    assert len(en_load) == 1
+    assert "sensor" in en_load
+    assert "moon.sensor" not in en_load
+
+
+async def test_translation_merging_custom_components(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     enable_custom_integrations: None,
