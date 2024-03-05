@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from datetime import date as Date
 import logging
-from typing import Any
+from typing import Any, cast
 
-from hdate import HDate
+from hdate import HDate, HebrewDate, htables
 from hdate.zmanim import Zmanim
 
 from homeassistant.components.sensor import (
@@ -190,7 +190,7 @@ class JewishCalendarSensor(SensorEntity):
         self._candle_lighting_offset = data[CONF_CANDLE_LIGHT_MINUTES]
         self._havdalah_offset = data[CONF_HAVDALAH_OFFSET_MINUTES]
         self._diaspora = data[CONF_DIASPORA]
-        self._holiday_attrs: dict[str, str] = {}
+        self._attrs: dict[str, str] = {}
 
     async def async_update(self) -> None:
         """Update the state of the sensor."""
@@ -247,9 +247,7 @@ class JewishCalendarSensor(SensorEntity):
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
-        if self.entity_description.key != "holiday":
-            return {}
-        return self._holiday_attrs
+        return self._attrs
 
     def get_state(
         self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate
@@ -258,15 +256,37 @@ class JewishCalendarSensor(SensorEntity):
         # Terminology note: by convention in py-libhdate library, "upcoming"
         # refers to "current" or "upcoming" dates.
         if self.entity_description.key == "date":
+            hdate = cast(HebrewDate, after_shkia_date.hdate)
+            month = htables.MONTHS[hdate.month.value - 1]
+            self._attrs = {
+                "year": hdate.year,
+                "month_name": month.hebrew if self._hebrew else month.english,
+                "day": hdate.day,
+            }
             return after_shkia_date.hebrew_date
         if self.entity_description.key == "weekly_portion":
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attrs = {
+                "options": [
+                    (p.hebrew if self._hebrew else p.english) for p in htables.PARASHAOT
+                ],
+            }
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
         if self.entity_description.key == "holiday":
-            self._holiday_attrs = {
+            self._attr_device_class = SensorDeviceClass.ENUM
+            self._attrs = {
                 "id": after_shkia_date.holiday_name,
                 "type": after_shkia_date.holiday_type.name,
                 "type_id": after_shkia_date.holiday_type.value,
+                "options": [
+                    (
+                        h.description.hebrew.long
+                        if self._hebrew
+                        else h.description.english
+                    )
+                    for h in htables.HOLIDAYS
+                ],
             }
             return after_shkia_date.holiday_description
         if self.entity_description.key == "omer_count":
