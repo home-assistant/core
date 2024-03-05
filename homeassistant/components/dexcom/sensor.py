@@ -1,7 +1,7 @@
 """Support for Dexcom sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -13,6 +13,16 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import COORDINATOR, DOMAIN, GLUCOSE_TREND_ICON, MG_DL
+
+trends = {
+    1: "rising_quickly",
+    2: "rising",
+    3: "rising_slightly",
+    4: "steady",
+    5: "falling_slightly",
+    6: "falling",
+    7: "falling_quickly",
+}
 
 
 async def async_setup_entry(
@@ -81,6 +91,8 @@ class DexcomGlucoseTrendSensor(DexcomSensorEntity):
     """Representation of a Dexcom glucose trend sensor."""
 
     _attr_translation_key = "glucose_trend"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = [*trends.values()]
 
     def __init__(
         self, coordinator: DataUpdateCoordinator, username: str, entry_id: str
@@ -96,8 +108,13 @@ class DexcomGlucoseTrendSensor(DexcomSensorEntity):
         return GLUCOSE_TREND_ICON[0]
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         if self.coordinator.data:
-            return self.coordinator.data.trend_description
+            return trends.get(self.coordinator.data.trend)
         return None
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.coordinator.data.trend != 9
