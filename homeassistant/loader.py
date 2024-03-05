@@ -1150,9 +1150,8 @@ class Integration:
     def platforms_exists(self, platform_names: Iterable[str]) -> list[str]:
         """Check if a platforms exists for an integration.
 
-        Returns a list of platforms that exist.
-
-        The component must be loaded before calling this method.
+        This method is thread-safe and can be called from the executor
+        or event loop without doing blocking I/O.
         """
         files = self._top_level_files
         domain = self.domain
