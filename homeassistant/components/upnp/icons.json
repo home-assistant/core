@@ -31,7 +31,7 @@
       "packet_download_speed": {
         "default": "mdi:server-network"
       },
-      "v": {
+      "packet_upload_speed": {
         "default": "mdi:server-network"
       }
     }
