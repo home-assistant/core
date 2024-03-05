@@ -47,8 +47,7 @@ def _async_integration_platform_component_loaded(
         return
 
     integration = async_get_loaded_integration(hass, component_name)
-    # First filter out platforms that the integration already
-    # known to be missing or already processed.
+    # First filter out platforms that the integration already processed.
     integration_platforms_by_name: dict[str, IntegrationPlatform] = {}
     for integration_platform in integration_platforms:
         if component_name in integration_platform.seen_components:
@@ -61,6 +60,7 @@ def _async_integration_platform_component_loaded(
     if not integration_platforms_by_name:
         return
 
+    # Next, check which platforms exist for this integration.
     platforms_that_exist = integration.platforms_exists(integration_platforms_by_name)
     if not platforms_that_exist:
         return
