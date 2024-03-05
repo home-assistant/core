@@ -107,18 +107,14 @@ async def _async_get_component_strings(
     for language in languages:
         files_to_load: dict[str, str] = {}
         files_to_load_by_language[language] = files_to_load
-
-        loaded_translations: dict[str, Any] = {}
-        translations_by_language[language] = loaded_translations
+        translations_by_language[language] = {}
 
         for loaded in components:
             domain = loaded.partition(".")[0]
             if not (integration := integrations.get(domain)):
                 continue
             # No translation available
-            if (path := component_translation_path(language, integration)) is None:
-                loaded_translations[loaded] = {}
-            else:
+            if path := component_translation_path(language, integration):
                 files_to_load[loaded] = path
 
     if not files_to_load:
