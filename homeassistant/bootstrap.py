@@ -28,6 +28,7 @@ from . import config as conf_util, config_entries, core, loader, requirements
 # as it would create a thundering heard of executor jobs trying to import
 # frontend deps at the same time.
 from .components import (
+    analytics as analytics_pre_import,  # noqa: F401
     api as api_pre_import,  # noqa: F401
     auth as auth_pre_import,  # noqa: F401
     config as config_pre_import,  # noqa: F401
