@@ -41,7 +41,7 @@ async def async_setup_entry(
 class VersionSensorEntity(VersionEntity, SensorEntity):
     """Version sensor entity class."""
 
-    _attr_icon = "mdi:package-up"
+    _attr_translation_key = "version"
 
     @property
     def native_value(self) -> StateType:
