@@ -58,11 +58,9 @@ async def async_setup_entry(
     """Set up the Nextcloud binary sensors."""
     coordinator: NextcloudDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            NextcloudBinarySensor(coordinator, entry, sensor)
-            for sensor in BINARY_SENSORS
-            if sensor.key in coordinator.data
-        ]
+        NextcloudBinarySensor(coordinator, entry, sensor)
+        for sensor in BINARY_SENSORS
+        if sensor.key in coordinator.data
     )
 
 
