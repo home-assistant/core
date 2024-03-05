@@ -36,10 +36,9 @@ class HassEnforceNonListComprehensionsChecker(BaseChecker):
             if len(node.args) > 1:
                 return
 
-            for arg in node.args:
-                if isinstance(arg, nodes.ListComp):
-                    self.add_message("hass-enforce-non-list-comprehensions", node=node)
-                    return
+            if isinstance(node.args[0], nodes.ListComp):
+                self.add_message("hass-enforce-non-list-comprehensions", node=node)
+                return
 
 
 def register(linter: PyLinter) -> None:
