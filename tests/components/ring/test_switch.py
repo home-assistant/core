@@ -45,7 +45,6 @@ async def test_siren_on_reports_correctly(
     state = hass.states.get("switch.internal_siren")
     assert state.state == "on"
     assert state.attributes.get("friendly_name") == "Internal Siren"
-    assert state.attributes.get("icon") == "mdi:alarm-bell"
 
 
 async def test_siren_can_be_turned_on(

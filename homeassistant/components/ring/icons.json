@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "sensor": {
+      "last_activity": {
+        "default": "mdi:history"
+      },
+      "last_ding": {
+        "default": "mdi:history"
+      },
+      "last_motion": {
+        "default": "mdi:history"
+      },
+      "volume": {
+        "default": "mdi:bell-ring"
+      },
+      "wifi_signal_category": {
+        "default": "mdi:wifi"
+      },
+      "wifi_signal_strength": {
+        "default": "mdi:wifi"
+      }
+    },
+    "switch": {
+      "siren": {
+        "default": "mdi:alarm-bell"
+      }
+    }
+  },
+  "services": {
+    "update": "mdi:refresh"
+  }
+}
