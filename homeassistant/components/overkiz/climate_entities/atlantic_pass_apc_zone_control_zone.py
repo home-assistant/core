@@ -30,12 +30,14 @@ OVERKIZ_MODE_TO_PRESET_MODES: dict[str, str] = {
     OverkizCommandParam.INTERNAL_SCHEDULING: PRESET_SCHEDULE,
 }
 
+PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_MODE_TO_PRESET_MODES.items()}
+
 # Maps the HVAC current ZoneControl system operating mode.
 OVERKIZ_TO_HVAC_ACTION: dict[str, HVACAction] = {
     OverkizCommandParam.COOLING: HVACAction.COOLING,
     OverkizCommandParam.DRYING: HVACAction.DRYING,
     OverkizCommandParam.HEATING: HVACAction.HEATING,
-    # There is no known way to differenciate OFF from Idle.
+    # There is no known way to differentiate OFF from Idle.
     OverkizCommandParam.STOP: HVACAction.OFF,
 }
 
@@ -49,9 +51,7 @@ HVAC_ACTION_TO_OVERKIZ_MODE_STATE: dict[HVACAction, OverkizState] = {
     HVACAction.HEATING: OverkizState.IO_PASS_APC_HEATING_MODE,
 }
 
-PRESET_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_MODE_TO_PRESET_MODES.items()}
-
-TEMPERATURE_ZONECONTROL_DEVICE_INDEX = 20
+TEMPERATURE_ZONECONTROL_DEVICE_INDEX = 1
 
 SUPPORTED_FEATURES: ClimateEntityFeature = (
     ClimateEntityFeature.PRESET_MODE
@@ -131,7 +131,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         if (
             (
                 state_thermal_configuration := cast(
-                    str,
+                    OverkizCommandParam | None,
                     self.executor.select_state(OverkizState.CORE_THERMAL_CONFIGURATION),
                 )
             )
@@ -264,16 +264,20 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
             return super().preset_mode
 
         if (
-            mode_state := HVAC_ACTION_TO_OVERKIZ_MODE_STATE[
-                self.zone_control_hvac_action
-            ]
-        ) is not None and (
-            (
-                mode := OVERKIZ_MODE_TO_PRESET_MODES[
-                    cast(str, self.executor.select_state(mode_state))
+            self.zone_control_hvac_action in HVAC_ACTION_TO_OVERKIZ_MODE_STATE
+            and (
+                mode_state := HVAC_ACTION_TO_OVERKIZ_MODE_STATE[
+                    self.zone_control_hvac_action
                 ]
             )
-            is not None
+            and (
+                (
+                    mode := OVERKIZ_MODE_TO_PRESET_MODES[
+                        cast(str, self.executor.select_state(mode_state))
+                    ]
+                )
+                is not None
+            )
         ):
             return mode
 
@@ -392,7 +396,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
 
         await self.executor.async_execute_command(
             OverkizCommand.SET_DEROGATION_ON_OFF_STATE,
-            OverkizCommandParam.OFF,
+            OverkizCommandParam.ON,
         )
 
         await self.async_refresh_modes()
@@ -424,7 +428,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         )
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return Minimum Temperature for AC of this group."""
 
         device_hvac_mode = self.device_hvac_mode
@@ -448,7 +452,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
         return self._attr_min_temp
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return Max Temperature for AC of this group."""
 
         device_hvac_mode = self.device_hvac_mode

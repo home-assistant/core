@@ -159,7 +159,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         await self.async_set_heating_mode(PRESET_MODES_TO_OVERKIZ[preset_mode])
 
     @property
-    def preset_mode(self) -> str:
+    def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         heating_mode = cast(
             str, self.executor.select_state(OverkizState.IO_PASS_APC_HEATING_MODE)
