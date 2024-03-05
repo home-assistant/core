@@ -5,6 +5,7 @@ from aiohttp import ClientError
 
 from homeassistant.components.gios.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_system_health_info
@@ -16,6 +17,8 @@ async def test_gios_system_health(
 ) -> None:
     """Test GIOS system health."""
     aioclient_mock.get("http://api.gios.gov.pl/", text="")
+    integration = await async_get_integration(hass, DOMAIN)
+    await integration.async_get_component()
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
 
@@ -33,6 +36,8 @@ async def test_gios_system_health_fail(
 ) -> None:
     """Test GIOS system health."""
     aioclient_mock.get("http://api.gios.gov.pl/", exc=ClientError)
+    integration = await async_get_integration(hass, DOMAIN)
+    await integration.async_get_component()
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
 

@@ -10,7 +10,7 @@ timer.
 from __future__ import annotations
 
 from collections import UserDict
-from collections.abc import Callable, Iterable, Mapping, ValuesView
+from collections.abc import Callable, Iterable, KeysView, Mapping, ValuesView
 from datetime import datetime, timedelta
 from enum import StrEnum
 import logging
@@ -221,9 +221,7 @@ class RegistryEntry:
         if not self.name and self.has_entity_name:
             display_dict["en"] = self.original_name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
-            if (precision := sensor_options.get("display_precision")) is not None:
-                display_dict["dp"] = precision
-            elif (
+            if (precision := sensor_options.get("display_precision")) is not None or (
                 precision := sensor_options.get("suggested_display_precision")
             ) is not None:
                 display_dict["dp"] = precision
@@ -457,9 +455,9 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         super().__init__()
         self._entry_ids: dict[str, RegistryEntry] = {}
         self._index: dict[tuple[str, str, str], str] = {}
-        self._config_entry_id_index: dict[str, list[str]] = {}
-        self._device_id_index: dict[str, list[str]] = {}
-        self._area_id_index: dict[str, list[str]] = {}
+        self._config_entry_id_index: dict[str, dict[str, Literal[True]]] = {}
+        self._device_id_index: dict[str, dict[str, Literal[True]]] = {}
+        self._area_id_index: dict[str, dict[str, Literal[True]]] = {}
 
     def values(self) -> ValuesView[RegistryEntry]:
         """Return the underlying values to avoid __iter__ overhead."""
@@ -473,15 +471,17 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         data[key] = entry
         self._entry_ids[entry.id] = entry
         self._index[(entry.domain, entry.platform, entry.unique_id)] = entry.entity_id
+        # python has no ordered set, so we use a dict with True values
+        # https://discuss.python.org/t/add-orderedset-to-stdlib/12730
         if (config_entry_id := entry.config_entry_id) is not None:
-            self._config_entry_id_index.setdefault(config_entry_id, []).append(key)
+            self._config_entry_id_index.setdefault(config_entry_id, {})[key] = True
         if (device_id := entry.device_id) is not None:
-            self._device_id_index.setdefault(device_id, []).append(key)
+            self._device_id_index.setdefault(device_id, {})[key] = True
         if (area_id := entry.area_id) is not None:
-            self._area_id_index.setdefault(area_id, []).append(key)
+            self._area_id_index.setdefault(area_id, {})[key] = True
 
     def _unindex_entry_value(
-        self, key: str, value: str, index: dict[str, list[str]]
+        self, key: str, value: str, index: dict[str, dict[str, Literal[True]]]
     ) -> None:
         """Unindex an entry value.
 
@@ -490,7 +490,7 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         index is the index to unindex from.
         """
         entries = index[value]
-        entries.remove(key)
+        del entries[key]
         if not entries:
             del index[value]
 
@@ -510,6 +510,10 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         """Remove an item."""
         self._unindex_entry(key)
         super().__delitem__(key)
+
+    def get_device_ids(self) -> KeysView[str]:
+        """Return device ids."""
+        return self._device_id_index.keys()
 
     def get_entity_id(self, key: tuple[str, str, str]) -> str | None:
         """Get entity_id from (domain, platform, unique_id)."""
@@ -611,6 +615,11 @@ class EntityRegistry:
     ) -> str | None:
         """Check if an entity_id is currently registered."""
         return self.entities.get_entity_id((domain, platform, unique_id))
+
+    @callback
+    def async_device_ids(self) -> list[str]:
+        """Return known device ids."""
+        return list(self.entities.get_device_ids())
 
     def _entity_id_available(
         self, entity_id: str, known_object_ids: Iterable[str] | None

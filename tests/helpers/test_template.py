@@ -37,6 +37,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity,
     entity_registry as er,
+    issue_registry as ir,
     template,
     translation,
 )
@@ -3509,6 +3510,67 @@ async def test_device_attr(
         ),
     )
     assert_result_info(info, [device_entry.id])
+    assert info.rate_limit is None
+
+
+async def test_issues(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
+    """Test issues function."""
+    # Test no issues
+    info = render_to_info(hass, "{{ issues() }}")
+    assert_result_info(info, {})
+    assert info.rate_limit is None
+
+    # Test persistent issue
+    ir.async_create_issue(
+        hass,
+        "test",
+        "issue 1",
+        breaks_in_ha_version="2023.7",
+        is_fixable=True,
+        is_persistent=True,
+        learn_more_url="https://theuselessweb.com",
+        severity="error",
+        translation_key="abc_1234",
+        translation_placeholders={"abc": "123"},
+    )
+    await hass.async_block_till_done()
+    created_issue = issue_registry.async_get_issue("test", "issue 1")
+    info = render_to_info(hass, "{{ issues()['test', 'issue 1'] }}")
+    assert_result_info(info, created_issue.to_json())
+    assert info.rate_limit is None
+
+    # Test fixed issue
+    ir.async_delete_issue(hass, "test", "issue 1")
+    await hass.async_block_till_done()
+    info = render_to_info(hass, "{{ issues() }}")
+    assert_result_info(info, {})
+    assert info.rate_limit is None
+
+
+async def test_issue(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
+    """Test issue function."""
+    # Test non existent issue
+    info = render_to_info(hass, "{{ issue('non_existent', 'issue') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test existing issue
+    ir.async_create_issue(
+        hass,
+        "test",
+        "issue 1",
+        breaks_in_ha_version="2023.7",
+        is_fixable=True,
+        is_persistent=True,
+        learn_more_url="https://theuselessweb.com",
+        severity="error",
+        translation_key="abc_1234",
+        translation_placeholders={"abc": "123"},
+    )
+    await hass.async_block_till_done()
+    created_issue = issue_registry.async_get_issue("test", "issue 1")
+    info = render_to_info(hass, "{{ issue('test', 'issue 1') }}")
+    assert_result_info(info, created_issue.to_json())
     assert info.rate_limit is None
 
 

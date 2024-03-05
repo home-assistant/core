@@ -94,7 +94,6 @@ from .const import (
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
-    TEMPLATE_ERRORS,
 )
 from .debug_info import log_message, log_messages
 from .discovery import (
@@ -109,6 +108,7 @@ from .discovery import (
 from .models import (
     MessageCallbackType,
     MqttValueTemplate,
+    MqttValueTemplateException,
     PublishPayloadType,
     ReceiveMessage,
 )
@@ -482,7 +482,8 @@ def write_state_on_attr_change(
             }
             try:
                 msg_callback(msg)
-            except TEMPLATE_ERRORS:
+            except MqttValueTemplateException as exc:
+                _LOGGER.warning(exc)
                 return
             if not _attrs_have_changed(tracked_attrs):
                 return
@@ -1347,15 +1348,12 @@ def async_removed_from_device(
     config_entry_id: str,
 ) -> bool:
     """Check if the passed event indicates MQTT was removed from a device."""
-    if event.data["action"] not in ("remove", "update"):
-        return False
-
     if event.data["action"] == "update":
         if "config_entries" not in event.data["changes"]:
             return False
         device_registry = dr.async_get(hass)
         if (
-            device_entry := device_registry.async_get(event.data["device_id"])
+            device_entry := device_registry.async_get(mqtt_device_id)
         ) and config_entry_id in device_entry.config_entries:
             # Not removed from device
             return False

@@ -41,7 +41,6 @@ class NexiaFanSpeedEntity(NexiaThermostatEntity, NumberEntity):
     """Provides Nexia Fan Speed support."""
 
     _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_icon = "mdi:fan"
     _attr_translation_key = "fan_speed"
 
     def __init__(

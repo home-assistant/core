@@ -89,7 +89,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Enable guest Wifi',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_enable_guest_wifi',
@@ -121,7 +120,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Enable guest Wifi',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
@@ -135,7 +134,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Enable LEDs',
-      'icon': 'mdi:led-off',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_enable_leds',
@@ -167,7 +165,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:led-off',
+    'original_icon': None,
     'original_name': 'Enable LEDs',
     'platform': 'devolo_home_network',
     'previous_unique_id': None,
