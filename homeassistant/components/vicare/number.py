@@ -52,7 +52,6 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve shift",
         translation_key="heating_curve_shift",
-        icon="mdi:plus-minus-variant",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -70,7 +69,6 @@ CIRCUIT_ENTITY_DESCRIPTIONS: tuple[ViCareNumberEntityDescription, ...] = (
     ViCareNumberEntityDescription(
         key="heating curve slope",
         translation_key="heating_curve_slope",
-        icon="mdi:slope-uphill",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getHeatingCurveSlope(),
         value_setter=lambda api, slope: (
