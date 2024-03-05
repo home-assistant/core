@@ -363,7 +363,7 @@ class FlowManager(abc.ABC, Generic[_FlowResultT]):
             data_schema := cur_step.get("data_schema")
         ) is not None and user_input is not None:
             try:
-                user_input = data_schema(user_input)
+                user_input = data_schema(user_input)  # type: ignore[operator]
             except vol.Invalid as ex:
                 raised_errors = [ex]
                 if isinstance(ex, vol.MultipleInvalid):
