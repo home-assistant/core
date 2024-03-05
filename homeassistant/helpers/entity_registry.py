@@ -511,10 +511,6 @@ class EntityRegistryItems(UserDict[str, RegistryEntry]):
         self._unindex_entry(key)
         super().__delitem__(key)
 
-    def get_entity_ids(self) -> ValuesView[str]:
-        """Return entity ids."""
-        return self._index.values()
-
     def get_device_ids(self) -> KeysView[str]:
         """Return device ids."""
         return self._device_id_index.keys()
@@ -619,11 +615,6 @@ class EntityRegistry:
     ) -> str | None:
         """Check if an entity_id is currently registered."""
         return self.entities.get_entity_id((domain, platform, unique_id))
-
-    @callback
-    def async_entity_ids(self) -> list[str]:
-        """Return entity ids."""
-        return list(self.entities.get_entity_ids())
 
     @callback
     def async_device_ids(self) -> list[str]:

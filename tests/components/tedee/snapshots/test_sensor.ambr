@@ -59,7 +59,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:timer-lock-open',
+    'original_icon': None,
     'original_name': 'Pullspring duration',
     'platform': 'tedee',
     'previous_unique_id': None,
@@ -89,7 +89,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'Lock-1A2B Pullspring duration',
-      'icon': 'mdi:timer-lock-open',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),

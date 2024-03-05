@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "sensor": {
+      "monitor_status": {
+        "default": "mdi:television",
+        "state": {
+          "pause": "mdi:television-pause",
+          "up": "mdi:television-shimmer",
+          "seems_down": "mdi:television-off",
+          "down": "mdi:television-off"
+        }
+      }
+    },
+    "switch": {
+      "monitor_status": {
+        "default": "mdi:cog"
+      }
+    }
+  }
+}

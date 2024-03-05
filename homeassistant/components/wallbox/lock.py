@@ -42,11 +42,9 @@ async def async_setup_entry(
         raise PlatformNotReady from exc
 
     async_add_entities(
-        [
-            WallboxLock(coordinator, description)
-            for ent in coordinator.data
-            if (description := LOCK_TYPES.get(ent))
-        ]
+        WallboxLock(coordinator, description)
+        for ent in coordinator.data
+        if (description := LOCK_TYPES.get(ent))
     )
 
 
