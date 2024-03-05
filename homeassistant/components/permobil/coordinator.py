@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class MyPermobilData:
     """MyPermobil data stored in the DataUpdateCoordinator."""
 
-    battery: dict[str, str | float | int | list | dict]
+    battery: dict[str, str | float | int | bool | list | dict]
     daily_usage: dict[str, str | float | int | list | dict]
     records: dict[str, str | float | int | list | dict]
 
