@@ -4,7 +4,11 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
 import pytest
-from tesla_fleet_api.exceptions import InvalidToken, PaymentRequired, TeslaFleetError
+from tesla_fleet_api.exceptions import (
+    InvalidToken,
+    SubscriptionRequired,
+    TeslaFleetError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.teslemetry.const import DOMAIN
@@ -54,7 +58,7 @@ async def test_form(
     ("side_effect", "error"),
     [
         (InvalidToken, {CONF_ACCESS_TOKEN: "invalid_access_token"}),
-        (PaymentRequired, {"base": "subscription_required"}),
+        (SubscriptionRequired, {"base": "subscription_required"}),
         (ClientConnectionError, {"base": "cannot_connect"}),
         (TeslaFleetError, {"base": "unknown"}),
     ],
