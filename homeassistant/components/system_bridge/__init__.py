@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import asdict
 import logging
 
 from systembridgeconnector.exceptions import (
@@ -9,7 +10,7 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.version import SUPPORTED_VERSION, Version
+from systembridgeconnector.version import Version
 from systembridgemodels.keyboard_key import KeyboardKey
 from systembridgemodels.keyboard_text import KeyboardText
 from systembridgemodels.open_path import OpenPath
@@ -25,10 +26,16 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PATH,
     CONF_PORT,
+    CONF_TOKEN,
     CONF_URL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -36,6 +43,7 @@ from homeassistant.helpers import (
     discovery,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN, MODULES
 from .coordinator import SystemBridgeDataUpdateCoordinator
@@ -80,16 +88,13 @@ async def async_setup_entry(
     version = Version(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
-        entry.data[CONF_API_KEY],
+        entry.data[CONF_TOKEN],
         session=async_get_clientsession(hass),
     )
+    supported = False
     try:
         async with asyncio.timeout(10):
-            if not await version.check_supported():
-                raise ConfigEntryNotReady(
-                    "You are not running a supported version of System Bridge. Please"
-                    f" update to {SUPPORTED_VERSION} or higher."
-                )
+            supported = await version.check_supported()
     except AuthenticationException as exception:
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed from exception
@@ -101,6 +106,21 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
+
+    # If not supported, create an issue and raise ConfigEntryNotReady
+    if not supported:
+        async_create_issue(
+            hass=hass,
+            domain=DOMAIN,
+            issue_id=f"system_bridge_{entry.entry_id}_unsupported_version",
+            translation_key="unsupported_version",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
+            severity=IssueSeverity.ERROR,
+            is_fixable=False,
+        )
+        raise ConfigEntryNotReady(
+            "You are not running a supported version of System Bridge. Please update to the latest version."
+        )
 
     coordinator = SystemBridgeDataUpdateCoordinator(
         hass,
@@ -122,6 +142,7 @@ async def async_setup_entry(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
 
+    # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
     try:
@@ -138,13 +159,6 @@ async def async_setup_entry(
         raise ConfigEntryNotReady(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
-
-    _LOGGER.debug(
-        "Initial coordinator data for %s (%s):\n%s",
-        entry.title,
-        entry.data[CONF_HOST],
-        coordinator.data.json(),
-    )
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
@@ -183,55 +197,62 @@ async def async_setup_entry(
                     if entry.entry_id in device_entry.config_entries
                 )
             except StopIteration as exception:
-                raise vol.Invalid from exception
+                raise vol.Invalid(f"Could not find device {device}") from exception
         raise vol.Invalid(f"Device {device} does not exist")
 
-    async def handle_open_path(call: ServiceCall) -> None:
+    async def handle_open_path(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open path service call."""
-        _LOGGER.info("Open: %s", call.data)
+        _LOGGER.debug("Open path: %s", service_call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.open_path(
-            OpenPath(path=call.data[CONF_PATH])
+        response = await coordinator.websocket_client.open_path(
+            OpenPath(path=service_call.data[CONF_PATH])
         )
+        return asdict(response)
 
-    async def handle_power_command(call: ServiceCall) -> None:
+    async def handle_power_command(service_call: ServiceCall) -> ServiceResponse:
         """Handle the power command service call."""
-        _LOGGER.info("Power command: %s", call.data)
+        _LOGGER.debug("Power command: %s", service_call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await getattr(
+        response = await getattr(
             coordinator.websocket_client,
-            POWER_COMMAND_MAP[call.data[CONF_COMMAND]],
+            POWER_COMMAND_MAP[service_call.data[CONF_COMMAND]],
         )()
+        return asdict(response)
 
-    async def handle_open_url(call: ServiceCall) -> None:
+    async def handle_open_url(service_call: ServiceCall) -> ServiceResponse:
         """Handle the open url service call."""
-        _LOGGER.info("Open: %s", call.data)
+        _LOGGER.debug("Open URL: %s", service_call.data)
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.open_url(OpenUrl(url=call.data[CONF_URL]))
+        response = await coordinator.websocket_client.open_url(
+            OpenUrl(url=service_call.data[CONF_URL])
+        )
+        return asdict(response)
 
-    async def handle_send_keypress(call: ServiceCall) -> None:
+    async def handle_send_keypress(service_call: ServiceCall) -> ServiceResponse:
         """Handle the send_keypress service call."""
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.keyboard_keypress(
-            KeyboardKey(key=call.data[CONF_KEY])
+        response = await coordinator.websocket_client.keyboard_keypress(
+            KeyboardKey(key=service_call.data[CONF_KEY])
         )
+        return asdict(response)
 
-    async def handle_send_text(call: ServiceCall) -> None:
+    async def handle_send_text(service_call: ServiceCall) -> ServiceResponse:
         """Handle the send_keypress service call."""
         coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][
-            call.data[CONF_BRIDGE]
+            service_call.data[CONF_BRIDGE]
         ]
-        await coordinator.websocket_client.keyboard_text(
-            KeyboardText(text=call.data[CONF_TEXT])
+        response = await coordinator.websocket_client.keyboard_text(
+            KeyboardText(text=service_call.data[CONF_TEXT])
         )
+        return asdict(response)
 
     hass.services.async_register(
         DOMAIN,
@@ -243,6 +264,7 @@ async def async_setup_entry(
                 vol.Required(CONF_PATH): cv.string,
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -255,6 +277,7 @@ async def async_setup_entry(
                 vol.Required(CONF_COMMAND): vol.In(POWER_COMMAND_MAP),
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -267,6 +290,7 @@ async def async_setup_entry(
                 vol.Required(CONF_URL): cv.string,
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -279,6 +303,7 @@ async def async_setup_entry(
                 vol.Required(CONF_KEY): cv.string,
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     hass.services.async_register(
@@ -291,6 +316,7 @@ async def async_setup_entry(
                 vol.Required(CONF_TEXT): cv.string,
             },
         ),
+        supports_response=SupportsResponse.ONLY,
     )
 
     # Reload entry when its updated.
@@ -328,3 +354,29 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload the config entry when it changed."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    if config_entry.version == 1 and config_entry.minor_version == 1:
+        # Migrate to CONF_TOKEN, which was added in 1.2
+        new_data = dict(config_entry.data)
+        new_data.setdefault(CONF_TOKEN, config_entry.data.get(CONF_API_KEY))
+        new_data.pop(CONF_API_KEY, None)
+
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data=new_data,
+            minor_version=2,
+        )
+
+        _LOGGER.debug(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+
+    # User is trying to downgrade from a future version
+    return False

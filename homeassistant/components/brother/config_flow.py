@@ -6,10 +6,10 @@ from typing import Any
 from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_TYPE
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.network import is_host_valid
 
 from .const import DOMAIN, PRINTER_TYPES
@@ -23,7 +23,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BrotherConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Brother Printer."""
 
     VERSION = 1
@@ -35,7 +35,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -71,7 +71,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.host = discovery_info.host
 
@@ -107,7 +107,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
         if user_input is not None:
             title = f"{self.brother.model} {self.brother.serial}"
@@ -127,5 +127,5 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class InvalidHost(exceptions.HomeAssistantError):
+class InvalidHost(HomeAssistantError):
     """Error to indicate that hostname/IP address is invalid."""

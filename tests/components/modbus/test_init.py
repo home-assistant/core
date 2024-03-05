@@ -741,6 +741,133 @@ async def test_duplicate_fan_mode_validator(do_config) -> None:
 
 
 @pytest.mark.parametrize(
+    ("do_config", "sensor_cnt"),
+    [
+        (
+            [
+                {
+                    CONF_NAME: TEST_MODBUS_NAME,
+                    CONF_TYPE: TCP,
+                    CONF_HOST: TEST_MODBUS_HOST,
+                    CONF_PORT: TEST_PORT_TCP,
+                    CONF_TIMEOUT: 3,
+                    CONF_SENSORS: [
+                        {
+                            CONF_NAME: TEST_ENTITY_NAME,
+                            CONF_ADDRESS: 117,
+                            CONF_SLAVE: 0,
+                        },
+                        {
+                            CONF_NAME: TEST_ENTITY_NAME + "1",
+                            CONF_ADDRESS: 119,
+                            CONF_SLAVE: 0,
+                        },
+                    ],
+                },
+            ],
+            2,
+        ),
+        (
+            [
+                {
+                    CONF_NAME: TEST_MODBUS_NAME,
+                    CONF_TYPE: TCP,
+                    CONF_HOST: TEST_MODBUS_HOST,
+                    CONF_PORT: TEST_PORT_TCP,
+                    CONF_TIMEOUT: 3,
+                    CONF_SENSORS: [
+                        {
+                            CONF_NAME: TEST_ENTITY_NAME,
+                            CONF_ADDRESS: 117,
+                            CONF_SLAVE: 0,
+                        },
+                        {
+                            CONF_NAME: TEST_ENTITY_NAME + "1",
+                            CONF_ADDRESS: 117,
+                            CONF_SLAVE: 1,
+                        },
+                    ],
+                },
+            ],
+            2,
+        ),
+        (
+            [
+                {
+                    CONF_NAME: TEST_MODBUS_NAME,
+                    CONF_TYPE: TCP,
+                    CONF_HOST: TEST_MODBUS_HOST,
+                    CONF_PORT: TEST_PORT_TCP,
+                    CONF_TIMEOUT: 3,
+                    CONF_SENSORS: [
+                        {
+                            CONF_NAME: TEST_ENTITY_NAME,
+                            CONF_ADDRESS: 117,
+                            CONF_SLAVE: 0,
+                        },
+                        {
+                            CONF_NAME: TEST_ENTITY_NAME + "1",
+                            CONF_ADDRESS: 117,
+                            CONF_SLAVE: 0,
+                        },
+                    ],
+                },
+            ],
+            1,
+        ),
+        (
+            [
+                {
+                    CONF_NAME: TEST_MODBUS_NAME,
+                    CONF_TYPE: TCP,
+                    CONF_HOST: TEST_MODBUS_HOST,
+                    CONF_PORT: TEST_PORT_TCP,
+                    CONF_TIMEOUT: 3,
+                    CONF_SENSORS: [
+                        {
+                            CONF_NAME: TEST_ENTITY_NAME,
+                            CONF_ADDRESS: 117,
+                            CONF_SLAVE: 0,
+                        },
+                        {
+                            CONF_NAME: TEST_ENTITY_NAME + "1",
+                            CONF_ADDRESS: 119,
+                            CONF_SLAVE: 0,
+                        },
+                    ],
+                },
+                {
+                    CONF_NAME: TEST_MODBUS_NAME + "1",
+                    CONF_TYPE: TCP,
+                    CONF_HOST: TEST_MODBUS_HOST,
+                    CONF_PORT: TEST_PORT_TCP,
+                    CONF_TIMEOUT: 3,
+                    CONF_SENSORS: [
+                        {
+                            CONF_NAME: TEST_ENTITY_NAME,
+                            CONF_ADDRESS: 117,
+                            CONF_SLAVE: 0,
+                        },
+                        {
+                            CONF_NAME: TEST_ENTITY_NAME,
+                            CONF_ADDRESS: 119,
+                            CONF_SLAVE: 0,
+                        },
+                    ],
+                },
+            ],
+            2,
+        ),
+    ],
+)
+async def test_duplicate_addresses(do_config, sensor_cnt) -> None:
+    """Test duplicate entity validator."""
+    check_config(do_config)
+    use_inx = len(do_config) - 1
+    assert len(do_config[use_inx][CONF_SENSORS]) == sensor_cnt
+
+
+@pytest.mark.parametrize(
     "do_config",
     [
         {

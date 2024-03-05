@@ -19,6 +19,7 @@ from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.components.mqtt.models import (
     MessageCallbackType,
     MqttCommandTemplateException,
+    MqttValueTemplateException,
     ReceiveMessage,
 )
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
@@ -433,37 +434,30 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
         assert template_state_calls.call_count == 1
 
 
-async def test_value_template_fails(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_value_template_fails(hass: HomeAssistant) -> None:
     """Test the rendering of MQTT value template fails."""
-
-    # test rendering a value fails
     entity = MockEntity(entity_id="sensor.test")
     entity.hass = hass
     tpl = template.Template("{{ value_json.some_var * 2 }}")
     val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass, entity=entity)
-    with pytest.raises(TypeError) as exc:
+    with pytest.raises(MqttValueTemplateException) as exc:
         val_tpl.async_render_with_possible_json_value('{"some_var": null }')
-    assert str(exc.value) == "unsupported operand type(s) for *: 'NoneType' and 'int'"
-    assert (
+    assert str(exc.value) == (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
         "rendering template for entity 'sensor.test', "
-        "template: '{{ value_json.some_var * 2 }}'"
-    ) in caplog.text
-    caplog.clear()
-    with pytest.raises(TypeError) as exc:
+        "template: '{{ value_json.some_var * 2 }}' "
+        'and payload: {"some_var": null }'
+    )
+    with pytest.raises(MqttValueTemplateException) as exc:
         val_tpl.async_render_with_possible_json_value(
             '{"some_var": null }', default=100
         )
-    assert str(exc.value) == "unsupported operand type(s) for *: 'NoneType' and 'int'"
-    assert (
+    assert str(exc.value) == (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
         "rendering template for entity 'sensor.test', "
         "template: '{{ value_json.some_var * 2 }}', default value: 100 and payload: "
         '{"some_var": null }'
-    ) in caplog.text
-    await hass.async_block_till_done()
+    )
 
 
 async def test_service_call_without_topic_does_not_publish(

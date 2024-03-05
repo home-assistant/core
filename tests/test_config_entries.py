@@ -70,6 +70,10 @@ def mock_handlers() -> Generator[None, None, None]:
                 return self.async_show_form(step_id="reauth_confirm")
             return self.async_abort(reason="test")
 
+        async def async_step_reconfigure(self, data):
+            """Mock Reauth."""
+            return await self.async_step_reauth_confirm()
+
     with patch.dict(
         config_entries.HANDLERS, {"comp": MockFlowHandler, "test": MockFlowHandler}
     ):
@@ -374,7 +378,7 @@ async def test_remove_entry(
     MockConfigEntry(domain="test_other", entry_id="test3").add_to_manager(manager)
 
     # Check all config entries exist
-    assert [item.entry_id for item in manager.async_entries()] == [
+    assert manager.async_entry_ids() == [
         "test1",
         "test2",
         "test3",
@@ -404,7 +408,7 @@ async def test_remove_entry(
     assert mock_remove_entry.call_count == 1
 
     # Check that config entry was removed.
-    assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
+    assert manager.async_entry_ids() == ["test1", "test3"]
 
     # Check that entity state has been removed
     assert hass.states.get("light.test_entity") is None
@@ -465,7 +469,7 @@ async def test_remove_entry_handles_callback_error(
     entry = MockConfigEntry(domain="test", entry_id="test1")
     entry.add_to_manager(manager)
     # Check all config entries exist
-    assert [item.entry_id for item in manager.async_entries()] == ["test1"]
+    assert manager.async_entry_ids() == ["test1"]
     # Setup entry
     await entry.async_setup(hass)
     await hass.async_block_till_done()
@@ -478,7 +482,7 @@ async def test_remove_entry_handles_callback_error(
     # Check the remove callback was invoked.
     assert mock_remove_entry.call_count == 1
     # Check that config entry was removed.
-    assert [item.entry_id for item in manager.async_entries()] == []
+    assert manager.async_entry_ids() == []
 
 
 async def test_remove_entry_raises(
@@ -498,7 +502,7 @@ async def test_remove_entry_raises(
     ).add_to_manager(manager)
     MockConfigEntry(domain="test", entry_id="test3").add_to_manager(manager)
 
-    assert [item.entry_id for item in manager.async_entries()] == [
+    assert manager.async_entry_ids() == [
         "test1",
         "test2",
         "test3",
@@ -507,7 +511,7 @@ async def test_remove_entry_raises(
     result = await manager.async_remove("test2")
 
     assert result == {"require_restart": True}
-    assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
+    assert manager.async_entry_ids() == ["test1", "test3"]
 
 
 async def test_remove_entry_if_not_loaded(
@@ -522,7 +526,7 @@ async def test_remove_entry_if_not_loaded(
     MockConfigEntry(domain="comp", entry_id="test2").add_to_manager(manager)
     MockConfigEntry(domain="test", entry_id="test3").add_to_manager(manager)
 
-    assert [item.entry_id for item in manager.async_entries()] == [
+    assert manager.async_entry_ids() == [
         "test1",
         "test2",
         "test3",
@@ -531,7 +535,7 @@ async def test_remove_entry_if_not_loaded(
     result = await manager.async_remove("test2")
 
     assert result == {"require_restart": False}
-    assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
+    assert manager.async_entry_ids() == ["test1", "test3"]
 
     assert len(mock_unload_entry.mock_calls) == 0
 
@@ -546,7 +550,7 @@ async def test_remove_entry_if_integration_deleted(
     MockConfigEntry(domain="comp", entry_id="test2").add_to_manager(manager)
     MockConfigEntry(domain="test", entry_id="test3").add_to_manager(manager)
 
-    assert [item.entry_id for item in manager.async_entries()] == [
+    assert manager.async_entry_ids() == [
         "test1",
         "test2",
         "test3",
@@ -555,7 +559,7 @@ async def test_remove_entry_if_integration_deleted(
     result = await manager.async_remove("test2")
 
     assert result == {"require_restart": False}
-    assert [item.entry_id for item in manager.async_entries()] == ["test1", "test3"]
+    assert manager.async_entry_ids() == ["test1", "test3"]
 
     assert len(mock_unload_entry.mock_calls) == 0
 
@@ -826,6 +830,8 @@ async def test_as_dict(snapshot: SnapshotAssertion) -> None:
         "_tries",
         "_setup_again_job",
         "_supports_options",
+        "_reconfigure_lock",
+        "supports_reconfigure",
     }
 
     entry = MockConfigEntry(entry_id="mock-entry")
@@ -1174,7 +1180,8 @@ async def test_setup_raise_not_ready(
     mock_setup_entry.side_effect = None
     mock_setup_entry.return_value = True
 
-    await hass.async_run_hass_job(p_setup, None)
+    hass.async_run_hass_job(p_setup, None)
+    await hass.async_block_till_done()
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert entry.reason is None
 
@@ -4056,6 +4063,94 @@ async def test_reauth(hass: HomeAssistant) -> None:
     entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
     entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
     entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test the async_reconfigure_helper."""
+    entry = MockConfigEntry(title="test_title", domain="test")
+    entry2 = MockConfigEntry(title="test_title", domain="test")
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(hass, MockModule("test", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "test.config_flow", None)
+
+    await entry.async_setup(hass)
+    await hass.async_block_till_done()
+
+    flow = hass.config_entries.flow
+    with patch.object(flow, "async_init", wraps=flow.async_init) as mock_init:
+        entry.async_start_reconfigure(
+            hass,
+            context={"extra_context": "some_extra_context"},
+            data={"extra_data": 1234},
+        )
+        await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_RECONFIGURE
+    assert flows[0]["context"]["title_placeholders"] == {"name": "test_title"}
+    assert flows[0]["context"]["extra_context"] == "some_extra_context"
+
+    assert mock_init.call_args.kwargs["data"]["extra_data"] == 1234
+
+    assert entry.entry_id != entry2.entry_id
+
+    # Check that we can't start duplicate reconfigure flows
+    entry.async_start_reconfigure(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+    # Check that we can't start duplicate reconfigure flows when the context is different
+    entry.async_start_reconfigure(hass, {"diff": "diff"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+    # Check that we can start a reconfigure flow for a different entry
+    entry2.async_start_reconfigure(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 2
+
+    # Abort all existing flows
+    for flow in hass.config_entries.flow.async_progress():
+        hass.config_entries.flow.async_abort(flow["flow_id"])
+    await hass.async_block_till_done()
+
+    # Check that we can't start duplicate reconfigure flows
+    # without blocking between flows
+    entry.async_start_reconfigure(hass, {"extra_context": "some_extra_context"})
+    entry.async_start_reconfigure(hass, {"extra_context": "some_extra_context"})
+    entry.async_start_reconfigure(hass, {"extra_context": "some_extra_context"})
+    entry.async_start_reconfigure(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+    # Abort all existing flows
+    for flow in hass.config_entries.flow.async_progress():
+        hass.config_entries.flow.async_abort(flow["flow_id"])
+    await hass.async_block_till_done()
+
+    # Check that we can't start reconfigure flows with active reauth flow
+    entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+    entry.async_start_reconfigure(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+    # Abort all existing flows
+    for flow in hass.config_entries.flow.async_progress():
+        hass.config_entries.flow.async_abort(flow["flow_id"])
+    await hass.async_block_till_done()
+
+    # Check that we can't start reauth flows with active reconfigure flow
+    entry.async_start_reconfigure(hass, {"extra_context": "some_extra_context"})
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.flow.async_progress()) == 1
     entry.async_start_reauth(hass, {"extra_context": "some_extra_context"})
     await hass.async_block_till_done()
     assert len(hass.config_entries.flow.async_progress()) == 1

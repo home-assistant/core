@@ -23,7 +23,6 @@ async def test_vehicle_binary_sensors(
     assert entry.unique_id == "11ZKZ3_liability_insured"
     assert state.state == "off"
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Skoda 11ZKZ3 Liability insured"
-    assert state.attributes.get(ATTR_ICON) == "mdi:shield-car"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("binary_sensor.skoda_11zkz3_pending_recall")

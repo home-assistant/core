@@ -57,5 +57,7 @@ def client_fixture() -> Generator[MagicMock, None, None]:
         client.heat_mode.set_state = AsyncMock()
         client.heat_mode.options = list(HeatMode)[:2]
         client.heat_state = 2
+        client.lights = []
+        client.pumps = []
 
         yield client
