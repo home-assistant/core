@@ -76,7 +76,6 @@ async def test_migration_minor_future_version(hass: HomeAssistant) -> None:
 
         assert len(mock_setup_entry.mock_calls) == 1
 
-    # Check that the version has been updated
     assert config_entry.version == SystemBridgeConfigFlow.VERSION
     assert config_entry.minor_version == SystemBridgeConfigFlow.MINOR_VERSION + 1
     assert config_entry.data[CONF_API_KEY] == FIXTURE_USER_INPUT[CONF_TOKEN]
