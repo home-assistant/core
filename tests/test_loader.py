@@ -120,6 +120,8 @@ async def test_custom_component_name(
 
     integration = await loader.async_get_integration(hass, "test")
     platform = integration.get_platform("light")
+    assert integration.get_platform_cached("light") is platform
+
     assert platform.__name__ == "custom_components.test.light"
     assert platform.__package__ == "custom_components.test"
 
@@ -277,6 +279,9 @@ async def test_async_get_platform_caches_failures_when_component_loaded(
     with pytest.raises(ImportError):
         assert await integration.async_get_platform("light") == hue_light
 
+    # The cache should never be filled because the import error is remembered
+    assert integration.get_platform_cached("light") is None
+
 
 async def test_async_get_platforms_caches_failures_when_component_loaded(
     hass: HomeAssistant,
@@ -312,6 +317,9 @@ async def test_async_get_platforms_caches_failures_when_component_loaded(
     with pytest.raises(ImportError):
         assert await integration.async_get_platforms(["light"]) == {"light": hue_light}
 
+    # The cache should never be filled because the import error is remembered
+    assert integration.get_platform_cached("light") is None
+
 
 async def test_get_integration_legacy(
     hass: HomeAssistant, enable_custom_integrations: None
@@ -320,6 +328,7 @@ async def test_get_integration_legacy(
     integration = await loader.async_get_integration(hass, "test_embedded")
     assert integration.get_component().DOMAIN == "test_embedded"
     assert integration.get_platform("switch") is not None
+    assert integration.get_platform_cached("switch") is not None
 
 
 async def test_get_integration_custom_component(
@@ -1094,27 +1103,36 @@ async def test_async_get_component_preloads_config_and_config_flow(
     assert "homeassistant.components.executor_import" not in sys.modules
     assert "custom_components.executor_import" not in sys.modules
 
+    platform_exists_calls = []
+
+    def mock_platforms_exists(platforms: list[str]) -> bool:
+        platform_exists_calls.append(platforms)
+        return platforms
+
     with patch(
         "homeassistant.loader.importlib.import_module"
     ) as mock_import, patch.object(
-        executor_import_integration, "platform_exists", return_value=True
-    ) as mock_platform_exists:
+        executor_import_integration, "platforms_exists", mock_platforms_exists
+    ):
         await executor_import_integration.async_get_component()
 
-    assert mock_platform_exists.call_count == 1
-    assert mock_import.call_count == 3
+    assert len(platform_exists_calls[0]) == len(loader.BASE_PRELOAD_PLATFORMS)
+    assert mock_import.call_count == 2 + len(loader.BASE_PRELOAD_PLATFORMS)
     assert (
         mock_import.call_args_list[0][0][0]
         == "homeassistant.components.executor_import"
     )
-    assert (
-        mock_import.call_args_list[1][0][0]
-        == "homeassistant.components.executor_import.config"
-    )
-    assert (
-        mock_import.call_args_list[2][0][0]
-        == "homeassistant.components.executor_import.config_flow"
-    )
+    checked_platforms = {
+        mock_import.call_args_list[i][0][0]
+        for i in range(1, len(mock_import.call_args_list))
+    }
+    assert checked_platforms == {
+        "homeassistant.components.executor_import.config_flow",
+        *(
+            f"homeassistant.components.executor_import.{platform}"
+            for platform in loader.BASE_PRELOAD_PLATFORMS
+        ),
+    }
 
 
 async def test_async_get_component_loads_loop_if_already_in_sys_modules(
@@ -1134,8 +1152,8 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
     assert "test_package_loaded_executor.config_flow" not in hass.config.components
 
     config_flow_module_name = f"{integration.pkg_path}.config_flow"
-    module_mock = MagicMock()
-    config_flow_module_mock = MagicMock()
+    module_mock = MagicMock(__file__="__init__.py")
+    config_flow_module_mock = MagicMock(__file__="config_flow.py")
 
     def import_module(name: str) -> Any:
         if name == integration.pkg_path:
@@ -1194,8 +1212,8 @@ async def test_async_get_component_concurrent_loads(
     assert "test_package_loaded_executor.config_flow" not in hass.config.components
 
     config_flow_module_name = f"{integration.pkg_path}.config_flow"
-    module_mock = MagicMock()
-    config_flow_module_mock = MagicMock()
+    module_mock = MagicMock(__file__="__init__.py")
+    config_flow_module_mock = MagicMock(__file__="config_flow.py")
     imports = []
     start_event = threading.Event()
     import_event = asyncio.Event()
@@ -1232,7 +1250,8 @@ async def test_async_get_component_concurrent_loads(
     assert comp1 is module_mock
     assert comp2 is module_mock
 
-    assert imports == [integration.pkg_path, config_flow_module_name]
+    assert integration.pkg_path in imports
+    assert config_flow_module_name in imports
 
 
 async def test_async_get_component_deadlock_fallback(
@@ -1243,7 +1262,7 @@ async def test_async_get_component_deadlock_fallback(
         hass, "executor_import", True, import_executor=True
     )
     assert executor_import_integration.import_executor is True
-    module_mock = MagicMock()
+    module_mock = MagicMock(__file__="__init__.py")
     import_attempts = 0
 
     def mock_import(module: str, *args: Any, **kwargs: Any) -> Any:
@@ -1395,38 +1414,51 @@ async def test_async_get_platform_raises_after_import_failure(
     assert "loaded_executor=False" not in caplog.text
 
 
-async def test_platform_exists(
+async def test_platforms_exists(
     hass: HomeAssistant, enable_custom_integrations: None
 ) -> None:
-    """Test platform_exists."""
-    integration = await loader.async_get_integration(hass, "test_integration_platform")
-    assert integration.domain == "test_integration_platform"
+    """Test platforms_exists."""
+    original_os_listdir = os.listdir
 
-    # get_component never called, will return None
-    assert integration.platform_exists("non_existing") is None
+    paths: list[str] = []
 
-    component = integration.get_component()
+    def mock_list_dir(path: str) -> list[str]:
+        paths.append(path)
+        return original_os_listdir(path)
+
+    with patch("homeassistant.loader.os.listdir", mock_list_dir):
+        integration = await loader.async_get_integration(
+            hass, "test_integration_platform"
+        )
+        assert integration.domain == "test_integration_platform"
+
+    # Verify the files cache is primed
+    assert integration.file_path in paths
+
+    # component is loaded, should now return False
+    with patch("homeassistant.loader.os.listdir", wraps=os.listdir) as mock_exists:
+        component = integration.get_component()
     assert component.DOMAIN == "test_integration_platform"
 
-    # component is loaded, should now return False
-    with patch(
-        "homeassistant.loader.os.path.exists", wraps=os.path.exists
-    ) as mock_exists:
-        assert integration.platform_exists("non_existing") is False
-
-    # We should check if the file exists
-    assert mock_exists.call_count == 2
+    # The files cache should be primed when
+    # the integration is resolved
+    assert mock_exists.call_count == 0
 
     # component is loaded, should now return False
-    with patch(
-        "homeassistant.loader.os.path.exists", wraps=os.path.exists
-    ) as mock_exists:
-        assert integration.platform_exists("non_existing") is False
+    with patch("homeassistant.loader.os.listdir", wraps=os.listdir) as mock_exists:
+        assert integration.platforms_exists(("non_existing",)) == []
+
+    # We should remember which files exist
+    assert mock_exists.call_count == 0
+
+    # component is loaded, should now return False
+    with patch("homeassistant.loader.os.listdir", wraps=os.listdir) as mock_exists:
+        assert integration.platforms_exists(("non_existing",)) == []
 
     # We should remember the file does not exist
     assert mock_exists.call_count == 0
 
-    assert integration.platform_exists("group") is True
+    assert integration.platforms_exists(["group"]) == ["group"]
 
     platform = await integration.async_get_platform("group")
     assert platform.MAGIC == 1
@@ -1434,7 +1466,7 @@ async def test_platform_exists(
     platform = integration.get_platform("group")
     assert platform.MAGIC == 1
 
-    assert integration.platform_exists("group") is True
+    assert integration.platforms_exists(["group"]) == ["group"]
 
 
 async def test_async_get_platforms_loads_loop_if_already_in_sys_modules(
@@ -1526,6 +1558,9 @@ async def test_async_get_platforms_loads_loop_if_already_in_sys_modules(
         "switch": switch_module_mock,
         "light": light_module_mock,
     }
+    assert integration.get_platform_cached("button") is button_module_mock
+    assert integration.get_platform_cached("switch") is switch_module_mock
+    assert integration.get_platform_cached("light") is light_module_mock
 
 
 async def test_async_get_platforms_concurrent_loads(
@@ -1587,3 +1622,4 @@ async def test_async_get_platforms_concurrent_loads(
     assert load_result2 == {"button": button_module_mock}
 
     assert imports == [button_module_name]
+    assert integration.get_platform_cached("button") is button_module_mock

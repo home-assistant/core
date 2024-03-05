@@ -55,10 +55,10 @@ async def test_other_failure(hass: HomeAssistant, mock_products) -> None:
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-# Coordinator
+# Vehicle Coordinator
 
 
-async def test_first_refresh(
+async def test_vehicle_first_refresh(
     hass: HomeAssistant,
     mock_wake_up,
     mock_vehicle_data,
@@ -88,14 +88,14 @@ async def test_first_refresh(
     mock_vehicle_data.assert_called_once()
 
 
-async def test_first_refresh_error(hass: HomeAssistant, mock_wake_up) -> None:
+async def test_vehicle_first_refresh_error(hass: HomeAssistant, mock_wake_up) -> None:
     """Test first coordinator refresh with an error."""
     mock_wake_up.side_effect = TeslaFleetError
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_refresh_offline(
+async def test_vehicle_refresh_offline(
     hass: HomeAssistant, mock_vehicle_data, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test coordinator refresh with an error."""
@@ -111,8 +111,18 @@ async def test_refresh_offline(
     mock_vehicle_data.assert_called_once()
 
 
-async def test_refresh_error(hass: HomeAssistant, mock_vehicle_data) -> None:
+async def test_vehicle_refresh_error(hass: HomeAssistant, mock_vehicle_data) -> None:
     """Test coordinator refresh with an error."""
     mock_vehicle_data.side_effect = TeslaFleetError
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+# Test Energy Coordinator
+
+
+async def test_energy_refresh_error(hass: HomeAssistant, mock_live_status) -> None:
+    """Test coordinator refresh with an error."""
+    mock_live_status.side_effect = TeslaFleetError
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY

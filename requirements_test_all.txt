@@ -170,7 +170,7 @@ aioairq==0.3.2
 aioairzone-cloud==0.4.5
 
 # homeassistant.components.airzone
-aioairzone==0.7.5
+aioairzone==0.7.6
 
 # homeassistant.components.ambient_station
 aioambient==2024.01.0
@@ -514,7 +514,7 @@ bond-async==0.2.1
 boschshcpy==0.2.75
 
 # homeassistant.components.bring
-bring-api==0.5.4
+bring-api==0.5.5
 
 # homeassistant.components.broadlink
 broadlink==0.18.3
@@ -1437,6 +1437,9 @@ pyhiveapi==0.5.16
 # homeassistant.components.homematic
 pyhomematic==0.1.77
 
+# homeassistant.components.homeworks
+pyhomeworks==0.0.6
+
 # homeassistant.components.ialarm
 pyialarm==2.2.0
 
@@ -1752,7 +1755,7 @@ python-qbittorrent==0.4.3
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==0.39.2
+python-roborock==0.40.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.36
@@ -2171,7 +2174,7 @@ wallbox==0.6.0
 watchdog==2.3.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.1.12
+weatherflow4py==0.1.13
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.1
