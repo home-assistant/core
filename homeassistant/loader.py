@@ -628,16 +628,15 @@ class Integration:
                 )
                 continue
 
+            path = manifest_path.parent
+
             integration = cls(
                 hass,
                 f"{root_module.__name__}.{domain}",
                 manifest_path.parent,
                 manifest,
+                set(os.listdir(path)),
             )
-
-            # Prime the cache while we are here
-            # so the import executor does not have to do it
-            integration._top_level_files  # pylint: disable=pointless-statement
 
             if integration.is_built_in:
                 return integration
@@ -689,6 +688,7 @@ class Integration:
         pkg_path: str,
         file_path: pathlib.Path,
         manifest: Manifest,
+        top_level_files: set[str] | None = None,
     ) -> None:
         """Initialize an integration."""
         self.hass = hass
@@ -714,6 +714,7 @@ class Integration:
             DATA_MISSING_PLATFORMS
         ]
         self._missing_platforms_cache = missing_platforms_cache
+        self._top_level_files = top_level_files or set()
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
 
     @cached_property
@@ -1145,14 +1146,6 @@ class Integration:
         using platforms_exists.
         """
         return bool(f"{self.domain}.{platform_name}" in self._missing_platforms_cache)
-
-    @cached_property
-    def _top_level_files(self) -> set[str]:
-        """Return a list of top level files in the integration directory.
-
-        This does blocking I/O and should not be called from the event loop.
-        """
-        return set(os.listdir(self.file_path))
 
     def platforms_exists(self, platform_names: Iterable[str]) -> list[str]:
         """Check if a platforms exists for an integration.
