@@ -206,6 +206,13 @@ RPC_SENSORS: Final = {
         name="Smoke",
         device_class=BinarySensorDeviceClass.SMOKE,
     ),
+    "restart": RpcBinarySensorDescription(
+        key="sys",
+        sub_key="restart_required",
+        name="Restart required",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 }
 
 
