@@ -21,9 +21,6 @@
       },
       "salinity": {
         "default": "mdi:sprout-outline"
-      },
-      "plant_number": {
-        "default": "mdi:update"
       }
     }
   }
