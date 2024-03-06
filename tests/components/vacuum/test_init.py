@@ -24,7 +24,8 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.components.vacuum import create_entity
+from . import create_entity
+
 from tests.testing_config.custom_components.test import vacuum as VacuumPlatform
 
 
@@ -45,7 +46,7 @@ async def test_state_services(
 
     entity0 = await create_entity(hass, None)
 
-    _ = await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         service,
         {"entity_id": entity0.entity_id},
@@ -61,7 +62,7 @@ async def test_fan_speed(hass: HomeAssistant, config_flow_fixture: None) -> None
 
     entity0 = await create_entity(hass, None)
 
-    _ = await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_FAN_SPEED,
         {"entity_id": entity0.entity_id, **{"fan_speed": "high"}},
@@ -91,7 +92,7 @@ async def test_locate(hass: HomeAssistant, config_flow_fixture: None) -> None:
         hass, None, MockVacuumWithLocation, **{"calls": calls}
     )
 
-    _ = await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_LOCATE,
         {"entity_id": entity0.entity_id},
@@ -127,7 +128,7 @@ async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> N
         hass, None, MockVacuumWithLocation, **{"strings": strings}
     )
 
-    _ = await hass.services.async_call(
+    await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_COMMAND,
         {
