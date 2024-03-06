@@ -43,8 +43,22 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "link"
+    assert result["errors"] is None
 
-    assert len(mock_setup_entry.mock_calls) == 0
+    with patch_microbot_api(), patch_async_setup_entry() as mock_setup_entry:
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["result"].data == {
+        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ACCESS_TOKEN: ANY,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:
