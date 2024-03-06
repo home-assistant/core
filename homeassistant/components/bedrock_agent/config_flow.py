@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 import boto3
+from botocore.exceptions import EndpointConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -39,15 +40,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-STEP_INIT_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONST_REGION): str,
-        vol.Required(CONST_MODEL_ID): selector.SelectSelector(
-            selector.SelectSelectorConfig(options=CONST_MODEL_LIST),
-        ),
-    }
-)
-
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
@@ -63,9 +55,15 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     try:
         response = await hass.async_add_executor_job(bedrock.list_foundation_models)
+    except EndpointConnectionError as err:
+        LOGGER.exception("Unable to connect to AWS Endpoint")
+        raise CannotConnect from err
+    except bedrock.exceptions.ClientError as err:
+        LOGGER.exception("Unable to ")
+        raise InvalidAuth from err
     except Exception as err:  # pylint: disable=broad-except
         LOGGER.exception("Unexpected exception")
-        raise CannotConnect from err
+        raise HomeAssistantError from err
     finally:
         bedrock.close()
 
@@ -89,12 +87,12 @@ class BedrockAgentConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "Unable to connect. Check region string."
             except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+                errors["base"] = "Client unable to connect. Check credentials."
+            except HomeAssistantError:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors["base"] = "Unknown error. Please check log files."
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -138,12 +136,12 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_entry, data=user_input
                 )
             except CannotConnect:
-                errors["base"] = "cannot_connect"
+                errors["base"] = "Unable to connect. Check region string."
             except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+                errors["base"] = "Client unable to connect. Check credentials."
+            except HomeAssistantError:  # pylint: disable=broad-except
                 LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors["base"] = "Unknown error. Please check log files."
             else:
                 return self.async_create_entry(title=info["title"], data=user_input)
 
