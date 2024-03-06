@@ -194,6 +194,21 @@ async def async_process_integration_platforms(
     if not top_level_components:
         return
 
+    hass.async_create_task(
+        _async_process_integration_platforms(
+            hass, platform_name, top_level_components.copy(), process_job
+        ),
+        eager_start=True,
+    )
+
+
+async def _async_process_integration_platforms(
+    hass: HomeAssistant,
+    platform_name: str,
+    top_level_components: set[str],
+    process_job: HassJob,
+) -> None:
+    """Process integration platforms for a component."""
     integrations = await async_get_integrations(hass, top_level_components)
     loaded_integrations: list[Integration] = [
         integration
