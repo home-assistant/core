@@ -1067,3 +1067,48 @@ async def test_bootstrap_does_not_preload_stage_1_integrations() -> None:
     # as a side effect of importing the pre-imports
     for integration in bootstrap.STAGE_1_INTEGRATIONS:
         assert f"homeassistant.components.{integration}" not in decoded_stdout
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_cancellation_does_not_leak_upward_from_async_setup(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
+    """Test setting up an integration that raises asyncio.CancelledError."""
+    await bootstrap.async_setup_multi_components(
+        hass, {"test_package_raises_cancelled_error"}, {}
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        "Error during setup of component test_package_raises_cancelled_error"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_cancellation_does_not_leak_upward_from_async_setup_entry(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+) -> None:
+    """Test setting up an integration that raises asyncio.CancelledError."""
+    entry = MockConfigEntry(
+        domain="test_package_raises_cancelled_error_config_entry", data={}
+    )
+    entry.add_to_hass(hass)
+    await bootstrap.async_setup_multi_components(
+        hass, {"test_package_raises_cancelled_error_config_entry"}, {}
+    )
+    await hass.async_block_till_done()
+
+    await bootstrap.async_setup_multi_components(hass, {"test_package"}, {})
+    await hass.async_block_till_done()
+    assert (
+        "Error setting up entry Mock Title for test_package_raises_cancelled_error_config_entry"
+        in caplog.text
+    )
+
+    assert "test_package" in hass.config.components
+    assert "test_package_raises_cancelled_error_config_entry" in hass.config.components
