@@ -10,14 +10,12 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothDataUpdateCoordinator,
 )
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
-PLATFORMS: list[str] = [Platform.SWITCH]
 
 
 class MicroBotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
