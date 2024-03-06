@@ -2,7 +2,10 @@
   "entity": {
     "binary_sensor": {
       "face": {
-        "default": "mdi:face-recognition"
+        "default": "mdi:motion-sensor-off"
+        "state": {
+          "on": "mdi:face-recognition"
+        }
       },
       "vehicle": {
         "default": "mdi:car-off",
