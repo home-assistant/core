@@ -60,6 +60,7 @@ class MockMicroBotApiClient:
     async def disconnect(self):
         """Mock disconnect."""
 
+    @property
     def is_connected(self):
         """Mock connected."""
         return True
@@ -77,6 +78,7 @@ class MockMicroBotApiClientFail:
     async def disconnect(self):
         """Mock disconnect."""
 
-    async def is_connected(self):
+    @property
+    def is_connected(self):
         """Mock disconnected."""
         return False
