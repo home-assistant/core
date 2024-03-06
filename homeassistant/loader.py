@@ -83,16 +83,16 @@ BASE_PRELOAD_PLATFORMS = [
 
 
 @dataclass
-class BlockedVersionRange:
-    """Blocked custom integration version range."""
+class BlockedIntegration:
+    """Blocked custom integration details."""
 
-    lowest: AwesomeVersion
-    highest: AwesomeVersion
+    highest: AwesomeVersion | None
+    reason: str
 
 
-BLOCKED_CUSTOM_INTEGRATIONS: dict[str, list[BlockedVersionRange] | None] = {
+BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
     # Added in 2024.3.0 because of https://github.com/home-assistant/core/issues/112464
-    "start_time": None
+    "start_time": BlockedIntegration(None, "breaks Home Assistant")
 }
 
 DATA_COMPONENTS = "components"
@@ -695,17 +695,15 @@ class Integration:
                 )
                 return None
 
-            if integration.domain in BLOCKED_CUSTOM_INTEGRATIONS:
-                if _version_blocked(
-                    integration.version, BLOCKED_CUSTOM_INTEGRATIONS[integration.domain]
-                ):
+            if blocked := BLOCKED_CUSTOM_INTEGRATIONS.get(integration.domain):
+                if _version_blocked(integration.version, blocked):
                     _LOGGER.error(
                         (
-                            "Version %s of custom integration '%s' is known to break "
-                            " Home Assistant and was blocked from loading"
+                            "Version %s of custom integration '%s' %s and was blocked from loading"
                         ),
                         integration.version,
                         integration.domain,
+                        blocked.reason,
                     )
                     return None
 
@@ -1242,15 +1240,14 @@ class Integration:
 
 def _version_blocked(
     integration_version: AwesomeVersion,
-    blocked_versions: list[BlockedVersionRange] | None,
+    blocked_integration: BlockedIntegration,
 ) -> bool:
     """Return True if the integration version is blocked."""
-    if blocked_versions is None:
+    if blocked_integration.highest is None:
         return True
 
-    for version in blocked_versions:
-        if integration_version.in_range(version.lowest, version.highest):
-            return True
+    if integration_version <= blocked_integration.highest:
+        return True
 
     return False
 
