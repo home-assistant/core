@@ -14,3 +14,25 @@ send_message:
       example: "{'images': ['/tmp/test.jpg'], 'format': 'text', 'image_urls': ['http://example.com'], 'verify_ssl': true}"
       selector:
         object:
+trust_blacklist_device:
+  fields:
+    user_id:
+      example: "@test_user:matrix.org"
+      selector:
+        text:
+    device_id:
+      example: "@test_user:matrix.org"
+      selector:
+        text:
+    apply_all_devices:
+      example: false
+      selector:
+        boolean:
+    apply_all_user_devices:
+      example: false
+      selector:
+        boolean:
+    blacklist:
+      example: false
+      selector:
+        boolean:

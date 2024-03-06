@@ -17,6 +17,32 @@
           "description": "Extended information of notification. Supports list of images. Supports message format. Optional."
         }
       }
+    },
+    "trust_blacklist_device": {
+      "name": "Trust or Blacklist device",
+      "description": "Trust or blacklist devices belonging to a user, a specific user and device combination, or all devices.",
+      "fields": {
+        "user_id": {
+          "name": "User ID",
+          "description": "The full user id of the user including the home server of the user to modify. This is required if using device_id or apply_all_user_devices."
+        },
+        "device_id": {
+          "name": "Device ID",
+          "description": "The device id associated with the user to trust. This is typically 10 uppercase characters. This is optional if using apply_all_devices or apply_all_user_devices."
+        },
+        "apply_all_devices": {
+          "name": "Apply all devices",
+          "description": "Apply this action to every device belonging to every user."
+        },
+        "apply_all_user_devices": {
+          "name": "Apply all user devices",
+          "description": "Apply this action to every device belonging to the specified user_id."
+        },
+        "blacklist": {
+          "name": "Blacklist",
+          "description": "Use the blacklist action instead of trusting."
+        }
+      }
     }
   }
 }

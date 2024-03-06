@@ -24,6 +24,8 @@ from PIL import Image
 import pytest
 
 from homeassistant.components.matrix import (
+    ATTR_ACCESS_TOKEN,
+    ATTR_DEVICE_ID,
     CONF_COMMANDS,
     CONF_EXPRESSION,
     CONF_HOMESERVER,
@@ -264,7 +266,9 @@ def mock_load_json():
     """Mock loading access_tokens from a file."""
     with patch(
         "homeassistant.components.matrix.load_json_object",
-        return_value={TEST_MXID: TEST_TOKEN},
+        return_value={
+            TEST_MXID: {ATTR_DEVICE_ID: TEST_DEVICE_ID, ATTR_ACCESS_TOKEN: TEST_TOKEN}
+        },
     ) as mock:
         yield mock
 
