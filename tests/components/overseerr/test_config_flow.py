@@ -15,8 +15,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
 USER_INPUT = {CONF_URL: "http://localhost:5055/api/v1", CONF_API_KEY: "test-api-key"}
 
 
