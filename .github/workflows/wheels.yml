@@ -63,16 +63,18 @@ jobs:
           ) > .env_file
 
       - name: Upload env_file
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: env_file
           path: ./.env_file
+          overwrite: true
 
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
+          overwrite: true
 
   core:
     name: Build Core wheels ${{ matrix.abi }} for ${{ matrix.arch }} (musllinux_1_2)
@@ -82,19 +84,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp311", "cp312"]
+        abi: ["cp312"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4.1.1
 
       - name: Download env_file
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.3
         with:
           name: env_file
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.3
         with:
           name: requirements_diff
 
@@ -120,19 +122,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp311", "cp312"]
+        abi: ["cp312"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4.1.1
 
       - name: Download env_file
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.3
         with:
           name: env_file
 
       - name: Download requirements_diff
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.3
         with:
           name: requirements_diff
 

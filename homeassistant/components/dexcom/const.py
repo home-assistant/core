@@ -3,7 +3,6 @@ from homeassistant.const import Platform
 
 DOMAIN = "dexcom"
 PLATFORMS = [Platform.SENSOR]
-GLUCOSE_VALUE_ICON = "mdi:diabetes"
 
 GLUCOSE_TREND_ICON = [
     "mdi:help",

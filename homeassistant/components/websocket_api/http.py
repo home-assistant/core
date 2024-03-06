@@ -16,6 +16,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
 from .auth import AUTH_REQUIRED_MESSAGE, AuthPhase
@@ -282,7 +283,7 @@ class WebSocketHandler:
         try:
             async with asyncio.timeout(10):
                 await wsock.prepare(request)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._logger.warning("Timeout preparing request from %s", request.remote)
             return wsock
 
@@ -310,7 +311,7 @@ class WebSocketHandler:
             # Auth Phase
             try:
                 msg = await wsock.receive(10)
-            except asyncio.TimeoutError as err:
+            except TimeoutError as err:
                 disconnect_warn = "Did not receive auth message within 10 seconds"
                 raise Disconnect from err
 
@@ -336,7 +337,7 @@ class WebSocketHandler:
             # We only start the writer queue after the auth phase is completed
             # since there is no need to queue messages before the auth phase
             self._connection = connection
-            self._writer_task = asyncio.create_task(self._writer(send_bytes_text))
+            self._writer_task = create_eager_task(self._writer(send_bytes_text))
             hass.data[DATA_CONNECTIONS] = hass.data.get(DATA_CONNECTIONS, 0) + 1
             async_dispatcher_send(hass, SIGNAL_WEBSOCKET_CONNECTED)
 

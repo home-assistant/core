@@ -3,6 +3,7 @@ import logging
 from typing import Any
 
 from pyhap.const import CATEGORY_HUMIDIFIER
+from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.humidifier import (
     ATTR_CURRENT_HUMIDITY,
@@ -173,7 +174,9 @@ class HumidifierDehumidifier(HomeAccessory):
             if humidity_state := states.get(self.linked_humidity_sensor):
                 self._async_update_current_humidity(humidity_state)
 
-    async def run(self) -> None:
+    @callback
+    @pyhap_callback  # type: ignore[misc]
+    def run(self) -> None:
         """Handle accessory driver started event.
 
         Run inside the Home Assistant event loop.
@@ -187,7 +190,7 @@ class HumidifierDehumidifier(HomeAccessory):
                 )
             )
 
-        await super().run()
+        super().run()
 
     @callback
     def async_update_current_humidity_event(

@@ -20,7 +20,6 @@ from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -30,6 +29,7 @@ from .const import (
     DOMAIN,
     TIMEOUT_SECONDS,
 )
+from .coordinator import async_create_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,9 +101,10 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         Raises a ConfigFlowError on failure.
         """
+        clientsession = async_create_clientsession()
         controller = AsyncRainbirdController(
             AsyncRainbirdClient(
-                async_get_clientsession(self.hass),
+                clientsession,
                 host,
                 password,
             )
@@ -114,7 +115,7 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     controller.get_serial_number(),
                     controller.get_wifi_params(),
                 )
-        except asyncio.TimeoutError as err:
+        except TimeoutError as err:
             raise ConfigFlowError(
                 f"Timeout connecting to Rain Bird controller: {str(err)}",
                 "timeout_connect",
@@ -124,6 +125,8 @@ class RainbirdConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 f"Error connecting to Rain Bird controller: {str(err)}",
                 "cannot_connect",
             ) from err
+        finally:
+            await clientsession.close()
 
     async def async_finish(
         self,

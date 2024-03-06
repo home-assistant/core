@@ -487,6 +487,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -512,6 +514,8 @@
     'hw_version': None,
     'id': <ANY>,
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'EnergyZero',
     'model': None,
     'name': 'Energy market price',
@@ -556,6 +560,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -581,6 +587,8 @@
     'hw_version': None,
     'id': <ANY>,
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'EnergyZero',
     'model': None,
     'name': 'Energy market price',
@@ -622,6 +630,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -647,6 +657,8 @@
     'hw_version': None,
     'id': <ANY>,
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'EnergyZero',
     'model': None,
     'name': 'Energy market price',
@@ -662,7 +674,6 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by EnergyZero',
       'friendly_name': 'Energy market price Hours priced equal or lower than current - today',
-      'icon': 'mdi:clock',
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
@@ -689,11 +700,13 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:clock',
+    'original_icon': None,
     'original_name': 'Hours priced equal or lower than current - today',
     'platform': 'energyzero',
     'previous_unique_id': None,
@@ -714,6 +727,8 @@
     'hw_version': None,
     'id': <ANY>,
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'EnergyZero',
     'model': None,
     'name': 'Energy market price',
@@ -755,6 +770,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -780,6 +797,8 @@
     'hw_version': None,
     'id': <ANY>,
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'EnergyZero',
     'model': None,
     'name': 'Energy market price',
@@ -824,6 +843,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -849,6 +870,8 @@
     'hw_version': None,
     'id': <ANY>,
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'EnergyZero',
     'model': None,
     'name': 'Gas market price',

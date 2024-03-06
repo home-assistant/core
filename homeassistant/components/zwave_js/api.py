@@ -2202,8 +2202,8 @@ class FirmwareUploadView(HomeAssistantView):
             node = async_get_node_from_device_id(hass, device_id, self._dev_reg)
         except ValueError as err:
             if "not loaded" in err.args[0]:
-                raise web_exceptions.HTTPBadRequest
-            raise web_exceptions.HTTPNotFound
+                raise web_exceptions.HTTPBadRequest from err
+            raise web_exceptions.HTTPNotFound from err
 
         # If this was not true, we wouldn't have been able to get the node from the
         # device ID above

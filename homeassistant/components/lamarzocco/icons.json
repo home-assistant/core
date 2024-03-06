@@ -25,8 +25,20 @@
       "coffee_temp": {
         "default": "mdi:thermometer-water"
       },
+      "dose": {
+        "default": "mdi:weight-kilogram"
+      },
       "steam_temp": {
         "default": "mdi:thermometer-water"
+      },
+      "prebrew_off": {
+        "default": "mdi:water-off"
+      },
+      "prebrew_on": {
+        "default": "mdi:water"
+      },
+      "preinfusion_off": {
+        "default": "mdi:water"
       },
       "tea_water_duration": {
         "default": "mdi:timer-sand"

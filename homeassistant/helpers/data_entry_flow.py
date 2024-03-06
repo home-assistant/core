@@ -8,7 +8,7 @@ from aiohttp import web
 import voluptuous as vol
 import voluptuous_serialize
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
@@ -70,10 +70,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         try:
             result = await self._flow_mgr.async_init(
                 handler,  # type: ignore[arg-type]
-                context={
-                    "source": config_entries.SOURCE_USER,
-                    "show_advanced_options": data["show_advanced_options"],
-                },
+                context=self.get_context(data),
             )
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
@@ -85,6 +82,10 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         result = self._prepare_result_json(result)
 
         return self.json(result)
+
+    def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Return context."""
+        return {"show_advanced_options": data["show_advanced_options"]}
 
 
 class FlowManagerResourceView(_BaseFlowManagerView):

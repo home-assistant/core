@@ -106,7 +106,7 @@ async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
         "Motion Sensor 1", [Capability.motion_sensor], {Attribute.motion: "inactive"}
     )
     config_entry = await setup_platform(hass, BINARY_SENSOR_DOMAIN, devices=[device])
-    config_entry.state = ConfigEntryState.LOADED
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
     # Act
     await hass.config_entries.async_forward_entry_unload(config_entry, "binary_sensor")
     # Assert

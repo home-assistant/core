@@ -1,6 +1,5 @@
 """Test Govee light local."""
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from govee_local_api import GoveeDevice
@@ -133,7 +132,7 @@ async def test_light_setup_retry(
 
         with patch(
             "homeassistant.components.govee_light_local.asyncio.timeout",
-            side_effect=asyncio.TimeoutError,
+            side_effect=TimeoutError,
         ):
             await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY

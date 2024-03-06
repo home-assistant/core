@@ -1,7 +1,6 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 from __future__ import annotations
 
-import asyncio
 import datetime
 from typing import Any
 
@@ -357,7 +356,7 @@ class HoneywellUSThermostat(ClimateEntity):
             else:
                 if mode == "cool":
                     await self._device.set_setpoint_cool(temperature)
-                if mode == "heat":
+                if mode in ["heat", "emheat"]:
                     await self._device.set_setpoint_heat(temperature)
 
         except UnexpectedResponse as err:
@@ -506,7 +505,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 await self._device.refresh()
 
             except (
-                asyncio.TimeoutError,
+                TimeoutError,
                 AscConnectionError,
                 APIRateLimited,
                 AuthError,
@@ -525,9 +524,8 @@ class HoneywellUSThermostat(ClimateEntity):
         except UnauthorizedError:
             await _login()
             return
-
         except (
-            asyncio.TimeoutError,
+            TimeoutError,
             AscConnectionError,
             APIRateLimited,
             ClientConnectionError,

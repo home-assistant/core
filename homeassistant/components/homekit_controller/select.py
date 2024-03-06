@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from enum import IntEnum
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
-from aiohomekit.model.characteristics.const import TemperatureDisplayUnits
+from aiohomekit.model.characteristics.const import (
+    TargetAirPurifierStateValues,
+    TemperatureDisplayUnits,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -40,11 +43,20 @@ SELECT_ENTITIES: dict[str, HomeKitSelectEntityDescription] = {
         key="temperature_display_units",
         translation_key="temperature_display_units",
         name="Temperature Display Units",
-        icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         choices={
             "celsius": TemperatureDisplayUnits.CELSIUS,
             "fahrenheit": TemperatureDisplayUnits.FAHRENHEIT,
+        },
+    ),
+    CharacteristicsTypes.AIR_PURIFIER_STATE_TARGET: HomeKitSelectEntityDescription(
+        key="air_purifier_state_target",
+        translation_key="air_purifier_state_target",
+        name="Air Purifier Mode",
+        entity_category=EntityCategory.CONFIG,
+        choices={
+            "automatic": TargetAirPurifierStateValues.AUTOMATIC,
+            "manual": TargetAirPurifierStateValues.MANUAL,
         },
     ),
 }

@@ -80,6 +80,17 @@ def _entry_is_complete(
     )
 
 
+def _mac_is_same_with_incorrect_formatting(
+    current_unformatted_mac: str, formatted_mac: str
+) -> bool:
+    """Check if two macs are the same but formatted incorrectly."""
+    current_formatted_mac = format_mac(current_unformatted_mac)
+    return (
+        current_formatted_mac == formatted_mac
+        and current_unformatted_mac != current_formatted_mac
+    )
+
+
 class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
@@ -359,7 +370,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             and data.get(CONF_SSDP_MAIN_TV_AGENT_LOCATION)
             != self._ssdp_main_tv_agent_location
         )
-        update_mac = self._mac and not data.get(CONF_MAC)
+        update_mac = self._mac and (
+            not (data_mac := data.get(CONF_MAC))
+            or _mac_is_same_with_incorrect_formatting(data_mac, self._mac)
+        )
         update_model = self._model and not data.get(CONF_MODEL)
         if (
             update_ssdp_rendering_control_location
@@ -464,7 +478,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle a flow initialized by dhcp discovery."""
         LOGGER.debug("Samsung device found via DHCP: %s", discovery_info)
-        self._mac = discovery_info.macaddress
+        self._mac = format_mac(discovery_info.macaddress)
         self._host = discovery_info.ip
         self._async_start_discovery_with_mac_address()
         await self._async_set_device_unique_id()

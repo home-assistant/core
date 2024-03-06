@@ -28,7 +28,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
@@ -77,25 +77,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def _update_config_if_entry_in_setup_error(
         self, entry: ConfigEntry, host: str, config: dict
-    ) -> None:
+    ) -> FlowResult | None:
         """If discovery encounters a device that is in SETUP_ERROR or SETUP_RETRY update the device config."""
         if entry.state not in (
             ConfigEntryState.SETUP_ERROR,
             ConfigEntryState.SETUP_RETRY,
         ):
-            return
+            return None
         entry_data = entry.data
         entry_config_dict = entry_data.get(CONF_DEVICE_CONFIG)
         if entry_config_dict == config and entry_data[CONF_HOST] == host:
-            return
-        self.hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_DEVICE_CONFIG: config, CONF_HOST: host}
+            return None
+        return self.async_update_reload_and_abort(
+            entry,
+            data={**entry.data, CONF_DEVICE_CONFIG: config, CONF_HOST: host},
+            reason="already_configured",
         )
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(entry.entry_id),
-            f"config entry reload {entry.title} {entry.domain} {entry.entry_id}",
-        )
-        raise AbortFlow("already_configured")
 
     async def _async_handle_discovery(
         self, host: str, formatted_mac: str, config: dict | None = None
@@ -104,8 +101,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         current_entry = await self.async_set_unique_id(
             formatted_mac, raise_on_progress=False
         )
-        if config and current_entry:
-            self._update_config_if_entry_in_setup_error(current_entry, host, config)
+        if (
+            config
+            and current_entry
+            and (
+                result := self._update_config_if_entry_in_setup_error(
+                    current_entry, host, config
+                )
+            )
+        ):
+            return result
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._async_abort_entries_match({CONF_HOST: host})
         self.context[CONF_HOST] = host
@@ -143,6 +148,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._discovered_device = device
                 return await self.async_step_discovery_confirm()
 
+        placeholders = self._async_make_placeholders_from_discovery()
+
         if user_input:
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
@@ -151,17 +158,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
                 )
-            except AuthenticationException:
+            except AuthenticationException as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except SmartDeviceException:
+                placeholders["error"] = str(ex)
+            except SmartDeviceException as ex:
                 errors["base"] = "cannot_connect"
+                placeholders["error"] = str(ex)
             else:
                 self._discovered_device = device
                 await set_credentials(self.hass, username, password)
                 self.hass.async_create_task(self._async_reload_requires_auth_entries())
                 return self._async_create_entry_from_device(self._discovered_device)
 
-        placeholders = self._async_make_placeholders_from_discovery()
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="discovery_auth_confirm",
@@ -199,7 +207,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
+
         if user_input is not None:
             if not (host := user_input[CONF_HOST]):
                 return await self.async_step_pick_device()
@@ -212,8 +222,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             except AuthenticationException:
                 return await self.async_step_user_auth_confirm()
-            except SmartDeviceException:
+            except SmartDeviceException as ex:
                 errors["base"] = "cannot_connect"
+                placeholders["error"] = str(ex)
             else:
                 return self._async_create_entry_from_device(device)
 
@@ -221,14 +232,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema({vol.Optional(CONF_HOST, default=""): str}),
             errors=errors,
+            description_placeholders=placeholders,
         )
 
     async def async_step_user_auth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Dialog that informs the user that auth is required."""
-        errors = {}
+        errors: dict[str, str] = {}
         host = self.context[CONF_HOST]
+        placeholders: dict[str, str] = {CONF_HOST: host}
+
         assert self._discovered_device is not None
         if user_input:
             username = user_input[CONF_USERNAME]
@@ -238,10 +252,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 device = await self._async_try_connect(
                     self._discovered_device, credentials
                 )
-            except AuthenticationException:
+            except AuthenticationException as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except SmartDeviceException:
+                placeholders["error"] = str(ex)
+            except SmartDeviceException as ex:
                 errors["base"] = "cannot_connect"
+                placeholders["error"] = str(ex)
             else:
                 await set_credentials(self.hass, username, password)
                 self.hass.async_create_task(self._async_reload_requires_auth_entries())
@@ -251,7 +267,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user_auth_confirm",
             data_schema=STEP_AUTH_DATA_SCHEMA,
             errors=errors,
-            description_placeholders={CONF_HOST: host},
+            description_placeholders=placeholders,
         )
 
     async def async_step_pick_device(
@@ -397,6 +413,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
         reauth_entry = self.reauth_entry
         assert reauth_entry is not None
         entry_data = reauth_entry.data
@@ -412,10 +429,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     credentials=credentials,
                     raise_on_progress=True,
                 )
-            except AuthenticationException:
+            except AuthenticationException as ex:
                 errors[CONF_PASSWORD] = "invalid_auth"
-            except SmartDeviceException:
+                placeholders["error"] = str(ex)
+            except SmartDeviceException as ex:
                 errors["base"] = "cannot_connect"
+                placeholders["error"] = str(ex)
             else:
                 await set_credentials(self.hass, username, password)
                 self.hass.async_create_task(self._async_reload_requires_auth_entries())
@@ -425,7 +444,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         alias = entry_data.get(CONF_ALIAS) or "unknown"
         model = entry_data.get(CONF_MODEL) or "unknown"
 
-        placeholders = {"name": alias, "model": model, "host": host}
+        placeholders.update({"name": alias, "model": model, "host": host})
+
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
             step_id="reauth_confirm",

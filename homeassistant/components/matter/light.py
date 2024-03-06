@@ -10,10 +10,12 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
     ATTR_XY_COLOR,
     ColorMode,
     LightEntity,
     LightEntityDescription,
+    LightEntityFeature,
     filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -38,6 +40,7 @@ COLOR_MODE_MAP = {
     clusters.ColorControl.Enums.ColorMode.kCurrentXAndCurrentY: ColorMode.XY,
     clusters.ColorControl.Enums.ColorMode.kColorTemperature: ColorMode.COLOR_TEMP,
 }
+DEFAULT_TRANSITION = 0.2
 
 
 async def async_setup_entry(
@@ -58,7 +61,9 @@ class MatterLight(MatterEntity, LightEntity):
     _supports_color = False
     _supports_color_temperature = False
 
-    async def _set_xy_color(self, xy_color: tuple[float, float]) -> None:
+    async def _set_xy_color(
+        self, xy_color: tuple[float, float], transition: float = 0.0
+    ) -> None:
         """Set xy color."""
 
         matter_xy = convert_to_matter_xy(xy_color)
@@ -67,8 +72,8 @@ class MatterLight(MatterEntity, LightEntity):
             clusters.ColorControl.Commands.MoveToColor(
                 colorX=int(matter_xy[0]),
                 colorY=int(matter_xy[1]),
-                # It's required in TLV. We don't implement transition time yet.
-                transitionTime=0,
+                # transition in matter is measured in tenths of a second
+                transitionTime=int(transition * 10),
                 # allow setting the color while the light is off,
                 # by setting the optionsMask to 1 (=ExecuteIfOff)
                 optionsMask=1,
@@ -76,7 +81,9 @@ class MatterLight(MatterEntity, LightEntity):
             )
         )
 
-    async def _set_hs_color(self, hs_color: tuple[float, float]) -> None:
+    async def _set_hs_color(
+        self, hs_color: tuple[float, float], transition: float = 0.0
+    ) -> None:
         """Set hs color."""
 
         matter_hs = convert_to_matter_hs(hs_color)
@@ -85,8 +92,8 @@ class MatterLight(MatterEntity, LightEntity):
             clusters.ColorControl.Commands.MoveToHueAndSaturation(
                 hue=int(matter_hs[0]),
                 saturation=int(matter_hs[1]),
-                # It's required in TLV. We don't implement transition time yet.
-                transitionTime=0,
+                # transition in matter is measured in tenths of a second
+                transitionTime=int(transition * 10),
                 # allow setting the color while the light is off,
                 # by setting the optionsMask to 1 (=ExecuteIfOff)
                 optionsMask=1,
@@ -94,14 +101,14 @@ class MatterLight(MatterEntity, LightEntity):
             )
         )
 
-    async def _set_color_temp(self, color_temp: int) -> None:
+    async def _set_color_temp(self, color_temp: int, transition: float = 0.0) -> None:
         """Set color temperature."""
 
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColorTemperature(
                 colorTemperatureMireds=color_temp,
-                # It's required in TLV. We don't implement transition time yet.
-                transitionTime=0,
+                # transition in matter is measured in tenths of a second
+                transitionTime=int(transition * 10),
                 # allow setting the color while the light is off,
                 # by setting the optionsMask to 1 (=ExecuteIfOff)
                 optionsMask=1,
@@ -109,7 +116,7 @@ class MatterLight(MatterEntity, LightEntity):
             )
         )
 
-    async def _set_brightness(self, brightness: int) -> None:
+    async def _set_brightness(self, brightness: int, transition: float = 0.0) -> None:
         """Set brightness."""
 
         level_control = self._endpoint.get_cluster(clusters.LevelControl)
@@ -127,8 +134,8 @@ class MatterLight(MatterEntity, LightEntity):
         await self.send_device_command(
             clusters.LevelControl.Commands.MoveToLevelWithOnOff(
                 level=level,
-                # It's required in TLV. We don't implement transition time yet.
-                transitionTime=0,
+                # transition in matter is measured in tenths of a second
+                transitionTime=int(transition * 10),
             )
         )
 
@@ -251,20 +258,21 @@ class MatterLight(MatterEntity, LightEntity):
         xy_color = kwargs.get(ATTR_XY_COLOR)
         color_temp = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
+        transition = kwargs.get(ATTR_TRANSITION, DEFAULT_TRANSITION)
 
         if self.supported_color_modes is not None:
             if hs_color is not None and ColorMode.HS in self.supported_color_modes:
-                await self._set_hs_color(hs_color)
+                await self._set_hs_color(hs_color, transition)
             elif xy_color is not None and ColorMode.XY in self.supported_color_modes:
-                await self._set_xy_color(xy_color)
+                await self._set_xy_color(xy_color, transition)
             elif (
                 color_temp is not None
                 and ColorMode.COLOR_TEMP in self.supported_color_modes
             ):
-                await self._set_color_temp(color_temp)
+                await self._set_color_temp(color_temp, transition)
 
         if brightness is not None and self._supports_brightness:
-            await self._set_brightness(brightness)
+            await self._set_brightness(brightness, transition)
             return
 
         await self.send_device_command(
@@ -324,6 +332,9 @@ class MatterLight(MatterEntity, LightEntity):
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
             self._attr_supported_color_modes = supported_color_modes
+            # flag support for transition as soon as we support setting brightness and/or color
+            if supported_color_modes != {ColorMode.ONOFF}:
+                self._attr_supported_features |= LightEntityFeature.TRANSITION
 
             LOGGER.debug(
                 "Supported color modes: %s for %s",

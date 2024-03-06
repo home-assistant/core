@@ -170,6 +170,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if discovery := await async_discover_device(self.hass, host):
+                    await self.async_set_unique_id(
+                        dr.format_mac(discovery.mac), raise_on_progress=False
+                    )
                     return self._async_create_entry_from_device(discovery)
                 self._async_abort_entries_match({CONF_HOST: host})
                 return self.async_create_entry(title=host, data=user_input)

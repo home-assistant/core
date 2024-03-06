@@ -82,7 +82,7 @@ async def test_entry_startup_and_unload(
     [
         InvalidAuth,
         InvalidFolder,
-        asyncio.TimeoutError,
+        TimeoutError,
     ],
 )
 async def test_entry_startup_fails(
@@ -417,7 +417,7 @@ async def test_late_folder_error(
     "imap_close",
     [
         AsyncMock(side_effect=AioImapException("Something went wrong")),
-        AsyncMock(side_effect=asyncio.TimeoutError),
+        AsyncMock(side_effect=TimeoutError),
     ],
     ids=["AioImapException", "TimeoutError"],
 )
@@ -460,7 +460,7 @@ async def test_handle_cleanup_exception(
     "imap_wait_server_push_exception",
     [
         AioImapException("Something went wrong"),
-        asyncio.TimeoutError,
+        TimeoutError,
     ],
     ids=["AioImapException", "TimeoutError"],
 )
@@ -468,7 +468,7 @@ async def test_lost_connection_with_imap_push(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_imap_protocol: MagicMock,
-    imap_wait_server_push_exception: AioImapException | asyncio.TimeoutError,
+    imap_wait_server_push_exception: AioImapException | TimeoutError,
 ) -> None:
     """Test error handling when the connection is lost."""
     # Mock an error in waiting for a pushed update

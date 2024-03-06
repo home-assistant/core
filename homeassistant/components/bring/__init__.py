@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import logging
 
-from python_bring_api.bring import Bring
-from python_bring_api.exceptions import (
+from bring_api.bring import Bring
+from bring_api.exceptions import (
     BringAuthException,
     BringParseException,
     BringRequestException,
@@ -31,11 +31,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     password = entry.data[CONF_PASSWORD]
 
     session = async_get_clientsession(hass)
-    bring = Bring(email, password, sessionAsync=session)
+    bring = Bring(session, email, password)
 
     try:
-        await bring.loginAsync()
-        await bring.loadListsAsync()
+        await bring.login()
+        await bring.load_lists()
     except BringRequestException as e:
         raise ConfigEntryNotReady(
             f"Timeout while connecting for email '{email}'"

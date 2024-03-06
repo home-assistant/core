@@ -1,5 +1,4 @@
 """Tests for the HTTP API for the cloud component."""
-import asyncio
 from copy import deepcopy
 from http import HTTPStatus
 from typing import Any
@@ -346,7 +345,7 @@ async def test_login_view_request_timeout(
 ) -> None:
     """Test request timeout while trying to log in."""
     cloud_client = await hass_client()
-    cloud.login.side_effect = asyncio.TimeoutError
+    cloud.login.side_effect = TimeoutError
 
     req = await cloud_client.post(
         "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
@@ -409,7 +408,7 @@ async def test_logout_view_request_timeout(
 ) -> None:
     """Test timeout while logging out."""
     cloud_client = await hass_client()
-    cloud.logout.side_effect = asyncio.TimeoutError
+    cloud.logout.side_effect = TimeoutError
 
     req = await cloud_client.post("/api/cloud/logout")
 
@@ -524,7 +523,7 @@ async def test_register_view_request_timeout(
 ) -> None:
     """Test timeout while registering."""
     cloud_client = await hass_client()
-    cloud.auth.async_register.side_effect = asyncio.TimeoutError
+    cloud.auth.async_register.side_effect = TimeoutError
 
     req = await cloud_client.post(
         "/api/cloud/register", json={"email": "hello@bla.com", "password": "falcon42"}
@@ -590,7 +589,7 @@ async def test_forgot_password_view_request_timeout(
 ) -> None:
     """Test timeout while forgot password."""
     cloud_client = await hass_client()
-    cloud.auth.async_forgot_password.side_effect = asyncio.TimeoutError
+    cloud.auth.async_forgot_password.side_effect = TimeoutError
 
     req = await cloud_client.post(
         "/api/cloud/forgot_password", json={"email": "hello@bla.com"}
@@ -674,7 +673,7 @@ async def test_resend_confirm_view_request_timeout(
 ) -> None:
     """Test timeout while resend confirm."""
     cloud_client = await hass_client()
-    cloud.auth.async_resend_email_confirm.side_effect = asyncio.TimeoutError
+    cloud.auth.async_resend_email_confirm.side_effect = TimeoutError
 
     req = await cloud_client.post(
         "/api/cloud/resend_confirm", json={"email": "hello@bla.com"}
@@ -735,6 +734,7 @@ async def test_websocket_status(
             "alexa_default_expose": DEFAULT_EXPOSED_DOMAINS,
             "alexa_report_state": True,
             "google_report_state": True,
+            "remote_allow_remote_enable": True,
             "remote_enabled": False,
             "tts_default_voice": ["en-US", "female"],
         },
@@ -854,6 +854,7 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.google_enabled
     assert cloud.client.prefs.alexa_enabled
     assert cloud.client.prefs.google_secure_devices_pin is None
+    assert cloud.client.prefs.remote_allow_remote_enable is True
 
     client = await hass_ws_client(hass)
 
@@ -865,6 +866,7 @@ async def test_websocket_update_preferences(
             "google_enabled": False,
             "google_secure_devices_pin": "1234",
             "tts_default_voice": ["en-GB", "male"],
+            "remote_allow_remote_enable": False,
         }
     )
     response = await client.receive_json()
@@ -873,6 +875,7 @@ async def test_websocket_update_preferences(
     assert not cloud.client.prefs.google_enabled
     assert not cloud.client.prefs.alexa_enabled
     assert cloud.client.prefs.google_secure_devices_pin == "1234"
+    assert cloud.client.prefs.remote_allow_remote_enable is False
     assert cloud.client.prefs.tts_default_voice == ("en-GB", "male")
 
 
@@ -1015,6 +1018,35 @@ async def test_enabling_remote(
     client = await hass_ws_client(hass)
     mock_connect = cloud.remote.connect
     assert not cloud.client.remote_autostart
+
+    await client.send_json({"id": 5, "type": "cloud/remote/connect"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert cloud.client.remote_autostart
+    assert mock_connect.call_count == 1
+
+    mock_disconnect = cloud.remote.disconnect
+
+    await client.send_json({"id": 6, "type": "cloud/remote/disconnect"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert not cloud.client.remote_autostart
+    assert mock_disconnect.call_count == 1
+
+
+async def test_enabling_remote_remote_activation_not_allowed(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    cloud: MagicMock,
+    setup_cloud: None,
+) -> None:
+    """Test we can enable remote UI locally when blocked remotely."""
+    client = await hass_ws_client(hass)
+    mock_connect = cloud.remote.connect
+    assert not cloud.client.remote_autostart
+    await cloud.client.prefs.async_update(remote_allow_remote_enable=False)
 
     await client.send_json({"id": 5, "type": "cloud/remote/connect"})
     response = await client.receive_json()
@@ -1400,7 +1432,7 @@ async def test_sync_alexa_entities_timeout(
             "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
             ".async_sync_entities"
         ),
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         await client.send_json({"id": 5, "type": "cloud/alexa/sync"})
         response = await client.receive_json()
@@ -1484,7 +1516,7 @@ async def test_thingtalk_convert_timeout(
 
     with patch(
         "homeassistant.components.cloud.http_api.thingtalk.async_convert",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         await client.send_json(
             {"id": 5, "type": "cloud/thingtalk/convert", "query": "some-data"}

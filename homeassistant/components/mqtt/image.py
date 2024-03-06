@@ -24,7 +24,7 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_ENCODING, CONF_QOS
+from .const import CONF_ENCODING, CONF_QOS, TEMPLATE_ERRORS
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -188,10 +188,11 @@ class MqttImage(MqttEntity, ImageEntity):
         @log_messages(self.hass, self.entity_id)
         def image_from_url_request_received(msg: ReceiveMessage) -> None:
             """Handle new MQTT messages."""
-
             try:
                 url = cv.url(self._url_template(msg.payload))
                 self._attr_image_url = url
+            except TEMPLATE_ERRORS:
+                return
             except vol.Invalid:
                 _LOGGER.error(
                     "Invalid image URL '%s' received at topic %s",

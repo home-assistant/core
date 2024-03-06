@@ -151,8 +151,8 @@ async def test_discovery_auth(
 @pytest.mark.parametrize(
     ("error_type", "errors_msg", "error_placement"),
     [
-        (AuthenticationException, "invalid_auth", CONF_PASSWORD),
-        (SmartDeviceException, "cannot_connect", "base"),
+        (AuthenticationException("auth_error_details"), "invalid_auth", CONF_PASSWORD),
+        (SmartDeviceException("smart_device_error_details"), "cannot_connect", "base"),
     ],
     ids=["invalid-auth", "unknown-error"],
 )
@@ -195,6 +195,7 @@ async def test_discovery_auth_errors(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {error_placement: errors_msg}
+    assert result2["description_placeholders"]["error"] == str(error_type)
 
     await hass.async_block_till_done()
 
@@ -524,8 +525,8 @@ async def test_manual_auth(
 @pytest.mark.parametrize(
     ("error_type", "errors_msg", "error_placement"),
     [
-        (AuthenticationException, "invalid_auth", CONF_PASSWORD),
-        (SmartDeviceException, "cannot_connect", "base"),
+        (AuthenticationException("auth_error_details"), "invalid_auth", CONF_PASSWORD),
+        (SmartDeviceException("smart_device_error_details"), "cannot_connect", "base"),
     ],
     ids=["invalid-auth", "unknown-error"],
 )
@@ -570,6 +571,7 @@ async def test_manual_auth_errors(
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "user_auth_confirm"
     assert result3["errors"] == {error_placement: errors_msg}
+    assert result3["description_placeholders"]["error"] == str(error_type)
 
     mock_connect["connect"].side_effect = default_connect_side_effect
     result4 = await hass.config_entries.flow.async_configure(
@@ -738,8 +740,10 @@ async def test_integration_discovery_with_ip_change(
     """Test reauth flow."""
     mock_connect["connect"].side_effect = SmartDeviceException()
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_RETRY
 
     flows = hass.config_entries.flow.async_progress()
@@ -789,8 +793,9 @@ async def test_dhcp_discovery_with_ip_change(
     """Test dhcp discovery with an IP change."""
     mock_connect["connect"].side_effect = SmartDeviceException()
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_RETRY
 
     flows = hass.config_entries.flow.async_progress()
@@ -853,8 +858,9 @@ async def test_reauth_update_from_discovery(
     """Test reauth flow."""
     mock_connect["connect"].side_effect = AuthenticationException
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
 
@@ -889,8 +895,9 @@ async def test_reauth_update_from_discovery_with_ip_change(
     """Test reauth flow."""
     mock_connect["connect"].side_effect = AuthenticationException()
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
@@ -924,11 +931,14 @@ async def test_reauth_no_update_if_config_and_ip_the_same(
 ) -> None:
     """Test reauth discovery does not update when the host and config are the same."""
     mock_connect["connect"].side_effect = AuthenticationException()
-    mock_config_entry.data = {
-        **mock_config_entry.data,
-        CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
-    }
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            **mock_config_entry.data,
+            CONF_DEVICE_CONFIG: DEVICE_CONFIG_DICT_AUTH,
+        },
+    )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is config_entries.ConfigEntryState.SETUP_ERROR
@@ -959,8 +969,8 @@ async def test_reauth_no_update_if_config_and_ip_the_same(
 @pytest.mark.parametrize(
     ("error_type", "errors_msg", "error_placement"),
     [
-        (AuthenticationException, "invalid_auth", CONF_PASSWORD),
-        (SmartDeviceException, "cannot_connect", "base"),
+        (AuthenticationException("auth_error_details"), "invalid_auth", CONF_PASSWORD),
+        (SmartDeviceException("smart_device_error_details"), "cannot_connect", "base"),
     ],
     ids=["invalid-auth", "unknown-error"],
 )
@@ -999,6 +1009,7 @@ async def test_reauth_errors(
     mock_discovery["mock_device"].update.assert_called_once_with()
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {error_placement: errors_msg}
+    assert result2["description_placeholders"]["error"] == str(error_type)
 
     mock_discovery["discover_single"].reset_mock()
     mock_discovery["mock_device"].update.reset_mock(side_effect=True)
@@ -1115,8 +1126,9 @@ async def test_reauth_update_other_flows(
     mock_connect["connect"].side_effect = AuthenticationException()
     mock_config_entry.add_to_hass(hass)
     mock_config_entry2.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.tplink.Discover.discover", return_value={}):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry2.state == config_entries.ConfigEntryState.SETUP_ERROR
     assert mock_config_entry.state == config_entries.ConfigEntryState.SETUP_ERROR

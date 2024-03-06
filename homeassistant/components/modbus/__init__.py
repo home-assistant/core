@@ -134,7 +134,9 @@ from .const import (  # noqa: F401
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
     check_config,
+    check_hvac_target_temp_registers,
     duplicate_fan_mode_validator,
+    hvac_fixedsize_reglist_validator,
     nan_validator,
     register_int_list_validator,
     struct_validator,
@@ -239,7 +241,7 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
 CLIMATE_SCHEMA = vol.All(
     BASE_STRUCT_SCHEMA.extend(
         {
-            vol.Required(CONF_TARGET_TEMP): cv.positive_int,
+            vol.Required(CONF_TARGET_TEMP): hvac_fixedsize_reglist_validator,
             vol.Optional(CONF_TARGET_TEMP_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_MAX_TEMP, default=35): vol.Coerce(float),
             vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(float),
@@ -296,8 +298,9 @@ CLIMATE_SCHEMA = vol.All(
                     duplicate_fan_mode_validator,
                 ),
             ),
-        }
+        },
     ),
+    check_hvac_target_temp_registers,
 )
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(

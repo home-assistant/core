@@ -1,5 +1,4 @@
 """Unit tests for the OurGroceries todo platform."""
-from asyncio import TimeoutError as AsyncIOTimeoutError
 from unittest.mock import AsyncMock
 
 from aiohttp import ClientError
@@ -257,7 +256,7 @@ async def test_version_id_optimization(
     ("exception"),
     [
         (ClientError),
-        (AsyncIOTimeoutError),
+        (TimeoutError),
     ],
 )
 async def test_coordinator_error(

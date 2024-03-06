@@ -175,7 +175,7 @@ async def test_user_flow_404(
 @pytest.mark.parametrize(
     "error",
     [
-        asyncio.TimeoutError,
+        TimeoutError,
         python_otbr_api.OTBRError,
         aiohttp.ClientError,
     ],
@@ -368,14 +368,14 @@ async def test_hassio_discovery_flow_2x_addons(
         "homeassistant.components.otbr.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        results = await asyncio.gather(
-            hass.config_entries.flow.async_init(
-                otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
-            ),
-            hass.config_entries.flow.async_init(
-                otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA_2
-            ),
+        result1 = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
         )
+        result2 = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA_2
+        )
+
+        results = [result1, result2]
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
@@ -578,6 +578,38 @@ async def test_hassio_discovery_flow_404(
     assert result["reason"] == "unknown"
 
 
+async def test_hassio_discovery_flow_new_port_missing_unique_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test the port can be updated when the unique id is missing."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={
+            "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']+1}"
+        },
+        domain=otbr.DOMAIN,
+        options={},
+        source="hassio",
+        title="Open Thread Border Router",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+    expected_data = {
+        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+    }
+    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    assert config_entry.data == expected_data
+
+
 async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
     """Test the port can be updated."""
     mock_integration(hass, MockModule("hassio"))
@@ -591,6 +623,7 @@ async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
         options={},
         source="hassio",
         title="Open Thread Border Router",
+        unique_id=HASSIO_DATA.uuid,
     )
     config_entry.add_to_hass(hass)
 

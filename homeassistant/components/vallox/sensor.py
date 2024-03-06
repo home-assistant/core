@@ -58,7 +58,7 @@ class ValloxSensorEntity(ValloxEntity, SensorEntity):
         if (metric_key := self.entity_description.metric_key) is None:
             return None
 
-        value = self.coordinator.data.get_metric(metric_key)
+        value = self.coordinator.data.get(metric_key)
 
         if self.entity_description.round_ndigits is not None and isinstance(
             value, float
@@ -90,7 +90,7 @@ class ValloxFanSpeedSensor(ValloxSensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
-        fan_is_on = self.coordinator.data.get_metric(METRIC_KEY_MODE) == MODE_ON
+        fan_is_on = self.coordinator.data.get(METRIC_KEY_MODE) == MODE_ON
         return super().native_value if fan_is_on else 0
 
 
@@ -100,7 +100,7 @@ class ValloxFilterRemainingSensor(ValloxSensorEntity):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
-        next_filter_change_date = self.coordinator.data.get_next_filter_change_date()
+        next_filter_change_date = self.coordinator.data.next_filter_change_date
 
         if next_filter_change_date is None:
             return None

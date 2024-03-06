@@ -1,5 +1,4 @@
 """Tests for the Cert Expiry config flow."""
-import asyncio
 import socket
 import ssl
 from unittest.mock import patch
@@ -210,7 +209,7 @@ async def test_abort_on_socket_failed(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.cert_expiry.helper.async_get_cert",
-        side_effect=asyncio.TimeoutError,
+        side_effect=TimeoutError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_HOST: HOST}

@@ -117,7 +117,6 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         translation_key="percentage_of_max",
         service_type="today_energy",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:percent",
         value_fn=lambda data: data.energy_today.pct_of_max_price,
     ),
     EnergyZeroSensorEntityDescription(
@@ -125,7 +124,6 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         translation_key="hours_priced_equal_or_lower",
         service_type="today_energy",
         native_unit_of_measurement=UnitOfTime.HOURS,
-        icon="mdi:clock",
         value_fn=lambda data: data.energy_today.hours_priced_equal_or_lower,
     ),
 )
@@ -140,6 +138,7 @@ def get_gas_price(data: EnergyZeroData, hours: int) -> float | None:
 
     Returns:
         The gas market price value.
+
     """
     if data.gas_today is None:
         return None

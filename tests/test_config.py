@@ -2233,6 +2233,79 @@ async def test_yaml_error(
     assert error_records == snapshot
 
 
+@pytest.mark.parametrize(
+    "config_dir",
+    [
+        "packages_dict",
+        "packages_slug",
+        "packages_include_dir_named_dict",
+        "packages_include_dir_named_slug",
+    ],
+)
+async def test_individual_packages_schema_validation_errors(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_dir: str,
+    mock_iot_domain_integration: Integration,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests syntactic errors in individual packages."""
+
+    base_path = os.path.dirname(__file__)
+    hass.config.config_dir = os.path.join(
+        base_path, "fixtures", "core", "config", "package_schema_validation", config_dir
+    )
+
+    config = await config_util.async_hass_config_yaml(hass)
+
+    error_records = [
+        record.message
+        for record in caplog.get_records("call")
+        if record.levelno == logging.ERROR
+    ]
+    assert error_records == snapshot
+
+    assert len(config["iot_domain"]) == 1
+
+
+@pytest.mark.parametrize(
+    "config_dir",
+    [
+        "packages_is_a_list",
+        "packages_is_a_value",
+        "packages_is_null",
+    ],
+)
+async def test_packages_schema_validation_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config_dir: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Ensure that global package schema validation errors are logged."""
+
+    base_path = os.path.dirname(__file__)
+    hass.config.config_dir = os.path.join(
+        base_path,
+        "fixtures",
+        "core",
+        "config",
+        "package_schema_errors",
+        config_dir,
+    )
+
+    config = await config_util.async_hass_config_yaml(hass)
+
+    error_records = [
+        record.message
+        for record in caplog.get_records("call")
+        if record.levelno == logging.ERROR
+    ]
+    assert error_records == snapshot
+
+    assert len(config[config_util.CONF_CORE][config_util.CONF_PACKAGES]) == 0
+
+
 def test_extract_domain_configs() -> None:
     """Test the extraction of domain configuration."""
     config = {
