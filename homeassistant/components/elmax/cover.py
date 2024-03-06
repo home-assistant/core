@@ -49,7 +49,6 @@ async def async_setup_entry(
             if cover.endpoint_id in known_devices:
                 continue
             entity = ElmaxCover(
-                panel=coordinator.panel_entry,
                 elmax_device=cover,
                 panel_version=panel_status.release,
                 coordinator=coordinator,

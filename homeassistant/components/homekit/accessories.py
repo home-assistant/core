@@ -610,7 +610,8 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         self.hass.async_create_task(
             self.hass.services.async_call(
                 domain, service, service_data, context=context
-            )
+            ),
+            eager_start=True,
         )
 
     @ha_callback

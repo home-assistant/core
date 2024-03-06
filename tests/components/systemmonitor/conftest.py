@@ -162,6 +162,7 @@ def mock_psutil(mock_process: list[MockProcess]) -> Generator:
             sdiskpart("test", "/", "ext4", "", 1, 1),
             sdiskpart("test2", "/media/share", "ext4", "", 1, 1),
             sdiskpart("test3", "/incorrect", "", "", 1, 1),
+            sdiskpart("hosts", "/etc/hosts", "bind", "", 1, 1),
             sdiskpart("proc", "/proc/run", "proc", "", 1, 1),
         ]
         mock_psutil.boot_time.return_value = 1708786800.0
@@ -172,6 +173,11 @@ def mock_psutil(mock_process: list[MockProcess]) -> Generator:
 @pytest.fixture
 def mock_os() -> Generator:
     """Mock os."""
+
+    def isdir(path: str) -> bool:
+        """Mock os.path.isdir."""
+        return path != "/etc/hosts"
+
     with patch(
         "homeassistant.components.systemmonitor.coordinator.os"
     ) as mock_os, patch(
@@ -179,4 +185,5 @@ def mock_os() -> Generator:
     ) as mock_os_util:
         mock_os_util.name = "nt"
         mock_os.getloadavg.return_value = (1, 2, 3)
+        mock_os_util.path.isdir = isdir
         yield mock_os

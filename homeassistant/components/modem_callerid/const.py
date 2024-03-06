@@ -7,7 +7,6 @@ from serial import SerialException
 DATA_KEY_API = "api"
 DEFAULT_NAME = "Phone Modem"
 DOMAIN = "modem_callerid"
-ICON = "mdi:phone-classic"
 
 EXCEPTIONS: Final = (
     FileNotFoundError,

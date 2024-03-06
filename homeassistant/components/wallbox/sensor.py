@@ -161,11 +161,9 @@ async def async_setup_entry(
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            WallboxSensor(coordinator, description)
-            for ent in coordinator.data
-            if (description := SENSOR_TYPES.get(ent))
-        ]
+        WallboxSensor(coordinator, description)
+        for ent in coordinator.data
+        if (description := SENSOR_TYPES.get(ent))
     )
 
 

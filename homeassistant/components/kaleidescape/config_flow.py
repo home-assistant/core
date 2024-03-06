@@ -2,20 +2,17 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 from urllib.parse import urlparse
 
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 
 from . import KaleidescapeDeviceInfo, UnsupportedError, validate_host
 from .const import DEFAULT_HOST, DOMAIN, NAME as KALEIDESCAPE_NAME
-
-if TYPE_CHECKING:
-    from homeassistant.data_entry_flow import FlowResult
 
 ERROR_CANNOT_CONNECT = "cannot_connect"
 ERROR_UNSUPPORTED = "unsupported"
@@ -30,7 +27,7 @@ class KaleidescapeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user initiated device additions."""
         errors = {}
         host = DEFAULT_HOST
@@ -63,7 +60,9 @@ class KaleidescapeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: ssdp.SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle discovered device."""
         host = cast(str, urlparse(discovery_info.ssdp_location).hostname)
         serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
@@ -93,7 +92,7 @@ class KaleidescapeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(
         self, user_input: dict | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle addition of discovered device."""
         if user_input is None:
             return self.async_show_form(

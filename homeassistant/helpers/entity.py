@@ -1457,7 +1457,7 @@ class Entity(
         self._removed_from_registry = is_remove
         if action == "update" or is_remove:
             self.hass.async_create_task(
-                self._async_process_registry_update_or_remove(event)
+                self._async_process_registry_update_or_remove(event), eager_start=True
             )
 
     async def _async_process_registry_update_or_remove(

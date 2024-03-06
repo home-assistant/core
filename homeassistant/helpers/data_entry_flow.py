@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Generic
 
 from aiohttp import web
+from typing_extensions import TypeVar
 import voluptuous as vol
 import voluptuous_serialize
 
@@ -14,11 +15,17 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 
 from . import config_validation as cv
 
+_FlowManagerT = TypeVar(
+    "_FlowManagerT",
+    bound=data_entry_flow.FlowManager[Any],
+    default=data_entry_flow.FlowManager,
+)
 
-class _BaseFlowManagerView(HomeAssistantView):
+
+class _BaseFlowManagerView(HomeAssistantView, Generic[_FlowManagerT]):
     """Foundation for flow manager views."""
 
-    def __init__(self, flow_mgr: data_entry_flow.FlowManager) -> None:
+    def __init__(self, flow_mgr: _FlowManagerT) -> None:
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
 
@@ -48,7 +55,7 @@ class _BaseFlowManagerView(HomeAssistantView):
         return data
 
 
-class FlowManagerIndexView(_BaseFlowManagerView):
+class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
     """View to create config flows."""
 
     @RequestDataValidator(
@@ -61,6 +68,16 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
+        """Initialize a POST request.
+
+        Override `_post_impl` in subclasses which need
+        to implement their own `RequestDataValidator`
+        """
+        return await self._post_impl(request, data)
+
+    async def _post_impl(
+        self, request: web.Request, data: dict[str, Any]
+    ) -> web.Response:
         """Handle a POST request."""
         if isinstance(data["handler"], list):
             handler = tuple(data["handler"])
@@ -74,10 +91,8 @@ class FlowManagerIndexView(_BaseFlowManagerView):
             )
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)
-        except data_entry_flow.UnknownStep:
-            return self.json_message(
-                "Handler does not support user", HTTPStatus.BAD_REQUEST
-            )
+        except data_entry_flow.UnknownStep as err:
+            return self.json_message(str(err), HTTPStatus.BAD_REQUEST)
 
         result = self._prepare_result_json(result)
 
@@ -88,7 +103,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
         return {"show_advanced_options": data["show_advanced_options"]}
 
 
-class FlowManagerResourceView(_BaseFlowManagerView):
+class FlowManagerResourceView(_BaseFlowManagerView[_FlowManagerT]):
     """View to interact with the flow manager."""
 
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:

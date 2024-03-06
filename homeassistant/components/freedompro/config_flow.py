@@ -2,8 +2,10 @@
 from pyfreedompro import get_list
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
@@ -26,7 +28,7 @@ class Hub:
         )
 
 
-async def validate_input(hass: core.HomeAssistant, api_key):
+async def validate_input(hass: HomeAssistant, api_key):
     """Validate api key."""
     hub = Hub(hass, api_key)
     result = await hub.authenticate()
@@ -37,7 +39,7 @@ async def validate_input(hass: core.HomeAssistant, api_key):
             raise CannotConnect
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class FreedomProConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -65,9 +67,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""

@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import COORDINATOR, DOMAIN, GLUCOSE_TREND_ICON, MG_DL
+from .const import DOMAIN, GLUCOSE_TREND_ICON, MG_DL
 
 
 async def async_setup_entry(
@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Dexcom sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     username = config_entry.data[CONF_USERNAME]
     unit_of_measurement = config_entry.options[CONF_UNIT_OF_MEASUREMENT]
     async_add_entities(
@@ -31,7 +31,6 @@ async def async_setup_entry(
                 coordinator, username, config_entry.entry_id, unit_of_measurement
             ),
         ],
-        False,
     )
 
 

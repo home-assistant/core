@@ -6,7 +6,7 @@ import logging
 
 from bring_api.bring import Bring
 from bring_api.exceptions import BringParseException, BringRequestException
-from bring_api.types import BringItemsResponse, BringList
+from bring_api.types import BringList, BringPurchase
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -20,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 class BringData(BringList):
     """Coordinator data class."""
 
-    purchase_items: list[BringItemsResponse]
-    recently_items: list[BringItemsResponse]
+    purchase_items: list[BringPurchase]
+    recently_items: list[BringPurchase]
 
 
 class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):

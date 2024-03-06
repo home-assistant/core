@@ -30,6 +30,12 @@ def get_all_disk_mounts(hass: HomeAssistant) -> set[str]:
             # Ignore disks which are memory
             continue
         try:
+            if not os.path.isdir(part.mountpoint):
+                _LOGGER.debug(
+                    "Mountpoint %s was excluded because it is not a directory",
+                    part.mountpoint,
+                )
+                continue
             usage = psutil_wrapper.psutil.disk_usage(part.mountpoint)
         except PermissionError:
             _LOGGER.debug(

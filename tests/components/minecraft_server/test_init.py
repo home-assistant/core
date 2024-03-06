@@ -153,7 +153,7 @@ async def test_setup_entry_lookup_failure(
         )
 
     await hass.async_block_till_done()
-    assert java_mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert java_mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_init_failure(

@@ -34,7 +34,6 @@ async def async_setup_entry(
 class FluxPairedRemotes(FluxEntity, SensorEntity):
     """Representation of a Magic Home paired remotes sensor."""
 
-    _attr_icon = "mdi:remote"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_translation_key = "paired_remotes"
 

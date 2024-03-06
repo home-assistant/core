@@ -87,6 +87,9 @@ class ZHAGroupMember(LogMixin):
         entity_info = []
 
         for entity_ref in zha_device_registry.get(self.device.ieee):
+            # We have device entities now that don't leverage cluster handlers
+            if not entity_ref.cluster_handlers:
+                continue
             entity = entity_registry.async_get(entity_ref.reference_id)
             handler = list(entity_ref.cluster_handlers.values())[0]
 

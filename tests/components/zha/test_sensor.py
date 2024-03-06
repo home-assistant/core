@@ -5,8 +5,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import zigpy.profiles.zha
+from zigpy.quirks import CustomCluster
+from zigpy.quirks.v2 import CustomDeviceV2, add_to_registry_v2
+from zigpy.quirks.v2.homeassistant import UnitOfMass
+import zigpy.types as t
 from zigpy.zcl.clusters import general, homeautomation, hvac, measurement, smartenergy
 from zigpy.zcl.clusters.hvac import Thermostat
+from zigpy.zcl.clusters.manufacturer_specific import ManufacturerSpecificCluster
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.zha.core import ZHADevice
@@ -1185,6 +1190,79 @@ async def test_elec_measurement_skip_unsupported_attribute(
         a for call in cluster.read_attributes.call_args_list for a in call[0][0]
     }
     assert read_attrs == supported_attributes
+
+
+class OppleCluster(CustomCluster, ManufacturerSpecificCluster):
+    """Aqara manufacturer specific cluster."""
+
+    cluster_id = 0xFCC0
+    ep_attribute = "opple_cluster"
+    attributes = {
+        0x010C: ("last_feeding_size", t.uint16_t, True),
+    }
+
+    def __init__(self, *args, **kwargs) -> None:
+        """Initialize."""
+        super().__init__(*args, **kwargs)
+        # populate cache to create config entity
+        self._attr_cache.update({0x010C: 10})
+
+
+(
+    add_to_registry_v2("Fake_Manufacturer_sensor", "Fake_Model_sensor")
+    .replaces(OppleCluster)
+    .sensor(
+        "last_feeding_size",
+        OppleCluster.cluster_id,
+        divisor=1,
+        multiplier=1,
+        unit=UnitOfMass.GRAMS,
+    )
+)
+
+
+@pytest.fixture
+async def zigpy_device_aqara_sensor_v2(
+    hass: HomeAssistant, zigpy_device_mock, zha_device_joined_restored
+):
+    """Device tracker zigpy Aqara motion sensor device."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_INPUT: [
+                    general.Basic.cluster_id,
+                    OppleCluster.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [],
+                SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.OCCUPANCY_SENSOR,
+            }
+        },
+        manufacturer="Fake_Manufacturer_sensor",
+        model="Fake_Model_sensor",
+    )
+
+    zha_device = await zha_device_joined_restored(zigpy_device)
+    return zha_device, zigpy_device.endpoints[1].opple_cluster
+
+
+async def test_last_feeding_size_sensor_v2(
+    hass: HomeAssistant, zigpy_device_aqara_sensor_v2
+) -> None:
+    """Test quirks defined sensor."""
+
+    zha_device, cluster = zigpy_device_aqara_sensor_v2
+    assert isinstance(zha_device.device, CustomDeviceV2)
+    entity_id = find_entity_id(
+        Platform.SENSOR, zha_device, hass, qualifier="last_feeding_size"
+    )
+    assert entity_id is not None
+
+    await send_attributes_report(hass, cluster, {0x010C: 1})
+    assert_state(hass, entity_id, "1.0", UnitOfMass.GRAMS)
+
+    await send_attributes_report(hass, cluster, {0x010C: 5})
+    assert_state(hass, entity_id, "5.0", UnitOfMass.GRAMS)
 
 
 @pytest.fixture

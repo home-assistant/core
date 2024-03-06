@@ -40,7 +40,9 @@ async def test_resolve(
     mock_api.get_item.side_effect = None
     mock_api.get_item.return_value = load_json_fixture("track.json")
 
-    play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID")
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID", "media_player.jellyfin_device"
+    )
 
     assert play_media.mime_type == "audio/flac"
     assert play_media.url == snapshot
@@ -49,7 +51,9 @@ async def test_resolve(
     mock_api.get_item.side_effect = None
     mock_api.get_item.return_value = load_json_fixture("movie.json")
 
-    play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/MOVIE-UUID")
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/MOVIE-UUID", "media_player.jellyfin_device"
+    )
 
     assert play_media.mime_type == "video/mp4"
     assert play_media.url == snapshot
@@ -59,7 +63,11 @@ async def test_resolve(
     mock_api.get_item.return_value = load_json_fixture("unsupported-item.json")
 
     with pytest.raises(BrowseError):
-        await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/UNSUPPORTED-ITEM-UUID")
+        await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/UNSUPPORTED-ITEM-UUID",
+            "media_player.jellyfin_device",
+        )
 
 
 async def test_root(

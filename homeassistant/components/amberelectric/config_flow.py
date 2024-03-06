@@ -6,9 +6,8 @@ from amberelectric.api import amber_api
 from amberelectric.model.site import Site, SiteStatus
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -43,7 +42,7 @@ def filter_sites(sites: list[Site]) -> list[Site]:
     return filtered
 
 
-class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AmberElectricConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -73,7 +72,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         self._sites = None
@@ -107,7 +106,7 @@ class AmberElectricConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_site(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step to select site."""
         self._errors = {}
 

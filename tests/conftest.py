@@ -63,6 +63,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import BASE_PLATFORMS, async_setup_component
 from homeassistant.util import location
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
@@ -555,7 +556,7 @@ async def hass(
         # to ensure that they could, and to help track lingering tasks and timers.
         await asyncio.gather(
             *(
-                config_entry.async_unload(hass)
+                create_eager_task(config_entry.async_unload(hass))
                 for config_entry in hass.config_entries.async_entries()
             )
         )
@@ -1576,6 +1577,33 @@ def mock_bleak_scanner_start() -> Generator[MagicMock, None, None]:
         "start",
     ) as mock_bleak_scanner_start, patch.object(bluetooth_scanner, "HaScanner"):
         yield mock_bleak_scanner_start
+
+
+@pytest.fixture
+def mock_integration_frame() -> Generator[Mock, None, None]:
+    """Mock as if we're calling code from inside an integration."""
+    correct_frame = Mock(
+        filename="/home/paulus/homeassistant/components/hue/light.py",
+        lineno="23",
+        line="self.light.is_on",
+    )
+    with patch(
+        "homeassistant.helpers.frame.extract_stack",
+        return_value=[
+            Mock(
+                filename="/home/paulus/homeassistant/core.py",
+                lineno="23",
+                line="do_something()",
+            ),
+            correct_frame,
+            Mock(
+                filename="/home/paulus/aiohue/lights.py",
+                lineno="2",
+                line="something()",
+            ),
+        ],
+    ):
+        yield correct_frame
 
 
 @pytest.fixture
