@@ -66,16 +66,9 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {
             "name": name_from_discovery(self._discovered_adv),
         }
-        return await self.async_step_init()
+        return await self.async_step_user()
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
-        # This is for backwards compatibility.
-        return await self.async_step_init(user_input)
-
-    async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Check if paired."""
@@ -108,7 +101,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_link()
 
         return self.async_show_form(
-            step_id="init",
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ADDRESS): vol.In(
@@ -127,19 +120,20 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Given a configured host, will ask the user to press the button to pair."""
         errors: dict[str, str] = {}
-        token = randomid(32)
-        self._client = MicroBotApiClient(
-            device=self._ble_device,
-            token=token,
-        )
+        if self._client is None:
+            token = randomid(32)
+            self._client = MicroBotApiClient(
+                device=self._ble_device,
+                token=token,
+            )
         assert self._client is not None
         if user_input is None:
             await self._client.connect(init=True)
             return self.async_show_form(step_id="link")
 
-        if not await self._client.is_connected():
+        if not self._client.is_connected:
             await self._client.connect(init=False)
-        if not await self._client.is_connected():
+        if not self._client.is_connected:
             errors["base"] = "linking"
         else:
             await self._client.disconnect()
