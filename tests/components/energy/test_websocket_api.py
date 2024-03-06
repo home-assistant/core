@@ -280,6 +280,7 @@ async def test_get_solar_forecast(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_energy_platform
 ) -> None:
     """Test we get preferences."""
+    await hass.async_block_till_done()
     entry = MockConfigEntry(domain="some_domain")
     entry.add_to_hass(hass)
 
