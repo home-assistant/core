@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="config_entry")
-def fixture_config_entry() -> MockConfigEntry:
+def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
