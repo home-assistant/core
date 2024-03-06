@@ -1045,6 +1045,7 @@ async def test_pre_import_no_requirements(hass: HomeAssistant) -> None:
         assert not integration.requirements
 
 
+@pytest.mark.timeout(20)
 async def test_bootstrap_does_not_preload_stage_1_integrations() -> None:
     """Test that the bootstrap does not preload stage 1 integrations.
 
