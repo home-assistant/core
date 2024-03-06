@@ -373,8 +373,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensors for UniFi Network integration."""
-    UnifiHub.register_platform(
-        hass, config_entry, async_add_entities, UnifiSensorEntity, ENTITY_DESCRIPTIONS
+    UnifiHub.get_hub(hass, config_entry).entity_loader.register_platform(
+        async_add_entities, UnifiSensorEntity, ENTITY_DESCRIPTIONS
     )
 
 
