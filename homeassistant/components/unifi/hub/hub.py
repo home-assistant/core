@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+
 import aiounifi
 
 from homeassistant.config_entries import ConfigEntry
@@ -32,7 +34,7 @@ class UnifiHub:
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
         self.entity_loader = UnifiEntityLoader(self)
-        self.entity_helper = UnifiEntityHelper(hass, api)
+        self._entity_helper = UnifiEntityHelper(hass, api)
         self.websocket = UnifiWebsocket(hass, api, self.signal_reachable)
 
         self.site = config_entry.data[CONF_SITE_ID]
@@ -49,6 +51,28 @@ class UnifiHub:
     def available(self) -> bool:
         """Websocket connection state."""
         return self.websocket.available
+
+    @property
+    def signal_heartbeat_missed(self) -> str:
+        """Event to signal new heartbeat missed."""
+        return self._entity_helper.signal_heartbeat
+
+    @callback
+    def update_heartbeat(self, unique_id: str, heartbeat_expire_time: datetime) -> None:
+        """Update device time in heartbeat monitor."""
+        self._entity_helper.update_heartbeat(unique_id, heartbeat_expire_time)
+
+    @callback
+    def remove_heartbeat(self, unique_id: str) -> None:
+        """Update device time in heartbeat monitor."""
+        self._entity_helper.remove_heartbeat(unique_id)
+
+    @callback
+    def queue_poe_port_command(
+        self, device_id: str, port_idx: int, poe_mode: str
+    ) -> None:
+        """Queue commands to execute them together per device."""
+        self._entity_helper.queue_poe_port_command(device_id, port_idx, poe_mode)
 
     @property
     def signal_reachable(self) -> str:
@@ -69,7 +93,7 @@ class UnifiHub:
 
         self.config.entry.add_update_listener(self.async_config_entry_updated)
 
-        self.entity_helper.initialize()
+        self._entity_helper.initialize()
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -134,6 +158,6 @@ class UnifiHub:
         if not unload_ok:
             return False
 
-        self.entity_helper.reset()
+        self._entity_helper.reset()
 
         return True

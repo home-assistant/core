@@ -20,41 +20,41 @@ class UnifiEntityHelper:
         self.hass = hass
         self.api = api
 
-        self.device_command = UnifiDeviceCommand(hass, api)
-        self.heartbeat = UnifiEntityHeartbeat(hass)
+        self._device_command = UnifiDeviceCommand(hass, api)
+        self._heartbeat = UnifiEntityHeartbeat(hass)
 
     @callback
     def reset(self) -> None:
         """Cancel timers."""
-        self.device_command.reset()
-        self.heartbeat.reset()
+        self._device_command.reset()
+        self._heartbeat.reset()
 
     @callback
     def initialize(self) -> None:
         """Initialize entity helper."""
-        self.heartbeat.initialize()
+        self._heartbeat.initialize()
 
     @property
     def signal_heartbeat(self) -> str:
         """Event to signal new heartbeat missed."""
-        return self.heartbeat.signal
+        return self._heartbeat.signal
 
     @callback
     def update_heartbeat(self, unique_id: str, heartbeat_expire_time: datetime) -> None:
         """Update device time in heartbeat monitor."""
-        self.heartbeat.update(unique_id, heartbeat_expire_time)
+        self._heartbeat.update(unique_id, heartbeat_expire_time)
 
     @callback
     def remove_heartbeat(self, unique_id: str) -> None:
         """Update device time in heartbeat monitor."""
-        self.heartbeat.remove(unique_id)
+        self._heartbeat.remove(unique_id)
 
     @callback
     def queue_poe_port_command(
         self, device_id: str, port_idx: int, poe_mode: str
     ) -> None:
         """Queue commands to execute them together per device."""
-        self.device_command.queue_poe_command(device_id, port_idx, poe_mode)
+        self._device_command.queue_poe_command(device_id, port_idx, poe_mode)
 
 
 class UnifiEntityHeartbeat:
@@ -123,7 +123,7 @@ class UnifiDeviceCommand:
         self.hass = hass
         self.api = api
 
-        self.poe_command_queue: dict[str, dict[int, str]] = {}
+        self._poe_command_queue: dict[str, dict[int, str]] = {}
         self._cancel_poe_command: CALLBACK_TYPE | None = None
 
     @callback
@@ -140,13 +140,13 @@ class UnifiDeviceCommand:
             self._cancel_poe_command()
             self._cancel_poe_command = None
 
-        device_queue = self.poe_command_queue.setdefault(device_id, {})
+        device_queue = self._poe_command_queue.setdefault(device_id, {})
         device_queue[port_idx] = poe_mode
 
         async def _execute_command(now: datetime) -> None:
             """Execute previously queued commands."""
-            queue = self.poe_command_queue.copy()
-            self.poe_command_queue.clear()
+            queue = self._poe_command_queue.copy()
+            self._poe_command_queue.clear()
             for device_id, device_commands in queue.items():
                 device = self.api.devices[device_id]
                 commands = list(device_commands.items())
