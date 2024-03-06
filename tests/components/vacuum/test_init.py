@@ -32,10 +32,8 @@ from tests.testing_config.custom_components.test import vacuum as VacuumPlatform
     ("service", "expected_state"),
     [
         (SERVICE_CLEAN_SPOT, STATE_CLEANING),
-        # (SERVICE_LOCATE,
         (SERVICE_PAUSE, STATE_PAUSED),
         (SERVICE_RETURN_TO_BASE, STATE_RETURNING),
-        # (SERVICE_SEND_COMMAND,
         (SERVICE_START, STATE_CLEANING),
         (SERVICE_STOP, STATE_IDLE),
     ],
