@@ -433,7 +433,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:wifi',
+    'original_icon': None,
     'original_name': 'Wi-Fi network name',
     'platform': 'technove',
     'previous_unique_id': None,
@@ -447,7 +447,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'TechnoVE Station Wi-Fi network name',
-      'icon': 'mdi:wifi',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.technove_station_wi_fi_network_name',
