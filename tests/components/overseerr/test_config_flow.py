@@ -53,7 +53,12 @@ async def test_form_create_entry(hass: HomeAssistant) -> None:
     ("exception", "error_string"),
     [
         (OpenApiException, "open_api_exception"),
-        (MaxRetryError, "open_api_exception"),
+        (
+            MaxRetryError(
+                HTTPConnectionPool(host="localhost", port=5055), "Dummy exception"
+            ),
+            "open_api_exception",
+        ),
         (Exception, "unknown"),
     ],
 )
@@ -63,9 +68,6 @@ async def test_form_retries_on_exception(
     error_string: str,
 ) -> None:
     """Test that config flow can recover for all expected exceptions."""
-    if exception == MaxRetryError:
-        pool = HTTPConnectionPool(host="localhost", port=5055)
-        exception = MaxRetryError(pool, "Dummy exception")
     with patch(
         "homeassistant.components.overseerr.config_flow.AuthApi.auth_me_get",
         side_effect=exception,
