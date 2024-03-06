@@ -1592,7 +1592,6 @@ omit =
     homeassistant/components/weatherflow_cloud/const.py
     homeassistant/components/weatherflow_cloud/coordinator.py
     homeassistant/components/weatherflow_cloud/weather.py
-    homeassistant/components/webmin/sensor.py
     homeassistant/components/wiffi/__init__.py
     homeassistant/components/wiffi/binary_sensor.py
     homeassistant/components/wiffi/sensor.py
