@@ -4,4 +4,5 @@ import asyncio
 
 async def async_setup(hass, config):
     """Mock a successful setup."""
-    raise asyncio.CancelledError("Make sure this does not leak upward")
+    asyncio.current_task().cancel()
+    await asyncio.sleep(0)

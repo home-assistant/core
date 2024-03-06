@@ -9,4 +9,5 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Mock an unsuccessful entry setup."""
-    raise asyncio.CancelledError("Make sure this does not leak upward")
+    asyncio.current_task().cancel()
+    await asyncio.sleep(0)
