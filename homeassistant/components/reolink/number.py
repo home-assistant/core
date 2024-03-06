@@ -116,7 +116,7 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_md_sensitivity(ch, int(value)),
     ),
     ReolinkNumberEntityDescription(
-        key="ai_face_sensitivity",
+        key="ai_face_sensititvity",
         cmd_key="GetAiAlarm",
         translation_key="ai_face_sensitivity",
         entity_category=EntityCategory.CONFIG,
@@ -130,7 +130,7 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "face"),
     ),
     ReolinkNumberEntityDescription(
-        key="ai_person_sensitivity",
+        key="ai_person_sensititvity",
         cmd_key="GetAiAlarm",
         translation_key="ai_person_sensitivity",
         entity_category=EntityCategory.CONFIG,
@@ -144,7 +144,7 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "people"),
     ),
     ReolinkNumberEntityDescription(
-        key="ai_vehicle_sensitivity",
+        key="ai_vehicle_sensititvity",
         cmd_key="GetAiAlarm",
         translation_key="ai_vehicle_sensitivity",
         entity_category=EntityCategory.CONFIG,
@@ -158,7 +158,7 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "vehicle"),
     ),
     ReolinkNumberEntityDescription(
-        key="ai_package_sensitivity",
+        key="ai_package_sensititvity",
         cmd_key="GetAiAlarm",
         translation_key="ai_package_sensitivity",
         entity_category=EntityCategory.CONFIG,
@@ -172,7 +172,7 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "package"),
     ),
     ReolinkNumberEntityDescription(
-        key="ai_pet_sensitivity",
+        key="ai_pet_sensititvity",
         cmd_key="GetAiAlarm",
         translation_key="ai_pet_sensitivity",
         entity_category=EntityCategory.CONFIG,
@@ -188,7 +188,7 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
     ),
     ReolinkNumberEntityDescription(
-        key="ai_pet_sensitivity",
+        key="ai_pet_sensititvity",
         cmd_key="GetAiAlarm",
         translation_key="ai_animal_sensitivity",
         entity_category=EntityCategory.CONFIG,

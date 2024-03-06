@@ -94,7 +94,7 @@ SWITCH_ENTITIES = (
         method=lambda api, ch, value: api.set_autofocus(ch, value),
     ),
     ReolinkSwitchEntityDescription(
-        key="guard_return",
+        key="gaurd_return",
         cmd_key="GetPtzGuard",
         translation_key="guard_return",
         entity_category=EntityCategory.CONFIG,
