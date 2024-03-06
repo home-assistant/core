@@ -67,7 +67,7 @@ class BedrockAgent(conversation.AbstractConversationAgent):
     async def async_call_bedrock(self, question) -> str:
         """Return result from Amazon Bedrock."""
 
-        question = "Answer with 50 words or less. " + question
+        question = "Provide me a short answer to the following question: " + question
 
         modelId = self.entry.data[CONST_MODEL_ID]
         body = json.dumps({"prompt": question})
@@ -88,7 +88,7 @@ class BedrockAgent(conversation.AbstractConversationAgent):
             body = json.dumps(
                 {
                     "prompt": f"\n\nHuman:{question}\n\nAssistant:",
-                    "max_tokens_to_sample": 300,
+                    "max_tokens_to_sample": 50,
                     "temperature": 0.1,
                     "top_p": 0.9,
                 }
