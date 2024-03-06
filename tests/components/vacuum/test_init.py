@@ -24,9 +24,7 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import create_entity
-
-from tests.testing_config.custom_components.test import vacuum as VacuumPlatform
+from . import MockVacuum, create_entity
 
 
 @pytest.mark.parametrize(
@@ -77,7 +75,7 @@ async def test_locate(hass: HomeAssistant, config_flow_fixture: None) -> None:
 
     calls = []
 
-    class MockVacuumWithLocation(VacuumPlatform.MockVacuum):
+    class MockVacuumWithLocation(MockVacuum):
         def __init__(self, calls: list[str], **kwargs) -> None:
             super().__init__()
             self._attr_supported_features = (
@@ -107,7 +105,7 @@ async def test_send_command(hass: HomeAssistant, config_flow_fixture: None) -> N
 
     strings = []
 
-    class MockVacuumWithLocation(VacuumPlatform.MockVacuum):
+    class MockVacuumWithLocation(MockVacuum):
         def __init__(self, strings: list[str], **kwargs) -> None:
             super().__init__()
             self._attr_supported_features = (
