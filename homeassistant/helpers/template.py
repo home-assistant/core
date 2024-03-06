@@ -78,7 +78,13 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
-from . import area_registry, device_registry, entity_registry, location as loc_helper
+from . import (
+    area_registry,
+    device_registry,
+    entity_registry,
+    issue_registry,
+    location as loc_helper,
+)
 from .singleton import singleton
 from .translation import async_translate_state
 from .typing import TemplateVarsType
@@ -1357,6 +1363,21 @@ def is_device_attr(
     return bool(device_attr(hass, device_or_entity_id, attr_name) == attr_value)
 
 
+def issues(hass: HomeAssistant) -> dict[tuple[str, str], dict[str, Any]]:
+    """Return all open issues."""
+    current_issues = issue_registry.async_get(hass).issues
+    # Use JSON for safe representation
+    return {k: v.to_json() for (k, v) in current_issues.items()}
+
+
+def issue(hass: HomeAssistant, domain: str, issue_id: str) -> dict[str, Any] | None:
+    """Get issue by domain and issue_id."""
+    result = issue_registry.async_get(hass).async_get_issue(domain, issue_id)
+    if result:
+        return result.to_json()
+    return None
+
+
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
     """Return all areas."""
     area_reg = area_registry.async_get(hass)
@@ -2618,6 +2639,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["device_id"] = hassfunction(device_id)
         self.filters["device_id"] = self.globals["device_id"]
+
+        self.globals["issues"] = hassfunction(issues)
+
+        self.globals["issue"] = hassfunction(issue)
+        self.filters["issue"] = self.globals["issue"]
 
         self.globals["areas"] = hassfunction(areas)
 

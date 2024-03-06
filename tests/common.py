@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections import OrderedDict
 from collections.abc import AsyncGenerator, Generator, Mapping, Sequence
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime, timedelta
@@ -615,27 +614,6 @@ def mock_registry(
         registry.entities[key] = entry
 
     hass.data[er.DATA_REGISTRY] = registry
-    return registry
-
-
-def mock_area_registry(
-    hass: HomeAssistant, mock_entries: dict[str, ar.AreaEntry] | None = None
-) -> ar.AreaRegistry:
-    """Mock the Area Registry.
-
-    This should only be used if you need to mock/re-stage a clean mocked
-    area registry in your current hass object. It can be useful to,
-    for example, pre-load the registry with items.
-
-    This mock will thus replace the existing registry in the running hass.
-
-    If you just need to access the existing registry, use the `area_registry`
-    fixture instead.
-    """
-    registry = ar.AreaRegistry(hass)
-    registry.areas = mock_entries or OrderedDict()
-
-    hass.data[ar.DATA_REGISTRY] = registry
     return registry
 
 
@@ -1418,6 +1396,7 @@ def mock_integration(
         else f"{loader.PACKAGE_CUSTOM_COMPONENTS}.{module.DOMAIN}",
         pathlib.Path(""),
         module.mock_manifest(),
+        set(),
     )
 
     def mock_import_platform(platform_name: str) -> NoReturn:
@@ -1445,13 +1424,14 @@ def mock_platform(
 
     platform_path is in form hue.config_flow.
     """
-    domain = platform_path.split(".")[0]
+    domain, _, platform_name = platform_path.partition(".")
     integration_cache = hass.data[loader.DATA_INTEGRATIONS]
     module_cache = hass.data[loader.DATA_COMPONENTS]
 
     if domain not in integration_cache:
         mock_integration(hass, MockModule(domain))
 
+    integration_cache[domain]._top_level_files.add(f"{platform_name}.py")
     _LOGGER.info("Adding mock integration platform: %s", platform_path)
     module_cache[platform_path] = module or Mock()
 

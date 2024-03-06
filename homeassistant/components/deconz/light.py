@@ -165,6 +165,7 @@ class DeconzBaseLight(DeconzDevice[_LightDeviceT], LightEntity):
     """Representation of a deCONZ light."""
 
     TYPE = DOMAIN
+    _attr_color_mode = ColorMode.UNKNOWN
 
     def __init__(self, device: _LightDeviceT, gateway: DeconzGateway) -> None:
         """Set up light."""

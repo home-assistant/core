@@ -308,7 +308,7 @@ def check_config(config: dict) -> dict:
     ) -> bool:
         """Validate entity."""
         name = entity[CONF_NAME]
-        addr = str(entity[CONF_ADDRESS])
+        addr = f"{hub_name}{entity[CONF_ADDRESS]}"
         scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         if scan_interval < 5:
             _LOGGER.warning(
@@ -335,11 +335,15 @@ def check_config(config: dict) -> dict:
         loc_addr: set[str] = {addr}
 
         if CONF_TARGET_TEMP in entity:
-            loc_addr.add(f"{entity[CONF_TARGET_TEMP]}_{inx}")
+            loc_addr.add(f"{hub_name}{entity[CONF_TARGET_TEMP]}_{inx}")
         if CONF_HVAC_MODE_REGISTER in entity:
-            loc_addr.add(f"{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
+            loc_addr.add(
+                f"{hub_name}{entity[CONF_HVAC_MODE_REGISTER][CONF_ADDRESS]}_{inx}"
+            )
         if CONF_FAN_MODE_REGISTER in entity:
-            loc_addr.add(f"{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]}_{inx}")
+            loc_addr.add(
+                f"{hub_name}{entity[CONF_FAN_MODE_REGISTER][CONF_ADDRESS]}_{inx}"
+            )
 
         dup_addrs = ent_addr.intersection(loc_addr)
         if len(dup_addrs) > 0:

@@ -199,6 +199,7 @@ async def test_loading_platforms(
         ),
     )
     await manager.load_platforms()
+    await hass.async_block_till_done()
 
     assert manager.loaded_platforms
     assert len(manager.platforms) == 1
@@ -218,6 +219,7 @@ async def test_not_loading_bad_platforms(
 
     await _setup_mock_domain(hass)
     await manager.load_platforms()
+    await hass.async_block_till_done()
 
     assert manager.loaded_platforms
     assert len(manager.platforms) == 0

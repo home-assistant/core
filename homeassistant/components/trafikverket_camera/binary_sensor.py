@@ -36,7 +36,6 @@ class TVCameraSensorEntityDescription(
 BINARY_SENSOR_TYPE = TVCameraSensorEntityDescription(
     key="active",
     translation_key="active",
-    icon="mdi:camera-outline",
     value_fn=lambda data: data.data.active,
 )
 
