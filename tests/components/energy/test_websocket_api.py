@@ -89,6 +89,7 @@ async def test_save_preferences(
     mock_energy_platform,
 ) -> None:
     """Test we can save preferences."""
+    await hass.async_block_till_done()
     client = await hass_ws_client(hass)
 
     # Test saving default prefs is also valid.
