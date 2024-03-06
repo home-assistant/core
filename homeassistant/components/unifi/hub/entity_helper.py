@@ -123,30 +123,28 @@ class UnifiDeviceCommand:
         self.hass = hass
         self.api = api
 
-        self._poe_command_queue: dict[str, dict[int, str]] = {}
-        self._cancel_poe_command: CALLBACK_TYPE | None = None
+        self._command_queue: dict[str, dict[int, str]] = {}
+        self._cancel_command: CALLBACK_TYPE | None = None
 
     @callback
     def reset(self) -> None:
         """Cancel timers."""
-        if self._cancel_poe_command:
-            self._cancel_poe_command()
-            self._cancel_poe_command = None
+        if self._cancel_command:
+            self._cancel_command()
+            self._cancel_command = None
 
     @callback
     def queue_poe_command(self, device_id: str, port_idx: int, poe_mode: str) -> None:
         """Queue commands to execute them together per device."""
-        if self._cancel_poe_command:
-            self._cancel_poe_command()
-            self._cancel_poe_command = None
+        self.reset()
 
-        device_queue = self._poe_command_queue.setdefault(device_id, {})
+        device_queue = self._command_queue.setdefault(device_id, {})
         device_queue[port_idx] = poe_mode
 
-        async def _execute_command(now: datetime) -> None:
+        async def _command(now: datetime) -> None:
             """Execute previously queued commands."""
-            queue = self._poe_command_queue.copy()
-            self._poe_command_queue.clear()
+            queue = self._command_queue.copy()
+            self._command_queue.clear()
             for device_id, device_commands in queue.items():
                 device = self.api.devices[device_id]
                 commands = list(device_commands.items())
@@ -154,6 +152,4 @@ class UnifiDeviceCommand:
                     DeviceSetPoePortModeRequest.create(device, targets=commands)
                 )
 
-        self._cancel_poe_command = async_call_later(
-            self.hass, self.COMMAND_DELAY, _execute_command
-        )
+        self._cancel_command = async_call_later(self.hass, self.COMMAND_DELAY, _command)
