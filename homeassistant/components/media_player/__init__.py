@@ -49,7 +49,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -59,6 +59,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.network import get_url
+from homeassistant.helpers.service import remove_entity_service_fields
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
@@ -279,6 +280,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await component.async_setup(config)
 
+    async def async_handle_volume_up_service(
+        media_player: MediaPlayerEntity, call: ServiceCall
+    ) -> None:
+        """Handle turning volume up."""
+        # pylint: disable-next=protected-access
+        max_volume = media_player._media_player_option_max_volume
+        if (
+            volume_level := media_player.volume_level
+        ) is not None and volume_level + media_player.volume_step > max_volume:
+            return
+        await media_player.async_volume_up(**remove_entity_service_fields(call))
+
+    async def async_handle_set_volume_level(
+        media_player: MediaPlayerEntity, call: ServiceCall
+    ) -> None:
+        """Handle setting volume."""
+        data = remove_entity_service_fields(call)
+        # pylint: disable-next=protected-access
+        max_volume = media_player._media_player_option_max_volume
+        if max_volume < 1.0:
+            data["volume"] = min(data["volume"], max_volume)
+
+        await media_player.async_set_volume_level(**data)
+
     component.async_register_entity_service(
         SERVICE_TURN_ON, {}, "async_turn_on", [MediaPlayerEntityFeature.TURN_ON]
     )
@@ -294,7 +319,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_VOLUME_UP,
         {},
-        "async_volume_up",
+        async_handle_volume_up_service,
         [MediaPlayerEntityFeature.VOLUME_SET, MediaPlayerEntityFeature.VOLUME_STEP],
     )
     component.async_register_entity_service(
@@ -344,7 +369,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             ),
             _rename_keys(volume=ATTR_MEDIA_VOLUME_LEVEL),
         ),
-        "async_set_volume_level",
+        async_handle_set_volume_level,
         [MediaPlayerEntityFeature.VOLUME_SET],
     )
     component.async_register_entity_service(
@@ -553,6 +578,15 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_supported_features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0)
     _attr_volume_level: float | None = None
     _attr_volume_step: float
+
+    _media_player_option_max_volume = 1.0
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the media player entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self.async_registry_entry_updated()
 
     # Implement these for your media player
     @cached_property
@@ -1203,6 +1237,16 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             url_query["media_image_id"] = media_image_id
 
         return str(URL(url_path).with_query(url_query))
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        assert self.registry_entry
+        if cover_options := self.registry_entry.options.get(DOMAIN):
+            self._media_player_option_max_volume = cover_options.get("max_volume", 1.0)
+            return
+
+        self._media_player_option_max_volume = 1.0
 
 
 class MediaPlayerImageView(HomeAssistantView):

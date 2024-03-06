@@ -6,6 +6,10 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_VOLUME_LEVEL,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
     BrowseMedia,
     MediaClass,
     MediaPlayerEnqueue,
@@ -15,7 +19,10 @@ from homeassistant.components.media_player import (
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+
+from .common import MockMediaPlayer
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -348,3 +355,124 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
     caplog.clear()
     assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
     assert "is using deprecated supported features values" not in caplog.text
+
+
+async def test_volume_limit_set_volume(
+    hass: HomeAssistant,
+    setup: None,
+    mock_media_player: MockMediaPlayer,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test volume limit."""
+    entity_id = "media_player.test"
+    mock_media_player._attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET | MediaPlayerEntityFeature.VOLUME_STEP
+    )
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry.options == {}
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_LEVEL: 1.0},
+        blocking=True,
+    )
+    mock_media_player.async_set_volume_level.assert_called_once_with(volume=1.0)
+    mock_media_player.async_set_volume_level.reset_mock()
+
+    # Set a volume limit
+    entity_registry.async_update_entity_options(
+        entity_id, MEDIA_PLAYER_DOMAIN, {"max_volume": 0.5}
+    )
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_LEVEL: 1.0},
+        blocking=True,
+    )
+    mock_media_player.async_set_volume_level.assert_called_once_with(volume=0.5)
+    mock_media_player.async_set_volume_level.reset_mock()
+
+    # Update the volume limit
+    entity_registry.async_update_entity_options(
+        entity_id, MEDIA_PLAYER_DOMAIN, {"max_volume": 0.8}
+    )
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_LEVEL: 1.0},
+        blocking=True,
+    )
+    mock_media_player.async_set_volume_level.assert_called_once_with(volume=0.8)
+
+
+async def test_volume_limit_increase_volume(
+    hass: HomeAssistant,
+    setup: None,
+    mock_media_player: MockMediaPlayer,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test volume limit."""
+    entity_id = "media_player.test"
+    mock_media_player._attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET | MediaPlayerEntityFeature.VOLUME_STEP
+    )
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry.options == {}
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_media_player.async_volume_up.assert_called_once_with()
+    mock_media_player.async_volume_up.reset_mock()
+
+    # Set a volume limit
+    entity_registry.async_update_entity_options(
+        entity_id, MEDIA_PLAYER_DOMAIN, {"max_volume": 0.5}
+    )
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_media_player.async_volume_up.assert_called_once_with()
+    mock_media_player.async_volume_up.reset_mock()
+
+    # 0.40 + 0.10 = 0.50 -> call not blocked
+    mock_media_player._attr_volume_level = 0.40
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_media_player.async_volume_up.assert_called_once_with()
+    mock_media_player.async_volume_up.reset_mock()
+
+    # 0.41 + 0.10 > 0.50 -> call blocked
+    mock_media_player._attr_volume_level = 0.41
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_media_player.async_volume_up.assert_not_called()
+    mock_media_player.async_volume_up.reset_mock()
+
+    # 0.41 + 0.05 < 0.50 -> call not blocked
+    mock_media_player._attr_volume_step = 0.05
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_media_player.async_volume_up.assert_called_once_with()
+    mock_media_player.async_volume_up.reset_mock()
