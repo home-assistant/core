@@ -81,9 +81,6 @@
       },
       "salinity": {
         "name": "Salinity"
-      },
-      "plant_number": {
-        "name": "Number of plants"
       }
     }
   }
