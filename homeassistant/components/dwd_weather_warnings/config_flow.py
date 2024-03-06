@@ -8,6 +8,7 @@ from dwdwfsapi import DwdWeatherWarningsAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
@@ -51,25 +52,34 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     return self.async_create_entry(title=identifier, data=user_input)
             elif CONF_REGION_DEVICE_TRACKER in user_input:
-                # Validate position using the API
                 device_tracker = user_input[CONF_REGION_DEVICE_TRACKER]
-                try:
-                    position = get_position_data(self.hass, device_tracker)
-                except EntityNotFoundError:
+                registry = er.async_get(self.hass)
+                entity_entry = registry.async_get(device_tracker)
+
+                if entity_entry is None:
                     errors["base"] = "entity_not_found"
-                except AttributeError:
-                    errors["base"] = "attribute_not_found"
                 else:
-                    if not await self.hass.async_add_executor_job(
-                        DwdWeatherWarningsAPI, position
-                    ):
-                        errors["base"] = "invalid_identifier"
+                    try:
+                        position = get_position_data(self.hass, entity_entry.id)
+                    except EntityNotFoundError:
+                        errors["base"] = "entity_not_found"
+                    except AttributeError:
+                        errors["base"] = "attribute_not_found"
+                    else:
+                        # Validate position using the API
+                        if not await self.hass.async_add_executor_job(
+                            DwdWeatherWarningsAPI, position
+                        ):
+                            errors["base"] = "invalid_identifier"
 
                 # Position is valid here, because the API call was successful.
-                if not errors and position is not None:
+                if not errors and position is not None and entity_entry is not None:
                     # Set the unique ID for this config entry.
-                    await self.async_set_unique_id(f"{position[0]}-{position[1]}")
+                    await self.async_set_unique_id(entity_entry.id)
                     self._abort_if_unique_id_configured()
+
+                    # Replace entity ID with registry ID for more stability.
+                    user_input[CONF_REGION_DEVICE_TRACKER] = entity_entry.id
 
                     return self.async_create_entry(
                         title=device_tracker.removeprefix("device_tracker."),
