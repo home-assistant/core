@@ -63,7 +63,9 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         information["board"] = os_info.get("board")
 
     information["supervisor_api"] = system_health.async_check_can_reach_url(
-        hass, SUPERVISOR_PING.format(ip_address), OBSERVER_URL.format(ip_address)
+        hass,
+        SUPERVISOR_PING.format(ip_address=ip_address),
+        OBSERVER_URL.format(ip_address=ip_address),
     )
     information["version_api"] = system_health.async_check_can_reach_url(
         hass,
