@@ -482,8 +482,10 @@ class HomeAssistant:
                     " phase. We're going to continue anyway. Please report the"
                     " following info at"
                     " https://github.com/home-assistant/core/issues: %s"
+                    " The system is waiting for tasks: %s"
                 ),
                 ", ".join(self.config.components),
+                self._tasks,
             )
 
         # Allow automations to set up the start triggers before changing state
