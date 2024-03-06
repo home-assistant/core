@@ -31,7 +31,7 @@ from .const import ATTR_EXTRUDER, ATTR_PLATFORM, DOMAIN
 from .entity import Dremel3DPrinterEntity
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class Dremel3DPrinterSensorEntityDescription(SensorEntityDescription):
     """Describes a Dremel 3D Printer sensor."""
 
