@@ -7,7 +7,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, HassioDataUpdateCoordinator
 from .const import (
     ATTR_SLUG,
     CONTAINER_STATS,
@@ -17,9 +16,11 @@ from .const import (
     DATA_KEY_HOST,
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
+    DOMAIN,
     KEY_TO_UPDATE_TYPES,
     SUPERVISOR_CONTAINER,
 )
+from .data import HassioDataUpdateCoordinator
 
 
 class HassioAddonEntity(CoordinatorEntity[HassioDataUpdateCoordinator]):

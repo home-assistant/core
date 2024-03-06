@@ -168,7 +168,7 @@
         "airzone_cloud": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "cloud_polling",
+          "iot_class": "cloud_push",
           "name": "Airzone Cloud"
         }
       }
@@ -3370,7 +3370,7 @@
         },
         "homeworks": {
           "integration_type": "hub",
-          "config_flow": false,
+          "config_flow": true,
           "iot_class": "local_push",
           "name": "Lutron Homeworks"
         }

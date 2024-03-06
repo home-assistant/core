@@ -14,7 +14,6 @@ from .entity import SteamistEntity
 
 ACTIVE_SWITCH = SwitchEntityDescription(
     key="active",
-    icon="mdi:pot-steam",
     translation_key="steam_active",
 )
 
