@@ -48,7 +48,7 @@ class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime
             self._path = self._get_full_path()
 
         try:
-            return os.stat(self._path)
+            return self._path.stat()
         except OSError as error:
             raise UpdateFailed(f"Can not retrieve file statistics {error}") from error
 
