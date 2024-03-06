@@ -81,6 +81,9 @@ BASE_PRELOAD_PLATFORMS = [
     "trigger",
 ]
 
+BLOCKED_CUSTOM_INTEGRATIONS = {
+    "start_time",  # Added in 2024.3.0 because of https://github.com/home-assistant/core/issues/112464
+}
 
 DATA_COMPONENTS = "components"
 DATA_INTEGRATIONS = "integrations"
@@ -644,6 +647,17 @@ class Integration:
                 return integration
 
             _LOGGER.warning(CUSTOM_WARNING, integration.domain)
+
+            if integration.domain in BLOCKED_CUSTOM_INTEGRATIONS:
+                _LOGGER.error(
+                    (
+                        "The custom integration '%s' is known to break Home Assistant"
+                        " manifest file and was blocked from loading"
+                    ),
+                    integration.domain,
+                )
+                return None
+
             if integration.version is None:
                 _LOGGER.error(
                     (
