@@ -652,7 +652,7 @@ class Integration:
                 _LOGGER.error(
                     (
                         "The custom integration '%s' is known to break Home Assistant"
-                        " manifest file and was blocked from loading"
+                        " and was blocked from loading"
                     ),
                     integration.domain,
                 )
