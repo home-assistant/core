@@ -385,7 +385,7 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
         if description.is_connected_fn is not None:
             # Send heartbeat if client is connected
             if description.is_connected_fn(self.hub, self._obj_id):
-                self.hub.entity_helper.heartbeat(
+                self.hub.entity_helper.heartbeat.update(
                     self._attr_unique_id,
                     dt_util.utcnow() + self.hub.config.option_detection_time,
                 )
@@ -399,7 +399,7 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
-                    f"{self.hub.signal_heartbeat_missed}_{self.unique_id}",
+                    f"{self.hub.entity_helper.heartbeat.signal}_{self.unique_id}",
                     self._make_disconnected,
                 )
             )
@@ -410,4 +410,4 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
 
         if self.entity_description.is_connected_fn is not None:
             # Remove heartbeat registration
-            self.hub.entity_helper.heartbeat(self._attr_unique_id)
+            self.hub.entity_helper.heartbeat.remove(self._attr_unique_id)

@@ -22,8 +22,7 @@ class UnifiEntityHelper:
         self.hass = hass
         self.api = api
 
-        self._cancel_heartbeat_check: CALLBACK_TYPE | None = None
-        self._heartbeat_time: dict[str, datetime] = {}
+        self.heartbeat = UnifiEntityHeartbeat(hass)
 
         self.poe_command_queue: dict[str, dict[int, str]] = {}
         self._cancel_poe_command: CALLBACK_TYPE | None = None
@@ -31,9 +30,7 @@ class UnifiEntityHelper:
     @callback
     def reset(self) -> None:
         """Cancel timers."""
-        if self._cancel_heartbeat_check:
-            self._cancel_heartbeat_check()
-            self._cancel_heartbeat_check = None
+        self.heartbeat.reset()
 
         if self._cancel_poe_command:
             self._cancel_poe_command()
@@ -42,42 +39,7 @@ class UnifiEntityHelper:
     @callback
     def initialize(self) -> None:
         """Initialize entity helper."""
-        self._cancel_heartbeat_check = async_track_time_interval(
-            self.hass, self._check_for_stale, CHECK_HEARTBEAT_INTERVAL
-        )
-
-    @property
-    def signal_heartbeat_missed(self) -> str:
-        """Event specific per UniFi device tracker to signal new heartbeat missed."""
-        return "unifi-heartbeat-missed"
-
-    @callback
-    def heartbeat(
-        self, unique_id: str, heartbeat_expire_time: datetime | None = None
-    ) -> None:
-        """Signal when a device has fresh home state."""
-        if heartbeat_expire_time is not None:
-            self._heartbeat_time[unique_id] = heartbeat_expire_time
-            return
-
-        if unique_id in self._heartbeat_time:
-            del self._heartbeat_time[unique_id]
-
-    @callback
-    def _check_for_stale(self, *_: datetime) -> None:
-        """Check for any devices scheduled to be marked disconnected."""
-        now = dt_util.utcnow()
-
-        unique_ids_to_remove = []
-        for unique_id, heartbeat_expire_time in self._heartbeat_time.items():
-            if now > heartbeat_expire_time:
-                async_dispatcher_send(
-                    self.hass, f"{self.signal_heartbeat_missed}_{unique_id}"
-                )
-                unique_ids_to_remove.append(unique_id)
-
-        for unique_id in unique_ids_to_remove:
-            del self._heartbeat_time[unique_id]
+        self.heartbeat.initialize()
 
     @callback
     def queue_poe_port_command(
@@ -103,3 +65,57 @@ class UnifiEntityHelper:
                 )
 
         self._cancel_poe_command = async_call_later(self.hass, 5, _execute_command)
+
+
+class UnifiEntityHeartbeat:
+    """UniFi entity heartbeat monitor."""
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the heartbeat monitor."""
+        self.hass = hass
+
+        self._cancel_heartbeat_check: CALLBACK_TYPE | None = None
+        self._heartbeat_time: dict[str, datetime] = {}
+
+    @callback
+    def reset(self) -> None:
+        """Cancel timers."""
+        if self._cancel_heartbeat_check:
+            self._cancel_heartbeat_check()
+            self._cancel_heartbeat_check = None
+
+    @callback
+    def initialize(self) -> None:
+        """Initialize heartbeat monitor."""
+        self._cancel_heartbeat_check = async_track_time_interval(
+            self.hass, self._check_for_stale, CHECK_HEARTBEAT_INTERVAL
+        )
+
+    @property
+    def signal(self) -> str:
+        """Event to signal new heartbeat missed."""
+        return "unifi-heartbeat-missed"
+
+    @callback
+    def update(self, unique_id: str, heartbeat_expire_time: datetime) -> None:
+        """Update device time in heartbeat monitor."""
+        self._heartbeat_time[unique_id] = heartbeat_expire_time
+
+    @callback
+    def remove(self, unique_id: str) -> None:
+        """Remove device from heartbeat monitor."""
+        self._heartbeat_time.pop(unique_id, None)
+
+    @callback
+    def _check_for_stale(self, *_: datetime) -> None:
+        """Check for any devices scheduled to be marked disconnected."""
+        now = dt_util.utcnow()
+
+        unique_ids_to_remove = []
+        for unique_id, heartbeat_expire_time in self._heartbeat_time.items():
+            if now > heartbeat_expire_time:
+                async_dispatcher_send(self.hass, f"{self.signal}_{unique_id}")
+                unique_ids_to_remove.append(unique_id)
+
+        for unique_id in unique_ids_to_remove:
+            del self._heartbeat_time[unique_id]
