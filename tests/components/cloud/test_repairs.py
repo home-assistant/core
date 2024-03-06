@@ -101,7 +101,6 @@ async def test_legacy_subscription_repair_flow(
     await mock_cloud(hass)
     await hass.async_block_till_done()
     await hass.async_start()
-    await hass.async_block_till_done()
 
     client = await hass_client()
 
@@ -183,7 +182,6 @@ async def test_legacy_subscription_repair_flow_timeout(
     await mock_cloud(hass)
     await hass.async_block_till_done()
     await hass.async_start()
-    await hass.async_block_till_done()
 
     client = await hass_client()
 
