@@ -1,0 +1,10 @@
+{
+  "domain": "awattar",
+  "name": "aWATTar",
+  "codeowners": ["@mexx42"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/awattar",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["awattar==0.8.1"]
+}
