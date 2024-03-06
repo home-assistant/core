@@ -106,6 +106,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
         self.supports_long_press = isinstance(wemo, LongPressMixin)
         self.update_lock = asyncio.Lock()
 
+    @callback
     def async_setup(self, device_id: str) -> None:
         """Set up the device coordinator."""
         self.device_id = device_id
