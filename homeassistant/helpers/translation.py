@@ -115,7 +115,7 @@ async def _async_get_component_strings(
             if not (integration := integrations.get(domain)):
                 continue
             if path := component_translation_path(language, integration):
-                files_to_load[loaded] = path
+                files_to_load[comp] = path
 
     if not has_files_to_load:
         return translations_by_language
