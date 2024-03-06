@@ -83,7 +83,9 @@ class JewishCalendarServices:
             schema=vol.Schema(
                 {
                     vol.Optional("year"): vol.Coerce(int),
-                    vol.Required("month"): vol.In(MONTH_INPUT_MAP.keys()),
+                    vol.Required("month"): vol.All(
+                        vol.In(MONTH_INPUT_MAP.keys()), MONTH_INPUT_MAP.get
+                    ),
                     vol.Required("day"): vol.Coerce(int),
                     **OUTPUT_SCHEMA,
                 }
@@ -99,7 +101,9 @@ class JewishCalendarServices:
                     {
                         vol.Optional("year"): vol.Coerce(int),
                         vol.Optional("holidays"): vol.All(
-                            cv.ensure_list, [vol.In(HOLIDAY_INPUT_MAP.keys())]
+                            cv.ensure_list,
+                            [vol.In(HOLIDAY_INPUT_MAP.keys())],
+                            [HOLIDAY_INPUT_MAP.get],
                         ),
                         **OUTPUT_SCHEMA,
                     },
@@ -147,11 +151,10 @@ class JewishCalendarServices:
         """Service call that returns Hebrew date info for a Hebrew date."""
         today: HebrewDate = cast(HebrewDate, HDate(dt_util.now()).hdate)
 
-        month = MONTH_INPUT_MAP.get(call.data["month"])
         date = HDate(
             heb_date=HebrewDate(
                 call.data.get("year", today.year),
-                month,
+                call.data["month"],
                 call.data["day"],
             ),
             diaspora=self._diaspora,
@@ -160,7 +163,7 @@ class JewishCalendarServices:
         # If the user passed Adar II in a non-leap year, reset to Adar.
         # The HDate implementation treats ADAR_I as ADAR and ADAR_II as
         # 30 days later.  This breaks ADAR_II in non-leap years.
-        if date.year_size() < 380 and month in [
+        if date.year_size() < 380 and call.data["month"] in [
             htables.Months.Adar_I,
             htables.Months.Adar_II,
         ]:
@@ -176,7 +179,7 @@ class JewishCalendarServices:
         date = self._get_day_in_year(call)
         holidays = None
         if call.data.get("holidays"):
-            holidays = [HOLIDAY_INPUT_MAP[holiday] for holiday in call.data["holidays"]]
+            holidays = call.data["holidays"]
             types = [holiday.type for holiday in holidays]
         else:
             types = call.data.get("types", [])
@@ -200,12 +203,8 @@ class JewishCalendarServices:
         types = call.data.get("types", [])
         while True:
             results = hdateInfo.get_holidays_for_year(types)
-            results.sort(key=lambda x: x[1].gdate)
-            results = [
-                hdateInfo
-                for holiday, hdateInfo in results
-                if hdateInfo.gdate and hdateInfo.gdate >= date
-            ]
+            results.sort(key=lambda x: x[1])
+            results = [holDate for holiday, holDate in results if holDate >= hdateInfo]
             if results:
                 break
             # If we found nothing this year, wrap around to next year.

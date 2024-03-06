@@ -17,7 +17,7 @@
           "description": "True to return information about the holiday that falls on this date, if any."
         },
         "include_zmanim": {
-          "name": "Include Hebrew Date Info",
+          "name": "Include Zmanim",
           "description": "True to return the day's zmanim timestamps."
         }
       }
@@ -47,7 +47,7 @@
           "description": "True to return information about the holiday that falls on this date, if any."
         },
         "include_zmanim": {
-          "name": "Include Hebrew Date Info",
+          "name": "Include Zmanim",
           "description": "True to return the day's zmanim timestamps."
         }
       }
@@ -73,7 +73,7 @@
           "description": "True to return information about the holiday that falls on this date, if any."
         },
         "include_zmanim": {
-          "name": "Include Hebrew Date Info",
+          "name": "Include Zmanim",
           "description": "True to return the day's zmanim timestamps."
         }
       }
@@ -103,7 +103,7 @@
           "description": "True to return information about the holiday that falls on this date, if any."
         },
         "include_zmanim": {
-          "name": "Include Hebrew Date Info",
+          "name": "Include Zmanim",
           "description": "True to return the day's zmanim timestamps."
         }
       }
