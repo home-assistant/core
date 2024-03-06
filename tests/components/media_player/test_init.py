@@ -431,7 +431,18 @@ async def test_volume_limit_increase_volume(
     mock_media_player.async_volume_up.assert_called_once_with()
     mock_media_player.async_volume_up.reset_mock()
 
+    mock_media_player._attr_volume_level = 1.0
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_media_player.async_volume_up.assert_called_once_with()
+    mock_media_player.async_volume_up.reset_mock()
+
     # Set a volume limit
+    mock_media_player._attr_volume_level = None
     entity_registry.async_update_entity_options(
         entity_id, MEDIA_PLAYER_DOMAIN, {"max_volume": 0.5}
     )

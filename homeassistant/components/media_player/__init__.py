@@ -287,9 +287,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # pylint: disable-next=protected-access
         max_volume = media_player._media_player_option_max_volume
         if (
-            volume_level := media_player.volume_level
-        ) is not None and volume_level + media_player.volume_step > max_volume:
+            max_volume < 1.0
+            and (volume_level := media_player.volume_level) is not None
+            and volume_level + media_player.volume_step > max_volume
+        ):
             return
+
         await media_player.async_volume_up(**remove_entity_service_fields(call))
 
     async def async_handle_set_volume_level(
