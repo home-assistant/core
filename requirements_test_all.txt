@@ -1612,6 +1612,9 @@ pyfttt==0.3
 # homeassistant.components.hvv_departures
 pygti==0.9.4
 
+# homeassistant.components.hausbus
+pyhausbus==1.0.0
+
 # homeassistant.components.version
 pyhaversion==22.8.0
 

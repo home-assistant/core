@@ -228,6 +228,7 @@ homeassistant.components.guardian.*
 homeassistant.components.habitica.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
+homeassistant.components.hausbus.*
 homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
