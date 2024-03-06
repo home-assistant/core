@@ -51,11 +51,11 @@ def mock_config_store(data=None):
         return result
 
     with patch(
-        "homeassistant.components.config._read",
+        "homeassistant.components.config.view._read",
         side_effect=mock_read,
         autospec=True,
     ), patch(
-        "homeassistant.components.config._write",
+        "homeassistant.components.config.view._write",
         side_effect=mock_write,
         autospec=True,
     ), patch(
