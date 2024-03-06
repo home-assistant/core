@@ -22,7 +22,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import FytaCoordinator
-from .entity import FytaCoordinatorEntity, FytaPlantEntity
+from .entity import FytaPlantEntity
 
 
 @dataclass(frozen=True)
@@ -114,13 +114,6 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
     ),
 ]
 
-PLANT_NUMBER_SENSOR = FytaSensorEntityDescription(
-    key="plant_number",
-    translation_key="plant_number",
-    state_class=SensorStateClass.MEASUREMENT,
-    entity_category=EntityCategory.DIAGNOSTIC,
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -129,30 +122,13 @@ async def async_setup_entry(
     coordinator: FytaCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     plant_entities: list[CoordinatorEntity] = [
-        FytaCoordinatorSensor(coordinator, entry, PLANT_NUMBER_SENSOR),
-    ]
-
-    plant_entities.extend(
         FytaPlantSensor(coordinator, entry, sensor, plant_id)
         for plant_id in coordinator.fyta.plant_list
         for sensor in SENSORS
         if sensor.key in coordinator.data[plant_id]
-    )
+    ]
 
     async_add_entities(plant_entities)
-
-
-class FytaCoordinatorSensor(FytaCoordinatorEntity, SensorEntity):
-    """Represents a Fyta sensor."""
-
-    entity_description: FytaSensorEntityDescription
-
-    @property
-    def native_value(self) -> str | int | float | datetime:
-        """Return the state for this sensor."""
-
-        val = len(self.coordinator.fyta.plant_list)
-        return self.entity_description.value_fn(val)
 
 
 class FytaPlantSensor(FytaPlantEntity, SensorEntity):
