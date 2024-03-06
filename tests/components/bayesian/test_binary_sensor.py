@@ -402,7 +402,7 @@ async def test_multiple_observations(hass: HomeAssistant) -> None:
 
     state = hass.states.get("binary_sensor.test_binary")
 
-    for _, attrs in state.attributes.items():
+    for attrs in state.attributes.values():
         json.dumps(attrs)
     assert state.attributes.get("occurred_observation_entities") == []
     assert state.attributes.get("probability") == 0.2
@@ -474,7 +474,7 @@ async def test_multiple_numeric_observations(hass: HomeAssistant) -> None:
 
     state = hass.states.get("binary_sensor.test_binary")
 
-    for _, attrs in state.attributes.items():
+    for attrs in state.attributes.values():
         json.dumps(attrs)
     assert state.attributes.get("occurred_observation_entities") == []
     assert state.attributes.get("probability") == 0.1
@@ -782,7 +782,7 @@ async def test_state_attributes_are_serializable(hass: HomeAssistant) -> None:
         state.attributes.get("occurred_observation_entities")
     )
 
-    for _, attrs in state.attributes.items():
+    for attrs in state.attributes.values():
         json.dumps(attrs)
 
 
