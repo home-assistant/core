@@ -190,7 +190,8 @@ async def test_custom_integration_version_blocked(
 
         assert (
             "Version 1.0.0 of custom integration 'test_blocked_version' breaks"
-            " Home Assistant and was blocked from loading"
+            " Home Assistant and was blocked from loading, please report it to the"
+            " author of the 'test_blocked_version' custom integration"
         ) in caplog.text
 
 
