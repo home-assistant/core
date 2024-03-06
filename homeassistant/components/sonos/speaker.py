@@ -456,7 +456,9 @@ class SonosSpeaker:
     def async_dispatch_device_properties(self, event: SonosEvent) -> None:
         """Update device properties from an event."""
         self.event_stats.process(event)
-        self.hass.async_create_task(self.async_update_device_properties(event))
+        self.hass.async_create_task(
+            self.async_update_device_properties(event), eager_start=True
+        )
 
     async def async_update_device_properties(self, event: SonosEvent) -> None:
         """Update device properties from an event."""
