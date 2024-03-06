@@ -13,7 +13,8 @@ from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
-from . import ACTION_DELETE, EditKeyBasedConfigView
+from .const import ACTION_DELETE
+from .view import EditKeyBasedConfigView
 
 
 @callback
