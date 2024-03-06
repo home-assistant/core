@@ -77,7 +77,6 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="play_quick_reply_message",
         translation_key="play_quick_reply_message",
-        icon="mdi:message-reply-text-outline",
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values())[1:],
         supported=lambda api, ch: api.supported(ch, "play_quick_reply"),
         method=lambda api, ch, mess: (

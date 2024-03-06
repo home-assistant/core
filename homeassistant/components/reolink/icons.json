@@ -180,6 +180,9 @@
       "ptz_preset": {
         "default": "mdi:pan"
       },
+      "play_quick_reply_message": {
+        "default": "mdi:message-reply-text-outline"
+      },
       "auto_quick_reply_message": {
         "default": "mdi:message-reply-text-outline"
       },
