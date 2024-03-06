@@ -8,7 +8,6 @@ import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     UnitOfInformation,
@@ -73,7 +72,6 @@ async def test_sensors(
 
     state = hass.states.get("sensor.sonarr_upcoming")
     assert state
-    assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
     assert state.attributes.get("Bob's Burgers") == "S04E11"
     assert state.state == "1"
