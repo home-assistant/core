@@ -7,6 +7,7 @@ from copy import deepcopy
 import ipaddress
 import logging
 import os
+import socket
 from typing import Any, cast
 
 from aiohttp import web
@@ -149,6 +150,8 @@ PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
 _HOMEKIT_CONFIG_UPDATE_TIME = (
     10  # number of seconds to wait for homekit to see the c# change
 )
+_HAS_IPV6 = hasattr(socket, "AF_INET6")
+_DEFAULT_BIND = ["0.0.0.0", "::"] if _HAS_IPV6 else ["0.0.0.0"]
 
 
 def _has_all_unique_names_and_ports(
@@ -308,7 +311,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Begin setup HomeKit for %s", name)
 
     # ip_address and advertise_ip are yaml only
-    ip_address = conf.get(CONF_IP_ADDRESS, [None])
+    ip_address = conf.get(CONF_IP_ADDRESS, _DEFAULT_BIND)
     advertise_ips: list[str] = conf.get(
         CONF_ADVERTISE_IP
     ) or await network.async_get_announce_addresses(hass)

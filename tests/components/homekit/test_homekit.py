@@ -80,6 +80,8 @@ from tests.common import MockConfigEntry, get_fixture_path
 
 IP_ADDRESS = "127.0.0.1"
 
+DEFAULT_LISTEN = ["0.0.0.0", "::"]
+
 
 def generate_filter(
     include_domains,
@@ -173,7 +175,7 @@ async def test_setup_min(hass: HomeAssistant, mock_async_zeroconf: None) -> None
         hass,
         BRIDGE_NAME,
         DEFAULT_PORT,
-        [None],
+        DEFAULT_LISTEN,
         ANY,
         ANY,
         {},
@@ -215,7 +217,7 @@ async def test_removing_entry(
         hass,
         BRIDGE_NAME,
         DEFAULT_PORT,
-        [None],
+        DEFAULT_LISTEN,
         ANY,
         ANY,
         {},
@@ -354,7 +356,7 @@ async def test_homekit_with_single_advertise_ips(
         ANY,
         entry.title,
         loop=hass.loop,
-        address=[None],
+        address=DEFAULT_LISTEN,
         port=ANY,
         persist_file=ANY,
         advertised_address="1.3.4.4",
@@ -393,7 +395,7 @@ async def test_homekit_with_many_advertise_ips(
         ANY,
         entry.title,
         loop=hass.loop,
-        address=[None],
+        address=DEFAULT_LISTEN,
         port=ANY,
         persist_file=ANY,
         advertised_address=["1.3.4.4", "4.3.2.2"],
@@ -1678,7 +1680,7 @@ async def test_yaml_updates_update_config_entry_for_name(
         hass,
         BRIDGE_NAME,
         12345,
-        [None],
+        DEFAULT_LISTEN,
         ANY,
         ANY,
         {},
@@ -2049,7 +2051,7 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         hass,
         "reloadable",
         12345,
-        [None],
+        DEFAULT_LISTEN,
         ANY,
         False,
         {},
@@ -2084,7 +2086,7 @@ async def test_reload(hass: HomeAssistant, mock_async_zeroconf: None) -> None:
         hass,
         "reloadable",
         45678,
-        [None],
+        DEFAULT_LISTEN,
         ANY,
         False,
         {},
