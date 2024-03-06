@@ -127,8 +127,7 @@ class BaseEditConfigView(HomeAssistantView, Generic[_DataT]):
 
         if self.post_write_hook is not None:
             hass.async_create_task(
-                self.post_write_hook(ACTION_CREATE_UPDATE, config_key),
-                eager_start=True,
+                self.post_write_hook(ACTION_CREATE_UPDATE, config_key)
             )
 
         return self.json({"result": "ok"})
@@ -149,9 +148,7 @@ class BaseEditConfigView(HomeAssistantView, Generic[_DataT]):
             await hass.async_add_executor_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_create_task(
-                self.post_write_hook(ACTION_DELETE, config_key), eager_start=True
-            )
+            hass.async_create_task(self.post_write_hook(ACTION_DELETE, config_key))
 
         return self.json({"result": "ok"})
 
