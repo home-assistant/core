@@ -55,17 +55,17 @@ from .hub import UnifiHub
 @callback
 def async_bandwidth_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
-    if obj_id in hub.option_supported_clients:
+    if obj_id in hub.config.option_supported_clients:
         return True
-    return hub.option_allow_bandwidth_sensors
+    return hub.config.option_allow_bandwidth_sensors
 
 
 @callback
 def async_uptime_sensor_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
-    if obj_id in hub.option_supported_clients:
+    if obj_id in hub.config.option_supported_clients:
         return True
-    return hub.option_allow_uptime_sensors
+    return hub.config.option_allow_uptime_sensors
 
 
 @callback
@@ -101,7 +101,7 @@ def async_wlan_client_value_fn(hub: UnifiHub, wlan: Wlan) -> int:
             for client in hub.api.clients.values()
             if client.essid == wlan.name
             and dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
-            < hub.option_detection_time
+            < hub.config.option_detection_time
         ]
     )
 
@@ -146,7 +146,7 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
 
     if (
         dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
-        > hub.option_detection_time
+        > hub.config.option_detection_time
     ):
         return False
 
@@ -193,7 +193,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda _: "RX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
-        supported_fn=lambda hub, _: hub.option_allow_bandwidth_sensors,
+        supported_fn=lambda hub, _: hub.config.option_allow_bandwidth_sensors,
         unique_id_fn=lambda hub, obj_id: f"rx-{obj_id}",
         value_fn=async_client_rx_value_fn,
     ),
@@ -212,7 +212,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda _: "TX",
         object_fn=lambda api, obj_id: api.clients[obj_id],
-        supported_fn=lambda hub, _: hub.option_allow_bandwidth_sensors,
+        supported_fn=lambda hub, _: hub.config.option_allow_bandwidth_sensors,
         unique_id_fn=lambda hub, obj_id: f"tx-{obj_id}",
         value_fn=async_client_tx_value_fn,
     ),
@@ -245,7 +245,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_client_device_info_fn,
         name_fn=lambda client: "Uptime",
         object_fn=lambda api, obj_id: api.clients[obj_id],
-        supported_fn=lambda hub, _: hub.option_allow_uptime_sensors,
+        supported_fn=lambda hub, _: hub.config.option_allow_uptime_sensors,
         unique_id_fn=lambda hub, obj_id: f"uptime-{obj_id}",
         value_fn=async_client_uptime_value_fn,
     ),
@@ -412,7 +412,7 @@ class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
             if description.is_connected_fn(self.hub, self._obj_id):
                 self.hub.async_heartbeat(
                     self._attr_unique_id,
-                    dt_util.utcnow() + self.hub.option_detection_time,
+                    dt_util.utcnow() + self.hub.config.option_detection_time,
                 )
 
     async def async_added_to_hass(self) -> None:

@@ -10,7 +10,8 @@ from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
-from . import ACTION_DELETE, EditIdBasedConfigView
+from .const import ACTION_DELETE
+from .view import EditIdBasedConfigView
 
 
 @callback

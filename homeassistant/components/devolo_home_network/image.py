@@ -21,18 +21,11 @@ from .const import DOMAIN, IMAGE_GUEST_WIFI, SWITCH_GUEST_WIFI
 from .entity import DevoloCoordinatorEntity
 
 
-@dataclass(frozen=True)
-class DevoloImageRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class DevoloImageEntityDescription(ImageEntityDescription):
+    """Describes devolo image entity."""
 
     image_func: Callable[[WifiGuestAccessGet], bytes]
-
-
-@dataclass(frozen=True)
-class DevoloImageEntityDescription(
-    ImageEntityDescription, DevoloImageRequiredKeysMixin
-):
-    """Describes devolo image entity."""
 
 
 IMAGE_TYPES: dict[str, DevoloImageEntityDescription] = {

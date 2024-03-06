@@ -37,6 +37,7 @@ class NukiBatterySensor(NukiEntity[NukiDevice], SensorEntity):
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_battery_level"
 
+    # Deprecated, can be removed in 2024.10
     @property
     def extra_state_attributes(self):
         """Return the device specific state attributes."""
