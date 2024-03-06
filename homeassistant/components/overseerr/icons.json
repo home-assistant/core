@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "requested_movies": {
+        "default": "mdi:movie"
+      },
+      "requested_tv": {
+        "default": "mdi:television-classic"
+      },
+      "requested_pending": {
+        "default": "mdi:clock-alert-outline"
+      },
+      "requested_approved": {
+        "default": "mdi:check"
+      },
+      "requested_available": {
+        "default": "mdi:download"
+      },
+      "requested_total": {
+        "default": "mdi:movie"
+      }
+    }
+  }
+}

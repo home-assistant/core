@@ -29,37 +29,31 @@ SENSOR_TYPES: tuple[OverseerrSensorEntityDescription, ...] = (
     OverseerrSensorEntityDescription(
         key="requested_movies",
         translation_key="requested_movies",
-        icon="mdi:movie",
         value_fn=lambda data: data.movie,
     ),
     OverseerrSensorEntityDescription(
         key="requested_tv",
         translation_key="requested_tv",
-        icon="mdi:television-classic",
         value_fn=lambda data: data.tv,
     ),
     OverseerrSensorEntityDescription(
         key="requested_pending",
         translation_key="requested_pending",
-        icon="mdi:clock-alert-outline",
         value_fn=lambda data: data.pending,
     ),
     OverseerrSensorEntityDescription(
         key="requested_approved",
         translation_key="requested_approved",
-        icon="mdi:check",
         value_fn=lambda data: data.approved,
     ),
     OverseerrSensorEntityDescription(
         key="requested_available",
         translation_key="requested_available",
-        icon="mdi:download",
         value_fn=lambda data: data.available,
     ),
     OverseerrSensorEntityDescription(
         key="requested_total",
         translation_key="requested_total",
-        icon="mdi:movie",
         value_fn=lambda data: data.total,
     ),
 )
