@@ -28,12 +28,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
 
-from .const import ATTR_DARK, ATTR_ON, DOMAIN as DECONZ_DOMAIN
+from .const import ATTR_DARK, ATTR_ON
 from .deconz_device import DeconzDevice
 from .hub import DeconzHub, get_gateway_from_config_entry
-from .util import serial_from_unique_id
 
 _SensorDeviceT = TypeVar("_SensorDeviceT", bound=PydeconzSensorBase)
 
@@ -164,29 +162,6 @@ ENTITY_DESCRIPTIONS: tuple[DeconzBinarySensorDescription, ...] = (
 )
 
 
-@callback
-def async_update_unique_id(
-    hass: HomeAssistant, unique_id: str, description: DeconzBinarySensorDescription
-) -> None:
-    """Update unique ID to always have a suffix.
-
-    Introduced with release 2022.7.
-    """
-    ent_reg = er.async_get(hass)
-
-    new_unique_id = f"{unique_id}-{description.key}"
-    if ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, new_unique_id):
-        return
-
-    if description.old_unique_id_suffix:
-        unique_id = (
-            f"{serial_from_unique_id(unique_id)}-{description.old_unique_id_suffix}"
-        )
-
-    if entity_id := ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, unique_id):
-        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -207,7 +182,6 @@ async def async_setup_entry(
                 and not isinstance(sensor, description.instance_check)
             ) or description.value_fn(sensor) is None:
                 continue
-            async_update_unique_id(hass, sensor.unique_id, description)
             async_add_entities([DeconzBinarySensor(sensor, gateway, description)])
 
     gateway.register_platform_add_device_callback(
