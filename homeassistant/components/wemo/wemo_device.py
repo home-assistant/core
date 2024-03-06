@@ -229,7 +229,10 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
     async def _async_update_data(self) -> None:
         """Update WeMo state."""
         # No need to poll if the device will push updates.
-        if not self.should_poll:
+        # The device_id will not be set until after the first
+        # update so we should not check should_poll until after
+        # the device_id is set.
+        if self.device_id and not self.should_poll:
             return
 
         # If an update is in progress, we don't do anything.
