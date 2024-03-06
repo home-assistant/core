@@ -18,6 +18,7 @@ async def test_humanify_command_received(hass: HomeAssistant) -> None:
     hass.config.components.add("frontend")
     hass.config.components.add("google_assistant")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "light.kitchen", "on", {ATTR_FRIENDLY_NAME: "The Kitchen Lights"}
