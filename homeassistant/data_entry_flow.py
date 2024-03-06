@@ -139,7 +139,7 @@ class AbortFlow(FlowError):
         self.description_placeholders = description_placeholders
 
 
-class FlowResult(Generic[_HandlerT], TypedDict, total=False):
+class FlowResult(TypedDict, Generic[_HandlerT], total=False):
     """Typed result dict."""
 
     context: dict[str, Any]

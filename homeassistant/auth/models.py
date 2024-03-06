@@ -27,7 +27,6 @@ TOKEN_TYPE_NORMAL = "normal"
 TOKEN_TYPE_SYSTEM = "system"
 TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = "long_lived_access_token"
 
-
 AuthFlowResult = FlowResult[tuple[str, str]]
 
 
