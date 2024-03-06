@@ -102,7 +102,9 @@ async def async_process_repairs_platforms(hass: HomeAssistant) -> None:
     """Start processing repairs platforms."""
     hass.data[DOMAIN]["platforms"] = {}
 
-    await async_process_integration_platforms(hass, DOMAIN, _register_repairs_platform)
+    await async_process_integration_platforms(
+        hass, DOMAIN, _register_repairs_platform, wait_for_platforms=True
+    )
 
 
 @callback
