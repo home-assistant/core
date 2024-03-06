@@ -81,8 +81,18 @@ BASE_PRELOAD_PLATFORMS = [
     "trigger",
 ]
 
-BLOCKED_CUSTOM_INTEGRATIONS = {
-    "start_time",  # Added in 2024.3.0 because of https://github.com/home-assistant/core/issues/112464
+
+@dataclass
+class BlockedVersionRange:
+    """Blocked custom integration version range."""
+
+    lowest: AwesomeVersion
+    highest: AwesomeVersion
+
+
+BLOCKED_CUSTOM_INTEGRATIONS: dict[str, list[BlockedVersionRange] | None] = {
+    # Added in 2024.3.0 because of https://github.com/home-assistant/core/issues/112464
+    "start_time": None
 }
 
 DATA_COMPONENTS = "components"
@@ -648,16 +658,6 @@ class Integration:
 
             _LOGGER.warning(CUSTOM_WARNING, integration.domain)
 
-            if integration.domain in BLOCKED_CUSTOM_INTEGRATIONS:
-                _LOGGER.error(
-                    (
-                        "The custom integration '%s' is known to break Home Assistant"
-                        " and was blocked from loading"
-                    ),
-                    integration.domain,
-                )
-                return None
-
             if integration.version is None:
                 _LOGGER.error(
                     (
@@ -694,6 +694,21 @@ class Integration:
                     integration.version,
                 )
                 return None
+
+            if integration.domain in BLOCKED_CUSTOM_INTEGRATIONS:
+                if _version_blocked(
+                    integration.version, BLOCKED_CUSTOM_INTEGRATIONS[integration.domain]
+                ):
+                    _LOGGER.error(
+                        (
+                            "Version %s of custom integration '%s' is known to break "
+                            " Home Assistant and was blocked from loading"
+                        ),
+                        integration.version,
+                        integration.domain,
+                    )
+                    return None
+
             return integration
 
         return None
@@ -1223,6 +1238,21 @@ class Integration:
     def __repr__(self) -> str:
         """Text representation of class."""
         return f"<Integration {self.domain}: {self.pkg_path}>"
+
+
+def _version_blocked(
+    integration_version: AwesomeVersion,
+    blocked_versions: list[BlockedVersionRange] | None,
+) -> bool:
+    """Return True if the integration version is blocked."""
+    if blocked_versions is None:
+        return True
+
+    for version in blocked_versions:
+        if integration_version.in_range(version.lowest, version.highest):
+            return True
+
+    return False
 
 
 def _resolve_integrations_from_root(
