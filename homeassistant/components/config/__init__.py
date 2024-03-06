@@ -23,13 +23,6 @@ from . import (
     script,
 )
 from .const import DOMAIN
-from .view import (  # noqa: F401
-    BaseEditConfigView,
-    EditIdBasedConfigView,
-    EditKeyBasedConfigView,
-    _read,
-    _write,
-)
 
 SECTIONS = (
     area_registry,
