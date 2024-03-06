@@ -198,6 +198,7 @@ async def test_custom_integration_version_blocked(
     "blocked_versions",
     [
         loader.BlockedIntegration(AwesomeVersion("0.9.9"), "breaks Home Assistant"),
+        loader.BlockedIntegration(AwesomeVersion("1.0.0"), "breaks Home Assistant"),
     ],
 )
 async def test_custom_integration_version_not_blocked(

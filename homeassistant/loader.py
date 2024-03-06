@@ -86,7 +86,7 @@ BASE_PRELOAD_PLATFORMS = [
 class BlockedIntegration:
     """Blocked custom integration details."""
 
-    highest: AwesomeVersion | None
+    lowest_good_version: AwesomeVersion | None
     reason: str
 
 
@@ -1243,13 +1243,13 @@ def _version_blocked(
     blocked_integration: BlockedIntegration,
 ) -> bool:
     """Return True if the integration version is blocked."""
-    if blocked_integration.highest is None:
+    if blocked_integration.lowest_good_version is None:
         return True
 
-    if integration_version <= blocked_integration.highest:
-        return True
+    if integration_version >= blocked_integration.lowest_good_version:
+        return False
 
-    return False
+    return True
 
 
 def _resolve_integrations_from_root(
