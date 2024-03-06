@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
+from homeassistant.components.config import script
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -32,7 +33,7 @@ async def test_get_script_config(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
 ) -> None:
     """Test getting script config."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     client = await hass_client()
@@ -55,7 +56,7 @@ async def test_update_script_config(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
 ) -> None:
     """Test updating script config."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
@@ -91,7 +92,7 @@ async def test_invalid_object_id(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
 ) -> None:
     """Test creating a script with an invalid object_id."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
@@ -156,7 +157,7 @@ async def test_update_script_config_with_error(
     validation_error: str,
 ) -> None:
     """Test updating script config with errors."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
@@ -207,7 +208,7 @@ async def test_update_script_config_with_blueprint_substitution_error(
     validation_error: str,
 ) -> None:
     """Test updating script config with errors."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
@@ -240,7 +241,7 @@ async def test_update_remove_key_script_config(
     hass: HomeAssistant, hass_client: ClientSessionGenerator, hass_config_store
 ) -> None:
     """Test updating script config while removing a key."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
@@ -287,7 +288,7 @@ async def test_delete_script(
     hass_config_store,
 ) -> None:
     """Test deleting a script."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("script")) == [
@@ -326,7 +327,7 @@ async def test_api_calls_require_admin(
     hass_config_store,
 ) -> None:
     """Test script APIs endpoints do not work as a normal user."""
-    with patch.object(config, "SECTIONS", ["script"]):
+    with patch.object(config, "SECTIONS", [script]):
         await async_setup_component(hass, "config", {})
 
     hass_config_store["scripts.yaml"] = {
