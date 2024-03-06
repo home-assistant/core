@@ -22,6 +22,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    DEFAULT_API_KEY,
     DEFAULT_LOCATION,
     DEFAULT_NAME,
     DEFAULT_SSL,
@@ -54,6 +55,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_LOCATION: user_input[CONF_LOCATION],
                 CONF_SSL: user_input[CONF_SSL],
                 CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                CONF_API_KEY: DEFAULT_API_KEY,
             }
 
             self._async_abort_entries_match(
