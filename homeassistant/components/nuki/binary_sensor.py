@@ -50,6 +50,7 @@ class NukiDoorsensorEntity(NukiEntity[NukiDevice], BinarySensorEntity):
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_doorsensor"
 
+    # Deprecated, can be removed in 2024.10
     @property
     def extra_state_attributes(self):
         """Return the device specific state attributes."""
@@ -90,6 +91,7 @@ class NukiRingactionEntity(NukiEntity[NukiDevice], BinarySensorEntity):
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_ringaction"
 
+    # Deprecated, can be removed in 2024.10
     @property
     def extra_state_attributes(self):
         """Return the device specific state attributes."""

@@ -70,7 +70,6 @@ DIAGNOSTICS = (
         key="link_strength",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         attribute_keys=[
             "channel",
@@ -104,7 +103,6 @@ async def async_setup_entry(
                         translation_key="meter_price",
                         key="price",
                         native_unit_of_measurement=f"{meter_data['PriceCluster']['currency'].value}/{UnitOfEnergy.KILO_WATT_HOUR}",
-                        icon="mdi:cash",
                         state_class=SensorStateClass.MEASUREMENT,
                         attribute_keys=[
                             "tier",

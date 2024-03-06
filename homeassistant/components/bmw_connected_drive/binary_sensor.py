@@ -109,19 +109,11 @@ def _format_cbs_report(
     return result
 
 
-@dataclass(frozen=True)
-class BMWRequiredKeysMixin:
-    """Mixin for required keys."""
-
-    value_fn: Callable[[MyBMWVehicle], bool]
-
-
-@dataclass(frozen=True)
-class BMWBinarySensorEntityDescription(
-    BinarySensorEntityDescription, BMWRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class BMWBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes BMW binary_sensor entity."""
 
+    value_fn: Callable[[MyBMWVehicle], bool]
     attr_fn: Callable[[MyBMWVehicle, UnitSystem], dict[str, Any]] | None = None
 
 
