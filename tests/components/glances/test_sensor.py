@@ -1,5 +1,8 @@
 """Tests for glances sensors."""
 
+from datetime import datetime
+
+from freezegun.api import freeze_time
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.glances.const import DOMAIN
@@ -16,15 +19,19 @@ async def test_sensor_states(
 ) -> None:
     """Test sensor states are correctly collected from library."""
 
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT, entry_id="test")
-    entry.add_to_hass(hass)
+    frozen_time = datetime.fromisoformat("2024-02-13T14:13:12")
+    with freeze_time(frozen_time):
+        entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT, entry_id="test")
+        entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-
-    assert entity_entries
-    for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
-        assert hass.states.get(entity_entry.entity_id) == snapshot(
-            name=f"{entity_entry.entity_id}-state"
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        entity_entries = er.async_entries_for_config_entry(
+            entity_registry, entry.entry_id
         )
+
+        assert entity_entries
+        for entity_entry in entity_entries:
+            assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+            assert hass.states.get(entity_entry.entity_id) == snapshot(
+                name=f"{entity_entry.entity_id}-state"
+            )
