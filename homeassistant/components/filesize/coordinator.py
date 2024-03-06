@@ -34,11 +34,11 @@ class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime
         """Check if path is valid, allowed and return full path."""
         path = self._unresolved_path
         get_path = pathlib.Path(path)
-        if not get_path.exists() or not get_path.is_file():
-            raise UpdateFailed(f"Can not access file {path}")
-
         if not self.hass.config.is_allowed_path(path):
             raise UpdateFailed(f"Filepath {path} is not valid or allowed")
+
+        if not get_path.exists() or not get_path.is_file():
+            raise UpdateFailed(f"Can not access file {path}")
 
         return get_path.absolute()
 
