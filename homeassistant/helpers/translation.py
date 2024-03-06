@@ -111,11 +111,12 @@ async def _async_get_component_strings(
         translations_by_language[language] = {}
 
         for comp in components:
-            domain, _, platform = comp.partition(".")
+            domain = comp.partition(".")[0]
             if not (integration := integrations.get(domain)):
                 continue
             if path := component_translation_path(language, integration):
                 files_to_load[comp] = path
+                has_files_to_load = True
 
     if not has_files_to_load:
         return translations_by_language
