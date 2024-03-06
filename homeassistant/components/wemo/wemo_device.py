@@ -5,7 +5,7 @@ import asyncio
 from dataclasses import dataclass, fields
 from datetime import timedelta
 import logging
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pywemo import Insight, LongPressMixin, WeMoDevice
 from pywemo.exceptions import ActionException, PyWeMoException
@@ -91,7 +91,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
 
     options: Options | None = None
 
-    def __init__(self, hass: HomeAssistant, wemo: WeMoDevice, device_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, wemo: WeMoDevice) -> None:
         """Initialize DeviceCoordinator."""
         super().__init__(
             hass,
@@ -101,10 +101,14 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
         )
         self.hass = hass
         self.wemo = wemo
-        self.device_id = device_id
+        self.device_id: str | None = None
         self.device_info = _create_device_info(wemo)
         self.supports_long_press = isinstance(wemo, LongPressMixin)
         self.update_lock = asyncio.Lock()
+
+    def async_setup(self, device_id: str) -> None:
+        """Set up the device coordinator."""
+        self.device_id = device_id
 
     def subscription_callback(
         self, _device: WeMoDevice, event_type: str, params: str
@@ -129,6 +133,9 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-en
     async def async_shutdown(self) -> None:
         """Unregister push subscriptions and remove from coordinators dict."""
         await super().async_shutdown()
+        if TYPE_CHECKING:
+            # mypy doesn't known that the device_id is set in async_setup.
+            assert self.device_id is not None
         del _async_coordinators(self.hass)[self.device_id]
         assert self.options  # Always set by async_register_device.
         if self.options.enable_subscription:
@@ -265,15 +272,15 @@ async def async_register_device(
     hass: HomeAssistant, config_entry: ConfigEntry, wemo: WeMoDevice
 ) -> DeviceCoordinator:
     """Register a device with home assistant and enable pywemo event callbacks."""
-    # Ensure proper communication with the device and get the initial state.
-    await hass.async_add_executor_job(wemo.get_state, True)
-
+    device = DeviceCoordinator(hass, wemo)
+    await device.async_refresh()
+    if not device.last_update_success and device.last_exception:
+        raise device.last_exception
     device_registry = async_get_device_registry(hass)
     entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, **_create_device_info(wemo)
     )
-
-    device = DeviceCoordinator(hass, wemo, entry.id)
+    device.async_setup(device_id=entry.id)
     _async_coordinators(hass)[entry.id] = device
 
     config_entry.async_on_unload(
