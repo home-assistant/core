@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from datetime import timedelta
+from itertools import chain
 import logging
 import logging.handlers
 from operator import itemgetter
@@ -649,17 +650,36 @@ async def async_setup_multi_components(
     hass: core.HomeAssistant,
     domains: set[str],
     config: dict[str, Any],
+    integration_cache: dict[str, loader.Integration],
 ) -> None:
     """Set up multiple domains. Log on failure."""
     # Avoid creating tasks for domains that were setup in a previous stage
     domains_not_yet_setup = domains - hass.config.components
+
+    # Create the setup tasks based on which how many integrations
+    # depend on on each integration. Since integrations have to wait
+    # for imports to complete we want to setup the most common dependencies
+    # first so integrations that depend on them can start their setup
+    # as soon as possible.
+    integration_depending: dict[str, int] = {}
+    for domain in domains_not_yet_setup:
+        if integration := integration_cache.get(domain):
+            for dep in chain(
+                integration.all_dependencies, integration.after_dependencies
+            ):
+                integration_depending[dep] = integration_depending.get(dep, 0) + 1
+    setup_order = sorted(
+        domains_not_yet_setup, key=lambda domain: -integration_depending.get(domain, 0)
+    )
+    _LOGGER.debug("Sorted setup order: %s", setup_order)
+
     futures = {
         domain: hass.async_create_task(
             async_setup_component(hass, domain, config),
             f"setup component {domain}",
             eager_start=True,
         )
-        for domain in domains_not_yet_setup
+        for domain in setup_order
     }
     results = await asyncio.gather(*futures.values(), return_exceptions=True)
     for idx, domain in enumerate(futures):
@@ -832,7 +852,9 @@ async def _async_set_up_integrations(
         if domain_group:
             stage_2_domains -= domain_group
             _LOGGER.info("Setting up %s: %s", name, domain_group)
-            await async_setup_multi_components(hass, domain_group, config)
+            await async_setup_multi_components(
+                hass, domain_group, config, integration_cache
+            )
 
     # Enables after dependencies when setting up stage 1 domains
     async_set_domains_to_be_loaded(hass, stage_1_domains)
@@ -844,7 +866,9 @@ async def _async_set_up_integrations(
             async with hass.timeout.async_timeout(
                 STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
             ):
-                await async_setup_multi_components(hass, stage_1_domains, config)
+                await async_setup_multi_components(
+                    hass, stage_1_domains, config, integration_cache
+                )
         except TimeoutError:
             _LOGGER.warning("Setup timed out for stage 1 - moving forward")
 
@@ -857,7 +881,9 @@ async def _async_set_up_integrations(
             async with hass.timeout.async_timeout(
                 STAGE_2_TIMEOUT, cool_down=COOLDOWN_TIME
             ):
-                await async_setup_multi_components(hass, stage_2_domains, config)
+                await async_setup_multi_components(
+                    hass, stage_2_domains, config, integration_cache
+                )
         except TimeoutError:
             _LOGGER.warning("Setup timed out for stage 2 - moving forward")
 
