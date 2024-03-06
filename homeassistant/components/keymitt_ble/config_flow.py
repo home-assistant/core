@@ -120,8 +120,8 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Given a configured host, will ask the user to press the button to pair."""
         errors: dict[str, str] = {}
+        token = randomid(32)
         if self._client is None:
-            token = randomid(32)
             self._client = MicroBotApiClient(
                 device=self._ble_device,
                 token=token,
