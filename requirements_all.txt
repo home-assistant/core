@@ -514,7 +514,7 @@ aurorapy==0.2.7
 # avion==0.10
 
 # homeassistant.components.axis
-axis==49
+axis==50
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -1071,7 +1071,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.43
+holidays==0.44
 
 # homeassistant.components.frontend
 home-assistant-frontend==20240304.0

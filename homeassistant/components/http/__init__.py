@@ -42,6 +42,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_start_setup, async_when_setup_or_start
 from homeassistant.util import dt as dt_util, ssl as ssl_util
+from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
@@ -188,6 +189,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
 
+    source_ip_task = create_eager_task(async_get_source_ip(hass))
+
     server = HomeAssistantHTTP(
         hass,
         server_host=server_host,
@@ -222,7 +225,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http = server
 
-    local_ip = await async_get_source_ip(hass)
+    local_ip = await source_ip_task
 
     host = local_ip
     if server_host is not None:
