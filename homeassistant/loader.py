@@ -98,7 +98,6 @@ CUSTOM_WARNING = (
 
 _UNDEF = object()  # Internal; not helpers.typing.UNDEFINED due to circular dependency
 
-MAX_LOAD_CONCURRENTLY = 4
 
 MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
 
