@@ -31,8 +31,6 @@ async def test_initial_state(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_BRIGHTNESS] == 26
     assert state.attributes["friendly_name"] == TEST_NAME
 
-    assert entity.original_icon == "mdi:string-lights"
-
     assert device.name == TEST_NAME
     assert device.model == TEST_MODEL
     assert device.manufacturer == "LEDWORKS"
