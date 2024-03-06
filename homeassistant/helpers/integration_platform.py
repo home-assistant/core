@@ -157,6 +157,7 @@ async def async_process_integration_platforms(
     platform_name: str,
     # Any = platform.
     process_platform: Callable[[HomeAssistant, str, Any], Awaitable[None] | None],
+    wait_for_platforms: bool = False,
 ) -> None:
     """Process a specific platform for all current and future loaded integrations."""
     if DATA_INTEGRATION_PLATFORMS not in hass.data:
@@ -204,12 +205,14 @@ async def async_process_integration_platforms(
     # 2. We want the behavior to be the same as if the integration that has
     #    the integration platform is loaded after the platform is processed.
     #
-    hass.async_create_task(
+    future = hass.async_create_task(
         _async_process_integration_platforms(
             hass, platform_name, top_level_components.copy(), process_job
         ),
         eager_start=True,
     )
+    if wait_for_platforms:
+        await future
 
 
 async def _async_process_integration_platforms(

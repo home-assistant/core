@@ -27,6 +27,7 @@ async def test_system_health(
 
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     MockConfigEntry(
         domain=DOMAIN,
