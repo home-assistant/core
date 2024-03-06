@@ -34,7 +34,7 @@ on:
 
 env:
   CACHE_VERSION: 5
-  UV_CACHE_VERSION: 4
+  UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 7
   HA_SHORT_VERSION: "2024.4"
   DEFAULT_PYTHON: "3.11"
@@ -471,7 +471,7 @@ jobs:
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
             steps.generate-uv-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-ub-${{ env.UV_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-uv-${{ env.UV_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
