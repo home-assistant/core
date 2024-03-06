@@ -60,11 +60,6 @@ class UnifiHub:
         """Event specific per UniFi entry to signal new options."""
         return f"unifi-options-{self.config.entry.entry_id}"
 
-    @property
-    def signal_heartbeat_missed(self) -> str:
-        """Event specific per UniFi device tracker to signal new heartbeat missed."""
-        return "unifi-heartbeat-missed"
-
     async def initialize(self) -> None:
         """Set up a UniFi Network instance."""
         await self.entity_loader.initialize()

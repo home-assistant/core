@@ -284,7 +284,7 @@ async def test_hub_setup(
 
     assert hub.signal_reachable == "unifi-reachable-1"
     assert hub.signal_options_update == "unifi-options-1"
-    assert hub.signal_heartbeat_missed == "unifi-heartbeat-missed"
+    assert hub.entity_helper.heartbeat.signal == "unifi-heartbeat-missed"
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
