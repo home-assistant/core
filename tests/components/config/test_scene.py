@@ -233,7 +233,7 @@ async def test_api_calls_require_admin(
     setup_scene,
 ) -> None:
     """Test scene APIs endpoints do not work as a normal user."""
-    with patch.object(config, "SECTIONS", ["scene"]):
+    with patch.object(config, "SECTIONS", [scene]):
         await async_setup_component(hass, "config", {})
 
     hass_config_store["scenes.yaml"] = [
