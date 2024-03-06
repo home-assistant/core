@@ -7,7 +7,6 @@ from overseerr_api.exceptions import OpenApiException
 from overseerr_api.models import RequestCountGet200Response
 from urllib3.exceptions import MaxRetryError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -20,14 +19,15 @@ _LOGGER = logging.getLogger(__name__)
 class OverseerrUpdateCoordinator(DataUpdateCoordinator[RequestCountGet200Response]):
     """Class to manage fetching Overseerr data."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize global Overseerr data updater."""
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=5)
         )
+
         self._overseerr_config = Configuration(
-            host=entry.data[CONF_URL],
-            api_key={"apiKey": entry.data[CONF_API_KEY]},
+            host=self.config_entry.data[CONF_URL],  # type: ignore[union-attr]
+            api_key={"apiKey": self.config_entry.data[CONF_API_KEY]},  # type: ignore[union-attr]
         )
         self._api_client = ApiClient(self._overseerr_config)
         self._request_api = RequestApi(self._api_client)
