@@ -34,7 +34,7 @@ class OverseerrUpdateCoordinator(DataUpdateCoordinator[RequestCountGet200Respons
         )
         self._api_client = ApiClient(self._overseerr_config)
         self._request_api = RequestApi(self._api_client)
-        self.request_count: RequestCountGet200Response = RequestCountGet200Response()
+        self.request_count = RequestCountGet200Response()
 
     async def _async_update_data(self):
         """Fetch data from Overseerr."""

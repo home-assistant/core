@@ -31,7 +31,7 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a user-initiated config flow."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
