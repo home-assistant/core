@@ -58,7 +58,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     for panel in SECTIONS:
         if panel.async_setup(hass):
-            key = f"{DOMAIN}.{panel.__name__}"
+            name = panel.__name__.split(".")[-1]
+            key = f"{DOMAIN}.{name}"
             hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: key})
 
     return True
