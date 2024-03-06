@@ -691,9 +691,9 @@ class HomeworksConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                 }
-                self.hass.config_entries.async_update_entry(entry, options=new_options)
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
+                return self.async_update_reload_and_abort(
+                    entry, options=new_options, reason="reconfigure_successful"
+                )
 
         return self.async_show_form(
             step_id="reconfigure",
