@@ -27,7 +27,7 @@ def patch_microbot_api():
 
 async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     """Test discovery via bluetooth with a valid device."""
-    result = await hass.config_entries.flow.async_user(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
         data=SERVICE_INFO,
@@ -72,7 +72,7 @@ async def test_bluetooth_discovery_already_setup(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
     with patch_microbot_api():
-        result = await hass.config_entries.flow.async_user(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_BLUETOOTH},
             data=SERVICE_INFO,
@@ -88,7 +88,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
         return_value=[SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_user(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] == FlowResultType.FORM
@@ -135,7 +135,7 @@ async def test_user_setup_already_configured(hass: HomeAssistant) -> None:
         "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
         return_value=[SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_user(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
@@ -148,7 +148,7 @@ async def test_user_no_devices(hass: HomeAssistant) -> None:
         "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
         return_value=[],
     ):
-        result = await hass.config_entries.flow.async_user(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] == FlowResultType.ABORT
@@ -162,7 +162,7 @@ async def test_no_link(hass: HomeAssistant) -> None:
         "homeassistant.components.keymitt_ble.config_flow.async_discovered_service_info",
         return_value=[SERVICE_INFO],
     ):
-        result = await hass.config_entries.flow.async_user(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
     assert result["type"] == FlowResultType.FORM
