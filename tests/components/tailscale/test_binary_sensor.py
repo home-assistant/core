@@ -5,12 +5,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.tailscale.const import DOMAIN
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
-    EntityCategory,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -34,7 +29,6 @@ async def test_tailscale_binary_sensors(
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Client"
     assert state.attributes.get(ATTR_DEVICE_CLASS) == BinarySensorDeviceClass.UPDATE
-    assert ATTR_ICON not in state.attributes
 
     state = hass.states.get("binary_sensor.frencks_iphone_supports_hairpinning")
     entry = entity_registry.async_get(
@@ -49,7 +43,6 @@ async def test_tailscale_binary_sensors(
         state.attributes.get(ATTR_FRIENDLY_NAME)
         == "frencks-iphone Supports hairpinning"
     )
-    assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("binary_sensor.frencks_iphone_supports_ipv6")
@@ -60,7 +53,6 @@ async def test_tailscale_binary_sensors(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Supports IPv6"
-    assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("binary_sensor.frencks_iphone_supports_pcp")
@@ -71,7 +63,6 @@ async def test_tailscale_binary_sensors(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Supports PCP"
-    assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("binary_sensor.frencks_iphone_supports_nat_pmp")
@@ -82,7 +73,6 @@ async def test_tailscale_binary_sensors(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Supports NAT-PMP"
-    assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("binary_sensor.frencks_iphone_supports_udp")
@@ -93,7 +83,6 @@ async def test_tailscale_binary_sensors(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Supports UDP"
-    assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     state = hass.states.get("binary_sensor.frencks_iphone_supports_upnp")
@@ -104,7 +93,6 @@ async def test_tailscale_binary_sensors(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "frencks-iphone Supports UPnP"
-    assert state.attributes.get(ATTR_ICON) == "mdi:wan"
     assert ATTR_DEVICE_CLASS not in state.attributes
 
     assert entry.device_id

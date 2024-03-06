@@ -82,6 +82,19 @@ BASE_PRELOAD_PLATFORMS = [
 ]
 
 
+@dataclass
+class BlockedIntegration:
+    """Blocked custom integration details."""
+
+    lowest_good_version: AwesomeVersion | None
+    reason: str
+
+
+BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
+    # Added in 2024.3.0 because of https://github.com/home-assistant/core/issues/112464
+    "start_time": BlockedIntegration(AwesomeVersion("1.1.7"), "breaks Home Assistant")
+}
+
 DATA_COMPONENTS = "components"
 DATA_INTEGRATIONS = "integrations"
 DATA_MISSING_PLATFORMS = "missing_platforms"
@@ -643,6 +656,7 @@ class Integration:
                 return integration
 
             _LOGGER.warning(CUSTOM_WARNING, integration.domain)
+
             if integration.version is None:
                 _LOGGER.error(
                     (
@@ -679,6 +693,21 @@ class Integration:
                     integration.version,
                 )
                 return None
+
+            if blocked := BLOCKED_CUSTOM_INTEGRATIONS.get(integration.domain):
+                if _version_blocked(integration.version, blocked):
+                    _LOGGER.error(
+                        (
+                            "Version %s of custom integration '%s' %s and was blocked "
+                            "from loading, please %s"
+                        ),
+                        integration.version,
+                        integration.domain,
+                        blocked.reason,
+                        async_suggest_report_issue(None, integration=integration),
+                    )
+                    return None
+
             return integration
 
         return None
@@ -1210,6 +1239,20 @@ class Integration:
         return f"<Integration {self.domain}: {self.pkg_path}>"
 
 
+def _version_blocked(
+    integration_version: AwesomeVersion,
+    blocked_integration: BlockedIntegration,
+) -> bool:
+    """Return True if the integration version is blocked."""
+    if blocked_integration.lowest_good_version is None:
+        return True
+
+    if integration_version >= blocked_integration.lowest_good_version:
+        return False
+
+    return True
+
+
 def _resolve_integrations_from_root(
     hass: HomeAssistant, root_module: ModuleType, domains: Iterable[str]
 ) -> dict[str, Integration]:
@@ -1565,6 +1608,7 @@ def is_component_module_loaded(hass: HomeAssistant, module: str) -> bool:
 def async_get_issue_tracker(
     hass: HomeAssistant | None,
     *,
+    integration: Integration | None = None,
     integration_domain: str | None = None,
     module: str | None = None,
 ) -> str | None:
@@ -1572,18 +1616,22 @@ def async_get_issue_tracker(
     issue_tracker = (
         "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
     )
-    if not integration_domain and not module:
+    if not integration and not integration_domain and not module:
         # If we know nothing about the entity, suggest opening an issue on HA core
         return issue_tracker
 
-    if hass and integration_domain:
+    if not integration and (hass and integration_domain):
         with suppress(IntegrationNotLoaded):
             integration = async_get_loaded_integration(hass, integration_domain)
-            if not integration.is_built_in:
-                return integration.issue_tracker
+
+    if integration and not integration.is_built_in:
+        return integration.issue_tracker
 
     if module and "custom_components" in module:
         return None
+
+    if integration:
+        integration_domain = integration.domain
 
     if integration_domain:
         issue_tracker += f"+label%3A%22integration%3A+{integration_domain}%22"
@@ -1594,15 +1642,21 @@ def async_get_issue_tracker(
 def async_suggest_report_issue(
     hass: HomeAssistant | None,
     *,
+    integration: Integration | None = None,
     integration_domain: str | None = None,
     module: str | None = None,
 ) -> str:
     """Generate a blurb asking the user to file a bug report."""
     issue_tracker = async_get_issue_tracker(
-        hass, integration_domain=integration_domain, module=module
+        hass,
+        integration=integration,
+        integration_domain=integration_domain,
+        module=module,
     )
 
     if not issue_tracker:
+        if integration:
+            integration_domain = integration.domain
         if not integration_domain:
             return "report it to the custom integration author"
         return (
