@@ -91,7 +91,6 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         translation_key="aqi",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        icon="mdi:air-filter",
         value=_get_air_quality,
     ),
     TradfriSensorEntityDescription(
@@ -99,7 +98,6 @@ SENSOR_DESCRIPTIONS_FAN: tuple[TradfriSensorEntityDescription, ...] = (
         translation_key="filter_life_remaining",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.HOURS,
-        icon="mdi:clock-outline",
         value=_get_filter_time_left,
     ),
 )
