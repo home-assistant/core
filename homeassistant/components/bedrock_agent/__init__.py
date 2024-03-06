@@ -67,11 +67,7 @@ class BedrockAgent(conversation.AbstractConversationAgent):
     async def async_call_bedrock(self, question) -> str:
         """Return result from Amazon Bedrock."""
 
-        # amazon.titan-text-express-v1
-        # anthropic.claude
-        # ai21.j2
-        # mistral.mistral-
-        # meta.llama2-
+        question = "Answer with 50 words or less. " + question
 
         modelId = self.entry.data[CONST_MODEL_ID]
         body = json.dumps({"prompt": question})
@@ -119,9 +115,6 @@ class BedrockAgent(conversation.AbstractConversationAgent):
                     "top_k": 50,
                 }
             )
-        #     return "ai21.j2"
-        # elif modelId == "mistral.mistral-":
-        #     return "mistral.mistral-"
         # elif modelId == "meta.llama2-":
         #     return "meta.llama2-"
 
