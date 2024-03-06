@@ -28,6 +28,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'requested_approved',
+    'unique_id': '12345678904321-requested_approved',
     'unit_of_measurement': None,
   })
 # ---
@@ -60,6 +61,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'requested_available',
+    'unique_id': '12345678904321-requested_available',
     'unit_of_measurement': None,
   })
 # ---
@@ -92,6 +94,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'requested_movies',
+    'unique_id': '12345678904321-requested_movies',
     'unit_of_measurement': None,
   })
 # ---
@@ -124,6 +127,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'requested_pending',
+    'unique_id': '12345678904321-requested_pending',
     'unit_of_measurement': None,
   })
 # ---
@@ -156,6 +160,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'requested_total',
+    'unique_id': '12345678904321-requested_total',
     'unit_of_measurement': None,
   })
 # ---

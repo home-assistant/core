@@ -1,7 +1,6 @@
 """Test the Overseerr sensor platform."""
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -23,9 +22,7 @@ async def test_overseerr_sensor(
 
     for sensor_name in sensor_names:
         entry = entity_registry.async_get(f"sensor.mock_title_{sensor_name}")
-        assert entry == snapshot(
-            name=f"entry-{sensor_name}", exclude=props("unique_id")
-        )
+        assert entry == snapshot(name=f"entry-{sensor_name}")
 
         state = hass.states.get(f"sensor.mock_title_{sensor_name}")
         assert state == snapshot(name=f"state-{sensor_name}")

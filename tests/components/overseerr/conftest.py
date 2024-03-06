@@ -17,6 +17,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id="12345",
+        entry_id="12345678904321",
         data={CONF_URL: DEFAULT_URL, CONF_API_KEY: "test-api-key"},
         version=1,
     )
