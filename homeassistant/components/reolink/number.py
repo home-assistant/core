@@ -118,7 +118,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_face_sensititvity",
         cmd_key="GetAiAlarm",
-        translation_key="ai_face_sensititvity",
+        translation_key="ai_face_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -132,7 +132,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_person_sensititvity",
         cmd_key="GetAiAlarm",
-        translation_key="ai_person_sensititvity",
+        translation_key="ai_person_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -146,7 +146,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_vehicle_sensititvity",
         cmd_key="GetAiAlarm",
-        translation_key="ai_vehicle_sensititvity",
+        translation_key="ai_vehicle_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -160,7 +160,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_package_sensititvity",
         cmd_key="GetAiAlarm",
-        translation_key="ai_package_sensititvity",
+        translation_key="ai_package_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -174,7 +174,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_pet_sensititvity",
         cmd_key="GetAiAlarm",
-        translation_key="ai_pet_sensititvity",
+        translation_key="ai_pet_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
@@ -190,7 +190,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="ai_pet_sensititvity",
         cmd_key="GetAiAlarm",
-        translation_key="ai_animal_sensititvity",
+        translation_key="ai_animal_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,

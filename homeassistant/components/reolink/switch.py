@@ -96,7 +96,7 @@ SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="gaurd_return",
         cmd_key="GetPtzGuard",
-        translation_key="gaurd_return",
+        translation_key="guard_return",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "ptz_guard"),
         value=lambda api, ch: api.ptz_guard_enabled(ch),

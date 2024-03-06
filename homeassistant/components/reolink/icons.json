@@ -103,22 +103,22 @@
       "motion_sensitivity": {
         "default": "mdi:motion-sensor"
       },
-      "ai_face_sensititvity": {
+      "ai_face_sensitivity": {
         "default": "mdi:face-recognition"
       },
-      "ai_person_sensititvity": {
+      "ai_person_sensitivity": {
         "default": "mdi:account"
       },
-      "ai_vehicle_sensititvity": {
+      "ai_vehicle_sensitivity": {
         "default": "mdi:car"
       },
-      "ai_package_sensititvity": {
+      "ai_package_sensitivity": {
         "default": "mdi:gift-outline"
       },
-      "ai_pet_sensititvity": {
+      "ai_pet_sensitivity": {
         "default": "mdi:dog-side"
       },
-      "ai_animal_sensititvity": {
+      "ai_animal_sensitivity": {
         "default": "mdi:paw"
       },
       "ai_face_delay": {
@@ -225,7 +225,7 @@
       "auto_focus": {
         "default": "mdi:focus-field"
       },
-      "gaurd_return": {
+      "guard_return": {
         "default": "mdi:crosshairs-gps"
       },
       "ptz_patrol": {
