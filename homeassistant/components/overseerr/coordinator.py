@@ -7,6 +7,8 @@ from overseerr_api.exceptions import OpenApiException
 from overseerr_api.models import RequestCountGet200Response
 from urllib3.exceptions import MaxRetryError
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -15,15 +17,19 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class OverseerrUpdateCoordinator(DataUpdateCoordinator):
+class OverseerrUpdateCoordinator(DataUpdateCoordinator[RequestCountGet200Response]):
     """Class to manage fetching Overseerr data."""
 
-    def __init__(self, hass: HomeAssistant, overseerr_config: Configuration) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize global Overseerr data updater."""
         super().__init__(
             hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=5)
         )
-        self._api_client = ApiClient(overseerr_config)
+        self._overseerr_config = Configuration(
+            host=entry.data[CONF_URL],
+            api_key={"apiKey": entry.data[CONF_API_KEY]},
+        )
+        self._api_client = ApiClient(self._overseerr_config)
         self._request_api = RequestApi(self._api_client)
         self.request_count: RequestCountGet200Response = RequestCountGet200Response()
 
@@ -33,6 +39,6 @@ class OverseerrUpdateCoordinator(DataUpdateCoordinator):
             self.request_count = await self.hass.async_add_executor_job(
                 self._request_api.request_count_get
             )
-            return self.request_count
         except (OpenApiException, MaxRetryError) as err:
             raise UpdateFailed(f"Update failed: {err}") from err
+        return self.request_count

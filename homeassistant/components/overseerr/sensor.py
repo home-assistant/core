@@ -4,6 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from overseerr_api.models import RequestCountGet200Response
+
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -20,7 +22,7 @@ from .coordinator import OverseerrUpdateCoordinator
 class OverseerrSensorEntityDescription(SensorEntityDescription):
     """Entity description class for Overseerr sensors."""
 
-    value_fn: Callable[[OverseerrUpdateCoordinator], StateType]
+    value_fn: Callable[[RequestCountGet200Response], StateType]
 
 
 SENSOR_TYPES: tuple[OverseerrSensorEntityDescription, ...] = (
@@ -28,37 +30,37 @@ SENSOR_TYPES: tuple[OverseerrSensorEntityDescription, ...] = (
         key="requested_movies",
         translation_key="requested_movies",
         icon="mdi:movie",
-        value_fn=lambda coordinator: coordinator.data.movie,
+        value_fn=lambda data: data.movie,
     ),
     OverseerrSensorEntityDescription(
         key="requested_tv",
         translation_key="requested_tv",
         icon="mdi:television-classic",
-        value_fn=lambda coordinator: coordinator.data.tv,
+        value_fn=lambda data: data.tv,
     ),
     OverseerrSensorEntityDescription(
         key="requested_pending",
         translation_key="requested_pending",
         icon="mdi:clock-alert-outline",
-        value_fn=lambda coordinator: coordinator.data.pending,
+        value_fn=lambda data: data.pending,
     ),
     OverseerrSensorEntityDescription(
         key="requested_approved",
         translation_key="requested_approved",
         icon="mdi:check",
-        value_fn=lambda coordinator: coordinator.data.approved,
+        value_fn=lambda data: data.approved,
     ),
     OverseerrSensorEntityDescription(
         key="requested_available",
         translation_key="requested_available",
         icon="mdi:download",
-        value_fn=lambda coordinator: coordinator.data.available,
+        value_fn=lambda data: data.available,
     ),
     OverseerrSensorEntityDescription(
         key="requested_total",
         translation_key="requested_total",
         icon="mdi:movie",
-        value_fn=lambda coordinator: coordinator.data.total,
+        value_fn=lambda data: data.total,
     ),
 )
 
@@ -104,4 +106,4 @@ class OverseeerrRequestsSensor(
     @property
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
-        return self.entity_description.value_fn(self.coordinator)
+        return self.entity_description.value_fn(self.coordinator.data)

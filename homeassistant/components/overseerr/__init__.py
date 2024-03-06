@@ -1,10 +1,8 @@
 """The Overseerr integration."""
 from __future__ import annotations
 
-from overseerr_api import Configuration
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_URL, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -15,12 +13,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Overseerr from a config entry."""
-    overseerr_config = Configuration(
-        host=entry.data[CONF_URL],
-        api_key={"apiKey": entry.data[CONF_API_KEY]},
-    )
-
-    overseerr_coordinator = OverseerrUpdateCoordinator(hass, overseerr_config)
+    overseerr_coordinator = OverseerrUpdateCoordinator(hass, entry)
 
     await overseerr_coordinator.async_config_entry_first_refresh()
 
