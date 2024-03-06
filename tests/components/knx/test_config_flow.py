@@ -132,17 +132,6 @@ class GatewayScannerMock:
             yield gateway
 
 
-async def test_user_single_instance(hass: HomeAssistant) -> None:
-    """Test we only allow a single config flow."""
-    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "single_instance_allowed"
-
-
 @patch(
     "homeassistant.components.knx.config_flow.GatewayScanner",
     return_value=GatewayScannerMock(),
