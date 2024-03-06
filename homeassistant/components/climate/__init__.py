@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import issue_registry as ir
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -39,6 +40,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_issue_tracker, async_suggest_report_issue
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (  # noqa: F401
@@ -307,6 +309,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_target_temperature: float | None = None
     _attr_temperature_unit: str
 
+    __climate_reported_legacy_aux = False
+    __climate_legacy_aux = False
+
     __mod_supported_features: ClimateEntityFeature = ClimateEntityFeature(0)
     # Integrations should set `_enable_turn_on_off_backwards_compatibility` to False
     # once migrated and set the feature flags TURN_ON/TURN_OFF as needed.
@@ -334,6 +339,19 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             "_ClimateEntity__mod_supported_features"
         )
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Post initialisation processing."""
+        super().__init_subclass__(**kwargs)
+        if (
+            "is_aux_heat" in cls.__dict__
+            or "_attr_is_aux_heat" in cls.__dict__
+            or cls.turn_aux_heat_on is not ClimateEntity.turn_aux_heat_on
+            or cls.async_turn_aux_heat_on is not ClimateEntity.async_turn_aux_heat_on
+            or cls.turn_aux_heat_off is not ClimateEntity.turn_aux_heat_off
+            or cls.async_turn_aux_heat_off is not ClimateEntity.async_turn_aux_heat_off
+        ):
+            cls.__climate_legacy_aux = True
+
     @callback
     def add_to_platform_start(
         self,
@@ -343,6 +361,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     ) -> None:
         """Start adding an entity to a platform."""
         super().add_to_platform_start(hass, platform, parallel_updates)
+
+        if self.__climate_legacy_aux:
+            self._report_legacy_aux(hass)
 
         def _report_turn_on_off(feature: str, method: str) -> None:
             """Log warning not implemented turn on/off feature."""
@@ -401,6 +422,52 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             self.__mod_supported_features |= (  # pylint: disable=unused-private-member
                 ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
             )
+
+    def _report_legacy_aux(self, hass: HomeAssistant) -> None:
+        """Log warning and create an issue if the entity implements legacy auxiliary heater."""
+
+        report_issue = async_suggest_report_issue(
+            hass,
+            integration_domain=self.platform.platform_name,
+            module=type(self).__module__,
+        )
+        _LOGGER.warning(
+            (
+                "%s::%s implements the `is_aux_heat` property or uses the auxiliary  "
+                "heater methods in a subclass of ClimateEntity which is "
+                "deprecated and will be unsupported from Home Assistant 2024.10."
+                " Please %s"
+            ),
+            self.platform.platform_name,
+            self.__class__.__name__,
+            report_issue,
+        )
+
+        translation_placeholders = {"platform": self.platform.platform_name}
+        translation_key = "deprecated_climate_aux_no_url"
+        issue_tracker = async_get_issue_tracker(
+            hass,
+            integration_domain=self.platform.platform_name,
+            module=type(self).__module__,
+        )
+        if issue_tracker:
+            translation_placeholders["issue_tracker"] = issue_tracker
+            translation_key = "deprecated_climate_aux_url"
+        if "custom_components" in type(self).__module__ and issue_tracker:
+            translation_placeholders["issue_tracker"] = issue_tracker
+            translation_key = "deprecated_climate_aux_url_custom"
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"deprecated_climate_aux_{self.platform.platform_name}",
+            breaks_in_ha_version="2024.10.0",
+            is_fixable=False,
+            is_persistent=False,
+            issue_domain=self.platform.platform_name,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
+        )
 
     @final
     @property
