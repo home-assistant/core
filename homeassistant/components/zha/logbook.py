@@ -30,7 +30,7 @@ def async_describe_events(
         device: dr.DeviceEntry | None = None
         device_name: str = "Unknown device"
         zha_device: ZHADevice | None = None
-        event_data: dict = event.data
+        event_data = event.data
         event_type: str | None = None
         event_subtype: str | None = None
 

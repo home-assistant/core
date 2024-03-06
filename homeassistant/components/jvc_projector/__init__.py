@@ -18,7 +18,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from .const import DOMAIN
 from .coordinator import JvcProjectorDataUpdateCoordinator
 
-PLATFORMS = [Platform.REMOTE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.REMOTE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

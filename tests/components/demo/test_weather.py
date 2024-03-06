@@ -1,6 +1,7 @@
 """The tests for the demo weather component."""
 import datetime
 from typing import Any
+from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -15,7 +16,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
 )
-from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -23,7 +24,17 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from tests.typing import WebSocketGenerator
 
 
-async def test_attributes(hass: HomeAssistant, disable_platforms) -> None:
+@pytest.fixture
+async def weather_only() -> None:
+    """Enable only the datetime platform."""
+    with patch(
+        "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
+        [Platform.WEATHER],
+    ):
+        yield
+
+
+async def test_attributes(hass: HomeAssistant, weather_only) -> None:
     """Test weather attributes."""
     assert await async_setup_component(
         hass, weather.DOMAIN, {"weather": {"platform": "demo"}}
@@ -115,7 +126,7 @@ async def test_forecast(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
-    disable_platforms: None,
+    weather_only: None,
     forecast_type: str,
     expected_forecast: list[dict[str, Any]],
 ) -> None:

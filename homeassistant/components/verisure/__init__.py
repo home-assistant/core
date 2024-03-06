@@ -48,7 +48,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Update options
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     return True
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+    """Handle options update."""
+    # Propagate configuration change.
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator.async_update_listeners()
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -98,7 +108,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             hass.config_entries.async_update_entry(entry, options=new_options)
 
-        entry.version = 2
+        hass.config_entries.async_update_entry(entry, version=2)
 
     LOGGER.info("Migration to version %s successful", entry.version)
 

@@ -1,5 +1,4 @@
 """Test the Kostal Plenticore Solar Inverter config flow."""
-import asyncio
 from collections.abc import Generator
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
@@ -54,7 +53,19 @@ async def test_form_g1(
         # mock of the context manager instance
         mock_apiclient.login = AsyncMock()
         mock_apiclient.get_settings = AsyncMock(
-            return_value={"scb:network": [SettingsData({"id": "Hostname"})]}
+            return_value={
+                "scb:network": [
+                    SettingsData(
+                        min="1",
+                        max="63",
+                        default=None,
+                        access="readwrite",
+                        unit=None,
+                        id="Hostname",
+                        type="string",
+                    ),
+                ]
+            }
         )
         mock_apiclient.get_setting_values = AsyncMock(
             # G1 model has the entry id "Hostname"
@@ -108,7 +119,19 @@ async def test_form_g2(
         # mock of the context manager instance
         mock_apiclient.login = AsyncMock()
         mock_apiclient.get_settings = AsyncMock(
-            return_value={"scb:network": [SettingsData({"id": "Network:Hostname"})]}
+            return_value={
+                "scb:network": [
+                    SettingsData(
+                        min="1",
+                        max="63",
+                        default=None,
+                        access="readwrite",
+                        unit=None,
+                        id="Network:Hostname",
+                        type="string",
+                    ),
+                ]
+            }
         )
         mock_apiclient.get_setting_values = AsyncMock(
             # G1 model has the entry id "Hostname"
@@ -188,7 +211,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         # mock of the context manager instance
         mock_api_ctx = MagicMock()
         mock_api_ctx.login = AsyncMock(
-            side_effect=asyncio.TimeoutError(),
+            side_effect=TimeoutError(),
         )
 
         # mock of the return instance of ApiClient

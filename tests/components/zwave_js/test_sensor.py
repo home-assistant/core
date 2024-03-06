@@ -25,7 +25,6 @@ from homeassistant.components.zwave_js.helpers import get_valueless_base_unique_
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
@@ -130,8 +129,45 @@ async def test_numeric_sensor(
     assert state.state == "0"
 
 
+async def test_invalid_multilevel_sensor_scale(
+    hass: HomeAssistant, client, multisensor_6_state, integration
+) -> None:
+    """Test a multilevel sensor with an invalid scale."""
+    node_state = copy.deepcopy(multisensor_6_state)
+    value = next(
+        value
+        for value in node_state["values"]
+        if value["commandClass"] == 49 and value["property"] == "Air temperature"
+    )
+    value["metadata"]["ccSpecific"]["scale"] = -1
+    value["metadata"]["unit"] = None
+
+    event = Event(
+        "node added",
+        {
+            "source": "controller",
+            "event": "node added",
+            "node": node_state,
+            "result": "",
+        },
+    )
+    client.driver.controller.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(AIR_TEMPERATURE_SENSOR)
+
+    assert state
+    assert state.state == "9.0"
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert ATTR_STATE_CLASS not in state.attributes
+
+
 async def test_energy_sensors(
-    hass: HomeAssistant, hank_binary_switch, integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hank_binary_switch,
+    integration,
 ) -> None:
     """Test power and energy sensors."""
     state = hass.states.get(POWER_SENSOR)
@@ -145,7 +181,7 @@ async def test_energy_sensors(
     state = hass.states.get(ENERGY_SENSOR)
 
     assert state
-    assert state.state == "0.16"
+    assert state.state == "0.164"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
@@ -153,9 +189,16 @@ async def test_energy_sensors(
     state = hass.states.get(VOLTAGE_SENSOR)
 
     assert state
-    assert state.state == "122.96"
+    assert state.state == "122.963"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfElectricPotential.VOLT
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.VOLTAGE
+
+    entity_entry = entity_registry.async_get(VOLTAGE_SENSOR)
+
+    assert entity_entry is not None
+    sensor_options = entity_entry.options.get("sensor")
+    assert sensor_options is not None
+    assert sensor_options["suggested_display_precision"] == 0
 
     state = hass.states.get(CURRENT_SENSOR)
 
@@ -261,6 +304,44 @@ async def test_config_parameter_sensor(
     await hass.async_block_till_done()
 
 
+async def test_controller_status_sensor(
+    hass: HomeAssistant, client, integration
+) -> None:
+    """Test controller status sensor is created and gets updated on controller state changes."""
+    entity_id = "sensor.z_stick_gen5_usb_controller_status"
+    ent_reg = er.async_get(hass)
+    entity_entry = ent_reg.async_get(entity_id)
+
+    assert not entity_entry.disabled
+    assert entity_entry.entity_category is EntityCategory.DIAGNOSTIC
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "ready"
+
+    event = Event(
+        "status changed",
+        data={"source": "controller", "event": "status changed", "status": 1},
+    )
+    client.driver.controller.receive_event(event)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unresponsive"
+
+    # Test transitions work
+    event = Event(
+        "status changed",
+        data={"source": "controller", "event": "status changed", "status": 2},
+    )
+    client.driver.controller.receive_event(event)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "jammed"
+
+    # Disconnect the client and make sure the entity is still available
+    await client.disconnect()
+    assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
 async def test_node_status_sensor(
     hass: HomeAssistant, client, lock_id_lock_as_id150, integration
 ) -> None:
@@ -280,33 +361,24 @@ async def test_node_status_sensor(
     )
     node.receive_event(event)
     assert hass.states.get(node_status_entity_id).state == "dead"
-    assert (
-        hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:robot-dead"
-    )
 
     event = Event(
         "wake up", data={"source": "node", "event": "wake up", "nodeId": node.node_id}
     )
     node.receive_event(event)
     assert hass.states.get(node_status_entity_id).state == "awake"
-    assert hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:eye"
 
     event = Event(
         "sleep", data={"source": "node", "event": "sleep", "nodeId": node.node_id}
     )
     node.receive_event(event)
     assert hass.states.get(node_status_entity_id).state == "asleep"
-    assert hass.states.get(node_status_entity_id).attributes[ATTR_ICON] == "mdi:sleep"
 
     event = Event(
         "alive", data={"source": "node", "event": "alive", "nodeId": node.node_id}
     )
     node.receive_event(event)
     assert hass.states.get(node_status_entity_id).state == "alive"
-    assert (
-        hass.states.get(node_status_entity_id).attributes[ATTR_ICON]
-        == "mdi:heart-pulse"
-    )
 
     # Disconnect the client and make sure the entity is still available
     await client.disconnect()
@@ -321,6 +393,16 @@ async def test_node_status_sensor(
             DOMAIN,
             "sensor",
             f"{get_valueless_base_unique_id(driver, node)}.node_status",
+        )
+        is None
+    )
+
+    # Assert a controller status sensor entity is not created for a node
+    assert (
+        ent_reg.async_get_entity_id(
+            DOMAIN,
+            "sensor",
+            f"{get_valueless_base_unique_id(driver, node)}.controller_status",
         )
         is None
     )
@@ -373,10 +455,7 @@ async def test_node_status_sensor_not_ready(
 
 
 async def test_reset_meter(
-    hass: HomeAssistant,
-    client,
-    aeon_smart_switch_6,
-    integration,
+    hass: HomeAssistant, client, aeon_smart_switch_6, integration
 ) -> None:
     """Test reset_meter service."""
     client.async_send_command.return_value = {}
@@ -436,10 +515,7 @@ async def test_reset_meter(
 
 
 async def test_meter_attributes(
-    hass: HomeAssistant,
-    client,
-    aeon_smart_switch_6,
-    integration,
+    hass: HomeAssistant, client, aeon_smart_switch_6, integration
 ) -> None:
     """Test meter entity attributes."""
     state = hass.states.get(METER_ENERGY_SENSOR)
@@ -448,6 +524,42 @@ async def test_meter_attributes(
     assert state.attributes[ATTR_METER_TYPE_NAME] == MeterType.ELECTRIC.name
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
     assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
+
+
+async def test_invalid_meter_scale(
+    hass: HomeAssistant, client, aeon_smart_switch_6_state, integration
+) -> None:
+    """Test a meter sensor with an invalid scale."""
+    node_state = copy.deepcopy(aeon_smart_switch_6_state)
+    value = next(
+        value
+        for value in node_state["values"]
+        if value["commandClass"] == 50
+        and value["property"] == "value"
+        and value["propertyKey"] == 65537
+    )
+    value["metadata"]["ccSpecific"]["scale"] = -1
+    value["metadata"]["unit"] = None
+
+    event = Event(
+        "node added",
+        {
+            "source": "controller",
+            "event": "node added",
+            "node": node_state,
+            "result": "",
+        },
+    )
+    client.driver.controller.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(METER_ENERGY_SENSOR)
+    assert state
+    assert state.attributes[ATTR_METER_TYPE] == MeterType.ELECTRIC.value
+    assert state.attributes[ATTR_METER_TYPE_NAME] == MeterType.ELECTRIC.name
+    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert ATTR_STATE_CLASS not in state.attributes
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
 
 async def test_special_meters(
@@ -622,10 +734,10 @@ NODE_STATISTICS_SUFFIXES_UNKNOWN = {
 }
 
 
-async def test_statistics_sensors(
+async def test_statistics_sensors_no_last_seen(
     hass: HomeAssistant, zp3111, client, integration, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test statistics sensors."""
+    """Test all statistics sensors but last seen which is enabled by default."""
     ent_reg = er.async_get(hass)
 
     for prefix, suffixes in (
@@ -731,6 +843,7 @@ async def test_statistics_sensors(
                     "repeaterRSSI": [],
                     "routeFailedBetween": [],
                 },
+                "lastSeen": "2024-01-01T00:00:00+0000",
             },
         },
     )
@@ -764,6 +877,22 @@ async def test_statistics_sensors(
             *NODE_STATISTICS_SUFFIXES_UNKNOWN,
         ]
     )
+
+
+async def test_last_seen_statistics_sensors(
+    hass: HomeAssistant, zp3111, client, integration
+) -> None:
+    """Test last_seen statistics sensors."""
+    ent_reg = er.async_get(hass)
+
+    entity_id = f"{NODE_STATISTICS_ENTITY_PREFIX}last_seen"
+    entry = ent_reg.async_get(entity_id)
+    assert entry
+    assert not entry.disabled
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "2024-01-01T12:00:00+00:00"
 
 
 ENERGY_PRODUCTION_ENTITY_MAP = {

@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ElkAttachedEntity, ElkEntity
 from .const import DOMAIN
+from .models import ELKM1Data
 
 
 async def async_setup_entry(
@@ -22,21 +23,20 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the Elk-M1 sensor platform."""
-
-    elk_data = hass.data[DOMAIN][config_entry.entry_id]
-    auto_configure = elk_data["auto_configure"]
-    elk = elk_data["elk"]
+    elk_data: ELKM1Data = hass.data[DOMAIN][config_entry.entry_id]
+    elk = elk_data.elk
+    auto_configure = elk_data.auto_configure
 
     entities: list[ElkEntity] = []
     for element in elk.zones:
         # Don't create binary sensors for zones that are analog
-        if element.definition in {ZoneType.TEMPERATURE, ZoneType.ANALOG_ZONE}:
+        if element.definition in {ZoneType.TEMPERATURE, ZoneType.ANALOG_ZONE}:  # type: ignore[attr-defined]
             continue
 
         if auto_configure:
             if not element.configured:
                 continue
-        elif not elk_data["config"]["zone"]["included"][element.index]:
+        elif not elk_data.config["zone"]["included"][element.index]:
             continue
 
         entities.append(ElkBinarySensor(element, elk, elk_data))

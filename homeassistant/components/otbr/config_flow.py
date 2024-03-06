@@ -1,7 +1,6 @@
 """Config flow for the Open Thread Border Router integration."""
 from __future__ import annotations
 
-import asyncio
 from contextlib import suppress
 import logging
 from typing import cast
@@ -20,15 +19,18 @@ from homeassistant.components.hassio import (
 )
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.components.thread import async_get_preferred_dataset
-from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_CHANNEL, DOMAIN
-from .util import get_allowed_channel
+from .util import (
+    compose_default_network_name,
+    generate_random_pan_id,
+    get_allowed_channel,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,17 +87,19 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug(
                     "not importing TLV with channel %s", thread_dataset_channel
                 )
+                pan_id = generate_random_pan_id()
                 await api.create_active_dataset(
                     python_otbr_api.ActiveDataSet(
                         channel=allowed_channel if allowed_channel else DEFAULT_CHANNEL,
-                        network_name="home-assistant",
+                        network_name=compose_default_network_name(pan_id),
+                        pan_id=pan_id,
                     )
                 )
             await api.set_enabled(True)
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Set up by user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
@@ -109,7 +113,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             except (
                 python_otbr_api.OTBRError,
                 aiohttp.ClientError,
-                asyncio.TimeoutError,
+                TimeoutError,
             ):
                 errors["base"] = "cannot_connect"
             else:
@@ -124,7 +128,9 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_hassio(self, discovery_info: HassioServiceInfo) -> FlowResult:
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
         """Handle hassio discovery."""
         config = discovery_info.config
         url = f"http://{config['host']}:{config['port']}"
@@ -139,13 +145,14 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             for current_entry in current_entries:
                 if current_entry.source != SOURCE_HASSIO:
                     continue
-                if current_entry.unique_id != discovery_info.uuid:
-                    self.hass.config_entries.async_update_entry(
-                        current_entry, unique_id=discovery_info.uuid
-                    )
                 current_url = yarl.URL(current_entry.data["url"])
                 if (
-                    current_url.host != config["host"]
+                    # The first version did not set a unique_id
+                    # so if the entry does not have a unique_id
+                    # we have to assume it's the first version
+                    current_entry.unique_id
+                    and (current_entry.unique_id != discovery_info.uuid)
+                    or current_url.host != config["host"]
                     or current_url.port == config["port"]
                 ):
                     continue

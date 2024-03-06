@@ -6,6 +6,7 @@ import os
 from typing import Any, NamedTuple
 from unittest.mock import Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import py
 import pytest
 
@@ -19,7 +20,11 @@ from homeassistant.helpers import issue_registry as ir, storage
 from homeassistant.util import dt as dt_util
 from homeassistant.util.color import RGBColor
 
-from tests.common import async_fire_time_changed, async_test_home_assistant
+from tests.common import (
+    async_fire_time_changed,
+    async_fire_time_changed_exact,
+    async_test_home_assistant,
+)
 
 MOCK_VERSION = 1
 MOCK_VERSION_2 = 2
@@ -110,12 +115,12 @@ async def test_loading_parallel(
     results = await asyncio.gather(store.async_load(), store.async_load())
 
     assert results[0] == MOCK_DATA
-    assert results[0] is results[1]
+    assert results[1] == MOCK_DATA
     assert caplog.text.count(f"Loading data for {store.key}")
 
 
 async def test_saving_with_delay(
-    hass: HomeAssistant, store, hass_storage: dict[str, Any]
+    hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
 ) -> None:
     """Test saving data after a delay."""
     store.async_delay_save(lambda: MOCK_DATA, 1)
@@ -131,6 +136,88 @@ async def test_saving_with_delay(
     }
 
 
+async def test_saving_with_delay_churn_reduction(
+    hass: HomeAssistant,
+    store: storage.Store,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test saving data after a delay with timer churn reduction."""
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    assert store.key not in hass_storage
+
+    freezer.tick(0.2)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    freezer.tick(1)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "minor_version": 1,
+        "key": MOCK_KEY,
+        "data": MOCK_DATA,
+    }
+
+    del hass_storage[store.key]
+    # Simulate what some of the registries do when they add 100 entities
+    for _ in range(100):
+        store.async_delay_save(lambda: MOCK_DATA, 1)
+
+    freezer.tick(0.2)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+
+    freezer.tick(1)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key in hass_storage
+
+    del hass_storage[store.key]
+
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    freezer.tick(0.5)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    freezer.tick(0.8)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    freezer.tick(0.8)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    freezer.tick(0.2)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key in hass_storage
+
+    # Make sure if we do another delayed save
+    # and one with a shorter delay, the shorter delay wins
+    del hass_storage[store.key]
+    store.async_delay_save(lambda: MOCK_DATA, 2)
+    freezer.tick(0.2)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key not in hass_storage
+
+    store.async_delay_save(lambda: MOCK_DATA, 1)
+    freezer.tick(1.0)
+    async_fire_time_changed_exact(hass)
+    await hass.async_block_till_done()
+    assert store.key in hass_storage
+
+
 async def test_saving_on_final_write(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -140,7 +227,7 @@ async def test_saving_on_final_write(
     assert store.key not in hass_storage
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
@@ -164,7 +251,7 @@ async def test_not_delayed_saving_while_stopping(
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
 
     store.async_delay_save(lambda: MOCK_DATA, 1)
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
@@ -181,7 +268,7 @@ async def test_not_delayed_saving_after_stopping(
     assert store.key not in hass_storage
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     await hass.async_block_till_done()
     assert store.key not in hass_storage
 
@@ -195,7 +282,7 @@ async def test_not_saving_while_stopping(
 ) -> None:
     """Test saves don't write when stopping Home Assistant."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     await store.async_save(MOCK_DATA)
     assert store.key not in hass_storage
 
@@ -279,6 +366,23 @@ async def test_multiple_delay_save_calls(
 
     data = await store.async_load()
     assert data == {"delay": "no"}
+
+
+async def test_delay_save_zero(
+    hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
+) -> None:
+    """Test async_delay_save accepts 0."""
+    store.async_delay_save(lambda: {"delay": "0"}, 0)
+    # sleep is to run one event loop to get the task scheduled
+    await asyncio.sleep(0)
+    await hass.async_block_till_done()
+    assert store.key in hass_storage
+    assert hass_storage[store.key] == {
+        "version": MOCK_VERSION,
+        "minor_version": 1,
+        "key": MOCK_KEY,
+        "data": {"delay": "0"},
+    }
 
 
 async def test_multiple_save_calls(
@@ -516,46 +620,44 @@ async def test_changing_delayed_written_data(
 
 async def test_saving_load_round_trip(tmpdir: py.path.local) -> None:
     """Test saving and loading round trip."""
-    loop = asyncio.get_running_loop()
-    hass = await async_test_home_assistant(loop)
+    async with async_test_home_assistant() as hass:
+        hass.config.config_dir = await hass.async_add_executor_job(
+            tmpdir.mkdir, "temp_storage"
+        )
 
-    hass.config.config_dir = await hass.async_add_executor_job(
-        tmpdir.mkdir, "temp_storage"
-    )
+        class NamedTupleSubclass(NamedTuple):
+            """A NamedTuple subclass."""
 
-    class NamedTupleSubclass(NamedTuple):
-        """A NamedTuple subclass."""
+            name: str
 
-        name: str
+        nts = NamedTupleSubclass("a")
 
-    nts = NamedTupleSubclass("a")
+        data = {
+            "named_tuple_subclass": nts,
+            "rgb_color": RGBColor(255, 255, 0),
+            "set": {1, 2, 3},
+            "list": [1, 2, 3],
+            "tuple": (1, 2, 3),
+            "dict_with_int": {1: 1, 2: 2},
+            "dict_with_named_tuple": {1: nts, 2: nts},
+        }
 
-    data = {
-        "named_tuple_subclass": nts,
-        "rgb_color": RGBColor(255, 255, 0),
-        "set": {1, 2, 3},
-        "list": [1, 2, 3],
-        "tuple": (1, 2, 3),
-        "dict_with_int": {1: 1, 2: 2},
-        "dict_with_named_tuple": {1: nts, 2: nts},
-    }
+        store = storage.Store(
+            hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
+        )
+        await store.async_save(data)
+        load = await store.async_load()
+        assert load == {
+            "dict_with_int": {"1": 1, "2": 2},
+            "dict_with_named_tuple": {"1": ["a"], "2": ["a"]},
+            "list": [1, 2, 3],
+            "named_tuple_subclass": ["a"],
+            "rgb_color": [255, 255, 0],
+            "set": [1, 2, 3],
+            "tuple": [1, 2, 3],
+        }
 
-    store = storage.Store(
-        hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
-    )
-    await store.async_save(data)
-    load = await store.async_load()
-    assert load == {
-        "dict_with_int": {"1": 1, "2": 2},
-        "dict_with_named_tuple": {"1": ["a"], "2": ["a"]},
-        "list": [1, 2, 3],
-        "named_tuple_subclass": ["a"],
-        "rgb_color": [255, 255, 0],
-        "set": [1, 2, 3],
-        "tuple": [1, 2, 3],
-    }
-
-    await hass.async_stop(force=True)
+        await hass.async_stop(force=True)
 
 
 async def test_loading_corrupt_core_file(
@@ -563,156 +665,171 @@ async def test_loading_corrupt_core_file(
 ) -> None:
     """Test we handle unrecoverable corruption in a core file."""
     loop = asyncio.get_running_loop()
-    hass = await async_test_home_assistant(loop)
+    tmp_storage = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
 
-    tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
-    hass.config.config_dir = tmp_storage
+    async with async_test_home_assistant(storage_dir=tmp_storage) as hass:
+        storage_key = "core.anything"
+        store = storage.Store(
+            hass, MOCK_VERSION_2, storage_key, minor_version=MOCK_MINOR_VERSION_1
+        )
+        await store.async_save({"hello": "world"})
+        storage_path = os.path.join(tmp_storage, ".storage")
+        store_file = os.path.join(storage_path, store.key)
 
-    storage_key = "core.anything"
-    store = storage.Store(
-        hass, MOCK_VERSION_2, storage_key, minor_version=MOCK_MINOR_VERSION_1
-    )
-    await store.async_save({"hello": "world"})
-    storage_path = os.path.join(tmp_storage, ".storage")
-    store_file = os.path.join(storage_path, store.key)
+        data = await store.async_load()
+        assert data == {"hello": "world"}
 
-    data = await store.async_load()
-    assert data == {"hello": "world"}
+        def _corrupt_store():
+            with open(store_file, "w") as f:
+                f.write("corrupt")
 
-    def _corrupt_store():
-        with open(store_file, "w") as f:
-            f.write("corrupt")
+        await hass.async_add_executor_job(_corrupt_store)
 
-    await hass.async_add_executor_job(_corrupt_store)
+        data = await store.async_load()
+        assert data is None
+        assert "Unrecoverable error decoding storage" in caplog.text
 
-    data = await store.async_load()
-    assert data is None
-    assert "Unrecoverable error decoding storage" in caplog.text
+        issue_registry = ir.async_get(hass)
+        found_issue = None
+        issue_entry = None
+        for (domain, issue), entry in issue_registry.issues.items():
+            if domain == HOMEASSISTANT_DOMAIN and issue.startswith(
+                f"storage_corruption_{storage_key}_"
+            ):
+                found_issue = issue
+                issue_entry = entry
+                break
 
-    issue_registry = ir.async_get(hass)
-    found_issue = None
-    issue_entry = None
-    for (domain, issue), entry in issue_registry.issues.items():
-        if domain == HOMEASSISTANT_DOMAIN and issue.startswith(
-            f"storage_corruption_{storage_key}_"
-        ):
-            found_issue = issue
-            issue_entry = entry
-            break
+        assert found_issue is not None
+        assert issue_entry is not None
+        assert issue_entry.is_fixable is True
+        assert issue_entry.translation_placeholders["storage_key"] == storage_key
+        assert issue_entry.issue_domain == HOMEASSISTANT_DOMAIN
+        assert (
+            "unexpected character: line 1 column 1 (char 0)"
+            in issue_entry.translation_placeholders["error"]
+        )
 
-    assert found_issue is not None
-    assert issue_entry is not None
-    assert issue_entry.is_fixable is True
-    assert issue_entry.translation_placeholders["storage_key"] == storage_key
-    assert issue_entry.issue_domain == HOMEASSISTANT_DOMAIN
-    assert (
-        issue_entry.translation_placeholders["error"]
-        == "unexpected character: line 1 column 1 (char 0)"
-    )
+        files = await hass.async_add_executor_job(
+            os.listdir, os.path.join(tmp_storage, ".storage")
+        )
+        assert ".corrupt" in files[0]
 
-    files = await hass.async_add_executor_job(
-        os.listdir, os.path.join(tmp_storage, ".storage")
-    )
-    assert ".corrupt" in files[0]
-
-    await hass.async_stop(force=True)
+        await hass.async_stop(force=True)
 
 
 async def test_loading_corrupt_file_known_domain(
     tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we handle unrecoverable corruption for a known domain."""
+
     loop = asyncio.get_running_loop()
-    hass = await async_test_home_assistant(loop)
-    hass.config.components.add("testdomain")
-    storage_key = "testdomain.testkey"
+    tmp_storage = await loop.run_in_executor(None, tmpdir.mkdir, "temp_storage")
 
-    tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
-    hass.config.config_dir = tmp_storage
+    async with async_test_home_assistant(storage_dir=tmp_storage) as hass:
+        hass.config.components.add("testdomain")
+        storage_key = "testdomain.testkey"
 
-    store = storage.Store(
-        hass, MOCK_VERSION_2, storage_key, minor_version=MOCK_MINOR_VERSION_1
-    )
-    await store.async_save({"hello": "world"})
-    storage_path = os.path.join(tmp_storage, ".storage")
-    store_file = os.path.join(storage_path, store.key)
+        store = storage.Store(
+            hass, MOCK_VERSION_2, storage_key, minor_version=MOCK_MINOR_VERSION_1
+        )
+        await store.async_save({"hello": "world"})
+        storage_path = os.path.join(tmp_storage, ".storage")
+        store_file = os.path.join(storage_path, store.key)
 
-    data = await store.async_load()
-    assert data == {"hello": "world"}
+        data = await store.async_load()
+        assert data == {"hello": "world"}
 
-    def _corrupt_store():
-        with open(store_file, "w") as f:
-            f.write('{"valid":"json"}..with..corrupt')
+        def _corrupt_store():
+            with open(store_file, "w") as f:
+                f.write('{"valid":"json"}..with..corrupt')
 
-    await hass.async_add_executor_job(_corrupt_store)
+        await hass.async_add_executor_job(_corrupt_store)
 
-    data = await store.async_load()
-    assert data is None
-    assert "Unrecoverable error decoding storage" in caplog.text
+        data = await store.async_load()
+        assert data is None
+        assert "Unrecoverable error decoding storage" in caplog.text
 
-    issue_registry = ir.async_get(hass)
-    found_issue = None
-    issue_entry = None
-    for (domain, issue), entry in issue_registry.issues.items():
-        if domain == HOMEASSISTANT_DOMAIN and issue.startswith(
-            f"storage_corruption_{storage_key}_"
-        ):
-            found_issue = issue
-            issue_entry = entry
-            break
+        issue_registry = ir.async_get(hass)
+        found_issue = None
+        issue_entry = None
+        for (domain, issue), entry in issue_registry.issues.items():
+            if domain == HOMEASSISTANT_DOMAIN and issue.startswith(
+                f"storage_corruption_{storage_key}_"
+            ):
+                found_issue = issue
+                issue_entry = entry
+                break
 
-    assert found_issue is not None
-    assert issue_entry is not None
-    assert issue_entry.is_fixable is True
-    assert issue_entry.translation_placeholders["storage_key"] == storage_key
-    assert issue_entry.issue_domain == "testdomain"
-    assert (
-        issue_entry.translation_placeholders["error"]
-        == "unexpected content after document: line 1 column 17 (char 16)"
-    )
+        assert found_issue is not None
+        assert issue_entry is not None
+        assert issue_entry.is_fixable is True
+        assert issue_entry.translation_placeholders["storage_key"] == storage_key
+        assert issue_entry.issue_domain == "testdomain"
+        assert (
+            "unexpected content after document: line 1 column 17 (char 16)"
+            in issue_entry.translation_placeholders["error"]
+        )
 
-    files = await hass.async_add_executor_job(
-        os.listdir, os.path.join(tmp_storage, ".storage")
-    )
-    assert ".corrupt" in files[0]
+        files = await hass.async_add_executor_job(
+            os.listdir, os.path.join(tmp_storage, ".storage")
+        )
+        assert ".corrupt" in files[0]
 
-    await hass.async_stop(force=True)
+        await hass.async_stop(force=True)
 
 
 async def test_os_error_is_fatal(tmpdir: py.path.local) -> None:
     """Test OSError during load is fatal."""
-    loop = asyncio.get_running_loop()
-    hass = await async_test_home_assistant(loop)
+    async with async_test_home_assistant() as hass:
+        tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
+        hass.config.config_dir = tmp_storage
 
-    tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
-    hass.config.config_dir = tmp_storage
+        store = storage.Store(
+            hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
+        )
+        await store.async_save({"hello": "world"})
 
-    store = storage.Store(
-        hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
-    )
-    await store.async_save({"hello": "world"})
+        with pytest.raises(OSError), patch(
+            "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+        ):
+            await store.async_load()
 
-    with pytest.raises(OSError), patch(
-        "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
-    ):
-        await store.async_load()
+        # Verify second load is also failing
+        with pytest.raises(OSError), patch(
+            "homeassistant.helpers.storage.json_util.load_json", side_effect=OSError
+        ):
+            await store.async_load()
 
-    base_os_error = OSError()
-    base_os_error.errno = 30
-    home_assistant_error = HomeAssistantError()
-    home_assistant_error.__cause__ = base_os_error
+        await hass.async_stop(force=True)
 
-    with pytest.raises(HomeAssistantError), patch(
-        "homeassistant.helpers.storage.json_util.load_json",
-        side_effect=home_assistant_error,
-    ):
-        await store.async_load()
 
-    await hass.async_stop(force=True)
+async def test_json_load_failure(tmpdir: py.path.local) -> None:
+    """Test json load raising HomeAssistantError."""
+    async with async_test_home_assistant() as hass:
+        tmp_storage = await hass.async_add_executor_job(tmpdir.mkdir, "temp_storage")
+        hass.config.config_dir = tmp_storage
+
+        store = storage.Store(
+            hass, MOCK_VERSION_2, MOCK_KEY, minor_version=MOCK_MINOR_VERSION_1
+        )
+        await store.async_save({"hello": "world"})
+        base_os_error = OSError()
+        base_os_error.errno = 30
+        home_assistant_error = HomeAssistantError()
+        home_assistant_error.__cause__ = base_os_error
+
+        with pytest.raises(HomeAssistantError), patch(
+            "homeassistant.helpers.storage.json_util.load_json",
+            side_effect=home_assistant_error,
+        ):
+            await store.async_load()
+
+        await hass.async_stop(force=True)
 
 
 async def test_read_only_store(
-    hass: HomeAssistant, read_only_store, hass_storage: dict[str, Any]
+    hass: HomeAssistant, read_only_store: storage.Store, hass_storage: dict[str, Any]
 ) -> None:
     """Test store opened in read only mode does not save."""
     read_only_store.async_delay_save(lambda: MOCK_DATA, 1)
@@ -723,7 +840,7 @@ async def test_read_only_store(
     assert read_only_store.key not in hass_storage
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    hass.state = CoreState.stopping
+    hass.set_state(CoreState.stopping)
     await hass.async_block_till_done()
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))

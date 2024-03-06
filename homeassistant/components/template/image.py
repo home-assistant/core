@@ -94,9 +94,9 @@ class StateImageEntity(TemplateEntity, ImageEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return entity picture."""
-        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
         if self._entity_picture_template:
-            return TemplateEntity.entity_picture.fget(self)  # type: ignore[attr-defined]
+            return TemplateEntity.entity_picture.__get__(self)
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
         return ImageEntity.entity_picture.fget(self)  # type: ignore[attr-defined]
 
     @callback
@@ -108,10 +108,11 @@ class StateImageEntity(TemplateEntity, ImageEntity):
         self._cached_image = None
         self._attr_image_url = result
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
+    @callback
+    def _async_setup_templates(self) -> None:
+        """Set up templates."""
         self.add_template_attribute("_url", self._url_template, None, self._update_url)
-        await super().async_added_to_hass()
+        super()._async_setup_templates()
 
 
 class TriggerImageEntity(TriggerEntity, ImageEntity):

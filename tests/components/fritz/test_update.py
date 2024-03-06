@@ -6,12 +6,25 @@ from homeassistant.components.fritz.const import DOMAIN
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
-from .const import MOCK_FIRMWARE_AVAILABLE, MOCK_FIRMWARE_RELEASE_URL, MOCK_USER_DATA
+from .const import (
+    MOCK_FB_SERVICES,
+    MOCK_FIRMWARE_AVAILABLE,
+    MOCK_FIRMWARE_RELEASE_URL,
+    MOCK_USER_DATA,
+)
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
+
+AVAILABLE_UPDATE = {
+    "UserInterface1": {
+        "GetInfo": {
+            "NewX_AVM-DE_Version": MOCK_FIRMWARE_AVAILABLE,
+            "NewX_AVM-DE_InfoURL": MOCK_FIRMWARE_RELEASE_URL,
+        },
+    }
+}
 
 
 async def test_update_entities_initialized(
@@ -25,7 +38,7 @@ async def test_update_entities_initialized(
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
 
@@ -41,23 +54,21 @@ async def test_update_available(
 ) -> None:
     """Test update entities."""
 
-    with patch(
-        "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
-        return_value=(True, MOCK_FIRMWARE_AVAILABLE, MOCK_FIRMWARE_RELEASE_URL),
-    ):
-        entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
-        entry.add_to_hass(hass)
+    fc_class_mock().override_services({**MOCK_FB_SERVICES, **AVAILABLE_UPDATE})
 
-        assert await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        assert entry.state == ConfigEntryState.LOADED
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
 
-        update = hass.states.get("update.mock_title_fritz_os")
-        assert update is not None
-        assert update.state == "on"
-        assert update.attributes.get("installed_version") == "7.29"
-        assert update.attributes.get("latest_version") == MOCK_FIRMWARE_AVAILABLE
-        assert update.attributes.get("release_url") == MOCK_FIRMWARE_RELEASE_URL
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state == ConfigEntryState.LOADED
+
+    update = hass.states.get("update.mock_title_fritz_os")
+    assert update is not None
+    assert update.state == "on"
+    assert update.attributes.get("installed_version") == "7.29"
+    assert update.attributes.get("latest_version") == MOCK_FIRMWARE_AVAILABLE
+    assert update.attributes.get("release_url") == MOCK_FIRMWARE_RELEASE_URL
 
 
 async def test_no_update_available(
@@ -71,7 +82,7 @@ async def test_no_update_available(
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
 
@@ -90,17 +101,16 @@ async def test_available_update_can_be_installed(
 ) -> None:
     """Test update entities."""
 
+    fc_class_mock().override_services({**MOCK_FB_SERVICES, **AVAILABLE_UPDATE})
+
     with patch(
-        "homeassistant.components.fritz.common.FritzBoxTools._update_device_info",
-        return_value=(True, MOCK_FIRMWARE_AVAILABLE, MOCK_FIRMWARE_RELEASE_URL),
-    ), patch(
         "homeassistant.components.fritz.common.FritzBoxTools.async_trigger_firmware_update",
         return_value=True,
     ) as mocked_update_call:
         entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
         entry.add_to_hass(hass)
 
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         assert entry.state == ConfigEntryState.LOADED
 

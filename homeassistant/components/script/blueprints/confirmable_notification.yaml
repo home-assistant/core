@@ -12,7 +12,8 @@ blueprint:
       description: Device needs to run the official Home Assistant app to receive notifications.
       selector:
         device:
-          integration: mobile_app
+          filter:
+            integration: mobile_app
     title:
       name: "Title"
       description: "The title of the button shown in the notification."

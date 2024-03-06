@@ -4,11 +4,7 @@ Call init before using it in your tests to ensure clean test data.
 """
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-    SUPPORT_ALARM_ARM_VACATION,
-    SUPPORT_ALARM_TRIGGER,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -73,14 +69,14 @@ class MockAlarm(MockEntity, AlarmControlPanelEntity):
         return self._state
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self) -> AlarmControlPanelEntityFeature:
         """Return the list of supported features."""
         return (
-            SUPPORT_ALARM_ARM_HOME
-            | SUPPORT_ALARM_ARM_AWAY
-            | SUPPORT_ALARM_ARM_NIGHT
-            | SUPPORT_ALARM_TRIGGER
-            | SUPPORT_ALARM_ARM_VACATION
+            AlarmControlPanelEntityFeature.ARM_HOME
+            | AlarmControlPanelEntityFeature.ARM_AWAY
+            | AlarmControlPanelEntityFeature.ARM_NIGHT
+            | AlarmControlPanelEntityFeature.TRIGGER
+            | AlarmControlPanelEntityFeature.ARM_VACATION
         )
 
     def alarm_arm_away(self, code=None):

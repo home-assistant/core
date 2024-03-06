@@ -13,8 +13,10 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
+    help_custom_config,
     help_test_reloadable,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_skipped_async_ha_write_state,
 )
 
 from tests.common import async_fire_mqtt_message
@@ -636,3 +638,66 @@ async def test_reloadable(
     domain = device_tracker.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            device_tracker.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "availability_topic": "availability-topic",
+                    "json_attributes_topic": "json-attributes-topic",
+                },
+            ),
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("topic", "payload1", "payload2"),
+    [
+        ("test-topic", "home", "work"),
+        ("availability-topic", "online", "offline"),
+        ("json-attributes-topic", '{"attr1": "val1"}', '{"attr1": "val2"}'),
+    ],
+)
+async def test_skipped_async_ha_write_state(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    topic: str,
+    payload1: str,
+    payload2: str,
+) -> None:
+    """Test a write state command is only called when there is change."""
+    await mqtt_mock_entry()
+    await help_test_skipped_async_ha_write_state(hass, topic, payload1, payload2)
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            device_tracker.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "value_template": "{{ value_json.some_var * 1 }}",
+                },
+            ),
+        )
+    ],
+)
+async def test_value_template_fails(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the rendering of MQTT value template fails."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
+    assert (
+        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
+        in caplog.text
+    )

@@ -16,14 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import (
-    ADDONS_COORDINATOR,
-    async_update_addon,
-    async_update_core,
-    async_update_os,
-    async_update_supervisor,
-)
 from .const import (
+    ADDONS_COORDINATOR,
     ATTR_AUTO_UPDATE,
     ATTR_CHANGELOG,
     ATTR_VERSION,
@@ -39,7 +33,13 @@ from .entity import (
     HassioOSEntity,
     HassioSupervisorEntity,
 )
-from .handler import HassioAPIError
+from .handler import (
+    HassioAPIError,
+    async_update_addon,
+    async_update_core,
+    async_update_os,
+    async_update_supervisor,
+)
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
     name="Update",
@@ -181,17 +181,17 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
 
     @property
     def latest_version(self) -> str:
-        """Return native value of entity."""
+        """Return the latest version."""
         return self.coordinator.data[DATA_KEY_OS][ATTR_VERSION_LATEST]
 
     @property
     def installed_version(self) -> str:
-        """Return native value of entity."""
+        """Return the installed version."""
         return self.coordinator.data[DATA_KEY_OS][ATTR_VERSION]
 
     @property
     def entity_picture(self) -> str | None:
-        """Return the iconof the entity."""
+        """Return the icon of the entity."""
         return "https://brands.home-assistant.io/homeassistant/icon.png"
 
     @property
@@ -224,12 +224,12 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
 
     @property
     def latest_version(self) -> str:
-        """Return native value of entity."""
+        """Return the latest version."""
         return self.coordinator.data[DATA_KEY_SUPERVISOR][ATTR_VERSION_LATEST]
 
     @property
     def installed_version(self) -> str:
-        """Return native value of entity."""
+        """Return the installed version."""
         return self.coordinator.data[DATA_KEY_SUPERVISOR][ATTR_VERSION]
 
     @property
@@ -247,7 +247,7 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
 
     @property
     def entity_picture(self) -> str | None:
-        """Return the iconof the entity."""
+        """Return the icon of the entity."""
         return "https://brands.home-assistant.io/hassio/icon.png"
 
     async def async_install(
@@ -274,17 +274,17 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
 
     @property
     def latest_version(self) -> str:
-        """Return native value of entity."""
+        """Return the latest version."""
         return self.coordinator.data[DATA_KEY_CORE][ATTR_VERSION_LATEST]
 
     @property
     def installed_version(self) -> str:
-        """Return native value of entity."""
+        """Return the installed version."""
         return self.coordinator.data[DATA_KEY_CORE][ATTR_VERSION]
 
     @property
     def entity_picture(self) -> str | None:
-        """Return the iconof the entity."""
+        """Return the icon of the entity."""
         return "https://brands.home-assistant.io/homeassistant/icon.png"
 
     @property

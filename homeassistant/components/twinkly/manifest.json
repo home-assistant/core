@@ -1,11 +1,14 @@
 {
   "domain": "twinkly",
   "name": "Twinkly",
-  "codeowners": ["@dr1rrb", "@Robbie1221"],
+  "codeowners": ["@dr1rrb", "@Robbie1221", "@Olen"],
   "config_flow": true,
   "dhcp": [
     {
       "hostname": "twinkly_*"
+    },
+    {
+      "hostname": "twinkly-*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/twinkly",

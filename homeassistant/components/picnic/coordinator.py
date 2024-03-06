@@ -42,7 +42,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
         try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # Note: TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with asyncio.timeout(10):
                 data = await self.hass.async_add_executor_job(self.fetch_data)

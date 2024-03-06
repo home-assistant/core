@@ -22,10 +22,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .core import discovery
-from .core.cluster_handlers.security import IasWd
+from .core.cluster_handlers.security import IasWdClusterHandler
 from .core.const import (
     CLUSTER_HANDLER_IAS_WD,
-    DATA_ZHA,
     SIGNAL_ADD_ENTITIES,
     WARNING_DEVICE_MODE_BURGLAR,
     WARNING_DEVICE_MODE_EMERGENCY,
@@ -39,6 +38,7 @@ from .core.const import (
     WARNING_DEVICE_STROBE_NO,
     Strobe,
 )
+from .core.helpers import get_zha_data
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -56,7 +56,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation siren from config entry."""
-    entities_to_create = hass.data[DATA_ZHA][Platform.SIREN]
+    zha_data = get_zha_data(hass)
+    entities_to_create = zha_data.platforms[Platform.SIREN]
 
     unsub = async_dispatcher_connect(
         hass,
@@ -100,7 +101,9 @@ class ZHASiren(ZhaEntity, SirenEntity):
             WARNING_DEVICE_MODE_EMERGENCY_PANIC: "Emergency Panic",
         }
         super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
-        self._cluster_handler: IasWd = cast(IasWd, cluster_handlers[0])
+        self._cluster_handler: IasWdClusterHandler = cast(
+            IasWdClusterHandler, cluster_handlers[0]
+        )
         self._attr_is_on: bool = False
         self._off_listener: Callable[[], None] | None = None
 

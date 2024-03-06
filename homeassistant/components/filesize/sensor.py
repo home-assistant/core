@@ -1,9 +1,8 @@
 """Sensor for monitoring the size of a file."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
-import os
 import pathlib
 
 from homeassistant.components.sensor import (
@@ -17,24 +16,17 @@ from homeassistant.const import CONF_FILE_PATH, EntityCategory, UnitOfInformatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import FileSizeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-ICON = "mdi:file"
 
 SENSOR_TYPES = (
     SensorEntityDescription(
         key="file",
         translation_key="size",
-        icon=ICON,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -43,7 +35,6 @@ SENSOR_TYPES = (
         key="bytes",
         translation_key="size_bytes",
         entity_registry_enabled_default=False,
-        icon=ICON,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -53,7 +44,6 @@ SENSOR_TYPES = (
         key="last_updated",
         translation_key="last_updated",
         entity_registry_enabled_default=False,
-        icon=ICON,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -78,40 +68,6 @@ async def async_setup_entry(
         FilesizeEntity(description, fullpath, entry.entry_id, coordinator)
         for description in SENSOR_TYPES
     )
-
-
-class FileSizeCoordinator(DataUpdateCoordinator):
-    """Filesize coordinator."""
-
-    def __init__(self, hass: HomeAssistant, path: str) -> None:
-        """Initialize filesize coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=timedelta(seconds=60),
-            always_update=False,
-        )
-        self._path = path
-
-    async def _async_update_data(self) -> dict[str, float | int | datetime]:
-        """Fetch file information."""
-        try:
-            statinfo = await self.hass.async_add_executor_job(os.stat, self._path)
-        except OSError as error:
-            raise UpdateFailed(f"Can not retrieve file statistics {error}") from error
-
-        size = statinfo.st_size
-        last_updated = dt_util.utc_from_timestamp(statinfo.st_mtime)
-
-        _LOGGER.debug("size %s, last updated %s", size, last_updated)
-        data: dict[str, int | float | datetime] = {
-            "file": round(size / 1e6, 2),
-            "bytes": size,
-            "last_updated": last_updated,
-        }
-
-        return data
 
 
 class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):

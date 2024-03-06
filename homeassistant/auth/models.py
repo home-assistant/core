@@ -3,16 +3,24 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import secrets
-from typing import NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 import uuid
 
 import attr
+from attr import Attribute
+from attr.setters import validate
 
 from homeassistant.const import __version__
 from homeassistant.util import dt as dt_util
 
 from . import permissions as perm_mdl
 from .const import GROUP_ID_ADMIN
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 TOKEN_TYPE_NORMAL = "normal"
 TOKEN_TYPE_SYSTEM = "system"
@@ -29,19 +37,27 @@ class Group:
     system_generated: bool = attr.ib(default=False)
 
 
-@attr.s(slots=True)
+def _handle_permissions_change(self: User, user_attr: Attribute, new: Any) -> Any:
+    """Handle a change to a permissions."""
+    self.invalidate_cache()
+    return validate(self, user_attr, new)
+
+
+@attr.s(slots=False)
 class User:
     """A user."""
 
     name: str | None = attr.ib()
     perm_lookup: perm_mdl.PermissionLookup = attr.ib(eq=False, order=False)
     id: str = attr.ib(factory=lambda: uuid.uuid4().hex)
-    is_owner: bool = attr.ib(default=False)
-    is_active: bool = attr.ib(default=False)
+    is_owner: bool = attr.ib(default=False, on_setattr=_handle_permissions_change)
+    is_active: bool = attr.ib(default=False, on_setattr=_handle_permissions_change)
     system_generated: bool = attr.ib(default=False)
     local_only: bool = attr.ib(default=False)
 
-    groups: list[Group] = attr.ib(factory=list, eq=False, order=False)
+    groups: list[Group] = attr.ib(
+        factory=list, eq=False, order=False, on_setattr=_handle_permissions_change
+    )
 
     # List of credentials of a user.
     credentials: list[Credentials] = attr.ib(factory=list, eq=False, order=False)
@@ -51,40 +67,31 @@ class User:
         factory=dict, eq=False, order=False
     )
 
-    _permissions: perm_mdl.PolicyPermissions | None = attr.ib(
-        init=False,
-        eq=False,
-        order=False,
-        default=None,
-    )
-
-    @property
+    @cached_property
     def permissions(self) -> perm_mdl.AbstractPermissions:
         """Return permissions object for user."""
         if self.is_owner:
             return perm_mdl.OwnerPermissions
-
-        if self._permissions is not None:
-            return self._permissions
-
-        self._permissions = perm_mdl.PolicyPermissions(
+        return perm_mdl.PolicyPermissions(
             perm_mdl.merge_policies([group.policy for group in self.groups]),
             self.perm_lookup,
         )
 
-        return self._permissions
-
-    @property
+    @cached_property
     def is_admin(self) -> bool:
         """Return if user is part of the admin group."""
-        if self.is_owner:
-            return True
+        return self.is_owner or (
+            self.is_active and any(gr.id == GROUP_ID_ADMIN for gr in self.groups)
+        )
 
-        return self.is_active and any(gr.id == GROUP_ID_ADMIN for gr in self.groups)
-
-    def invalidate_permission_cache(self) -> None:
-        """Invalidate permission cache."""
-        self._permissions = None
+    def invalidate_cache(self) -> None:
+        """Invalidate permission and is_admin cache."""
+        for attr_to_invalidate in ("permissions", "is_admin"):
+            # try is must more efficient than suppress
+            try:  # noqa: SIM105
+                delattr(self, attr_to_invalidate)
+            except AttributeError:
+                pass
 
 
 @attr.s(slots=True)
@@ -110,6 +117,8 @@ class RefreshToken:
     last_used_at: datetime | None = attr.ib(default=None)
     last_used_ip: str | None = attr.ib(default=None)
 
+    expire_at: float | None = attr.ib(default=None)
+
     credential: Credentials | None = attr.ib(default=None)
 
     version: str | None = attr.ib(default=__version__)
@@ -134,3 +143,5 @@ class UserMeta(NamedTuple):
 
     name: str | None
     is_active: bool
+    group: str | None = None
+    local_only: bool | None = None

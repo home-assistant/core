@@ -24,7 +24,7 @@ from .device import RoborockEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockSwitchDescriptionMixin:
     """Define an entity description mixin for switch entities."""
 
@@ -36,7 +36,7 @@ class RoborockSwitchDescriptionMixin:
     attribute: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class RoborockSwitchDescription(
     SwitchEntityDescription, RoborockSwitchDescriptionMixin
 ):
@@ -52,7 +52,6 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         attribute="lock_status",
         key="child_lock",
         translation_key="child_lock",
-        icon="mdi:account-lock",
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockSwitchDescription(
@@ -63,7 +62,6 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         attribute="status",
         key="status_indicator",
         translation_key="status_indicator",
-        icon="mdi:alarm-light-outline",
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockSwitchDescription(
@@ -81,7 +79,6 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         attribute="enabled",
         key="dnd_switch",
         translation_key="dnd_switch",
-        icon="mdi:bell-cancel",
         entity_category=EntityCategory.CONFIG,
     ),
     RoborockSwitchDescription(
@@ -99,7 +96,6 @@ SWITCH_DESCRIPTIONS: list[RoborockSwitchDescription] = [
         attribute="enabled",
         key="off_peak_switch",
         translation_key="off_peak_switch",
-        icon="mdi:power-plug",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
@@ -125,7 +121,7 @@ async def async_setup_entry(
     # We need to check if this function is supported by the device.
     results = await asyncio.gather(
         *(
-            coordinator.api.cache.get(description.cache_key).async_value()
+            coordinator.api.get_from_cache(description.cache_key)
             for coordinator, description in possible_entities
         ),
         return_exceptions=True,

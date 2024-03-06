@@ -1,9 +1,10 @@
 """The tests for the Ring switch platform."""
 import requests_mock
 
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from .common import setup_platform
 
@@ -44,7 +45,6 @@ async def test_siren_on_reports_correctly(
     state = hass.states.get("switch.internal_siren")
     assert state.state == "on"
     assert state.attributes.get("friendly_name") == "Internal Siren"
-    assert state.attributes.get("icon") == "mdi:alarm-bell"
 
 
 async def test_siren_can_be_turned_on(
@@ -84,7 +84,13 @@ async def test_updates_work(
         text=load_fixture("devices_updated.json", "ring"),
     )
 
-    await hass.services.async_call("ring", "update", {}, blocking=True)
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: ["switch.front_siren"]},
+        blocking=True,
+    )
 
     await hass.async_block_till_done()
 

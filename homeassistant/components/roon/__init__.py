@@ -7,7 +7,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import CONF_ROON_NAME, DOMAIN
 from .server import RoonServer
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.EVENT, Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

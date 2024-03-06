@@ -40,6 +40,7 @@
       'disabled_by': None,
       'domain': 'devolo_home_control',
       'entry_id': '123456',
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,

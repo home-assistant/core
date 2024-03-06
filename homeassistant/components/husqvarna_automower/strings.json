@@ -1,0 +1,71 @@
+{
+  "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    }
+  },
+  "entity": {
+    "switch": {
+      "enable_schedule": {
+        "name": "Enable schedule"
+      }
+    },
+    "sensor": {
+      "number_of_charging_cycles": {
+        "name": "Number of charging cycles"
+      },
+      "number_of_collisions": {
+        "name": "Number of collisions"
+      },
+      "cutting_blade_usage_time": {
+        "name": "Cutting blade usage time"
+      },
+      "total_charging_time": {
+        "name": "Total charging time"
+      },
+      "total_cutting_time": {
+        "name": "Total cutting time"
+      },
+      "total_running_time": {
+        "name": "Total running time"
+      },
+      "total_searching_time": {
+        "name": "Total searching time"
+      },
+      "total_drive_distance": {
+        "name": "Total drive distance"
+      },
+      "next_start_timestamp": {
+        "name": "Next start"
+      },
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "main_area": "Main area",
+          "secondary_area": "Secondary area",
+          "home": "Home",
+          "demo": "Demo"
+        }
+      }
+    }
+  }
+}

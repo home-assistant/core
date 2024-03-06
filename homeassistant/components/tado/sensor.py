@@ -19,6 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import TadoConnector
 from .const import (
     CONDITIONS_MAP,
     DATA,
@@ -35,14 +36,14 @@ from .entity import TadoHomeEntity, TadoZoneEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class TadoSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     state_fn: Callable[[Any], StateType]
 
 
-@dataclass
+@dataclass(frozen=True)
 class TadoSensorEntityDescription(
     SensorEntityDescription, TadoSensorEntityDescriptionMixin
 ):
@@ -50,6 +51,47 @@ class TadoSensorEntityDescription(
 
     attributes_fn: Callable[[Any], dict[Any, StateType]] | None = None
     data_category: str | None = None
+
+
+def format_condition(condition: str) -> str:
+    """Return condition from dict CONDITIONS_MAP."""
+    for key, value in CONDITIONS_MAP.items():
+        if condition in value:
+            return key
+    return condition
+
+
+def get_tado_mode(data: dict[str, str]) -> str | None:
+    """Return Tado Mode based on Presence attribute."""
+    if "presence" in data:
+        return data["presence"]
+    return None
+
+
+def get_automatic_geofencing(data: dict[str, str]) -> bool:
+    """Return whether Automatic Geofencing is enabled based on Presence Locked attribute."""
+    if "presenceLocked" in data:
+        if data["presenceLocked"]:
+            return False
+        return True
+    return False
+
+
+def get_geofencing_mode(data: dict[str, str]) -> str:
+    """Return Geofencing Mode based on Presence and Presence Locked attributes."""
+    tado_mode = ""
+    tado_mode = data.get("presence", "unknown")
+
+    geofencing_switch_mode = ""
+    if "presenceLocked" in data:
+        if data["presenceLocked"]:
+            geofencing_switch_mode = "manual"
+        else:
+            geofencing_switch_mode = "auto"
+    else:
+        geofencing_switch_mode = "manual"
+
+    return f"{tado_mode.capitalize()} ({geofencing_switch_mode.capitalize()})"
 
 
 HOME_SENSORS = [
@@ -86,22 +128,19 @@ HOME_SENSORS = [
     TadoSensorEntityDescription(
         key="tado mode",
         translation_key="tado_mode",
-        # pylint: disable=unnecessary-lambda
-        state_fn=lambda data: get_tado_mode(data),
+        state_fn=get_tado_mode,
         data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
     ),
     TadoSensorEntityDescription(
         key="geofencing mode",
         translation_key="geofencing_mode",
-        # pylint: disable=unnecessary-lambda
-        state_fn=lambda data: get_geofencing_mode(data),
+        state_fn=get_geofencing_mode,
         data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
     ),
     TadoSensorEntityDescription(
         key="automatic geofencing",
         translation_key="automatic_geofencing",
-        # pylint: disable=unnecessary-lambda
-        state_fn=lambda data: get_automatic_geofencing(data),
+        state_fn=get_automatic_geofencing,
         data_category=SENSOR_DATA_CATEGORY_GEOFENCE,
     ),
 ]
@@ -163,47 +202,6 @@ ZONE_SENSORS = {
 }
 
 
-def format_condition(condition: str) -> str:
-    """Return condition from dict CONDITIONS_MAP."""
-    for key, value in CONDITIONS_MAP.items():
-        if condition in value:
-            return key
-    return condition
-
-
-def get_tado_mode(data) -> str | None:
-    """Return Tado Mode based on Presence attribute."""
-    if "presence" in data:
-        return data["presence"]
-    return None
-
-
-def get_automatic_geofencing(data) -> bool:
-    """Return whether Automatic Geofencing is enabled based on Presence Locked attribute."""
-    if "presenceLocked" in data:
-        if data["presenceLocked"]:
-            return False
-        return True
-    return False
-
-
-def get_geofencing_mode(data) -> str:
-    """Return Geofencing Mode based on Presence and Presence Locked attributes."""
-    tado_mode = ""
-    tado_mode = data.get("presence", "unknown")
-
-    geofencing_switch_mode = ""
-    if "presenceLocked" in data:
-        if data["presenceLocked"]:
-            geofencing_switch_mode = "manual"
-        else:
-            geofencing_switch_mode = "auto"
-    else:
-        geofencing_switch_mode = "manual"
-
-    return f"{tado_mode.capitalize()} ({geofencing_switch_mode.capitalize()})"
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -243,7 +241,9 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
 
     entity_description: TadoSensorEntityDescription
 
-    def __init__(self, tado, entity_description: TadoSensorEntityDescription) -> None:
+    def __init__(
+        self, tado: TadoConnector, entity_description: TadoSensorEntityDescription
+    ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
         super().__init__(tado)
@@ -264,13 +264,13 @@ class TadoHomeSensor(TadoHomeEntity, SensorEntity):
         self._async_update_home_data()
 
     @callback
-    def _async_update_callback(self):
+    def _async_update_callback(self) -> None:
         """Update and write state."""
         self._async_update_home_data()
         self.async_write_ha_state()
 
     @callback
-    def _async_update_home_data(self):
+    def _async_update_home_data(self) -> None:
         """Handle update callbacks."""
         try:
             tado_weather_data = self._tado.data["weather"]
@@ -297,9 +297,9 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
 
     def __init__(
         self,
-        tado,
-        zone_name,
-        zone_id,
+        tado: TadoConnector,
+        zone_name: str,
+        zone_id: int,
         entity_description: TadoSensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
@@ -324,13 +324,13 @@ class TadoZoneSensor(TadoZoneEntity, SensorEntity):
         self._async_update_zone_data()
 
     @callback
-    def _async_update_callback(self):
+    def _async_update_callback(self) -> None:
         """Update and write state."""
         self._async_update_zone_data()
         self.async_write_ha_state()
 
     @callback
-    def _async_update_zone_data(self):
+    def _async_update_zone_data(self) -> None:
         """Handle update callbacks."""
         try:
             tado_zone_data = self._tado.data["zone"][self.zone_id]

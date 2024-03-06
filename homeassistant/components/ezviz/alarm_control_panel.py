@@ -33,14 +33,14 @@ SCAN_INTERVAL = timedelta(seconds=60)
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizAlarmControlPanelEntityDescriptionMixin:
     """Mixin values for EZVIZ Alarm control panel entities."""
 
     ezviz_alarm_states: list
 
 
-@dataclass
+@dataclass(frozen=True)
 class EzvizAlarmControlPanelEntityDescription(
     AlarmControlPanelEntityDescription, EzvizAlarmControlPanelEntityDescriptionMixin
 ):
@@ -66,12 +66,12 @@ async def async_setup_entry(
         DATA_COORDINATOR
     ]
 
-    device_info: DeviceInfo = {
-        "identifiers": {(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]
-        "name": "EZVIZ Alarm",
-        "model": "EZVIZ Alarm",
-        "manufacturer": MANUFACTURER,
-    }
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]
+        name="EZVIZ Alarm",
+        model="EZVIZ Alarm",
+        manufacturer=MANUFACTURER,
+    )
 
     async_add_entities(
         [EzvizAlarm(coordinator, entry.entry_id, device_info, ALARM_TYPE)]

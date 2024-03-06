@@ -16,7 +16,7 @@ from .coordinator import FiveMDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FiveMEntityDescription(EntityDescription):
     """Describes FiveM entity."""
 

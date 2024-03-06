@@ -17,14 +17,14 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboEntityDescriptionMixin:
     """Mixin values for Sensibo entities."""
 
     data_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboButtonEntityDescription(
     ButtonEntityDescription, SensiboEntityDescriptionMixin
 ):
@@ -34,7 +34,6 @@ class SensiboButtonEntityDescription(
 DEVICE_BUTTON_TYPES = SensiboButtonEntityDescription(
     key="reset_filter",
     translation_key="reset_filter",
-    icon="mdi:air-filter",
     entity_category=EntityCategory.CONFIG,
     data_key="filter_clean",
 )

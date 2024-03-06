@@ -17,7 +17,7 @@ from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RitualsEntityDescriptionMixin:
     """Mixin values for Rituals entities."""
 
@@ -26,7 +26,7 @@ class RitualsEntityDescriptionMixin:
     turn_off_fn: Callable[[Diffuser], Awaitable[None]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RitualsSwitchEntityDescription(
     SwitchEntityDescription, RitualsEntityDescriptionMixin
 ):
@@ -37,7 +37,7 @@ ENTITY_DESCRIPTIONS = (
     RitualsSwitchEntityDescription(
         key="is_on",
         name=None,
-        icon="mdi:fan",
+        translation_key="fan",
         is_on_fn=lambda diffuser: diffuser.is_on,
         turn_on_fn=lambda diffuser: diffuser.turn_on(),
         turn_off_fn=lambda diffuser: diffuser.turn_off(),

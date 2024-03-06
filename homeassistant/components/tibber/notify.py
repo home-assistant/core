@@ -1,7 +1,6 @@
 """Support for Tibber notifications."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 import logging
 from typing import Any
@@ -41,5 +40,5 @@ class TibberNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         try:
             await self._notify(title=title, message=message)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.error("Timeout sending message with Tibber")

@@ -29,6 +29,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -36,6 +38,7 @@
     'original_icon': 'mdi:leaf',
     'original_name': 'Energy saving',
     'platform': 'elgato',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saving',
     'unique_id': 'GW24L1A02987_energy_saving',
@@ -64,10 +67,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light Mini',
     'name': 'Frenck',
     'name_by_user': None,
+    'serial_number': 'GW24L1A02987',
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
@@ -103,6 +109,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -110,6 +118,7 @@
     'original_icon': 'mdi:battery-off-outline',
     'original_name': 'Studio mode',
     'platform': 'elgato',
+    'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'bypass',
     'unique_id': 'GW24L1A02987_bypass',
@@ -138,10 +147,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'Elgato',
     'model': 'Elgato Key Light Mini',
     'name': 'Frenck',
     'name_by_user': None,
+    'serial_number': 'GW24L1A02987',
     'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,

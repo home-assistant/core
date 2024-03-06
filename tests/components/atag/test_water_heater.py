@@ -18,15 +18,16 @@ WATER_HEATER_ID = f"{Platform.WATER_HEATER}.{DOMAIN}"
 
 
 async def test_water_heater(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the creation of Atag water heater."""
     with patch("pyatag.entities.DHW.status"):
         entry = await init_integration(hass, aioclient_mock)
-        registry = er.async_get(hass)
 
-        assert registry.async_is_registered(WATER_HEATER_ID)
-        entry = registry.async_get(WATER_HEATER_ID)
+        assert entity_registry.async_is_registered(WATER_HEATER_ID)
+        entry = entity_registry.async_get(WATER_HEATER_ID)
         assert entry.unique_id == f"{UID}-{Platform.WATER_HEATER}"
 
 

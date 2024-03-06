@@ -1,7 +1,6 @@
 """Switcher integration Button platform."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -30,7 +29,7 @@ from .const import SIGNAL_DEVICE_ADD
 from .utils import get_breeze_remote_manager
 
 
-@dataclass
+@dataclass(frozen=True)
 class SwitcherThermostatButtonDescriptionMixin:
     """Mixin to describe a Switcher Thermostat Button entity."""
 
@@ -38,7 +37,7 @@ class SwitcherThermostatButtonDescriptionMixin:
     supported: Callable[[SwitcherBreezeRemote], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SwitcherThermostatButtonEntityDescription(
     ButtonEntityDescription, SwitcherThermostatButtonDescriptionMixin
 ):
@@ -48,8 +47,7 @@ class SwitcherThermostatButtonEntityDescription(
 THERMOSTAT_BUTTONS = [
     SwitcherThermostatButtonEntityDescription(
         key="assume_on",
-        name="Assume on",
-        icon="mdi:fan",
+        translation_key="assume_on",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, state=DeviceState.ON, update_state=True
@@ -58,8 +56,7 @@ THERMOSTAT_BUTTONS = [
     ),
     SwitcherThermostatButtonEntityDescription(
         key="assume_off",
-        name="Assume off",
-        icon="mdi:fan-off",
+        translation_key="assume_off",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, state=DeviceState.OFF, update_state=True
@@ -68,8 +65,7 @@ THERMOSTAT_BUTTONS = [
     ),
     SwitcherThermostatButtonEntityDescription(
         key="vertical_swing_on",
-        name="Vertical swing on",
-        icon="mdi:autorenew",
+        translation_key="vertical_swing_on",
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, swing=ThermostatSwing.ON
         ),
@@ -77,8 +73,7 @@ THERMOSTAT_BUTTONS = [
     ),
     SwitcherThermostatButtonEntityDescription(
         key="vertical_swing_off",
-        name="Vertical swing off",
-        icon="mdi:autorenew-off",
+        translation_key="vertical_swing_off",
         press_fn=lambda api, remote: api.control_breeze_device(
             remote, swing=ThermostatSwing.OFF
         ),
@@ -117,6 +112,7 @@ class SwitcherThermostatButtonEntity(
     """Representation of a Switcher climate entity."""
 
     entity_description: SwitcherThermostatButtonEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -129,7 +125,6 @@ class SwitcherThermostatButtonEntity(
         self.entity_description = description
         self._remote = remote
 
-        self._attr_name = f"{coordinator.name} {description.name}"
         self._attr_unique_id = f"{coordinator.mac_address}-{description.key}"
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
@@ -142,10 +137,12 @@ class SwitcherThermostatButtonEntity(
 
         try:
             async with SwitcherType2Api(
-                self.coordinator.data.ip_address, self.coordinator.data.device_id
+                self.coordinator.data.ip_address,
+                self.coordinator.data.device_id,
+                self.coordinator.data.device_key,
             ) as swapi:
                 response = await self.entity_description.press_fn(swapi, self._remote)
-        except (asyncio.TimeoutError, OSError, RuntimeError) as err:
+        except (TimeoutError, OSError, RuntimeError) as err:
             error = repr(err)
 
         if error or not response or not response.successful:

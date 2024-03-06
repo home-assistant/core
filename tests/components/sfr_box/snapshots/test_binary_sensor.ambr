@@ -18,10 +18,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': None,
       'model': 'NB6VAC-FXC-r0',
       'name': 'SFR Box',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'NB6VAC-MAIN-R4.0.44k',
       'via_device_id': None,
@@ -46,6 +49,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -53,6 +58,7 @@
       'original_icon': None,
       'original_name': 'WAN status',
       'platform': 'sfr_box',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'wan_status',
       'unique_id': 'e4:5d:51:00:11:22_wan_status',
@@ -74,6 +80,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -81,6 +89,7 @@
       'original_icon': None,
       'original_name': 'DSL status',
       'platform': 'sfr_box',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'dsl_status',
       'unique_id': 'e4:5d:51:00:11:22_dsl_status',
@@ -133,10 +142,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': None,
       'model': 'NB6VAC-FXC-r0',
       'name': 'SFR Box',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': 'NB6VAC-MAIN-R4.0.44k',
       'via_device_id': None,
@@ -161,6 +173,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -168,6 +182,7 @@
       'original_icon': None,
       'original_name': 'WAN status',
       'platform': 'sfr_box',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'wan_status',
       'unique_id': 'e4:5d:51:00:11:22_wan_status',
@@ -189,6 +204,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -196,6 +213,7 @@
       'original_icon': None,
       'original_name': 'FTTH status',
       'platform': 'sfr_box',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'ftth_status',
       'unique_id': 'e4:5d:51:00:11:22_ftth_status',

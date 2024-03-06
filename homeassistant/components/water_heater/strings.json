@@ -16,6 +16,15 @@
         "high_demand": "High Demand",
         "heat_pump": "Heat Pump",
         "performance": "Performance"
+      },
+      "state_attributes": {
+        "away_mode": {
+          "name": "Away mode",
+          "state": {
+            "off": "[%key:common::state::off%]",
+            "on": "[%key:common::state::on%]"
+          }
+        }
       }
     }
   },
@@ -61,6 +70,14 @@
     "turn_off": {
       "name": "[%key:common::action::turn_off%]",
       "description": "Turns water heater off."
+    }
+  },
+  "exceptions": {
+    "not_valid_operation_mode": {
+      "message": "Operation mode {operation_mode} is not valid for {entity_id}. Valid operation modes are: {operation_list}."
+    },
+    "operation_list_not_defined": {
+      "message": "Operation mode {operation_mode} is not valid for {entity_id}. The operation list is not defined."
     }
   }
 }

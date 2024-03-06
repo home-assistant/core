@@ -34,6 +34,8 @@ async def async_setup_entry(
 class TelldusLiveSensor(TelldusLiveEntity, BinarySensorEntity):
     """Representation of a Tellstick sensor."""
 
+    _attr_name = None
+
     @property
     def is_on(self):
         """Return true if switch is on."""

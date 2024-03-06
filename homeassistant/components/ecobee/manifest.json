@@ -1,16 +1,19 @@
 {
   "domain": "ecobee",
   "name": "ecobee",
-  "codeowners": ["@marthoc", "@marcolivierarsenault"],
+  "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ecobee",
   "homekit": {
-    "models": ["EB-*", "ecobee*"]
+    "models": ["EB", "ecobee*"]
   },
   "iot_class": "cloud_polling",
   "loggers": ["pyecobee"],
-  "requirements": ["python-ecobee-api==0.2.14"],
+  "requirements": ["python-ecobee-api==0.2.17"],
   "zeroconf": [
+    {
+      "type": "_ecobee._tcp.local."
+    },
     {
       "type": "_sideplay._tcp.local.",
       "properties": {

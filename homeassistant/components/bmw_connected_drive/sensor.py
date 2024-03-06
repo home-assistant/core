@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import LENGTH, PERCENTAGE, VOLUME, UnitOfElectricCurrent
@@ -27,7 +28,7 @@ from .coordinator import BMWDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class BMWSensorEntityDescription(SensorEntityDescription):
     """Describes BMW sensor entity."""
 
@@ -58,7 +59,6 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         translation_key="ac_current_limit",
         key_class="charging_profile",
         unit_type=UnitOfElectricCurrent.AMPERE,
-        icon="mdi:current-ac",
         entity_registry_enabled_default=False,
     ),
     "charging_start_time": BMWSensorEntityDescription(
@@ -78,14 +78,12 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         key="charging_status",
         translation_key="charging_status",
         key_class="fuel_and_battery",
-        icon="mdi:ev-station",
         value=lambda x, y: x.value,
     ),
     "charging_target": BMWSensorEntityDescription(
         key="charging_target",
         translation_key="charging_target",
         key_class="fuel_and_battery",
-        icon="mdi:battery-charging-high",
         unit_type=PERCENTAGE,
     ),
     "remaining_battery_percent": BMWSensorEntityDescription(
@@ -94,53 +92,54 @@ SENSOR_TYPES: dict[str, BMWSensorEntityDescription] = {
         key_class="fuel_and_battery",
         unit_type=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     # --- Specific ---
     "mileage": BMWSensorEntityDescription(
         key="mileage",
         translation_key="mileage",
-        icon="mdi:speedometer",
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "remaining_range_total": BMWSensorEntityDescription(
         key="remaining_range_total",
         translation_key="remaining_range_total",
         key_class="fuel_and_battery",
-        icon="mdi:map-marker-distance",
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "remaining_range_electric": BMWSensorEntityDescription(
         key="remaining_range_electric",
         translation_key="remaining_range_electric",
         key_class="fuel_and_battery",
-        icon="mdi:map-marker-distance",
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "remaining_range_fuel": BMWSensorEntityDescription(
         key="remaining_range_fuel",
         translation_key="remaining_range_fuel",
         key_class="fuel_and_battery",
-        icon="mdi:map-marker-distance",
         unit_type=LENGTH,
         value=lambda x, hass: convert_and_round(x, hass.config.units.length, 2),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "remaining_fuel": BMWSensorEntityDescription(
         key="remaining_fuel",
         translation_key="remaining_fuel",
         key_class="fuel_and_battery",
-        icon="mdi:gas-station",
         unit_type=VOLUME,
         value=lambda x, hass: convert_and_round(x, hass.config.units.volume, 2),
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "remaining_fuel_percent": BMWSensorEntityDescription(
         key="remaining_fuel_percent",
         translation_key="remaining_fuel_percent",
         key_class="fuel_and_battery",
-        icon="mdi:gas-station",
         unit_type=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 

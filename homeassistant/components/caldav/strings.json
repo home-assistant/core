@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "description": "Please enter your CalDAV server credentials"
+      },
+      "reauth_confirm": {
+        "description": "The password for {username} is invalid.",
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    }
+  }
+}

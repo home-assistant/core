@@ -1,4 +1,5 @@
 """Test config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 from requests import RequestException
@@ -75,8 +76,8 @@ async def test_zeroconf_flow_create_entry(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
-            host=DEVICE_1_IP,
-            addresses=[DEVICE_1_IP],
+            ip_address=ip_address(DEVICE_1_IP),
+            ip_addresses=[ip_address(DEVICE_1_IP)],
             port=8090,
             hostname="Bose-SM2-060000000001.local.",
             type="_soundtouch._tcp.local.",

@@ -251,6 +251,6 @@ class MetOfficeCurrentSensor(
         return {
             ATTR_LAST_UPDATE: self.coordinator.data.now.date,
             ATTR_SENSOR_ID: self.entity_description.key,
-            ATTR_SITE_ID: self.coordinator.data.site.id,
+            ATTR_SITE_ID: self.coordinator.data.site.location_id,
             ATTR_SITE_NAME: self.coordinator.data.site.name,
         }

@@ -1,7 +1,9 @@
 """Support for August doorbell camera."""
 from __future__ import annotations
 
+from aiohttp import ClientSession
 from yalexs.activity import ActivityType
+from yalexs.doorbell import Doorbell
 from yalexs.util import update_doorbell_image_from_activity
 
 from homeassistant.components.camera import Camera
@@ -37,7 +39,9 @@ class AugustCamera(AugustEntityMixin, Camera):
 
     _attr_translation_key = "camera"
 
-    def __init__(self, data, device, session, timeout):
+    def __init__(
+        self, data: AugustData, device: Doorbell, session: ClientSession, timeout: int
+    ) -> None:
         """Initialize an August security camera."""
         super().__init__(data, device)
         self._timeout = timeout
@@ -45,6 +49,8 @@ class AugustCamera(AugustEntityMixin, Camera):
         self._image_url = None
         self._image_content = None
         self._attr_unique_id = f"{self._device_id:s}_camera"
+        self._attr_motion_detection_enabled = True
+        self._attr_brand = DEFAULT_NAME
 
     @property
     def is_recording(self) -> bool:
@@ -52,22 +58,12 @@ class AugustCamera(AugustEntityMixin, Camera):
         return self._device.has_subscription
 
     @property
-    def motion_detection_enabled(self) -> bool:
-        """Return the camera motion detection status."""
-        return True
-
-    @property
-    def brand(self):
-        """Return the camera brand."""
-        return DEFAULT_NAME
-
-    @property
-    def model(self):
+    def model(self) -> str | None:
         """Return the camera model."""
         return self._detail.model
 
     @callback
-    def _update_from_data(self):
+    def _update_from_data(self) -> None:
         """Get the latest state of the sensor."""
         doorbell_activity = self._data.activity_stream.get_latest_device_activity(
             self._device_id,

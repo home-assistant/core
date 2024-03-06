@@ -19,14 +19,14 @@ from .const import DOMAIN
 from .entity import RokuEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class RokuBinarySensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
     value_fn: Callable[[RokuDevice], bool | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RokuBinarySensorEntityDescription(
     BinarySensorEntityDescription, RokuBinarySensorEntityDescriptionMixin
 ):

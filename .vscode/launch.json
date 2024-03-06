@@ -23,6 +23,14 @@
       "preLaunchTask": "Compile English translations"
     },
     {
+      "name": "Home Assistant: Changed tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "justMyCode": false,
+      "args": ["--timeout=10", "--picked"],
+    },
+    {
       // Debug by attaching to local Home Assistant server using Remote Python Debugger.
       // See https://www.home-assistant.io/integrations/debugpy/
       "name": "Home Assistant: Attach Local",

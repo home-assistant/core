@@ -37,16 +37,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class AirQEntityDescriptionMixin:
-    """Class for keys required by AirQ entity."""
+@dataclass(frozen=True, kw_only=True)
+class AirQEntityDescription(SensorEntityDescription):
+    """Describes AirQ sensor entity."""
 
     value: Callable[[dict], float | int | None]
-
-
-@dataclass
-class AirQEntityDescription(SensorEntityDescription, AirQEntityDescriptionMixin):
-    """Describes AirQ sensor entity."""
 
 
 # Keys must match those in the data dictionary
@@ -190,7 +185,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         translation_key="health_index",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:heart-pulse",
         value=lambda data: data.get("health", 0.0) / 10.0,
     ),
     AirQEntityDescription(
@@ -206,7 +200,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=CONCENTRATION_GRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("humidity_abs"),
-        icon="mdi:water",
     ),
     AirQEntityDescription(
         key="h2_M1000",
@@ -263,7 +256,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("oxygen"),
-        icon="mdi:leaf",
     ),
     AirQEntityDescription(
         key="o3",
@@ -277,7 +269,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         translation_key="performance_index",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:head-check",
         value=lambda data: data.get("performance", 0.0) / 10.0,
     ),
     AirQEntityDescription(
@@ -293,7 +284,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("pm1"),
-        icon="mdi:dots-hexagon",
     ),
     AirQEntityDescription(
         key="pm2_5",
@@ -301,7 +291,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("pm2_5"),
-        icon="mdi:dots-hexagon",
     ),
     AirQEntityDescription(
         key="pm10",
@@ -309,7 +298,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("pm10"),
-        icon="mdi:dots-hexagon",
     ),
     AirQEntityDescription(
         key="pressure",
@@ -376,7 +364,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         native_unit_of_measurement=ACTIVITY_BECQUEREL_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("radon"),
-        icon="mdi:radioactive",
     ),
     AirQEntityDescription(
         key="temperature",
@@ -405,7 +392,6 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
         translation_key="virus_index",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:virus-off",
         value=lambda data: data.get("virus", 0.0),
     ),
 ]

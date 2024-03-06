@@ -23,18 +23,11 @@ from .const import DOMAIN
 from .model import DoorDevice
 
 
-@dataclass
-class AccSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AccSensorEntityDescription(SensorEntityDescription):
+    """Describes AladdinConnect sensor entity."""
 
     value_fn: Callable
-
-
-@dataclass
-class AccSensorEntityDescription(
-    SensorEntityDescription, AccSensorEntityDescriptionMixin
-):
-    """Describes AladdinConnect sensor entity."""
 
 
 SENSORS: tuple[AccSensorEntityDescription, ...] = (

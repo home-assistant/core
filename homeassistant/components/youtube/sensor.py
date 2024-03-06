@@ -26,7 +26,7 @@ from .const import (
 from .entity import YouTubeChannelEntity
 
 
-@dataclass
+@dataclass(frozen=True)
 class YouTubeMixin:
     """Mixin for required keys."""
 
@@ -36,7 +36,7 @@ class YouTubeMixin:
     attributes_fn: Callable[[Any], dict[str, Any] | None] | None
 
 
-@dataclass
+@dataclass(frozen=True)
 class YouTubeSensorEntityDescription(SensorEntityDescription, YouTubeMixin):
     """Describes YouTube sensor entity."""
 
@@ -45,7 +45,6 @@ SENSOR_TYPES = [
     YouTubeSensorEntityDescription(
         key="latest_upload",
         translation_key="latest_upload",
-        icon="mdi:youtube",
         available_fn=lambda channel: channel[ATTR_LATEST_VIDEO] is not None,
         value_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_TITLE],
         entity_picture_fn=lambda channel: channel[ATTR_LATEST_VIDEO][ATTR_THUMBNAIL],
@@ -57,7 +56,6 @@ SENSOR_TYPES = [
     YouTubeSensorEntityDescription(
         key="subscribers",
         translation_key="subscribers",
-        icon="mdi:youtube-subscription",
         native_unit_of_measurement="subscribers",
         available_fn=lambda _: True,
         value_fn=lambda channel: channel[ATTR_SUBSCRIBER_COUNT],

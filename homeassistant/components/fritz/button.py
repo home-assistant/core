@@ -23,14 +23,14 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzButtonDescriptionMixin:
     """Mixin to describe a Button entity."""
 
     press_action: Callable
 
 
-@dataclass
+@dataclass(frozen=True)
 class FritzButtonDescription(ButtonEntityDescription, FritzButtonDescriptionMixin):
     """Class to describe a Button entity."""
 
@@ -59,7 +59,6 @@ BUTTONS: Final = [
     FritzButtonDescription(
         key="cleanup",
         translation_key="cleanup",
-        icon="mdi:broom",
         entity_category=EntityCategory.CONFIG,
         press_action=lambda avm_wrapper: avm_wrapper.async_trigger_cleanup(),
     ),

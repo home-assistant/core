@@ -134,6 +134,7 @@ async def test_flow_ssdp_non_igd_device(hass: HomeAssistant) -> None:
             ssdp_usn=TEST_USN,
             ssdp_st=TEST_ST,
             ssdp_location=TEST_LOCATION,
+            ssdp_all_locations=[TEST_LOCATION],
             upnp={
                 ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:WFADevice:1",  # Non-IGD
                 ssdp.ATTR_UPNP_UDN: TEST_UDN,
@@ -324,6 +325,7 @@ async def test_flow_ssdp_discovery_changed_location(hass: HomeAssistant) -> None
     new_location = TEST_DISCOVERY.ssdp_location + "2"
     new_discovery = deepcopy(TEST_DISCOVERY)
     new_discovery.ssdp_location = new_location
+    new_discovery.ssdp_all_locations = {new_location}
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},

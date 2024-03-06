@@ -7,6 +7,7 @@ from glances_api import Glances, exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -35,6 +36,9 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest data from the Glances REST API."""
         try:
-            return await self.api.get_ha_sensor_data()
+            data = await self.api.get_ha_sensor_data()
+        except exceptions.GlancesApiAuthorizationError as err:
+            raise ConfigEntryAuthFailed from err
         except exceptions.GlancesApiError as err:
             raise UpdateFailed from err
+        return data or {}

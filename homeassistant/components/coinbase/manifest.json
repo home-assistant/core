@@ -4,6 +4,7 @@
   "codeowners": ["@tombrien"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/coinbase",
+  "import_executor": true,
   "iot_class": "cloud_polling",
   "loggers": ["coinbase"],
   "requirements": ["coinbase==2.1.0"]

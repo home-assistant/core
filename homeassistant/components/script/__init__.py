@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -42,9 +42,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platform_for_component,
-)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -74,6 +71,12 @@ from .const import (
 )
 from .helpers import async_get_blueprints
 from .trace import trace_script
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
+
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
 SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
@@ -187,10 +190,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = component = EntityComponent[BaseScriptEntity](
         LOGGER, DOMAIN, hass
     )
-
-    # Process integration platforms right away since
-    # we will create entities before firing EVENT_COMPONENT_LOADED
-    await async_process_integration_platform_for_component(hass, DOMAIN)
 
     # Register script as valid domain for Blueprint
     async_get_blueprints(hass)
@@ -382,9 +381,13 @@ async def _async_process_config(
 class BaseScriptEntity(ToggleEntity, ABC):
     """Base class for script entities."""
 
+    _entity_component_unrecorded_attributes = frozenset(
+        {ATTR_LAST_TRIGGERED, ATTR_MODE, ATTR_CUR, ATTR_MAX, ATTR_LAST_ACTION}
+    )
+
     raw_config: ConfigType | None
 
-    @property
+    @cached_property
     @abstractmethod
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
@@ -394,12 +397,12 @@ class BaseScriptEntity(ToggleEntity, ABC):
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
 
-    @property
+    @cached_property
     @abstractmethod
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
 
-    @property
+    @cached_property
     @abstractmethod
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
@@ -429,7 +432,7 @@ class UnavailableScriptEntity(BaseScriptEntity):
         """Return the name of the entity."""
         return self._name
 
-    @property
+    @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         return set()
@@ -439,12 +442,12 @@ class UnavailableScriptEntity(BaseScriptEntity):
         """Return referenced blueprint or None."""
         return None
 
-    @property
+    @cached_property
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         return set()
 
-    @property
+    @cached_property
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return set()
@@ -512,7 +515,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         """Return true if script is on."""
         return self.script.is_running
 
-    @property
+    @cached_property
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         return self.script.referenced_areas
@@ -524,12 +527,12 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             return None
         return self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH]
 
-    @property
+    @cached_property
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         return self.script.referenced_devices
 
-    @property
+    @cached_property
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return self.script.referenced_entities
@@ -563,7 +566,8 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
         )
         coro = self._async_run(variables, context)
         if wait:
-            return await coro
+            script_result = await coro
+            return script_result.service_response if script_result else None
 
         # Caller does not want to wait for called script to finish so let script run in
         # separate Task. Make a new empty script stack; scripts are allowed to

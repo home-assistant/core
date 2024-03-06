@@ -4,5 +4,5 @@
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/vlc",
   "iot_class": "local_polling",
-  "requirements": ["python-vlc==1.1.2"]
+  "requirements": ["python-vlc==3.0.18122"]
 }

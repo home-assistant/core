@@ -25,13 +25,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    Event,
-    HomeAssistant,
-    callback,
-)
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -39,7 +33,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 
 from .alarms import SonosAlarms
@@ -131,20 +124,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
             )
-        )
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.2.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Sonos",
-            },
         )
 
     return True
@@ -311,6 +290,17 @@ class SonosDiscoveryManager:
         sub.callback = _async_subscription_succeeded
         # Hold lock to prevent concurrent subscription attempts
         await asyncio.sleep(ZGS_SUBSCRIPTION_TIMEOUT * 2)
+        try:
+            # Cancel this subscription as we create an autorenewing
+            # subscription when setting up the SonosSpeaker instance
+            await sub.unsubscribe()
+        except ClientError as ex:
+            # Will be rejected if already replaced by new subscription
+            _LOGGER.debug(
+                "Cleanup unsubscription from %s was rejected: %s", ip_address, ex
+            )
+        except (OSError, Timeout) as ex:
+            _LOGGER.error("Cleanup unsubscription from %s failed: %s", ip_address, ex)
 
     async def _async_stop_event_listener(self, event: Event | None = None) -> None:
         for speaker in self.data.discovered.values():
@@ -403,7 +393,7 @@ class SonosDiscoveryManager:
                 OSError,
                 SoCoException,
                 Timeout,
-                asyncio.TimeoutError,
+                TimeoutError,
             ) as ex:
                 if not self.hosts_in_error.get(ip_addr):
                     _LOGGER.warning(
@@ -457,7 +447,7 @@ class SonosDiscoveryManager:
                     OSError,
                     SoCoException,
                     Timeout,
-                    asyncio.TimeoutError,
+                    TimeoutError,
                 ) as ex:
                     _LOGGER.warning("Discovery message failed to %s : %s", ip_addr, ex)
             elif not known_speaker.available:

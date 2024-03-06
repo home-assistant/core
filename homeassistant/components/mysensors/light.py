@@ -19,7 +19,7 @@ from homeassistant.util.color import rgb_hex_to_rgb_list
 
 from .. import mysensors
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo, SensorType
-from .device import MySensorsEntity
+from .device import MySensorsChildEntity
 from .helpers import on_unload
 
 
@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
-    device_class_map: dict[SensorType, type[MySensorsEntity]] = {
+    device_class_map: dict[SensorType, type[MySensorsChildEntity]] = {
         "S_DIMMER": MySensorsLightDimmer,
         "S_RGB_LIGHT": MySensorsLightRGB,
         "S_RGBW_LIGHT": MySensorsLightRGBW,
@@ -56,7 +56,7 @@ async def async_setup_entry(
     )
 
 
-class MySensorsLight(mysensors.device.MySensorsEntity, LightEntity):
+class MySensorsLight(mysensors.device.MySensorsChildEntity, LightEntity):
     """Representation of a MySensors Light child node."""
 
     def __init__(self, *args: Any) -> None:

@@ -1,0 +1,35 @@
+{
+  "authorized_doorbots": [],
+  "chimes": [
+    {
+      "address": "123 Main St",
+      "alerts": { "connection": "online" },
+      "description": "Downstairs",
+      "device_id": "abcdef123",
+      "do_not_disturb": { "seconds_left": 0 },
+      "features": { "ringtones_enabled": true },
+      "firmware_version": "1.2.3",
+      "id": 123456,
+      "kind": "chime",
+      "latitude": 12.0,
+      "longitude": -70.12345,
+      "owned": true,
+      "owner": {
+        "email": "foo@bar.org",
+        "first_name": "Marcelo",
+        "id": 999999,
+        "last_name": "Assistant"
+      },
+      "settings": {
+        "ding_audio_id": null,
+        "ding_audio_user_id": null,
+        "motion_audio_id": null,
+        "motion_audio_user_id": null,
+        "volume": 2
+      },
+      "time_zone": "America/New_York"
+    }
+  ],
+  "doorbots": [],
+  "stickup_cams": []
+}

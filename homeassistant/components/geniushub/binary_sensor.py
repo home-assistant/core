@@ -9,6 +9,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import DOMAIN, GeniusDevice
 
 GH_STATE_ATTR = "outputOnOff"
+GH_TYPE = "Receiver"
 
 
 async def async_setup_platform(
@@ -26,7 +27,7 @@ async def async_setup_platform(
     switches = [
         GeniusBinarySensor(broker, d, GH_STATE_ATTR)
         for d in broker.client.device_objs
-        if GH_STATE_ATTR in d.data["state"]
+        if GH_TYPE in d.data["type"]
     ]
 
     async_add_entities(switches, update_before_add=True)

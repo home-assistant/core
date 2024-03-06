@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
+from homeassistant.components.config import scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -27,7 +28,7 @@ async def test_create_scene(
     setup_scene,
 ) -> None:
     """Test creating a scene."""
-    with patch.object(config, "SECTIONS", ["scene"]):
+    with patch.object(config, "SECTIONS", [scene]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("scene")) == []
@@ -74,7 +75,7 @@ async def test_update_scene(
     setup_scene,
 ) -> None:
     """Test updating a scene."""
-    with patch.object(config, "SECTIONS", ["scene"]):
+    with patch.object(config, "SECTIONS", [scene]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("scene")) == []
@@ -122,7 +123,7 @@ async def test_bad_formatted_scene(
     setup_scene,
 ) -> None:
     """Test that we handle scene without ID."""
-    with patch.object(config, "SECTIONS", ["scene"]):
+    with patch.object(config, "SECTIONS", [scene]):
         await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("scene")) == []
@@ -184,15 +185,15 @@ async def test_bad_formatted_scene(
 async def test_delete_scene(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
     hass_config_store,
     setup_scene,
 ) -> None:
     """Test deleting a scene."""
-    ent_reg = er.async_get(hass)
 
-    assert len(ent_reg.entities) == 2
+    assert len(entity_registry.entities) == 2
 
-    with patch.object(config, "SECTIONS", ["scene"]):
+    with patch.object(config, "SECTIONS", [scene]):
         assert await async_setup_component(hass, "config", {})
 
     assert sorted(hass.states.async_entity_ids("scene")) == [
@@ -220,7 +221,7 @@ async def test_delete_scene(
         {"id": "light_off"},
     ]
 
-    assert len(ent_reg.entities) == 1
+    assert len(entity_registry.entities) == 1
 
 
 @pytest.mark.parametrize("scene_config", ({},))
@@ -232,7 +233,7 @@ async def test_api_calls_require_admin(
     setup_scene,
 ) -> None:
     """Test scene APIs endpoints do not work as a normal user."""
-    with patch.object(config, "SECTIONS", ["scene"]):
+    with patch.object(config, "SECTIONS", [scene]):
         await async_setup_component(hass, "config", {})
 
     hass_config_store["scenes.yaml"] = [

@@ -1,4 +1,5 @@
 """Test Axis config flow."""
+from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
@@ -6,7 +7,6 @@ import pytest
 from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
-    CONF_EVENTS,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
@@ -31,10 +31,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 
 from .const import DEFAULT_HOST, MAC, MODEL, NAME
 
 from tests.common import MockConfigEntry
+
+DHCP_FORMATTED_MAC = dr.format_mac(MAC).replace(":", "")
 
 
 @pytest.fixture(name="mock_config_entry")
@@ -120,7 +123,7 @@ async def test_flow_fails_faulty_credentials(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.axis.config_flow.get_axis_device",
+        "homeassistant.components.axis.config_flow.get_axis_api",
         side_effect=config_flow.AuthenticationRequired,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -146,7 +149,7 @@ async def test_flow_fails_cannot_connect(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     with patch(
-        "homeassistant.components.axis.config_flow.get_axis_device",
+        "homeassistant.components.axis.config_flow.get_axis_api",
         side_effect=config_flow.CannotConnect,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -252,7 +255,7 @@ async def test_reauth_flow_update_configuration(
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip=DEFAULT_HOST,
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
         ),
         (
@@ -294,8 +297,8 @@ async def test_reauth_flow_update_configuration(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host=DEFAULT_HOST,
-                addresses=[DEFAULT_HOST],
+                ip_address=ip_address(DEFAULT_HOST),
+                ip_addresses=[ip_address(DEFAULT_HOST)],
                 port=80,
                 hostname=f"axis-{MAC.lower()}.local.",
                 type="_axis-video._tcp.local.",
@@ -359,7 +362,7 @@ async def test_discovery_flow(
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip=DEFAULT_HOST,
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
         ),
         (
@@ -377,8 +380,8 @@ async def test_discovery_flow(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host=DEFAULT_HOST,
-                addresses=[DEFAULT_HOST],
+                ip_address=ip_address(DEFAULT_HOST),
+                ip_addresses=[ip_address(DEFAULT_HOST)],
                 hostname="mock_hostname",
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
                 port=80,
@@ -411,7 +414,7 @@ async def test_discovered_device_already_configured(
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip="2.3.4.5",
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
             80,
         ),
@@ -431,8 +434,8 @@ async def test_discovered_device_already_configured(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host="2.3.4.5",
-                addresses=["2.3.4.5"],
+                ip_address=ip_address("2.3.4.5"),
+                ip_addresses=[ip_address("2.3.4.5")],
                 hostname="mock_hostname",
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
                 port=8080,
@@ -487,7 +490,7 @@ async def test_discovery_flow_updated_configuration(
             dhcp.DhcpServiceInfo(
                 hostname="",
                 ip="",
-                macaddress="01234567890",
+                macaddress=dr.format_mac("01234567890").replace(":", ""),
             ),
         ),
         (
@@ -505,8 +508,8 @@ async def test_discovery_flow_updated_configuration(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host="",
-                addresses=[""],
+                ip_address=None,
+                ip_addresses=[],
                 hostname="mock_hostname",
                 name="",
                 port=0,
@@ -536,7 +539,7 @@ async def test_discovery_flow_ignore_non_axis_device(
             dhcp.DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip="169.254.3.4",
-                macaddress=MAC,
+                macaddress=DHCP_FORMATTED_MAC,
             ),
         ),
         (
@@ -554,8 +557,8 @@ async def test_discovery_flow_ignore_non_axis_device(
         (
             SOURCE_ZEROCONF,
             zeroconf.ZeroconfServiceInfo(
-                host="169.254.3.4",
-                addresses=["169.254.3.4"],
+                ip_address=ip_address("169.254.3.4"),
+                ip_addresses=[ip_address("169.254.3.4")],
                 hostname="mock_hostname",
                 name=f"AXIS M1065-LW - {MAC}._axis-video._tcp.local.",
                 port=80,
@@ -603,7 +606,6 @@ async def test_option_flow(hass: HomeAssistant, setup_config_entry) -> None:
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_EVENTS: True,
         CONF_STREAM_PROFILE: "profile_1",
         CONF_VIDEO_SOURCE: 1,
     }

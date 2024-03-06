@@ -5,11 +5,10 @@ from socket import gaierror
 import voluptuous as vol
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
-from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import (
@@ -44,7 +43,7 @@ GATEWAY_SETTINGS = vol.Schema(
 )
 
 
-class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Xiaomi Aqara config flow."""
 
     VERSION = 1
@@ -148,7 +147,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         name = discovery_info.name
         self.host = discovery_info.host

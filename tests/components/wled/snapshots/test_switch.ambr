@@ -5,7 +5,6 @@
       'duration': 60,
       'fade': True,
       'friendly_name': 'WLED RGB Light Nightlight',
-      'icon': 'mdi:weather-night',
       'target_brightness': 0,
     }),
     'context': <ANY>,
@@ -32,15 +31,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:weather-night',
+    'original_icon': None,
     'original_name': 'Nightlight',
     'platform': 'wled',
+    'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'nightlight',
     'unique_id': 'aabbccddeeff_nightlight',
     'unit_of_measurement': None,
   })
@@ -67,10 +69,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',
     'name_by_user': None,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': '0.8.5',
     'via_device_id': None,
@@ -80,7 +85,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light Reverse',
-      'icon': 'mdi:swap-horizontal-bold',
     }),
     'context': <ANY>,
     'entity_id': 'switch.wled_rgb_light_reverse',
@@ -106,15 +110,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:swap-horizontal-bold',
+    'original_icon': None,
     'original_name': 'Reverse',
     'platform': 'wled',
+    'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'reverse',
     'unique_id': 'aabbccddeeff_reverse_0',
     'unit_of_measurement': None,
   })
@@ -141,10 +148,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',
     'name_by_user': None,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': '0.8.5',
     'via_device_id': None,
@@ -154,7 +164,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light Sync receive',
-      'icon': 'mdi:download-network-outline',
       'udp_port': 21324,
     }),
     'context': <ANY>,
@@ -181,15 +190,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:download-network-outline',
+    'original_icon': None,
     'original_name': 'Sync receive',
     'platform': 'wled',
+    'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'sync_receive',
     'unique_id': 'aabbccddeeff_sync_receive',
     'unit_of_measurement': None,
   })
@@ -216,10 +228,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',
     'name_by_user': None,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': '0.8.5',
     'via_device_id': None,
@@ -229,7 +244,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WLED RGB Light Sync send',
-      'icon': 'mdi:upload-network-outline',
       'udp_port': 21324,
     }),
     'context': <ANY>,
@@ -256,15 +270,18 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:upload-network-outline',
+    'original_icon': None,
     'original_name': 'Sync send',
     'platform': 'wled',
+    'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'sync_send',
     'unique_id': 'aabbccddeeff_sync_send',
     'unit_of_measurement': None,
   })
@@ -291,10 +308,13 @@
       ),
     }),
     'is_new': False,
+    'labels': set({
+    }),
     'manufacturer': 'WLED',
     'model': 'DIY light',
     'name': 'WLED RGB Light',
     'name_by_user': None,
+    'serial_number': None,
     'suggested_area': None,
     'sw_version': '0.8.5',
     'via_device_id': None,

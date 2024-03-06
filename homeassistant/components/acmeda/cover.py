@@ -30,7 +30,7 @@ async def async_setup_entry(
     current: set[int] = set()
 
     @callback
-    def async_add_acmeda_covers():
+    def async_add_acmeda_covers() -> None:
         async_add_acmeda_entities(
             hass, AcmedaCover, config_entry, current, async_add_entities
         )
@@ -95,7 +95,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
-        return self.roller.closed_percent == 100
+        return self.roller.closed_percent == 100  # type: ignore[no-any-return]
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the roller."""

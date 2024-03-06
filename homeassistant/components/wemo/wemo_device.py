@@ -56,6 +56,7 @@ class OptionsValidationError(Exception):
             field_key must also match one of the field names inside the Options class.
           error_key: Name of the options.error key that corresponds to this error.
           message: Message for the Exception class.
+
         """
         super().__init__(message)
         self.field_key = field_key
@@ -86,7 +87,7 @@ class Options:
             )
 
 
-class DeviceCoordinator(DataUpdateCoordinator[None]):
+class DeviceCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
     """Home Assistant wrapper for a pyWeMo device."""
 
     options: Options | None = None
@@ -244,7 +245,7 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
 def _create_device_info(wemo: WeMoDevice) -> DeviceInfo:
     """Create device information. Modify if special device."""
     _dev_info = _device_info(wemo)
-    if wemo.model_name == "DLI emulated Belkin Socket":
+    if wemo.model_name.lower() == "dli emulated belkin socket":
         _dev_info[ATTR_CONFIGURATION_URL] = f"http://{wemo.host}"
         _dev_info[ATTR_IDENTIFIERS] = {(DOMAIN, wemo.serial_number[:-1])}
         _dev_info[ATTR_NAME] = "Digital Loggers"

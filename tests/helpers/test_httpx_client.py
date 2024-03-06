@@ -7,6 +7,8 @@ import pytest
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE, HomeAssistant
 import homeassistant.helpers.httpx_client as client
 
+from tests.common import MockModule, mock_integration
+
 
 async def test_get_async_client_with_ssl(hass: HomeAssistant) -> None:
     """Test init async client with ssl."""
@@ -125,9 +127,10 @@ async def test_warning_close_session_integration(
         await httpx_session.aclose()
 
     assert (
-        "Detected integration that closes the Home Assistant httpx client. "
-        "Please report issue for hue using this method at "
-        "homeassistant/components/hue/light.py, line 23: await session.aclose()"
+        "Detected that integration 'hue' closes the Home Assistant httpx client at "
+        "homeassistant/components/hue/light.py, line 23: await session.aclose(), "
+        "please create a bug report at https://github.com/home-assistant/core/issues?"
+        "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
     ) in caplog.text
 
 
@@ -136,6 +139,7 @@ async def test_warning_close_session_custom(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test log warning message when closing the session from custom context."""
+    mock_integration(hass, MockModule("hue"), built_in=False)
     with patch(
         "homeassistant.helpers.frame.extract_stack",
         return_value=[
@@ -159,8 +163,7 @@ async def test_warning_close_session_custom(
         httpx_session = client.get_async_client(hass)
         await httpx_session.aclose()
     assert (
-        "Detected integration that closes the Home Assistant httpx client. Please"
-        " report issue to the custom integration author for hue using this method at"
-        " custom_components/hue/light.py, line 23: await session.aclose()"
-        in caplog.text
-    )
+        "Detected that custom integration 'hue' closes the Home Assistant httpx client "
+        "at custom_components/hue/light.py, line 23: await session.aclose(), "
+        "please report it to the author of the 'hue' custom integration"
+    ) in caplog.text

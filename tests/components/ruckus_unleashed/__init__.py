@@ -1,44 +1,60 @@
 """Tests for the Ruckus Unleashed integration."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.ruckus_unleashed import DOMAIN
+from aioruckus import AjaxSession, RuckusAjaxApi
+
 from homeassistant.components.ruckus_unleashed.const import (
-    API_ACCESS_POINT,
-    API_AP,
-    API_DEVICE_NAME,
-    API_ID,
-    API_IP,
-    API_MAC,
-    API_MODEL,
-    API_NAME,
-    API_SERIAL,
-    API_SYSTEM_OVERVIEW,
-    API_VERSION,
+    API_AP_DEVNAME,
+    API_AP_MAC,
+    API_AP_MODEL,
+    API_AP_SERIALNUMBER,
+    API_CLIENT_AP_MAC,
+    API_CLIENT_HOSTNAME,
+    API_CLIENT_IP,
+    API_CLIENT_MAC,
+    API_MESH_NAME,
+    API_MESH_PSK,
+    API_SYS_IDENTITY,
+    API_SYS_IDENTITY_NAME,
+    API_SYS_SYSINFO,
+    API_SYS_SYSINFO_SERIAL,
+    API_SYS_SYSINFO_VERSION,
+    API_SYS_UNLEASHEDNETWORK,
+    API_SYS_UNLEASHEDNETWORK_TOKEN,
+    DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
-DEFAULT_TITLE = "Ruckus Mesh"
-DEFAULT_UNIQUE_ID = "123456789012"
 DEFAULT_SYSTEM_INFO = {
-    API_SYSTEM_OVERVIEW: {
-        API_SERIAL: DEFAULT_UNIQUE_ID,
-        API_VERSION: "v1.0.0",
-    }
+    API_SYS_IDENTITY: {API_SYS_IDENTITY_NAME: "RuckusUnleashed"},
+    API_SYS_SYSINFO: {
+        API_SYS_SYSINFO_SERIAL: "123456789012",
+        API_SYS_SYSINFO_VERSION: "200.7.10.202 build 141",
+    },
+    API_SYS_UNLEASHEDNETWORK: {
+        API_SYS_UNLEASHEDNETWORK_TOKEN: "un1234567890121680060227001"
+    },
 }
-DEFAULT_AP_INFO = {
-    API_AP: {
-        API_ID: {
-            "1": {
-                API_MAC: "00:11:22:33:44:55",
-                API_DEVICE_NAME: "Test Device",
-                API_MODEL: "r510",
-            }
-        }
-    }
+
+DEFAULT_MESH_INFO = {
+    API_MESH_NAME: "Ruckus Mesh",
+    API_MESH_PSK: "",
 }
+
+DEFAULT_AP_INFO = [
+    {
+        API_AP_MAC: "00:11:22:33:44:55",
+        API_AP_DEVNAME: "Test Device",
+        API_AP_MODEL: "r510",
+        API_AP_SERIALNUMBER: DEFAULT_SYSTEM_INFO[API_SYS_SYSINFO][
+            API_SYS_SYSINFO_SERIAL
+        ],
+    }
+]
 
 CONFIG = {
     CONF_HOST: "1.1.1.1",
@@ -48,11 +64,14 @@ CONFIG = {
 
 TEST_CLIENT_ENTITY_ID = "device_tracker.ruckus_test_device"
 TEST_CLIENT = {
-    API_IP: "1.1.1.2",
-    API_MAC: "AA:BB:CC:DD:EE:FF",
-    API_NAME: "Ruckus Test Device",
-    API_ACCESS_POINT: "00:11:22:33:44:55",
+    API_CLIENT_IP: "1.1.1.2",
+    API_CLIENT_MAC: "AA:BB:CC:DD:EE:FF",
+    API_CLIENT_HOSTNAME: "Ruckus Test Device",
+    API_CLIENT_AP_MAC: DEFAULT_AP_INFO[0][API_AP_MAC],
 }
+
+DEFAULT_TITLE = DEFAULT_MESH_INFO[API_MESH_NAME]
+DEFAULT_UNIQUEID = DEFAULT_SYSTEM_INFO[API_SYS_SYSINFO][API_SYS_SYSINFO_SERIAL]
 
 
 def mock_config_entry() -> MockConfigEntry:
@@ -60,13 +79,13 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=DEFAULT_TITLE,
-        unique_id=DEFAULT_UNIQUE_ID,
+        unique_id=DEFAULT_UNIQUEID,
         data=CONFIG,
         options=None,
     )
 
 
-async def init_integration(hass) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Ruckus Unleashed integration in Home Assistant."""
     entry = mock_config_entry()
     entry.add_to_hass(hass)
@@ -76,27 +95,103 @@ async def init_integration(hass) -> MockConfigEntry:
     dr.async_get(hass).async_get_or_create(
         name="Device from other integration",
         config_entry_id=other_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, TEST_CLIENT[API_MAC])},
+        connections={(dr.CONNECTION_NETWORK_MAC, TEST_CLIENT[API_CLIENT_MAC])},
     )
-    with patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.connect",
-        return_value=None,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.mesh_name",
-        return_value=DEFAULT_TITLE,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.system_info",
-        return_value=DEFAULT_SYSTEM_INFO,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.Ruckus.ap_info",
-        return_value=DEFAULT_AP_INFO,
-    ), patch(
-        "homeassistant.components.ruckus_unleashed.RuckusUnleashedDataUpdateCoordinator._fetch_clients",
-        return_value={
-            TEST_CLIENT[API_MAC]: TEST_CLIENT,
-        },
-    ):
+
+    with RuckusAjaxApiPatchContext():
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     return entry
+
+
+class RuckusAjaxApiPatchContext:
+    """Context Manager which mocks the Ruckus AjaxSession and RuckusAjaxApi."""
+
+    def __init__(
+        self,
+        login_mock: AsyncMock = None,
+        system_info: dict | None = None,
+        mesh_info: dict | None = None,
+        active_clients: list[dict] | AsyncMock | None = None,
+    ) -> None:
+        """Initialize Ruckus Mock Context Manager."""
+        self.login_mock = login_mock
+        self.system_info = system_info
+        self.mesh_info = mesh_info
+        self.active_clients = active_clients
+        self.patchers = []
+
+    def __enter__(self):
+        """Patch RuckusAjaxApi and AjaxSession methods."""
+        self.patchers.append(
+            patch.object(RuckusAjaxApi, "_get_conf", new=AsyncMock(return_value={}))
+        )
+        self.patchers.append(
+            patch.object(
+                RuckusAjaxApi, "get_aps", new=AsyncMock(return_value=DEFAULT_AP_INFO)
+            )
+        )
+        self.patchers.append(
+            patch.object(
+                RuckusAjaxApi,
+                "get_system_info",
+                new=AsyncMock(
+                    return_value=DEFAULT_SYSTEM_INFO
+                    if self.system_info is None
+                    else self.system_info
+                ),
+            )
+        )
+        self.patchers.append(
+            patch.object(
+                RuckusAjaxApi,
+                "get_mesh_info",
+                new=AsyncMock(
+                    return_value=DEFAULT_MESH_INFO
+                    if self.mesh_info is None
+                    else self.mesh_info
+                ),
+            )
+        )
+        self.patchers.append(
+            patch.object(
+                RuckusAjaxApi,
+                "get_active_clients",
+                new=self.active_clients
+                if isinstance(self.active_clients, AsyncMock)
+                else AsyncMock(
+                    return_value=[TEST_CLIENT]
+                    if self.active_clients is None
+                    else self.active_clients
+                ),
+            )
+        )
+        self.patchers.append(
+            patch.object(
+                AjaxSession,
+                "login",
+                new=self.login_mock or AsyncMock(return_value=self),
+            )
+        )
+        self.patchers.append(
+            patch.object(AjaxSession, "close", new=AsyncMock(return_value=None))
+        )
+
+        def _patched_async_create(
+            host: str, username: str, password: str
+        ) -> "AjaxSession":
+            return AjaxSession(None, host, username, password)
+
+        self.patchers.append(
+            patch.object(AjaxSession, "async_create", new=_patched_async_create)
+        )
+
+        for patcher in self.patchers:
+            patcher.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Remove RuckusAjaxApi and AjaxSession patches."""
+        for patcher in self.patchers:
+            patcher.stop()

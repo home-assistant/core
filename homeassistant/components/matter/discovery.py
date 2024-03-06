@@ -115,8 +115,9 @@ def async_discover_entities(
             attributes_to_watch=attributes_to_watch,
             entity_description=schema.entity_description,
             entity_class=schema.entity_class,
+            should_poll=schema.should_poll,
         )
 
-        # prevent re-discovery of the same attributes
+        # prevent re-discovery of the primary attribute if not allowed
         if not schema.allow_multi:
-            discovered_attributes.update(attributes_to_watch)
+            discovered_attributes.update(schema.required_attributes)

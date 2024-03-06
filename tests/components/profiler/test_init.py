@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from unittest.mock import patch
 
-from lru import LRU  # pylint: disable=no-name-in-module
+from lru import LRU
 import pytest
 
 from homeassistant.components.profiler import (

@@ -7,9 +7,10 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_SLAVE_COUNT,
+    CONF_VIRTUAL_COUNT,
     MODBUS_DOMAIN,
 )
 from homeassistant.const import (
@@ -23,13 +24,12 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
+from .conftest import TEST_ENTITY_NAME, ReadResult
 
 ENTITY_ID = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 SLAVE_UNIQUE_ID = "ground_floor_sensor"
@@ -54,7 +54,17 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_SLAVE: 10,
                     CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
                     CONF_DEVICE_CLASS: "door",
-                    CONF_LAZY_ERROR: 10,
+                }
+            ]
+        },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DEVICE_ADDRESS: 10,
+                    CONF_INPUT_TYPE: CALL_TYPE_DISCRETE,
+                    CONF_DEVICE_CLASS: "door",
                 }
             ]
         },
@@ -64,6 +74,16 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SLAVE: 10,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
+                }
+            ]
+        },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DEVICE_ADDRESS: 10,
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_INPUT,
                 }
             ]
@@ -178,45 +198,6 @@ async def test_all_binary_sensor(hass: HomeAssistant, expected, mock_do_cycle) -
             CONF_BINARY_SENSORS: [
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 51,
-                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
-                    CONF_SCAN_INTERVAL: 10,
-                    CONF_LAZY_ERROR: 2,
-                },
-            ],
-        },
-    ],
-)
-@pytest.mark.parametrize(
-    ("register_words", "do_exception", "start_expect", "end_expect"),
-    [
-        (
-            [False * 16],
-            True,
-            STATE_UNKNOWN,
-            STATE_UNAVAILABLE,
-        ),
-    ],
-)
-async def test_lazy_error_binary_sensor(
-    hass: HomeAssistant, start_expect, end_expect, mock_do_cycle
-) -> None:
-    """Run test for given config."""
-    now = mock_do_cycle
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
-    assert hass.states.get(ENTITY_ID).state == end_expect
-
-
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_BINARY_SENSORS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_INPUT_TYPE: CALL_TYPE_COIL,
                 }
@@ -265,7 +246,7 @@ ENTITY_ID2 = f"{ENTITY_ID}_1"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_SCAN_INTERVAL: 0,
-                    CONF_SLAVE_COUNT: 1,
+                    CONF_VIRTUAL_COUNT: 1,
                 }
             ]
         },
@@ -294,9 +275,18 @@ TEST_NAME = "test_sensor"
                 }
             ]
         },
+        {
+            CONF_BINARY_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 52,
+                    CONF_VIRTUAL_COUNT: 3,
+                }
+            ]
+        },
     ],
 )
-async def test_config_slave_binary_sensor(hass: HomeAssistant, mock_modbus) -> None:
+async def test_config_virtual_binary_sensor(hass: HomeAssistant, mock_modbus) -> None:
     """Run config test for binary sensor."""
     assert SENSOR_DOMAIN in hass.config.components
 
@@ -356,7 +346,19 @@ async def test_config_slave_binary_sensor(hass: HomeAssistant, mock_modbus) -> N
             [STATE_OFF],
         ),
         (
+            {CONF_VIRTUAL_COUNT: 1, CONF_UNIQUE_ID: SLAVE_UNIQUE_ID},
+            [False] * 8,
+            STATE_OFF,
+            [STATE_OFF],
+        ),
+        (
             {CONF_SLAVE_COUNT: 1, CONF_UNIQUE_ID: SLAVE_UNIQUE_ID},
+            [True] + [False] * 7,
+            STATE_ON,
+            [STATE_OFF],
+        ),
+        (
+            {CONF_VIRTUAL_COUNT: 1, CONF_UNIQUE_ID: SLAVE_UNIQUE_ID},
             [True] + [False] * 7,
             STATE_ON,
             [STATE_OFF],
@@ -368,7 +370,19 @@ async def test_config_slave_binary_sensor(hass: HomeAssistant, mock_modbus) -> N
             [STATE_ON],
         ),
         (
+            {CONF_VIRTUAL_COUNT: 1, CONF_UNIQUE_ID: SLAVE_UNIQUE_ID},
+            [False, True] + [False] * 6,
+            STATE_OFF,
+            [STATE_ON],
+        ),
+        (
             {CONF_SLAVE_COUNT: 7, CONF_UNIQUE_ID: SLAVE_UNIQUE_ID},
+            [True, False] * 4,
+            STATE_ON,
+            [STATE_OFF, STATE_ON] * 3 + [STATE_OFF],
+        ),
+        (
+            {CONF_VIRTUAL_COUNT: 7, CONF_UNIQUE_ID: SLAVE_UNIQUE_ID},
             [True, False] * 4,
             STATE_ON,
             [STATE_OFF, STATE_ON] * 3 + [STATE_OFF],
@@ -379,14 +393,23 @@ async def test_config_slave_binary_sensor(hass: HomeAssistant, mock_modbus) -> N
             STATE_ON,
             [STATE_OFF, STATE_ON] * 15 + [STATE_OFF],
         ),
+        (
+            {CONF_VIRTUAL_COUNT: 31, CONF_UNIQUE_ID: SLAVE_UNIQUE_ID},
+            [True, False] * 16,
+            STATE_ON,
+            [STATE_OFF, STATE_ON] * 15 + [STATE_OFF],
+        ),
     ],
 )
-async def test_slave_binary_sensor(
-    hass: HomeAssistant, expected, slaves, mock_do_cycle
+async def test_virtual_binary_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    expected,
+    slaves,
+    mock_do_cycle,
 ) -> None:
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
-    entity_registry = er.async_get(hass)
 
     for i, slave in enumerate(slaves):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i+1}".replace(" ", "_")

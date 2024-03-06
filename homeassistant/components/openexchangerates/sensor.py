@@ -64,4 +64,4 @@ class OpenexchangeratesSensor(
     @property
     def native_value(self) -> float:
         """Return the state of the sensor."""
-        return round(self.coordinator.data.rates[self._quote], 4)
+        return self.coordinator.data.rates[self._quote]

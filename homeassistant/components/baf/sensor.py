@@ -28,19 +28,13 @@ from .entity import BAFEntity
 from .models import BAFData
 
 
-@dataclass
-class BAFSensorDescriptionMixin:
-    """Required values for BAF sensors."""
-
-    value_fn: Callable[[Device], int | float | str | None]
-
-
-@dataclass
+@dataclass(frozen=True, kw_only=True)
 class BAFSensorDescription(
     SensorEntityDescription,
-    BAFSensorDescriptionMixin,
 ):
     """Class describing BAF sensor entities."""
+
+    value_fn: Callable[[Device], int | float | str | None]
 
 
 AUTO_COMFORT_SENSORS = (

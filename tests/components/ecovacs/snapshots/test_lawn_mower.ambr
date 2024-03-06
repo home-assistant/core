@@ -1,0 +1,67 @@
+# serializer version: 1
+# name: test_lawn_mower[5xu9h3][lawn_mower.goat_g1-entity_entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'lawn_mower',
+    'entity_category': None,
+    'entity_id': 'lawn_mower.goat_g1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': <LawnMowerEntityFeature: 7>,
+    'translation_key': None,
+    'unique_id': '8516fbb1-17f1-4194-0000000_mower',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_lawn_mower[5xu9h3][lawn_mower.goat_g1-state]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'lawn_mower',
+    'entity_category': None,
+    'entity_id': 'lawn_mower.goat_g1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': <LawnMowerEntityFeature: 7>,
+    'translation_key': None,
+    'unique_id': '8516fbb1-17f1-4194-0000000_mower',
+    'unit_of_measurement': None,
+  })
+# ---

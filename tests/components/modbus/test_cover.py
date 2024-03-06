@@ -6,8 +6,8 @@ from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
+    CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
     CONF_STATE_OPEN,
@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
-from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
+from .conftest import TEST_ENTITY_NAME, ReadResult
 
 ENTITY_ID = f"{COVER_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
 ENTITY_ID2 = f"{ENTITY_ID}_2"
@@ -57,7 +57,17 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
                     CONF_SLAVE: 10,
                     CONF_SCAN_INTERVAL: 20,
-                    CONF_LAZY_ERROR: 10,
+                }
+            ]
+        },
+        {
+            CONF_COVERS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 1234,
+                    CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                    CONF_DEVICE_ADDRESS: 10,
+                    CONF_SCAN_INTERVAL: 20,
                 }
             ]
         },
@@ -111,46 +121,6 @@ async def test_config_cover(hass: HomeAssistant, mock_modbus) -> None:
 async def test_coil_cover(hass: HomeAssistant, expected, mock_do_cycle) -> None:
     """Run test for given config."""
     assert hass.states.get(ENTITY_ID).state == expected
-
-
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_COVERS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_INPUT_TYPE: CALL_TYPE_COIL,
-                    CONF_ADDRESS: 1234,
-                    CONF_SLAVE: 1,
-                    CONF_SCAN_INTERVAL: 10,
-                    CONF_LAZY_ERROR: 2,
-                },
-            ],
-        },
-    ],
-)
-@pytest.mark.parametrize(
-    ("register_words", "do_exception", "start_expect", "end_expect"),
-    [
-        (
-            [0x00],
-            True,
-            STATE_OPEN,
-            STATE_UNAVAILABLE,
-        ),
-    ],
-)
-async def test_lazy_error_cover(
-    hass: HomeAssistant, start_expect, end_expect, mock_do_cycle
-) -> None:
-    """Run test for given config."""
-    now = mock_do_cycle
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
-    assert hass.states.get(ENTITY_ID).state == start_expect
-    now = await do_next_cycle(hass, now, 11)
-    assert hass.states.get(ENTITY_ID).state == end_expect
 
 
 @pytest.mark.parametrize(

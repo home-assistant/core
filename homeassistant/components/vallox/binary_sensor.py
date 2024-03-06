@@ -38,17 +38,17 @@ class ValloxBinarySensorEntity(ValloxEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data.get_metric(self.entity_description.metric_key) == 1
+        return self.coordinator.data.get(self.entity_description.metric_key) == 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxMetricKeyMixin:
     """Dataclass to allow defining metric_key without a default value."""
 
     metric_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class ValloxBinarySensorEntityDescription(
     BinarySensorEntityDescription, ValloxMetricKeyMixin
 ):
@@ -59,7 +59,6 @@ BINARY_SENSOR_ENTITIES: tuple[ValloxBinarySensorEntityDescription, ...] = (
     ValloxBinarySensorEntityDescription(
         key="post_heater",
         translation_key="post_heater",
-        icon="mdi:radiator",
         metric_key="A_CYC_IO_HEATER",
     ),
 )
@@ -75,8 +74,6 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [
-            ValloxBinarySensorEntity(data["name"], data["coordinator"], description)
-            for description in BINARY_SENSOR_ENTITIES
-        ]
+        ValloxBinarySensorEntity(data["name"], data["coordinator"], description)
+        for description in BINARY_SENSOR_ENTITIES
     )

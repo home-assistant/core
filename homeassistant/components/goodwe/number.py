@@ -23,7 +23,7 @@ from .const import DOMAIN, KEY_DEVICE_INFO, KEY_INVERTER
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweNumberEntityDescriptionBase:
     """Required values when describing Goodwe number entities."""
 
@@ -32,7 +32,7 @@ class GoodweNumberEntityDescriptionBase:
     filter: Callable[[Inverter], bool]
 
 
-@dataclass
+@dataclass(frozen=True)
 class GoodweNumberEntityDescription(
     NumberEntityDescription, GoodweNumberEntityDescriptionBase
 ):
@@ -51,7 +51,6 @@ NUMBERS = (
     GoodweNumberEntityDescription(
         key="grid_export_limit",
         translation_key="grid_export_limit",
-        icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
         device_class=NumberDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -66,7 +65,6 @@ NUMBERS = (
     GoodweNumberEntityDescription(
         key="grid_export_limit",
         translation_key="grid_export_limit",
-        icon="mdi:transmission-tower",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         native_step=1,

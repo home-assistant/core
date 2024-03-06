@@ -368,7 +368,7 @@ async def test_ingress_request_get_compressed(
     aioclient_mock.get(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
         text=body,
-        headers={"Content-Length": len(body)},
+        headers={"Content-Length": len(body), "Content-Type": "text/plain"},
     )
 
     resp = await hassio_noauth_client.get(
@@ -403,6 +403,7 @@ async def test_ingress_request_get_compressed(
         "image/jpeg",
         "font/woff2",
         "video/mp4",
+        "application/tar",
     ],
 )
 async def test_ingress_request_not_compressed(
@@ -427,6 +428,30 @@ async def test_ingress_request_not_compressed(
     assert "Content-Encoding" not in resp.headers
 
 
+async def test_ingress_request_with_charset_in_content_type(
+    hassio_noauth_client, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test ingress passes content type."""
+    body = b"this_is_long_enough_to_be_compressed" * 100
+    aioclient_mock.get(
+        "http://127.0.0.1/ingress/core/x.any",
+        data=body,
+        headers={
+            "Content-Length": len(body),
+            "Content-Type": "text/html; charset=utf-8",
+        },
+    )
+
+    resp = await hassio_noauth_client.get(
+        "/api/hassio_ingress/core/x.any",
+        headers={"X-Test-Header": "beer", "Accept-Encoding": "gzip, deflate"},
+    )
+
+    # Check we got right response
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Content-Type"] == "text/html"
+
+
 @pytest.mark.parametrize(
     "content_type",
     [
@@ -434,6 +459,7 @@ async def test_ingress_request_not_compressed(
         "text/html",
         "application/javascript",
         "text/plain",
+        "application/json",
     ],
 )
 async def test_ingress_request_compressed(

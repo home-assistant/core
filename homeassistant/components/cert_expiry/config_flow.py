@@ -7,9 +7,8 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_PORT, DOMAIN
 from .errors import (
@@ -23,7 +22,7 @@ from .helper import get_cert_expiry_timestamp
 _LOGGER = logging.getLogger(__name__)
 
 
-class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
@@ -35,7 +34,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _test_connection(
         self,
         user_input: Mapping[str, Any],
-    ):
+    ) -> bool:
         """Test connection to the server and try to get the certificate."""
         try:
             await get_cert_expiry_timestamp(
@@ -57,7 +56,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self,
         user_input: Mapping[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
@@ -73,7 +72,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=title,
                     data={CONF_HOST: host, CONF_PORT: port},
                 )
-            if self.context["source"] == config_entries.SOURCE_IMPORT:
+            if self.context["source"] == SOURCE_IMPORT:
                 _LOGGER.error("Config import failed for %s", user_input[CONF_HOST])
                 return self.async_abort(reason="import_failed")
         else:
@@ -97,7 +96,7 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(
         self,
         user_input: Mapping[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Import a config entry.
 
         Only host was required in the yaml file all other fields are optional

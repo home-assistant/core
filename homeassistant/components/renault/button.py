@@ -15,14 +15,14 @@ from .entity import RenaultEntity
 from .renault_hub import RenaultHub
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultButtonRequiredKeysMixin:
     """Mixin for required keys."""
 
     async_press: Callable[[RenaultButtonEntity], Coroutine[Any, Any, Any]]
 
 
-@dataclass
+@dataclass(frozen=True)
 class RenaultButtonEntityDescription(
     ButtonEntityDescription, RenaultButtonRequiredKeysMixin
 ):
@@ -61,20 +61,17 @@ BUTTON_TYPES: tuple[RenaultButtonEntityDescription, ...] = (
     RenaultButtonEntityDescription(
         async_press=lambda x: x.vehicle.set_ac_start(21, None),
         key="start_air_conditioner",
-        icon="mdi:air-conditioner",
         translation_key="start_air_conditioner",
     ),
     RenaultButtonEntityDescription(
         async_press=lambda x: x.vehicle.set_charge_start(),
         key="start_charge",
-        icon="mdi:ev-station",
         requires_electricity=True,
         translation_key="start_charge",
     ),
     RenaultButtonEntityDescription(
         async_press=lambda x: x.vehicle.set_charge_stop(),
         key="stop_charge",
-        icon="mdi:ev-station",
         requires_electricity=True,
         translation_key="stop_charge",
     ),

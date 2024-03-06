@@ -121,6 +121,46 @@ async def test_flow_abort_without_channel(
         assert result["reason"] == "no_channel"
 
 
+async def test_flow_abort_without_subscriptions(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    current_request_with_host: None,
+) -> None:
+    """Check abort flow if user has no subscriptions."""
+    result = await hass.config_entries.flow.async_init(
+        "youtube", context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["url"] == (
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}&scope={'+'.join(SCOPES)}"
+        "&access_type=offline&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    service = MockYouTube(subscriptions_fixture="youtube/get_no_subscriptions.json")
+    with patch(
+        "homeassistant.components.youtube.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.youtube.config_flow.YouTube", return_value=service
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "no_subscriptions"
+
+
 async def test_flow_http_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

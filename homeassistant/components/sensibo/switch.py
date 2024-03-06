@@ -24,7 +24,7 @@ from .entity import SensiboDeviceBaseEntity, async_handle_api_call
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo Device description keys."""
 
@@ -35,7 +35,7 @@ class DeviceBaseEntityDescriptionMixin:
     data_key: str
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboDeviceSwitchEntityDescription(
     SwitchEntityDescription, DeviceBaseEntityDescriptionMixin
 ):
@@ -47,7 +47,6 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         key="timer_on_switch",
         translation_key="timer_on_switch",
         device_class=SwitchDeviceClass.SWITCH,
-        icon="mdi:timer",
         value_fn=lambda data: data.timer_on,
         extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
         command_on="async_turn_on_timer",
@@ -58,7 +57,6 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         key="climate_react_switch",
         translation_key="climate_react_switch",
         device_class=SwitchDeviceClass.SWITCH,
-        icon="mdi:wizard-hat",
         value_fn=lambda data: data.smart_on,
         extra_fn=lambda data: {"type": data.smart_type},
         command_on="async_turn_on_off_smart",
@@ -184,7 +182,9 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         if self.device_data.smart_type is None:
             raise HomeAssistantError(
                 "Use Sensibo Enable Climate React Service once to enable switch or the"
-                " Sensibo app"
+                " Sensibo app",
+                translation_domain=DOMAIN,
+                translation_key="climate_react_not_available",
             )
         data: dict[str, Any] = {"enabled": value}
         result = await self._client.async_enable_climate_react(self._device_id, data)

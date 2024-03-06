@@ -231,7 +231,9 @@ def create_battery_event_data(
         (
             "sdm.devices.types.THERMOSTAT",
             {
-                "sdm.devices.traits.Temperature": {},
+                "sdm.devices.traits.Temperature": {
+                    "ambientTemperatureCelsius": 22.0,
+                },
             },
         )
     ],

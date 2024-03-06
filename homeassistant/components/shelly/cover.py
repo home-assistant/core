@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from aioshelly.block_device import Block
+from aioshelly.const import RPC_GENERATIONS
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -25,8 +26,8 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up switches for device."""
-    if get_device_entry_gen(config_entry) == 2:
+    """Set up covers for device."""
+    if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
         return async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
     return async_setup_block_entry(hass, config_entry, async_add_entities)
@@ -70,14 +71,14 @@ class BlockShellyCover(ShellyBlockEntity, CoverEntity):
     """Entity that controls a cover on block based Shelly devices."""
 
     _attr_device_class = CoverDeviceClass.SHUTTER
+    _attr_supported_features: CoverEntityFeature = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
 
     def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
         """Initialize block cover."""
         super().__init__(coordinator, block)
         self.control_result: dict[str, Any] | None = None
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
         if self.coordinator.device.settings["rollers"][0]["positioning"]:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
@@ -146,14 +147,14 @@ class RpcShellyCover(ShellyRpcEntity, CoverEntity):
     """Entity that controls a cover on RPC based Shelly devices."""
 
     _attr_device_class = CoverDeviceClass.SHUTTER
+    _attr_supported_features: CoverEntityFeature = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
 
     def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
         """Initialize rpc cover."""
         super().__init__(coordinator, f"cover:{id_}")
         self._id = id_
-        self._attr_supported_features = (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
         if self.status["pos_control"]:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 

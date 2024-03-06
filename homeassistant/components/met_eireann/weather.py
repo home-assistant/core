@@ -88,60 +88,61 @@ class MetEireannWeather(
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
 
-    def __init__(self, coordinator, config, hourly):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[MetEireannWeatherData],
+        config: MappingProxyType[str, Any],
+        hourly: bool,
+    ) -> None:
         """Initialise the platform with a data instance and site."""
         super().__init__(coordinator)
         self._attr_unique_id = _calculate_unique_id(config, hourly)
         self._config = config
         self._hourly = hourly
+        name_appendix = " Hourly" if hourly else ""
+        if (name := self._config.get(CONF_NAME)) is not None:
+            self._attr_name = f"{name}{name_appendix}"
+        else:
+            self._attr_name = f"{DEFAULT_NAME}{name_appendix}"
+        self._attr_entity_registry_enabled_default = not hourly
+        self._attr_device_info = DeviceInfo(
+            name="Forecast",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN,)},  # type: ignore[arg-type]
+            manufacturer="Met Éireann",
+            model="Forecast",
+            configuration_url="https://www.met.ie",
+        )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        name = self._config.get(CONF_NAME)
-        name_appendix = ""
-        if self._hourly:
-            name_appendix = " Hourly"
-
-        if name is not None:
-            return f"{name}{name_appendix}"
-
-        return f"{DEFAULT_NAME}{name_appendix}"
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the entity registry."""
-        return not self._hourly
-
-    @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the current condition."""
         return format_condition(
             self.coordinator.data.current_weather_data.get("condition")
         )
 
     @property
-    def native_temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self.coordinator.data.current_weather_data.get("temperature")
 
     @property
-    def native_pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
         return self.coordinator.data.current_weather_data.get("pressure")
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
         return self.coordinator.data.current_weather_data.get("humidity")
 
     @property
-    def native_wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
         return self.coordinator.data.current_weather_data.get("wind_speed")
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | None:
         """Return the wind direction."""
         return self.coordinator.data.current_weather_data.get("wind_bearing")
 
@@ -191,15 +192,3 @@ class MetEireannWeather(
     def _async_forecast_hourly(self) -> list[Forecast]:
         """Return the hourly forecast in native units."""
         return self._forecast(True)
-
-    @property
-    def device_info(self):
-        """Device info."""
-        return DeviceInfo(
-            name="Forecast",
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN,)},
-            manufacturer="Met Éireann",
-            model="Forecast",
-            configuration_url="https://www.met.ie",
-        )

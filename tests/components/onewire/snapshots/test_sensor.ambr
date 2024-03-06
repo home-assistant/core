@@ -30,10 +30,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2405',
       'name': '05.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -67,10 +70,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18S20',
       'name': '10.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -97,6 +103,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -104,6 +112,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/10.111111111111/temperature',
@@ -149,10 +158,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2406',
       'name': '12.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -179,6 +191,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -186,6 +200,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/12.111111111111/TAI8570/temperature',
@@ -209,6 +224,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -216,6 +233,7 @@
       'original_icon': None,
       'original_name': 'Pressure',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/12.111111111111/TAI8570/pressure',
@@ -276,10 +294,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2423',
       'name': '1D.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -306,6 +327,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -313,8 +336,9 @@
       'original_icon': None,
       'original_name': 'Counter A',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'counter_a',
+      'translation_key': 'counter_id',
       'unique_id': '/1D.111111111111/counter.A',
       'unit_of_measurement': 'count',
     }),
@@ -336,6 +360,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -343,8 +369,9 @@
       'original_icon': None,
       'original_name': 'Counter B',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'counter_b',
+      'translation_key': 'counter_id',
       'unique_id': '/1D.111111111111/counter.B',
       'unit_of_measurement': 'count',
     }),
@@ -401,10 +428,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2409',
       'name': '1F.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -426,10 +456,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2423',
       'name': '1D.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': <ANY>,
@@ -456,6 +489,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -463,8 +498,9 @@
       'original_icon': None,
       'original_name': 'Counter A',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'counter_a',
+      'translation_key': 'counter_id',
       'unique_id': '/1D.111111111111/counter.A',
       'unit_of_measurement': 'count',
     }),
@@ -486,6 +522,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -493,8 +531,9 @@
       'original_icon': None,
       'original_name': 'Counter B',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'counter_b',
+      'translation_key': 'counter_id',
       'unique_id': '/1D.111111111111/counter.B',
       'unit_of_measurement': 'count',
     }),
@@ -551,10 +590,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS1822',
       'name': '22.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -581,6 +623,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -588,6 +632,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/22.111111111111/temperature',
@@ -633,10 +678,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2438',
       'name': '26.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -663,6 +711,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -670,6 +720,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/26.111111111111/temperature',
@@ -693,6 +744,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -700,6 +753,7 @@
       'original_icon': None,
       'original_name': 'Humidity',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/26.111111111111/humidity',
@@ -723,6 +777,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -730,6 +786,7 @@
       'original_icon': None,
       'original_name': 'HIH3600 humidity',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'humidity_hih3600',
       'unique_id': '/26.111111111111/HIH3600/humidity',
@@ -753,6 +810,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -760,6 +819,7 @@
       'original_icon': None,
       'original_name': 'HIH4000 humidity',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'humidity_hih4000',
       'unique_id': '/26.111111111111/HIH4000/humidity',
@@ -783,6 +843,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -790,6 +852,7 @@
       'original_icon': None,
       'original_name': 'HIH5030 humidity',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'humidity_hih5030',
       'unique_id': '/26.111111111111/HIH5030/humidity',
@@ -813,6 +876,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -820,6 +885,7 @@
       'original_icon': None,
       'original_name': 'HTM1735 humidity',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'humidity_htm1735',
       'unique_id': '/26.111111111111/HTM1735/humidity',
@@ -843,6 +909,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -850,6 +918,7 @@
       'original_icon': None,
       'original_name': 'Pressure',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/26.111111111111/B1-R1-A/pressure',
@@ -873,6 +942,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -880,6 +951,7 @@
       'original_icon': None,
       'original_name': 'Illuminance',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/26.111111111111/S3-R1-A/illuminance',
@@ -903,6 +975,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -910,6 +984,7 @@
       'original_icon': None,
       'original_name': 'VAD voltage',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'voltage_vad',
       'unique_id': '/26.111111111111/VAD',
@@ -933,6 +1008,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -940,6 +1017,7 @@
       'original_icon': None,
       'original_name': 'VDD voltage',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'voltage_vdd',
       'unique_id': '/26.111111111111/VDD',
@@ -963,6 +1041,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -970,6 +1050,7 @@
       'original_icon': None,
       'original_name': 'VIS voltage difference',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'voltage_vis',
       'unique_id': '/26.111111111111/vis',
@@ -1165,10 +1246,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
       'name': '28.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -1195,6 +1279,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1202,6 +1288,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/28.111111111111/temperature',
@@ -1247,10 +1334,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
       'name': '28.222222222222',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -1277,6 +1367,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1284,6 +1376,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/28.222222222222/temperature',
@@ -1329,10 +1422,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS18B20',
       'name': '28.222222222223',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -1359,6 +1455,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1366,6 +1464,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/28.222222222223/temperature',
@@ -1411,10 +1510,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2408',
       'name': '29.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -1448,10 +1550,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2760',
       'name': '30.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -1478,6 +1583,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1485,6 +1592,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/30.111111111111/temperature',
@@ -1508,6 +1616,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1515,6 +1625,7 @@
       'original_icon': None,
       'original_name': 'Thermocouple K temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'thermocouple_temperature_k',
       'unique_id': '/30.111111111111/typeX/temperature',
@@ -1538,6 +1649,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1545,6 +1658,7 @@
       'original_icon': None,
       'original_name': 'Voltage',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/30.111111111111/volt',
@@ -1568,6 +1682,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1575,6 +1691,7 @@
       'original_icon': None,
       'original_name': 'VIS voltage gradient',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'voltage_vis_gradient',
       'unique_id': '/30.111111111111/vis',
@@ -1665,10 +1782,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS2413',
       'name': '3A.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -1702,10 +1822,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS1825',
       'name': '3B.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -1732,6 +1855,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1739,6 +1864,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/3B.111111111111/temperature',
@@ -1784,10 +1910,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Maxim Integrated',
       'model': 'DS28EA00',
       'name': '42.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -1814,6 +1943,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1821,6 +1952,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/42.111111111111/temperature',
@@ -1866,10 +1998,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Embedded Data Systems',
       'model': 'EDS0068',
       'name': '7E.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -1896,6 +2031,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1903,6 +2040,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/7E.111111111111/EDS0068/temperature',
@@ -1926,6 +2064,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1933,6 +2073,7 @@
       'original_icon': None,
       'original_name': 'Pressure',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/7E.111111111111/EDS0068/pressure',
@@ -1956,6 +2097,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1963,6 +2106,7 @@
       'original_icon': None,
       'original_name': 'Illuminance',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/7E.111111111111/EDS0068/light',
@@ -1986,6 +2130,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -1993,6 +2139,7 @@
       'original_icon': None,
       'original_name': 'Humidity',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/7E.111111111111/EDS0068/humidity',
@@ -2083,10 +2230,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Embedded Data Systems',
       'model': 'EDS0066',
       'name': '7E.222222222222',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -2113,6 +2263,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2120,6 +2272,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/7E.222222222222/EDS0066/temperature',
@@ -2143,6 +2296,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2150,6 +2305,7 @@
       'original_icon': None,
       'original_name': 'Pressure',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/7E.222222222222/EDS0066/pressure',
@@ -2210,10 +2366,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HobbyBoards_EF',
       'name': 'EF.111111111111',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -2240,6 +2399,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2247,6 +2408,7 @@
       'original_icon': None,
       'original_name': 'Humidity',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/EF.111111111111/humidity/humidity_corrected',
@@ -2270,6 +2432,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2277,6 +2441,7 @@
       'original_icon': None,
       'original_name': 'Raw humidity',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': 'humidity_raw',
       'unique_id': '/EF.111111111111/humidity/humidity_raw',
@@ -2300,6 +2465,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2307,6 +2474,7 @@
       'original_icon': None,
       'original_name': 'Temperature',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '/EF.111111111111/humidity/temperature',
@@ -2382,10 +2550,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HB_MOISTURE_METER',
       'name': 'EF.111111111112',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
@@ -2412,6 +2583,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2419,8 +2592,9 @@
       'original_icon': None,
       'original_name': 'Wetness 0',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'wetness_0',
+      'translation_key': 'wetness_id',
       'unique_id': '/EF.111111111112/moisture/sensor.0',
       'unit_of_measurement': '%',
     }),
@@ -2442,6 +2616,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2449,8 +2625,9 @@
       'original_icon': None,
       'original_name': 'Wetness 1',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'wetness_1',
+      'translation_key': 'wetness_id',
       'unique_id': '/EF.111111111112/moisture/sensor.1',
       'unit_of_measurement': '%',
     }),
@@ -2472,6 +2649,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2479,8 +2658,9 @@
       'original_icon': None,
       'original_name': 'Moisture 2',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'moisture_2',
+      'translation_key': 'moisture_id',
       'unique_id': '/EF.111111111112/moisture/sensor.2',
       'unit_of_measurement': <UnitOfPressure.CBAR: 'cbar'>,
     }),
@@ -2502,6 +2682,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -2509,8 +2691,9 @@
       'original_icon': None,
       'original_name': 'Moisture 3',
       'platform': 'onewire',
+      'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'moisture_3',
+      'translation_key': 'moisture_id',
       'unique_id': '/EF.111111111112/moisture/sensor.3',
       'unit_of_measurement': <UnitOfPressure.CBAR: 'cbar'>,
     }),
@@ -2599,10 +2782,13 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Hobby Boards',
       'model': 'HB_HUB',
       'name': 'EF.111111111113',
       'name_by_user': None,
+      'serial_number': None,
       'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,

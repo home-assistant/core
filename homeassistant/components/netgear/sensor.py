@@ -36,47 +36,43 @@ from .const import (
     KEY_COORDINATOR_UTIL,
     KEY_ROUTER,
 )
-from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterCoordinatorEntity
+from .entity import NetgearDeviceEntity, NetgearRouterCoordinatorEntity
+from .router import NetgearRouter
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "type": SensorEntityDescription(
         key="type",
-        name="link type",
+        translation_key="link_type",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:lan",
     ),
     "link_rate": SensorEntityDescription(
         key="link_rate",
-        name="link rate",
+        translation_key="link_rate",
         native_unit_of_measurement="Mbps",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:speedometer",
     ),
     "signal": SensorEntityDescription(
         key="signal",
-        name="signal strength",
+        translation_key="signal_strength",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:wifi",
     ),
     "ssid": SensorEntityDescription(
         key="ssid",
-        name="ssid",
+        translation_key="ssid",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:wifi-marker",
     ),
     "conn_ap_mac": SensorEntityDescription(
         key="conn_ap_mac",
-        name="access point mac",
+        translation_key="access_point_mac",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:router-network",
     ),
 }
 
 
-@dataclass
+@dataclass(frozen=True)
 class NetgearSensorEntityDescription(SensorEntityDescription):
     """Class describing Netgear sensor entities."""
 
@@ -87,153 +83,137 @@ class NetgearSensorEntityDescription(SensorEntityDescription):
 SENSOR_TRAFFIC_TYPES = [
     NetgearSensorEntityDescription(
         key="NewTodayUpload",
-        name="Upload today",
+        translation_key="upload_today",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:upload",
     ),
     NetgearSensorEntityDescription(
         key="NewTodayDownload",
-        name="Download today",
+        translation_key="download_today",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:download",
     ),
     NetgearSensorEntityDescription(
         key="NewYesterdayUpload",
-        name="Upload yesterday",
+        translation_key="upload_yesterday",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:upload",
     ),
     NetgearSensorEntityDescription(
         key="NewYesterdayDownload",
-        name="Download yesterday",
+        translation_key="download_yesterday",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:download",
     ),
     NetgearSensorEntityDescription(
         key="NewWeekUpload",
-        name="Upload week",
+        translation_key="upload_week",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:upload",
         index=0,
         value=lambda data: data[0],
     ),
     NetgearSensorEntityDescription(
         key="NewWeekUpload",
-        name="Upload week average",
+        translation_key="upload_week_average",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:upload",
         index=1,
         value=lambda data: data[1],
     ),
     NetgearSensorEntityDescription(
         key="NewWeekDownload",
-        name="Download week",
+        translation_key="download_week",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:download",
         index=0,
         value=lambda data: data[0],
     ),
     NetgearSensorEntityDescription(
         key="NewWeekDownload",
-        name="Download week average",
+        translation_key="download_week_average",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:download",
         index=1,
         value=lambda data: data[1],
     ),
     NetgearSensorEntityDescription(
         key="NewMonthUpload",
-        name="Upload month",
+        translation_key="upload_month",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:upload",
         index=0,
         value=lambda data: data[0],
     ),
     NetgearSensorEntityDescription(
         key="NewMonthUpload",
-        name="Upload month average",
+        translation_key="upload_month_average",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:upload",
         index=1,
         value=lambda data: data[1],
     ),
     NetgearSensorEntityDescription(
         key="NewMonthDownload",
-        name="Download month",
+        translation_key="download_month",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:download",
         index=0,
         value=lambda data: data[0],
     ),
     NetgearSensorEntityDescription(
         key="NewMonthDownload",
-        name="Download month average",
+        translation_key="download_month_average",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:download",
         index=1,
         value=lambda data: data[1],
     ),
     NetgearSensorEntityDescription(
         key="NewLastMonthUpload",
-        name="Upload last month",
+        translation_key="upload_last_month",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:upload",
         index=0,
         value=lambda data: data[0],
     ),
     NetgearSensorEntityDescription(
         key="NewLastMonthUpload",
-        name="Upload last month average",
+        translation_key="upload_last_month_average",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:upload",
         index=1,
         value=lambda data: data[1],
     ),
     NetgearSensorEntityDescription(
         key="NewLastMonthDownload",
-        name="Download last month",
+        translation_key="download_last_month",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:download",
         index=0,
         value=lambda data: data[0],
     ),
     NetgearSensorEntityDescription(
         key="NewLastMonthDownload",
-        name="Download last month average",
+        translation_key="download_last_month_average",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfInformation.MEGABYTES,
         device_class=SensorDeviceClass.DATA_SIZE,
-        icon="mdi:download",
         index=1,
         value=lambda data: data[1],
     ),
@@ -242,44 +222,39 @@ SENSOR_TRAFFIC_TYPES = [
 SENSOR_SPEED_TYPES = [
     NetgearSensorEntityDescription(
         key="NewOOKLAUplinkBandwidth",
-        name="Uplink Bandwidth",
+        translation_key="uplink_bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:upload",
     ),
     NetgearSensorEntityDescription(
         key="NewOOKLADownlinkBandwidth",
-        name="Downlink Bandwidth",
+        translation_key="downlink_bandwidth",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
-        icon="mdi:download",
     ),
     NetgearSensorEntityDescription(
         key="AveragePing",
-        name="Average Ping",
+        translation_key="average_ping",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
-        icon="mdi:wan",
     ),
 ]
 
 SENSOR_UTILIZATION = [
     NetgearSensorEntityDescription(
         key="NewCPUUtilization",
-        name="CPU Utilization",
+        translation_key="cpu_utilization",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:cpu-64-bit",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     NetgearSensorEntityDescription(
         key="NewMemoryUtilization",
-        name="Memory Utilization",
+        translation_key="memory_utilization",
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:memory",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
@@ -287,9 +262,8 @@ SENSOR_UTILIZATION = [
 SENSOR_LINK_TYPES = [
     NetgearSensorEntityDescription(
         key="NewEthernetLinkStatus",
-        name="Ethernet Link Status",
+        translation_key="ethernet_link_status",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:ethernet",
     ),
 ]
 
@@ -379,10 +353,9 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router, device)
         self._attribute = attribute
-        self.entity_description = SENSOR_TYPES[self._attribute]
-        self._name = f"{self.get_device_name()} {self.entity_description.name}"
-        self._unique_id = f"{self._mac}-{self._attribute}"
-        self._state = self._device.get(self._attribute)
+        self.entity_description = SENSOR_TYPES[attribute]
+        self._attr_unique_id = f"{self._mac}-{attribute}"
+        self._state = device.get(attribute)
 
     @property
     def native_value(self):
@@ -413,8 +386,7 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router)
         self.entity_description = entity_description
-        self._name = f"{router.device_name} {entity_description.name}"
-        self._unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
+        self._attr_unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
 
         self._value: StateType | date | datetime | Decimal = None
         self.async_update_device()

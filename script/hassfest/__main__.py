@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from operator import attrgetter
 import pathlib
 import sys
 from time import monotonic
@@ -15,6 +16,8 @@ from . import (
     coverage,
     dependencies,
     dhcp,
+    docker,
+    icons,
     json,
     manifest,
     metadata,
@@ -36,6 +39,7 @@ INTEGRATION_PLUGINS = [
     config_schema,
     dependencies,
     dhcp,
+    icons,
     json,
     manifest,
     mqtt,
@@ -49,6 +53,7 @@ INTEGRATION_PLUGINS = [
 ]
 HASS_PLUGINS = [
     coverage,
+    docker,
     mypy_config,
     metadata,
 ]
@@ -229,7 +234,7 @@ def print_integrations_status(
     show_fixable_errors: bool = True,
 ) -> None:
     """Print integration status."""
-    for integration in sorted(integrations, key=lambda itg: itg.domain):
+    for integration in sorted(integrations, key=attrgetter("domain")):
         extra = f" - {integration.path}" if config.specific_integrations else ""
         print(f"Integration {integration.domain}{extra}:")
         for error in integration.errors:

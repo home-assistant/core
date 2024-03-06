@@ -70,9 +70,6 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
 
         self.serial_number = serial_number
         self._state: str | None = None
-        self._digits = coordinator.entry.options.get(
-            CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
-        )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -80,7 +77,6 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         area = self.coordinator.data["locks"][self.serial_number]["device"]["area"]
         return DeviceInfo(
             name=area,
-            suggested_area=area,
             manufacturer="Verisure",
             model="Lockguard Smartlock",
             identifiers={(DOMAIN, self.serial_number)},
@@ -111,8 +107,11 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
 
     @property
     def code_format(self) -> str:
-        """Return the required six digit code."""
-        return "^\\d{%s}$" % self._digits
+        """Return the configured code format."""
+        digits = self.coordinator.entry.options.get(
+            CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
+        )
+        return "^\\d{%s}$" % digits
 
     @property
     def is_locked(self) -> bool:

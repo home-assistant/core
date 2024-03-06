@@ -7,6 +7,7 @@ from typing import Any, Final
 from aioairzone_cloud.const import (
     AZD_ACTIVE,
     AZD_AIDOOS,
+    AZD_AQ_ACTIVE,
     AZD_ERRORS,
     AZD_PROBLEMS,
     AZD_SYSTEMS,
@@ -34,7 +35,7 @@ from .entity import (
 )
 
 
-@dataclass
+@dataclass(frozen=True)
 class AirzoneBinarySensorEntityDescription(BinarySensorEntityDescription):
     """A class that describes Airzone Cloud binary sensor entities."""
 
@@ -75,6 +76,10 @@ ZONE_BINARY_SENSOR_TYPES: Final[tuple[AirzoneBinarySensorEntityDescription, ...]
     AirzoneBinarySensorEntityDescription(
         device_class=BinarySensorDeviceClass.RUNNING,
         key=AZD_ACTIVE,
+    ),
+    AirzoneBinarySensorEntityDescription(
+        key=AZD_AQ_ACTIVE,
+        translation_key="air_quality_active",
     ),
     AirzoneBinarySensorEntityDescription(
         attributes={
@@ -159,8 +164,6 @@ class AirzoneBinarySensor(AirzoneEntity, BinarySensorEntity):
 class AirzoneAidooBinarySensor(AirzoneAidooEntity, AirzoneBinarySensor):
     """Define an Airzone Cloud Aidoo binary sensor."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -180,8 +183,6 @@ class AirzoneAidooBinarySensor(AirzoneAidooEntity, AirzoneBinarySensor):
 class AirzoneSystemBinarySensor(AirzoneSystemEntity, AirzoneBinarySensor):
     """Define an Airzone Cloud System binary sensor."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
@@ -200,8 +201,6 @@ class AirzoneSystemBinarySensor(AirzoneSystemEntity, AirzoneBinarySensor):
 
 class AirzoneZoneBinarySensor(AirzoneZoneEntity, AirzoneBinarySensor):
     """Define an Airzone Cloud Zone binary sensor."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,

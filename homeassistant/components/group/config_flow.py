@@ -269,7 +269,7 @@ PREVIEW_OPTIONS_SCHEMA: dict[str, vol.Schema] = {}
 
 CREATE_PREVIEW_ENTITY: dict[
     str,
-    Callable[[str, dict[str, Any]], GroupEntity | MediaPlayerGroup],
+    Callable[[HomeAssistant, str, dict[str, Any]], GroupEntity | MediaPlayerGroup],
 ] = {
     "binary_sensor": async_create_preview_binary_sensor,
     "cover": async_create_preview_cover,
@@ -361,6 +361,7 @@ def ws_start_preview(
     msg: dict[str, Any],
 ) -> None:
     """Generate a preview."""
+    entity_registry_entry: er.RegistryEntry | None = None
     if msg["flow_type"] == "config_flow":
         flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
         group_type = flow_status["step_id"]
@@ -370,12 +371,17 @@ def ws_start_preview(
         name = validated["name"]
     else:
         flow_status = hass.config_entries.options.async_get(msg["flow_id"])
-        config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
+        config_entry_id = flow_status["handler"]
+        config_entry = hass.config_entries.async_get_entry(config_entry_id)
         if not config_entry:
             raise HomeAssistantError
         group_type = config_entry.options["group_type"]
         name = config_entry.options["name"]
         validated = PREVIEW_OPTIONS_SCHEMA[group_type](msg["user_input"])
+        entity_registry = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
+        if entries:
+            entity_registry_entry = entries[0]
 
     @callback
     def async_preview_updated(state: str, attributes: Mapping[str, Any]) -> None:
@@ -386,8 +392,11 @@ def ws_start_preview(
             )
         )
 
-    preview_entity = CREATE_PREVIEW_ENTITY[group_type](name, validated)
+    preview_entity: GroupEntity | MediaPlayerGroup = CREATE_PREVIEW_ENTITY[group_type](
+        hass, name, validated
+    )
     preview_entity.hass = hass
+    preview_entity.registry_entry = entity_registry_entry
 
     connection.send_result(msg["id"])
     connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(

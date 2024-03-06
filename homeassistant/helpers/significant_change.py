@@ -82,7 +82,8 @@ async def _initialize(hass: HomeAssistant) -> None:
 
     functions = hass.data[DATA_FUNCTIONS] = {}
 
-    async def process_platform(
+    @callback
+    def process_platform(
         hass: HomeAssistant, component_name: str, platform: Any
     ) -> None:
         """Process a significant change platform."""
@@ -145,6 +146,15 @@ def check_percentage_change(
             return float("inf")
 
     return _check_numeric_change(old_state, new_state, change, percentage_change)
+
+
+def check_valid_float(value: str | int | float) -> bool:
+    """Check if given value is a valid float."""
+    try:
+        float(value)
+    except ValueError:
+        return False
+    return True
 
 
 class SignificantlyChangedChecker:

@@ -23,7 +23,7 @@ from .entity import SensiboDeviceBaseEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass
+@dataclass(frozen=True)
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
@@ -31,7 +31,7 @@ class DeviceBaseEntityDescriptionMixin:
     value_available: Callable[[SensiboDevice], str | None]
 
 
-@dataclass
+@dataclass(frozen=True)
 class SensiboDeviceUpdateEntityDescription(
     UpdateEntityDescription, DeviceBaseEntityDescriptionMixin
 ):
@@ -41,10 +41,8 @@ class SensiboDeviceUpdateEntityDescription(
 DEVICE_SENSOR_TYPES: tuple[SensiboDeviceUpdateEntityDescription, ...] = (
     SensiboDeviceUpdateEntityDescription(
         key="fw_ver_available",
-        translation_key="fw_ver_available",
         device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:rocket-launch",
         value_version=lambda data: data.fw_ver,
         value_available=lambda data: data.fw_ver_available,
     ),

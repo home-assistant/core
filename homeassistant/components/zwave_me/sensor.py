@@ -31,7 +31,7 @@ from . import ZWaveMeController, ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
 
 
-@dataclass
+@dataclass(frozen=True)
 class ZWaveMeSensorEntityDescription(SensorEntityDescription):
     """Class describing ZWaveMeSensor sensor entities."""
 

@@ -100,10 +100,10 @@ class TomatoDeviceScanner(DeviceScanner):
         try:
             if self.ssl:
                 response = requests.Session().send(
-                    self.req, timeout=3, verify=self.verify_ssl
+                    self.req, timeout=60, verify=self.verify_ssl
                 )
             else:
-                response = requests.Session().send(self.req, timeout=3)
+                response = requests.Session().send(self.req, timeout=60)
 
             # Calling and parsing the Tomato api here. We only need the
             # wldev and dhcpd_lease values.

@@ -6,12 +6,11 @@ import logging
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantAccessLogger
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import (
     CONF_ENTITIES,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant
@@ -101,7 +100,7 @@ async def start_emulated_hue_bridge(
         config.advertise_port or config.listen_port,
     )
 
-    runner = web.AppRunner(app, access_log_class=HomeAssistantAccessLogger)
+    runner = web.AppRunner(app)
     await runner.setup()
 
     site = web.TCPSite(runner, config.host_ip_addr, config.listen_port)
@@ -154,6 +153,6 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
         """Start the bridge."""
         await start_emulated_hue_bridge(hass, config, app)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _start)
 
     return True

@@ -23,17 +23,12 @@ from .deconz_device import DeconzDevice, DeconzSceneMixin
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
 
-@dataclass
-class DeconzButtonDescriptionMixin:
-    """Required values when describing deCONZ button entities."""
-
-    suffix: str
-    button_fn: str
-
-
-@dataclass
-class DeconzButtonDescription(ButtonEntityDescription, DeconzButtonDescriptionMixin):
+@dataclass(frozen=True, kw_only=True)
+class DeconzButtonDescription(ButtonEntityDescription):
     """Class describing deCONZ button entities."""
+
+    button_fn: str
+    suffix: str
 
 
 ENTITY_DESCRIPTIONS = {

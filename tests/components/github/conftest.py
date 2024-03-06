@@ -4,11 +4,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.github.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_REPOSITORIES,
-    DOMAIN,
-)
+from homeassistant.components.github.const import CONF_REPOSITORIES, DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .common import MOCK_ACCESS_TOKEN, TEST_REPOSITORY, setup_github_integration

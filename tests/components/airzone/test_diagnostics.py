@@ -2,30 +2,13 @@
 
 from unittest.mock import patch
 
-from aioairzone.const import (
-    API_DATA,
-    API_MAC,
-    API_SYSTEM_ID,
-    API_SYSTEMS,
-    API_VERSION,
-    API_WIFI_RSSI,
-    AZD_ID,
-    AZD_MASTER,
-    AZD_SYSTEM,
-    AZD_SYSTEMS,
-    AZD_ZONES,
-    RAW_HVAC,
-    RAW_VERSION,
-    RAW_WEBSERVER,
-)
+from aioairzone.const import RAW_HVAC, RAW_VERSION, RAW_WEBSERVER
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.airzone.const import DOMAIN
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .util import (
-    CONFIG,
     HVAC_MOCK,
     HVAC_VERSION_MOCK,
     HVAC_WEBSERVER_MOCK,
@@ -37,7 +20,9 @@ from tests.typing import ClientSessionGenerator
 
 
 async def test_config_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
     await async_init_integration(hass)
@@ -52,54 +37,5 @@ async def test_config_entry_diagnostics(
             RAW_WEBSERVER: HVAC_WEBSERVER_MOCK,
         },
     ):
-        diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
-
-    assert (
-        diag["api_data"][RAW_HVAC][API_SYSTEMS][0][API_DATA][0].items()
-        >= {
-            API_SYSTEM_ID: HVAC_MOCK[API_SYSTEMS][0][API_DATA][0][API_SYSTEM_ID],
-        }.items()
-    )
-
-    assert (
-        diag["api_data"][RAW_VERSION].items()
-        >= {
-            API_VERSION: HVAC_VERSION_MOCK[API_VERSION],
-        }.items()
-    )
-
-    assert (
-        diag["api_data"][RAW_WEBSERVER].items()
-        >= {
-            API_MAC: REDACTED,
-            API_WIFI_RSSI: HVAC_WEBSERVER_MOCK[API_WIFI_RSSI],
-        }.items()
-    )
-
-    assert (
-        diag["config_entry"].items()
-        >= {
-            "data": {
-                CONF_HOST: CONFIG[CONF_HOST],
-                CONF_PORT: CONFIG[CONF_PORT],
-            },
-            "domain": DOMAIN,
-            "unique_id": REDACTED,
-        }.items()
-    )
-
-    assert (
-        diag["coord_data"][AZD_SYSTEMS]["1"].items()
-        >= {
-            AZD_ID: 1,
-        }.items()
-    )
-
-    assert (
-        diag["coord_data"][AZD_ZONES]["1:1"].items()
-        >= {
-            AZD_ID: 1,
-            AZD_MASTER: True,
-            AZD_SYSTEM: 1,
-        }.items()
-    )
+        result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        assert result == snapshot

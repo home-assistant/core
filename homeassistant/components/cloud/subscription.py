@@ -19,7 +19,7 @@ async def async_subscription_info(cloud: Cloud[CloudClient]) -> dict[str, Any] |
     try:
         async with asyncio.timeout(REQUEST_TIMEOUT):
             return await cloud_api.async_subscription_info(cloud)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.error(
             (
                 "A timeout of %s was reached while trying to fetch subscription"
@@ -40,7 +40,7 @@ async def async_migrate_paypal_agreement(
     try:
         async with asyncio.timeout(REQUEST_TIMEOUT):
             return await cloud_api.async_migrate_paypal_agreement(cloud)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _LOGGER.error(
             "A timeout of %s was reached while trying to start agreement migration",
             REQUEST_TIMEOUT,

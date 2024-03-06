@@ -1,0 +1,30 @@
+[
+  {
+    "videoState": "download:ready",
+    "_id": "1234567890ab1234567890ab",
+    "device": "0123456789abcdef01234567",
+    "callId": "1234567890123-1234567890abcd1234567890abcd",
+    "event": "device:sensor:motion",
+    "state": "ready",
+    "ttlStartDate": "2020-03-30T12:35:02.204Z",
+    "createdAt": "2020-03-30T12:35:02.204Z",
+    "updatedAt": "2020-03-30T12:35:02.566Z",
+    "id": "1234567890ab1234567890ab",
+    "media": "https://skybell-thumbnails-stage.s3.amazonaws.com/012345670123456789abcdef/1646859244793-951012345670123456789abcdef_012345670123456789abcdef.jpeg",
+    "mediaSmall": "https://skybell-thumbnails-stage.s3.amazonaws.com/012345670123456789abcdef/1646859244793-951012345670123456789abcdef_012345670123456789abcdef_small.jpeg"
+  },
+  {
+    "videoState": "download:ready",
+    "_id": "1234567890ab1234567890a9",
+    "device": "0123456789abcdef01234567",
+    "callId": "1234567890123-1234567890abcd1234567890abc9",
+    "event": "application:on-demand",
+    "state": "ready",
+    "ttlStartDate": "2020-03-30T11:35:02.204Z",
+    "createdAt": "2020-03-30T11:35:02.204Z",
+    "updatedAt": "2020-03-30T11:35:02.566Z",
+    "id": "1234567890ab1234567890a9",
+    "media": "https://skybell-thumbnails-stage.s3.amazonaws.com/012345670123456789abcdef/1646859244793-951012345670123456789abcdef_012345670123456789abcde9.jpeg",
+    "mediaSmall": "https://skybell-thumbnails-stage.s3.amazonaws.com/012345670123456789abcdef/1646859244793-951012345670123456789abcdef_012345670123456789abcde9_small.jpeg"
+  }
+]

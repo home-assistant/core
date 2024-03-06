@@ -43,20 +43,17 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="orp",
         translation_key="oxydo_reduction_potential",
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
-        icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="ph",
         translation_key="ph",
-        icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="tds",
         translation_key="tds",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -68,7 +65,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="rssi",
         translation_key="rssi",
-        icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -76,7 +72,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         key="salt",
         translation_key="salt",
         native_unit_of_measurement="mg/L",
-        icon="mdi:pool",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
@@ -153,7 +148,13 @@ class OndiloICO(
 
         pooldata = self._pooldata()
         self._attr_unique_id = f"{pooldata['ICO']['serial_number']}-{description.key}"
-        self._device_name = pooldata["name"]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, pooldata["ICO"]["serial_number"])},
+            manufacturer="Ondilo",
+            model="ICO",
+            name=pooldata["name"],
+            sw_version=pooldata["ICO"]["sw_version"],
+        )
 
     def _pooldata(self):
         """Get pool data dict."""
@@ -177,15 +178,3 @@ class OndiloICO(
     def native_value(self):
         """Last value of the sensor."""
         return self._devdata()["value"]
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info for the sensor."""
-        pooldata = self._pooldata()
-        return DeviceInfo(
-            identifiers={(DOMAIN, pooldata["ICO"]["serial_number"])},
-            manufacturer="Ondilo",
-            model="ICO",
-            name=self._device_name,
-            sw_version=pooldata["ICO"]["sw_version"],
-        )

@@ -74,8 +74,8 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
     seal(upnp_device)
     domain_data.upnp_factory.async_create_device.return_value = upnp_device
 
-    with patch.dict(hass.data, {DLNA_DOMAIN: domain_data}):
-        yield domain_data
+    hass.data[DLNA_DOMAIN] = domain_data
+    return domain_data
 
 
 @pytest.fixture
@@ -129,6 +129,7 @@ def dmr_device_mock(domain_data_mock: Mock) -> Iterable[Mock]:
         device.manufacturer = "device_manufacturer"
         device.model_name = "device_model_name"
         device.name = "device_name"
+        device.preset_names = ["preset1", "preset2"]
 
         yield device
 
