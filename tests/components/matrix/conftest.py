@@ -134,6 +134,9 @@ class _MockAsyncClient(AsyncClient):
     async def sync_forever(self, *args, **kwargs):
         return None
 
+    def load_store(self):
+        return
+
     async def upload(self, *args, **kwargs):
         return UploadResponse(content_uri="mxc://example.com/randomgibberish"), None
 
