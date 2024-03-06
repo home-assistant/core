@@ -28,8 +28,7 @@ TOKEN_TYPE_SYSTEM = "system"
 TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = "long_lived_access_token"
 
 
-class AuthFlowResult(FlowResult[tuple[str, str]], total=False):
-    """Typed result dict for auth flow."""
+AuthFlowResult = FlowResult[tuple[str, str]]
 
 
 @attr.s(slots=True)

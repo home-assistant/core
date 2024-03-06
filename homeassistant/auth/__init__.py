@@ -106,7 +106,7 @@ class AuthManagerFlowManager(
         *,
         context: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
-    ) -> data_entry_flow.FlowHandler[AuthFlowResult, tuple[str, str]]:
+    ) -> LoginFlow:
         """Create a login flow."""
         auth_provider = self.auth_manager.get_auth_provider(*handler_key)
         if not auth_provider:

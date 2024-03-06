@@ -297,7 +297,9 @@ class LoginFlowIndexView(LoginFlowBaseView):
         vol.Schema(
             {
                 vol.Required("client_id"): str,
-                vol.Required("handler"): vol.All(list[str], vol.Length(2, 2)),
+                vol.Required("handler"): vol.All(
+                    [str], vol.Length(2, 2), vol.Coerce(tuple)
+                ),
                 vol.Required("redirect_uri"): str,
                 vol.Optional("type", default="authorize"): str,
             }
