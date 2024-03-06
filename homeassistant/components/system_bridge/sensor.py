@@ -33,7 +33,8 @@ from homeassistant.helpers.typing import UNDEFINED, StateType
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeDataUpdateCoordinator
+from .data import SystemBridgeData
 from .entity import SystemBridgeEntity
 
 ATTR_AVAILABLE: Final = "available"
@@ -53,14 +54,14 @@ class SystemBridgeSensorEntityDescription(SensorEntityDescription):
     value: Callable = round
 
 
-def battery_time_remaining(data: SystemBridgeCoordinatorData) -> datetime | None:
+def battery_time_remaining(data: SystemBridgeData) -> datetime | None:
     """Return the battery time remaining."""
     if (battery_time := data.battery.time_remaining) is not None:
         return dt_util.utcnow() + timedelta(seconds=battery_time)
     return None
 
 
-def cpu_speed(data: SystemBridgeCoordinatorData) -> float | None:
+def cpu_speed(data: SystemBridgeData) -> float | None:
     """Return the CPU speed."""
     if (cpu_frequency := data.cpu.frequency) is not None and (
         cpu_frequency.current
@@ -72,7 +73,7 @@ def cpu_speed(data: SystemBridgeCoordinatorData) -> float | None:
 def with_per_cpu(func) -> Callable:
     """Wrap a function to ensure per CPU data is available."""
 
-    def wrapper(data: SystemBridgeCoordinatorData, index: int) -> float | None:
+    def wrapper(data: SystemBridgeData, index: int) -> float | None:
         """Wrap a function to ensure per CPU data is available."""
         if data.cpu.per_cpu is not None and index < len(data.cpu.per_cpu):
             return func(data.cpu.per_cpu[index])
@@ -96,7 +97,7 @@ def cpu_usage_per_cpu(per_cpu: PerCPU) -> float | None:
 def with_display(func) -> Callable:
     """Wrap a function to ensure a Display is available."""
 
-    def wrapper(data: SystemBridgeCoordinatorData, index: int) -> Display | None:
+    def wrapper(data: SystemBridgeData, index: int) -> Display | None:
         """Wrap a function to ensure a Display is available."""
         if index < len(data.displays):
             return func(data.displays[index])
@@ -126,7 +127,7 @@ def display_refresh_rate(display: Display) -> float | None:
 def with_gpu(func) -> Callable:
     """Wrap a function to ensure a GPU is available."""
 
-    def wrapper(data: SystemBridgeCoordinatorData, index: int) -> GPU | None:
+    def wrapper(data: SystemBridgeData, index: int) -> GPU | None:
         """Wrap a function to ensure a GPU is available."""
         if index < len(data.gpus):
             return func(data.gpus[index])
@@ -191,7 +192,7 @@ def gpu_usage_percentage(gpu: GPU) -> float | None:
     return gpu.core_load
 
 
-def memory_free(data: SystemBridgeCoordinatorData) -> float | None:
+def memory_free(data: SystemBridgeData) -> float | None:
     """Return the free memory."""
     if (virtual := data.memory.virtual) is not None and (
         free := virtual.free
@@ -200,7 +201,7 @@ def memory_free(data: SystemBridgeCoordinatorData) -> float | None:
     return None
 
 
-def memory_used(data: SystemBridgeCoordinatorData) -> float | None:
+def memory_used(data: SystemBridgeData) -> float | None:
     """Return the used memory."""
     if (virtual := data.memory.virtual) is not None and (
         used := virtual.used
@@ -210,7 +211,7 @@ def memory_used(data: SystemBridgeCoordinatorData) -> float | None:
 
 
 def partition_usage(
-    data: SystemBridgeCoordinatorData,
+    data: SystemBridgeData,
     device_index: int,
     partition_index: int,
 ) -> float | None:
@@ -382,9 +383,11 @@ async def async_setup_entry(
                         state_class=SensorStateClass.MEASUREMENT,
                         native_unit_of_measurement=PERCENTAGE,
                         icon="mdi:harddisk",
-                        value=lambda data,
-                        dk=index_device,
-                        pk=index_partition: partition_usage(data, dk, pk),
+                        value=(
+                            lambda data,
+                            dk=index_device,
+                            pk=index_partition: partition_usage(data, dk, pk)
+                        ),
                     ),
                     entry.data[CONF_PORT],
                 )
