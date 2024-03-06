@@ -199,8 +199,8 @@ async def async_process_integration_platforms(
     #
     # 1. We want the integration that provides the integration platform to
     #    not be delayed by waiting on each individual platform to be processed
-    #    since the integration platforms may have to schedule I/O or executor
-    #    jobs.
+    #    since the import or the integration platforms themselves may have to
+    #    schedule I/O or executor jobs.
     #
     # 2. We want the behavior to be the same as if the integration that has
     #    the integration platform is loaded after the platform is processed.
