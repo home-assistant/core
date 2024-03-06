@@ -88,7 +88,7 @@ class BedrockAgent(conversation.AbstractConversationAgent):
             body = json.dumps(
                 {
                     "prompt": f"\n\nHuman:{question}\n\nAssistant:",
-                    "max_tokens_to_sample": 50,
+                    "max_tokens_to_sample": 200,
                     "temperature": 0.1,
                     "top_p": 0.9,
                 }
