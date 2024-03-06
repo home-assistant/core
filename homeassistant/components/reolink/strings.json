@@ -363,6 +363,9 @@
       "ptz_preset": {
         "name": "PTZ preset"
       },
+      "play_quick_reply_message": {
+        "name": "Play quick reply message"
+      },
       "auto_quick_reply_message": {
         "name": "Auto quick reply message",
         "state": {

@@ -41,6 +41,11 @@ class ReolinkSelectEntityDescription(
     value: Callable[[Host, int], str] | None = None
 
 
+def _get_quick_reply_id(api: Host, ch: int, mess: str) -> int:
+    """Get the quick reply file id from the message string."""
+    return [k for k, v in api.quick_reply_dict(ch).items() if v == mess][0]
+
+
 SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="floodlight_mode",
@@ -73,6 +78,16 @@ SELECT_ENTITIES = (
         method=lambda api, ch, name: api.set_ptz_command(ch, preset=name),
     ),
     ReolinkSelectEntityDescription(
+        key="play_quick_reply_message",
+        translation_key="play_quick_reply_message",
+        icon="mdi:message-reply-text-outline",
+        get_options=lambda api, ch: list(api.quick_reply_dict(ch).values())[1:],
+        supported=lambda api, ch: api.supported(ch, "play_quick_reply"),
+        method=lambda api, ch, mess: (
+            api.play_quick_reply(ch, file_id=_get_quick_reply_id(api, ch, mess))
+        ),
+    ),
+    ReolinkSelectEntityDescription(
         key="auto_quick_reply_message",
         cmd_key="GetAutoReply",
         translation_key="auto_quick_reply_message",
@@ -81,8 +96,8 @@ SELECT_ENTITIES = (
         get_options=lambda api, ch: list(api.quick_reply_dict(ch).values()),
         supported=lambda api, ch: api.supported(ch, "quick_reply"),
         value=lambda api, ch: api.quick_reply_dict(ch)[api.quick_reply_file(ch)],
-        method=lambda api, ch, mess: api.set_quick_reply(
-            ch, file_id=[k for k, v in api.quick_reply_dict(ch).items() if v == mess][0]
+        method=lambda api, ch, mess: (
+            api.set_quick_reply(ch, file_id=_get_quick_reply_id(api, ch, mess))
         ),
     ),
     ReolinkSelectEntityDescription(
