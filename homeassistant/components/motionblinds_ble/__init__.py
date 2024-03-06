@@ -20,6 +20,7 @@ from homeassistant.components.bluetooth import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 
@@ -30,6 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [
     Platform.COVER,
 ]
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
