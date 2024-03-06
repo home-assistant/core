@@ -285,7 +285,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except (
             SerialException,
             OSError,
-            asyncio.TimeoutError,
+            TimeoutError,
         ):
             reconnect_interval = config[DOMAIN][CONF_RECONNECT_INTERVAL]
             _LOGGER.exception(

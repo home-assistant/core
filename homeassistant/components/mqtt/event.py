@@ -29,6 +29,7 @@ from .const import (
     CONF_STATE_TOPIC,
     PAYLOAD_EMPTY_JSON,
     PAYLOAD_NONE,
+    TEMPLATE_ERRORS,
 )
 from .debug_info import log_messages
 from .mixins import (
@@ -131,7 +132,10 @@ class MqttEvent(MqttEntity, EventEntity):
                 return
             event_attributes: dict[str, Any] = {}
             event_type: str
-            payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
+            try:
+                payload = self._template(msg.payload, PayloadSentinel.DEFAULT)
+            except TEMPLATE_ERRORS:
+                return
             if (
                 not payload
                 or payload is PayloadSentinel.DEFAULT

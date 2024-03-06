@@ -49,23 +49,10 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._client = client
         self._attr_unique_id = f"{entry.unique_id}_Duty"
 
-        self._state: bool | None = None
-
-    @property
-    def icon(self) -> str:
-        """Return the icon to use in the frontend."""
-        if self._state:
-            return "mdi:calendar-check"
-
-        return "mdi:calendar-remove"
-
     @property
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-
-        self._state = self._client.on_duty
-
-        return self._state
+        return self._client.on_duty
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

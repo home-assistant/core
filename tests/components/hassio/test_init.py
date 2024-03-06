@@ -615,6 +615,7 @@ async def test_service_calls(
 
     # check backup with different timezone
     await hass.config.async_update(time_zone="Europe/London")
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         "hassio",

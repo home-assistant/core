@@ -372,7 +372,7 @@ async def test_prepare_fail(
     """Test failing to prepare."""
     with patch(
         "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
-        side_effect=(asyncio.TimeoutError, web.WebSocketResponse.prepare),
+        side_effect=(TimeoutError, web.WebSocketResponse.prepare),
     ), pytest.raises(ServerDisconnectedError):
         await hass_ws_client(hass)
 

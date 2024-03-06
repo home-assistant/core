@@ -29,7 +29,7 @@ from .const import (
     SMART_METER_SCAN_INTERVAL,
 )
 
-PLATFORMS: Final = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 @dataclass

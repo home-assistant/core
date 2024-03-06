@@ -216,7 +216,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         if error is not None:
             return error, None
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Successfully connected to the AsusWrt router at %s using protocol %s",
             host,
             protocol,

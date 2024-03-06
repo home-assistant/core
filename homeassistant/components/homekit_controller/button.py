@@ -5,6 +5,7 @@ characteristics that don't map to a Home Assistant feature.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
@@ -32,6 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 class HomeKitButtonEntityDescription(ButtonEntityDescription):
     """Describes Homekit button."""
 
+    probe: Callable[[Characteristic], bool] | None = None
     write_value: int | str | None = None
 
 
@@ -39,7 +41,7 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
     CharacteristicsTypes.VENDOR_HAA_SETUP: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.VENDOR_HAA_SETUP,
         name="Setup",
-        icon="mdi:cog",
+        translation_key="setup",
         entity_category=EntityCategory.CONFIG,
         write_value="#HAA@trcmd",
     ),
@@ -53,6 +55,7 @@ BUTTON_ENTITIES: dict[str, HomeKitButtonEntityDescription] = {
     CharacteristicsTypes.IDENTIFY: HomeKitButtonEntityDescription(
         key=CharacteristicsTypes.IDENTIFY,
         name="Identify",
+        device_class=ButtonDeviceClass.IDENTIFY,
         entity_category=EntityCategory.DIAGNOSTIC,
         write_value=True,
     ),
@@ -70,13 +73,19 @@ async def async_setup_entry(
 
     @callback
     def async_add_characteristic(char: Characteristic) -> bool:
-        entities: list[HomeKitButton | HomeKitEcobeeClearHoldButton] = []
+        entities: list[CharacteristicEntity] = []
         info = {"aid": char.service.accessory.aid, "iid": char.service.iid}
 
         if description := BUTTON_ENTITIES.get(char.type):
             entities.append(HomeKitButton(conn, info, char, description))
         elif entity_type := BUTTON_ENTITY_CLASSES.get(char.type):
             entities.append(entity_type(conn, info, char))
+        elif char.type == CharacteristicsTypes.THREAD_CONTROL_POINT:
+            if not conn.is_unprovisioned_thread_device:
+                return False
+            entities.append(
+                HomeKitProvisionPreferredThreadCredentials(conn, info, char)
+            )
         else:
             return False
 
@@ -91,7 +100,11 @@ async def async_setup_entry(
     conn.add_char_factory(async_add_characteristic)
 
 
-class HomeKitButton(CharacteristicEntity, ButtonEntity):
+class BaseHomeKitButton(CharacteristicEntity, ButtonEntity):
+    """Base class for all HomeKit buttons."""
+
+
+class HomeKitButton(BaseHomeKitButton):
     """Representation of a Button control on a homekit accessory."""
 
     entity_description: HomeKitButtonEntityDescription
@@ -125,7 +138,7 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
         await self.async_put_characteristics({key: val})
 
 
-class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
+class HomeKitEcobeeClearHoldButton(BaseHomeKitButton):
     """Representation of a Button control for Ecobee clear hold request."""
 
     def get_characteristic_types(self) -> list[str]:
@@ -154,7 +167,7 @@ class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
             await self.async_put_characteristics({key: val})
 
 
-class HomeKitProvisionPreferredThreadCredentials(CharacteristicEntity, ButtonEntity):
+class HomeKitProvisionPreferredThreadCredentials(BaseHomeKitButton):
     """A button users can press to migrate their HomeKit BLE device to Thread."""
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -178,5 +191,4 @@ class HomeKitProvisionPreferredThreadCredentials(CharacteristicEntity, ButtonEnt
 
 BUTTON_ENTITY_CLASSES: dict[str, type] = {
     CharacteristicsTypes.VENDOR_ECOBEE_CLEAR_HOLD: HomeKitEcobeeClearHoldButton,
-    CharacteristicsTypes.THREAD_CONTROL_POINT: HomeKitProvisionPreferredThreadCredentials,
 }

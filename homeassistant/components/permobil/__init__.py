@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import APPLICATION, DOMAIN
 from .coordinator import MyPermobilCoordinator
@@ -29,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up MyPermobil from a config entry."""
 
     # create the API object from the config and save it in hass
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    session = async_get_clientsession(hass)
     p_api = MyPermobil(
         application=APPLICATION,
         session=session,

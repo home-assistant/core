@@ -1,7 +1,6 @@
 """Support for exposing Home Assistant via Zeroconf."""
 from __future__ import annotations
 
-import asyncio
 import contextlib
 from contextlib import suppress
 from dataclasses import dataclass
@@ -215,9 +214,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     aio_zc = await _async_get_instance(hass, **zc_args)
     zeroconf = cast(HaZeroconf, aio_zc.zeroconf)
-    zeroconf_types, homekit_models = await asyncio.gather(
-        async_get_zeroconf(hass), async_get_homekit(hass)
-    )
+    zeroconf_types = await async_get_zeroconf(hass)
+    homekit_models = await async_get_homekit(hass)
     homekit_model_lookup, homekit_model_matchers = _build_homekit_model_lookups(
         homekit_models
     )

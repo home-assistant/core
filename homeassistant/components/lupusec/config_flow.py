@@ -106,9 +106,9 @@ async def test_host_connection(
 
     try:
         await hass.async_add_executor_job(lupupy.Lupusec, username, password, host)
-    except lupupy.LupusecException:
+    except lupupy.LupusecException as ex:
         _LOGGER.error("Failed to connect to Lupusec device at %s", host)
-        raise CannotConnect
+        raise CannotConnect from ex
 
 
 class CannotConnect(HomeAssistantError):

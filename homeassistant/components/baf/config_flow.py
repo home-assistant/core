@@ -1,7 +1,6 @@
 """Config flow for baf."""
 from __future__ import annotations
 
-import asyncio
 from asyncio import timeout
 import logging
 from typing import Any
@@ -28,7 +27,7 @@ async def async_try_connect(ip_address: str) -> Device:
     try:
         async with timeout(RUN_TIMEOUT):
             await device.async_wait_available()
-    except asyncio.TimeoutError as ex:
+    except TimeoutError as ex:
         raise CannotConnect from ex
     finally:
         run_future.cancel()

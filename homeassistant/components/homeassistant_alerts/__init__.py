@@ -1,7 +1,6 @@
 """The Home Assistant alerts integration."""
 from __future__ import annotations
 
-import asyncio
 import dataclasses
 from datetime import timedelta
 import logging
@@ -53,7 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     f"https://alerts.home-assistant.io/alerts/{alert.alert_id}.json",
                     timeout=aiohttp.ClientTimeout(total=30),
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 _LOGGER.warning("Error fetching %s: timeout", alert.filename)
                 continue
 

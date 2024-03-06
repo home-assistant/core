@@ -171,7 +171,7 @@ async def async_setup_entry(
         return False
 
     timed_out = True
-    with contextlib.suppress(asyncio.TimeoutError):
+    with contextlib.suppress(TimeoutError):
         async with asyncio.timeout(BRIDGE_TIMEOUT):
             await bridge.connect()
             timed_out = False

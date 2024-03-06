@@ -56,7 +56,6 @@ NUMBER_TYPES: list[BMWNumberEntityDescription] = [
         remote_service=lambda v, o: v.remote_services.trigger_charging_settings_update(
             target_soc=int(o)
         ),
-        icon="mdi:battery-charging-medium",
     ),
 ]
 

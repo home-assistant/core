@@ -18,6 +18,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.util.async_ import create_eager_task
 
 from .const import X_HASS_SOURCE, X_INGRESS_PATH
 from .http import should_compress
@@ -143,8 +144,8 @@ class HassIOIngress(HomeAssistantView):
             # Proxy requests
             await asyncio.wait(
                 [
-                    asyncio.create_task(_websocket_forward(ws_server, ws_client)),
-                    asyncio.create_task(_websocket_forward(ws_client, ws_server)),
+                    create_eager_task(_websocket_forward(ws_server, ws_client)),
+                    create_eager_task(_websocket_forward(ws_client, ws_server)),
                 ],
                 return_when=asyncio.FIRST_COMPLETED,
             )
@@ -288,13 +289,13 @@ async def _websocket_forward(
     """Handle websocket message directly."""
     try:
         async for msg in ws_from:
-            if msg.type == aiohttp.WSMsgType.TEXT:
+            if msg.type is aiohttp.WSMsgType.TEXT:
                 await ws_to.send_str(msg.data)
-            elif msg.type == aiohttp.WSMsgType.BINARY:
+            elif msg.type is aiohttp.WSMsgType.BINARY:
                 await ws_to.send_bytes(msg.data)
-            elif msg.type == aiohttp.WSMsgType.PING:
+            elif msg.type is aiohttp.WSMsgType.PING:
                 await ws_to.ping()
-            elif msg.type == aiohttp.WSMsgType.PONG:
+            elif msg.type is aiohttp.WSMsgType.PONG:
                 await ws_to.pong()
             elif ws_to.closed:
                 await ws_to.close(code=ws_to.close_code, message=msg.extra)  # type: ignore[arg-type]

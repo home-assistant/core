@@ -163,7 +163,7 @@ async def test_generate_content_service_without_images(
     """Test generate content service."""
     stubbed_generated_content = (
         "I'm thrilled to welcome you all to the release "
-        + "party for the latest version of Home Assistant!"
+        "party for the latest version of Home Assistant!"
     )
 
     with patch("google.generativeai.GenerativeModel") as mock_model:
@@ -257,7 +257,11 @@ async def test_generate_content_service_with_image_not_allowed_path(
         hass.config, "is_allowed_path", return_value=False
     ), pytest.raises(
         HomeAssistantError,
-        match="Cannot read `doorbell_snapshot.jpg`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`",
+        match=(
+            "Cannot read `doorbell_snapshot.jpg`, no access to path; "
+            "`allowlist_external_dirs` may need to be adjusted in "
+            "`configuration.yaml`"
+        ),
     ):
         await hass.services.async_call(
             "google_generative_ai_conversation",

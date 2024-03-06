@@ -526,6 +526,9 @@ async def test_alexa_handle_logout(
         return_value=Mock(),
     ) as mock_enable:
         await aconf.async_enable_proactive_mode()
+        await hass.async_block_till_done()
+
+    assert len(aconf._on_deinitialize) == 5
 
     # This will trigger a prefs update when we logout.
     await cloud_prefs.get_cloud_user()
@@ -536,8 +539,13 @@ async def test_alexa_handle_logout(
         "async_check_token",
         side_effect=AssertionError("Should not be called"),
     ):
+        # Fake logging out; CloudClient.logout_cleanups sets username to None
+        # and deinitializes the Google config.
         await cloud_prefs.async_set_username(None)
+        aconf.async_deinitialize()
         await hass.async_block_till_done()
+        # Check listeners are removed:
+        assert not aconf._on_deinitialize
 
     assert len(mock_enable.return_value.mock_calls) == 1
 

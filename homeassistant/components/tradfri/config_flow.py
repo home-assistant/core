@@ -144,7 +144,7 @@ async def authenticate(
             key = await api_factory.generate_psk(security_code)
     except RequestError as err:
         raise AuthError("invalid_security_code") from err
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise AuthError("timeout") from err
     finally:
         await api_factory.shutdown()

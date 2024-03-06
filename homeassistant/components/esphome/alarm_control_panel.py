@@ -115,42 +115,42 @@ class EsphomeAlarmControlPanel(
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self._client.alarm_control_panel_command(
+        self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.DISARM, code
         )
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self._client.alarm_control_panel_command(
+        self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.ARM_HOME, code
         )
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._client.alarm_control_panel_command(
+        self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.ARM_AWAY, code
         )
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._client.alarm_control_panel_command(
+        self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.ARM_NIGHT, code
         )
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._client.alarm_control_panel_command(
+        self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.ARM_CUSTOM_BYPASS, code
         )
 
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._client.alarm_control_panel_command(
+        self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.ARM_VACATION, code
         )
 
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
-        await self._client.alarm_control_panel_command(
+        self._client.alarm_control_panel_command(
             self._key, AlarmControlPanelCommand.TRIGGER, code
         )

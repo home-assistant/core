@@ -49,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     options = ConnectionOptions(host=host, username=username, password=password)
     try:
         nam = await NettigoAirMonitor.create(websession, options)
-    except (ApiError, ClientError, ClientConnectorError, asyncio.TimeoutError) as err:
+    except (ApiError, ClientError, ClientConnectorError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
     try:

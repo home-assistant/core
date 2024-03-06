@@ -67,7 +67,7 @@ def async_setup_block_attribute_entities(
     sensor_class: Callable,
 ) -> None:
     """Set up entities for block attributes."""
-    blocks = []
+    entities = []
 
     assert coordinator.device.blocks
 
@@ -78,7 +78,7 @@ def async_setup_block_attribute_entities(
                 continue
 
             # Filter out non-existing sensors and sensors without a value
-            if getattr(block, sensor_id, None) in (-1, None):
+            if getattr(block, sensor_id, None) is None:
                 continue
 
             # Filter and remove entities that according to settings
@@ -90,17 +90,14 @@ def async_setup_block_attribute_entities(
                 unique_id = f"{coordinator.mac}-{block.description}-{sensor_id}"
                 async_remove_shelly_entity(hass, domain, unique_id)
             else:
-                blocks.append((block, sensor_id, description))
+                entities.append(
+                    sensor_class(coordinator, block, sensor_id, description)
+                )
 
-    if not blocks:
+    if not entities:
         return
 
-    async_add_entities(
-        [
-            sensor_class(coordinator, block, sensor_id, description)
-            for block, sensor_id, description in blocks
-        ]
-    )
+    async_add_entities(entities)
 
 
 @callback
@@ -273,7 +270,6 @@ class BlockEntityDescription(EntityDescription):
     # restrict the type to str.
     name: str = ""
 
-    icon_fn: Callable[[dict], str] | None = None
     unit_fn: Callable[[dict], str] | None = None
     value: Callable[[Any], Any] = lambda val: val
     available: Callable[[Block], bool] | None = None

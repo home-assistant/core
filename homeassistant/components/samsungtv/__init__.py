@@ -93,9 +93,10 @@ class DebouncedEntryReloader:
         LOGGER.debug("Calling debouncer to get a reload after cooldown")
         await self._debounced_reload.async_call()
 
-    async def async_shutdown(self) -> None:
+    @callback
+    def async_shutdown(self) -> None:
         """Cancel any pending reload."""
-        await self._debounced_reload.async_shutdown()
+        self._debounced_reload.async_shutdown()
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
@@ -198,10 +199,13 @@ async def _async_create_bridge_with_updated_data(
 
     mac: str | None = entry.data.get(CONF_MAC)
     model: str | None = entry.data.get(CONF_MODEL)
-    if (not mac or not model) and not load_info_attempted:
+    mac_is_incorrectly_formatted = mac and dr.format_mac(mac) != mac
+    if (
+        not mac or not model or mac_is_incorrectly_formatted
+    ) and not load_info_attempted:
         info = await bridge.async_device_info()
 
-    if not mac:
+    if not mac or mac_is_incorrectly_formatted:
         LOGGER.debug("Attempting to get mac for %s", host)
         if info:
             mac = mac_from_device_info(info)
@@ -215,7 +219,7 @@ async def _async_create_bridge_with_updated_data(
             # Samsung sometimes returns a value of "none" for the mac address
             # this should be ignored
             LOGGER.info("Updated mac to %s for %s", mac, host)
-            updated_data[CONF_MAC] = mac
+            updated_data[CONF_MAC] = dr.format_mac(mac)
         else:
             LOGGER.info("Failed to get mac for %s", host)
 
@@ -269,7 +273,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         en_reg = er.async_get(hass)
         en_reg.async_clear_config_entry(config_entry.entry_id)
 
-        version = config_entry.version = 2
+        version = 2
+        hass.config_entries.async_update_entry(config_entry, version=2)
+
     LOGGER.debug("Migration to version %s successful", version)
 
     return True

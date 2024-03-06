@@ -163,7 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         async with asyncio.timeout(10):
             nextdns = await NextDns.create(websession, api_key)
-    except (ApiError, ClientConnectorError, asyncio.TimeoutError) as err:
+    except (ApiError, ClientConnectorError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
     tasks = []

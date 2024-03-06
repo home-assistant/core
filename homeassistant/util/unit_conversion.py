@@ -365,7 +365,7 @@ class TemperatureConverter(BaseUnitConverter):
     }
 
     @classmethod
-    @lru_cache(maxsize=8)
+    @lru_cache
     def converter_factory(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float], float]:
@@ -379,7 +379,7 @@ class TemperatureConverter(BaseUnitConverter):
         return cls._converter_factory(from_unit, to_unit)
 
     @classmethod
-    @lru_cache(maxsize=8)
+    @lru_cache
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:

@@ -75,7 +75,7 @@ async def _validate_input(
             "Connection error when connecting to %s: %s", data[CONF_HOST], exception
         )
         raise CannotConnect from exception
-    except asyncio.TimeoutError as exception:
+    except TimeoutError as exception:
         _LOGGER.warning("Timed out connecting to %s: %s", data[CONF_HOST], exception)
         raise CannotConnect from exception
     except ValueError as exception:

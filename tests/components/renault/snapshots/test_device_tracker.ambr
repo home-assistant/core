@@ -18,6 +18,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
@@ -47,6 +49,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -97,6 +101,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
@@ -126,6 +132,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -176,6 +184,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
@@ -214,6 +224,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
@@ -243,6 +255,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -293,6 +307,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
@@ -322,6 +338,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -375,6 +393,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Captur ii',
       'name': 'REG-NUMBER',
@@ -404,6 +424,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -457,6 +479,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
@@ -495,6 +519,8 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': 'Renault',
       'model': 'Zoe',
       'name': 'REG-NUMBER',
@@ -524,6 +550,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),

@@ -1,7 +1,6 @@
 """Config flow for Qingping integration."""
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from qingping_ble import QingpingBluetoothDeviceData as DeviceData
@@ -62,7 +61,7 @@ class QingpingConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_info = await self._async_wait_for_full_advertisement(
                 discovery_info, device
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return self.async_abort(reason="not_supported")
         self._discovery_info = discovery_info
         self._discovered_device = device

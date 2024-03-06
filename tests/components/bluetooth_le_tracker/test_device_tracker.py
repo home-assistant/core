@@ -1,5 +1,4 @@
 """Test Bluetooth LE device tracker."""
-import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -47,7 +46,7 @@ class MockBleakClientTimesOut(MockBleakClient):
 
     async def read_gatt_char(self, *args, **kwargs):
         """Mock BleakClient.read_gatt_char."""
-        raise asyncio.TimeoutError
+        raise TimeoutError
 
 
 class MockBleakClientFailing(MockBleakClient):

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import Any
 
 from aioesphomeapi import DeviceInfo as ESPHomeDeviceInfo, EntityInfo
@@ -28,8 +27,6 @@ from .entry_data import RuntimeEntryData
 KEY_UPDATE_LOCK = "esphome_update_lock"
 
 NO_FEATURES = UpdateEntityFeature(0)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(

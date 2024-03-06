@@ -44,7 +44,6 @@ from tests.typing import RecorderInstanceGenerator
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE = "tests.components.recorder.db_schema_32"
-ORIG_TZ = dt_util.DEFAULT_TIME_ZONE
 
 
 async def _async_wait_migration_done(hass: HomeAssistant) -> None:

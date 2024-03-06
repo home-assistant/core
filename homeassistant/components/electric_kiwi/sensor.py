@@ -52,7 +52,6 @@ ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
     ElectricKiwiAccountSensorEntityDescription(
         key=ATTR_TOTAL_RUNNING_BALANCE,
         translation_key="total_running_balance",
-        icon="mdi:currency-usd",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_DOLLAR,
@@ -61,7 +60,6 @@ ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
     ElectricKiwiAccountSensorEntityDescription(
         key=ATTR_TOTAL_CURRENT_BALANCE,
         translation_key="total_current_balance",
-        icon="mdi:currency-usd",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=CURRENCY_DOLLAR,
@@ -70,7 +68,6 @@ ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
     ElectricKiwiAccountSensorEntityDescription(
         key=ATTR_NEXT_BILLING_DATE,
         translation_key="next_billing_date",
-        icon="mdi:calendar",
         device_class=SensorDeviceClass.DATE,
         value_func=lambda account_balance: datetime.strptime(
             account_balance.next_billing_date, "%Y-%m-%d"
@@ -79,7 +76,6 @@ ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
     ElectricKiwiAccountSensorEntityDescription(
         key=ATTR_HOP_PERCENTAGE,
         translation_key="hop_power_savings",
-        icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_func=lambda account_balance: float(

@@ -31,22 +31,17 @@ class TessieButtonEntityDescription(ButtonEntityDescription):
 
 
 DESCRIPTIONS: tuple[TessieButtonEntityDescription, ...] = (
-    TessieButtonEntityDescription(key="wake", func=lambda: wake, icon="mdi:sleep-off"),
+    TessieButtonEntityDescription(key="wake", func=lambda: wake),
+    TessieButtonEntityDescription(key="flash_lights", func=lambda: flash_lights),
+    TessieButtonEntityDescription(key="honk", func=lambda: honk),
     TessieButtonEntityDescription(
-        key="flash_lights", func=lambda: flash_lights, icon="mdi:flashlight"
-    ),
-    TessieButtonEntityDescription(key="honk", func=lambda: honk, icon="mdi:bullhorn"),
-    TessieButtonEntityDescription(
-        key="trigger_homelink", func=lambda: trigger_homelink, icon="mdi:garage"
+        key="trigger_homelink", func=lambda: trigger_homelink
     ),
     TessieButtonEntityDescription(
         key="enable_keyless_driving",
         func=lambda: enable_keyless_driving,
-        icon="mdi:car-key",
     ),
-    TessieButtonEntityDescription(
-        key="boombox", func=lambda: boombox, icon="mdi:volume-high"
-    ),
+    TessieButtonEntityDescription(key="boombox", func=lambda: boombox),
 )
 
 

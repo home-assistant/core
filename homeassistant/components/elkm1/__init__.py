@@ -296,7 +296,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT):
             return False
-    except asyncio.TimeoutError as exc:
+    except TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
 
     elk_temp_unit = elk.panel.temperature_units
@@ -389,7 +389,7 @@ async def async_wait_for_elk_to_sync(
         try:
             async with asyncio.timeout(timeout):
                 await event.wait()
-        except asyncio.TimeoutError:
+        except TimeoutError:
             _LOGGER.debug("Timed out waiting for %s event", name)
             elk.disconnect()
             raise

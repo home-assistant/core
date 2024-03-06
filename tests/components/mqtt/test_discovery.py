@@ -1523,23 +1523,20 @@ async def test_mqtt_integration_discovery_subscribe_unsubscribe(
             """Test mqtt step."""
             return self.async_abort(reason="already_configured")
 
-    with mock_config_flow("comp", TestFlow):
-        await asyncio.sleep(0)
-        assert ("comp/discovery/#", 0) in help_all_subscribe_calls(mqtt_client_mock)
-        assert not mqtt_client_mock.unsubscribe.called
+    assert not mqtt_client_mock.unsubscribe.called
 
+    wait_unsub = asyncio.Event()
+
+    def _mock_unsubscribe(topics: list[str]) -> tuple[int, int]:
+        wait_unsub.set()
+        return (0, 0)
+
+    with mock_config_flow("comp", TestFlow), patch.object(
+        mqtt_client_mock, "unsubscribe", side_effect=_mock_unsubscribe
+    ):
         async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
-        await asyncio.sleep(0)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await wait_unsub.wait()
         mqtt_client_mock.unsubscribe.assert_called_once_with(["comp/discovery/#"])
-        mqtt_client_mock.unsubscribe.reset_mock()
-
-        async_fire_mqtt_message(hass, "comp/discovery/bla/config", "")
-        await asyncio.sleep(0)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
-        assert not mqtt_client_mock.unsubscribe.called
 
 
 @patch("homeassistant.components.mqtt.PLATFORMS", [])

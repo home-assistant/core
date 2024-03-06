@@ -111,7 +111,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         en_reg = er.async_get(hass)
         en_reg.async_clear_config_entry(entry.entry_id)
 
-        version = entry.version = 2
+        version = 2
+        hass.config_entries.async_update_entry(entry, version=version)
 
     LOGGER.info("Migration to version %s successful", version)
 

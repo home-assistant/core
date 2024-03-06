@@ -9,7 +9,7 @@ from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOM
 from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.const import CONF_ZONE
+from homeassistant.const import CONF_ZONE, UnitOfLength
 from homeassistant.core import State, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.selector import (
@@ -50,7 +50,9 @@ def _base_schema(user_input: dict[str, Any]) -> vol.Schema:
             CONF_TOLERANCE,
             default=user_input.get(CONF_TOLERANCE, DEFAULT_TOLERANCE),
         ): NumberSelector(
-            NumberSelectorConfig(min=1, max=100, step=1),
+            NumberSelectorConfig(
+                min=1, max=100, step=1, unit_of_measurement=UnitOfLength.METERS
+            ),
         ),
     }
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2024.2.5"
+version     = "2024.3.0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -28,31 +28,32 @@ dependencies    = [
     "aiohttp-fast-url-dispatcher==0.3.0",
     "aiohttp-zlib-ng==0.3.1",
     "astral==2.2",
+    "async-interrupt==1.1.1",
     "attrs==23.2.0",
     "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==24.2.0",
-    "bcrypt==4.0.1",
+    "bcrypt==4.1.2",
     "certifi>=2021.5.30",
-    "ciso8601==2.3.0",
+    "ciso8601==2.3.1",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
-    "httpx==0.26.0",
+    "httpx==0.27.0",
     "home-assistant-bluetooth==1.12.0",
     "ifaddr==0.2.0",
     "Jinja2==3.1.3",
     "lru-dict==1.3.0",
     "PyJWT==2.8.0",
     # PyJWT has loose dependency. We want the latest one.
-    "cryptography==42.0.2",
+    "cryptography==42.0.5",
     # pyOpenSSL 23.2.0 is required to work with cryptography 41+
     "pyOpenSSL==24.0.0",
     "orjson==3.9.15",
     "packaging>=23.1",
     "pip>=21.3.1",
-    "python-slugify==8.0.1",
+    "python-slugify==8.0.4",
     "PyYAML==6.0.1",
     "requests==2.31.0",
-    "typing-extensions>=4.9.0,<5.0",
+    "typing-extensions>=4.10.0,<5.0",
     "ulid-transform==0.9.0",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
@@ -221,7 +222,7 @@ disable = [
     "duplicate-key", # F601
     "duplicate-string-formatting-argument", # F
     "duplicate-value", # F
-    "eval-used", # PGH001
+    "eval-used", # S307
     "exec-used", # S102
     # "expression-not-assigned", # B018, ruff catches new occurrences, needs more work
     "f-string-without-interpolation", # F541
@@ -241,7 +242,7 @@ disable = [
     "named-expr-without-context", # PLW0131
     "nested-min-max", # PLW3301
     # "pointless-statement", # B018, ruff catches new occurrences, needs more work
-    "raise-missing-from", # TRY200
+    "raise-missing-from", # B904
     # "redefined-builtin", # A001, ruff is way more stricter, needs work
     "try-except-raise", # TRY302
     "unused-argument", # ARG001, we don't use it
@@ -383,6 +384,12 @@ enable = [
     #"useless-suppression",  # temporarily every now and then to clean them up
     "use-symbolic-message-instead",
 ]
+per-file-ignores = [
+    # hass-component-root-import: Tests test non-public APIs
+    # protected-access: Tests do often test internals a lot
+    # redefined-outer-name: Tests reference fixtures in the test function
+    "/tests/:hass-component-root-import,protected-access,redefined-outer-name",
+]
 
 [tool.pylint.REPORTS]
 score = false
@@ -408,12 +415,6 @@ runtime-typing = false
 
 [tool.pylint.CODE_STYLE]
 max-line-length-suggestions = 72
-
-[tool.pylint-per-file-ignores]
-# hass-component-root-import: Tests test non-public APIs
-# protected-access: Tests do often test internals a lot
-# redefined-outer-name: Tests reference fixtures in the test function
-"/tests/"="hass-component-root-import,protected-access,redefined-outer-name"
 
 [tool.pytest.ini_options]
 testpaths = [
@@ -444,27 +445,28 @@ filterwarnings = [
     # -- design choice 3rd party
     # https://github.com/gwww/elkm1/blob/2.2.6/elkm1_lib/util.py#L8-L19
     "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:elkm1_lib.util",
-    # https://github.com/michaeldavie/env_canada/blob/v0.6.0/env_canada/ec_cache.py
+    # https://github.com/michaeldavie/env_canada/blob/v0.6.1/env_canada/ec_cache.py
     "ignore:Inheritance class CacheClientSession from ClientSession is discouraged:DeprecationWarning:env_canada.ec_cache",
-    # https://github.com/allenporter/ical/pull/215 - v5.0.0
+    # https://github.com/allenporter/ical/pull/215
+    # https://github.com/allenporter/ical/blob/6.1.1/ical/util.py#L20-L22
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:ical.util",
-    # https://github.com/bachya/regenmaschine/blob/2023.12.0/regenmaschine/client.py#L57
+    # https://github.com/bachya/regenmaschine/blob/2024.01.0/regenmaschine/client.py#L51
     "ignore:ssl.TLSVersion.SSLv3 is deprecated:DeprecationWarning:regenmaschine.client",
 
     # -- Setuptools DeprecationWarnings
     # https://github.com/googleapis/google-cloud-python/issues/11184
     # https://github.com/zopefoundation/meta/issues/194
     "ignore:Deprecated call to `pkg_resources.declare_namespace\\(('google.*'|'pywinusb'|'repoze'|'xbox'|'zope')\\)`:DeprecationWarning:pkg_resources",
-    "ignore:Deprecated call to `pkg_resources.declare_namespace\\('google.*'\\)`:DeprecationWarning:google.rpc",
 
     # -- tracked upstream / open PRs
+    # https://github.com/certbot/certbot/issues/9828 - v2.8.0
+    "ignore:X509Extension support in pyOpenSSL is deprecated. You should use the APIs in cryptography:DeprecationWarning:acme.crypto_util",
+    # https://github.com/tschamm/boschshcpy/pull/39 - v0.2.88
+    "ignore:pkg_resources is deprecated as an API:DeprecationWarning:boschshcpy.api",
     # https://github.com/influxdata/influxdb-client-python/issues/603 - v1.37.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:influxdb_client.client.write.point",
     # https://github.com/beetbox/mediafile/issues/67 - v0.12.0
     "ignore:'imghdr' is deprecated and slated for removal in Python 3.13:DeprecationWarning:mediafile",
-    # https://github.com/eclipse/paho.mqtt.python/issues/653 - v1.6.1
-    # https://github.com/eclipse/paho.mqtt.python/pull/665
-    "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:paho.mqtt.client",
     # https://github.com/PythonCharmers/python-future/issues/488 - v0.18.3
     "ignore:the imp module is deprecated in favour of importlib and slated for removal in Python 3.12:DeprecationWarning:future.standard_library",
     # https://github.com/foxel/python_ndms2_client/issues/6 - v0.1.3
@@ -475,16 +477,23 @@ filterwarnings = [
     "ignore:The --rsyncdir command line argument and rsyncdirs config variable are deprecated:DeprecationWarning:xdist.plugin",
 
     # -- fixed, waiting for release / update
+    # https://github.com/mkmer/AIOAladdinConnect/commit/8851fff4473d80d70ac518db2533f0fbef63b69c - >0.1.58
+    "ignore:module 'sre_constants' is deprecated:DeprecationWarning:AIOAladdinConnect",
     # https://github.com/ludeeus/aiogithubapi/pull/208 - >=23.9.0
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiogithubapi.namespaces.events",
     # https://github.com/bachya/aiopurpleair/pull/200 - >=2023.10.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:aiopurpleair.helpers.validators",
     # https://github.com/kiorky/croniter/pull/52 - >=2.0.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:croniter.croniter",
+    # https://github.com/fwestenberg/devialet/pull/6 - >1.4.5
+    "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:devialet.devialet_api",
     # https://github.com/jaraco/jaraco.abode/commit/9e3e789efc96cddcaa15f920686bbeb79a7469e0 - update jaraco.abode to >=5.1.0
     "ignore:`jaraco.functools.call_aside` is deprecated, use `jaraco.functools.invoke` instead:DeprecationWarning:jaraco.abode.helpers.timeline",
     # https://github.com/nextcord/nextcord/pull/1095 - >2.6.1
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:nextcord.health_check",
+    # https://github.com/eclipse/paho.mqtt.python/issues/653 - >=2.0.0
+    # https://github.com/eclipse/paho.mqtt.python/pull/665
+    "ignore:ssl.PROTOCOL_TLS is deprecated:DeprecationWarning:paho.mqtt.client",
     # https://github.com/bachya/pytile/pull/280 - >=2023.10.0
     "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pytile.tile",
     # https://github.com/rytilahti/python-miio/pull/1809 - >0.5.12
@@ -494,31 +503,28 @@ filterwarnings = [
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:onvif.client",
     # Fixed upstream in python-telegram-bot - >=20.0
     "ignore:python-telegram-bot is using upstream urllib3:UserWarning:telegram.utils.request",
+    # https://github.com/xeniter/romy/pull/1 - >0.0.7
+    "ignore:with timeout\\(\\) is deprecated, use async with timeout\\(\\) instead:DeprecationWarning:romy.utils",
     # https://github.com/grahamwetzler/smart-meter-texas/pull/143 - >0.5.3
     "ignore:ssl.OP_NO_SSL\\*/ssl.OP_NO_TLS\\* options are deprecated:DeprecationWarning:smart_meter_texas",
-    # https://github.com/Bluetooth-Devices/xiaomi-ble/pull/59 - >0.21.1
-    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated and scheduled for removal:DeprecationWarning:xiaomi_ble.parser",
     # https://github.com/mvantellingen/python-zeep/pull/1364 - >4.2.1
     "ignore:'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning:zeep.utils",
-
-    # -- not helpful
-    # pyatmo.__init__ imports deprecated moduls from itself - v7.5.0
-    "ignore:The module pyatmo.* is deprecated:DeprecationWarning:pyatmo",
 
     # -- other
     # Locale changes might take some time to resolve upstream
     "ignore:'locale.getdefaultlocale' is deprecated and slated for removal in Python 3.15:DeprecationWarning:micloud.micloud",
     # https://github.com/protocolbuffers/protobuf - v4.25.1
     "ignore:Type google._upb._message.(Message|Scalar)MapContainer uses PyType_Spec with a metaclass that has custom tp_new. .* Python 3.14:DeprecationWarning",
-    # https://github.com/googleapis/google-auth-library-python/blob/v2.23.3/google/auth/_helpers.py#L95 - v2.23.3
-    "ignore:datetime.*utcnow\\(\\) is deprecated:DeprecationWarning:google.auth._helpers",
-    # https://github.com/googleapis/proto-plus-python/blob/v1.22.3/proto/datetime_helpers.py#L24 - v1.22.3
-    "ignore:datetime.*utcfromtimestamp\\(\\) is deprecated:DeprecationWarning:proto.datetime_helpers",
     # https://github.com/MatsNl/pyatag/issues/11 - v0.3.7.1
     "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:pyatag.gateway",
     # https://github.com/lidatong/dataclasses-json/issues/328
     # https://github.com/lidatong/dataclasses-json/pull/351
     "ignore:The 'default' argument to fields is deprecated. Use 'dump_default' instead:DeprecationWarning:dataclasses_json.mm",
+    # https://pypi.org/project/emulated-roku/ - v0.2.1
+    # https://github.com/martonperei/emulated_roku
+    "ignore:loop argument is deprecated:DeprecationWarning:emulated_roku",
+    # https://github.com/thecynic/pylutron - v0.2.10
+    "ignore:setDaemon\\(\\) is deprecated, set the daemon attribute instead:DeprecationWarning:pylutron",
     # Fixed for Python 3.12
     # https://github.com/lextudio/pysnmp/issues/10
     "ignore:The asyncore module is deprecated and will be removed in Python 3.12:DeprecationWarning:pysnmp.carrier.asyncore.base",
@@ -569,28 +575,28 @@ filterwarnings = [
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning:webrtcvad",
 ]
 
-[tool.ruff]
+[tool.ruff.lint]
 select = [
     "B002", # Python does not support the unary prefix increment
     "B007", # Loop control variable {name} not used within loop body
     "B014", # Exception handler with duplicate exception
     "B023", # Function definition does not bind loop variable {name}
     "B026", # Star-arg unpacking after a keyword argument is strongly discouraged
-    "C",  # complexity
+    "B904", # Use raise from to specify exception cause
+    "C", # complexity
     "COM818", # Trailing comma on bare tuple prohibited
-    "D",  # docstrings
-    "DTZ003",  # Use datetime.now(tz=) instead of datetime.utcnow()
-    "DTZ004",  # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
-    "E",  # pycodestyle
-    "F",  # pyflakes/autoflake
+    "D", # docstrings
+    "DTZ003", # Use datetime.now(tz=) instead of datetime.utcnow()
+    "DTZ004", # Use datetime.fromtimestamp(ts, tz=) instead of datetime.utcfromtimestamp(ts)
+    "E", # pycodestyle
+    "F", # pyflakes/autoflake
     "G", # flake8-logging-format
-    "I",  # isort
+    "I", # isort
     "ICN001", # import concentions; {name} should be imported as {asname}
     "N804", # First argument of a class method should be named cls
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase
-    "PGH001", # No builtin eval() allowed
-    "PGH004",  # Use specific rule codes when using noqa
+    "PGH004", # Use specific rule codes when using noqa
     "PLC0414", # Useless import alias. Import alias does not rename original package.
     "PLC", # pylint
     "PLE", # pylint
@@ -599,24 +605,25 @@ select = [
     "Q000", # Double quotes found but single quotes preferred
     "RUF006", # Store a reference to the return value of asyncio.create_task
     "S102", # Use of exec detected
-    "S103",  # bad-file-permissions
-    "S108",  # hardcoded-temp-file
-    "S306",  # suspicious-mktemp-usage
-    "S307",  # suspicious-eval-usage
-    "S313",  # suspicious-xmlc-element-tree-usage
-    "S314",  # suspicious-xml-element-tree-usage
-    "S315",  # suspicious-xml-expat-reader-usage
-    "S316",  # suspicious-xml-expat-builder-usage
-    "S317",  # suspicious-xml-sax-usage
-    "S318",  # suspicious-xml-mini-dom-usage
-    "S319",  # suspicious-xml-pull-dom-usage
-    "S320",  # suspicious-xmle-tree-usage
-    "S601",  # paramiko-call
-    "S602",  # subprocess-popen-with-shell-equals-true
-    "S604",  # call-with-shell-equals-true
-    "S608",  # hardcoded-sql-expression
-    "S609",  # unix-command-wildcard-injection
+    "S103", # bad-file-permissions
+    "S108", # hardcoded-temp-file
+    "S306", # suspicious-mktemp-usage
+    "S307", # suspicious-eval-usage
+    "S313", # suspicious-xmlc-element-tree-usage
+    "S314", # suspicious-xml-element-tree-usage
+    "S315", # suspicious-xml-expat-reader-usage
+    "S316", # suspicious-xml-expat-builder-usage
+    "S317", # suspicious-xml-sax-usage
+    "S318", # suspicious-xml-mini-dom-usage
+    "S319", # suspicious-xml-pull-dom-usage
+    "S320", # suspicious-xmle-tree-usage
+    "S601", # paramiko-call
+    "S602", # subprocess-popen-with-shell-equals-true
+    "S604", # call-with-shell-equals-true
+    "S608", # hardcoded-sql-expression
+    "S609", # unix-command-wildcard-injection
     "SIM105", # Use contextlib.suppress({exception}) instead of try-except-pass
+    "SIM114", # Combine if branches using logical or operator
     "SIM117", # Merge with-statements that use the same scope
     "SIM118", # Use {key} in {dict} instead of {key} in {dict}.keys()
     "SIM201", # Use {left} != {right} instead of not {left} == {right}
@@ -625,23 +632,22 @@ select = [
     "SIM300", # Yoda conditions. Use 'age == 42' instead of '42 == age'.
     "SIM401", # Use get from dict with default instead of an if block
     "T100", # Trace found: {name} used
-    "T20",  # flake8-print
+    "T20", # flake8-print
     "TID251", # Banned imports
     "TRY004", # Prefer TypeError exception for invalid type
-    "TRY200", # Use raise from to specify exception cause
     "TRY302", # Remove exception handler; error is immediately re-raised
-    "UP",  # pyupgrade
-    "W",  # pycodestyle
+    "UP", # pyupgrade
+    "W", # pycodestyle
 ]
 
 ignore = [
-    "D202",  # No blank lines allowed after function docstring
-    "D203",  # 1 blank line required before class docstring
-    "D213",  # Multi-line docstring summary should start at the second line
-    "D406",  # Section name should end with a newline
-    "D407",  # Section name underlining
-    "E501",  # line too long
-    "E731",  # do not assign a lambda expression, use a def
+    "D202", # No blank lines allowed after function docstring
+    "D203", # 1 blank line required before class docstring
+    "D213", # Multi-line docstring summary should start at the second line
+    "D406", # Section name should end with a newline
+    "D407", # Section name underlining
+    "E501", # line too long
+    "E731", # do not assign a lambda expression, use a def
 
     # Ignore ignored, as the rule is now back in preview/nursery, which cannot
     # be ignored anymore without warnings.
@@ -654,7 +660,7 @@ ignore = [
     "PLR0912", # Too many branches ({branches} > {max_branches})
     "PLR0913", # Too many arguments to function call ({c_args} > {max_args})
     "PLR0915", # Too many statements ({statements} > {max_statements})
-    "PLR2004",  # Magic value used in comparison, consider replacing {value} with a constant variable
+    "PLR2004", # Magic value used in comparison, consider replacing {value} with a constant variable
     "PLW2901", # Outer {outer_kind} variable {name} overwritten by inner {inner_kind} target
     "UP006", # keep type annotation style as is
     "UP007", # keep type annotation style as is
@@ -681,23 +687,25 @@ ignore = [
     "PLE0605",
 ]
 
-[tool.ruff.flake8-import-conventions.extend-aliases]
+[tool.ruff.lint.flake8-import-conventions.extend-aliases]
 voluptuous = "vol"
 "homeassistant.helpers.area_registry" = "ar"
 "homeassistant.helpers.config_validation" = "cv"
 "homeassistant.helpers.device_registry" = "dr"
 "homeassistant.helpers.entity_registry" = "er"
+"homeassistant.helpers.floor_registry" = "fr"
 "homeassistant.helpers.issue_registry" = "ir"
+"homeassistant.helpers.label_registry" = "lr"
 "homeassistant.util.dt" = "dt_util"
 
-[tool.ruff.flake8-pytest-style]
+[tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
 
-[tool.ruff.flake8-tidy-imports.banned-api]
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 force-sort-within-sections = true
 known-first-party = [
     "homeassistant",
@@ -705,12 +713,12 @@ known-first-party = [
 combine-as-imports = true
 split-on-trailing-comma = false
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 
 # Allow for main entry & scripts to write to stdout
 "homeassistant/__main__.py" = ["T201"]
 "homeassistant/scripts/*" = ["T201"]
 "script/*" = ["T20"]
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 25

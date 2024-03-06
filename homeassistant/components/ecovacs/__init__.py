@@ -28,6 +28,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.IMAGE,
+    Platform.LAWN_MOWER,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

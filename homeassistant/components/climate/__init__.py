@@ -14,6 +14,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -165,6 +166,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         {},
         "async_turn_off",
         [ClimateEntityFeature.TURN_OFF],
+    )
+    component.async_register_entity_service(
+        SERVICE_TOGGLE,
+        {},
+        "async_toggle",
+        [ClimateEntityFeature.TURN_OFF, ClimateEntityFeature.TURN_ON],
     )
     component.async_register_entity_service(
         SERVICE_SET_HVAC_MODE,
@@ -756,7 +763,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             if mode not in self.hvac_modes:
                 continue
             await self.async_set_hvac_mode(mode)
-            break
+            return
+
+        raise NotImplementedError
 
     def turn_off(self) -> None:
         """Turn the entity off."""
@@ -772,6 +781,26 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         # Fake turn off
         if HVACMode.OFF in self.hvac_modes:
             await self.async_set_hvac_mode(HVACMode.OFF)
+            return
+
+        raise NotImplementedError
+
+    def toggle(self) -> None:
+        """Toggle the entity."""
+        raise NotImplementedError
+
+    async def async_toggle(self) -> None:
+        """Toggle the entity."""
+        # Forward to self.toggle if it's been overridden.
+        if type(self).toggle is not ClimateEntity.toggle:
+            await self.hass.async_add_executor_job(self.toggle)
+            return
+
+        # We assume that since turn_off is supported, HVACMode.OFF is as well.
+        if self.hvac_mode == HVACMode.OFF:
+            await self.async_turn_on()
+        else:
+            await self.async_turn_off()
 
     @cached_property
     def supported_features(self) -> ClimateEntityFeature:

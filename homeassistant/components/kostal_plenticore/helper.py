@@ -1,7 +1,6 @@
 """Code to handle the Plenticore API."""
 from __future__ import annotations
 
-import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
@@ -66,7 +65,7 @@ class Plenticore:
                 "Authentication exception connecting to %s: %s", self.host, err
             )
             return False
-        except (ClientError, asyncio.TimeoutError) as err:
+        except (ClientError, TimeoutError) as err:
             _LOGGER.error("Error connecting to %s", self.host)
             raise ConfigEntryNotReady from err
         else:

@@ -1,6 +1,10 @@
 #!/usr/bin/env sh
 set -eu
 
+# Used in venv activate script.
+# Would be an error if undefined.
+OSTYPE="${OSTYPE-}"
+
 # Activate pyenv and virtualenv if present, then run the specified command
 
 # pyenv, pyenv-virtualenv

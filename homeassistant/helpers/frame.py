@@ -34,6 +34,26 @@ class IntegrationFrame:
     relative_filename: str
 
 
+def get_integration_logger(fallback_name: str) -> logging.Logger:
+    """Return a logger by checking the current integration frame.
+
+    If Python is unable to access the sources files, the call stack frame
+    will be missing information, so let's guard by requiring a fallback name.
+    https://github.com/home-assistant/core/issues/24982
+    """
+    try:
+        integration_frame = get_integration_frame()
+    except MissingIntegrationFrame:
+        return logging.getLogger(fallback_name)
+
+    if integration_frame.custom_integration:
+        logger_name = f"custom_components.{integration_frame.integration}"
+    else:
+        logger_name = f"homeassistant.components.{integration_frame.integration}"
+
+    return logging.getLogger(logger_name)
+
+
 def get_integration_frame(exclude_integrations: set | None = None) -> IntegrationFrame:
     """Return the frame, integration and integration path of the current stack frame."""
     found_frame = None
@@ -86,6 +106,7 @@ def report(
     exclude_integrations: set | None = None,
     error_if_core: bool = True,
     level: int = logging.WARNING,
+    log_custom_component_only: bool = False,
 ) -> None:
     """Report incorrect usage.
 
@@ -99,10 +120,12 @@ def report(
         msg = f"Detected code that {what}. Please report this issue."
         if error_if_core:
             raise RuntimeError(msg) from err
-        _LOGGER.warning(msg, stack_info=True)
+        if not log_custom_component_only:
+            _LOGGER.warning(msg, stack_info=True)
         return
 
-    _report_integration(what, integration_frame, level)
+    if not log_custom_component_only or integration_frame.custom_integration:
+        _report_integration(what, integration_frame, level)
 
 
 def _report_integration(

@@ -1,4 +1,5 @@
 """Config flow for BTHome Bluetooth integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -11,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components import onboarding
 from homeassistant.components.bluetooth import (
-    BluetoothServiceInfo,
+    BluetoothServiceInfoBleak,
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow
@@ -26,11 +27,11 @@ class Discovery:
     """A discovered bluetooth device."""
 
     title: str
-    discovery_info: BluetoothServiceInfo
+    discovery_info: BluetoothServiceInfoBleak
     device: DeviceData
 
 
-def _title(discovery_info: BluetoothServiceInfo, device: DeviceData) -> str:
+def _title(discovery_info: BluetoothServiceInfoBleak, device: DeviceData) -> str:
     return device.title or device.get_device_name() or discovery_info.name
 
 
@@ -41,12 +42,12 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovery_info: BluetoothServiceInfo | None = None
+        self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_device: DeviceData | None = None
         self._discovered_devices: dict[str, Discovery] = {}
 
     async def async_step_bluetooth(
-        self, discovery_info: BluetoothServiceInfo
+        self, discovery_info: BluetoothServiceInfoBleak
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)

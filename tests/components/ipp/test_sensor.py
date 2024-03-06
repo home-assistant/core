@@ -99,8 +99,8 @@ async def test_missing_entry_unique_id(
     mock_ipp: AsyncMock,
 ) -> None:
     """Test the unique_id of IPP sensor when printer is missing identifiers."""
-    mock_config_entry.unique_id = None
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=None)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
