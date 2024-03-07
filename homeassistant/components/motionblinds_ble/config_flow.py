@@ -123,7 +123,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_BLIND_TYPE): SelectSelector(
                         SelectSelectorConfig(
                             options=[
-                                blind_type.value for blind_type in MotionBlindType
+                                blind_type.name.lower()
+                                for blind_type in MotionBlindType
                             ],
                             translation_key=CONF_BLIND_TYPE,
                             mode=SelectSelectorMode.DROPDOWN,
