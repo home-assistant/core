@@ -83,7 +83,7 @@
         "name": "Battery level"
       },
       "charge_state_usable_battery_level": {
-        "name": "Usable Battery level"
+        "name": "Usable battery level"
       },
       "climate_state_driver_temp_setting": {
         "name": "Driver temperature setting"
