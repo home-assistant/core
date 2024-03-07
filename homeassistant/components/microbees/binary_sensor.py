@@ -37,7 +37,7 @@ BINARYSENSOR_TYPES = {
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Config entry."""
+    """Set up the microBees binary sensor platform."""
     coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ].coordinator
