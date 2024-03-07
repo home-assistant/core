@@ -477,14 +477,12 @@ class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
             # No change
             return None
         self._last_value = value
-        if isinstance(value, int | float):
-            return self._get_timestamp(value)
-        return None
+        return self._get_timestamp(value)
 
     @property
     def available(self) -> bool:
         """Return the avaliability of the sensor."""
-        return self._value is not None and self._value > 0
+        return isinstance(self._value, int | float) and self._value > 0
 
 
 class TeslemetryEnergySensorEntity(TeslemetryEnergyEntity, SensorEntity):

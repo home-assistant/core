@@ -51,7 +51,7 @@
       "fast_charger_type": "ACSingleWireCAN",
       "ideal_battery_range": 266.87,
       "max_range_charge_counter": 0,
-      "minutes_to_full_charge": null,
+      "minutes_to_full_charge": "bad value",
       "not_enough_power_to_heat": null,
       "off_peak_charging_enabled": false,
       "off_peak_charging_times": "all_week",
