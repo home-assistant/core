@@ -7,12 +7,13 @@ from typing import NamedTuple
 from awattar import AsyncAwattarClient, AwattarConnectionError, MarketItem
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_COUNTRY, COUNTRY_TO_CODE, DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
 
 class AwattarData(NamedTuple):
@@ -38,7 +39,7 @@ class AwattarDataUpdateCoordinator(DataUpdateCoordinator[AwattarData]):
 
         self.awattar = AsyncAwattarClient(
             session=async_get_clientsession(hass),
-            country=COUNTRY_TO_CODE[self.config_entry.data[CONF_COUNTRY]],
+            country=self.config_entry.data[CONF_COUNTRY],
         )
 
     async def _async_update_data(self) -> AwattarData:
