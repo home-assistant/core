@@ -1026,8 +1026,7 @@ class ConfigEntry:
     ) -> asyncio.Task[_R]:
         """Create a background task tied to the config entry lifecycle.
 
-        This type of task is for background tasks that usually run for
-        the lifetime of Home Assistant or an integration's setup.
+        Background tasks are automatically canceled when config entry is unloaded.
 
         This is a background task which is different from a normal task:
 
@@ -1053,6 +1052,8 @@ class ConfigEntry:
         eager_start: bool = False,
     ) -> asyncio.Task[_R]:
         """Create a periodic task tied to the config entry lifecycle.
+
+        Periodic tasks are automatically canceled when config entry is unloaded.
 
         This type of task is typically used for polling.
 
