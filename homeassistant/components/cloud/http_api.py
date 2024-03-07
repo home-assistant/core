@@ -850,5 +850,11 @@ def tts_info(
     """Fetch available tts info."""
     connection.send_result(
         msg["id"],
-        {"languages": list(TTS_VOICES.items())},
+        {
+            "languages": [
+                (language, voice)
+                for language, voices in TTS_VOICES.items()
+                for voice in voices
+            ]
+        },
     )

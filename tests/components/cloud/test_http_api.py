@@ -1629,7 +1629,15 @@ async def test_tts_info(
 
     assert response["success"]
     assert response["result"] == {
-        "languages": json.loads(json.dumps(list(TTS_VOICES.items())))
+        "languages": json.loads(
+            json.dumps(
+                [
+                    (language, voice)
+                    for language, voices in TTS_VOICES.items()
+                    for voice in voices
+                ]
+            )
+        )
     }
 
 
