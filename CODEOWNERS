@@ -158,6 +158,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/awair/ @ahayworth @danielsjf
 /tests/components/awair/ @ahayworth @danielsjf
 /homeassistant/components/awattar/ @mexx42
+/tests/components/awattar/ @mexx42
 /homeassistant/components/axis/ @Kane610
 /tests/components/axis/ @Kane610
 /homeassistant/components/azure_devops/ @timmo001

@@ -6,19 +6,12 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.helpers.selector import selector
+from homeassistant.const import CONF_COUNTRY
+from homeassistant.helpers.selector import CountrySelector, CountrySelectorConfig
 
-from .const import CONF_COUNTRY, DOMAIN
+from .const import DOMAIN
 
-data_schema = {
-    vol.Required(CONF_COUNTRY): selector(
-        {
-            "select": {
-                "options": ["Austria", "Germany"],
-            }
-        }
-    ),
-}
+SUPPORTED_COUNTRIES = ["AT", "DE"]
 
 
 class AwattarFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -34,14 +27,22 @@ class AwattarFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(DOMAIN)
         self._abort_if_unique_id_configured()
 
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=vol.Schema(data_schema)
+        if user_input is not None:
+            return self.async_create_entry(
+                title="aWATTar",
+                data=user_input,
             )
 
-        return self.async_create_entry(
-            title="aWATTar",
-            data={
-                CONF_COUNTRY: user_input[CONF_COUNTRY],
-            },
+        user_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_COUNTRY, default=self.hass.config.country
+                ): CountrySelector(
+                    CountrySelectorConfig(
+                        countries=SUPPORTED_COUNTRIES,
+                    )
+                ),
+            }
         )
+
+        return self.async_show_form(step_id="user", data_schema=user_schema)

@@ -456,6 +456,9 @@ auroranoaa==0.0.3
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.7
 
+# homeassistant.components.awattar
+awattar==0.8.1
+
 # homeassistant.components.axis
 axis==61
 
