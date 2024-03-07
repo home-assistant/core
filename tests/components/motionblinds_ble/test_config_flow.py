@@ -14,7 +14,7 @@ from .conftest import TEST_ADDRESS, TEST_MAC, TEST_NAME
 
 from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
-TEST_BLIND_TYPE = MotionBlindType.ROLLER
+TEST_BLIND_TYPE = MotionBlindType.ROLLER.value
 
 BLIND_SERVICE_INFO = BluetoothServiceInfoBleak(
     name=TEST_NAME,
@@ -61,7 +61,7 @@ async def test_config_flow_manual_success(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER},
+        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.value},
     )
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
@@ -107,7 +107,7 @@ async def test_config_flow_manual_error_invalid_mac(
     # Finish flow
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER},
+        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.value},
     )
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
@@ -181,7 +181,7 @@ async def test_config_flow_manual_error_could_not_find_motor(
     # Finish flow
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER},
+        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.value},
     )
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == f"MotionBlind {TEST_MAC.upper()}"
@@ -232,7 +232,7 @@ async def test_config_flow_bluetooth_success(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER},
+        {const.CONF_BLIND_TYPE: MotionBlindType.ROLLER.value},
     )
 
     assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
