@@ -10,7 +10,7 @@ from nacl.secret import SecretBox
 import voluptuous as vol
 
 from homeassistant.components import cloud
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_validation as cv
@@ -65,7 +65,7 @@ class RegistrationsView(HomeAssistantView):
     )
     async def post(self, request: Request, data: dict) -> Response:
         """Handle the POST request for registration."""
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         webhook_id = secrets.token_hex()
 
