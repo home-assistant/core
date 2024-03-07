@@ -692,7 +692,13 @@ async def test_quirks_v2_entity_discovery_e1_curtain(
     assert state.state == STATE_OFF
 
 
-def _get_test_device(zigpy_device_mock, manufacturer: str, model: str):
+def _get_test_device(
+    zigpy_device_mock,
+    manufacturer: str,
+    model: str,
+    include_unit_error=False,
+    include_device_class_translation_key_error=False,
+):
     zigpy_device = zigpy_device_mock(
         {
             1: {
@@ -712,7 +718,7 @@ def _get_test_device(zigpy_device_mock, manufacturer: str, model: str):
         model=model,
     )
 
-    (
+    v2_quirk = (
         add_to_registry_v2(manufacturer, model, zigpy.quirks._DEVICE_REGISTRY)
         .replaces(PowerConfig1CRCluster)
         .replaces(ScenesCluster, cluster_type=ClusterType.Client)
@@ -741,6 +747,24 @@ def _get_test_device(zigpy_device_mock, manufacturer: str, model: str):
             entity_type=EntityType.CONFIG,
         )
     )
+
+    if include_unit_error:
+        v2_quirk.sensor(
+            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+            zigpy.zcl.clusters.general.OnOff.cluster_id,
+            entity_type=EntityType.CONFIG,
+            unit="invalid",
+            device_class="invalid",
+        )
+
+    if include_device_class_translation_key_error:
+        v2_quirk.sensor(
+            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+            zigpy.zcl.clusters.general.OnOff.cluster_id,
+            entity_type=EntityType.CONFIG,
+            translation_key="invalid",
+            device_class="invalid",
+        )
 
     zigpy_device = zigpy.quirks._DEVICE_REGISTRY.get_device(zigpy_device)
     zigpy_device.endpoints[1].power.PLUGGED_ATTR_READS = {
@@ -821,16 +845,25 @@ async def test_quirks_v2_entity_discovery_errors(
 DEVICE_CLASS_TYPES = [NumberMetadata, BinarySensorMetadata, ZCLSensorMetadata]
 
 
-def test_translations_exist() -> None:
-    """Ensure all v2 quirks translation keys exist."""
+def test_metadata_correctness(skip_translations_errors: bool = False) -> None:
+    """Ensure v2 quirks metadata does not violate HA rules."""
     all_v2_quirks = itertools.chain.from_iterable(
         zigpy.quirks._DEVICE_REGISTRY._registry_v2.values()
     )
+    translations = load_json("homeassistant/components/zha/strings.json")
     for quirk in all_v2_quirks:
-        for entity_metadata in itertools.chain(quirk.entity_metadata):
-            translations = load_json("homeassistant/components/zha/strings.json")
+        for entity_metadata in quirk.entity_metadata:
             platform = Platform(entity_metadata.entity_platform.value)
             metadata_type = type(entity_metadata.entity_metadata)
+            if (
+                hasattr(entity_metadata.entity_metadata, "unit")
+                and entity_metadata.entity_metadata.unit is not None
+                and hasattr(entity_metadata.entity_metadata, "device_class")
+                and entity_metadata.entity_metadata.device_class is not None
+            ):
+                raise ValueError(
+                    f"device_class and unit are both set - unit: {entity_metadata.entity_metadata.unit} device_class: {entity_metadata.entity_metadata.device_class} for {platform.name} {quirk}"
+                )
             if isinstance(entity_metadata, ZCLCommandButtonMetadata):
                 default_translation_key = entity_metadata.entity_metadata.command_name
             else:
@@ -841,16 +874,16 @@ def test_translations_exist() -> None:
                 device_class = entity_metadata.entity_metadata.device_class
                 if device_class is not None and translation_key is not None:
                     raise ValueError(
-                        f"Translation_key and device_class are both set: translation_key: {translation_key} device_class: {device_class} for {platform.name} {quirk}"
+                        f"translation_key and device_class are both set - translation_key: {translation_key} device_class: {device_class} for {platform.name} {quirk}"
                     )
-
-            if (
-                translation_key is not None
-                and translation_key not in translations["entity"][platform]
-            ):
-                raise ValueError(
-                    f"Missing translation key: {translation_key} for {platform.name} {quirk}"
-                )
+            if not skip_translations_errors:
+                if (
+                    translation_key is not None
+                    and translation_key not in translations["entity"][platform]
+                ):
+                    raise ValueError(
+                        f"Missing translation key: {translation_key} for {platform.name} {quirk}"
+                    )
 
 
 async def test_quirks_v2_missing_translations(
@@ -860,12 +893,56 @@ async def test_quirks_v2_missing_translations(
 ) -> None:
     """Ensure all v2 quirks translation keys exist."""
 
-    test_translations_exist()
+    test_metadata_correctness()
 
     zigpy_device = _get_test_device(
-        zigpy_device_mock, "Ikea of Sweden3", "TRADFRI remote control3"
+        zigpy_device_mock, "Ikea of Sweden4", "TRADFRI remote control4"
     )
     await zha_device_joined(zigpy_device)
 
     with pytest.raises(ValueError, match="Missing translation key: off_wait_time"):
-        test_translations_exist()
+        test_metadata_correctness()
+
+
+async def test_quirks_v2_device_class_unit_usage(
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    zha_device_joined,
+) -> None:
+    """Ensure all v2 quirks dont set device class and unit at the same time."""
+
+    test_metadata_correctness()
+
+    zigpy_device = _get_test_device(
+        zigpy_device_mock,
+        "Ikea of Sweden5",
+        "TRADFRI remote control5",
+        include_unit_error=True,
+    )
+    await zha_device_joined(zigpy_device)
+
+    with pytest.raises(ValueError, match="device_class and unit are both set"):
+        test_metadata_correctness(skip_translations_errors=True)
+
+
+async def test_quirks_v2_device_class_translation_key_usage(
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    zha_device_joined,
+) -> None:
+    """Ensure all v2 quirks dont set device class and translation_key at the same time."""
+
+    test_metadata_correctness()
+
+    zigpy_device = _get_test_device(
+        zigpy_device_mock,
+        "Ikea of Sweden6",
+        "TRADFRI remote control6",
+        include_device_class_translation_key_error=True,
+    )
+    await zha_device_joined(zigpy_device)
+
+    with pytest.raises(
+        ValueError, match="translation_key and device_class are both set"
+    ):
+        test_metadata_correctness(skip_translations_errors=True)
