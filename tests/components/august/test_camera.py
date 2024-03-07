@@ -77,7 +77,7 @@ async def test_doorbell_refresh_content_token_fail(
         doorbell_two,
         "async_get_doorbell_image",
         create=False,
-        side_effect=[ContentTokenExpired],
+        side_effect=ContentTokenExpired,
     ):
         await _create_august_with_devices(
             hass,
