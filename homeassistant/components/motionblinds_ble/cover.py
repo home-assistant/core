@@ -50,20 +50,20 @@ class MotionCoverEntityDescription(CoverEntityDescription):
 
 
 COVER_TYPES: dict[str, MotionCoverEntityDescription] = {
-    MotionBlindType.ROLLER.value: MotionCoverEntityDescription(),
-    MotionBlindType.HONEYCOMB.value: MotionCoverEntityDescription(),
-    MotionBlindType.ROMAN.value: MotionCoverEntityDescription(),
-    MotionBlindType.VENETIAN.value: MotionCoverEntityDescription(
+    MotionBlindType.ROLLER.name: MotionCoverEntityDescription(),
+    MotionBlindType.HONEYCOMB.name: MotionCoverEntityDescription(),
+    MotionBlindType.ROMAN.name: MotionCoverEntityDescription(),
+    MotionBlindType.VENETIAN.name: MotionCoverEntityDescription(
         device_class=CoverDeviceClass.BLIND
     ),
-    MotionBlindType.VENETIAN_TILT_ONLY.value: MotionCoverEntityDescription(
+    MotionBlindType.VENETIAN_TILT_ONLY.name: MotionCoverEntityDescription(
         device_class=CoverDeviceClass.BLIND
     ),
-    MotionBlindType.DOUBLE_ROLLER.value: MotionCoverEntityDescription(),
-    MotionBlindType.CURTAIN.value: MotionCoverEntityDescription(
+    MotionBlindType.DOUBLE_ROLLER.name: MotionCoverEntityDescription(),
+    MotionBlindType.CURTAIN.name: MotionCoverEntityDescription(
         device_class=CoverDeviceClass.CURTAIN
     ),
-    MotionBlindType.VERTICAL.value: MotionCoverEntityDescription(
+    MotionBlindType.VERTICAL.name: MotionCoverEntityDescription(
         device_class=CoverDeviceClass.CURTAIN, icon=ICON_VERTICAL_BLIND
     ),
 }
@@ -272,12 +272,12 @@ class PositionTiltBlind(PositionBlind, TiltBlind):
 
 
 BLIND_TO_ENTITY_TYPE: dict[str, type[GenericBlind]] = {
-    MotionBlindType.ROLLER.value: PositionBlind,
-    MotionBlindType.HONEYCOMB.value: PositionBlind,
-    MotionBlindType.ROMAN.value: PositionBlind,
-    MotionBlindType.VENETIAN.value: PositionTiltBlind,
-    MotionBlindType.VENETIAN_TILT_ONLY.value: TiltBlind,
-    MotionBlindType.DOUBLE_ROLLER.value: PositionTiltBlind,
-    MotionBlindType.CURTAIN.value: PositionBlind,
-    MotionBlindType.VERTICAL.value: PositionTiltBlind,
+    MotionBlindType.ROLLER.name: PositionBlind,
+    MotionBlindType.HONEYCOMB.name: PositionBlind,
+    MotionBlindType.ROMAN.name: PositionBlind,
+    MotionBlindType.VENETIAN.name: PositionTiltBlind,
+    MotionBlindType.VENETIAN_TILT_ONLY.name: TiltBlind,
+    MotionBlindType.DOUBLE_ROLLER.name: PositionTiltBlind,
+    MotionBlindType.CURTAIN.name: PositionBlind,
+    MotionBlindType.VERTICAL.name: PositionTiltBlind,
 }
