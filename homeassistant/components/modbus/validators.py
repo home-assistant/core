@@ -365,6 +365,7 @@ def check_config(config: dict) -> dict:
     hub_inx = 0
     while hub_inx < len(config):
         hub = config[hub_inx]
+        minimum_scan_interval = 9999
         if not validate_modbus(hub, hub_name_inx):
             del config[hub_inx]
             continue
@@ -373,7 +374,6 @@ def check_config(config: dict) -> dict:
                 continue
             entity_inx = 0
             entities = hub[conf_key]
-            minimum_scan_interval = 9999
             while entity_inx < len(entities):
                 if not validate_entity(
                     hub[CONF_NAME],
