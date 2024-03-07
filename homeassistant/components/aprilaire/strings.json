@@ -23,6 +23,35 @@
       "thermostat": {
         "name": "Thermostat"
       }
+    },
+    "sensor": {
+      "indoor_humidity_controlling_sensor": {
+        "name": "Indoor Humidity Controlling Sensor"
+      },
+      "outdoor_humidity_controlling_sensor": {
+        "name": "Outdoor Humidity Controlling Sensor"
+      },
+      "indoor_temperature_controlling_sensor": {
+        "name": "Indoor Temperature Controlling Sensor"
+      },
+      "outdoor_temperature_controlling_sensor": {
+        "name": "Outdoor Temperature Controlling Sensor"
+      },
+      "dehumidification_status": {
+        "name": "Dehumidification Status"
+      },
+      "humidification_status": {
+        "name": "Humidification Status"
+      },
+      "ventilation_status": {
+        "name": "Ventilation Status"
+      },
+      "air_cleaning_status": {
+        "name": "Air Cleaning Status"
+      },
+      "fan_status": {
+        "name": "Fan Status"
+      }
     }
   }
 }
