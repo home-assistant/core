@@ -9,7 +9,13 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 def convert_temperature_if_needed(
     temperature_unit: UnitOfTemperature, temperature: float
 ) -> float:
-    """Convert a temperature manually to correct rounding errors."""
+    """Convert a temperature manually to correct rounding errors.
+
+    This is due to the fact that the rounding in Home Assistant does not match the rounding
+    that is performed on the device. Relying on the Home Assistant rounding results in an
+    off-by-one issue. This code uses the current temperature unit for the sensor and rounds
+    according to the Aprilaire conventions to match what is displayed on the device.
+    """
 
     if temperature is not None and temperature_unit == UnitOfTemperature.FAHRENHEIT:
         raw_fahrenheit = TemperatureConverter.convert(
