@@ -32,4 +32,4 @@ class BaseRegistry(ABC):
     @callback
     @abstractmethod
     def _data_to_save(self) -> dict[str, Any]:
-        """Return data of entity registry to store in a file."""
+        """Return data of registry to store in a file."""
