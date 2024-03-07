@@ -484,7 +484,7 @@ class ConversationProcessView(http.HomeAssistantView):
     )
     async def post(self, request: web.Request, data: dict[str, str]) -> web.Response:
         """Send a request for processing."""
-        hass = request.app["hass"]
+        hass = request.app[http.KEY_HASS]
 
         result = await async_converse(
             hass,

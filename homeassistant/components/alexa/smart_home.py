@@ -7,8 +7,11 @@ from yarl import URL
 
 from homeassistant import core
 from homeassistant.auth.models import User
-from homeassistant.components.http import HomeAssistantRequest
-from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http import (
+    KEY_HASS,
+    HomeAssistantRequest,
+    HomeAssistantView,
+)
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -146,7 +149,7 @@ class SmartHomeView(HomeAssistantView):
         Lambda, which will need to forward the requests to here and pass back
         the response.
         """
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         user: User = request["hass_user"]
         message: dict[str, Any] = await request.json()
 

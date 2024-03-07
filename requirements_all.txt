@@ -1074,7 +1074,7 @@ hole==0.8.0
 holidays==0.44
 
 # homeassistant.components.frontend
-home-assistant-frontend==20240306.0
+home-assistant-frontend==20240307.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2024.3.6
@@ -2241,6 +2241,9 @@ python-izone==1.2.9
 # homeassistant.components.joaoapps_join
 python-join-api==0.0.9
 
+# homeassistant.components.juicenet
+python-juicenet==1.1.0
+
 # homeassistant.components.tplink
 python-kasa[speedups]==0.6.2.1
 
@@ -2833,7 +2836,7 @@ watchdog==2.3.1
 waterfurnace==1.1.0
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==0.1.13
+weatherflow4py==0.1.14
 
 # homeassistant.components.webmin
 webmin-xmlrpc==0.0.1

@@ -34,7 +34,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntityFeature
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import ATTR_HUMIDITY, SERVICE_SET_HUMIDITY
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -319,7 +319,7 @@ class HueOneLightStateView(HomeAssistantView):
         if not _remote_is_allowed(request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
-        hass: core.HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         hass_entity_id = self.config.number_to_entity_id(entity_id)
 
         if hass_entity_id is None:
@@ -362,7 +362,7 @@ class HueOneLightChangeView(HomeAssistantView):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         config = self.config
-        hass: core.HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         entity_id = config.number_to_entity_id(entity_number)
 
         if entity_id is None:
@@ -885,7 +885,7 @@ def create_config_model(config: Config, request: web.Request) -> dict[str, Any]:
 
 def create_list_of_entities(config: Config, request: web.Request) -> dict[str, Any]:
     """Create a list of all entities."""
-    hass: core.HomeAssistant = request.app["hass"]
+    hass = request.app[KEY_HASS]
     return {
         config.entity_id_to_number(entity_id): state_to_json(config, state)
         for entity_id in config.get_exposed_entity_ids()
