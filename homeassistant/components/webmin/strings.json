@@ -48,6 +48,39 @@
       },
       "swap_free": {
         "name": "Swap free"
+      },
+      "total_space": {
+        "name": "Disks total space"
+      },
+      "used_space": {
+        "name": "Disks used space"
+      },
+      "free_space": {
+        "name": "Disks free space"
+      },
+      "fs_total": {
+        "name": "Disk total space {mountpoint}"
+      },
+      "fs_used": {
+        "name": "Disk used space {mountpoint}"
+      },
+      "fs_free": {
+        "name": "Disk free space {mountpoint}"
+      },
+      "fs_itotal": {
+        "name": "Disk total inodes {mountpoint}"
+      },
+      "fs_iused": {
+        "name": "Disk used inodes {mountpoint}"
+      },
+      "fs_ifree": {
+        "name": "Disk free inodes {mountpoint}"
+      },
+      "fs_used_percent": {
+        "name": "Disk usage {mountpoint}"
+      },
+      "fs_iused_percent": {
+        "name": "Disk inode usage {mountpoint}"
       }
     }
   }

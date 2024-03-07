@@ -1,6 +1,8 @@
 """Support for Webmin sensors."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -8,13 +10,21 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfInformation
+from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import WebminUpdateCoordinator
+
+
+@dataclass(frozen=True, kw_only=True)
+class WebminFSSensorDescription(SensorEntityDescription):
+    """Represents a filesystem sensor description."""
+
+    mountpoint: str
+
 
 SENSOR_TYPES: list[SensorEntityDescription] = [
     SensorEntityDescription(
@@ -75,7 +85,116 @@ SENSOR_TYPES: list[SensorEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
+    SensorEntityDescription(
+        key="total_space",
+        translation_key="total_space",
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="free_space",
+        translation_key="free_space",
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    SensorEntityDescription(
+        key="used_space",
+        translation_key="used_space",
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        suggested_display_precision=1,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
 ]
+
+
+def generate_filesystem_sensor_description(
+    mountpoint: str,
+) -> list[WebminFSSensorDescription]:
+    """Return all sensor descriptions for a mount point."""
+
+    return [
+        WebminFSSensorDescription(
+            mountpoint=mountpoint,
+            key="total",
+            translation_key="fs_total",
+            native_unit_of_measurement=UnitOfInformation.BYTES,
+            suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+            device_class=SensorDeviceClass.DATA_SIZE,
+            suggested_display_precision=1,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        WebminFSSensorDescription(
+            mountpoint=mountpoint,
+            key="used",
+            translation_key="fs_used",
+            native_unit_of_measurement=UnitOfInformation.BYTES,
+            suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+            device_class=SensorDeviceClass.DATA_SIZE,
+            suggested_display_precision=1,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        WebminFSSensorDescription(
+            mountpoint=mountpoint,
+            key="free",
+            translation_key="fs_free",
+            native_unit_of_measurement=UnitOfInformation.BYTES,
+            suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+            device_class=SensorDeviceClass.DATA_SIZE,
+            suggested_display_precision=1,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        WebminFSSensorDescription(
+            mountpoint=mountpoint,
+            key="itotal",
+            translation_key="fs_itotal",
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        WebminFSSensorDescription(
+            mountpoint=mountpoint,
+            key="iused",
+            translation_key="fs_iused",
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        WebminFSSensorDescription(
+            mountpoint=mountpoint,
+            key="ifree",
+            translation_key="fs_ifree",
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        WebminFSSensorDescription(
+            mountpoint=mountpoint,
+            key="used_percent",
+            translation_key="fs_used_percent",
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+        WebminFSSensorDescription(
+            mountpoint=mountpoint,
+            key="iused_percent",
+            translation_key="fs_iused_percent",
+            native_unit_of_measurement=PERCENTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            entity_registry_enabled_default=False,
+        ),
+    ]
 
 
 async def async_setup_entry(
@@ -83,11 +202,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up Webmin sensors based on a config entry."""
     coordinator: WebminUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
+
+    entities: list[WebminSensor | WebminFSSensor] = [
         WebminSensor(coordinator, description)
         for description in SENSOR_TYPES
         if description.key in coordinator.data
-    )
+    ]
+
+    for fs, values in coordinator.data["fs"].items():
+        entities += [
+            WebminFSSensor(coordinator, description)
+            for description in generate_filesystem_sensor_description(fs)
+            if description.key in values
+        ]
+
+    async_add_entities(entities)
 
 
 class WebminSensor(CoordinatorEntity[WebminUpdateCoordinator], SensorEntity):
@@ -110,3 +239,32 @@ class WebminSensor(CoordinatorEntity[WebminUpdateCoordinator], SensorEntity):
     def native_value(self) -> int | float:
         """Return the state of the sensor."""
         return self.coordinator.data[self.entity_description.key]
+
+
+class WebminFSSensor(CoordinatorEntity[WebminUpdateCoordinator], SensorEntity):
+    """Represents a Webmin filesystem sensor."""
+
+    entity_description: WebminFSSensorDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: WebminUpdateCoordinator,
+        description: WebminFSSensorDescription,
+    ) -> None:
+        """Initialize a Webmin filesystem sensor."""
+
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_device_info = coordinator.device_info
+        self._attr_translation_placeholders = {"mountpoint": description.mountpoint}
+        self._attr_unique_id = (
+            f"{coordinator.mac_address}_{description.mountpoint}_{description.key}"
+        )
+
+    @property
+    def native_value(self) -> int | float:
+        """Return the state of the sensor."""
+        return self.coordinator.data["fs"][self.entity_description.mountpoint][
+            self.entity_description.key
+        ]

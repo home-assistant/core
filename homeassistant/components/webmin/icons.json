@@ -21,6 +21,39 @@
       },
       "swap_free": {
         "default": "mdi:memory"
+      },
+      "total_space": {
+        "default": "mdi:harddisk"
+      },
+      "used_space": {
+        "default": "mdi:harddisk"
+      },
+      "free_space": {
+        "default": "mdi:harddisk"
+      },
+      "fs_total": {
+        "default": "mdi:harddisk"
+      },
+      "fs_used": {
+        "default": "mdi:harddisk"
+      },
+      "fs_free": {
+        "default": "mdi:harddisk"
+      },
+      "fs_itotal": {
+        "default": "mdi:harddisk"
+      },
+      "fs_iused": {
+        "default": "mdi:harddisk"
+      },
+      "fs_ifree": {
+        "default": "mdi:harddisk"
+      },
+      "fs_used_percent": {
+        "default": "mdi:harddisk"
+      },
+      "fs_iused_percent": {
+        "default": "mdi:harddisk"
       }
     }
   }
