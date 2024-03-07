@@ -24,19 +24,12 @@ from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
 from .coordinator import AwattarData, AwattarDataUpdateCoordinator
 
 
-@dataclass(frozen=True)
-class AwattarSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AwattarSensorEntityDescription(SensorEntityDescription):
+    """Describes a aWATTar sensor entity."""
 
     value_fn: Callable[[AwattarData], float | datetime | None]
     service_type: str
-
-
-@dataclass(frozen=True)
-class AwattarSensorEntityDescription(
-    SensorEntityDescription, AwattarSensorEntityDescriptionMixin
-):
-    """Describes a aWATTar sensor entity."""
 
 
 SENSORS: tuple[AwattarSensorEntityDescription, ...] = (
