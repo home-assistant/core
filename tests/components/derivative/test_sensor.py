@@ -1,18 +1,19 @@
 """The tests for the derivative sensor platform."""
 from datetime import timedelta
+import logging
 from math import sin
-import random
 
 from freezegun import freeze_time
 
 from homeassistant.components.derivative.const import DOMAIN
+from homeassistant.components.derivative.sensor import _LOGGER as derivative_logger
 from homeassistant.const import UnitOfPower, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_state(hass: HomeAssistant) -> None:
@@ -66,16 +67,31 @@ async def _setup_sensor(hass, config):
     return config, entity_id
 
 
-async def setup_tests(hass, config, times, values, expected_state):
+async def setup_tests(
+    hass: HomeAssistant, config, times, values, force_update, expected_state
+):
     """Test derivative sensor state."""
+
+    # Set derivative logger to DEBUG level for debugging failed tests.
+    derivative_logger.setLevel(logging.DEBUG)
+
+    assert len(times) == len(values)
+
     config, entity_id = await _setup_sensor(hass, config)
 
-    # Testing a energy sensor with non-monotonic intervals and values
-    base = dt_util.utcnow()
+    # Testing a energy sensor with non-monotonic intervals and values. Set the base time to the next rounded second.
+    base = (dt_util.utcnow() + timedelta(seconds=1)).replace(microsecond=0)
+
     with freeze_time(base) as freezer:
         for time, value in zip(times, values):
-            freezer.move_to(base + timedelta(seconds=time))
-            hass.states.async_set(entity_id, value, {}, force_update=True)
+            new_time = base + timedelta(seconds=time)
+            logging.getLogger().info(
+                f"Move test time to {new_time} ({time} seconds after test start) with value {value}"
+            )
+            freezer.move_to(new_time)
+            async_fire_time_changed(hass, new_time)
+            if value is not None:
+                hass.states.async_set(entity_id, value, {}, force_update=force_update)
             await hass.async_block_till_done()
 
     state = hass.states.get("sensor.power")
@@ -86,6 +102,19 @@ async def setup_tests(hass, config, times, values, expected_state):
     return state
 
 
+async def test_dataSet0(hass: HomeAssistant) -> None:
+    """Test derivative sensor state."""
+    # With only 1 state (change) the derivative is 0
+    await setup_tests(
+        hass,
+        {"unit_time": UnitOfTime.SECONDS},
+        times=[20],
+        values=[5],
+        force_update=False,
+        expected_state=0.0,
+    )
+
+
 async def test_dataSet1(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
     await setup_tests(
@@ -93,6 +122,7 @@ async def test_dataSet1(hass: HomeAssistant) -> None:
         {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30, 40, 50],
         values=[10, 30, 5, 0],
+        force_update=False,
         expected_state=-0.5,
     )
 
@@ -104,6 +134,7 @@ async def test_dataSet2(hass: HomeAssistant) -> None:
         {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30],
         values=[5, 0],
+        force_update=False,
         expected_state=-0.5,
     )
 
@@ -115,6 +146,7 @@ async def test_dataSet3(hass: HomeAssistant) -> None:
         {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30],
         values=[5, 10],
+        force_update=False,
         expected_state=0.5,
     )
 
@@ -123,12 +155,26 @@ async def test_dataSet3(hass: HomeAssistant) -> None:
 
 async def test_dataSet4(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
+
     await setup_tests(
         hass,
         {"unit_time": UnitOfTime.SECONDS},
-        times=[20, 30],
-        values=[5, 5],
+        times=[10, 20, 30],
+        values=[1, 5, 5],
+        force_update=True,  # Force because the values are the same, and then derivative is 0
         expected_state=0,
+    )
+
+
+async def test_dataSet4_no_force(hass: HomeAssistant) -> None:
+    """Test derivative sensor state."""
+    await setup_tests(
+        hass,
+        {"unit_time": UnitOfTime.SECONDS},
+        times=[10, 20, 30],
+        values=[1, 5, 5],
+        force_update=False,  # Without force the value stays as it was: 0.4
+        expected_state=0.4,
     )
 
 
@@ -139,97 +185,112 @@ async def test_dataSet5(hass: HomeAssistant) -> None:
         {"unit_time": UnitOfTime.SECONDS},
         times=[20, 30],
         values=[10, -10],
+        force_update=False,
         expected_state=-2,
     )
 
 
 async def test_dataSet6(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
-    await setup_tests(hass, {}, times=[0, 60], values=[0, 1 / 60], expected_state=1)
-
-
-async def test_data_moving_average_for_discrete_sensor(hass: HomeAssistant) -> None:
-    """Test derivative sensor state."""
-    # We simulate the following situation:
-    # The temperature rises 1 °C per minute for 30 minutes long.
-    # There is a data point every 30 seconds, however, the sensor returns
-    # the temperature rounded down to an integer value.
-    # We use a time window of 10 minutes and therefore we can expect
-    # (because the true derivative is 1 °C/min) an error of less than 10%.
-
-    temperature_values = []
-    for temperature in range(30):
-        temperature_values += [temperature] * 2  # two values per minute
-    time_window = 600
-    times = list(range(0, 1800 + 30, 30))
-
-    config, entity_id = await _setup_sensor(
+    await setup_tests(
         hass,
-        {
-            "time_window": {"seconds": time_window},
-            "unit_time": UnitOfTime.MINUTES,
-            "round": 1,
-        },
-    )  # two minute window
-
-    base = dt_util.utcnow()
-    with freeze_time(base) as freezer:
-        for time, value in zip(times, temperature_values):
-            now = base + timedelta(seconds=time)
-            freezer.move_to(now)
-            hass.states.async_set(entity_id, value, {}, force_update=True)
-            await hass.async_block_till_done()
-
-            if time_window < time < times[-1] - time_window:
-                state = hass.states.get("sensor.power")
-                derivative = round(float(state.state), config["sensor"]["round"])
-                # Test that the error is never more than
-                # (time_window_in_minutes / true_derivative * 100) = 10% + ε
-                assert abs(1 - derivative) <= 0.1 + 1e-6
-
-
-async def test_data_moving_average_for_irregular_times(hass: HomeAssistant) -> None:
-    """Test derivative sensor state."""
-    # We simulate the following situation:
-    # The temperature rises 1 °C per minute for 30 minutes long.
-    # There is 60 random datapoints (and the start and end) and the signal is normally distributed
-    # around the expected value with ±0.1°C
-    # We use a time window of 1 minute and expect an error of less than the standard deviation. (0.01)
-
-    time_window = 60
-    random.seed(0)
-    times = sorted(random.sample(range(1800), 60))
-
-    def temp_function(time):
-        random.seed(0)
-        temp = time / (600)
-        return random.gauss(temp, 0.1)
-
-    temperature_values = list(map(temp_function, times))
-
-    config, entity_id = await _setup_sensor(
-        hass,
-        {
-            "time_window": {"seconds": time_window},
-            "unit_time": UnitOfTime.MINUTES,
-            "round": 3,
-        },
+        {},
+        times=[0, 60],
+        values=[0, 1 / 60],
+        force_update=True,
+        expected_state=1,
     )
 
-    base = dt_util.utcnow()
-    with freeze_time(base) as freezer:
-        for time, value in zip(times, temperature_values):
-            now = base + timedelta(seconds=time)
-            freezer.move_to(now)
-            hass.states.async_set(entity_id, value, {}, force_update=True)
-            await hass.async_block_till_done()
 
-            if time_window < time and time > times[3]:
-                state = hass.states.get("sensor.power")
-                derivative = round(float(state.state), config["sensor"]["round"])
-                # Test that the error is never more than
-                # (time_window_in_minutes / true_derivative * 100) = 10% + ε
-                assert abs(0.1 - derivative) <= 0.01 + 1e-6
+async def test_SMA_dataSet1(hass: HomeAssistant) -> None:
+    """Test derivative sensor state."""
+    # If the first state (change) has not yet left the time window, the algorithm assumes this value has been the state for all of history.
+    # Therefore at time 6 (with value 20) the value at the other end of the time window (-4) is 10 (which was actually received at time 0), resulting in derivative (20-10)/10 = 1
+    await setup_tests(
+        hass,
+        {"time_window": 10, "unit_time": UnitOfTime.SECONDS},
+        times=[0, 6],
+        values=[10, 20],
+        force_update=False,
+        expected_state=1,
+    )
+
+
+async def test_SMA_dataSet1_wait_done(hass: HomeAssistant) -> None:
+    """Test derivative sensor state."""
+    # When the last state change has left the window, the derivative should be reset to 0.
+    await setup_tests(
+        hass,
+        {"time_window": 10, "unit_time": UnitOfTime.SECONDS},
+        times=[0, 6, 17],
+        values=[10, 20, None],
+        force_update=False,
+        expected_state=0,
+    )
+
+
+async def test_SMA_dataSet2(hass: HomeAssistant) -> None:
+    """Test derivative sensor state."""
+    # Intermediate values don't matter, only the values at the end points.
+    # So extremely large values in the middle of the time_window are not relevant at time 6,
+    # but they were relevant when they occurred (entered the time window) and will be again when they leave it.
+    await setup_tests(
+        hass,
+        {"time_window": 10, "unit_time": UnitOfTime.SECONDS},
+        times=[0, 1, 2, 3, 4, 5, 6],
+        values=[10, 100000, 200000, 300000, 400000, 500000, 20],
+        force_update=False,
+        expected_state=1,
+    )
+
+
+async def test_SMA_dataSet3(hass: HomeAssistant) -> None:
+    """Test derivative sensor state."""
+    await setup_tests(
+        hass,
+        {"time_window": 10, "unit_time": UnitOfTime.SECONDS},
+        times=[0, 1, 2, 3, 4, 5, 6, 11.5],
+        values=[10, 100000, 200000, 300000, 400000, 500000, 20, -1],
+        force_update=False,
+        expected_state=-10000.1,
+    )
+
+
+async def test_SMA_dataSet4(hass: HomeAssistant) -> None:
+    """Test derivative sensor state."""
+    await setup_tests(
+        hass,
+        {"time_window": 10, "unit_time": UnitOfTime.SECONDS},
+        times=[0, 1, 2, 3, 4, 5, 6, 11.5, 12.5],
+        values=[10, 100000, 200000, 300000, 400000, 500000, 20, -1, None],
+        force_update=False,
+        expected_state=-20000.1,
+    )
+
+
+async def test_SMA_dataSet5(hass: HomeAssistant) -> None:
+    """Test derivative sensor state."""
+    await setup_tests(
+        hass,
+        {"time_window": 10, "unit_time": UnitOfTime.SECONDS},
+        times=[0, 1, 2, 3, 4, 5, 6, 11.5, 12.5, 15.5],
+        values=[10, 100000, 200000, 300000, 400000, 500000, 20, -1, None, None],
+        force_update=False,
+        expected_state=-50000.1,
+    )
+
+
+async def test_SMA_dataSet6(hass: HomeAssistant) -> None:
+    """Test derivative sensor state."""
+    # Wait until the last value has left the window, and see that the derivative is 0 again, even with many values in the window.
+    await setup_tests(
+        hass,
+        {"time_window": 10, "unit_time": UnitOfTime.SECONDS},
+        times=[0, 1, 2, 3, 4, 5, 6, 11.5, 12.5, 15.5, 22],
+        values=[10, 100000, 200000, 300000, 400000, 500000, 20, -1, None, None, None],
+        force_update=False,
+        expected_state=0.0,
+    )
 
 
 async def test_double_signal_after_delay(hass: HomeAssistant) -> None:
