@@ -1609,7 +1609,15 @@ class _TrackTimeInterval:
             self._track_job,
             hass.loop.time() + self.seconds,
         )
-        hass.async_run_hass_job(self._run_job, now)
+        if self._run_job.job_type is HassJobType.Coroutinefunction:
+            hass.async_create_periodic_task(
+                # mypy does not know we just checked for the job type
+                self.action(now),  # type: ignore[arg-type]
+                f"track time interval {self.seconds}",
+                eager_start=True,
+            )
+        else:
+            hass.async_run_hass_job(self._run_job, now)
 
     @callback
     def async_cancel(self) -> None:
