@@ -98,11 +98,6 @@ class HomeworksLight(HomeworksEntity, LightEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
-        """Supported attributes."""
-        return {"homeworks_address": self._addr}
-
-    @property
     def is_on(self) -> bool:
         """Is the light on/off."""
         return self._level != 0

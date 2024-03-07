@@ -6,6 +6,7 @@ import threading
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
+from awesomeversion import AwesomeVersion
 import pytest
 
 from homeassistant import loader
@@ -165,6 +166,57 @@ async def test_custom_integration_version_not_valid(
         "The custom integration 'test_bad_version' does not have a valid version key"
         " (bad) in the manifest file and was blocked from loading."
     ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "blocked_versions",
+    [
+        loader.BlockedIntegration(None, "breaks Home Assistant"),
+        loader.BlockedIntegration(AwesomeVersion("2.0.0"), "breaks Home Assistant"),
+    ],
+)
+async def test_custom_integration_version_blocked(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    blocked_versions,
+) -> None:
+    """Test that we log a warning when custom integrations have a blocked version."""
+    with patch.dict(
+        loader.BLOCKED_CUSTOM_INTEGRATIONS, {"test_blocked_version": blocked_versions}
+    ):
+        with pytest.raises(loader.IntegrationNotFound):
+            await loader.async_get_integration(hass, "test_blocked_version")
+
+        assert (
+            "Version 1.0.0 of custom integration 'test_blocked_version' breaks"
+            " Home Assistant and was blocked from loading, please report it to the"
+            " author of the 'test_blocked_version' custom integration"
+        ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "blocked_versions",
+    [
+        loader.BlockedIntegration(AwesomeVersion("0.9.9"), "breaks Home Assistant"),
+        loader.BlockedIntegration(AwesomeVersion("1.0.0"), "breaks Home Assistant"),
+    ],
+)
+async def test_custom_integration_version_not_blocked(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    enable_custom_integrations: None,
+    blocked_versions,
+) -> None:
+    """Test that we log a warning when custom integrations have a blocked version."""
+    with patch.dict(
+        loader.BLOCKED_CUSTOM_INTEGRATIONS, {"test_blocked_version": blocked_versions}
+    ):
+        await loader.async_get_integration(hass, "test_blocked_version")
+
+        assert (
+            "Version 1.0.0 of custom integration 'test_blocked_version'"
+        ) not in caplog.text
 
 
 async def test_get_integration(hass: HomeAssistant) -> None:
@@ -1070,7 +1122,7 @@ async def test_hass_components_use_reported(
     )
     integration_frame = frame.IntegrationFrame(
         custom_integration=True,
-        frame=mock_integration_frame,
+        _frame=mock_integration_frame,
         integration="test_integration_frame",
         module="custom_components.test_integration_frame",
         relative_filename="custom_components/test_integration_frame/__init__.py",

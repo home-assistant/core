@@ -36,7 +36,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.LIGHT]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.LIGHT]
 
 EVENT_BUTTON_PRESS = "homeworks_button_press"
 EVENT_BUTTON_RELEASE = "homeworks_button_release"
@@ -186,6 +186,7 @@ class HomeworksEntity(Entity):
             self._controller_id, self._addr, self._idx
         )
         self._controller = controller
+        self._attr_extra_state_attributes = {"homeworks_address": self._addr}
 
 
 class HomeworksKeypad:

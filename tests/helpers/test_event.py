@@ -453,7 +453,7 @@ async def test_async_track_state_change_event(hass: HomeAssistant) -> None:
         raise ValueError
 
     unsub_single = async_track_state_change_event(
-        hass, ["light.Bowl"], single_run_callback
+        hass, ["light.Bowl"], single_run_callback, job_type=ha.HassJobType.Callback
     )
     unsub_multi = async_track_state_change_event(
         hass, ["light.Bowl", "switch.kitchen"], multiple_run_callback
@@ -560,7 +560,9 @@ async def test_async_track_state_added_domain(hass: HomeAssistant) -> None:
     def callback_that_throws(event):
         raise ValueError
 
-    unsub_single = async_track_state_added_domain(hass, "light", single_run_callback)
+    unsub_single = async_track_state_added_domain(
+        hass, "light", single_run_callback, job_type=ha.HassJobType.Callback
+    )
     unsub_multi = async_track_state_added_domain(
         hass, ["light", "switch"], multiple_run_callback
     )
@@ -672,7 +674,9 @@ async def test_async_track_state_removed_domain(hass: HomeAssistant) -> None:
     def callback_that_throws(event):
         raise ValueError
 
-    unsub_single = async_track_state_removed_domain(hass, "light", single_run_callback)
+    unsub_single = async_track_state_removed_domain(
+        hass, "light", single_run_callback, job_type=ha.HassJobType.Callback
+    )
     unsub_multi = async_track_state_removed_domain(
         hass, ["light", "switch"], multiple_run_callback
     )
@@ -4602,7 +4606,9 @@ async def test_async_track_entity_registry_updated_event(hass: HomeAssistant) ->
     def run_callback(event):
         event_data.append(event.data)
 
-    unsub1 = async_track_entity_registry_updated_event(hass, entity_id, run_callback)
+    unsub1 = async_track_entity_registry_updated_event(
+        hass, entity_id, run_callback, job_type=ha.HassJobType.Callback
+    )
     unsub2 = async_track_entity_registry_updated_event(
         hass, new_entity_id, run_callback
     )
@@ -4721,7 +4727,10 @@ async def test_async_track_device_registry_updated_event(hass: HomeAssistant) ->
         hass, device_id, single_device_id_callback
     )
     unsub2 = async_track_device_registry_updated_event(
-        hass, [device_id, device_id2], multiple_device_id_callback
+        hass,
+        [device_id, device_id2],
+        multiple_device_id_callback,
+        job_type=ha.HassJobType.Callback,
     )
     hass.bus.async_fire(
         EVENT_DEVICE_REGISTRY_UPDATED, {"action": "create", "device_id": device_id}

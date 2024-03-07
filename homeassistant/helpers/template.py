@@ -1286,19 +1286,23 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
     or provide a config entry title for filtering between instances of the same
     integration.
     """
-    # first try if this is a config entry match
-    conf_entry = next(
-        (
-            entry.entry_id
-            for entry in hass.config_entries.async_entries()
-            if entry.title == entry_name
-        ),
-        None,
-    )
-    if conf_entry is not None:
-        ent_reg = entity_registry.async_get(hass)
-        entries = entity_registry.async_entries_for_config_entry(ent_reg, conf_entry)
-        return [entry.entity_id for entry in entries]
+
+    # Don't allow searching for config entries without title
+    if not entry_name:
+        return []
+
+    # first try if there are any config entries with a matching title
+    entities: list[str] = []
+    ent_reg = entity_registry.async_get(hass)
+    for entry in hass.config_entries.async_entries():
+        if entry.title != entry_name:
+            continue
+        entries = entity_registry.async_entries_for_config_entry(
+            ent_reg, entry.entry_id
+        )
+        entities.extend(entry.entity_id for entry in entries)
+    if entities:
+        return entities
 
     # fallback to just returning all entities for a domain
     # pylint: disable-next=import-outside-toplevel
