@@ -1,6 +1,7 @@
 """Test ZHA device discovery."""
 
 from collections.abc import Callable
+import itertools
 import re
 from typing import Any
 from unittest import mock
@@ -20,7 +21,14 @@ from zhaquirks.xiaomi.aqara.driver_curtain_e1 import (
 from zigpy.const import SIG_ENDPOINTS, SIG_MANUFACTURER, SIG_MODEL, SIG_NODE_DESC
 import zigpy.profiles.zha
 import zigpy.quirks
-from zigpy.quirks.v2 import EntityType, add_to_registry_v2
+from zigpy.quirks.v2 import (
+    BinarySensorMetadata,
+    EntityType,
+    NumberMetadata,
+    ZCLCommandButtonMetadata,
+    ZCLSensorMetadata,
+    add_to_registry_v2,
+)
 from zigpy.quirks.v2.homeassistant import UnitOfTime
 import zigpy.types
 from zigpy.zcl import ClusterType
@@ -40,6 +48,7 @@ from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.util.json import load_json
 
 from .common import find_entity_id, update_attribute_cache
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -807,3 +816,56 @@ async def test_quirks_v2_entity_discovery_errors(
     m2 = f"details: {entity_details} that does not have an entity class mapping - "
     m3 = "unable to create entity"
     assert f"{m1}{m2}{m3}" in caplog.text
+
+
+DEVICE_CLASS_TYPES = [NumberMetadata, BinarySensorMetadata, ZCLSensorMetadata]
+
+
+def test_translations_exist() -> None:
+    """Ensure all v2 quirks translation keys exist."""
+    all_v2_quirks = itertools.chain.from_iterable(
+        zigpy.quirks._DEVICE_REGISTRY._registry_v2.values()
+    )
+    for quirk in all_v2_quirks:
+        for entity_metadata in itertools.chain(quirk.entity_metadata):
+            translations = load_json("homeassistant/components/zha/strings.json")
+            platform = Platform(entity_metadata.entity_platform.value)
+            metadata_type = type(entity_metadata.entity_metadata)
+            if isinstance(entity_metadata, ZCLCommandButtonMetadata):
+                default_translation_key = entity_metadata.entity_metadata.command_name
+            else:
+                default_translation_key = entity_metadata.entity_metadata.attribute_name
+            translation_key = entity_metadata.translation_key or default_translation_key
+
+            if metadata_type in DEVICE_CLASS_TYPES:
+                device_class = entity_metadata.entity_metadata.device_class
+                if device_class is not None and translation_key is not None:
+                    raise ValueError(
+                        f"Translation_key and device_class are both set: translation_key: {translation_key} device_class: {device_class} for {platform.name} {quirk}"
+                    )
+
+            if (
+                translation_key is not None
+                and translation_key not in translations["entity"][platform]
+            ):
+                raise ValueError(
+                    f"Missing translation key: {translation_key} for {platform.name} {quirk}"
+                )
+
+
+async def test_quirks_v2_missing_translations(
+    hass: HomeAssistant,
+    zigpy_device_mock,
+    zha_device_joined,
+) -> None:
+    """Ensure all v2 quirks translation keys exist."""
+
+    test_translations_exist()
+
+    zigpy_device = _get_test_device(
+        zigpy_device_mock, "Ikea of Sweden3", "TRADFRI remote control3"
+    )
+    await zha_device_joined(zigpy_device)
+
+    with pytest.raises(ValueError, match="Missing translation key: off_wait_time"):
+        test_translations_exist()
