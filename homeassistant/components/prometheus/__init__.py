@@ -259,7 +259,7 @@ class PrometheusMetrics:
         self, entity_id: str, friendly_name: str | None = None
     ) -> None:
         """Remove labelsets matching the given entity id from all metrics."""
-        for _, metric in self._metrics.items():
+        for metric in self._metrics.values():
             for sample in cast(list[prometheus_client.Metric], metric.collect())[
                 0
             ].samples:

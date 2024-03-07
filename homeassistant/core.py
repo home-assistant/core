@@ -289,8 +289,6 @@ class HassJob(Generic[_P, _R_co]):
     we run the job.
     """
 
-    __slots__ = ("job_type", "target", "name", "_cancel_on_shutdown")
-
     def __init__(
         self,
         target: Callable[_P, _R_co],
@@ -302,8 +300,13 @@ class HassJob(Generic[_P, _R_co]):
         """Create a job object."""
         self.target = target
         self.name = name
-        self.job_type = job_type or _get_hassjob_callable_job_type(target)
         self._cancel_on_shutdown = cancel_on_shutdown
+        self._job_type = job_type
+
+    @cached_property
+    def job_type(self) -> HassJobType:
+        """Return the job type."""
+        return self._job_type or _get_hassjob_callable_job_type(self.target)
 
     @property
     def cancel_on_shutdown(self) -> bool | None:
@@ -482,8 +485,10 @@ class HomeAssistant:
                     " phase. We're going to continue anyway. Please report the"
                     " following info at"
                     " https://github.com/home-assistant/core/issues: %s"
+                    " The system is waiting for tasks: %s"
                 ),
                 ", ".join(self.config.components),
+                self._tasks,
             )
 
         # Allow automations to set up the start triggers before changing state
@@ -2012,9 +2017,10 @@ class Service:
         service: str,
         context: Context | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
+        job_type: HassJobType | None = None,
     ) -> None:
         """Initialize a service."""
-        self.job = HassJob(func, f"service {domain}.{service}")
+        self.job = HassJob(func, f"service {domain}.{service}", job_type=job_type)
         self.schema = schema
         self.supports_response = supports_response
 
@@ -2156,6 +2162,7 @@ class ServiceRegistry:
         ],
         schema: vol.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
+        job_type: HassJobType | None = None,
     ) -> None:
         """Register a service.
 
@@ -2166,7 +2173,12 @@ class ServiceRegistry:
         domain = domain.lower()
         service = service.lower()
         service_obj = Service(
-            service_func, schema, domain, service, supports_response=supports_response
+            service_func,
+            schema,
+            domain,
+            service,
+            supports_response=supports_response,
+            job_type=job_type,
         )
 
         if domain in self._services:

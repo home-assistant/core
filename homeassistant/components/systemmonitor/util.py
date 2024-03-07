@@ -57,7 +57,7 @@ def get_all_network_interfaces(hass: HomeAssistant) -> set[str]:
     """Return all network interfaces on system."""
     psutil_wrapper: ha_psutil = hass.data[DOMAIN]
     interfaces: set[str] = set()
-    for interface, _ in psutil_wrapper.psutil.net_if_addrs().items():
+    for interface in psutil_wrapper.psutil.net_if_addrs():
         if interface.startswith("veth"):
             # Don't load docker virtual network interfaces
             continue
