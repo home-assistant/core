@@ -158,7 +158,11 @@ async def _validate_dsmr_connection(
     equipment_identifier_gas = conn.equipment_identifier_gas()
 
     # Check only for equipment identifier in case no gas meter is connected
-    if equipment_identifier is None and data[CONF_DSMR_VERSION] != "5S" and equipment_identifier_gas is None:
+    if (
+        equipment_identifier is None
+        and data[CONF_DSMR_VERSION] != "5S"
+        and equipment_identifier_gas is None
+    ):
         raise CannotCommunicate
 
     return {
