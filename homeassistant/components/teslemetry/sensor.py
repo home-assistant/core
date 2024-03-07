@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import chain
+from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,10 +27,11 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.variance import ignore_variance
 
 from .const import DOMAIN
 from .entity import (
@@ -39,13 +41,16 @@ from .entity import (
 )
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
+ChargeStates = {
+    "Starting": "starting",
+    "Charging": "charging",
+    "Stopped": "stopped",
+    "Complete": "complete",
+    "Disconnected": "disconnected",
+    "NoPower": "no_power",
+}
 
-@callback
-def minutes_to_datetime(value: StateType) -> datetime | None:
-    """Convert relative minutes into absolute datetime."""
-    if isinstance(value, (int, float)) and value > 0:
-        return dt_util.now() + timedelta(minutes=value)
-    return None
+ShiftStates = {"P": "p", "D": "d", "R": "r", "N": "n"}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -57,10 +62,23 @@ class TeslemetrySensorEntityDescription(SensorEntityDescription):
 
 VEHICLE_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
     TeslemetrySensorEntityDescription(
+        key="charge_state_charging_state",
+        options=list(ChargeStates.values()),
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda value: ChargeStates.get(cast(str, value)),
+    ),
+    TeslemetrySensorEntityDescription(
+        key="charge_state_battery_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+    ),
+    TeslemetrySensorEntityDescription(
         key="charge_state_usable_battery_level",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
+        entity_registry_enabled_default=False,
     ),
     TeslemetrySensorEntityDescription(
         key="charge_state_charge_energy_added",
@@ -95,13 +113,16 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TeslemetrySensorEntityDescription(
+        key="charge_state_conn_charge_cable",
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     TeslemetrySensorEntityDescription(
-        key="charge_state_minutes_to_full_charge",
-        device_class=SensorDeviceClass.TIMESTAMP,
+        key="charge_state_fast_charger_type",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=minutes_to_datetime,
+        entity_registry_enabled_default=False,
     ),
     TeslemetrySensorEntityDescription(
         key="charge_state_battery_range",
@@ -111,11 +132,28 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
         suggested_display_precision=1,
     ),
     TeslemetrySensorEntityDescription(
+        key="charge_state_est_battery_range",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetrySensorEntityDescription(
+        key="charge_state_ideal_battery_range",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfLength.MILES,
+        device_class=SensorDeviceClass.DISTANCE,
+        suggested_display_precision=1,
+        entity_registry_enabled_default=False,
+    ),
+    TeslemetrySensorEntityDescription(
         key="drive_state_speed",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         entity_registry_enabled_default=False,
+        value_fn=lambda value: value or 0,
     ),
     TeslemetrySensorEntityDescription(
         key="drive_state_power",
@@ -124,13 +162,13 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        value_fn=lambda value: value or 0,
     ),
     TeslemetrySensorEntityDescription(
         key="drive_state_shift_state",
-        icon="mdi:car-shift-pattern",
-        options=["p", "d", "r", "n"],
+        options=list(ShiftStates.values()),
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda x: x.lower() if isinstance(x, str) else x,
+        value_fn=lambda x: ShiftStates.get(str(x), "p"),
         entity_registry_enabled_default=False,
     ),
     TeslemetrySensorEntityDescription(
@@ -235,19 +273,31 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
     ),
-    TeslemetrySensorEntityDescription(
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class TeslemetryTimeEntityDescription(SensorEntityDescription):
+    """Describes Teslemetry Sensor entity."""
+
+    variance: int
+
+
+VEHICLE_TIME_DESCRIPTIONS: tuple[TeslemetryTimeEntityDescription, ...] = (
+    TeslemetryTimeEntityDescription(
+        key="charge_state_minutes_to_full_charge",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        variance=4,
+    ),
+    TeslemetryTimeEntityDescription(
         key="drive_state_active_route_minutes_to_arrival",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=minutes_to_datetime,
-    ),
-    TeslemetrySensorEntityDescription(
-        key="drive_state_active_route_destination",
-        icon="mdi:map-marker",
-        entity_category=EntityCategory.DIAGNOSTIC,
+        variance=1,
     ),
 )
 
-ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="solar_power",
         state_class=SensorStateClass.MEASUREMENT,
@@ -255,7 +305,6 @@ ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
-        icon="mdi:solar-power",
     ),
     SensorEntityDescription(
         key="energy_left",
@@ -265,7 +314,6 @@ ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:battery",
     ),
     SensorEntityDescription(
         key="total_pack_energy",
@@ -275,7 +323,6 @@ ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:battery-high",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -292,7 +339,6 @@ ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
-        icon="mdi:home-battery",
     ),
     SensorEntityDescription(
         key="load_power",
@@ -301,7 +347,6 @@ ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
-        icon="mdi:power-plug",
     ),
     SensorEntityDescription(
         key="grid_power",
@@ -310,7 +355,6 @@ ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
-        icon="mdi:transmission-tower",
     ),
     SensorEntityDescription(
         key="grid_services_power",
@@ -319,7 +363,6 @@ ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
-        icon="mdi:transmission-tower",
     ),
     SensorEntityDescription(
         key="generator_power",
@@ -328,9 +371,9 @@ ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
-        icon="mdi:generator-stationary",
         entity_registry_enabled_default=False,
     ),
+    SensorEntityDescription(key="island_status", device_class=SensorDeviceClass.ENUM),
 )
 
 WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
@@ -338,13 +381,11 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         key="wall_connector_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:ev-station",
     ),
     SensorEntityDescription(
         key="wall_connector_fault_state",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        icon="mdi:ev-station",
     ),
     SensorEntityDescription(
         key="wall_connector_power",
@@ -353,7 +394,6 @@ WALL_CONNECTOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfPower.KILO_WATT,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
-        icon="mdi:ev-station",
     ),
     SensorEntityDescription(
         key="vin",
@@ -375,10 +415,15 @@ async def async_setup_entry(
                 for vehicle in data.vehicles
                 for description in VEHICLE_DESCRIPTIONS
             ),
-            (  # Add energy sites
+            (  # Add vehicles time sensors
+                TeslemetryVehicleTimeSensorEntity(vehicle, description)
+                for vehicle in data.vehicles
+                for description in VEHICLE_TIME_DESCRIPTIONS
+            ),
+            (  # Add energy site live
                 TeslemetryEnergySensorEntity(energysite, description)
                 for energysite in data.energysites
-                for description in ENERGY_DESCRIPTIONS
+                for description in ENERGY_LIVE_DESCRIPTIONS
                 if description.key in energysite.coordinator.data
             ),
             (  # Add wall connectors
@@ -403,17 +448,43 @@ class TeslemetryVehicleSensorEntity(TeslemetryVehicleEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(vehicle, description.key)
+
+
+class TeslemetryVehicleTimeSensorEntity(TeslemetryVehicleEntity, SensorEntity):
+    """Base class for Teslemetry vehicle metric sensors."""
+
+    entity_description: TeslemetryTimeEntityDescription
+    _last_value: int | None = None
+
+    def __init__(
+        self,
+        data: TeslemetryVehicleData,
+        description: TeslemetryTimeEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
         self.entity_description = description
+        self._get_timestamp = ignore_variance(
+            func=lambda value: dt_util.now() + timedelta(minutes=value),
+            ignored_variance=timedelta(minutes=description.variance),
+        )
+
+        super().__init__(data, description.key)
 
     @property
-    def native_value(self) -> StateType | datetime:
+    def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.get())
+        if (value := self._value) == self._last_value:
+            # No change
+            return None
+        self._last_value = value
+        if isinstance(value, int | float):
+            return self._get_timestamp(value)
+        return None
 
     @property
     def available(self) -> bool:
-        """Return if sensor is available."""
-        return super().available and self.get() is not None
+        """Return the avaliability of the sensor."""
+        return self._value is not None and self._value > 0
 
 
 class TeslemetryEnergySensorEntity(TeslemetryEnergyEntity, SensorEntity):

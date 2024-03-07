@@ -30,7 +30,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:home-battery',
+    'original_icon': None,
     'original_name': 'Battery power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -45,7 +45,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Battery power',
-      'icon': 'mdi:home-battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -87,7 +86,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
-    'original_icon': 'mdi:battery',
+    'original_icon': None,
     'original_name': 'Energy left',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -102,7 +101,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy_storage',
       'friendly_name': 'Energy Site Energy left',
-      'icon': 'mdi:battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -144,7 +142,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:generator-stationary',
+    'original_icon': None,
     'original_name': 'Generator power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -159,7 +157,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Generator power',
-      'icon': 'mdi:generator-stationary',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -201,7 +198,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:transmission-tower',
+    'original_icon': None,
     'original_name': 'Grid power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -216,7 +213,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Grid power',
-      'icon': 'mdi:transmission-tower',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -258,7 +254,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:transmission-tower',
+    'original_icon': None,
     'original_name': 'Grid services power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -273,7 +269,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Grid services power',
-      'icon': 'mdi:transmission-tower',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -315,7 +310,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:power-plug',
+    'original_icon': None,
     'original_name': 'Load power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -330,7 +325,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Load power',
-      'icon': 'mdi:power-plug',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -339,6 +333,52 @@
     'last_changed': <ANY>,
     'last_updated': <ANY>,
     'state': '6.245',
+  })
+# ---
+# name: test_sensors[sensor.energy_site_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'island_status',
+    'unique_id': '123456-island_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.energy_site_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Energy Site None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_none',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_grid',
   })
 # ---
 # name: test_sensors[sensor.energy_site_percentage_charged-entry]
@@ -425,7 +465,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:solar-power',
+    'original_icon': None,
     'original_name': 'Solar power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -440,7 +480,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Energy Site Solar power',
-      'icon': 'mdi:solar-power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -482,7 +521,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
-    'original_icon': 'mdi:battery-high',
+    'original_icon': None,
     'original_name': 'Total pack energy',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -497,7 +536,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy_storage',
       'friendly_name': 'Energy Site Total pack energy',
-      'icon': 'mdi:battery-high',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -513,376 +551,14 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_battery_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery level',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'charge_state_usable_battery_level',
-    'unique_id': 'VINVINVIN-charge_state_usable_battery_level',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_sensors[sensor.test_battery_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Test Battery level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_battery_level',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '77',
-  })
-# ---
-# name: test_sensors[sensor.test_battery_range-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_battery_range',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
-    'original_icon': None,
-    'original_name': 'Battery range',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'charge_state_battery_range',
-    'unique_id': 'VINVINVIN-charge_state_battery_range',
-    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-  })
-# ---
-# name: test_sensors[sensor.test_battery_range-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'Test Battery range',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_battery_range',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '429.48563328',
-  })
-# ---
-# name: test_sensors[sensor.test_charge_energy_added-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_charge_energy_added',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Charge energy added',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'charge_state_charge_energy_added',
-    'unique_id': 'VINVINVIN-charge_state_charge_energy_added',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_sensors[sensor.test_charge_energy_added-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'Test Charge energy added',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_charge_energy_added',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.test_charge_rate-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_charge_rate',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
-    'original_icon': None,
-    'original_name': 'Charge rate',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'charge_state_charge_rate',
-    'unique_id': 'VINVINVIN-charge_state_charge_rate',
-    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-  })
-# ---
-# name: test_sensors[sensor.test_charge_rate-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'speed',
-      'friendly_name': 'Test Charge rate',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_charge_rate',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.test_charger_current-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_charger_current',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
-    'original_icon': None,
-    'original_name': 'Charger current',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'charge_state_charger_actual_current',
-    'unique_id': 'VINVINVIN-charge_state_charger_actual_current',
-    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-  })
-# ---
-# name: test_sensors[sensor.test_charger_current-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'current',
-      'friendly_name': 'Test Charger current',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_charger_current',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.test_charger_power-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_charger_power',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
-    'original_name': 'Charger power',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'charge_state_charger_power',
-    'unique_id': 'VINVINVIN-charge_state_charger_power',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
-  })
-# ---
-# name: test_sensors[sensor.test_charger_power-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'power',
-      'friendly_name': 'Test Charger power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_charger_power',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_sensors[sensor.test_charger_voltage-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_charger_voltage',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
-    'original_icon': None,
-    'original_name': 'Charger voltage',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'charge_state_charger_voltage',
-    'unique_id': 'VINVINVIN-charge_state_charger_voltage',
-    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-  })
-# ---
-# name: test_sensors[sensor.test_charger_voltage-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'voltage',
-      'friendly_name': 'Test Charger voltage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_charger_voltage',
-    'last_changed': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2',
-  })
-# ---
-# name: test_sensors[sensor.test_destination-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_destination',
+    'entity_category': None,
+    'entity_id': 'sensor.test_battery_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -893,27 +569,386 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:map-marker',
-    'original_name': 'Destination',
+    'original_icon': None,
+    'original_name': 'Battery level',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'drive_state_active_route_destination',
-    'unique_id': 'VINVINVIN-drive_state_active_route_destination',
+    'translation_key': 'charge_state_battery_level',
+    'unique_id': 'VINVINVIN-charge_state_battery_level',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.test_destination-state]
+# name: test_sensors[sensor.test_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Destination',
-      'icon': 'mdi:map-marker',
+      'friendly_name': 'Test Battery level',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_destination',
+    'entity_id': 'sensor.test_battery_level',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_battery_range-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_battery_range',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery range',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_battery_range',
+    'unique_id': 'VINVINVIN-charge_state_battery_range',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_battery_range-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Battery range',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_battery_range',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_charge_cable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charge_cable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge cable',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_conn_charge_cable',
+    'unique_id': 'VINVINVIN-charge_state_conn_charge_cable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_charge_cable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charge cable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charge_cable',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_charge_energy_added-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charge_energy_added',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge energy added',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charge_energy_added',
+    'unique_id': 'VINVINVIN-charge_state_charge_energy_added',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_charge_energy_added-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charge energy added',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charge_energy_added',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_charge_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charge_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge rate',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charge_rate',
+    'unique_id': 'VINVINVIN-charge_state_charge_rate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_charge_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charge rate',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charge_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_charger_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charger_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charger current',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charger_actual_current',
+    'unique_id': 'VINVINVIN-charge_state_charger_actual_current',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_charger_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charger current',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charger_current',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_charger_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charger_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charger power',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charger_power',
+    'unique_id': 'VINVINVIN-charge_state_charger_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_charger_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charger power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charger_power',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_charger_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charger_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charger voltage',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charger_voltage',
+    'unique_id': 'VINVINVIN-charge_state_charger_voltage',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_charger_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charger voltage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charger_voltage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charging',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charging_state',
+    'unique_id': 'VINVINVIN-charge_state_charging_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charging',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_distance_to_arrival-entry]
@@ -921,9 +956,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -939,11 +972,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Distance to arrival',
     'platform': 'teslemetry',
@@ -951,22 +981,19 @@
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_miles_to_arrival',
     'unique_id': 'VINVINVIN-drive_state_active_route_miles_to_arrival',
-    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_distance_to_arrival-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'distance',
       'friendly_name': 'Test Distance to arrival',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_distance_to_arrival',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.063555',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_driver_temperature_setting-entry]
@@ -974,15 +1001,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.test_driver_temperature_setting',
     'has_entity_name': True,
     'hidden_by': None,
@@ -992,11 +1017,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Driver temperature setting',
     'platform': 'teslemetry',
@@ -1004,22 +1026,154 @@
     'supported_features': 0,
     'translation_key': 'climate_state_driver_temp_setting',
     'unique_id': 'VINVINVIN-climate_state_driver_temp_setting',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_driver_temperature_setting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Test Driver temperature setting',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_driver_temperature_setting',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '22',
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_estimate_battery_range-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_estimate_battery_range',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Estimate battery range',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_est_battery_range',
+    'unique_id': 'VINVINVIN-charge_state_est_battery_range',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_estimate_battery_range-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Estimate battery range',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_estimate_battery_range',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_fast_charger_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_fast_charger_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fast charger type',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_fast_charger_type',
+    'unique_id': 'VINVINVIN-charge_state_fast_charger_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_fast_charger_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Fast charger type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_fast_charger_type',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_ideal_battery_range-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_ideal_battery_range',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ideal battery range',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_ideal_battery_range',
+    'unique_id': 'VINVINVIN-charge_state_ideal_battery_range',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_ideal_battery_range-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Ideal battery range',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ideal_battery_range',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_inside_temperature-entry]
@@ -1027,9 +1181,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -1045,11 +1197,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Inside temperature',
     'platform': 'teslemetry',
@@ -1057,22 +1206,19 @@
     'supported_features': 0,
     'translation_key': 'climate_state_inside_temp',
     'unique_id': 'VINVINVIN-climate_state_inside_temp',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_inside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Test Inside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_inside_temperature',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '29.8',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_odometer-entry]
@@ -1080,15 +1226,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.test_odometer',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1098,14 +1242,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Odometer',
     'platform': 'teslemetry',
@@ -1113,22 +1251,19 @@
     'supported_features': 0,
     'translation_key': 'vehicle_state_odometer',
     'unique_id': 'VINVINVIN-vehicle_state_odometer',
-    'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_odometer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'distance',
       'friendly_name': 'Test Odometer',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_odometer',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '10430.189495371',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_outside_temperature-entry]
@@ -1136,9 +1271,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -1154,11 +1287,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Outside temperature',
     'platform': 'teslemetry',
@@ -1166,22 +1296,19 @@
     'supported_features': 0,
     'translation_key': 'climate_state_outside_temp',
     'unique_id': 'VINVINVIN-climate_state_outside_temp',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_outside_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Test Outside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_outside_temperature',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '30',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_passenger_temperature_setting-entry]
@@ -1189,15 +1316,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.test_passenger_temperature_setting',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1207,11 +1332,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Passenger temperature setting',
     'platform': 'teslemetry',
@@ -1219,22 +1341,19 @@
     'supported_features': 0,
     'translation_key': 'climate_state_passenger_temp_setting',
     'unique_id': 'VINVINVIN-climate_state_passenger_temp_setting',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_passenger_temperature_setting-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Test Passenger temperature setting',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_passenger_temperature_setting',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '22',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_power-entry]
@@ -1242,15 +1361,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.test_power',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1261,7 +1378,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Power',
     'platform': 'teslemetry',
@@ -1269,22 +1386,19 @@
     'supported_features': 0,
     'translation_key': 'drive_state_power',
     'unique_id': 'VINVINVIN-drive_state_power',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
       'friendly_name': 'Test Power',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_power',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '-7',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_shift_state-entry]
@@ -1292,14 +1406,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'p',
-        'd',
-        'r',
-        'n',
-      ]),
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -1316,8 +1423,8 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:car-shift-pattern',
+    'original_device_class': None,
+    'original_icon': None,
     'original_name': 'Shift state',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -1330,21 +1437,13 @@
 # name: test_sensors[sensor.test_shift_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
       'friendly_name': 'Test Shift state',
-      'icon': 'mdi:car-shift-pattern',
-      'options': list([
-        'p',
-        'd',
-        'r',
-        'n',
-      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_shift_state',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_speed-entry]
@@ -1352,9 +1451,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -1370,11 +1467,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.SPEED: 'speed'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Speed',
     'platform': 'teslemetry',
@@ -1382,22 +1476,19 @@
     'supported_features': 0,
     'translation_key': 'drive_state_speed',
     'unique_id': 'VINVINVIN-drive_state_speed',
-    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'speed',
       'friendly_name': 'Test Speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_speed',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_state_of_charge_at_arrival-entry]
@@ -1405,15 +1496,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.test_state_of_charge_at_arrival',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1424,7 +1513,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'State of charge at arrival',
     'platform': 'teslemetry',
@@ -1432,22 +1521,19 @@
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_energy_at_arrival',
     'unique_id': 'VINVINVIN-drive_state_active_route_energy_at_arrival',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_state_of_charge_at_arrival-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'Test State of charge at arrival',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_state_of_charge_at_arrival',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_time_to_arrival-entry]
@@ -1539,7 +1625,7 @@
     'entity_id': 'sensor.test_time_to_full_charge',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_front_left-entry]
@@ -1547,15 +1633,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.test_tire_pressure_front_left',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1565,14 +1649,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tire pressure front left',
     'platform': 'teslemetry',
@@ -1580,22 +1658,19 @@
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fl',
     'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_fl',
-    'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
       'friendly_name': 'Test Tire pressure front left',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_tire_pressure_front_left',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '40.2479739314961',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_front_right-entry]
@@ -1603,15 +1678,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.test_tire_pressure_front_right',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1621,14 +1694,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tire pressure front right',
     'platform': 'teslemetry',
@@ -1636,22 +1703,19 @@
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_fr',
     'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_fr',
-    'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
       'friendly_name': 'Test Tire pressure front right',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_tire_pressure_front_right',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '40.6105682912393',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_rear_left-entry]
@@ -1659,15 +1723,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.test_tire_pressure_rear_left',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1677,14 +1739,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tire pressure rear left',
     'platform': 'teslemetry',
@@ -1692,22 +1748,19 @@
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rl',
     'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_rl',
-    'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
       'friendly_name': 'Test Tire pressure rear left',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_tire_pressure_rear_left',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '40.2479739314961',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_rear_right-entry]
@@ -1715,15 +1768,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.test_tire_pressure_rear_right',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1733,14 +1784,8 @@
     }),
     'name': None,
     'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
-      }),
     }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Tire pressure rear right',
     'platform': 'teslemetry',
@@ -1748,22 +1793,19 @@
     'supported_features': 0,
     'translation_key': 'vehicle_state_tpms_pressure_rr',
     'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_rr',
-    'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_tire_pressure_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
       'friendly_name': 'Test Tire pressure rear right',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPressure.PSI: 'psi'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_tire_pressure_rear_right',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '40.2479739314961',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.test_traffic_delay-entry]
@@ -1771,9 +1813,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
@@ -1790,7 +1830,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Traffic delay',
     'platform': 'teslemetry',
@@ -1798,22 +1838,64 @@
     'supported_features': 0,
     'translation_key': 'drive_state_active_route_traffic_minutes_delay',
     'unique_id': 'VINVINVIN-drive_state_active_route_traffic_minutes_delay',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.test_traffic_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'duration',
       'friendly_name': 'Test Traffic delay',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_traffic_delay',
     'last_changed': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[sensor.test_usable_battery_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_usable_battery_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Usable Battery level',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_usable_battery_level',
+    'unique_id': 'VINVINVIN-charge_state_usable_battery_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.test_usable_battery_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Usable Battery level',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_usable_battery_level',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.wall_connector_fault_state_code-entry]
@@ -1839,7 +1921,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'Fault state code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -1853,7 +1935,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector Fault state code',
-      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_fault_state_code',
@@ -1885,7 +1966,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'Fault state code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -1899,7 +1980,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector Fault state code',
-      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_fault_state_code_2',
@@ -1939,7 +2019,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'Power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -1954,7 +2034,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Wall Connector Power',
-      'icon': 'mdi:ev-station',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -1996,7 +2075,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'Power',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -2011,7 +2090,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Wall Connector Power',
-      'icon': 'mdi:ev-station',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
     }),
@@ -2045,7 +2123,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'State code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -2059,7 +2137,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector State code',
-      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_state_code',
@@ -2091,7 +2168,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:ev-station',
+    'original_icon': None,
     'original_name': 'State code',
     'platform': 'teslemetry',
     'previous_unique_id': None,
@@ -2105,7 +2182,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector State code',
-      'icon': 'mdi:ev-station',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.wall_connector_state_code_2',
@@ -2194,6 +2270,2289 @@
   })
 # ---
 # name: test_sensors[sensor.wall_connector_vehicle_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wall Connector Vehicle',
+      'icon': 'mdi:car-electric',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_connector_vehicle_2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_battery_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_battery_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Battery power',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_power',
+    'unique_id': '123456-battery_power',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_battery_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Energy Site Battery power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_battery_power',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.06',
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_energy_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.energy_site_energy_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
+    'original_icon': None,
+    'original_name': 'Energy left',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_left',
+    'unique_id': '123456-energy_left',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_energy_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy_storage',
+      'friendly_name': 'Energy Site Energy left',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_energy_left',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '38.8964736842105',
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_generator_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_generator_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Generator power',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'generator_power',
+    'unique_id': '123456-generator_power',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_generator_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Energy Site Generator power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_generator_power',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_grid_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_grid_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Grid power',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_power',
+    'unique_id': '123456-grid_power',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_grid_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Energy Site Grid power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_power',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_grid_services_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_grid_services_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Grid services power',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'grid_services_power',
+    'unique_id': '123456-grid_services_power',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_grid_services_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Energy Site Grid services power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_grid_services_power',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_load_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_load_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Load power',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'load_power',
+    'unique_id': '123456-load_power',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_load_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Energy Site Load power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_load_power',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.245',
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'island_status',
+    'unique_id': '123456-island_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Energy Site None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_none',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_grid',
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_percentage_charged-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_percentage_charged',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Percentage charged',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'percentage_charged',
+    'unique_id': '123456-percentage_charged',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_percentage_charged-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Energy Site Percentage charged',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_percentage_charged',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '95.5053740373966',
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_solar_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.energy_site_solar_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Solar power',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'solar_power',
+    'unique_id': '123456-solar_power',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_solar_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Energy Site Solar power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_solar_power',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.185',
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_total_pack_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.energy_site_total_pack_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
+    'original_icon': None,
+    'original_name': 'Total pack energy',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_pack_energy',
+    'unique_id': '123456-total_pack_energy',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors_alt[sensor.energy_site_total_pack_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy_storage',
+      'friendly_name': 'Energy Site Total pack energy',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.energy_site_total_pack_energy',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40.727',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_battery_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_battery_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery level',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_battery_level',
+    'unique_id': 'VINVINVIN-charge_state_battery_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_battery_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Battery level',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_battery_level',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_battery_range-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_battery_range',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery range',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_battery_range',
+    'unique_id': 'VINVINVIN-charge_state_battery_range',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_battery_range-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Battery range',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_battery_range',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charge_cable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charge_cable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge cable',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_conn_charge_cable',
+    'unique_id': 'VINVINVIN-charge_state_conn_charge_cable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charge_cable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charge cable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charge_cable',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charge_energy_added-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charge_energy_added',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge energy added',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charge_energy_added',
+    'unique_id': 'VINVINVIN-charge_state_charge_energy_added',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charge_energy_added-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charge energy added',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charge_energy_added',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charge_rate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charge_rate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charge rate',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charge_rate',
+    'unique_id': 'VINVINVIN-charge_state_charge_rate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charge_rate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charge rate',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charge_rate',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charger_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charger_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charger current',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charger_actual_current',
+    'unique_id': 'VINVINVIN-charge_state_charger_actual_current',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charger_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charger current',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charger_current',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charger_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charger_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charger power',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charger_power',
+    'unique_id': 'VINVINVIN-charge_state_charger_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charger_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charger power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charger_power',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charger_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charger_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charger voltage',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charger_voltage',
+    'unique_id': 'VINVINVIN-charge_state_charger_voltage',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charger_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charger voltage',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charger_voltage',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charging-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_charging',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charging',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_charging_state',
+    'unique_id': 'VINVINVIN-charge_state_charging_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_charging-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Charging',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_charging',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_distance_to_arrival-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_distance_to_arrival',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Distance to arrival',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'drive_state_active_route_miles_to_arrival',
+    'unique_id': 'VINVINVIN-drive_state_active_route_miles_to_arrival',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_distance_to_arrival-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Distance to arrival',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_distance_to_arrival',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_driver_temperature_setting-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_driver_temperature_setting',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Driver temperature setting',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_driver_temp_setting',
+    'unique_id': 'VINVINVIN-climate_state_driver_temp_setting',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_driver_temperature_setting-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Driver temperature setting',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_driver_temperature_setting',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_estimate_battery_range-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_estimate_battery_range',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Estimate battery range',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_est_battery_range',
+    'unique_id': 'VINVINVIN-charge_state_est_battery_range',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_estimate_battery_range-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Estimate battery range',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_estimate_battery_range',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_fast_charger_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_fast_charger_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fast charger type',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_fast_charger_type',
+    'unique_id': 'VINVINVIN-charge_state_fast_charger_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_fast_charger_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Fast charger type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_fast_charger_type',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_ideal_battery_range-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_ideal_battery_range',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ideal battery range',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_ideal_battery_range',
+    'unique_id': 'VINVINVIN-charge_state_ideal_battery_range',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_ideal_battery_range-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Ideal battery range',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_ideal_battery_range',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_inside_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_inside_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Inside temperature',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_inside_temp',
+    'unique_id': 'VINVINVIN-climate_state_inside_temp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_inside_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Inside temperature',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_inside_temperature',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_odometer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_odometer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Odometer',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_odometer',
+    'unique_id': 'VINVINVIN-vehicle_state_odometer',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_odometer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Odometer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_odometer',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_outside_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_outside_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Outside temperature',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_outside_temp',
+    'unique_id': 'VINVINVIN-climate_state_outside_temp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_outside_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Outside temperature',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_outside_temperature',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_passenger_temperature_setting-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_passenger_temperature_setting',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Passenger temperature setting',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_state_passenger_temp_setting',
+    'unique_id': 'VINVINVIN-climate_state_passenger_temp_setting',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_passenger_temperature_setting-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Passenger temperature setting',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_passenger_temperature_setting',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'drive_state_power',
+    'unique_id': 'VINVINVIN-drive_state_power',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Power',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_power',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_shift_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_shift_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Shift state',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'drive_state_shift_state',
+    'unique_id': 'VINVINVIN-drive_state_shift_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_shift_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Shift state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_shift_state',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Speed',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'drive_state_speed',
+    'unique_id': 'VINVINVIN-drive_state_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Speed',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_speed',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_state_of_charge_at_arrival-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_state_of_charge_at_arrival',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'State of charge at arrival',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'drive_state_active_route_energy_at_arrival',
+    'unique_id': 'VINVINVIN-drive_state_active_route_energy_at_arrival',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_state_of_charge_at_arrival-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test State of charge at arrival',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_state_of_charge_at_arrival',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_time_to_arrival-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_time_to_arrival',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Time to arrival',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'drive_state_active_route_minutes_to_arrival',
+    'unique_id': 'VINVINVIN-drive_state_active_route_minutes_to_arrival',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_time_to_arrival-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test Time to arrival',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_time_to_arrival',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_time_to_full_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.test_time_to_full_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Time to full charge',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_minutes_to_full_charge',
+    'unique_id': 'VINVINVIN-charge_state_minutes_to_full_charge',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_time_to_full_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Test Time to full charge',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_time_to_full_charge',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_tire_pressure_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_tire_pressure_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tire pressure front left',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_tpms_pressure_fl',
+    'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_fl',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_tire_pressure_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Tire pressure front left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_tire_pressure_front_left',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_tire_pressure_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_tire_pressure_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tire pressure front right',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_tpms_pressure_fr',
+    'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_fr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_tire_pressure_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Tire pressure front right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_tire_pressure_front_right',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_tire_pressure_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_tire_pressure_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tire pressure rear left',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_tpms_pressure_rl',
+    'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_rl',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_tire_pressure_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Tire pressure rear left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_tire_pressure_rear_left',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_tire_pressure_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_tire_pressure_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tire pressure rear right',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vehicle_state_tpms_pressure_rr',
+    'unique_id': 'VINVINVIN-vehicle_state_tpms_pressure_rr',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_tire_pressure_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Tire pressure rear right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_tire_pressure_rear_right',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_traffic_delay-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_traffic_delay',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Traffic delay',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'drive_state_active_route_traffic_minutes_delay',
+    'unique_id': 'VINVINVIN-drive_state_active_route_traffic_minutes_delay',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_traffic_delay-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Traffic delay',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_traffic_delay',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.test_usable_battery_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_usable_battery_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Usable Battery level',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'charge_state_usable_battery_level',
+    'unique_id': 'VINVINVIN-charge_state_usable_battery_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.test_usable_battery_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Usable Battery level',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_usable_battery_level',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_fault_state_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wall_connector_fault_state_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fault state code',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wall_connector_fault_state',
+    'unique_id': '123456-abd-123-wall_connector_fault_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_fault_state_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wall Connector Fault state code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_connector_fault_state_code',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_fault_state_code_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wall_connector_fault_state_code_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Fault state code',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wall_connector_fault_state',
+    'unique_id': '123456-bcd-234-wall_connector_fault_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_fault_state_code_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wall Connector Fault state code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_connector_fault_state_code_2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wall_connector_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wall_connector_power',
+    'unique_id': '123456-abd-123-wall_connector_power',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Wall Connector Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_connector_power',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_power_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wall_connector_power_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wall_connector_power',
+    'unique_id': '123456-bcd-234-wall_connector_power',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_power_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Wall Connector Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_connector_power_2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_state_code-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wall_connector_state_code',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'State code',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wall_connector_state',
+    'unique_id': '123456-abd-123-wall_connector_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_state_code-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wall Connector State code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_connector_state_code',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_state_code_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wall_connector_state_code_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'State code',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'wall_connector_state',
+    'unique_id': '123456-bcd-234-wall_connector_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_state_code_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wall Connector State code',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_connector_state_code_2',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_vehicle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wall_connector_vehicle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:car-electric',
+    'original_name': 'Vehicle',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vin',
+    'unique_id': '123456-abd-123-vin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_vehicle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wall Connector Vehicle',
+      'icon': 'mdi:car-electric',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wall_connector_vehicle',
+    'last_changed': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_vehicle_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wall_connector_vehicle_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:car-electric',
+    'original_name': 'Vehicle',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vin',
+    'unique_id': '123456-bcd-234-vin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors_alt[sensor.wall_connector_vehicle_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Wall Connector Vehicle',
