@@ -53,7 +53,6 @@ COPY . homeassistant/
 RUN \
     uv pip install \
         --system \
-        #--no-build \
         -e ./homeassistant \
     && python3 -m compileall \
         homeassistant/homeassistant
