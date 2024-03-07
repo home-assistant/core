@@ -35,7 +35,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
-    hosts: list[VeluxHost | None] = []
+    hosts: list[VeluxHost] = []
 
     async def async_step_import(self, config: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry."""
@@ -98,12 +98,12 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-            if self.hosts is not None:
+            if self.hosts:
                 for host in self.hosts:
-                    if user_input[CONF_HOST] == host.ip_address:  # type: ignore[union-attr]
-                        await self.async_set_unique_id(host.hostname)  # type: ignore[union-attr]
+                    if user_input[CONF_HOST] == host.ip_address:
+                        await self.async_set_unique_id(host.hostname)
                         self._abort_if_unique_id_configured(
-                            updates={CONF_HOST: host.ip_address}  # type: ignore[union-attr]
+                            updates={CONF_HOST: host.ip_address}
                         )
 
             pyvlx = PyVLX(
@@ -124,17 +124,17 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-        if self.hosts is None:
+        if not self.hosts:
             aiozc = await zeroconf.async_get_async_instance(self.hass)
             vd: VeluxDiscovery = VeluxDiscovery(zeroconf=aiozc)
-            self.hosts = vd.hosts
+            self.hosts = vd.hosts  # type: ignore[assignment]
 
-        if self.hosts is not None:
+        if self.hosts:
             data_schema = vol.Schema(
                 {
                     vol.Required(CONF_HOST): SelectSelector(
                         SelectSelectorConfig(
-                            options=[host.ip_address for host in self.hosts],  # type: ignore[union-attr]
+                            options=[host.ip_address for host in self.hosts],
                             custom_value=True,
                             mode=SelectSelectorMode.DROPDOWN,
                         )

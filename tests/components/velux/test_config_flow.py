@@ -42,7 +42,7 @@ error_types_to_test: list[tuple[Exception, str]] = [
     (Exception("DUMMY"), "unknown"),
 ]
 
-pytest.mark.usefixtures(
+pytestmark = pytest.mark.usefixtures(
     "mock_setup_entry", "mock_async_zeroconf", "mock_velux_discovery"
 )
 
