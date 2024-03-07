@@ -3280,6 +3280,16 @@ async def test_integration_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Test integration_entities function."""
+    # test entities for untitled config entry
+    config_entry = MockConfigEntry(domain="mock", title="")
+    config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "sensor", "mock", "untitled", config_entry=config_entry
+    )
+    info = render_to_info(hass, "{{ integration_entities('') }}")
+    assert_result_info(info, [])
+    assert info.rate_limit is None
+
     # test entities for given config entry title
     config_entry = MockConfigEntry(domain="mock", title="Mock bridge 2")
     config_entry.add_to_hass(hass)
@@ -3288,6 +3298,23 @@ async def test_integration_entities(
     )
     info = render_to_info(hass, "{{ integration_entities('Mock bridge 2') }}")
     assert_result_info(info, [entity_entry.entity_id])
+    assert info.rate_limit is None
+
+    # test entities for given non unique config entry title
+    config_entry = MockConfigEntry(domain="mock", title="Not unique")
+    config_entry.add_to_hass(hass)
+    entity_entry_not_unique_1 = entity_registry.async_get_or_create(
+        "sensor", "mock", "not_unique_1", config_entry=config_entry
+    )
+    config_entry = MockConfigEntry(domain="mock", title="Not unique")
+    config_entry.add_to_hass(hass)
+    entity_entry_not_unique_2 = entity_registry.async_get_or_create(
+        "sensor", "mock", "not_unique_2", config_entry=config_entry
+    )
+    info = render_to_info(hass, "{{ integration_entities('Not unique') }}")
+    assert_result_info(
+        info, [entity_entry_not_unique_1.entity_id, entity_entry_not_unique_2.entity_id]
+    )
     assert info.rate_limit is None
 
     # test integration entities not in entity registry

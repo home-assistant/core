@@ -25,6 +25,7 @@ async def test_humanifying_zwave_js_notification_event(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -108,6 +109,7 @@ async def test_humanifying_zwave_js_value_notification_event(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,

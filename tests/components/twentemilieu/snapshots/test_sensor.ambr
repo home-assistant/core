@@ -4,7 +4,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'date',
       'friendly_name': 'Twente Milieu Christmas tree pickup',
-      'icon': 'mdi:pine-tree',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.twente_milieu_christmas_tree_pickup',
@@ -36,7 +35,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
-    'original_icon': 'mdi:pine-tree',
+    'original_icon': None,
     'original_name': 'Christmas tree pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
@@ -81,7 +80,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'date',
       'friendly_name': 'Twente Milieu Non-recyclable waste pickup',
-      'icon': 'mdi:delete-empty',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.twente_milieu_non_recyclable_waste_pickup',
@@ -113,7 +111,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
-    'original_icon': 'mdi:delete-empty',
+    'original_icon': None,
     'original_name': 'Non-recyclable waste pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
@@ -158,7 +156,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'date',
       'friendly_name': 'Twente Milieu Organic waste pickup',
-      'icon': 'mdi:delete-empty',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.twente_milieu_organic_waste_pickup',
@@ -190,7 +187,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
-    'original_icon': 'mdi:delete-empty',
+    'original_icon': None,
     'original_name': 'Organic waste pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
@@ -235,7 +232,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'date',
       'friendly_name': 'Twente Milieu Packages waste pickup',
-      'icon': 'mdi:delete-empty',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.twente_milieu_packages_waste_pickup',
@@ -267,7 +263,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
-    'original_icon': 'mdi:delete-empty',
+    'original_icon': None,
     'original_name': 'Packages waste pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,
@@ -312,7 +308,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'date',
       'friendly_name': 'Twente Milieu Paper waste pickup',
-      'icon': 'mdi:delete-empty',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.twente_milieu_paper_waste_pickup',
@@ -344,7 +339,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.DATE: 'date'>,
-    'original_icon': 'mdi:delete-empty',
+    'original_icon': None,
     'original_name': 'Paper waste pickup',
     'platform': 'twentemilieu',
     'previous_unique_id': None,

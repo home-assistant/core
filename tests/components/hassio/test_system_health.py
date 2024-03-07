@@ -29,6 +29,7 @@ async def test_hassio_system_health(
 
     hass.config.components.add("hassio")
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     hass.data["hassio_info"] = {
         "channel": "stable",
@@ -88,6 +89,7 @@ async def test_hassio_system_health_with_issues(
 
     hass.config.components.add("hassio")
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
     hass.data["hassio_info"] = {"channel": "stable"}
     hass.data["hassio_host_info"] = {}

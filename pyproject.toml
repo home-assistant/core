@@ -600,6 +600,9 @@ select = [
     "N804", # First argument of a class method should be named cls
     "N805", # First argument of a method should be named self
     "N815", # Variable {name} in class scope should not be mixedCase
+    "PERF101", # Do not cast an iterable to list before iterating over it
+    "PERF102", # When using only the {subset} of a dict use the {subset}() method
+    "PERF203", # try-except within a loop incurs performance overhead
     "PGH004", # Use specific rule codes when using noqa
     "PLC0414", # Useless import alias. Import alias does not rename original package.
     "PLC", # pylint

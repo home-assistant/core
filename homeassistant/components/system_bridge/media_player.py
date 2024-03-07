@@ -20,7 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import SystemBridgeCoordinatorData, SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeDataUpdateCoordinator
+from .data import SystemBridgeData
 from .entity import SystemBridgeEntity
 
 STATUS_CHANGING: Final[str] = "CHANGING"
@@ -126,7 +127,7 @@ class SystemBridgeMediaPlayer(SystemBridgeEntity, MediaPlayerEntity):
         return features
 
     @property
-    def _systembridge_data(self) -> SystemBridgeCoordinatorData:
+    def _systembridge_data(self) -> SystemBridgeData:
         """Return data for the entity."""
         return self.coordinator.data
 
