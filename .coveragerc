@@ -78,6 +78,7 @@ omit =
     homeassistant/components/aprilaire/coordinator.py
     homeassistant/components/aprilaire/entity.py
     homeassistant/components/aprilaire/sensor.py
+    homeassistant/components/aprilaire/util.py
     homeassistant/components/aqualogic/*
     homeassistant/components/aquostv/media_player.py
     homeassistant/components/arcam_fmj/__init__.py
