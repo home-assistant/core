@@ -1589,6 +1589,8 @@ def mock_integration_frame() -> Generator[Mock, None, None]:
         line="self.light.is_on",
     )
     with patch(
+        "homeassistant.helpers.frame.linecache.getline", return_value=correct_frame.line
+    ), patch(
         "homeassistant.helpers.frame.get_current_frame",
         return_value=extract_stack_to_frame(
             [

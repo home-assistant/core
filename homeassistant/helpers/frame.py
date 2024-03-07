@@ -6,6 +6,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import functools
+import linecache
 import logging
 import sys
 from types import FrameType
@@ -149,7 +150,7 @@ def _report_integration(
     """
     found_frame = integration_frame.frame
     # Keep track of integrations already reported to prevent flooding
-    key = f"{found_frame.f_code.co_filename}:{found_frame.f_code.co_firstlineno}"
+    key = f"{found_frame.f_code.co_filename}:{found_frame.f_lineno}"
     if key in _REPORTED_INTEGRATIONS:
         return
     _REPORTED_INTEGRATIONS.add(key)
@@ -170,8 +171,11 @@ def _report_integration(
         integration_frame.integration,
         what,
         integration_frame.relative_filename,
-        found_frame.f_code.co_firstlineno,
-        (str(found_frame) or "?").strip(),
+        found_frame.f_lineno,
+        (
+            linecache.getline(found_frame.f_code.co_filename, found_frame.f_lineno)
+            or "?"
+        ).strip(),
         report_issue,
     )
 
