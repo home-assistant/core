@@ -105,7 +105,6 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
     LyricSensorEntityDescription(
         key="setpoint_status",
         translation_key="setpoint_status",
-        icon="mdi:thermostat",
         value_fn=lambda device: get_setpoint_status(
             device.changeableValues.thermostatSetpointStatus,
             device.changeableValues.nextPeriodTime,

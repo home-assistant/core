@@ -586,21 +586,17 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # Separate call to turn on needed
         if turn_on_needed:
-            hass.async_create_task(
-                hass.services.async_call(
-                    core.DOMAIN,
-                    SERVICE_TURN_ON,
-                    {ATTR_ENTITY_ID: entity_id},
-                    blocking=True,
-                )
+            await hass.services.async_call(
+                core.DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: entity_id},
+                blocking=False,
             )
 
         if service is not None:
             state_will_change = parsed[STATE_ON] != _hass_to_hue_state(entity)
 
-            hass.async_create_task(
-                hass.services.async_call(domain, service, data, blocking=True)
-            )
+            await hass.services.async_call(domain, service, data, blocking=False)
 
             if state_will_change:
                 # Wait for the state to change.

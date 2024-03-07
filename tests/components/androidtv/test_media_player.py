@@ -25,11 +25,10 @@ from homeassistant.components.androidtv.const import (
     DEVICE_FIRETV,
     DOMAIN,
 )
+from homeassistant.components.androidtv.entity import PREFIX_ANDROIDTV, PREFIX_FIRETV
 from homeassistant.components.androidtv.media_player import (
     ATTR_DEVICE_PATH,
     ATTR_LOCAL_PATH,
-    PREFIX_ANDROIDTV,
-    PREFIX_FIRETV,
     SERVICE_ADB_COMMAND,
     SERVICE_DOWNLOAD,
     SERVICE_LEARN_SENDEVENT,
@@ -47,8 +46,6 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
     SERVICE_SELECT_SOURCE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
@@ -63,6 +60,8 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_PLAYING,
     STATE_STANDBY,

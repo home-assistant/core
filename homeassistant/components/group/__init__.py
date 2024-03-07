@@ -383,7 +383,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _process_group_platform(
+@callback
+def _process_group_platform(
     hass: HomeAssistant, domain: str, platform: GroupProtocol
 ) -> None:
     """Process a group platform."""

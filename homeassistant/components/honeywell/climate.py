@@ -356,7 +356,7 @@ class HoneywellUSThermostat(ClimateEntity):
             else:
                 if mode == "cool":
                     await self._device.set_setpoint_cool(temperature)
-                if mode == "heat":
+                if mode in ["heat", "emheat"]:
                     await self._device.set_setpoint_heat(temperature)
 
         except UnexpectedResponse as err:

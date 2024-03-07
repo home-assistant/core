@@ -635,3 +635,13 @@ async def test_query_recover_from_rollback(
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
     assert state.attributes.get("value") == 5
+
+
+async def test_setup_without_recorder(hass: HomeAssistant) -> None:
+    """Test the SQL sensor without recorder."""
+
+    assert await async_setup_component(hass, DOMAIN, YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.get_value")
+    assert state.state == "5"

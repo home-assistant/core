@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/apple_tv",
+  "import_executor": true,
   "iot_class": "local_push",
   "loggers": ["pyatv", "srptools"],
   "requirements": ["pyatv==0.14.3"],

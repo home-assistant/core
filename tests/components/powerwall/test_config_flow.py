@@ -159,7 +159,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbcceeddff",
             hostname="any",
         ),
     )
@@ -186,7 +186,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname="00GGX",
             ),
         )
@@ -225,7 +225,7 @@ async def test_dhcp_discovery_manual_configure(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname="any",
             ),
         )
@@ -264,7 +264,7 @@ async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname="00GGX",
             ),
         )
@@ -305,7 +305,7 @@ async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname="00GGX",
             ),
         )
@@ -376,7 +376,7 @@ async def test_dhcp_discovery_update_ip_address(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -410,7 +410,7 @@ async def test_dhcp_discovery_does_not_update_ip_when_auth_fails(
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -444,7 +444,7 @@ async def test_dhcp_discovery_does_not_update_ip_when_auth_successful(
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -476,7 +476,7 @@ async def test_dhcp_discovery_updates_unique_id(hass: HomeAssistant) -> None:
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.2.3.4",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -512,7 +512,7 @@ async def test_dhcp_discovery_updates_unique_id_when_entry_is_failed(
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.2.3.4",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -548,7 +548,7 @@ async def test_discovered_wifi_does_not_update_ip_if_is_still_online(
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.2.3.5",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )
@@ -594,7 +594,7 @@ async def test_discovered_wifi_does_not_update_ip_online_but_access_denied(
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.2.3.5",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
             ),
         )

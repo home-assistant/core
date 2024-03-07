@@ -44,13 +44,6 @@ class HarmonyActivitySelect(HarmonyEntity, SelectEntity):
         self._attr_name = name
 
     @property
-    def icon(self) -> str:
-        """Return a representative icon."""
-        if not self.available or self.current_option == TRANSLATABLE_POWER_OFF:
-            return "mdi:remote-tv-off"
-        return "mdi:remote-tv"
-
-    @property
     def options(self) -> list[str]:
         """Return a set of selectable options."""
         return [TRANSLATABLE_POWER_OFF] + sorted(self._data.activity_names)

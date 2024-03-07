@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Get all devices from Tuya
     try:
         await hass.async_add_executor_job(manager.update_device_cache)
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:
         # While in general, we should avoid catching broad exceptions,
         # we have no other way of detecting this case.
         if "sign invalid" in str(exc):

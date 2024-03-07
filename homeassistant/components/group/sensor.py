@@ -396,7 +396,7 @@ class SensorGroup(GroupEntity, SensorEntity):
                         self._state_incorrect.add(entity_id)
                         _LOGGER.warning(
                             "Unable to use state. Only entities with correct unit of measurement"
-                            " is supported when having a device class,"
+                            " is supported,"
                             " entity %s, value %s with device class %s"
                             " and unit of measurement %s excluded from calculation in %s",
                             entity_id,
@@ -548,19 +548,28 @@ class SensorGroup(GroupEntity, SensorEntity):
 
         # Ensure only valid unit of measurements for the specific device class can be used
         if (
-            # Test if uom's in device class is convertible
-            (device_class := self.device_class) in UNIT_CONVERTERS
-            and all(
-                uom in UNIT_CONVERTERS[device_class].VALID_UNITS
-                for uom in unit_of_measurements
+            (
+                # Test if uom's in device class is convertible
+                (device_class := self.device_class) in UNIT_CONVERTERS
+                and all(
+                    uom in UNIT_CONVERTERS[device_class].VALID_UNITS
+                    for uom in unit_of_measurements
+                )
             )
-        ) or (
-            # Test if uom's in device class is not convertible
-            device_class
-            and device_class not in UNIT_CONVERTERS
-            and device_class in DEVICE_CLASS_UNITS
-            and all(
-                uom in DEVICE_CLASS_UNITS[device_class] for uom in unit_of_measurements
+            or (
+                # Test if uom's in device class is not convertible
+                device_class
+                and device_class not in UNIT_CONVERTERS
+                and device_class in DEVICE_CLASS_UNITS
+                and all(
+                    uom in DEVICE_CLASS_UNITS[device_class]
+                    for uom in unit_of_measurements
+                )
+            )
+            or (
+                # Test no device class and all uom's are same
+                device_class is None
+                and all(x == unit_of_measurements[0] for x in unit_of_measurements)
             )
         ):
             async_delete_issue(
@@ -608,6 +617,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         """Return valid units.
 
         If device class is set and compatible unit of measurements.
+        If device class is not set, use one unit of measurement.
         """
         if (
             device_class := self.device_class
@@ -621,4 +631,6 @@ class SensorGroup(GroupEntity, SensorEntity):
         ):
             valid_uoms: set = DEVICE_CLASS_UNITS[device_class]
             return valid_uoms
+        if device_class is None and self.native_unit_of_measurement:
+            return {self.native_unit_of_measurement}
         return set()

@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for motion blinds integration."""
+"""DataUpdateCoordinator for Motionblinds integration."""
 import asyncio
 from datetime import timedelta
 import logging

@@ -186,7 +186,7 @@ class WatcherBase(ABC):
 
     @callback
     def async_process_client(
-        self, ip_address: str, hostname: str, mac_address: str
+        self, ip_address: str, hostname: str, unformatted_mac_address: str
     ) -> None:
         """Process a client."""
         if (made_ip_address := cached_ip_addresses(ip_address)) is None:
@@ -201,6 +201,12 @@ class WatcherBase(ABC):
         ):
             # Ignore self assigned addresses, loopback, invalid
             return
+
+        formatted_mac = format_mac(unformatted_mac_address)
+        # Historically, the MAC address was formatted without colons
+        # and since all consumers of this data are expecting it to be
+        # formatted without colons we will continue to do so
+        mac_address = formatted_mac.replace(":", "")
 
         data = self._address_data.get(ip_address)
         if (
@@ -231,7 +237,7 @@ class WatcherBase(ABC):
 
         dev_reg: DeviceRegistry = async_get(self.hass)
         if device := dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, uppercase_mac)}
+            connections={(CONNECTION_NETWORK_MAC, formatted_mac)}
         ):
             for entry_id in device.config_entries:
                 if (
@@ -319,7 +325,7 @@ class NetworkWatcher(WatcherBase):
             self.async_process_client(
                 host[DISCOVERY_IP_ADDRESS],
                 host[DISCOVERY_HOSTNAME],
-                _format_mac(host[DISCOVERY_MAC_ADDRESS]),
+                host[DISCOVERY_MAC_ADDRESS],
             )
 
 
@@ -360,7 +366,7 @@ class DeviceTrackerWatcher(WatcherBase):
         if ip_address is None or mac_address is None:
             return
 
-        self.async_process_client(ip_address, hostname, _format_mac(mac_address))
+        self.async_process_client(ip_address, hostname, mac_address)
 
 
 class DeviceTrackerRegisteredWatcher(WatcherBase):
@@ -383,7 +389,7 @@ class DeviceTrackerRegisteredWatcher(WatcherBase):
         if ip_address is None or mac_address is None:
             return
 
-        self.async_process_client(ip_address, hostname, _format_mac(mac_address))
+        self.async_process_client(ip_address, hostname, mac_address)
 
 
 class DHCPWatcher(WatcherBase):
@@ -393,18 +399,13 @@ class DHCPWatcher(WatcherBase):
     def _async_process_dhcp_request(self, response: aiodhcpwatcher.DHCPRequest) -> None:
         """Process a dhcp request."""
         self.async_process_client(
-            response.ip_address, response.hostname, _format_mac(response.mac_address)
+            response.ip_address, response.hostname, response.mac_address
         )
 
     @callback
     def async_start(self) -> None:
         """Start watching for dhcp packets."""
         self._unsub = aiodhcpwatcher.start(self._async_process_dhcp_request)
-
-
-def _format_mac(mac_address: str) -> str:
-    """Format a mac address for matching."""
-    return format_mac(mac_address).replace(":", "")
 
 
 @lru_cache(maxsize=4096, typed=True)

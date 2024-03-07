@@ -39,6 +39,7 @@ from .const import (
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_GOOGLE_SETTINGS_VERSION,
     PREF_INSTANCE_ID,
+    PREF_REMOTE_ALLOW_REMOTE_ENABLE,
     PREF_REMOTE_DOMAIN,
     PREF_TTS_DEFAULT_VOICE,
     PREF_USERNAME,
@@ -153,6 +154,7 @@ class CloudPreferences:
         alexa_settings_version: int | UndefinedType = UNDEFINED,
         google_settings_version: int | UndefinedType = UNDEFINED,
         google_connected: bool | UndefinedType = UNDEFINED,
+        remote_allow_remote_enable: bool | UndefinedType = UNDEFINED,
     ) -> None:
         """Update user preferences."""
         prefs = {**self._prefs}
@@ -171,6 +173,7 @@ class CloudPreferences:
             (PREF_TTS_DEFAULT_VOICE, tts_default_voice),
             (PREF_REMOTE_DOMAIN, remote_domain),
             (PREF_GOOGLE_CONNECTED, google_connected),
+            (PREF_REMOTE_ALLOW_REMOTE_ENABLE, remote_allow_remote_enable),
         ):
             if value is not UNDEFINED:
                 prefs[key] = value
@@ -212,8 +215,15 @@ class CloudPreferences:
             PREF_GOOGLE_DEFAULT_EXPOSE: self.google_default_expose,
             PREF_GOOGLE_REPORT_STATE: self.google_report_state,
             PREF_GOOGLE_SECURE_DEVICES_PIN: self.google_secure_devices_pin,
+            PREF_REMOTE_ALLOW_REMOTE_ENABLE: self.remote_allow_remote_enable,
             PREF_TTS_DEFAULT_VOICE: self.tts_default_voice,
         }
+
+    @property
+    def remote_allow_remote_enable(self) -> bool:
+        """Return if it's allowed to remotely activate remote."""
+        allowed: bool = self._prefs.get(PREF_REMOTE_ALLOW_REMOTE_ENABLE, True)
+        return allowed
 
     @property
     def remote_enabled(self) -> bool:
@@ -375,5 +385,6 @@ class CloudPreferences:
             PREF_INSTANCE_ID: uuid.uuid4().hex,
             PREF_GOOGLE_SECURE_DEVICES_PIN: None,
             PREF_REMOTE_DOMAIN: None,
+            PREF_REMOTE_ALLOW_REMOTE_ENABLE: True,
             PREF_USERNAME: username,
         }

@@ -4,8 +4,8 @@ from typing import Any
 
 from aioautomower.utils import async_structure_token
 
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN, NAME
@@ -23,7 +23,7 @@ class HusqvarnaConfigFlowHandler(
     VERSION = 1
     DOMAIN = DOMAIN
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow."""
         token = data[CONF_TOKEN]
         user_id = token[CONF_USER_ID]

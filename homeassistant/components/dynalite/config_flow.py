@@ -5,10 +5,9 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -17,7 +16,7 @@ from .const import DEFAULT_PORT, DOMAIN, LOGGER
 from .convert_config import convert_config
 
 
-class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class DynaliteFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Dynalite config flow."""
 
     VERSION = 1
@@ -26,7 +25,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Dynalite flow."""
         self.host = None
 
-    async def async_step_import(self, import_info: dict[str, Any]) -> FlowResult:
+    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import a new bridge as a config entry."""
         LOGGER.debug("Starting async_step_import (deprecated) - %s", import_info)
         # Raise an issue that this is deprecated and has been imported
@@ -60,7 +59,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         if user_input is not None:
             return await self._try_create(user_input)
@@ -73,7 +72,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="user", data_schema=schema)
 
-    async def _try_create(self, info: dict[str, Any]) -> FlowResult:
+    async def _try_create(self, info: dict[str, Any]) -> ConfigFlowResult:
         """Try to connect and if successful, create entry."""
         host = info[CONF_HOST]
         configured_hosts = [

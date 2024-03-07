@@ -112,3 +112,14 @@ def mock_router_bridge_mode(mock_device_registry_devices, router):
     )
 
     return router
+
+
+@pytest.fixture
+def mock_router_bridge_mode_error(mock_device_registry_devices, router):
+    """Mock a failed connection to Freebox Bridge mode."""
+
+    router().lan.get_hosts_list = AsyncMock(
+        side_effect=HttpRequestError("Request failed (APIResponse: some unknown error)")
+    )
+
+    return router

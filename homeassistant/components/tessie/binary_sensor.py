@@ -92,7 +92,7 @@ DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
     ),
     TessieBinarySensorEntityDescription(
         key="vehicle_state_is_user_present",
-        device_class=BinarySensorDeviceClass.PRESENCE,
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
     TessieBinarySensorEntityDescription(
         key="vehicle_state_tpms_soft_warning_fl",

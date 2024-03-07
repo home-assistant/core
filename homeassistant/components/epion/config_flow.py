@@ -7,9 +7,8 @@ from typing import Any
 from epion import Epion, EpionAuthenticationError, EpionConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 
@@ -23,7 +22,7 @@ class EpionConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input:

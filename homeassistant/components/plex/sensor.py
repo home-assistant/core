@@ -72,7 +72,7 @@ class PlexSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_icon = "mdi:plex"
+    _attr_translation_key = "plex"
     _attr_should_poll = False
     _attr_native_unit_of_measurement = "watching"
 

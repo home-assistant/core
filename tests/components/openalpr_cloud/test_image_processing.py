@@ -106,6 +106,7 @@ async def test_setup_platform_without_api_key(hass: HomeAssistant) -> None:
 
     with assert_setup_component(0, ip.DOMAIN):
         await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 async def test_setup_platform_without_region(hass: HomeAssistant) -> None:
@@ -121,6 +122,7 @@ async def test_setup_platform_without_region(hass: HomeAssistant) -> None:
 
     with assert_setup_component(0, ip.DOMAIN):
         await async_setup_component(hass, ip.DOMAIN, config)
+        await hass.async_block_till_done()
 
 
 async def test_openalpr_process_image(

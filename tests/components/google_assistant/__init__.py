@@ -54,7 +54,7 @@ class MockConfig(http.GoogleConfig):
         """Return secure devices pin."""
         return self._entity_config
 
-    def get_agent_user_id(self, context):
+    def get_agent_user_id_from_context(self, context):
         """Get agent user ID making request."""
         return context.user_id
 

@@ -254,7 +254,7 @@ async def test_form_user_already_configured_from_dhcp(hass: HomeAssistant) -> No
             context={"source": config_entries.SOURCE_DHCP},
             data=dhcp.DhcpServiceInfo(
                 ip="1.1.1.1",
-                macaddress="AA:BB:CC:DD:EE:FF",
+                macaddress="aabbccddeeff",
                 hostname="somfy_eeff",
             ),
         )
@@ -278,7 +278,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbccddeeff",
             hostname="somfy_eeff",
         ),
     )
@@ -293,7 +293,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_DHCP},
         data=dhcp.DhcpServiceInfo(
             ip="1.1.1.1",
-            macaddress="AA:BB:CC:DD:EE:FF",
+            macaddress="aabbccddeeff",
             hostname="somfy_eeff",
         ),
     )

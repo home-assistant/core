@@ -54,14 +54,22 @@ async def test_climate(
     with patch(
         "homeassistant.components.tessie.climate.set_temperature",
         return_value=TEST_RESPONSE,
-    ) as mock_set:
+    ) as mock_set, patch(
+        "homeassistant.components.tessie.climate.start_climate_preconditioning",
+        return_value=TEST_RESPONSE,
+    ) as mock_set2:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 20},
+            {
+                ATTR_ENTITY_ID: [entity_id],
+                ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
+                ATTR_TEMPERATURE: 20,
+            },
             blocking=True,
         )
         mock_set.assert_called_once()
+        mock_set2.assert_called_once()
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_TEMPERATURE] == 20
 

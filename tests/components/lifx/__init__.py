@@ -17,6 +17,7 @@ LABEL = "My Bulb"
 GROUP = "My Group"
 SERIAL = "aa:bb:cc:dd:ee:cc"
 MAC_ADDRESS = "aa:bb:cc:dd:ee:cd"
+DHCP_FORMATTED_MAC = "aabbccddeecd"
 DEFAULT_ENTRY_TITLE = LABEL
 
 

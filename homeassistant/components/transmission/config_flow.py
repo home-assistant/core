@@ -6,10 +6,14 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 
 from . import get_api
 from .const import (
@@ -34,23 +38,23 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle Tansmission config flow."""
 
     VERSION = 1
-    _reauth_entry: config_entries.ConfigEntry | None
+    _reauth_entry: ConfigEntry | None
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> TransmissionOptionsFlowHandler:
         """Get the options flow for this handler."""
         return TransmissionOptionsFlowHandler(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
 
@@ -79,7 +83,9 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -88,7 +94,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         errors = {}
         assert self._reauth_entry
@@ -122,16 +128,16 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class TransmissionOptionsFlowHandler(config_entries.OptionsFlow):
+class TransmissionOptionsFlowHandler(OptionsFlow):
     """Handle Transmission client options."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Transmission options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the Transmission options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

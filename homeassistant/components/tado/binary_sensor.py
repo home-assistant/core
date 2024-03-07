@@ -17,6 +17,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import TadoConnector
 from .const import (
     DATA,
     DOMAIN,
@@ -170,7 +171,10 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
     entity_description: TadoBinarySensorEntityDescription
 
     def __init__(
-        self, tado, device_info, entity_description: TadoBinarySensorEntityDescription
+        self,
+        tado: TadoConnector,
+        device_info: dict[str, Any],
+        entity_description: TadoBinarySensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
@@ -183,7 +187,6 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -196,13 +199,13 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
         self._async_update_device_data()
 
     @callback
-    def _async_update_callback(self):
+    def _async_update_callback(self) -> None:
         """Update and write state."""
         self._async_update_device_data()
         self.async_write_ha_state()
 
     @callback
-    def _async_update_device_data(self):
+    def _async_update_device_data(self) -> None:
         """Handle update callbacks."""
         try:
             self._device_info = self._tado.data["device"][self.device_id]
@@ -223,9 +226,9 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        tado,
-        zone_name,
-        zone_id,
+        tado: TadoConnector,
+        zone_name: str,
+        zone_id: int,
         entity_description: TadoBinarySensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
@@ -237,7 +240,6 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register for sensor updates."""
-
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -250,13 +252,13 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
         self._async_update_zone_data()
 
     @callback
-    def _async_update_callback(self):
+    def _async_update_callback(self) -> None:
         """Update and write state."""
         self._async_update_zone_data()
         self.async_write_ha_state()
 
     @callback
-    def _async_update_zone_data(self):
+    def _async_update_zone_data(self) -> None:
         """Handle update callbacks."""
         try:
             tado_zone_data = self._tado.data["zone"][self.zone_id]

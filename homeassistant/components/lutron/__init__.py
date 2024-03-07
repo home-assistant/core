@@ -16,8 +16,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
@@ -186,6 +186,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     lutron_client.connect()
     _LOGGER.info("Connected to main repeater at %s", host)
 
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
     entry_data = LutronData(
         client=lutron_client,
         binary_sensors=[],
@@ -201,17 +204,39 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     for area in lutron_client.areas:
         _LOGGER.debug("Working on area %s", area.name)
         for output in area.outputs:
+            platform = None
             _LOGGER.debug("Working on output %s", output.type)
             if output.type == "SYSTEM_SHADE":
                 entry_data.covers.append((area.name, output))
+                platform = Platform.COVER
             elif output.type == "CEILING_FAN_TYPE":
                 entry_data.fans.append((area.name, output))
+                platform = Platform.FAN
                 # Deprecated, should be removed in 2024.8
                 entry_data.lights.append((area.name, output))
             elif output.is_dimmable:
                 entry_data.lights.append((area.name, output))
+                platform = Platform.LIGHT
             else:
                 entry_data.switches.append((area.name, output))
+                platform = Platform.SWITCH
+
+            _async_check_entity_unique_id(
+                hass,
+                entity_registry,
+                platform,
+                output.uuid,
+                output.legacy_uuid,
+                entry_data.client.guid,
+            )
+            _async_check_device_identifiers(
+                hass,
+                device_registry,
+                output.uuid,
+                output.legacy_uuid,
+                entry_data.client.guid,
+            )
+
         for keypad in area.keypads:
             for button in keypad.buttons:
                 # If the button has a function assigned to it, add it as a scene
@@ -228,11 +253,46 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     )
                     entry_data.scenes.append((area.name, keypad, button, led))
 
+                    platform = Platform.SCENE
+                    _async_check_entity_unique_id(
+                        hass,
+                        entity_registry,
+                        platform,
+                        button.uuid,
+                        button.legacy_uuid,
+                        entry_data.client.guid,
+                    )
+                    if led is not None:
+                        platform = Platform.SWITCH
+                        _async_check_entity_unique_id(
+                            hass,
+                            entity_registry,
+                            platform,
+                            led.uuid,
+                            led.legacy_uuid,
+                            entry_data.client.guid,
+                        )
+
                 entry_data.buttons.append(LutronButton(hass, area.name, keypad, button))
         if area.occupancy_group is not None:
             entry_data.binary_sensors.append((area.name, area.occupancy_group))
+            platform = Platform.BINARY_SENSOR
+            _async_check_entity_unique_id(
+                hass,
+                entity_registry,
+                platform,
+                area.occupancy_group.uuid,
+                area.occupancy_group.legacy_uuid,
+                entry_data.client.guid,
+            )
+            _async_check_device_identifiers(
+                hass,
+                device_registry,
+                area.occupancy_group.uuid,
+                area.occupancy_group.legacy_uuid,
+                entry_data.client.guid,
+            )
 
-    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, lutron_client.guid)},
@@ -245,6 +305,52 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
+
+
+def _async_check_entity_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    platform: str,
+    uuid: str,
+    legacy_uuid: str,
+    controller_guid: str,
+) -> None:
+    """If uuid becomes available update to use it."""
+
+    if not uuid:
+        return
+
+    unique_id = f"{controller_guid}_{legacy_uuid}"
+    entity_id = entity_registry.async_get_entity_id(
+        domain=platform, platform=DOMAIN, unique_id=unique_id
+    )
+
+    if entity_id:
+        new_unique_id = f"{controller_guid}_{uuid}"
+        _LOGGER.debug("Updating entity id from %s to %s", unique_id, new_unique_id)
+        entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+
+def _async_check_device_identifiers(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    uuid: str,
+    legacy_uuid: str,
+    controller_guid: str,
+) -> None:
+    """If uuid becomes available update to use it."""
+
+    if not uuid:
+        return
+
+    unique_id = f"{controller_guid}_{legacy_uuid}"
+    device = device_registry.async_get_device(identifiers={(DOMAIN, unique_id)})
+    if device:
+        new_unique_id = f"{controller_guid}_{uuid}"
+        _LOGGER.debug("Updating device id from %s to %s", unique_id, new_unique_id)
+        device_registry.async_update_device(
+            device.id, new_identifiers={(DOMAIN, new_unique_id)}
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

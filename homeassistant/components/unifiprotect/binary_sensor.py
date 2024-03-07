@@ -273,6 +273,15 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_value="is_glass_break_detection_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
+    ProtectBinaryEntityDescription(
+        key="track_person",
+        name="Tracking: Person",
+        icon="mdi:walk",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_required_field="is_ptz",
+        ufp_value="is_person_tracking_enabled",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
 )
 
 LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
@@ -591,7 +600,8 @@ async def async_setup_entry(
     """Set up binary sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
         entities: list[ProtectDeviceEntity] = async_all_device_entities(
             data,
             ProtectDeviceBinarySensor,

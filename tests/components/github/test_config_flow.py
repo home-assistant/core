@@ -61,6 +61,8 @@ async def test_full_user_flow_implementation(
     assert result["step_id"] == "device"
     assert result["type"] == FlowResultType.SHOW_PROGRESS
 
+    # Wait for the task to start before configuring
+    await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     result = await hass.config_entries.flow.async_configure(

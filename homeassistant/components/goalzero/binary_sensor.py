@@ -22,7 +22,6 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key="backlight",
         translation_key="backlight",
-        icon="mdi:clock-digital",
     ),
     BinarySensorEntityDescription(
         key="app_online",
