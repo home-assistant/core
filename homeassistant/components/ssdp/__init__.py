@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
@@ -123,7 +123,7 @@ class SsdpServiceInfo(BaseServiceInfo):
 
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
-SsdpCallback = Callable[[SsdpServiceInfo, SsdpChange], Awaitable]
+SsdpCallback = Callable[[SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, Any]]
 
 SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
     SsdpSource.SEARCH_ALIVE: SsdpChange.ALIVE,
@@ -205,14 +205,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def _async_process_callbacks(
+@core_callback
+def _async_process_callbacks(
+    hass: HomeAssistant,
     callbacks: list[SsdpCallback],
     discovery_info: SsdpServiceInfo,
     ssdp_change: SsdpChange,
 ) -> None:
     for callback in callbacks:
         try:
-            await callback(discovery_info, ssdp_change)
+            hass.async_create_background_task(
+                callback(discovery_info, ssdp_change),
+                name="process ssdp callbacks",
+                eager_start=True,
+            )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Failed to callback info: %s", discovery_info)
 
@@ -309,7 +315,8 @@ class Scanner:
         for ssdp_device in self._ssdp_devices:
             for headers in ssdp_device.all_combined_headers.values():
                 if _async_headers_match(headers, lower_match_dict):
-                    await _async_process_callbacks(
+                    _async_process_callbacks(
+                        self.hass,
                         [callback],
                         await self._async_headers_to_discovery_info(
                             ssdp_device, headers
@@ -508,10 +515,7 @@ class Scanner:
 
         if callbacks:
             ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
-            self.hass.async_create_task(
-                _async_process_callbacks(callbacks, discovery_info, ssdp_change),
-                eager_start=True,
-            )
+            _async_process_callbacks(self.hass, callbacks, discovery_info, ssdp_change)
 
         # Config flows should only be created for alive/update messages from alive devices
         if source == SsdpSource.ADVERTISEMENT_BYEBYE:
