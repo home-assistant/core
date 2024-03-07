@@ -19,7 +19,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:
-        await coordinator.awattar.close()
         raise
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
