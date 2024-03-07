@@ -183,7 +183,7 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
 
     @property
     @abstractmethod
-    def flow_manager(self) -> FlowManager[ConfigFlowResult, str]:
+    def flow_manager(self) -> FlowManager[ConfigFlowResult]:
         """Return the flow manager of the flow."""
 
     async def async_step_install_addon(
