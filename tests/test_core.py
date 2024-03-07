@@ -2190,7 +2190,7 @@ async def test_hassjob_forbid_coroutine() -> None:
     coro = bla()
 
     with pytest.raises(ValueError):
-        ha.HassJob(coro)
+        ha.HassJob(coro).job_type
 
     # To avoid warning about unawaited coro
     await coro

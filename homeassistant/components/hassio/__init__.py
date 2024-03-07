@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components import panel_custom
 from homeassistant.components.homeassistant import async_set_stop_handler
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import (
     ATTR_NAME,
     EVENT_CORE_CONFIG_UPDATE,
@@ -30,7 +30,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery_flow,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import Store
@@ -39,10 +43,17 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import now
 
-# config_flow, diagnostics, and entity platforms are imported to ensure
-# other dependencies that wait for hassio are not waiting
+# config_flow, diagnostics, system_health, and entity platforms are imported to
+# ensure other dependencies that wait for hassio are not waiting
 # for hassio to import its platforms
-from . import binary_sensor, config_flow, diagnostics, sensor, update  # noqa: F401
+from . import (  # noqa: F401
+    binary_sensor,
+    config_flow,
+    diagnostics,
+    sensor,
+    system_health,
+    update,
+)
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState  # noqa: F401
 from .addon_panel import async_setup_addon_panel
 from .auth import async_setup_auth_view
@@ -490,11 +501,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             return
         if (hw_integration := HARDWARE_INTEGRATIONS.get(board)) is None:
             return
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                hw_integration, context={"source": "system"}
-            ),
-            eager_start=True,
+        discovery_flow.async_create_flow(
+            hass, hw_integration, context={"source": SOURCE_SYSTEM}, data={}
         )
 
     async_setup_hardware_integration_job = HassJob(
@@ -502,12 +510,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     )
 
     _async_setup_hardware_integration()
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"}),
-        eager_start=True,
+    discovery_flow.async_create_flow(
+        hass, DOMAIN, context={"source": SOURCE_SYSTEM}, data={}
     )
-
     return True
 
 

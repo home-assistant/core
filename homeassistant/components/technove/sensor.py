@@ -104,7 +104,6 @@ SENSORS: tuple[TechnoVESensorEntityDescription, ...] = (
     TechnoVESensorEntityDescription(
         key="ssid",
         translation_key="ssid",
-        icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda station: station.info.network_ssid,

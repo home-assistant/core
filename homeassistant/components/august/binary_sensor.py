@@ -105,27 +105,15 @@ def _native_datetime() -> datetime:
     return datetime.now()
 
 
-@dataclass(frozen=True)
-class AugustBinarySensorEntityDescription(BinarySensorEntityDescription):
+@dataclass(frozen=True, kw_only=True)
+class AugustDoorbellBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes August binary_sensor entity."""
-
-
-@dataclass(frozen=True)
-class AugustDoorbellRequiredKeysMixin:
-    """Mixin for required keys."""
 
     value_fn: Callable[[AugustData, DoorbellDetail], bool]
     is_time_based: bool
 
 
-@dataclass(frozen=True)
-class AugustDoorbellBinarySensorEntityDescription(
-    BinarySensorEntityDescription, AugustDoorbellRequiredKeysMixin
-):
-    """Describes August binary_sensor entity."""
-
-
-SENSOR_TYPE_DOOR = AugustBinarySensorEntityDescription(
+SENSOR_TYPE_DOOR = BinarySensorEntityDescription(
     key="open",
     device_class=BinarySensorDeviceClass.DOOR,
 )
@@ -217,7 +205,7 @@ class AugustDoorBinarySensor(AugustEntityMixin, BinarySensorEntity):
         self,
         data: AugustData,
         device: Lock,
-        description: AugustBinarySensorEntityDescription,
+        description: BinarySensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(data, device)

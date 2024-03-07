@@ -82,21 +82,21 @@ WIRELESS_DISCONNECTION = (
 @callback
 def async_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
-    if obj_id in hub.option_supported_clients:
+    if obj_id in hub.config.option_supported_clients:
         return True
 
-    if not hub.option_track_clients:
+    if not hub.config.option_track_clients:
         return False
 
     client = hub.api.clients[obj_id]
     if client.mac not in hub.wireless_clients:
-        if not hub.option_track_wired_clients:
+        if not hub.config.option_track_wired_clients:
             return False
 
     elif (
         client.essid
-        and hub.option_ssid_filter
-        and client.essid not in hub.option_ssid_filter
+        and hub.config.option_ssid_filter
+        and client.essid not in hub.config.option_ssid_filter
     ):
         return False
 
@@ -109,20 +109,20 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
     client = hub.api.clients[obj_id]
 
     if hub.wireless_clients.is_wireless(client) and client.is_wired:
-        if not hub.option_ignore_wired_bug:
+        if not hub.config.option_ignore_wired_bug:
             return False  # Wired bug in action
 
     if (
         not client.is_wired
         and client.essid
-        and hub.option_ssid_filter
-        and client.essid not in hub.option_ssid_filter
+        and hub.config.option_ssid_filter
+        and client.essid not in hub.config.option_ssid_filter
     ):
         return False
 
     if (
         dt_util.utcnow() - dt_util.utc_from_timestamp(client.last_seen or 0)
-        > hub.option_detection_time
+        > hub.config.option_detection_time
     ):
         return False
 
@@ -161,7 +161,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
             + WIRELESS_CONNECTION
             + WIRELESS_DISCONNECTION
         ),
-        heartbeat_timedelta_fn=lambda hub, _: hub.option_detection_time,
+        heartbeat_timedelta_fn=lambda hub, _: hub.config.option_detection_time,
         is_connected_fn=async_client_is_connected_fn,
         name_fn=lambda client: client.name or client.hostname,
         object_fn=lambda api, obj_id: api.clients[obj_id],
@@ -173,7 +173,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiTrackerEntityDescription, ...] = (
     UnifiTrackerEntityDescription[Devices, Device](
         key="Device scanner",
         has_entity_name=True,
-        allowed_fn=lambda hub, obj_id: hub.option_track_devices,
+        allowed_fn=lambda hub, obj_id: hub.config.option_track_devices,
         api_handler_fn=lambda api: api.devices,
         available_fn=async_device_available_fn,
         device_info_fn=lambda api, obj_id: None,
