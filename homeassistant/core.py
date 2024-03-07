@@ -402,6 +402,18 @@ class HomeAssistant:
             max_workers=1, thread_name_prefix="ImportExecutor"
         )
 
+    @property
+    def _active_tasks(self) -> set[asyncio.Future[Any]]:
+        """Return all active tasks.
+
+        This property is used in bootstrap to log all active tasks
+        so we can identify what is blocking startup.
+
+        This property is marked as private to avoid accidental use
+        as it is not guaranteed to be present in future versions.
+        """
+        return self._tasks
+
     @cached_property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
