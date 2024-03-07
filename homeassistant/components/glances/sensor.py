@@ -20,14 +20,13 @@ from homeassistant.const import (
     UnitOfInformation,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import parse_duration, utcnow
 
 from . import GlancesDataUpdateCoordinator
-from .const import CPU_ICON, DOMAIN
+from .const import CPU_ICON, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -249,7 +248,7 @@ async def async_setup_entry(
         elif sensor_type == "uptime":
             if sensor_description := SENSOR_TYPES.get((sensor_type, sensor_type)):
                 entities.append(
-                    GlancesTimestampSensor(
+                    GlancesUptimeSensor(
                         coordinator,
                         sensor_description,
                     )
@@ -318,24 +317,37 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         return cast(StateType, value[self.entity_description.key])
 
 
-class GlancesTimestampSensor(GlancesSensor):
-    """Implementation of a Glances Timestamp sensor."""
+class GlancesUptimeSensor(GlancesSensor):
+    """Implementation of a Glances Uptime sensor."""
 
     _attr_native_value: datetime | None = None
+
+    def __init__(
+        self,
+        coordinator: GlancesDataUpdateCoordinator,
+        description: GlancesSensorEntityDescription,
+        sensor_label: str = "",
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, description, sensor_label)
+        self._attr_native_value = self.coordinator.get_uptime()
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the resources."""
-        uptime = self.coordinator.data[self.entity_description.type]
-        up_duration = parse_duration(uptime)
-        if up_duration:
-            new_value = utcnow() - up_duration
-            # Accept only changes of more than 10 minutes to avoid flapping
-            if (
-                self._attr_native_value is None
-                or abs((new_value - self._attr_native_value).total_seconds()) > 600
-            ):
-                self._attr_native_value = new_value
-        else:
-            self._attr_native_value = None
         return self._attr_native_value
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        uptime = self.coordinator.get_uptime()
+        if (
+            self._attr_native_value is None
+            or uptime is None
+            or
+            # Accept only changes of more than 10 x DEFAULT_SCAN_INTERVAL to avoid flapping
+            uptime - self._attr_native_value > DEFAULT_SCAN_INTERVAL * 10
+        ):
+            self._attr_native_value = uptime
+
+        super()._handle_coordinator_update()

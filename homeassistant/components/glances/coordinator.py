@@ -1,5 +1,6 @@
 """Coordinator for Glances integration."""
 
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -10,6 +11,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.dt import parse_duration, utcnow
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -43,3 +45,12 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except exceptions.GlancesApiError as err:
             raise UpdateFailed from err
         return data or {}
+
+    def get_uptime(self) -> datetime | None:
+        """Get uptime by converting Glances duration to datetime."""
+        if self.data:
+            uptime = self.data["uptime"]
+            up_duration = parse_duration(uptime)
+            if up_duration:
+                return utcnow() - up_duration
+        return None
