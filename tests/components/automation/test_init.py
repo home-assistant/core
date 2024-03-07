@@ -902,6 +902,116 @@ async def test_reload_single_add_automation(hass: HomeAssistant, calls) -> None:
     assert len(calls) == 1
 
 
+async def test_reload_single_parallel_calls(hass: HomeAssistant, calls) -> None:
+    """Test reloading single automations in parallel."""
+    config1 = {automation.DOMAIN: {}}
+    config2 = {
+        automation.DOMAIN: [
+            {
+                "id": "sun",
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event_sun"},
+                "action": [{"service": "test.automation"}],
+            },
+            {
+                "id": "moon",
+                "alias": "goodbye",
+                "trigger": {"platform": "event", "event_type": "test_event_moon"},
+                "action": [{"service": "test.automation"}],
+            },
+            {
+                "id": "mars",
+                "alias": "goodbye",
+                "trigger": {"platform": "event", "event_type": "test_event_mars"},
+                "action": [{"service": "test.automation"}],
+            },
+            {
+                "id": "venus",
+                "alias": "goodbye",
+                "trigger": {"platform": "event", "event_type": "test_event_venus"},
+                "action": [{"service": "test.automation"}],
+            },
+        ]
+    }
+    assert await async_setup_component(hass, automation.DOMAIN, config1)
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Trigger multiple reload service calls
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value=config2,
+    ):
+        tasks = [
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "sun"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "moon"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "mars"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "venus"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "sun"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "moon"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "mars"},
+                blocking=False,
+            ),
+            hass.services.async_call(
+                automation.DOMAIN,
+                SERVICE_RELOAD,
+                {CONF_ID: "venus"},
+                blocking=False,
+            ),
+        ]
+        asyncio.gather(*tasks)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire("test_event_sun")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    hass.bus.async_fire("test_event_moon")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    hass.bus.async_fire("test_event_mars")
+    await hass.async_block_till_done()
+    assert len(calls) == 3
+    hass.bus.async_fire("test_event_venus")
+    await hass.async_block_till_done()
+    assert len(calls) == 4
+
+
 async def test_reload_single_remove_automation(hass: HomeAssistant, calls) -> None:
     """Test that reloading a single automation."""
     config1 = {
