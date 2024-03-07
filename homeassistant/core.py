@@ -289,8 +289,6 @@ class HassJob(Generic[_P, _R_co]):
     we run the job.
     """
 
-    __slots__ = ("job_type", "target", "name", "_cancel_on_shutdown")
-
     def __init__(
         self,
         target: Callable[_P, _R_co],
@@ -302,8 +300,13 @@ class HassJob(Generic[_P, _R_co]):
         """Create a job object."""
         self.target = target
         self.name = name
-        self.job_type = job_type or _get_hassjob_callable_job_type(target)
         self._cancel_on_shutdown = cancel_on_shutdown
+        self._job_type = job_type
+
+    @cached_property
+    def job_type(self) -> HassJobType:
+        """Return the job type."""
+        return self._job_type or _get_hassjob_callable_job_type(self.target)
 
     @property
     def cancel_on_shutdown(self) -> bool | None:
