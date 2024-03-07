@@ -254,14 +254,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     def __wrap_handle_refresh_interval(self) -> None:
         """Handle a refresh interval occurrence."""
         if self.config_entry:
-            self.config_entry.async_create_background_task(
+            self.config_entry.async_create_periodic_task(
                 self.hass,
                 self._handle_refresh_interval(),
                 name=f"{self.name} - {self.config_entry.title} - refresh",
                 eager_start=True,
             )
         else:
-            self.hass.async_create_background_task(
+            self.hass.async_create_periodic_task(
                 self._handle_refresh_interval(),
                 name=f"{self.name} - refresh",
                 eager_start=True,
