@@ -2,10 +2,12 @@
   "config": {
     "step": {
       "user": {
+        "title": "Configure your Whirlpool account",
+        "description": "For 'brand', please choose the brand of the mobile app you use, or the brand of the appliances in your account",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "brand": "Brand of appliances"
+          "brand": "Brand"
         }
       }
     },
