@@ -531,6 +531,7 @@ async def test_quirks_v2_entity_discovery(
             step=1,
             unit=UnitOfTime.SECONDS,
             multiplier=1,
+            translation_key="on_off_transition_time",
         )
     )
 
@@ -629,7 +630,11 @@ async def test_quirks_v2_entity_discovery_e1_curtain(
             entity_platform=Platform.SENSOR,
             entity_type=EntityType.DIAGNOSTIC,
         )
-        .binary_sensor("error_detected", FakeXiaomiAqaraDriverE1.cluster_id)
+        .binary_sensor(
+            "error_detected",
+            FakeXiaomiAqaraDriverE1.cluster_id,
+            translation_key="valve_alarm",
+        )
     )
 
     aqara_E1_device = zigpy.quirks._DEVICE_REGISTRY.get_device(aqara_E1_device)
@@ -698,6 +703,7 @@ def _get_test_device(
     zigpy_device_mock,
     manufacturer: str,
     model: str,
+    include_missing_translation_key=False,
     include_unit_error=False,
     include_device_class_translation_key_error=False,
 ):
@@ -733,6 +739,7 @@ def _get_test_device(
             step=1,
             unit=UnitOfTime.SECONDS,
             multiplier=1,
+            translation_key="on_off_transition_time",
         )
         .number(
             zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
@@ -742,13 +749,23 @@ def _get_test_device(
             step=1,
             unit=UnitOfTime.SECONDS,
             multiplier=1,
+            translation_key="on_off_transition_time",
         )
         .sensor(
             zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
             zigpy.zcl.clusters.general.OnOff.cluster_id,
             entity_type=EntityType.CONFIG,
+            translation_key="analog_input",
         )
     )
+
+    if include_missing_translation_key:
+        v2_quirk.sensor(
+            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+            zigpy.zcl.clusters.general.OnOff.cluster_id,
+            entity_type=EntityType.CONFIG,
+            translation_key="missing_translation_key",
+        )
 
     if include_unit_error:
         v2_quirk.sensor(
@@ -757,6 +774,7 @@ def _get_test_device(
             entity_type=EntityType.CONFIG,
             unit="invalid",
             device_class="invalid",
+            translation_key="analog_input",
         )
 
     if include_device_class_translation_key_error:
@@ -834,7 +852,7 @@ async def test_quirks_v2_entity_discovery_errors(
         "SENSOR: 'sensor'>, entity_type=<EntityType.CONFIG: 'config'>, "
         "cluster_id=6, endpoint_id=1, cluster_type=<ClusterType.Server: 0>, "
         "initially_disabled=False, attribute_initialized_from_cache=True, "
-        "translation_key=None)}"
+        "translation_key='analog_input')}"
     )
     # fmt: on
 
@@ -873,7 +891,7 @@ def validate_translation_keys(
     translations: dict,
 ) -> None:
     """Ensure translation keys exist for all v2 quirks."""
-    if isinstance(entity_metadata, ZCLCommandButtonMetadata):
+    if isinstance(entity_metadata.entity_metadata, ZCLCommandButtonMetadata):
         default_translation_key = entity_metadata.entity_metadata.command_name
     else:
         default_translation_key = entity_metadata.entity_metadata.attribute_name
@@ -895,7 +913,7 @@ def validate_translation_keys_device_class(
     translations: dict,
 ) -> None:
     """Validate translation keys and device class usage."""
-    if isinstance(entity_metadata, ZCLCommandButtonMetadata):
+    if isinstance(entity_metadata.entity_metadata, ZCLCommandButtonMetadata):
         default_translation_key = entity_metadata.entity_metadata.command_name
     else:
         default_translation_key = entity_metadata.entity_metadata.attribute_name
@@ -910,7 +928,7 @@ def validate_translation_keys_device_class(
             raise ValueError(f"{m1}{m2}{quirk}")
 
 
-def test_metadata_correctness(validator: Callable) -> None:
+def validate_metadata(validator: Callable) -> None:
     """Ensure v2 quirks metadata does not violate HA rules."""
     all_v2_quirks = itertools.chain.from_iterable(
         zigpy.quirks._DEVICE_REGISTRY._registry_v2.values()
@@ -930,17 +948,25 @@ async def test_quirks_v2_missing_translations(
     """Ensure all v2 quirks translation keys exist."""
 
     # no error yet
-    test_metadata_correctness(validate_translation_keys)
+    validate_metadata(validate_translation_keys)
 
     # introduce an error
     zigpy_device = _get_test_device(
-        zigpy_device_mock, "Ikea of Sweden4", "TRADFRI remote control4"
+        zigpy_device_mock,
+        "Ikea of Sweden4",
+        "TRADFRI remote control4",
+        include_missing_translation_key=True,
     )
     await zha_device_joined(zigpy_device)
 
     # ensure the error is caught and raised
-    with pytest.raises(ValueError, match="Missing translation key: off_wait_time"):
-        test_metadata_correctness(validate_translation_keys)
+    with pytest.raises(
+        ValueError, match="Missing translation key: missing_translation_key"
+    ):
+        validate_metadata(validate_translation_keys)
+
+    # remove the device so we don't pollute the rest of the tests
+    zigpy.quirks._DEVICE_REGISTRY.remove(zigpy_device)
 
 
 async def test_quirks_v2_device_class_unit_usage(
@@ -951,7 +977,7 @@ async def test_quirks_v2_device_class_unit_usage(
     """Ensure all v2 quirks dont set device class and unit at the same time."""
 
     # no error yet
-    test_metadata_correctness(validate_device_class_unit)
+    validate_metadata(validate_device_class_unit)
 
     # introduce an error
     zigpy_device = _get_test_device(
@@ -964,7 +990,10 @@ async def test_quirks_v2_device_class_unit_usage(
 
     # ensure the error is caught and raised
     with pytest.raises(ValueError, match="device_class and unit are both set"):
-        test_metadata_correctness(validate_device_class_unit)
+        validate_metadata(validate_device_class_unit)
+
+    # remove the device so we don't pollute the rest of the tests
+    zigpy.quirks._DEVICE_REGISTRY.remove(zigpy_device)
 
 
 async def test_quirks_v2_device_class_translation_key_usage(
@@ -975,7 +1004,7 @@ async def test_quirks_v2_device_class_translation_key_usage(
     """Ensure all v2 quirks dont set device class and translation_key at the same time."""
 
     # no error yet
-    test_metadata_correctness(validate_translation_keys_device_class)
+    validate_metadata(validate_translation_keys_device_class)
 
     # introduce an error
     zigpy_device = _get_test_device(
@@ -990,4 +1019,7 @@ async def test_quirks_v2_device_class_translation_key_usage(
     with pytest.raises(
         ValueError, match="translation_key and device_class are both set"
     ):
-        test_metadata_correctness(validate_translation_keys_device_class)
+        validate_metadata(validate_translation_keys_device_class)
+
+    # remove the device so we don't pollute the rest of the tests
+    zigpy.quirks._DEVICE_REGISTRY.remove(zigpy_device)

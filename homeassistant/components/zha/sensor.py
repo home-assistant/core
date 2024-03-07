@@ -75,7 +75,7 @@ from .core.const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
-from .core.helpers import get_zha_data
+from .core.helpers import get_zha_data, validate_unit
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import BaseZhaEntity, ZhaEntity
 
@@ -190,7 +190,21 @@ class Sensor(ZhaEntity, SensorEntity):
         if sensor_metadata.multiplier is not None:
             self._multiplier = sensor_metadata.multiplier
         if sensor_metadata.unit is not None:
-            self._attr_native_unit_of_measurement = sensor_metadata.unit
+            self._attr_native_unit_of_measurement = validate_unit(
+                sensor_metadata.unit
+            ).value
+        if sensor_metadata.device_class is not None:
+            try:
+                self._attr_device_class = SensorDeviceClass(
+                    sensor_metadata.device_class.value
+                )
+            except ValueError as ex:
+                self.warning(
+                    "Quirks provided an invalid device class: %s for entity %s: %s",
+                    sensor_metadata.device_class,
+                    self.entity_id,
+                    ex,
+                )
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
@@ -354,6 +368,17 @@ class EnumSensor(Sensor):
 
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.ENUM
     _enum: type[enum.Enum]
+
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        cluster_handlers: list[ClusterHandler],
+        **kwargs: Any,
+    ) -> None:
+        """Init this sensor."""
+        super().__init__(unique_id, zha_device, cluster_handlers, **kwargs)
+        self._attr_options = [e.name for e in self._enum]
 
     def _init_from_quirks_metadata(self, entity_metadata: EntityMetadata) -> None:
         """Init this entity from the quirks metadata."""

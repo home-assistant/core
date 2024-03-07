@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Self
 from zigpy.quirks.v2 import EntityMetadata, NumberMetadata
 from zigpy.zcl.clusters.hvac import Thermostat
 
-from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform, UnitOfMass, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
@@ -30,7 +30,7 @@ from .core.const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
-from .core.helpers import get_zha_data
+from .core.helpers import get_zha_data, validate_unit
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -443,9 +443,24 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         if number_metadata.step is not None:
             self._attr_native_step = number_metadata.step
         if number_metadata.unit is not None:
-            self._attr_native_unit_of_measurement = number_metadata.unit
+            self._attr_native_unit_of_measurement = validate_unit(
+                number_metadata.unit
+            ).value
         if number_metadata.multiplier is not None:
             self._attr_multiplier = number_metadata.multiplier
+
+        if number_metadata.device_class is not None:
+            try:
+                self._attr_device_class = NumberDeviceClass(
+                    number_metadata.device_class.value
+                )
+            except ValueError as ex:
+                self.warning(
+                    "Quirks provided an invalid device class: %s for entity %s: %s",
+                    number_metadata.device_class,
+                    self.entity_id,
+                    ex,
+                )
 
     @property
     def native_value(self) -> float:

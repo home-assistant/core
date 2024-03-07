@@ -88,6 +88,18 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
         super()._init_from_quirks_metadata(entity_metadata)
         binary_sensor_metadata: BinarySensorMetadata = entity_metadata.entity_metadata
         self._attribute_name = binary_sensor_metadata.attribute_name
+        if binary_sensor_metadata.device_class is not None:
+            try:
+                self._attr_device_class = BinarySensorDeviceClass(
+                    binary_sensor_metadata.device_class.value
+                )
+            except ValueError as ex:
+                self.warning(
+                    "Quirks provided an invalid device class: %s for entity %s: %s",
+                    binary_sensor_metadata.device_class,
+                    self.entity_id,
+                    ex,
+                )
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
