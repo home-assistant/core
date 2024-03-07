@@ -10,6 +10,8 @@ from homeassistant import block_async_io
 from homeassistant.core import HomeAssistant
 from homeassistant.util import async_ as hasync
 
+from tests.common import extract_stack_to_frame
+
 
 @patch("concurrent.futures.Future")
 @patch("threading.get_ident")
@@ -49,24 +51,28 @@ async def test_check_loop_async() -> None:
 async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects and raises when called from event loop from integration context."""
     with pytest.raises(RuntimeError), patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            Mock(
-                filename="/home/paulus/homeassistant/components/hue/light.py",
-                lineno="23",
-                line="self.light.is_on",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.linecache.getline", return_value="self.light.is_on"
+    ), patch(
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                Mock(
+                    filename="/home/paulus/homeassistant/components/hue/light.py",
+                    lineno="23",
+                    line="self.light.is_on",
+                ),
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         hasync.check_loop(banned_function)
     assert (
@@ -82,24 +88,28 @@ async def test_check_loop_async_integration_non_strict(
 ) -> None:
     """Test check_loop detects when called from event loop from integration context."""
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            Mock(
-                filename="/home/paulus/homeassistant/components/hue/light.py",
-                lineno="23",
-                line="self.light.is_on",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.linecache.getline", return_value="self.light.is_on"
+    ), patch(
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                Mock(
+                    filename="/home/paulus/homeassistant/components/hue/light.py",
+                    lineno="23",
+                    line="self.light.is_on",
+                ),
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         hasync.check_loop(banned_function, strict=False)
     assert (
@@ -113,24 +123,28 @@ async def test_check_loop_async_integration_non_strict(
 async def test_check_loop_async_custom(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects when called from event loop with custom component context."""
     with pytest.raises(RuntimeError), patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            Mock(
-                filename="/home/paulus/config/custom_components/hue/light.py",
-                lineno="23",
-                line="self.light.is_on",
-            ),
-            Mock(
-                filename="/home/paulus/aiohue/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.linecache.getline", return_value="self.light.is_on"
+    ), patch(
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                Mock(
+                    filename="/home/paulus/config/custom_components/hue/light.py",
+                    lineno="23",
+                    line="self.light.is_on",
+                ),
+                Mock(
+                    filename="/home/paulus/aiohue/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         hasync.check_loop(banned_function)
     assert (
@@ -161,24 +175,16 @@ async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> 
     block_async_io.enable()
 
     with patch(
-        "homeassistant.util.async_.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/.venv/blah/pydevd.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            Mock(
-                filename="/home/paulus/homeassistant/util/async.py",
-                lineno="123",
-                line="protected_loop_func",
-            ),
-            Mock(
-                filename="/home/paulus/homeassistant/util/async.py",
-                lineno="123",
-                line="check_loop()",
-            ),
-        ],
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/.venv/blah/pydevd.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+            ]
+        ),
     ):
         time.sleep(0)
     assert "Detected blocking call inside the event loop" not in caplog.text

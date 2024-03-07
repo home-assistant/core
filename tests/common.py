@@ -15,7 +15,7 @@ import os
 import pathlib
 import threading
 import time
-from types import ModuleType
+from types import FrameType, ModuleType
 from typing import Any, NoReturn, TypeVar
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -1596,3 +1596,20 @@ def help_test_all(module: ModuleType) -> None:
     assert set(module.__all__) == {
         itm for itm in module.__dir__() if not itm.startswith("_")
     }
+
+
+def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
+    """Convert an extract stack to a frame list."""
+    stack = list(extract_stack)
+    for frame in stack:
+        frame.f_back = None
+        frame.f_code.co_filename = frame.filename
+        frame.f_lineno = int(frame.lineno)
+
+    top_frame = stack.pop()
+    current_frame = top_frame
+    while stack and (next_frame := stack.pop()):
+        current_frame.f_back = next_frame
+        current_frame = next_frame
+
+    return top_frame
