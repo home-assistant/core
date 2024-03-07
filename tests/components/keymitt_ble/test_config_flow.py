@@ -187,7 +187,7 @@ async def test_no_link(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["step_id"] == "link"
     assert result3["errors"] == {"base": "linking"}
 
