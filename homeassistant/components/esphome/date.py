@@ -1,13 +1,9 @@
 """Support for esphome dates."""
 from __future__ import annotations
 
-import math
 from datetime import date
 
-from aioesphomeapi import (
-    DateInfo,
-    DateState,
-)
+from aioesphomeapi import DateInfo, DateState
 
 from homeassistant.components.date import DateEntity
 from homeassistant.config_entries import ConfigEntry

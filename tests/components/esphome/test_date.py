@@ -2,11 +2,7 @@
 
 from unittest.mock import call
 
-from aioesphomeapi import (
-    APIClient,
-    DateInfo,
-    DateState,
-)
+from aioesphomeapi import APIClient, DateInfo, DateState
 
 from homeassistant.components.date import (
     ATTR_DATE,
