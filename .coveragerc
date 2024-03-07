@@ -545,7 +545,9 @@ omit =
     homeassistant/components/homematic/notify.py
     homeassistant/components/homematic/sensor.py
     homeassistant/components/homematic/switch.py
-    homeassistant/components/homeworks/*
+    homeassistant/components/homeworks/__init__.py
+    homeassistant/components/homeworks/button.py
+    homeassistant/components/homeworks/light.py
     homeassistant/components/horizon/media_player.py
     homeassistant/components/hp_ilo/sensor.py
     homeassistant/components/huawei_lte/__init__.py
@@ -639,6 +641,12 @@ omit =
     homeassistant/components/izone/climate.py
     homeassistant/components/izone/discovery.py
     homeassistant/components/joaoapps_join/*
+    homeassistant/components/juicenet/__init__.py
+    homeassistant/components/juicenet/device.py
+    homeassistant/components/juicenet/entity.py
+    homeassistant/components/juicenet/number.py
+    homeassistant/components/juicenet/sensor.py
+    homeassistant/components/juicenet/switch.py
     homeassistant/components/justnimbus/coordinator.py
     homeassistant/components/justnimbus/entity.py
     homeassistant/components/justnimbus/sensor.py
@@ -982,6 +990,7 @@ omit =
     homeassistant/components/pandora/media_player.py
     homeassistant/components/pencom/switch.py
     homeassistant/components/permobil/__init__.py
+    homeassistant/components/permobil/binary_sensor.py
     homeassistant/components/permobil/coordinator.py
     homeassistant/components/permobil/entity.py
     homeassistant/components/permobil/sensor.py
@@ -1589,7 +1598,6 @@ omit =
     homeassistant/components/weatherflow_cloud/const.py
     homeassistant/components/weatherflow_cloud/coordinator.py
     homeassistant/components/weatherflow_cloud/weather.py
-    homeassistant/components/webmin/sensor.py
     homeassistant/components/wiffi/__init__.py
     homeassistant/components/wiffi/binary_sensor.py
     homeassistant/components/wiffi/sensor.py

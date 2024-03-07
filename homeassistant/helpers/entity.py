@@ -46,6 +46,7 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
+    HassJobType,
     HomeAssistant,
     callback,
     get_release_channel,
@@ -1430,7 +1431,10 @@ class Entity(
 
             self.async_on_remove(
                 async_track_entity_registry_updated_event(
-                    self.hass, self.entity_id, self._async_registry_updated
+                    self.hass,
+                    self.entity_id,
+                    self._async_registry_updated,
+                    job_type=HassJobType.Callback,
                 )
             )
             self._async_subscribe_device_updates()
@@ -1545,6 +1549,7 @@ class Entity(
             self.hass,
             device_id,
             self._async_device_registry_updated,
+            job_type=HassJobType.Callback,
         )
         if (
             not self._on_remove

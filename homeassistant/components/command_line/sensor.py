@@ -33,7 +33,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_COMMAND_TIMEOUT, LOGGER
-from .utils import check_output_or_log
+from .utils import async_check_output_or_log
 
 CONF_JSON_ATTRIBUTES = "json_attributes"
 
@@ -138,6 +138,7 @@ class CommandSensor(ManualTriggerSensorEntity):
         """Update the state of the entity."""
         if self._process_updates is None:
             self._process_updates = asyncio.Lock()
+
         if self._process_updates.locked():
             LOGGER.warning(
                 "Updating Command Line Sensor %s took longer than the scheduled update interval %s",
@@ -151,7 +152,7 @@ class CommandSensor(ManualTriggerSensorEntity):
 
     async def _async_update(self) -> None:
         """Get the latest data and updates the state."""
-        await self.hass.async_add_executor_job(self.data.update)
+        await self.data.async_update()
         value = self.data.value
 
         if self._json_attributes:
@@ -216,7 +217,7 @@ class CommandSensorData:
         self.command = command
         self.timeout = command_timeout
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Get the latest data with a shell command."""
         command = self.command
 
@@ -231,7 +232,7 @@ class CommandSensorData:
         if args_compiled:
             try:
                 args_to_render = {"arguments": args}
-                rendered_args = args_compiled.render(args_to_render)
+                rendered_args = args_compiled.async_render(args_to_render)
             except TemplateError as ex:
                 LOGGER.exception("Error rendering command template: %s", ex)
                 return
@@ -246,4 +247,4 @@ class CommandSensorData:
             command = f"{prog} {rendered_args}"
 
         LOGGER.debug("Running command: %s", command)
-        self.value = check_output_or_log(command, self.timeout)
+        self.value = await async_check_output_or_log(command, self.timeout)

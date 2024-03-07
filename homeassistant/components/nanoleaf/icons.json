@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "light": {
+      "light": {
+        "default": "mdi:triangle-outline"
+      }
+    }
+  }
+}

@@ -281,8 +281,6 @@ class HassJob(Generic[_P, _R_co]):
     we run the job.
     """
 
-    __slots__ = ("job_type", "target", "name", "_cancel_on_shutdown")
-
     def __init__(
         self,
         target: Callable[_P, _R_co],
@@ -294,8 +292,13 @@ class HassJob(Generic[_P, _R_co]):
         """Create a job object."""
         self.target = target
         self.name = name
-        self.job_type = job_type or _get_hassjob_callable_job_type(target)
         self._cancel_on_shutdown = cancel_on_shutdown
+        self._job_type = job_type
+
+    @cached_property
+    def job_type(self) -> HassJobType:
+        """Return the job type."""
+        return self._job_type or _get_hassjob_callable_job_type(self.target)
 
     @property
     def cancel_on_shutdown(self) -> bool | None:
@@ -474,8 +477,10 @@ class HomeAssistant:
                     " phase. We're going to continue anyway. Please report the"
                     " following info at"
                     " https://github.com/home-assistant/core/issues: %s"
+                    " The system is waiting for tasks: %s"
                 ),
                 ", ".join(self.config.components),
+                self._tasks,
             )
 
         # Allow automations to set up the start triggers before changing state
@@ -597,6 +602,8 @@ class HomeAssistant:
                 hassjob.target = cast(
                     Callable[..., Coroutine[Any, Any, _R]], hassjob.target
                 )
+            # Use loop.create_task
+            # to avoid the extra function call in asyncio.create_task.
             task = self.loop.create_task(hassjob.target(*args), name=hassjob.name)
         elif hassjob.job_type is HassJobType.Callback:
             if TYPE_CHECKING:
@@ -641,6 +648,8 @@ class HomeAssistant:
             if task.done():
                 return task
         else:
+            # Use loop.create_task
+            # to avoid the extra function call in asyncio.create_task.
             task = self.loop.create_task(target, name=name)
         self._tasks.add(task)
         task.add_done_callback(self._tasks.remove)
@@ -663,6 +672,8 @@ class HomeAssistant:
             if task.done():
                 return task
         else:
+            # Use loop.create_task
+            # to avoid the extra function call in asyncio.create_task.
             task = self.loop.create_task(target, name=name)
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.remove)
@@ -1998,9 +2009,10 @@ class Service:
         service: str,
         context: Context | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
+        job_type: HassJobType | None = None,
     ) -> None:
         """Initialize a service."""
-        self.job = HassJob(func, f"service {domain}.{service}")
+        self.job = HassJob(func, f"service {domain}.{service}", job_type=job_type)
         self.schema = schema
         self.supports_response = supports_response
 
@@ -2142,6 +2154,7 @@ class ServiceRegistry:
         ],
         schema: vol.Schema | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
+        job_type: HassJobType | None = None,
     ) -> None:
         """Register a service.
 
@@ -2152,7 +2165,12 @@ class ServiceRegistry:
         domain = domain.lower()
         service = service.lower()
         service_obj = Service(
-            service_func, schema, domain, service, supports_response=supports_response
+            service_func,
+            schema,
+            domain,
+            service,
+            supports_response=supports_response,
+            job_type=job_type,
         )
 
         if domain in self._services:
