@@ -17,7 +17,7 @@ from .coordinator import QBittorrentDataCoordinator
 
 @dataclass(frozen=True, kw_only=True)
 class QBittorrentSwitchEntityDescription(SwitchEntityDescription):
-    """Describes QBittorren binary sensor entity."""
+    """Describes qBittorren binary sensor entity."""
 
     update_fn: Callable[["QBittorrentSwitch"], bool]
     turn_on_fn: Callable[["QBittorrentSwitch"], None]
@@ -27,7 +27,7 @@ class QBittorrentSwitchEntityDescription(SwitchEntityDescription):
 def alternative_speed_turn_on(entity: "QBittorrentSwitch"):
     """Turn on alternative speed.
 
-    The QBittorent only expose the toggle for alternative speed, so we test is alternative_speed is false before using toggle.
+    qBittorrent only exposes the toggle for alternative speed, so we test if alternative_speed is false before using toggle.
     """
 
     if not entity.is_on:
@@ -35,7 +35,7 @@ def alternative_speed_turn_on(entity: "QBittorrentSwitch"):
 
 
 def alternative_speed_turn_off(entity: "QBittorrentSwitch"):
-    """Turn on alternative speed."""
+    """Turn off alternative speed."""
 
     if entity.is_on:
         entity.client.toggle_alternative_speed()
@@ -47,7 +47,6 @@ SWITCH_TYPES: tuple[QBittorrentSwitchEntityDescription, ...] = (
         translation_key="alternative_speed",
         icon="mdi:speedometer-slow",
         update_fn=lambda entity: bool(entity.client.get_alternative_speed_status()),
-        # The QBittorent only expose the toggle for alternative speed, so we test is alternative_speed is false before using toggle
         turn_on_fn=alternative_speed_turn_on,
         turn_off_fn=alternative_speed_turn_off,
     ),
@@ -83,7 +82,7 @@ class QBittorrentSwitch(SwitchEntity):
         config_entry: ConfigEntry,
         entity_description: QBittorrentSwitchEntityDescription,
     ) -> None:
-        """Initialize the qBittorrent sensor."""
+        """Initialize qBittorrent switch."""
         super().__init__()
         self.entity_description = entity_description
         self._attr_unique_id = f"{config_entry.entry_id}-{entity_description.key}"
