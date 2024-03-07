@@ -23,6 +23,7 @@ import datetime
 import enum
 import functools
 import inspect
+from itertools import chain
 import logging
 import os
 import pathlib
@@ -382,6 +383,7 @@ class HomeAssistant:
         self.loop = asyncio.get_running_loop()
         self._tasks: set[asyncio.Future[Any]] = set()
         self._background_tasks: set[asyncio.Future[Any]] = set()
+        self._periodic_tasks: set[asyncio.Future[Any]] = set()
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -669,9 +671,17 @@ class HomeAssistant:
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
-        This is a background task which will not block startup and will be
-        automatically cancelled on shutdown. If you are using this in your
-        integration, use the create task methods on the config entry instead.
+        This type of task is for background tasks that usually run for
+        the lifetime of Home Assistant or an integration's setup.
+
+        This is a background task which is different from a normal task:
+
+          - Will not block startup
+          - Will be automatically cancelled on shutdown
+          - Calls to async_block_till_done will not wait for completion
+
+        If you are using this in your integration, use the create task
+        methods on the config entry instead.
 
         This method must be run in the event loop.
         """
@@ -685,6 +695,38 @@ class HomeAssistant:
             task = self.loop.create_task(target, name=name)
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.remove)
+        return task
+
+    @callback
+    def async_create_periodic_task(
+        self, target: Coroutine[Any, Any, _R], name: str, eager_start: bool = False
+    ) -> asyncio.Task[_R]:
+        """Create a task from within the event loop.
+
+        This type of tasks is for periodic updates such as polling
+        entities.
+
+        This is a periodic task which is different from a normal task:
+
+          - Will not block startup
+          - Will be automatically cancelled on shutdown
+          - Calls to async_block_till_done will wait for completion by default
+
+        If you are using this in your integration, use the create task
+        methods on the config entry instead.
+
+        This method must be run in the event loop.
+        """
+        if eager_start:
+            task = create_eager_task(target, name=name, loop=self.loop)
+            if task.done():
+                return task
+        else:
+            # Use loop.create_task
+            # to avoid the extra function call in asyncio.create_task.
+            task = self.loop.create_task(target, name=name)
+        self._periodic_tasks.add(task)
+        task.add_done_callback(self._periodic_tasks.remove)
         return task
 
     @callback
@@ -796,16 +838,19 @@ class HomeAssistant:
             self.async_block_till_done(), self.loop
         ).result()
 
-    async def async_block_till_done(self) -> None:
+    async def async_block_till_done(self, wait_periodic_tasks: bool = True) -> None:
         """Block until all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0)
         start_time: float | None = None
         current_task = asyncio.current_task()
+        to_wait: Iterable[asyncio.Future[Any]] = self._tasks
+        if wait_periodic_tasks:
+            to_wait = chain(self._tasks, self._periodic_tasks)
 
         while tasks := [
             task
-            for task in self._tasks
+            for task in to_wait
             if task is not current_task and not cancelling(task)
         ]:
             await self._await_and_log_pending(tasks)
@@ -936,7 +981,7 @@ class HomeAssistant:
         self._tasks = set()
 
         # Cancel all background tasks
-        for task in self._background_tasks:
+        for task in chain(self._background_tasks, self._periodic_tasks):
             self._tasks.add(task)
             task.add_done_callback(self._tasks.remove)
             task.cancel("Home Assistant is stopping")
@@ -948,7 +993,7 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         try:
             async with self.timeout.async_timeout(STOP_STAGE_SHUTDOWN_TIMEOUT):
-                await self.async_block_till_done()
+                await self.async_block_till_done(wait_periodic_tasks=False)
         except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for integrations to stop, the shutdown will"
@@ -961,7 +1006,7 @@ class HomeAssistant:
         self.bus.async_fire(EVENT_HOMEASSISTANT_FINAL_WRITE)
         try:
             async with self.timeout.async_timeout(FINAL_WRITE_STAGE_SHUTDOWN_TIMEOUT):
-                await self.async_block_till_done()
+                await self.async_block_till_done(wait_periodic_tasks=False)
         except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for final writes to complete, the shutdown will"
@@ -1013,7 +1058,7 @@ class HomeAssistant:
 
         try:
             async with self.timeout.async_timeout(CLOSE_STAGE_SHUTDOWN_TIMEOUT):
-                await self.async_block_till_done()
+                await self.async_block_till_done(wait_periodic_tasks=False)
         except TimeoutError:
             _LOGGER.warning(
                 "Timed out waiting for close event to be processed, the shutdown will"

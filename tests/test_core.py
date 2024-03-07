@@ -514,7 +514,7 @@ async def test_shutdown_calls_block_till_done_after_shutdown_run_callback_thread
     """Ensure shutdown_run_callback_threadsafe is called before the final async_block_till_done."""
     stop_calls = []
 
-    async def _record_block_till_done():
+    async def _record_block_till_done(wait_periodic_tasks: bool = True):
         nonlocal stop_calls
         stop_calls.append("async_block_till_done")
 
@@ -2098,9 +2098,9 @@ async def test_chained_logging_hits_log_timeout(
             return
         hass.async_create_task(_task_chain_1())
 
-    with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0001):
+    with patch.object(ha, "BLOCK_LOG_TIMEOUT", 0.0):
         hass.async_create_task(_task_chain_1())
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_periodic_tasks=False)
 
     assert "_task_chain_" in caplog.text
 
