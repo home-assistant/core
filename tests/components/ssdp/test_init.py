@@ -554,6 +554,7 @@ async def test_scan_with_registered_callback(
     await ssdp.async_register_callback(
         hass, async_integration_callback_from_cache, {"st": "mock-st"}
     )
+    await hass.async_block_till_done()
     assert async_integration_callback_from_cache.call_count == 1
 
 
