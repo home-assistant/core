@@ -641,11 +641,19 @@ class EntityPlatform:
     @callback
     def _async_handle_interval_callback(self, now: datetime) -> None:
         """Update all the entity states in a single platform."""
-        self.hass.async_create_periodic_task(
-            self._update_entity_states(now),
-            name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
-            eager_start=True,
-        )
+        if self.config_entry:
+            self.config_entry.async_create_periodic_task(
+                self.hass,
+                self._update_entity_states(now),
+                name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
+                eager_start=True,
+            )
+        else:
+            self.hass.async_create_periodic_task(
+                self._update_entity_states(now),
+                name=f"EntityPlatform poll {self.domain}.{self.platform_name}",
+                eager_start=True,
+            )
 
     def _entity_id_already_exists(self, entity_id: str) -> tuple[bool, bool]:
         """Check if an entity_id already exists.
