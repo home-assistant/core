@@ -1877,7 +1877,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Usable Battery level',
+    'original_name': 'Usable battery level',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1889,7 +1889,7 @@
 # name: test_sensors[sensor.test_usable_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Usable Battery level',
+      'friendly_name': 'Test Usable battery level',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_usable_battery_level',
@@ -4160,7 +4160,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Usable Battery level',
+    'original_name': 'Usable battery level',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4172,7 +4172,7 @@
 # name: test_sensors_alt[sensor.test_usable_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Usable Battery level',
+      'friendly_name': 'Test Usable battery level',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_usable_battery_level',
