@@ -2,16 +2,17 @@
 
 from unittest.mock import patch
 
+from motionblindsble.const import MotionBlindType
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.components.motionblinds_ble import const
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-from motionblindsble.const import MotionBlindType
-from tests.components.bluetooth import (generate_advertisement_data,
-                                        generate_ble_device)
 
 from .conftest import TEST_ADDRESS, TEST_MAC, TEST_NAME
+
+from tests.components.bluetooth import generate_advertisement_data, generate_ble_device
 
 TEST_BLIND_TYPE = MotionBlindType.ROLLER
 
