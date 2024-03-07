@@ -20,6 +20,7 @@ from .entity import (
     EsphomeEntity,
     esphome_state_property,
     platform_async_setup_entry,
+    convert_api_error_ha_error,
 )
 from .entry_data import RuntimeEntryData
 
@@ -66,6 +67,7 @@ class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
         state = self._state
         return None if state.missing_state else state.state
 
+    @convert_api_error_ha_error
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self._client.select_command(self._key, option)
