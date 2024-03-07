@@ -66,7 +66,7 @@ class TwinklyLight(LightEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_icon = "mdi:string-lights"
+    _attr_translation_key = "light"
 
     def __init__(
         self,
