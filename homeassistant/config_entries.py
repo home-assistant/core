@@ -1028,7 +1028,7 @@ class ConfigEntry:
 
         Background tasks are automatically canceled when config entry is unloaded.
 
-        This is a background task which is different from a normal task:
+        A background task is different from a normal task:
 
           - Will not block startup
           - Will be automatically cancelled on shutdown
@@ -1057,7 +1057,7 @@ class ConfigEntry:
 
         This type of task is typically used for polling.
 
-        This is a periodic task which is different from a normal task:
+        A periodic task is different from a normal task:
 
           - Will not block startup
           - Will be automatically cancelled on shutdown
