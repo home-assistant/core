@@ -205,6 +205,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def _async_run_ssdp_callback(
+    callback: SsdpCallback,
+    discovery_info: SsdpServiceInfo,
+    ssdp_change: SsdpChange,
+) -> None:
+    try:
+        await callback(discovery_info, ssdp_change)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Failed to callback info: %s", discovery_info)
+
+
 @core_callback
 def _async_process_callbacks(
     hass: HomeAssistant,
@@ -213,14 +224,11 @@ def _async_process_callbacks(
     ssdp_change: SsdpChange,
 ) -> None:
     for callback in callbacks:
-        try:
-            hass.async_create_background_task(
-                callback(discovery_info, ssdp_change),
-                name="process ssdp callbacks",
-                eager_start=True,
-            )
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Failed to callback info: %s", discovery_info)
+        hass.async_create_background_task(
+            _async_run_ssdp_callback(callback, discovery_info, ssdp_change),
+            name="process ssdp callbacks",
+            eager_start=True,
+        )
 
 
 @core_callback
