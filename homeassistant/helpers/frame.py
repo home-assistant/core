@@ -10,11 +10,16 @@ import linecache
 import logging
 import sys
 from types import FrameType
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
+
+if TYPE_CHECKING:
+    from functools import cached_property
+else:
+    from homeassistant.backports.functools import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +38,13 @@ class IntegrationFrame:
     integration: str
     module: str | None
     relative_filename: str
+
+    @cached_property
+    def line(self) -> str:
+        """Return the line of the frame."""
+        return (
+            linecache.getline(self.frame.f_code.co_filename, self.frame.f_lineno) or "?"
+        ).strip()
 
 
 def get_integration_logger(fallback_name: str) -> logging.Logger:
@@ -172,10 +184,7 @@ def _report_integration(
         what,
         integration_frame.relative_filename,
         found_frame.f_lineno,
-        (
-            linecache.getline(found_frame.f_code.co_filename, found_frame.f_lineno)
-            or "?"
-        ).strip(),
+        integration_frame.line,
         report_issue,
     )
 
