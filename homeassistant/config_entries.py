@@ -1024,7 +1024,7 @@ class ConfigEntry:
         name: str,
         eager_start: bool = False,
     ) -> asyncio.Task[_R]:
-        """Create a task from within the event loop.
+        """Create a background task tied to the config entry lifecycle.
 
         This type of task is for background tasks that usually run for
         the lifetime of Home Assistant or an integration's setup.
@@ -1052,7 +1052,7 @@ class ConfigEntry:
         name: str,
         eager_start: bool = False,
     ) -> asyncio.Task[_R]:
-        """Create a task from within the event loop.
+        """Create a periodic task tied to the config entry lifecycle.
 
         This type of task is for background tasks that usually run for
         the lifetime of Home Assistant or an integration's setup.
