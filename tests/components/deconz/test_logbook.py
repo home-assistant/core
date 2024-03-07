@@ -74,6 +74,7 @@ async def test_humanifying_deconz_alarm_event(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,
@@ -183,6 +184,7 @@ async def test_humanifying_deconz_event(
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
 
     events = mock_humanify(
         hass,

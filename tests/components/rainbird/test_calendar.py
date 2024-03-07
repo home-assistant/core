@@ -204,7 +204,6 @@ async def test_event_state(
         "description": "",
         "location": "",
         "friendly_name": "Rain Bird Controller",
-        "icon": "mdi:sprinkler",
     }
     assert state.state == expected_state
 
@@ -248,7 +247,6 @@ async def test_no_schedule(
     assert state.state == "unavailable"
     assert state.attributes == {
         "friendly_name": "Rain Bird Controller",
-        "icon": "mdi:sprinkler",
     }
 
     client = await hass_client()
@@ -276,7 +274,6 @@ async def test_program_schedule_disabled(
     assert state.state == "off"
     assert state.attributes == {
         "friendly_name": "Rain Bird Controller",
-        "icon": "mdi:sprinkler",
     }
 
 

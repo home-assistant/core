@@ -58,18 +58,11 @@ INVERTERS_KEY = "inverters"
 LAST_REPORTED_KEY = "last_reported"
 
 
-@dataclass(frozen=True)
-class EnvoyInverterRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyInverterSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy inverter sensor entity."""
 
     value_fn: Callable[[EnvoyInverter], datetime.datetime | float]
-
-
-@dataclass(frozen=True)
-class EnvoyInverterSensorEntityDescription(
-    SensorEntityDescription, EnvoyInverterRequiredKeysMixin
-):
-    """Describes an Envoy inverter sensor entity."""
 
 
 INVERTER_SENSORS = (
@@ -91,19 +84,12 @@ INVERTER_SENSORS = (
 )
 
 
-@dataclass(frozen=True)
-class EnvoyProductionRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyProductionSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy production sensor entity."""
 
     value_fn: Callable[[EnvoySystemProduction], int]
     on_phase: str | None
-
-
-@dataclass(frozen=True)
-class EnvoyProductionSensorEntityDescription(
-    SensorEntityDescription, EnvoyProductionRequiredKeysMixin
-):
-    """Describes an Envoy production sensor entity."""
 
 
 PRODUCTION_SENSORS = (
@@ -168,19 +154,12 @@ PRODUCTION_PHASE_SENSORS = {
 }
 
 
-@dataclass(frozen=True)
-class EnvoyConsumptionRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyConsumptionSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy consumption sensor entity."""
 
     value_fn: Callable[[EnvoySystemConsumption], int]
     on_phase: str | None
-
-
-@dataclass(frozen=True)
-class EnvoyConsumptionSensorEntityDescription(
-    SensorEntityDescription, EnvoyConsumptionRequiredKeysMixin
-):
-    """Describes an Envoy consumption sensor entity."""
 
 
 CONSUMPTION_SENSORS = (
@@ -245,20 +224,15 @@ CONSUMPTION_PHASE_SENSORS = {
 }
 
 
-@dataclass(frozen=True)
-class EnvoyCTRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyCTSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy CT sensor entity."""
 
     value_fn: Callable[
         [EnvoyMeterData],
         int | float | str | CtType | CtMeterStatus | CtStatusFlags | CtState | None,
     ]
     on_phase: str | None
-
-
-@dataclass(frozen=True)
-class EnvoyCTSensorEntityDescription(SensorEntityDescription, EnvoyCTRequiredKeysMixin):
-    """Describes an Envoy CT sensor entity."""
 
 
 CT_NET_CONSUMPTION_SENSORS = (
@@ -390,32 +364,23 @@ CT_PRODUCTION_PHASE_SENSORS = {
 }
 
 
-@dataclass(frozen=True)
-class EnvoyEnchargeRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyEnchargeSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy Encharge sensor entity."""
 
     value_fn: Callable[[EnvoyEncharge], datetime.datetime | int | float]
-
-
-@dataclass(frozen=True)
-class EnvoyEnchargeSensorEntityDescription(
-    SensorEntityDescription, EnvoyEnchargeRequiredKeysMixin
-):
-    """Describes an Envoy Encharge sensor entity."""
 
 
 @dataclass(frozen=True)
 class EnvoyEnchargePowerRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[EnvoyEnchargePower], int | float]
 
-
-@dataclass(frozen=True)
-class EnvoyEnchargePowerSensorEntityDescription(
-    SensorEntityDescription, EnvoyEnchargePowerRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class EnvoyEnchargePowerSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy Encharge sensor entity."""
+
+    value_fn: Callable[[EnvoyEnchargePower], int | float]
 
 
 ENCHARGE_INVENTORY_SENSORS = (
@@ -455,18 +420,11 @@ ENCHARGE_POWER_SENSORS = (
 )
 
 
-@dataclass(frozen=True)
-class EnvoyEnpowerRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnvoyEnpowerSensorEntityDescription(SensorEntityDescription):
+    """Describes an Envoy Encharge sensor entity."""
 
     value_fn: Callable[[EnvoyEnpower], datetime.datetime | int | float]
-
-
-@dataclass(frozen=True)
-class EnvoyEnpowerSensorEntityDescription(
-    SensorEntityDescription, EnvoyEnpowerRequiredKeysMixin
-):
-    """Describes an Envoy Encharge sensor entity."""
 
 
 ENPOWER_SENSORS = (
@@ -489,14 +447,12 @@ ENPOWER_SENSORS = (
 class EnvoyEnchargeAggregateRequiredKeysMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[EnvoyEnchargeAggregate], int]
 
-
-@dataclass(frozen=True)
-class EnvoyEnchargeAggregateSensorEntityDescription(
-    SensorEntityDescription, EnvoyEnchargeAggregateRequiredKeysMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class EnvoyEnchargeAggregateSensorEntityDescription(SensorEntityDescription):
     """Describes an Envoy Encharge sensor entity."""
+
+    value_fn: Callable[[EnvoyEnchargeAggregate], int]
 
 
 ENCHARGE_AGGREGATE_SENSORS = (

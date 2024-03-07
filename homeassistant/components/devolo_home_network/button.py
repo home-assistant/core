@@ -22,18 +22,11 @@ from .const import DOMAIN, IDENTIFY, PAIRING, RESTART, START_WPS
 from .entity import DevoloEntity
 
 
-@dataclass(frozen=True)
-class DevoloButtonRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class DevoloButtonEntityDescription(ButtonEntityDescription):
+    """Describes devolo button entity."""
 
     press_func: Callable[[Device], Awaitable[bool]]
-
-
-@dataclass(frozen=True)
-class DevoloButtonEntityDescription(
-    ButtonEntityDescription, DevoloButtonRequiredKeysMixin
-):
-    """Describes devolo button entity."""
 
 
 BUTTON_TYPES: dict[str, DevoloButtonEntityDescription] = {

@@ -10,7 +10,7 @@ from typing import Any, Final
 
 from aiohttp import web
 from aiohttp.typedefs import LooseHeaders
-from aiohttp.web import Request
+from aiohttp.web import AppKey, Request
 from aiohttp.web_exceptions import (
     HTTPBadRequest,
     HTTPInternalServerError,
@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 KEY_AUTHENTICATED: Final = "ha_authenticated"
+KEY_HASS: AppKey[HomeAssistant] = AppKey("hass")
 
 current_request: ContextVar[Request | None] = ContextVar(
     "current_request", default=None

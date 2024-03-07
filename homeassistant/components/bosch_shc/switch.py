@@ -29,21 +29,13 @@ from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
 
 
-@dataclass(frozen=True)
-class SHCSwitchRequiredKeysMixin:
-    """Mixin for SHC switch required keys."""
+@dataclass(frozen=True, kw_only=True)
+class SHCSwitchEntityDescription(SwitchEntityDescription):
+    """Class describing SHC switch entities."""
 
     on_key: str
     on_value: StateType
     should_poll: bool
-
-
-@dataclass(frozen=True)
-class SHCSwitchEntityDescription(
-    SwitchEntityDescription,
-    SHCSwitchRequiredKeysMixin,
-):
-    """Class describing SHC switch entities."""
 
 
 SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {

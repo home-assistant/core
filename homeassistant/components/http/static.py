@@ -12,8 +12,6 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
 from lru import LRU
 
-from homeassistant.core import HomeAssistant
-
 from .const import KEY_HASS
 
 CACHE_TIME: Final = 31 * 86400  # = 1 month
@@ -48,7 +46,7 @@ class CachingStaticResource(StaticResource):
         rel_url = request.match_info["filename"]
         key = (rel_url, self._directory)
         if (filepath_content_type := PATH_CACHE.get(key)) is None:
-            hass: HomeAssistant = request.app[KEY_HASS]
+            hass = request.app[KEY_HASS]
             try:
                 filepath = await hass.async_add_executor_job(_get_file_path, *key)
             except (ValueError, FileNotFoundError) as error:

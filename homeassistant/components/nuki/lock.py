@@ -76,6 +76,7 @@ class NukiDeviceEntity(NukiEntity[_NukiDeviceT], LockEntity):
         """Return a unique ID."""
         return self._nuki_device.nuki_id
 
+    # Deprecated, can be removed in 2024.10
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
