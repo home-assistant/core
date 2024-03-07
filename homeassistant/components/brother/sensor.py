@@ -35,18 +35,11 @@ UNIT_PAGES = "p"
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class BrotherSensorRequiredKeysMixin:
-    """Class for Brother entity required keys."""
+@dataclass(frozen=True, kw_only=True)
+class BrotherSensorEntityDescription(SensorEntityDescription):
+    """A class that describes sensor entities."""
 
     value: Callable[[BrotherSensors], StateType | datetime]
-
-
-@dataclass(frozen=True)
-class BrotherSensorEntityDescription(
-    SensorEntityDescription, BrotherSensorRequiredKeysMixin
-):
-    """A class that describes sensor entities."""
 
 
 SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (

@@ -36,6 +36,8 @@ from .components import (
     file_upload as file_upload_pre_import,  # noqa: F401
     history as history_pre_import,  # noqa: F401
     http,  # not named pre_import since it has requirements
+    image_upload as image_upload_import,  # noqa: F401 - not named pre_import since it has requirements
+    logbook as logbook_pre_import,  # noqa: F401
     lovelace as lovelace_pre_import,  # noqa: F401
     onboarding as onboarding_pre_import,  # noqa: F401
     recorder as recorder_import,  # noqa: F401 - not named pre_import since it has requirements
@@ -43,8 +45,10 @@ from .components import (
     search as search_pre_import,  # noqa: F401
     sensor as sensor_pre_import,  # noqa: F401
     system_log as system_log_pre_import,  # noqa: F401
+    webhook as webhook_pre_import,  # noqa: F401
     websocket_api as websocket_api_pre_import,  # noqa: F401
 )
+from .components.sensor import recorder as sensor_recorder  # noqa: F401
 from .const import (
     FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
@@ -99,7 +103,6 @@ STAGE_2_TIMEOUT = 300
 WRAP_UP_TIMEOUT = 300
 COOLDOWN_TIME = 60
 
-MAX_LOAD_CONCURRENTLY = 6
 
 DEBUGGER_INTEGRATIONS = {"debugpy"}
 CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
@@ -140,6 +143,7 @@ DEFAULT_INTEGRATIONS = {
     # These integrations are set up unless recovery mode is activated.
     #
     # Integrations providing core functionality:
+    "analytics",  # Needed for onboarding
     "application_credentials",
     "backup",
     "frontend",

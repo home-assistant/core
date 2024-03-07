@@ -9,6 +9,8 @@ from homeassistant.components.zeroconf.usage import install_multiple_zeroconf_ca
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import extract_stack_to_frame
+
 DOMAIN = "zeroconf"
 
 
@@ -50,25 +52,29 @@ async def test_multiple_zeroconf_instances_gives_shared(
         line="self.light.is_on",
     )
     with patch(
-        "homeassistant.helpers.frame.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/dev/homeassistant/core.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            correct_frame,
-            Mock(
-                filename="/home/dev/homeassistant/components/zeroconf/usage.py",
-                lineno="23",
-                line="self.light.is_on",
-            ),
-            Mock(
-                filename="/home/dev/mdns/lights.py",
-                lineno="2",
-                line="something()",
-            ),
-        ],
+        "homeassistant.helpers.frame.linecache.getline", return_value=correct_frame.line
+    ), patch(
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/dev/homeassistant/core.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+                correct_frame,
+                Mock(
+                    filename="/home/dev/homeassistant/components/zeroconf/usage.py",
+                    lineno="23",
+                    line="self.light.is_on",
+                ),
+                Mock(
+                    filename="/home/dev/mdns/lights.py",
+                    lineno="2",
+                    line="something()",
+                ),
+            ]
+        ),
     ):
         assert zeroconf.Zeroconf() == zeroconf_instance
 

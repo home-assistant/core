@@ -65,15 +65,13 @@ async def async_setup_entry(
         entry.entry_id
     ]
     async_add_entities(
-        [
-            OpenGarageSensor(
-                open_garage_data_coordinator,
-                cast(str, entry.unique_id),
-                description,
-            )
-            for description in SENSOR_TYPES
-            if description.key in open_garage_data_coordinator.data
-        ],
+        OpenGarageSensor(
+            open_garage_data_coordinator,
+            cast(str, entry.unique_id),
+            description,
+        )
+        for description in SENSOR_TYPES
+        if description.key in open_garage_data_coordinator.data
     )
 
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Coroutine
 from http import HTTPStatus
 from typing import TYPE_CHECKING, Any, cast
 
@@ -20,6 +21,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.setup import async_setup_component
+from homeassistant.util.async_ import create_eager_task
 
 if TYPE_CHECKING:
     from . import OnboadingStorage
@@ -215,15 +218,22 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
             ):
                 onboard_integrations.append("rpi_power")
 
-            # Set up integrations after onboarding
-            await asyncio.gather(
-                *(
-                    hass.config_entries.flow.async_init(
-                        domain, context={"source": "onboarding"}
-                    )
-                    for domain in onboard_integrations
+            coros: list[Coroutine[Any, Any, Any]] = [
+                hass.config_entries.flow.async_init(
+                    domain, context={"source": "onboarding"}
                 )
-            )
+                for domain in onboard_integrations
+            ]
+
+            if "analytics" not in hass.config.components:
+                # If by some chance that analytics has not finished
+                # setting up, wait for it here so its ready for the
+                # next step.
+                coros.append(async_setup_component(hass, "analytics", {}))
+
+            # Set up integrations after onboarding and ensure
+            # analytics is ready for the next step.
+            await asyncio.gather(*(create_eager_task(coro) for coro in coros))
 
             return self.json({})
 

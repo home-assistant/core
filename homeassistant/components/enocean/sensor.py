@@ -44,18 +44,11 @@ SENSOR_TYPE_TEMPERATURE = "temperature"
 SENSOR_TYPE_WINDOWHANDLE = "windowhandle"
 
 
-@dataclass(frozen=True)
-class EnOceanSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EnOceanSensorEntityDescription(SensorEntityDescription):
+    """Describes EnOcean sensor entity."""
 
     unique_id: Callable[[list[int]], str | None]
-
-
-@dataclass(frozen=True)
-class EnOceanSensorEntityDescription(
-    SensorEntityDescription, EnOceanSensorEntityDescriptionMixin
-):
-    """Describes EnOcean sensor entity."""
 
 
 SENSOR_DESC_TEMPERATURE = EnOceanSensorEntityDescription(
