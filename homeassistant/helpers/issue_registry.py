@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
+from .registry import BaseRegistry
 from .storage import Store
 
 DATA_REGISTRY = "issue_registry"
@@ -21,7 +22,6 @@ EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED = "repairs_issue_registry_updated"
 STORAGE_KEY = "repairs.issue_registry"
 STORAGE_VERSION_MAJOR = 1
 STORAGE_VERSION_MINOR = 2
-SAVE_DELAY = 10
 
 
 class IssueSeverity(StrEnum):
@@ -92,7 +92,7 @@ class IssueRegistryStore(Store[dict[str, list[dict[str, Any]]]]):
         return old_data
 
 
-class IssueRegistry:
+class IssueRegistry(BaseRegistry):
     """Class to hold a registry of issues."""
 
     def __init__(self, hass: HomeAssistant, *, read_only: bool = False) -> None:
@@ -258,11 +258,6 @@ class IssueRegistry:
                     )
 
         self.issues = issues
-
-    @callback
-    def async_schedule_save(self) -> None:
-        """Schedule saving the issue registry."""
-        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:
