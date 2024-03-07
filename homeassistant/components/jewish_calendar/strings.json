@@ -1,7 +1,7 @@
 {
   "services": {
-    "for_gregorian_date": {
-      "name": "For Gregorian Date",
+    "get_gregorian_date": {
+      "name": "Get Gregorian Date",
       "description": "Returns Hebrew Calendar information for a given Gregorian date.  Pass one or more include_* parameters to specify which fields to return.",
       "fields": {
         "date": {
@@ -22,8 +22,8 @@
         }
       }
     },
-    "for_hebrew_date": {
-      "name": "For Hebrew Date",
+    "get_hebrew_date": {
+      "name": "Get Hebrew Date",
       "description": "Returns Hebrew Calendar information for a given Hebrew date.  Pass one or more include_* parameters to specify which fields to return.",
       "fields": {
         "year": {
@@ -52,8 +52,8 @@
         }
       }
     },
-    "for_next_holiday": {
-      "name": "For Next Holiday",
+    "get_next_holiday": {
+      "name": "Get Next Holiday",
       "description": "Returns Hebrew Calendar information for the next holiday on or after a given date, optionally filtered.  Pass one or more include_* parameters to specify which fields to return.",
       "fields": {
         "date": {

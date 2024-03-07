@@ -19,10 +19,10 @@ from homeassistant.setup import async_setup_component
         ("2023-01-01T17:34:00-08:00", "2023-01-02"),
     ],
 )
-async def test_for_gregorian_date(
+async def test_get_gregorian_date(
     hass: HomeAssistant, input: str, expected: str
 ) -> None:
-    """Tests for_gregorian_date with various inputs."""
+    """Tests get_gregorian_date with various inputs."""
     assert await async_setup_component(
         hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"language": "hebrew"}}
     )
@@ -30,7 +30,7 @@ async def test_for_gregorian_date(
 
     result = await hass.services.async_call(
         jewish_calendar.DOMAIN,
-        "for_gregorian_date",
+        "get_gregorian_date",
         {"date": input},
         blocking=True,
         return_response=True,
@@ -57,10 +57,10 @@ async def test_for_gregorian_date(
         ({"month": "Adar II", "day": 1}, "1 Adar 5780"),
     ],
 )
-async def test_for_hebrew_date_result(
+async def test_get_hebrew_date_result(
     hass: HomeAssistant, input: dict[str, str], expected: str
 ) -> None:
-    """Tests for_hebrew_date with various inputs."""
+    """Tests get_hebrew_date with various inputs."""
     assert await async_setup_component(
         hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"language": "english"}}
     )
@@ -68,7 +68,7 @@ async def test_for_hebrew_date_result(
 
     result = await hass.services.async_call(
         jewish_calendar.DOMAIN,
-        "for_hebrew_date",
+        "get_hebrew_date",
         {**input, "include_hebrew_date_info": "true"},
         blocking=True,
         return_response=True,
@@ -93,10 +93,10 @@ async def test_for_hebrew_date_result(
         ({"date": "2023-09-15", "types": "HOL_HAMOED"}, "17 Tishrei 5784"),
     ],
 )
-async def test_for_next_holiday(
+async def test_get_next_holiday(
     hass: HomeAssistant, input: dict[str, str], expected: str
 ) -> None:
-    """Tests for_next_holiday with various inputs."""
+    """Tests get_next_holiday with various inputs."""
     assert await async_setup_component(
         hass,
         jewish_calendar.DOMAIN,
@@ -111,7 +111,7 @@ async def test_for_next_holiday(
 
     result = await hass.services.async_call(
         jewish_calendar.DOMAIN,
-        "for_next_holiday",
+        "get_next_holiday",
         {**input, "include_hebrew_date_info": "true"},
         blocking=True,
         return_response=True,
@@ -182,7 +182,7 @@ async def test_include_holiday_info_non_holiday(hass: HomeAssistant) -> None:
 
     result = await hass.services.async_call(
         jewish_calendar.DOMAIN,
-        "for_gregorian_date",
+        "get_gregorian_date",
         {"date": "2023-01-01", "include_holiday_info": "true"},
         blocking=True,
         return_response=True,
@@ -211,7 +211,7 @@ async def test_include_holiday_info_multi_day_holiday(hass: HomeAssistant) -> No
 
     result = await hass.services.async_call(
         jewish_calendar.DOMAIN,
-        "for_gregorian_date",
+        "get_gregorian_date",
         {"date": "2023-04-07", "include_holiday_info": "true"},
         blocking=True,
         return_response=True,
@@ -230,7 +230,7 @@ async def test_include_holiday_info_multi_day_holiday(hass: HomeAssistant) -> No
 
 
 async def test_include_hebrew_date_info(hass: HomeAssistant) -> None:
-    """Tests for_gregorian_date with include_hebrew_date_info."""
+    """Tests get_gregorian_date with include_hebrew_date_info."""
     assert await async_setup_component(
         hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"language": "hebrew"}}
     )
@@ -238,7 +238,7 @@ async def test_include_hebrew_date_info(hass: HomeAssistant) -> None:
 
     result = await hass.services.async_call(
         jewish_calendar.DOMAIN,
-        "for_gregorian_date",
+        "get_gregorian_date",
         {"date": "2023-01-01", "include_hebrew_date_info": "true"},
         blocking=True,
         return_response=True,
@@ -269,7 +269,7 @@ async def test_include_hebrew_date_info(hass: HomeAssistant) -> None:
 
 
 async def test_include_zmanim(hass: HomeAssistant) -> None:
-    """Tests for_gregorian_date with include_zmanim."""
+    """Tests get_gregorian_date with include_zmanim."""
     assert await async_setup_component(
         hass, jewish_calendar.DOMAIN, {"jewish_calendar": {"language": "hebrew"}}
     )
@@ -277,7 +277,7 @@ async def test_include_zmanim(hass: HomeAssistant) -> None:
 
     result = await hass.services.async_call(
         jewish_calendar.DOMAIN,
-        "for_gregorian_date",
+        "get_gregorian_date",
         {"date": "2023-01-01", "include_zmanim": "true"},
         blocking=True,
         return_response=True,
@@ -318,7 +318,7 @@ async def test_include_all_fields(hass: HomeAssistant) -> None:
 
     result = await hass.services.async_call(
         jewish_calendar.DOMAIN,
-        "for_gregorian_date",
+        "get_gregorian_date",
         {
             "date": "2023-04-07",
             "include_hebrew_date_info": "true",

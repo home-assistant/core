@@ -66,8 +66,8 @@ class JewishCalendarServices:
 
         hass.services.async_register(
             DOMAIN,
-            "for_gregorian_date",
-            self.for_gregorian_date,
+            "get_gregorian_date",
+            self.get_gregorian_date,
             schema=vol.Schema(
                 {
                     vol.Optional("date"): cv.datetime,
@@ -78,8 +78,8 @@ class JewishCalendarServices:
         )
         hass.services.async_register(
             DOMAIN,
-            "for_hebrew_date",
-            self.for_hebrew_date,
+            "get_hebrew_date",
+            self.get_hebrew_date,
             schema=vol.Schema(
                 {
                     vol.Optional("year"): vol.Coerce(int),
@@ -121,8 +121,8 @@ class JewishCalendarServices:
         )
         hass.services.async_register(
             DOMAIN,
-            "for_next_holiday",
-            self.for_next_holiday,
+            "get_next_holiday",
+            self.get_next_holiday,
             schema=vol.Schema(
                 {
                     vol.Optional("date"): cv.datetime,
@@ -136,7 +136,7 @@ class JewishCalendarServices:
             supports_response=SupportsResponse.ONLY,
         )
 
-    async def for_gregorian_date(self, call: ServiceCall) -> ServiceResponse:
+    async def get_gregorian_date(self, call: ServiceCall) -> ServiceResponse:
         """Service call that returns Hebrew date info for a Gregorian date."""
         return self._build_response(
             HDate(
@@ -147,7 +147,7 @@ class JewishCalendarServices:
             call,
         )
 
-    async def for_hebrew_date(self, call: ServiceCall) -> ServiceResponse:
+    async def get_hebrew_date(self, call: ServiceCall) -> ServiceResponse:
         """Service call that returns Hebrew date info for a Hebrew date."""
         today: HebrewDate = cast(HebrewDate, HDate(dt_util.now()).hdate)
 
@@ -192,7 +192,7 @@ class JewishCalendarServices:
             ]
         }
 
-    async def for_next_holiday(self, call: ServiceCall) -> ServiceResponse:
+    async def get_next_holiday(self, call: ServiceCall) -> ServiceResponse:
         """Service call that returns Hebrew date info for a holiday in a given year."""
         date = self.resolve_date_param(call)
         hdateInfo = HDate(

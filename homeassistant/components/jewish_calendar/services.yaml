@@ -1,4 +1,4 @@
-for_gregorian_date:
+get_gregorian_date:
   fields:
     date:
       example: 2023-01-01
@@ -18,7 +18,7 @@ for_gregorian_date:
       selector:
         boolean:
 
-for_hebrew_date:
+get_hebrew_date:
   fields:
     year:
       example: 5780
@@ -69,7 +69,7 @@ for_hebrew_date:
     include_holiday_info: *include_holiday_info
     include_zmanim: *include_zmanim
 
-for_next_holiday:
+get_next_holiday:
   fields:
     date:
       example: 2023-01-01
