@@ -1054,14 +1054,13 @@ class ConfigEntry:
     ) -> asyncio.Task[_R]:
         """Create a periodic task tied to the config entry lifecycle.
 
-        This type of task is for background tasks that usually run for
-        the lifetime of Home Assistant or an integration's setup.
+        This type of task is typically used for polling.
 
-        This is a background task which is different from a normal task:
+        This is a periodic task which is different from a normal task:
 
           - Will not block startup
           - Will be automatically cancelled on shutdown
-          - Calls to async_block_till_done will not wait for completion
+          - Calls to async_block_till_done will wait for completion by default
 
         This method must be run in the event loop.
         """

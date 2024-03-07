@@ -703,8 +703,7 @@ class HomeAssistant:
     ) -> asyncio.Task[_R]:
         """Create a task from within the event loop.
 
-        This type of tasks is for periodic updates such as polling
-        entities.
+        This type of task is typically used for polling.
 
         This is a periodic task which is different from a normal task:
 
