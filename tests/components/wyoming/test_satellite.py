@@ -24,6 +24,7 @@ from wyoming.wake import Detect, Detection
 from homeassistant.components import assist_pipeline, wyoming
 from homeassistant.components.wyoming.data import WyomingService
 from homeassistant.components.wyoming.devices import SatelliteDevice
+from homeassistant.components.wyoming.satellite import ConversationIdCache
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -227,6 +228,10 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
             return_value=("wav", get_test_wav()),
         ),
         patch("homeassistant.components.wyoming.satellite._PING_SEND_DELAY", 0),
+        patch(
+            "homeassistant.components.wyoming.satellite._CONVERSATION_ID_RETENTION_PERIOD",
+            0.01,
+        ),
     ):
         entry = await setup_config_entry(hass)
         device: SatelliteDevice = hass.data[wyoming.DOMAIN][
@@ -1083,3 +1088,18 @@ async def test_wake_word_phrase(hass: HomeAssistant) -> None:
         assert (
             mock_run_pipeline.call_args.kwargs.get("wake_word_phrase") == "Test Phrase"
         )
+
+
+async def test_conversation_id_cache(hass: HomeAssistant) -> None:
+    """Test that ConversationIdCache stores the string for X amount of time, and then automatically clears it."""
+    with (
+        patch(
+            "homeassistant.components.wyoming.satellite._CONVERSATION_ID_RETENTION_PERIOD",
+            0.5,
+        ),
+    ):
+        cache = ConversationIdCache(hass)
+        cache.set("test")
+        assert cache.get() == "test"
+        await asyncio.sleep(1)
+        assert cache.get() is None

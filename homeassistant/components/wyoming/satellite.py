@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 import io
 import logging
+from threading import Lock
 from typing import Final
 import wave
 
@@ -35,6 +36,7 @@ _RESTART_SECONDS: Final = 3
 _PING_TIMEOUT: Final = 5
 _PING_SEND_DELAY: Final = 2
 _PIPELINE_FINISH_TIMEOUT: Final = 1
+_CONVERSATION_ID_RETENTION_PERIOD: Final = 600
 
 # Wyoming stage -> Assist stage
 _STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
@@ -43,6 +45,41 @@ _STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
     PipelineStage.HANDLE: assist_pipeline.PipelineStage.INTENT,
     PipelineStage.TTS: assist_pipeline.PipelineStage.TTS,
 }
+
+
+class ConversationIdCache:
+    """The cache for the conversation ID.
+
+    This is needed so that conversation agents that utilize LLMs like ChatGPT can
+    retain a link to the rest of the conversation, allowing back and forth conversations
+    with the assist pipeline.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize Conversation ID Cache."""
+        self._conversation_id: str | None = None
+        self._unset_task: asyncio.Future[None] | None = None
+        self._hass = hass
+        self.lock = Lock()
+
+    async def unset(self) -> None:
+        """Unset the conversation ID after _CONVERSATION_ID_RETENTION_PERIOD seconds."""
+        await asyncio.sleep(_CONVERSATION_ID_RETENTION_PERIOD)
+        with self.lock:
+            self._conversation_id = None
+
+    def set(self, conversation_id: str | None) -> None:
+        """Set the conversation ID and reset timeout."""
+        with self.lock:
+            self._conversation_id = conversation_id
+        if self._unset_task is not None:
+            self._unset_task.cancel()
+            self._unset_task = None
+        self._unset_task = self._hass.async_add_job(self.unset)
+
+    def get(self) -> str | None:
+        """Get the conversation ID."""
+        return self._conversation_id
 
 
 class WyomingSatellite:
@@ -64,6 +101,7 @@ class WyomingSatellite:
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._pipeline_id: str | None = None
         self._muted_changed_event = asyncio.Event()
+        self._conversation_id_cache = ConversationIdCache(hass)
 
         self.device.set_is_muted_listener(self._muted_changed)
         self.device.set_pipeline_listener(self._pipeline_changed)
@@ -353,6 +391,7 @@ class WyomingSatellite:
                 self.hass,
                 context=Context(),
                 event_callback=self._event_callback,
+                conversation_id=self._conversation_id_cache.get(),
                 stt_metadata=stt.SpeechMetadata(
                     language=pipeline.language,
                     format=stt.AudioFormats.WAV,
@@ -443,6 +482,10 @@ class WyomingSatellite:
                 self.hass.add_job(
                     self._client.write_event(Transcript(text=stt_text).event())
                 )
+        elif event.type == assist_pipeline.PipelineEventType.INTENT_END:
+            # Intent End to retain conversation ID
+            if event.data and (intent_output := event.data["intent_output"]):
+                self._conversation_id_cache.set(intent_output["conversation_id"])
         elif event.type == assist_pipeline.PipelineEventType.TTS_START:
             # Text-to-speech text
             if event.data:
