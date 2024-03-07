@@ -24,7 +24,7 @@ CLIMATE_PRODUCT_IDS = {76, 78}
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Config entry."""
+    """Set up the microBees climate platform."""
     coordinator: MicroBeesUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ].coordinator
@@ -45,17 +45,6 @@ async def async_setup_entry(
 class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
     """Representation of a microBees climate."""
 
-    def __init__(
-        self,
-        coordinator: MicroBeesUpdateCoordinator,
-        bee_id: int,
-        actuator_id: int,
-        sensor_id: int,
-    ) -> None:
-        """Initialize the microBees climate."""
-        super().__init__(coordinator, bee_id, actuator_id)
-        self.sensor_id = sensor_id
-
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 0.5
     _attr_supported_features = (
@@ -68,6 +57,17 @@ class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
     _attr_min_temp = 15
     _attr_max_temp = 35
     _attr_name = None
+
+    def __init__(
+        self,
+        coordinator: MicroBeesUpdateCoordinator,
+        bee_id: int,
+        actuator_id: int,
+        sensor_id: int,
+    ) -> None:
+        """Initialize the microBees climate."""
+        super().__init__(coordinator, bee_id, actuator_id)
+        self.sensor_id = sensor_id
 
     @property
     def current_temperature(self) -> float | None:
@@ -97,11 +97,12 @@ class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
         send_command = await self.coordinator.microbees.sendCommand(
             self.actuator_id, self.actuator.value, temperature=temperature
         )
-        if send_command:
-            self.bee.instanceData.targetTemp = temperature
-            self.async_write_ha_state()
-        else:
+
+        if not send_command:
             raise HomeAssistantError(f"Failed to set temperature {self.name}")
+
+        self.bee.instanceData.targetTemp = temperature
+        self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode, **kwargs: Any) -> None:
         """Set new target hvac mode."""
@@ -115,12 +116,13 @@ class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
         send_command = await self.coordinator.microbees.sendCommand(
             self.actuator_id, 1, temperature=temperature
         )
-        if send_command:
-            self.actuator.value = 1
-            self._attr_hvac_mode = HVACMode.HEAT
-            self.async_write_ha_state()
-        else:
+
+        if not send_command:
             raise HomeAssistantError(f"Failed to set temperature {self.name}")
+
+        self.actuator.value = 1
+        self._attr_hvac_mode = HVACMode.HEAT
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the climate."""
@@ -128,9 +130,10 @@ class MBClimate(MicroBeesActuatorEntity, ClimateEntity):
         send_command = await self.coordinator.microbees.sendCommand(
             self.actuator_id, 0, temperature=temperature
         )
-        if send_command:
-            self.actuator.value = 0
-            self._attr_hvac_mode = HVACMode.OFF
-            self.async_write_ha_state()
-        else:
+
+        if not send_command:
             raise HomeAssistantError(f"Failed to set temperature {self.name}")
+
+        self.actuator.value = 0
+        self._attr_hvac_mode = HVACMode.OFF
+        self.async_write_ha_state()
