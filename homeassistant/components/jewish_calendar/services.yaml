@@ -6,15 +6,12 @@ get_gregorian_date:
         date:
     include_hebrew_date_info: &include_hebrew_date_info
       default: true
-      required: true
       selector:
         boolean:
     include_holiday_info: &include_holiday_info
-      required: true
       selector:
         boolean:
     include_zmanim: &include_zmanim
-      required: true
       selector:
         boolean:
 
@@ -26,7 +23,6 @@ get_hebrew_date:
         number:
           mode: box
     month:
-      required: true
       example: Tishrei
       selector:
         select:
@@ -58,7 +54,6 @@ get_hebrew_date:
             - אב
             - אלול
     day:
-      required: true
       example: 1
       selector:
         number:
