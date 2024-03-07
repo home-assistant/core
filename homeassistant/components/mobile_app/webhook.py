@@ -743,7 +743,7 @@ async def webhook_get_config(
         resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
 
     if cloud.async_active_subscription(hass):
-        with suppress(hass.components.cloud.CloudNotAvailable):
+        with suppress(cloud.CloudNotAvailable):
             resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]

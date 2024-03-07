@@ -6,11 +6,12 @@ import logging
 from aiohttp import web
 import voluptuous as vol
 
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.const import (
     CONF_ENTITIES,
     CONF_TYPE,
-    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant
@@ -130,7 +131,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     await config.async_setup()
 
     app = web.Application()
-    app["hass"] = hass
+    app[KEY_HASS] = hass
 
     # We misunderstood the startup signal. You're not allowed to change
     # anything during startup. Temp workaround.
@@ -153,6 +154,6 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
         """Start the bridge."""
         await start_emulated_hue_bridge(hass, config, app)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _start)
 
     return True

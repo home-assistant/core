@@ -108,7 +108,6 @@ class SwissPublicTransportSensor(
     """Implementation of a Swiss public transport sensor."""
 
     _attr_attribution = "Data provided by transport.opendata.ch"
-    _attr_icon = "mdi:bus"
     _attr_has_entity_name = True
     _attr_translation_key = "departure"
     _attr_device_class = SensorDeviceClass.TIMESTAMP

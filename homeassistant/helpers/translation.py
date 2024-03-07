@@ -162,26 +162,29 @@ async def _async_get_component_strings(
     translations_by_language: dict[str, dict[str, Any]] = {}
     # Determine paths of missing components/platforms
     files_to_load_by_language: dict[str, dict[str, str]] = {}
+    has_files_to_load = False
     for language in languages:
         files_to_load: dict[str, str] = {}
         files_to_load_by_language[language] = files_to_load
+        translations_by_language[language] = {}
 
-        loaded_translations: dict[str, Any] = {}
-        translations_by_language[language] = loaded_translations
-
-        for loaded in components:
-            domain = loaded.partition(".")[0]
+        for comp in components:
+            domain, _, platform = comp.partition(".")
             if not (integration := integrations.get(domain)):
                 continue
 
-            path = component_translation_path(loaded, language, integration)
-            # No translation available
-            if path is None:
-                loaded_translations[loaded] = {}
-            else:
-                files_to_load[loaded] = path
+            if platform and integration.is_built_in:
+                # Legacy state translations are no longer used for built-in integrations
+                # and we avoid trying to load them. This is a temporary measure to allow
+                # them to keep working for custom integrations until we can fully remove
+                # them.
+                continue
 
-    if not files_to_load:
+            if path := component_translation_path(comp, language, integration):
+                files_to_load[comp] = path
+                has_files_to_load = True
+
+    if not has_files_to_load:
         return translations_by_language
 
     # Load files

@@ -197,7 +197,7 @@ async def _async_get_condition_platform(
             f'Invalid condition "{platform}" specified {config}'
         ) from None
     try:
-        return integration.get_platform("condition")
+        return await integration.async_get_platform("condition")
     except ImportError:
         raise HomeAssistantError(
             f"Integration '{platform}' does not provide condition support"

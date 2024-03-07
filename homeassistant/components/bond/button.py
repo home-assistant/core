@@ -21,23 +21,15 @@ from .utils import BondDevice, BondHub
 STEP_SIZE = 10
 
 
-@dataclass(frozen=True)
-class BondButtonEntityDescriptionMixin:
-    """Mixin to describe a Bond Button entity."""
-
-    mutually_exclusive: Action | None
-    argument: int | None
-
-
-@dataclass(frozen=True)
-class BondButtonEntityDescription(
-    ButtonEntityDescription, BondButtonEntityDescriptionMixin
-):
+@dataclass(frozen=True, kw_only=True)
+class BondButtonEntityDescription(ButtonEntityDescription):
     """Class to describe a Bond Button entity."""
 
     # BondEntity does not support UNDEFINED,
     # restrict the type to str | None
     name: str | None = None
+    mutually_exclusive: Action | None
+    argument: int | None
 
 
 STOP_BUTTON = BondButtonEntityDescription(

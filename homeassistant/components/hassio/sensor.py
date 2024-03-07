@@ -12,8 +12,8 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ADDONS_COORDINATOR
 from .const import (
+    ADDONS_COORDINATOR,
     ATTR_CPU_PERCENT,
     ATTR_MEMORY_PERCENT,
     ATTR_VERSION,

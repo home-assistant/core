@@ -429,7 +429,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ]
             await asyncio.gather(*tasks)
 
-            for _, component in mqtt_data.reload_handlers.items():
+            for component in mqtt_data.reload_handlers.values():
                 component()
 
             # Fire event
