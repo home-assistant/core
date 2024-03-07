@@ -11,16 +11,34 @@ from homeassistant.components.climate import (
     HVACMode,
     intent as climate_intent,
 )
+from homeassistant.components.climate.const import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    SERVICE_SET_TEMPERATURE,
+    ClimateEntityFeature,
+)
+from homeassistant.components.climate.intent import (
+    INTENT_SET_TEMPERATURE,
+    async_setup_intents,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import Platform, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    Platform,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, entity_registry as er, intent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.intent import async_handle
 
 from tests.common import (
     MockConfigEntry,
     MockModule,
     MockPlatform,
+    async_mock_service,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -298,3 +316,54 @@ async def test_get_temperature_no_state(
     assert constraints.area_name == "Living Room"
     assert constraints.domains == {DOMAIN}
     assert constraints.device_classes is None
+
+
+async def test_set_temperature(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test HassClimateSetTemperature intent."""
+    hass.states.async_set(
+        "climate.simple_temp",
+        "heat",
+        {ATTR_SUPPORTED_FEATURES: [ClimateEntityFeature.TARGET_TEMPERATURE]},
+    )
+    hass.states.async_set(
+        "climate.temp_range",
+        "heat",
+        {ATTR_SUPPORTED_FEATURES: [ClimateEntityFeature.TARGET_TEMPERATURE_RANGE]},
+    )
+    calls = async_mock_service(hass, DOMAIN, SERVICE_SET_TEMPERATURE)
+    await async_setup_intents(hass)
+
+    await async_handle(
+        hass,
+        "test",
+        INTENT_SET_TEMPERATURE,
+        {"name": {"value": "simple temp"}, "temperature": {"value": 23}},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == DOMAIN
+    assert call.service == SERVICE_SET_TEMPERATURE
+    assert call.data.get(ATTR_ENTITY_ID) == "climate.simple_temp"
+    assert call.data.get(ATTR_TEMPERATURE) == 23
+
+    await async_handle(
+        hass,
+        "test",
+        INTENT_SET_TEMPERATURE,
+        {"name": {"value": "temp range"}, "temperature": {"value": 22}},
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    call = calls[1]
+    assert call.domain == DOMAIN
+    assert call.service == SERVICE_SET_TEMPERATURE
+    assert call.data.get(ATTR_ENTITY_ID) == "climate.temp_range"
+    assert call.data.get(ATTR_TARGET_TEMP_HIGH) == 22
+    assert call.data.get(ATTR_TARGET_TEMP_LOW) == 22
