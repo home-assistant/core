@@ -86,8 +86,14 @@ class DSMRConnection:
             if self._equipment_identifier in telegram:
                 self._telegram = telegram
                 transport.close()
+
             # Swedish meters have no equipment identifier
             if self._dsmr_version == "5S" and obis_ref.P1_MESSAGE_TIMESTAMP in telegram:
+                self._telegram = telegram
+                transport.close()
+
+            # gas meters
+            if obis_ref.EQUIPMENT_IDENTIFIER_GAS in telegram:
                 self._telegram = telegram
                 transport.close()
 
@@ -152,7 +158,7 @@ async def _validate_dsmr_connection(
     equipment_identifier_gas = conn.equipment_identifier_gas()
 
     # Check only for equipment identifier in case no gas meter is connected
-    if equipment_identifier is None and data[CONF_DSMR_VERSION] != "5S":
+    if equipment_identifier is None and data[CONF_DSMR_VERSION] != "5S" and equipment_identifier_gas is None:
         raise CannotCommunicate
 
     return {
