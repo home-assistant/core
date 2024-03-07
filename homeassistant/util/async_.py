@@ -6,6 +6,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 import concurrent.futures
 from contextlib import suppress
 import functools
+import linecache
 import logging
 import sys
 import threading
@@ -177,8 +178,11 @@ def check_loop(
         "custom " if integration_frame.custom_integration else "",
         integration_frame.integration,
         integration_frame.relative_filename,
-        found_frame.lineno,
-        (found_frame.line or "?").strip(),
+        found_frame.f_lineno,
+        (
+            linecache.getline(found_frame.f_code.co_filename, found_frame.f_lineno)
+            or "?"
+        ).strip(),
         report_issue,
     )
 
@@ -186,8 +190,8 @@ def check_loop(
         raise RuntimeError(
             "Blocking calls must be done in the executor or a separate thread;"
             f" {advise_msg or 'Use `await hass.async_add_executor_job()`'}; at"
-            f" {integration_frame.relative_filename}, line {found_frame.lineno}:"
-            f" {(found_frame.line or '?').strip()}"
+            f" {integration_frame.relative_filename}, line {found_frame.f_lineno}:"
+            f" {(linecache.getline(found_frame.f_code.co_filename, found_frame.f_lineno) or '?').strip()}"
         )
 
 
