@@ -844,10 +844,10 @@ async def test_warning_logged_on_wrap_up_timeout(
 
     def gen_domain_setup(domain):
         async def async_setup(hass, config):
-            async def _background_task():
+            async def _not_marked_background_task():
                 await asyncio.sleep(0.2)
 
-            hass.async_create_task(_background_task())
+            hass.async_create_task(_not_marked_background_task())
             return True
 
         return async_setup
@@ -865,7 +865,9 @@ async def test_warning_logged_on_wrap_up_timeout(
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
         await hass.async_block_till_done()
 
-    assert "Setup timed out for bootstrap - moving forward" in caplog.text
+    assert "Setup timed out for bootstrap" in caplog.text
+    assert "waiting on" in caplog.text
+    assert "_not_marked_background_task" in caplog.text
 
 
 @pytest.mark.parametrize("load_registries", [False])
