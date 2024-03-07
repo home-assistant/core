@@ -6,6 +6,7 @@ from contextlib import suppress
 from ipaddress import ip_address
 from typing import cast
 
+from hass_nabucasa import remote
 import yarl
 
 from homeassistant.components import http
@@ -313,7 +314,5 @@ def is_cloud_connection(hass: HomeAssistant) -> bool:
 
     if "cloud" not in hass.config.components:
         return False
-
-    from hass_nabucasa import remote  # pylint: disable=import-outside-toplevel
 
     return remote.is_cloud_request.get()
