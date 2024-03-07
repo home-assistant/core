@@ -3,6 +3,8 @@
 All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
+from unittest.mock import AsyncMock
+
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_CONTENT_ID,
@@ -15,6 +17,7 @@ from homeassistant.components.media_player import (
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEntity,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -34,7 +37,15 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.loader import bind_hass
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
+
+TEST_DOMAIN = "test"
 
 
 async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL):
@@ -267,3 +278,44 @@ async def async_clear_playlist(hass, entity_id=ENTITY_MATCH_ALL):
 def clear_playlist(hass, entity_id=ENTITY_MATCH_ALL):
     """Send the media player the command for clear playlist."""
     hass.add_job(async_clear_playlist, hass, entity_id)
+
+
+class MockMediaPlayer(MediaPlayerEntity):
+    """A mock media player class."""
+
+    async_set_volume_level: AsyncMock
+    async_volume_up: AsyncMock
+
+    def __init__(self, object_id: str, unique_id: str) -> None:
+        """Initialize."""
+        self.entity_id = f"DOMAIN.{object_id}"
+        self._attr_unique_id = unique_id
+
+        self.async_set_volume_level = AsyncMock()
+        self.async_volume_up = AsyncMock()
+
+
+async def mock_setup(
+    hass: HomeAssistant,
+    mock_media_player: MockMediaPlayer,
+) -> None:
+    """Set up a test provider."""
+
+    async def async_setup_media_player_platform(
+        hass: HomeAssistant,
+        config: ConfigType,
+        async_add_entities: AddEntitiesCallback,
+        discovery_info: DiscoveryInfoType | None = None,
+    ) -> None:
+        """Set up a media player platform."""
+        async_add_entities([mock_media_player], False)
+
+    mock_integration(hass, MockModule(domain=TEST_DOMAIN))
+    mock_platform(
+        hass,
+        f"{TEST_DOMAIN}.{DOMAIN}",
+        MockPlatform(async_setup_platform=async_setup_media_player_platform),
+    )
+
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": TEST_DOMAIN}})
+    await hass.async_block_till_done()
