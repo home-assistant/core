@@ -127,7 +127,8 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self.hosts:
             aiozc = await zeroconf.async_get_async_instance(self.hass)
             vd: VeluxDiscovery = VeluxDiscovery(zeroconf=aiozc)
-            self.hosts = vd.hosts  # type: ignore[assignment]
+            if await vd.async_discover_hosts(expected_hosts=1):
+                self.hosts = vd.hosts  # type: ignore[assignment]
 
         if self.hosts:
             data_schema = vol.Schema(
