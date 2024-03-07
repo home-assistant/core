@@ -31,7 +31,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_BRAND): vol.In(list(CONF_BRANDS_MAP)),
+    }
+)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, str]:
@@ -84,10 +89,8 @@ class WhirlpoolConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             assert self.entry is not None
             password = user_input[CONF_PASSWORD]
-            data = {
-                **self.entry.data,
-                CONF_PASSWORD: password,
-            }
+            brand = user_input[CONF_BRAND]
+            data = {**self.entry.data, CONF_PASSWORD: password, CONF_BRAND: brand}
 
             try:
                 await validate_input(self.hass, data)
@@ -101,6 +104,7 @@ class WhirlpoolConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         **self.entry.data,
                         CONF_PASSWORD: password,
+                        CONF_BRAND: brand,
                     },
                 )
                 await self.hass.config_entries.async_reload(self.entry.entry_id)
