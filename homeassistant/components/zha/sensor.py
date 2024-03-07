@@ -200,9 +200,9 @@ class Sensor(ZhaEntity, SensorEntity):
                 )
             except ValueError as ex:
                 self.warning(
-                    "Quirks provided an invalid device class: %s for entity %s: %s",
+                    "Quirks provided an invalid device class: %s for platform %s: %s",
                     sensor_metadata.device_class,
-                    self.entity_id,
+                    Platform.SENSOR.value,
                     ex,
                 )
 

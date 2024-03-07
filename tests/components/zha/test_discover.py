@@ -1,6 +1,7 @@
 """Test ZHA device discovery."""
 
 from collections.abc import Callable
+import enum
 import itertools
 import re
 from typing import Any
@@ -703,9 +704,8 @@ def _get_test_device(
     zigpy_device_mock,
     manufacturer: str,
     model: str,
-    include_missing_translation_key=False,
-    include_unit_error=False,
-    include_device_class_translation_key_error=False,
+    augment_method: Callable[[QuirksV2RegistryEntry], QuirksV2RegistryEntry]
+    | None = None,
 ):
     zigpy_device = zigpy_device_mock(
         {
@@ -759,32 +759,8 @@ def _get_test_device(
         )
     )
 
-    if include_missing_translation_key:
-        v2_quirk.sensor(
-            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
-            zigpy.zcl.clusters.general.OnOff.cluster_id,
-            entity_type=EntityType.CONFIG,
-            translation_key="missing_translation_key",
-        )
-
-    if include_unit_error:
-        v2_quirk.sensor(
-            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
-            zigpy.zcl.clusters.general.OnOff.cluster_id,
-            entity_type=EntityType.CONFIG,
-            unit="invalid",
-            device_class="invalid",
-            translation_key="analog_input",
-        )
-
-    if include_device_class_translation_key_error:
-        v2_quirk.sensor(
-            zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
-            zigpy.zcl.clusters.general.OnOff.cluster_id,
-            entity_type=EntityType.CONFIG,
-            translation_key="invalid",
-            device_class="invalid",
-        )
+    if augment_method:
+        v2_quirk = augment_method(v2_quirk)
 
     zigpy_device = zigpy.quirks._DEVICE_REGISTRY.get_device(zigpy_device)
     zigpy_device.endpoints[1].power.PLUGGED_ATTR_READS = {
@@ -940,86 +916,175 @@ def validate_metadata(validator: Callable) -> None:
             validator(quirk, entity_metadata, platform, translations)
 
 
-async def test_quirks_v2_missing_translations(
+def bad_translation_key(v2_quirk: QuirksV2RegistryEntry) -> QuirksV2RegistryEntry:
+    """Introduce a bad translation key."""
+    return v2_quirk.sensor(
+        zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+        zigpy.zcl.clusters.general.OnOff.cluster_id,
+        entity_type=EntityType.CONFIG,
+        translation_key="missing_translation_key",
+    )
+
+
+def bad_device_class_unit_combination(
+    v2_quirk: QuirksV2RegistryEntry,
+) -> QuirksV2RegistryEntry:
+    """Introduce a bad device class and unit combination."""
+    return v2_quirk.sensor(
+        zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+        zigpy.zcl.clusters.general.OnOff.cluster_id,
+        entity_type=EntityType.CONFIG,
+        unit="invalid",
+        device_class="invalid",
+        translation_key="analog_input",
+    )
+
+
+def bad_device_class_translation_key_usage(
+    v2_quirk: QuirksV2RegistryEntry,
+) -> QuirksV2RegistryEntry:
+    """Introduce a bad device class and translation key combination."""
+    return v2_quirk.sensor(
+        zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+        zigpy.zcl.clusters.general.OnOff.cluster_id,
+        entity_type=EntityType.CONFIG,
+        translation_key="invalid",
+        device_class="invalid",
+    )
+
+
+@pytest.mark.parametrize(
+    ("augment_method", "validate_method", "expected_exception_string"),
+    [
+        (
+            bad_translation_key,
+            validate_translation_keys,
+            "Missing translation key: missing_translation_key",
+        ),
+        (
+            bad_device_class_unit_combination,
+            validate_device_class_unit,
+            "device_class and unit are both set",
+        ),
+        (
+            bad_device_class_translation_key_usage,
+            validate_translation_keys_device_class,
+            "translation_key and device_class are both set",
+        ),
+    ],
+)
+async def test_quirks_v2_metadata_errors(
     hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined,
+    augment_method: Callable[[QuirksV2RegistryEntry], QuirksV2RegistryEntry],
+    validate_method: Callable,
+    expected_exception_string: str,
 ) -> None:
     """Ensure all v2 quirks translation keys exist."""
 
     # no error yet
-    validate_metadata(validate_translation_keys)
+    validate_metadata(validate_method)
 
     # introduce an error
     zigpy_device = _get_test_device(
         zigpy_device_mock,
         "Ikea of Sweden4",
         "TRADFRI remote control4",
-        include_missing_translation_key=True,
+        augment_method=augment_method,
     )
     await zha_device_joined(zigpy_device)
 
     # ensure the error is caught and raised
-    with pytest.raises(
-        ValueError, match="Missing translation key: missing_translation_key"
-    ):
-        validate_metadata(validate_translation_keys)
+    with pytest.raises(ValueError, match=expected_exception_string):
+        validate_metadata(validate_method)
 
     # remove the device so we don't pollute the rest of the tests
     zigpy.quirks._DEVICE_REGISTRY.remove(zigpy_device)
 
 
-async def test_quirks_v2_device_class_unit_usage(
+class BadDeviceClass(enum.Enum):
+    """Bad device class."""
+
+    BAD = "bad"
+
+
+def bad_binary_sensor_device_class(
+    v2_quirk: QuirksV2RegistryEntry,
+) -> QuirksV2RegistryEntry:
+    """Introduce a bad device class on a binary sensor."""
+
+    return v2_quirk.binary_sensor(
+        zigpy.zcl.clusters.general.OnOff.AttributeDefs.on_off.name,
+        zigpy.zcl.clusters.general.OnOff.cluster_id,
+        device_class=BadDeviceClass.BAD,
+    )
+
+
+def bad_sensor_device_class(
+    v2_quirk: QuirksV2RegistryEntry,
+) -> QuirksV2RegistryEntry:
+    """Introduce a bad device class on a sensor."""
+
+    return v2_quirk.sensor(
+        zigpy.zcl.clusters.general.OnOff.AttributeDefs.off_wait_time.name,
+        zigpy.zcl.clusters.general.OnOff.cluster_id,
+        device_class=BadDeviceClass.BAD,
+    )
+
+
+def bad_number_device_class(
+    v2_quirk: QuirksV2RegistryEntry,
+) -> QuirksV2RegistryEntry:
+    """Introduce a bad device class on a number."""
+
+    return v2_quirk.number(
+        zigpy.zcl.clusters.general.OnOff.AttributeDefs.on_time.name,
+        zigpy.zcl.clusters.general.OnOff.cluster_id,
+        device_class=BadDeviceClass.BAD,
+    )
+
+
+ERROR_ROOT = "Quirks provided an invalid device class"
+
+
+@pytest.mark.parametrize(
+    ("augment_method", "expected_exception_string"),
+    [
+        (
+            bad_binary_sensor_device_class,
+            f"{ERROR_ROOT}: BadDeviceClass.BAD for platform binary_sensor",
+        ),
+        (
+            bad_sensor_device_class,
+            f"{ERROR_ROOT}: BadDeviceClass.BAD for platform sensor",
+        ),
+        (
+            bad_number_device_class,
+            f"{ERROR_ROOT}: BadDeviceClass.BAD for platform number",
+        ),
+    ],
+)
+async def test_quirks_v2_metadata_bad_device_classes(
     hass: HomeAssistant,
     zigpy_device_mock,
     zha_device_joined,
+    caplog: pytest.LogCaptureFixture,
+    augment_method: Callable[[QuirksV2RegistryEntry], QuirksV2RegistryEntry],
+    expected_exception_string: str,
 ) -> None:
-    """Ensure all v2 quirks dont set device class and unit at the same time."""
-
-    # no error yet
-    validate_metadata(validate_device_class_unit)
+    """Test bad quirks v2 device classes."""
 
     # introduce an error
     zigpy_device = _get_test_device(
         zigpy_device_mock,
-        "Ikea of Sweden5",
-        "TRADFRI remote control5",
-        include_unit_error=True,
+        "Ikea of Sweden4",
+        "TRADFRI remote control4",
+        augment_method=augment_method,
     )
     await zha_device_joined(zigpy_device)
 
-    # ensure the error is caught and raised
-    with pytest.raises(ValueError, match="device_class and unit are both set"):
-        validate_metadata(validate_device_class_unit)
-
-    # remove the device so we don't pollute the rest of the tests
-    zigpy.quirks._DEVICE_REGISTRY.remove(zigpy_device)
-
-
-async def test_quirks_v2_device_class_translation_key_usage(
-    hass: HomeAssistant,
-    zigpy_device_mock,
-    zha_device_joined,
-) -> None:
-    """Ensure all v2 quirks dont set device class and translation_key at the same time."""
-
-    # no error yet
-    validate_metadata(validate_translation_keys_device_class)
-
-    # introduce an error
-    zigpy_device = _get_test_device(
-        zigpy_device_mock,
-        "Ikea of Sweden6",
-        "TRADFRI remote control6",
-        include_device_class_translation_key_error=True,
-    )
-    await zha_device_joined(zigpy_device)
-
-    # ensure the error is caught and raised
-    with pytest.raises(
-        ValueError, match="translation_key and device_class are both set"
-    ):
-        validate_metadata(validate_translation_keys_device_class)
+    assert expected_exception_string in caplog.text
 
     # remove the device so we don't pollute the rest of the tests
     zigpy.quirks._DEVICE_REGISTRY.remove(zigpy_device)

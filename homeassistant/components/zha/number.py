@@ -456,9 +456,9 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
                 )
             except ValueError as ex:
                 self.warning(
-                    "Quirks provided an invalid device class: %s for entity %s: %s",
+                    "Quirks provided an invalid device class: %s for platform %s: %s",
                     number_metadata.device_class,
-                    self.entity_id,
+                    Platform.NUMBER.value,
                     ex,
                 )
 

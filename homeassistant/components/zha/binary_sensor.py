@@ -95,9 +95,9 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
                 )
             except ValueError as ex:
                 self.warning(
-                    "Quirks provided an invalid device class: %s for entity %s: %s",
+                    "Quirks provided an invalid device class: %s for platform %s: %s",
                     binary_sensor_metadata.device_class,
-                    self.entity_id,
+                    Platform.BINARY_SENSOR.value,
                     ex,
                 )
 
