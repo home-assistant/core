@@ -280,6 +280,7 @@ async def test_reconfigure_flow(
             CONF_PORT: 1234,
         },
     )
+    await hass.async_block_till_done()
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.options == {
