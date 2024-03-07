@@ -27,13 +27,6 @@
           "stopped": "mdi:stop-circle"
         }
       },
-      "charge_state_charge_phases": {
-        "state": {
-          "1": "mdi:numeric-1-box",
-          "2": "mdi:numeric-2-box",
-          "3": "mdi:numeric-3-box"
-        }
-      },
       "drive_state_active_route_destination": {
         "default": "mdi:routes"
       },
