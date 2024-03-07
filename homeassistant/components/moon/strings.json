@@ -11,6 +11,24 @@
     }
   },
   "entity": {
+    "calendar": {
+      "moon_phases": {
+        "state_attributes": {
+          "message": {
+            "state": {
+              "first_quarter": "[%key:component::moon::entity::sensor::phase::state::first_quarter%]",
+              "full_moon": "[%key:component::moon::entity::sensor::phase::state::full_moon%]",
+              "last_quarter": "[%key:component::moon::entity::sensor::phase::state::last_quarter%]",
+              "new_moon": "[%key:component::moon::entity::sensor::phase::state::new_moon%]",
+              "waning_crescent": "[%key:component::moon::entity::sensor::phase::state::waning_crescent%]",
+              "waning_gibbous": "[%key:component::moon::entity::sensor::phase::state::waning_gibbous%]",
+              "waxing_crescent": "[%key:component::moon::entity::sensor::phase::state::waxing_crescent%]",
+              "waxing_gibbous": "[%key:component::moon::entity::sensor::phase::state::waxing_gibbous%]"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "phase": {
         "name": "Phase",
