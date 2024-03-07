@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import functools
+import logging
 
 from zigpy.quirks.v2 import BinarySensorMetadata, EntityMetadata
 import zigpy.types as t
@@ -31,7 +32,7 @@ from .core.const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
-from .core.helpers import get_zha_data
+from .core.helpers import get_zha_data, validate_device_class
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -50,6 +51,8 @@ MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BINARY_SE
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
     ZHA_ENTITIES.config_diagnostic_match, Platform.BINARY_SENSOR
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -89,17 +92,12 @@ class BinarySensor(ZhaEntity, BinarySensorEntity):
         binary_sensor_metadata: BinarySensorMetadata = entity_metadata.entity_metadata
         self._attribute_name = binary_sensor_metadata.attribute_name
         if binary_sensor_metadata.device_class is not None:
-            try:
-                self._attr_device_class = BinarySensorDeviceClass(
-                    binary_sensor_metadata.device_class.value
-                )
-            except ValueError as ex:
-                self.warning(
-                    "Quirks provided an invalid device class: %s for platform %s: %s",
-                    binary_sensor_metadata.device_class,
-                    Platform.BINARY_SENSOR.value,
-                    ex,
-                )
+            self._attr_device_class = validate_device_class(
+                BinarySensorDeviceClass,
+                binary_sensor_metadata.device_class,
+                Platform.BINARY_SENSOR.value,
+                _LOGGER,
+            )
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""

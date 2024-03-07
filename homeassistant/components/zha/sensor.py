@@ -75,7 +75,7 @@ from .core.const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
-from .core.helpers import get_zha_data, validate_unit
+from .core.helpers import get_zha_data, validate_device_class, validate_unit
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import BaseZhaEntity, ZhaEntity
 
@@ -189,22 +189,17 @@ class Sensor(ZhaEntity, SensorEntity):
             self._divisor = sensor_metadata.divisor
         if sensor_metadata.multiplier is not None:
             self._multiplier = sensor_metadata.multiplier
-        if sensor_metadata.unit is not None:
+        if sensor_metadata.device_class is not None:
+            self._attr_device_class = validate_device_class(
+                SensorDeviceClass,
+                sensor_metadata.device_class,
+                Platform.SENSOR.value,
+                _LOGGER,
+            )
+        if sensor_metadata.device_class is None and sensor_metadata.unit is not None:
             self._attr_native_unit_of_measurement = validate_unit(
                 sensor_metadata.unit
             ).value
-        if sensor_metadata.device_class is not None:
-            try:
-                self._attr_device_class = SensorDeviceClass(
-                    sensor_metadata.device_class.value
-                )
-            except ValueError as ex:
-                self.warning(
-                    "Quirks provided an invalid device class: %s for platform %s: %s",
-                    sensor_metadata.device_class,
-                    Platform.SENSOR.value,
-                    ex,
-                )
 
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""

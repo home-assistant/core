@@ -14,7 +14,7 @@ from dataclasses import dataclass
 import enum
 import logging
 import re
-from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, overload
 
 import voluptuous as vol
 import zigpy.exceptions
@@ -24,6 +24,9 @@ import zigpy.zcl
 from zigpy.zcl.foundation import CommandSchema
 import zigpy.zdo.types as zdo_types
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     Platform,
@@ -475,3 +478,54 @@ UNITS_OF_MEASURE = {
 def validate_unit(quirks_unit: enum.Enum) -> enum.Enum:
     """Validate and return a unit of measure."""
     return UNITS_OF_MEASURE[type(quirks_unit).__name__](quirks_unit.value)
+
+
+@overload
+def validate_device_class(
+    device_class_enum: type[BinarySensorDeviceClass],
+    metadata_value,
+    platform: str,
+    logger: logging.Logger,
+) -> BinarySensorDeviceClass | None:
+    ...
+
+
+@overload
+def validate_device_class(
+    device_class_enum: type[SensorDeviceClass],
+    metadata_value,
+    platform: str,
+    logger: logging.Logger,
+) -> SensorDeviceClass | None:
+    ...
+
+
+@overload
+def validate_device_class(
+    device_class_enum: type[NumberDeviceClass],
+    metadata_value,
+    platform: str,
+    logger: logging.Logger,
+) -> NumberDeviceClass | None:
+    ...
+
+
+def validate_device_class(
+    device_class_enum: type[BinarySensorDeviceClass]
+    | type[SensorDeviceClass]
+    | type[NumberDeviceClass],
+    metadata_value: enum.Enum,
+    platform: str,
+    logger: logging.Logger,
+) -> BinarySensorDeviceClass | SensorDeviceClass | NumberDeviceClass | None:
+    """Validate and return a device class."""
+    try:
+        return device_class_enum(metadata_value.value)
+    except ValueError as ex:
+        logger.warning(
+            "Quirks provided an invalid device class: %s for platform %s: %s",
+            metadata_value,
+            platform,
+            ex,
+        )
+        return None

@@ -30,7 +30,7 @@ from .core.const import (
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
 )
-from .core.helpers import get_zha_data, validate_unit
+from .core.helpers import get_zha_data, validate_device_class, validate_unit
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
@@ -442,25 +442,19 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
             self._attr_native_max_value = number_metadata.max
         if number_metadata.step is not None:
             self._attr_native_step = number_metadata.step
-        if number_metadata.unit is not None:
+        if number_metadata.multiplier is not None:
+            self._attr_multiplier = number_metadata.multiplier
+        if number_metadata.device_class is not None:
+            self._attr_device_class = validate_device_class(
+                NumberDeviceClass,
+                number_metadata.device_class,
+                Platform.NUMBER.value,
+                _LOGGER,
+            )
+        if number_metadata.device_class is None and number_metadata.unit is not None:
             self._attr_native_unit_of_measurement = validate_unit(
                 number_metadata.unit
             ).value
-        if number_metadata.multiplier is not None:
-            self._attr_multiplier = number_metadata.multiplier
-
-        if number_metadata.device_class is not None:
-            try:
-                self._attr_device_class = NumberDeviceClass(
-                    number_metadata.device_class.value
-                )
-            except ValueError as ex:
-                self.warning(
-                    "Quirks provided an invalid device class: %s for platform %s: %s",
-                    number_metadata.device_class,
-                    Platform.NUMBER.value,
-                    ex,
-                )
 
     @property
     def native_value(self) -> float:
