@@ -23,7 +23,6 @@ import datetime
 import enum
 import functools
 import inspect
-from itertools import chain
 import logging
 import os
 import pathlib
@@ -843,13 +842,13 @@ class HomeAssistant:
         await asyncio.sleep(0)
         start_time: float | None = None
         current_task = asyncio.current_task()
-        to_wait: Iterable[asyncio.Future[Any]] = self._tasks
-        if wait_periodic_tasks:
-            to_wait = chain(self._tasks, self._periodic_tasks)
-
         while tasks := [
             task
-            for task in to_wait
+            for task in (
+                self._tasks | self._periodic_tasks
+                if wait_periodic_tasks
+                else self._tasks
+            )
             if task is not current_task and not cancelling(task)
         ]:
             await self._await_and_log_pending(tasks)
@@ -980,7 +979,7 @@ class HomeAssistant:
         self._tasks = set()
 
         # Cancel all background tasks
-        for task in chain(self._background_tasks, self._periodic_tasks):
+        for task in self._background_tasks | self._periodic_tasks:
             self._tasks.add(task)
             task.add_done_callback(self._tasks.remove)
             task.cancel("Home Assistant is stopping")
