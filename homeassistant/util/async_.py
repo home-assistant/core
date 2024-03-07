@@ -9,7 +9,6 @@ import functools
 import logging
 import sys
 import threading
-from traceback import extract_stack
 from typing import Any, ParamSpec, TypeVar, TypeVarTuple
 
 from homeassistant.exceptions import HomeAssistantError
@@ -116,14 +115,6 @@ def check_loop(
     The default advisory message is 'Use `await hass.async_add_executor_job()'
     Set `advise_msg` to an alternate message if the solution differs.
     """
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.core import HomeAssistant, async_get_hass
-    from homeassistant.helpers.frame import (
-        MissingIntegrationFrame,
-        get_integration_frame,
-    )
-    from homeassistant.loader import async_suggest_report_issue
-
     try:
         get_running_loop()
         in_loop = True
@@ -133,18 +124,32 @@ def check_loop(
     if not in_loop:
         return
 
+    # Import only after we know we are running in the event loop
+    # so threads do not have to pay the late import cost.
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.core import HomeAssistant, async_get_hass
+    from homeassistant.helpers.frame import (
+        MissingIntegrationFrame,
+        get_current_frame,
+        get_integration_frame,
+    )
+    from homeassistant.loader import async_suggest_report_issue
+
     found_frame = None
 
-    stack = extract_stack()
-
-    if (
-        func.__name__ == "sleep"
-        and len(stack) >= 3
-        and stack[-3].filename.endswith("pydevd.py")
-    ):
-        # Don't report `time.sleep` injected by the debugger (pydevd.py)
-        # stack[-1] is us, stack[-2] is protected_loop_func, stack[-3] is the offender
-        return
+    if func.__name__ == "sleep":
+        #
+        # Avoid extracting the stack unless we need to since it
+        # will have to access the linecache which can do blocking
+        # I/O and we are trying to avoid blocking calls.
+        #
+        # frame[1] is us
+        # frame[2] is protected_loop_func
+        # frame[3] is the offender
+        with suppress(ValueError):
+            offender_frame = get_current_frame(3)
+            if offender_frame.f_code.co_filename.endswith("pydevd.py"):
+                return
 
     try:
         integration_frame = get_integration_frame()

@@ -175,24 +175,16 @@ async def test_protect_loop_debugger_sleep(caplog: pytest.LogCaptureFixture) -> 
     block_async_io.enable()
 
     with patch(
-        "homeassistant.util.async_.extract_stack",
-        return_value=[
-            Mock(
-                filename="/home/paulus/homeassistant/.venv/blah/pydevd.py",
-                lineno="23",
-                line="do_something()",
-            ),
-            Mock(
-                filename="/home/paulus/homeassistant/util/async.py",
-                lineno="123",
-                line="protected_loop_func",
-            ),
-            Mock(
-                filename="/home/paulus/homeassistant/util/async.py",
-                lineno="123",
-                line="check_loop()",
-            ),
-        ],
+        "homeassistant.helpers.frame.get_current_frame",
+        return_value=extract_stack_to_frame(
+            [
+                Mock(
+                    filename="/home/paulus/homeassistant/.venv/blah/pydevd.py",
+                    lineno="23",
+                    line="do_something()",
+                ),
+            ]
+        ),
     ):
         time.sleep(0)
     assert "Detected blocking call inside the event loop" not in caplog.text
