@@ -297,7 +297,7 @@ VEHICLE_TIME_DESCRIPTIONS: tuple[TeslemetryTimeEntityDescription, ...] = (
     ),
 )
 
-ENERGY_LIVE_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
+ENERGY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="solar_power",
         state_class=SensorStateClass.MEASUREMENT,
@@ -423,7 +423,7 @@ async def async_setup_entry(
             (  # Add energy site live
                 TeslemetryEnergySensorEntity(energysite, description)
                 for energysite in data.energysites
-                for description in ENERGY_LIVE_DESCRIPTIONS
+                for description in ENERGY_DESCRIPTIONS
                 if description.key in energysite.coordinator.data
             ),
             (  # Add wall connectors
