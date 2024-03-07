@@ -310,7 +310,7 @@ def check_config(config: dict) -> dict:
         name = entity[CONF_NAME]
         addr = f"{hub_name}{entity[CONF_ADDRESS]}"
         scan_interval = entity.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        if scan_interval < 5:
+        if 0 < scan_interval < 5:
             _LOGGER.warning(
                 (
                     "%s %s scan_interval(%d) is lower than 5 seconds, "
