@@ -606,7 +606,10 @@ class _WatchPendingSetups:
             domain: (now - start_time)
             for domain, start_time in self._setup_started.items()
         }
-        _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
+        if remaining_with_setup_started:
+            _LOGGER.debug("Integration remaining: %s", remaining_with_setup_started)
+        elif waiting_tasks := self._hass._active_tasks:  # pylint: disable=protected-access
+            _LOGGER.debug("Waiting on tasks: %s", waiting_tasks)
         self._async_dispatch(remaining_with_setup_started)
         if (
             self._setup_started
