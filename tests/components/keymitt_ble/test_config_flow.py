@@ -192,6 +192,3 @@ async def test_no_link(hass: HomeAssistant) -> None:
     assert result3["errors"] == {"base": "linking"}
 
     assert len(mock_setup_entry.mock_calls) == 0
-
-    assert result4["type"] == FlowResultType.ABORT
-    assert result4["reason"] == "cannot_connect"
