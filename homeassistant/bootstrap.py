@@ -852,7 +852,10 @@ async def _async_set_up_integrations(
             ):
                 await async_setup_multi_components(hass, stage_1_domains, config)
         except TimeoutError:
-            _LOGGER.warning("Setup timed out for stage 1 - moving forward")
+            _LOGGER.warning(
+                "Setup timed out for stage 1 waiting on %s - moving forward",
+                hass._active_tasks,  # pylint: disable=protected-access
+            )
 
     # Add after dependencies when setting up stage 2 domains
     async_set_domains_to_be_loaded(hass, stage_2_domains)
@@ -865,7 +868,10 @@ async def _async_set_up_integrations(
             ):
                 await async_setup_multi_components(hass, stage_2_domains, config)
         except TimeoutError:
-            _LOGGER.warning("Setup timed out for stage 2 - moving forward")
+            _LOGGER.warning(
+                "Setup timed out for stage 2 waiting on %s - moving forward",
+                hass._active_tasks,  # pylint: disable=protected-access
+            )
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
@@ -873,7 +879,10 @@ async def _async_set_up_integrations(
         async with hass.timeout.async_timeout(WRAP_UP_TIMEOUT, cool_down=COOLDOWN_TIME):
             await hass.async_block_till_done()
     except TimeoutError:
-        _LOGGER.warning("Setup timed out for bootstrap - moving forward")
+        _LOGGER.warning(
+            "Setup timed out for bootstrap waiting on %s - moving forward",
+            hass._active_tasks,  # pylint: disable=protected-access
+        )
 
     watcher.async_stop()
 
