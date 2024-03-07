@@ -51,6 +51,8 @@ async def test_check_loop_async() -> None:
 async def test_check_loop_async_integration(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects and raises when called from event loop from integration context."""
     with pytest.raises(RuntimeError), patch(
+        "homeassistant.helpers.frame.linecache.getline", return_value="self.light.is_on"
+    ), patch(
         "homeassistant.helpers.frame.get_current_frame",
         return_value=extract_stack_to_frame(
             [
@@ -86,6 +88,8 @@ async def test_check_loop_async_integration_non_strict(
 ) -> None:
     """Test check_loop detects when called from event loop from integration context."""
     with patch(
+        "homeassistant.helpers.frame.linecache.getline", return_value="self.light.is_on"
+    ), patch(
         "homeassistant.helpers.frame.get_current_frame",
         return_value=extract_stack_to_frame(
             [
@@ -119,6 +123,8 @@ async def test_check_loop_async_integration_non_strict(
 async def test_check_loop_async_custom(caplog: pytest.LogCaptureFixture) -> None:
     """Test check_loop detects when called from event loop with custom component context."""
     with pytest.raises(RuntimeError), patch(
+        "homeassistant.helpers.frame.linecache.getline", return_value="self.light.is_on"
+    ), patch(
         "homeassistant.helpers.frame.get_current_frame",
         return_value=extract_stack_to_frame(
             [

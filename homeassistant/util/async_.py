@@ -167,7 +167,6 @@ def check_loop(
         module=integration_frame.module,
     )
 
-    found_frame = integration_frame.frame
     _LOGGER.warning(
         (
             "Detected blocking call to %s inside the event loop by %sintegration '%s' "
@@ -177,7 +176,7 @@ def check_loop(
         "custom " if integration_frame.custom_integration else "",
         integration_frame.integration,
         integration_frame.relative_filename,
-        found_frame.f_lineno,
+        integration_frame.line_number,
         integration_frame.line,
         report_issue,
     )
@@ -186,7 +185,7 @@ def check_loop(
         raise RuntimeError(
             "Blocking calls must be done in the executor or a separate thread;"
             f" {advise_msg or 'Use `await hass.async_add_executor_job()`'}; at"
-            f" {integration_frame.relative_filename}, line {found_frame.f_lineno}:"
+            f" {integration_frame.relative_filename}, line {integration_frame.line_number}:"
             f" {integration_frame.line}"
         )
 

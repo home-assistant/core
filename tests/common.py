@@ -1604,7 +1604,7 @@ def extract_stack_to_frame(extract_stack: list[Mock]) -> FrameType:
     for frame in stack:
         frame.f_back = None
         frame.f_code.co_filename = frame.filename
-        frame.f_lineno = frame.lineno
+        frame.f_lineno = int(frame.lineno)
 
     top_frame = stack.pop()
     current_frame = top_frame
